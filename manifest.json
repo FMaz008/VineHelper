@@ -2,12 +2,12 @@
   "manifest_version": 3,
   "name": "Amazon Vine Canada extension",
   "description": "Base Level Extension",
-  "version": "1.0",
+  "version": "1.2",
   
   "browser_specific_settings": {
     "gecko": {
       "id": "{5951bf9a-25ae-4043-9fa2-54dc0ac1ce70}",
-      "strict_min_version": "42.0"
+      "strict_min_version": "109.0"
 	}
   },
 
