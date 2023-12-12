@@ -24,7 +24,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": [ "images/rating-bad.png", "images/rating-good.png" ],
+      "resources": [ "images/rating-bad.png", "images/rating-good.png", "images/info.png" ],
       "matches": ["<all_urls>"]
 	}
   ],
