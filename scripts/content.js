@@ -80,7 +80,11 @@ function updateToolBarFees(pageId, fees){
 var reportfees = function(event){
 	let pageId = event.data.pageId;
 	let fees = event.data.fees;
-	console.log("Reporting page " +pageId+ " with fee value of " + fees);
+	
+	let url = "https://francoismazerolle.ca/vinehelperCastVote.php"
+		+ '?data={"url":"' + pageId +'","fees":'+ fees +'}';
+	fetch(url);
+
 	updateToolBarFees(pageId, fees);
 };
 
