@@ -2,8 +2,16 @@
 $('head').append( $('<link rel="stylesheet" type="text/css" />').attr('href', browser.runtime.getURL('/main.css') ));
 //$('head').append( $('<script type="text/javascript" />').attr('src', browser.runtime.getURL('/scripts/content.js') ));
 
-let i=0;
+var i=0;
+var arrUrl = [];
+const regex = /^(?:.*\/dp\/)(.+?)(?:\?.*)?$/;
+
 $(".vvp-item-tile-content").each(function(){
+	
+	let url = $(this).find(".a-link-normal").attr("href");
+	let pageId = url.match(regex);
+	arrUrl.push(pageId[1]);
+	
 	$(this).prepend(
 		'<div class="ext-helper-status">'
 			+ '<div class="ext-helper-status-container">'
@@ -45,7 +53,24 @@ $(".vvp-item-tile-content").each(function(){
 	
 	i++;
 });
+let jsonArrURL = JSON.stringify(arrUrl);
+console.log(jsonArrURL);
 
+//Post an AJAX request to the 3rd party server
+url = "http://www.francoismazerolle.ca/vinehelper.php"
+		+ "?data=" + jsonArrURL;
+$.ajax(url,   // request url
+			{
+				crossDomain: true,
+				dataType: 'jsonp',
+				jsonp: 'callback',
+				jsonpCallback: 'jsonpServerResponse',
+			}
+		);
+
+function jsonpServerResponse(data){
+	console.log(data);
+}
 
 function parseDOM(context, data){
 	
