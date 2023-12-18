@@ -49,30 +49,45 @@ function updateToolBarFees(pageId, fees){
 	let context = $("#ext-helper-toolbar-" + pageId);
 	
 	//Remove the default icon
-	$(context).find(".ext-helper-icon").removeClass("ext-helper-icon-info");
+	let container = $(context).find("div.ext-helper-status-container");
+	let icon = $(container).find(".ext-helper-icon");
+	let span = $(container).find("span");
+	let itemImg = $(context).parent(".vvp-item-tile-content").find("img");
+	
+	//Remove all images for the icon
+	icon.removeClass("ext-helper-icon-info");
+	icon.removeClass("ext-helper-icon-sad");
+	icon.removeClass("ext-helper-icon-happy");
 	
 	if(fees==1){
 		//The item has fees
-		$(context).find(".ext-helper-icon").addClass("ext-helper-icon-yes");
-		$(context).find("div.ext-helper-status-container span").text("Import fees reported");
-		$(context).parent(".vvp-item-tile-content").find("img").css('opacity', '0.3');
+		icon.addClass("ext-helper-icon-sad");
+		span.text("Import fees reported");
+		itemImg.css('opacity', '0.3');
 	}else if(fees==0){
 		//The item does not have fees
-		$(context).find(".ext-helper-icon").addClass("ext-helper-icon-no");
-		$(context).find("div.ext-helper-status-container span").text("No import fees!");
+		icon.addClass("ext-helper-icon-happy");
+		span.text("No import fees!");
 	}else if(fees==null){
 		//The item is not registered or needs more votes
-		$(context).find(".ext-helper-icon").addClass("ext-helper-icon-info");
-		$(context).find("div.ext-helper-status-container span").html(
-			"No data :-/<br />"
-			+ "Any fees? "
-			+ "<a href='#"+pageId+"' id='ext-helper-reportlink-"+pageId+"-yes' onclick='return false;'>Yes</a> / "
-			+ "<a href='#"+pageId+"' id='ext-helper-reportlink-"+pageId+"-no' onclick='return false;'>No</a>"
-		);
-		
-		$("a#ext-helper-reportlink-"+pageId+"-yes").bind('click', { 'pageId': pageId, 'fees': 1 }, reportfees);
-		$("a#ext-helper-reportlink-"+pageId+"-no").bind('click', { 'pageId': pageId, 'fees': 0 }, reportfees);
+		icon.addClass("ext-helper-icon-info");
+		span.text("No data :-/");
 	}
+	
+	//Regardless of the result, allow the user to vote or change their vote
+	span.append(
+		"<br />Any fees? "
+		+ "<a href='#"+pageId+"' id='ext-helper-reportlink-"+pageId+"-yes' class='ext-helper-reportlink-bad' onclick='return false;'>"
+			+ "&#11199; Yes"
+		+ "</a> / "
+		+ "<a href='#"+pageId+"' id='ext-helper-reportlink-"+pageId+"-no' class='ext-helper-reportlink-good' onclick='return false;'>"
+			+ "&#9745; No"
+		+ "</a>"
+	);
+		
+	$("a#ext-helper-reportlink-"+pageId+"-yes").bind('click', { 'pageId': pageId, 'fees': 1 }, reportfees);
+	$("a#ext-helper-reportlink-"+pageId+"-no").bind('click', { 'pageId': pageId, 'fees': 0 }, reportfees);
+
 }
 
 

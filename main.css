@@ -20,19 +20,36 @@ div.ext-helper-icon{
 	float:left;
 	width:30px;
 	height:30px;
+	background-position: 0px 0px;
 }
+
+div.ext-helper-icon-mini{
+	display:inline-block;
+	width:16px;
+	height:16px;
+	background-position: -16px 0px;
+}
+
+.ext-helper-reportlink-bad {
+	color: #CC0000 !important;
+}
+.ext-helper-reportlink-good {
+	color: #33CC33 !important;
+}
+
+
 
 
 
 /* Chrome 29+ */
 @media screen and (-webkit-min-device-pixel-ratio:0)
   and (min-resolution:.001dpcm) {
-	div.ext-helper-icon-yes{
+	div.ext-helper-icon-sad, div.ext-helper-icon-no{
 		background-size: 200%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/images/rating-bad.png");
 		background-repeat:no-repeat;
 	}
-	div.ext-helper-icon-no{
+	div.ext-helper-icon-happy, div.ext-helper-icon-yes{
 		background-size: 200%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/images/rating-good.png");
 		background-repeat:no-repeat;
@@ -45,12 +62,12 @@ div.ext-helper-icon{
 }
 
 @supports (-moz-appearance:none) {
-	div.ext-helper-icon-yes{
+	div.ext-helper-icon-sad, div.ext-helper-icon-no{
 		background-size: 200%;
 		background-image: url("/images/rating-bad.png");
 		background-repeat:no-repeat;
 	}
-	div.ext-helper-icon-no{
+	div.ext-helper-icon-happy, div.ext-helper-icon-yes{
 		background-size: 200%;
 		background-image: url("/images/rating-good.png");
 		background-repeat:no-repeat;
