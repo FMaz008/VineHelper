@@ -6,6 +6,20 @@ var pageId; //Will be used to store the current pageId within the each loop.
 var arrUrl = [];
 const regex = /^(?:.*\/dp\/)(.+?)(?:\?.*)?$/; //Isolate the product ID in the URL.
 
+$("<div id=\"discardedItems\"><div id=\"ext-helper-grid-header\"><span id=\"ext-helper-grid-collapse-indicator\"></span> <span id=\"ext-helper-grid-count\"></span> item(s) voted with fees</div><div id=\"ext-helper-grid\"></div></div><br /><hr /><br />").insertBefore("#vvp-items-grid");
+
+$("#ext-helper-grid-header").bind('click', {}, toggleDiscardedList);
+toggleDiscardedList(); //Hide at first
+
+function toggleDiscardedList(){
+	$('#ext-helper-grid').toggle();
+	if($('#ext-helper-grid').is(":hidden")){
+		$("#ext-helper-grid-collapse-indicator").html("&#11166;");	
+	}else{
+		$("#ext-helper-grid-collapse-indicator").html("&#11167;");
+	}
+}
+
 $(".vvp-item-tile-content").each(function(){
 	
 	let url = $(this).find(".a-link-normal").attr("href");
@@ -51,8 +65,14 @@ function serverResponse(data){
 	}
 	
 	$.each(data["arr_url"],function(key,values){
+		if(values['f'] == 1){
+			let tile = $("#ext-helper-toolbar-" + key).parents(".vvp-item-tile");
+			$(tile).detach().appendTo('#ext-helper-grid');
+		}
 		updateToolBarFees(key, values);
 	});
+	
+	$("#ext-helper-grid-count").text($("#ext-helper-grid").children().length);
 }
 
 function updateToolBarFees(pageId, arrValues){
