@@ -1,0 +1,16 @@
+body {
+	height: 400px; /* popovers have a max height of 600px */
+	width: 400px;
+	padding: 10px;
+	margin: 0;
+}
+
+div.summary{
+	display:block;
+	background-color:#EEE;
+	padding:10px;
+}
+
+span.number{
+	font-weight:bold;
+}

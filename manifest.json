@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Amazon Vine Canada extension",
-  "description": "Base Level Extension",
+  "name": "Amazon Vine Helper Canada",
+  "description": "Help identify items with import fees.",
   "version": "1.4",
   
   "browser_specific_settings": {
@@ -17,9 +17,9 @@
     "48": "images/icon-48.png",
     "128": "images/icon-128.png"
   },
-  
   "action": {
-    "default_popup": "hello.html",
+    "default_popup": "popup/homepage.html",
+	"default_title": "Vine Helper Canada",
     "default_icon": "icon.png"
   },
   "web_accessible_resources": [
