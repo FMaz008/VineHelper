@@ -8,6 +8,7 @@ div.ext-helper-status-container{
 	width: 100%;
 	background-color: rgba(255, 255, 255, 0.7);
 	border:1px solid #000;
+	border-radius:8px;
 	padding:5px;
 }
 div.ext-helper-status-container span, div.ext-helper-info-container span{
@@ -37,7 +38,12 @@ div.ext-helper-icon-mini{
 	color: #33CC33 !important;
 }
 
-
+a.selectedVote{
+	border:1px solid #666;
+	border-radius:4px;
+	padding:2px;
+	background-color:#EEE;
+}
 
 
 

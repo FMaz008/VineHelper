@@ -22,29 +22,45 @@ $(".vvp-item-tile-content").each(function(){
 		+ '</div>'
 	);
 	
-	
 });
 
+fetchData(arrUrl);
 
-
-//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-let jsonArrURL = JSON.stringify(arrUrl);
-let url = "https://www.francoismazerolle.ca/vinehelper.php"
-		+ "?data=" + jsonArrURL;
-fetch(url)
-    .then((response) => response.json())
-    .then(serverResponse);
-
+function fetchData(arrUrl){
+	let arrJSON = {"api_version":2, "arr_url":arrUrl};
+	let jsonArrURL = JSON.stringify(arrJSON);
+	
+	//console.log("Outgoing request");
+	//console.log(jsonArrURL);
+	
+	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
+	let url = "https://www.francoismazerolle.ca/vinehelper_v2.php"
+			+ "?data=" + jsonArrURL;
+	fetch(url)
+		.then((response) => response.json())
+		.then(serverResponse)
+		.catch( error =>  console.log(error) );
+}
 
 function serverResponse(data){
+	//console.log("Response");
+	//console.log(data);
 	//let arr = $.parseJSON(data); //convert to javascript array
-	$.each(data,function(key,value){
-		updateToolBarFees(key, value);
+	if(data["api_version"]!=2){
+		console.log("Wrong API version");
+	}
+	
+	$.each(data["arr_url"],function(key,values){
+		updateToolBarFees(key, values);
 	});
 }
 
-function updateToolBarFees(pageId, fees){
+function updateToolBarFees(pageId, arrValues){
 	let context = $("#ext-helper-toolbar-" + pageId);
+	let fees = arrValues["f"];
+	let vote = arrValues["s"];
+	let voteCountFees = arrValues["v1"];
+	let voteCountNoFees = arrValues["v0"];
 	
 	//Remove the default icon
 	let container = $(context).find("div.ext-helper-status-container");
@@ -57,12 +73,13 @@ function updateToolBarFees(pageId, fees){
 	icon.removeClass("ext-helper-icon-happy");
 	
 	let divVoteStyle = "";
-	if(fees==1){
+	$(context).parent(".vvp-item-tile-content").css('opacity', '1')
+	if(fees==1 || (fees==null && vote==1)){
 		//The item has fees
 		icon.addClass("ext-helper-icon-sad");
 		span.text("Import fees reported");
 		$(context).parent(".vvp-item-tile-content").css('opacity', '0.3')
-	}else if(fees==0){
+	}else if(fees==0 || (fees==null && vote==0)){
 		//The item does not have fees
 		icon.addClass("ext-helper-icon-happy");
 		span.text("No import fees!");
@@ -73,32 +90,40 @@ function updateToolBarFees(pageId, fees){
 		span.text("No data :-/");
 	}
 	
+	let sadVoteClass = "";
+	let happyVoteClass = "";
+	if(vote == 1)
+		sadVoteClass = "selectedVote";
+	if(vote==0)
+		happyVoteClass = "selectedVote";
+	
 	//Regardless of the result, allow the user to vote or change their vote
 	span.append(
 		"<div style='"+divVoteStyle+"'>Any fees? "
-		+ "<a href='#"+pageId+"' id='ext-helper-reportlink-"+pageId+"-yes' class='ext-helper-reportlink-bad' onclick='return false;'>"
-			+ "&#11199; Yes"
+		+ "<a href='#"+pageId+"' id='ext-helper-reportlink-"+pageId+"-yes' class='ext-helper-reportlink-bad "+sadVoteClass+"' onclick='return false;'>"
+			+ "&#11199; Yes ("+voteCountFees+")"
 		+ "</a> / "
-		+ "<a href='#"+pageId+"' id='ext-helper-reportlink-"+pageId+"-no' class='ext-helper-reportlink-good' onclick='return false;'>"
-			+ "&#9745; No"
+		+ "<a href='#"+pageId+"' id='ext-helper-reportlink-"+pageId+"-no' class='ext-helper-reportlink-good "+happyVoteClass+"' onclick='return false;'>"
+			+ "&#9745; No ("+voteCountNoFees+")"
 		+ "</a>"
 	);
 		
-	$("a#ext-helper-reportlink-"+pageId+"-yes").bind('click', { 'pageId': pageId, 'fees': 1 }, reportfees);
-	$("a#ext-helper-reportlink-"+pageId+"-no").bind('click', { 'pageId': pageId, 'fees': 0 }, reportfees);
+	$("a#ext-helper-reportlink-"+pageId+"-yes").bind('click', { 'pageId': pageId, 'fees': 1, 'v1': voteCountFees, 'v0':voteCountNoFees}, reportfees);
+	$("a#ext-helper-reportlink-"+pageId+"-no").bind('click', { 'pageId': pageId, 'fees': 0, 'v1': voteCountFees, 'v0':voteCountNoFees }, reportfees);
 
 }
 
 
 
-var reportfees = function(event){
+async function reportfees(event){
 	let pageId = event.data.pageId;
 	let fees = event.data.fees;
 	
-	let url = "https://francoismazerolle.ca/vinehelperCastVote.php"
+	let url = "https://francoismazerolle.ca/vinehelperCastVote_v2.php"
 		+ '?data={"url":"' + pageId +'","fees":'+ fees +'}';
-	fetch(url);
+	await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
 
-	updateToolBarFees(pageId, fees);
+	let arrUrl = [pageId];
+	fetchData(arrUrl); //Refresh the toolbar for that specific product only
 };
 
