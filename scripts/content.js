@@ -37,8 +37,6 @@ fetch(url)
 
 
 function serverResponse(data){
-	//Print out the result from the ajax query.
-	console.log(data);
 	//let arr = $.parseJSON(data); //convert to javascript array
 	$.each(data,function(key,value){
 		updateToolBarFees(key, value);
@@ -52,22 +50,23 @@ function updateToolBarFees(pageId, fees){
 	let container = $(context).find("div.ext-helper-status-container");
 	let icon = $(container).find(".ext-helper-icon");
 	let span = $(container).find("span");
-	let itemImg = $(context).parent(".vvp-item-tile-content").find("img");
 	
 	//Remove all images for the icon
 	icon.removeClass("ext-helper-icon-info");
 	icon.removeClass("ext-helper-icon-sad");
 	icon.removeClass("ext-helper-icon-happy");
 	
+	let divVoteStyle = "";
 	if(fees==1){
 		//The item has fees
 		icon.addClass("ext-helper-icon-sad");
 		span.text("Import fees reported");
-		itemImg.css('opacity', '0.3');
+		$(context).parent(".vvp-item-tile-content").css('opacity', '0.3')
 	}else if(fees==0){
 		//The item does not have fees
 		icon.addClass("ext-helper-icon-happy");
 		span.text("No import fees!");
+		divVoteStyle = "opacity:0.6";
 	}else if(fees==null){
 		//The item is not registered or needs more votes
 		icon.addClass("ext-helper-icon-info");
@@ -76,7 +75,7 @@ function updateToolBarFees(pageId, fees){
 	
 	//Regardless of the result, allow the user to vote or change their vote
 	span.append(
-		"<br />Any fees? "
+		"<div style='"+divVoteStyle+"'>Any fees? "
 		+ "<a href='#"+pageId+"' id='ext-helper-reportlink-"+pageId+"-yes' class='ext-helper-reportlink-bad' onclick='return false;'>"
 			+ "&#11199; Yes"
 		+ "</a> / "
