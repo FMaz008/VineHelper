@@ -22,6 +22,9 @@ div#ext-helper-grid-header{
 div#ext-helper-grid-header:hover{
 	cursor:pointer;
 }
+span#ext-helper-grid-count{
+	padding-left:7px;
+}
 div#ext-helper-grid{
 	display: grid;
 	grid-template-columns: repeat(auto-fill,minmax(236px,auto));
@@ -52,7 +55,7 @@ div#ext-helper-grid .vvp-item-tile .vvp-item-tile-content > * {
 
 
 
-div.ext-helper-status-container span, div.ext-helper-info-container span{
+div.ext-helper-status-container div.ext-helper-status-container2, div.ext-helper-info-container span{
 	display:block;
 	padding-left:35px;
 	font-weight:bold;
