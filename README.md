@@ -1,10 +1,20 @@
 # VineHelper
-Firefox Extension to detect import fees on Vine items
+Browser Extension to help identify import fees on items from Vine Canada.
 
 To install manually:
-Go to the URL about:debugging#/runtime/this-firefox in your firefox browser, add the temporary extension folder manually.
 
-Note: The extension will need to click clicked on on every page to be activated.
+__To install in Firefox:__
 
-Limitations:
-The extension is currently unable to detect import fees with products having variations (Requiring to select a size, or a color, etc..)
+1. In Firefox, go to `about:debugging#/runtime/this-firefox`
+2. click "Load Temporary Add-on..."
+3. open the folder with the unzipped files in it and select the *manifest.json* file.
+
+__To install in Chrome:__
+
+1. In Chrome, go to `chrome://extensions/`
+2. enable Developer mode on the right of the page,
+3. then click "Load Unpacked".
+4. select the folder with the unzipped files in it
+
+__Note:__ There will be an error about some lines in the *manifest.json* file, you can safely ignore them as they are required for Mozilla. Or you can delete them. Up to you, won't change anything.
+
