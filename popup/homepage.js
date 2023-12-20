@@ -1,4 +1,7 @@
+//Reminder: This script is executed from the extension popup.
+//          The console used is the browser console, not the inspector console.
 
+//Obtain contribution statistics
 let url = "https://www.francoismazerolle.ca/vinehelperStats.php";
 fetch(url)
 	.then((response) => response.json())
@@ -15,3 +18,25 @@ function serverResponse(data){
 	$("#confirmed").text(data["totalConfirmed"]);
 	$("#discarded").text(data["totalDiscarded"]);
 }
+
+
+
+function isNumeric(n) {
+    return !isNaN(parseFloat(n)) && isFinite(n);
+}
+
+
+//Load saved settings:
+
+chrome.storage.local.get('settingsThreshold', function(data) {
+	if(!data || !data.settingsThreshold || !isNumeric(data.settingsThreshold) || data.settingsThreshold < 1){
+		data.settingsThreshold = 2;
+	}
+    $("#threshold").val(data.settingsThreshold);
+});
+
+$("#threshold").on( "change", function() {
+	if(isNumeric($(this).val()) && $(this).val()>0 && $(this).val() <10){
+		chrome.storage.local.set({ settingsThreshold: $( this ).val() });
+	}
+} );

@@ -14,3 +14,7 @@ div.summary{
 span.number{
 	font-weight:bold;
 }
+
+div.options{
+	font-size:12px;
+}

@@ -4,6 +4,10 @@
   "description": "Help identify items with import fees.",
   "version": "1.4",
   
+  "permissions": [
+    "storage"
+  ],
+  
   "browser_specific_settings": {
     "gecko": {
       "id": "{5951bf9a-25ae-4043-9fa2-54dc0ac1ce70}",

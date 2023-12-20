@@ -5,7 +5,40 @@
 var pageId; //Will be used to store the current pageId within the each loop.
 var arrUrl = []; //Will be use to store the URL identifier of the listed products.
 const regex = /^(?:.*\/dp\/)(.+?)(?:\?.*)?$/; //Isolate the product ID in the URL.
-const consensusThreshold = 2;
+
+
+//Load settings
+var consensusThreshold = 2;
+
+const readLocalStorage = async (key) => {
+return new Promise((resolve, reject) => {
+  chrome.storage.local.get([key], function (result) {
+	if (result[key] === undefined) {
+	  reject();
+	} else {
+	  resolve(result[key]);
+	}
+  });
+});
+};
+
+async function getSettings(){
+	
+	await readLocalStorage('settingsThreshold')
+		.then(function(result) {
+			if(result > 0 && result <10){
+				consensusThreshold = result;
+			}
+		})
+		.catch((err) => {
+			//Can't retreive the key, probably non-existent
+		});
+	
+	init(); // Initialize the app
+}
+getSettings();
+
+
 
 
 function createInterface(){
@@ -113,23 +146,24 @@ function moveProductTileToDiscardedGrid(pageId){
 	$(tile).detach().appendTo('#ext-helper-grid');
 }
 
-createInterface();
 
+function init(){
+	createInterface();
 
+	//Browse each items from the list
+	//Create an array of all the products listed on the page
+	$(".vvp-item-tile-content").each(function(){
+		
+		let url = $(this).find(".a-link-normal").attr("href");
+		let arrPageId = url.match(regex);
+		pageId = arrPageId[1];
+		arrUrl.push(pageId);
 
-//Browse each items from the list
-//Create an array of all the products listed on the page
-$(".vvp-item-tile-content").each(function(){
-	
-	let url = $(this).find(".a-link-normal").attr("href");
-	let arrPageId = url.match(regex);
-	pageId = arrPageId[1];
-	arrUrl.push(pageId);
+		createProductToolbar(this, pageId);
+	});
 
-	createProductToolbar(this, pageId);
-});
-
-fetchData(arrUrl);
+	fetchData(arrUrl);
+}
 
 
 //Get data from the server about the products listed on this page
@@ -155,7 +189,7 @@ function serverResponse(data){
 	$.each(data["arr_url"],function(key,values){
 		
 		//If there is a consensus of a fee for the product, move it to the discarded grid
-		if(values['f'] == 1){
+		if(values["v1"] - values["v0"] >= consensusThreshold){
 			moveProductTileToDiscardedGrid(key);
 		}
 		
