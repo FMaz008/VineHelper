@@ -9,6 +9,7 @@ const regex = /^(?:.*\/dp\/)(.+?)(?:\?.*)?$/; //Isolate the product ID in the UR
 
 //Load settings
 var consensusThreshold = 2;
+var selfDiscard = false;
 
 const readLocalStorage = async (key) => {
 return new Promise((resolve, reject) => {
@@ -28,6 +29,16 @@ async function getSettings(){
 		.then(function(result) {
 			if(result > 0 && result <10){
 				consensusThreshold = result;
+			}
+		})
+		.catch((err) => {
+			//Can't retreive the key, probably non-existent
+		});
+
+	await readLocalStorage('settingsSelfDiscard')
+		.then(function(result) {
+			if(result == true || result == false){
+				selfDiscard = result;
 			}
 		})
 		.catch((err) => {
@@ -135,18 +146,31 @@ function createVotingWidget(pageId, votesFees, votesNoFees, voteUser){
 	//If the user has already voted, add the selected class to the vote link
 	if(voteUser == 1){
 		v1.addClass("selectedVote");
+		
+		//If self discard is on, move the item on the discard grid
+		if(selfDiscard == true){
+			moveProductTileToGrid(pageId, '#ext-helper-grid');
+		}
 	}
 	if(voteUser == 0){
 		v0.addClass("selectedVote");
+		
+		//We vote nofees and there's no more consensus, move the item out of the discard grid
+		if(votesFees - votesNoFees < consensusThreshold){
+			let grid = $("#ext-helper-toolbar-" + pageId).parents("#ext-helper-grid");
+			if(grid.length==1){ //Item is located in the discard grill
+				moveProductTileToGrid(pageId, '#vvp-items-grid');
+			}
+		}
 	}
 }
 
-function moveProductTileToDiscardedGrid(pageId){
+function moveProductTileToGrid(pageId, gridSelector){
 	let tile = $("#ext-helper-toolbar-" + pageId).parents(".vvp-item-tile");
-	$(tile).detach().appendTo('#ext-helper-grid');
+	$(tile).detach().appendTo(gridSelector);
 }
 
-
+//Initiate the extension
 function init(){
 	createInterface();
 
@@ -190,7 +214,7 @@ function serverResponse(data){
 		
 		//If there is a consensus of a fee for the product, move it to the discarded grid
 		if(values["v1"] - values["v0"] >= consensusThreshold){
-			moveProductTileToDiscardedGrid(key);
+			moveProductTileToGrid(key, '#ext-helper-grid');
 		}
 		
 		//Update the toolbar with the information received

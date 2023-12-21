@@ -26,7 +26,7 @@ function isNumeric(n) {
 }
 
 
-//Load saved settings:
+//Load/save settings:
 
 chrome.storage.local.get('settingsThreshold', function(data) {
 	if(!data || !data.settingsThreshold || !isNumeric(data.settingsThreshold) || data.settingsThreshold < 1){
@@ -39,4 +39,17 @@ $("#threshold").on( "change", function() {
 	if(isNumeric($(this).val()) && $(this).val()>0 && $(this).val() <10){
 		chrome.storage.local.set({ settingsThreshold: $( this ).val() });
 	}
+} );
+
+
+chrome.storage.local.get('settingsSelfDiscard', function(data) {
+	if(data && data.settingsSelfDiscard == true){
+		$( "#selfDiscard" ).prop( "checked", true);
+	}else{
+		$( "#selfDiscard" ).prop( "checked", false);
+	}
+});
+
+$("#selfDiscard").on( "change", function() {
+	chrome.storage.local.set({ settingsSelfDiscard: $( this ).is(":checked") });
 } );
