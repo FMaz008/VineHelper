@@ -17,6 +17,7 @@ function serverResponse(data){
 	$("#rank").text("#" + data["rank"]);
 	$("#confirmed").text(data["totalConfirmed"]);
 	$("#discarded").text(data["totalDiscarded"]);
+	$("#totalUsers").text(data["totalUsers"]);
 }
 
 
