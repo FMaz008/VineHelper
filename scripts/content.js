@@ -1,7 +1,5 @@
 
 
-
-
 var pageId; //Will be used to store the current pageId within the each loop.
 var arrUrl = []; //Will be use to store the URL identifier of the listed products.
 const regex = /^(?:.*\/dp\/)(.+?)(?:\?.*)?$/; //Isolate the product ID in the URL.
@@ -283,8 +281,8 @@ function createVotingWidget(pageId, votesFees, votesNoFees, voteUser){
 		.html("&#9745; No ("+votesNoFees+")")
 		.appendTo(pe);
 	
-	v1.bind('click', { 'pageId': pageId, 'fees': 1, 'v1': votesFees, 'v0':votesNoFees}, reportfees);
-	v0.bind('click', { 'pageId': pageId, 'fees': 0, 'v1': votesFees, 'v0':votesNoFees }, reportfees);
+	v1.bind('click', {'pageId': pageId, 'fees': 1, 'v1': votesFees, 'v0':votesNoFees}, reportfees);
+	v0.bind('click', {'pageId': pageId, 'fees': 0, 'v1': votesFees, 'v0':votesNoFees}, reportfees);
 
 
 	//Make the widget transparent if the user voted "no fees"
@@ -311,11 +309,20 @@ async function reportfees(event){
 	
 	let grid = null;
 	
-	//Our vote "Fees" + the self discard option is active: move the item to the Discard grid
-	if(fees == 1 && selfDiscard){
-		grid = getTileGrid(pageId, "#vvp-items-grid");
-		if(grid !== null){ //Item is located in the regular grid, but should not
-			await moveProductTileToGrid(pageId, "#ext-helper-grid", true);
+	//Our vote "Fees"
+	if(fees == 1){
+		// + the self discard option is active: move the item to the Discard grid
+		// or
+		// + the added vote will meet the consensus: move the item to the Discard grid
+		if(
+			selfDiscard
+			||
+			votesFees + 1 - votesNoFees >= consensusThreshold
+		){
+			grid = getTileGrid(pageId, "#vvp-items-grid");
+			if(grid !== null){ //Item is located in the regular grid, but should not
+				await moveProductTileToGrid(pageId, "#ext-helper-grid", true);
+			}
 		}
 	}
 	
@@ -323,7 +330,7 @@ async function reportfees(event){
 	if(fees == 0 && votesFees - votesNoFees < consensusThreshold){
 		grid = getTileGrid(pageId, "#ext-helper-grid");
 		if(grid !== null){ //Item is located in the discard grid, but should not
-			moveProductTileToGrid(pageId, '#vvp-items-grid', true);
+			await moveProductTileToGrid(pageId, '#vvp-items-grid', true);
 		}
 	}
 	
