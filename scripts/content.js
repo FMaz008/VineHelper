@@ -8,6 +8,7 @@ const regex = /^(?:.*\/dp\/)(.+?)(?:\?.*)?$/; //Isolate the product ID in the UR
 //Load settings
 var consensusThreshold = 2;
 var selfDiscard = false;
+var compactToolbar = false;
 
 const readLocalStorage = async (key) => {
 return new Promise((resolve, reject) => {
@@ -37,6 +38,16 @@ async function getSettings(){
 		.then(function(result) {
 			if(result == true || result == false){
 				selfDiscard = result;
+			}
+		})
+		.catch((err) => {
+			//Can't retreive the key, probably non-existent
+		});
+
+	await readLocalStorage('settingsCompactToolbar')
+		.then(function(result) {
+			if(result == true || result == false){
+				compactToolbar = result;
 			}
 		})
 		.catch((err) => {
@@ -155,7 +166,7 @@ function createInterface(){
 
 function createProductToolbar(attachTo, pageId){
 	let toolbarId = "ext-helper-toolbar-" + pageId;
-	$("<div />")
+	let context = $("<div />")
 		.attr("id",toolbarId)
 		.addClass("ext-helper-status")
 		.prependTo(attachTo);
@@ -169,6 +180,10 @@ function createProductToolbar(attachTo, pageId){
 		.addClass("ext-helper-status-container2")
 		.text("Loading...")
 		.appendTo("#"+toolbarId + " .ext-helper-status-container");
+	
+	if(compactToolbar){
+		context.addClass("compact");
+	}
 }
 
 
@@ -231,21 +246,32 @@ function updateToolBarFees(pageId, arrValues){
 	let tileOpacity;
 	let statusText;
 	let statusIcon;
+	let statusColor;
 	if(fees==1 || (fees==null && voteUser==1)){
 		//The item has fees
 		statusIcon = "ext-helper-icon-sad";
+		statusColor = "ext-helper-background-fees";
 		statusText = "Import fees reported";
 		tileOpacity = 0.3;
 	}else if(fees==0 || (fees==null && voteUser==0)){
 		//The item does not have fees
 		statusIcon = "ext-helper-icon-happy";
+		statusColor = "ext-helper-background-nofees";
 		statusText = "No import fees!";
 		tileOpacity = 1.0;
 	}else if(fees==null){
 		//The item is not registered or needs more votes
 		statusIcon = "ext-helper-icon-info";
+		statusColor = "ext-helper-background-neutral";
 		statusText = "Not enough data :-/";
 		tileOpacity = 1.0;
+	}
+	
+	if(compactToolbar){ //No icon, no text
+		statusIcon = "";
+		statusText = "";
+		context.addClass(statusColor);
+		context.addClass("compact");
 	}
 	
 	$(context).parent(".vvp-item-tile-content").css('opacity', tileOpacity);
@@ -262,7 +288,10 @@ function createVotingWidget(pageId, votesFees, votesNoFees, voteUser){
 	
 	let pe; //Parent Element
 	let v1, v0; //VoteFees(1), VoteNoFees(0)
-	pe = $("<div />").text("Any fees? ").appendTo(container);
+	pe = $("<div />").appendTo(container);
+	if(!compactToolbar){
+		pe.text("Any fees?");
+	}
 	v1 = $("<a />")
 		.attr("href", "#" + pageId)
 		.attr("id", "ext-helper-reportlink-"+pageId+"-yes")

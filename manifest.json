@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Amazon Vine Helper Canada",
   "description": "Help identify items with import fees.",
-  "version": "1.4",
+  "version": "1.5",
   
   "permissions": [
     "storage"

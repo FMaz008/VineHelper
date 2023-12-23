@@ -54,3 +54,16 @@ chrome.storage.local.get('settingsSelfDiscard', function(data) {
 $("#selfDiscard").on( "change", function() {
 	chrome.storage.local.set({ settingsSelfDiscard: $( this ).is(":checked") });
 } );
+
+chrome.storage.local.get('settingsCompactToolbar', function(data) {
+	if(data && data.settingsCompactToolbar == true){
+		$( "#compactToolbar" ).prop( "checked", true);
+	}else{
+		$( "#compactToolbar" ).prop( "checked", false);
+	}
+});
+
+$("#compactToolbar").on( "change", function() {
+	chrome.storage.local.set({ settingsCompactToolbar: $( this ).is(":checked") });
+} );
+

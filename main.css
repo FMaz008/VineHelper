@@ -61,6 +61,27 @@ div.ext-helper-status-container div.ext-helper-status-container2, div.ext-helper
 	font-weight:bold;
 	font-size:10px;
 }
+
+
+div.compact div.ext-helper-status-container{
+	padding:2px;
+}
+
+div.compact div.ext-helper-status-container2{
+	padding-left:0px;
+	text-align:center;
+}
+div.compact div.ext-helper-icon{
+	display:none;
+}
+div.ext-helper-background-nofees div.ext-helper-status-container{
+	background-color:#99ff99;
+}
+div.ext-helper-background-fees div.ext-helper-status-container{
+	background-color:#ff9999;
+}
+
+
 div.ext-helper-icon{
 	float:left;
 	width:30px;
