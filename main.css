@@ -64,7 +64,9 @@ div.ext-helper-status-container div.ext-helper-status-container2, div.ext-helper
 
 
 div.compact div.ext-helper-status-container{
+	margin-top:10px;
 	padding:2px;
+	position:relative;
 }
 
 div.compact div.ext-helper-status-container2{
