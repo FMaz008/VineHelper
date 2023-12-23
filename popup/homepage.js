@@ -33,37 +33,29 @@ chrome.storage.local.get('settingsThreshold', function(data) {
 	if(!data || !data.settingsThreshold || !isNumeric(data.settingsThreshold) || data.settingsThreshold < 1){
 		data.settingsThreshold = 2;
 	}
-    $("#threshold").val(data.settingsThreshold);
+    $("#settingsThreshold").val(data.settingsThreshold);
 });
 
-$("#threshold").on( "change", function() {
+$("#settingsThreshold").on( "change", function() {
 	if(isNumeric($(this).val()) && $(this).val()>0 && $(this).val() <10){
 		chrome.storage.local.set({ settingsThreshold: $( this ).val() });
 	}
 } );
 
 
-chrome.storage.local.get('settingsSelfDiscard', function(data) {
-	if(data && data.settingsSelfDiscard == true){
-		$( "#selfDiscard" ).prop( "checked", true);
-	}else{
-		$( "#selfDiscard" ).prop( "checked", false);
-	}
-});
+function manageCheckboxSetting(key){
+	chrome.storage.local.get([key], function(data) {
+		if(data && data[key] == true){
+			$( "#" + key ).prop( "checked", true);
+		}else{
+			$( "#" + key ).prop( "checked", false);
+		}
+	});
 
-$("#selfDiscard").on( "change", function() {
-	chrome.storage.local.set({ settingsSelfDiscard: $( this ).is(":checked") });
-} );
+	$("#" + key).on( "change", function() {
+		chrome.storage.local.set({ [key]: $( this ).is(":checked") });
+	} );
+}
 
-chrome.storage.local.get('settingsCompactToolbar', function(data) {
-	if(data && data.settingsCompactToolbar == true){
-		$( "#compactToolbar" ).prop( "checked", true);
-	}else{
-		$( "#compactToolbar" ).prop( "checked", false);
-	}
-});
-
-$("#compactToolbar").on( "change", function() {
-	chrome.storage.local.set({ settingsCompactToolbar: $( this ).is(":checked") });
-} );
-
+manageCheckboxSetting("settingsSelfDiscard");
+manageCheckboxSetting("settingsCompactToolbar");
