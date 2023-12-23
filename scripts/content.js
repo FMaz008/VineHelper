@@ -54,6 +54,44 @@ async function getSettings(){
 			//Can't retreive the key, probably non-existent
 		});
 	
+	//Load Thorvarium stylesheets
+	await readLocalStorage('thorvariumSmallItems').then(function(r){if(r == true){
+		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/small-items.css">');
+	}}).catch((err) => {});
+	await readLocalStorage('thorvariumRemoveHeader').then(function(r){if(r == true){
+		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/remove-header.css">');
+	}}).catch((err) => {});
+	await readLocalStorage('thorvariumRemoveFooter').then(function(r){if(r == true){
+		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/remove-footer.css">');
+	}}).catch((err) => {});
+	await readLocalStorage('thorvariumRemoveAssociateHeader').then(function(r){if(r == true){
+		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/remove-associate-header.css">');
+	}}).catch((err) => {});
+	await readLocalStorage('thorvariumMoreDescriptionText').then(function(r){if(r == true){
+		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/more-description-text.css">');
+	}}).catch((err) => {});
+	await readLocalStorage('thorvariumETVModalOnTop').then(function(r){if(r == true){
+		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/etv-modal-on-top.css">');
+	}}).catch((err) => {});
+	await readLocalStorage('thorvariumCategoriesWithEmojis').then(function(r){if(r == true){
+		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/categories-with-emojis.css">');
+	}}).catch((err) => {});
+	await readLocalStorage('thorvariumPaginationOnTop').then(function(r){if(r == true){
+		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/pagination-on-top.css">');
+	}}).catch((err) => {});
+	await readLocalStorage('thorvariumCollapsableCategories').then(function(r){if(r == true){
+		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/collapsable-categories.css">');
+	}}).catch((err) => {});
+	await readLocalStorage('thorvariumStripedCategories').then(function(r){if(r == true){
+		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/striped-categories.css">');
+	}}).catch((err) => {});
+	await readLocalStorage('thorvariumLimitedQuantityIcon').then(function(r){if(r == true){
+		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/limited-quantity-icon.css">');
+	}}).catch((err) => {});
+	await readLocalStorage('thorvariumRFYAFAAITabs').then(function(r){if(r == true){
+		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/rfy-afa-ai-tabs.css">');
+	}}).catch((err) => {});
+	
 	init(); // Initialize the app
 }
 getSettings();

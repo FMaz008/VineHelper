@@ -59,3 +59,18 @@ function manageCheckboxSetting(key){
 
 manageCheckboxSetting("settingsSelfDiscard");
 manageCheckboxSetting("settingsCompactToolbar");
+
+manageCheckboxSetting("thorvariumSmallItems");
+manageCheckboxSetting("thorvariumRemoveHeader");
+manageCheckboxSetting("thorvariumRemoveFooter");
+manageCheckboxSetting("thorvariumRemoveAssociateHeader");
+manageCheckboxSetting("thorvariumMoreDescriptionText");
+manageCheckboxSetting("thorvariumETVModalOnTop");
+manageCheckboxSetting("thorvariumCategoriesWithEmojis");
+manageCheckboxSetting("thorvariumPaginationOnTop");
+manageCheckboxSetting("thorvariumCollapsableCategories");
+manageCheckboxSetting("thorvariumStripedCategories");
+manageCheckboxSetting("thorvariumLimitedQuantityIcon");
+manageCheckboxSetting("thorvariumRFYAFAAITabs");
+		
+		
