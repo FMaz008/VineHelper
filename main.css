@@ -84,6 +84,15 @@ div.ext-helper-background-fees div.ext-helper-status-container{
 }
 
 
+a.ext-helper-hide-link div.ext-helper-toolbar-icon{
+	float:right;
+	display:block;
+	width:12px;
+	height:12px;
+}
+
+
+
 div.ext-helper-icon{
 	float:left;
 	width:30px;
@@ -132,6 +141,16 @@ a.selectedVote{
 		background-image: url("chrome-extension://__MSG_@@extension_id__/images/info.png");
 		background-repeat:no-repeat;
 	}
+	div.ext-helper-icon-show{
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/images/show.png");
+		background-repeat:no-repeat;
+	}
+	div.ext-helper-icon-hide{
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/images/hide.png");
+		background-repeat:no-repeat;
+	}
 }
 
 @supports (-moz-appearance:none) {
@@ -148,6 +167,16 @@ a.selectedVote{
 	div.ext-helper-icon-info{
 		background-size: 100%;
 		background-image: url("/images/info.png");
+		background-repeat:no-repeat;
+	}
+	div.ext-helper-icon-show{
+		background-size: 100%;
+		background-image: url("/images/show.png");
+		background-repeat:no-repeat;
+	}
+	div.ext-helper-icon-hide{
+		background-size: 100%;
+		background-image: url("/images/hide.png");
 		background-repeat:no-repeat;
 	}
 }
