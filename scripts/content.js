@@ -54,7 +54,7 @@ function Grid(obj)
 		});
 	};
 	
-	this.countTile = function(trueCount=false){
+	this.getTileCount = function(trueCount=false){
 		if(trueCount){
 			return $(pGrid).children().length;
 		}else{
@@ -82,6 +82,7 @@ function Tile(obj, gridInstance){
 	var pPageId = findPageId();
 	var pGrid = gridInstance;
 	pGrid.addTile(this);
+	var pToolbar = null;
 	
 	var pVoteFees = 0;
 	var pVoteNoFees = 0;
@@ -105,6 +106,12 @@ function Tile(obj, gridInstance){
 	}
 	
 	//Public methods
+	this.setToolbar = function(toolbarInstance){
+		pToolbar = toolbarInstance;
+	}
+	this.getToolbar = function(){
+		return pToolbar;
+	}
 	
 	this.setVotes = function(no, yes, own){
 		pVoteFees = yes;
@@ -153,9 +160,13 @@ function Tile(obj, gridInstance){
 		return pTile;
 	};
 	
+	this.getGrid = function(){
+		return pGrid;
+	};
+	
 	this.getGridId = function(){
 		return pGrid.getId();
-	}
+	};
 	
 	this.moveToGrid = async function(g, animate = false){
 		if(pGrid != null){
@@ -173,7 +184,176 @@ function Tile(obj, gridInstance){
 	};
 }
 
+function Toolbar(tileInstance){
+	var pToolbar = null;
+	var pTile = tileInstance;
+	pTile.setToolbar(this);
+	
+	//Create the bare bone structure of the toolbar
+	this.createProductToolbar = function (){
+		let toolbarId = "ext-helper-toolbar-" + pTile.getPageId();
+		let anchorTo = $(pTile.getDOM()).children(".vvp-item-tile-content");
+		pToolbar = $("<div />")
+			.attr("id",toolbarId)
+			.addClass("ext-helper-status")
+			.prependTo(anchorTo);
+		$("<div />")
+			.addClass("ext-helper-status-container")
+			.appendTo("#"+toolbarId);
+		$("<div />")
+			.addClass("ext-helper-icon ext-helper-icon-info")
+			.appendTo("#"+toolbarId + " .ext-helper-status-container");
+		$("<div />")
+			.addClass("ext-helper-status-container2")
+			.text("Loading...")
+			.appendTo("#"+toolbarId + " .ext-helper-status-container");
+		
+		if(compactToolbar){
+			pToolbar.addClass("compact");
+		}
+		
+		
+		let h, hi;
+		h = $("<a />")
+			.attr("href", "#"+pTile.getPageId())
+			.attr("id", "ext-helper-hide-link-"+pTile.getPageId())
+			.addClass("ext-helper-hide-link")
+			.attr("onclick", "return false;")
+			.appendTo("#"+toolbarId + " .ext-helper-status-container2");
+		hi= $("<div />")
+			.addClass("ext-helper-toolbar-icon")
+			.appendTo(h);
+		
+		h.on('click', {'pageId': pTile.getPageId()}, toggleItemVisibility);
+		
+	};
+	
+	setVisibilityIcon = function(show){
+		if(show){
+			$("#ext-helper-hide-link-"+pTile.getPageId()).show();
+		}else{
+			$("#ext-helper-hide-link-"+pTile.getPageId()).hide();
+		}
+	};
+	
+	this.updateVisibilityIcon = function(){
+		let icon = $("#ext-helper-hide-link-"+tile.getPageId() + " div.ext-helper-toolbar-icon");
+		let gridId = pTile.getGridId();
+		
+		icon.removeClass("ext-helper-icon-hide");
+		icon.removeClass("ext-helper-icon-show");
+		switch (gridId){
+			case "vvp-items-grid":
+				icon.addClass("ext-helper-icon-hide");
+				break;
+			case "ext-helper-grid":
+				icon.addClass("ext-helper-icon-show");
+				break;
+		}
+	};
 
+	this.updateToolbar = function (){
+		let context = $("#ext-helper-toolbar-" + pTile.getPageId());
+		let icon = $(context).find(".ext-helper-icon");
+		let container = $(context).find("div.ext-helper-status-container2");
+		
+		
+		//Remove all images for the icon
+		icon.removeClass("ext-helper-icon-info");
+		icon.removeClass("ext-helper-icon-sad");
+		icon.removeClass("ext-helper-icon-happy");
+		
+		let tileOpacity;
+		let statusText;
+		let statusIcon;
+		let statusColor;
+		
+		setVisibilityIcon(true);
+		switch (pTile.getStatus()){
+			case DISCARDED_WITH_FEES:
+				statusIcon = "ext-helper-icon-sad";
+				statusColor = "ext-helper-background-fees";
+				statusText = "Import fees reported";
+				tileOpacity = 0.3;
+				setVisibilityIcon(false);
+				break;
+			case NOT_DISCARDED_NO_FEES:
+			case NOT_DISCARDED_OWN_VOTE:
+				statusIcon = "ext-helper-icon-happy";
+				statusColor = "ext-helper-background-nofees";
+				statusText = "No import fees!";
+				tileOpacity = 1.0;
+				break;
+			case NOT_DISCARDED_NO_STATUS:
+				//The item is not registered or needs more votes
+				statusIcon = "ext-helper-icon-info";
+				statusColor = "ext-helper-background-neutral";
+				statusText = "Not enough data :-/";
+				tileOpacity = 1.0;
+				break;
+		}
+		
+		if(compactToolbar){ //No icon, no text
+			statusIcon = "";
+			statusText = "";
+			context.addClass(statusColor);
+			context.addClass("compact");
+		}
+		
+		tile.getDOM().css('opacity', tileOpacity);
+		icon.addClass(statusIcon);
+		container.text(statusText);
+		
+		createVotingWidget();
+	}
+
+	//Create the voting widget part of the toolbar
+	function createVotingWidget(){
+		let context = $("#ext-helper-toolbar-" + pTile.getPageId());
+		let container = $(context).find("div.ext-helper-status-container2");
+		
+		let pe; //Parent Element
+		let v1, v0; //VoteFees(1), VoteNoFees(0)
+		pe = $("<div />").appendTo(container);
+		if(!compactToolbar){
+			pe.text("Any fees?");
+		}
+		v1 = $("<a />")
+			.attr("href", "#" + pTile.getPageId())
+			.attr("id", "ext-helper-reportlink-"+pTile.getPageId()+"-yes")
+			.addClass("ext-helper-reportlink-bad")
+			.attr("onclick", "return false;")
+			.html("&#11199; Yes ("+pTile.getVoteFees()+")")
+			.appendTo(pe);
+		$("<span />")
+			.text(" / ")
+			.appendTo(pe);
+		v0 = $("<a />")
+			.attr("href", "#" + pTile.getPageId())
+			.attr("id", "ext-helper-reportlink-"+pTile.getPageId()+"-no")
+			.addClass("ext-helper-reportlink-good")
+			.attr("onclick", "return false;")
+			.html("&#9745; No ("+pTile.getVoteNoFees()+")")
+			.appendTo(pe);
+		
+		
+		v1.on('click', {'pageId': pTile.getPageId(), 'fees': 1}, reportfees);
+		v0.on('click', {'pageId': pTile.getPageId(), 'fees': 0}, reportfees);
+
+		//Make the widget transparent if the user voted "no fees"
+		//Note: If we voted "fees", the entire card will be transparent.
+		//      If we have not voted, we want the option to remain visible.
+		pe.css('opacity', (pTile.getVoteOwn() == 0) ? 0.4 : 1.0); 
+		
+		if(pTile.getVoteOwn() == 1){
+			v1.addClass("selectedVote");
+		}
+		if(pTile.getVoteOwn() == 0){
+			v0.addClass("selectedVote");
+		}
+	}
+	
+}
 
 function getTileByPageId(pageId){
 	tile = null;
@@ -187,7 +367,8 @@ function getTileByPageId(pageId){
 
 
 
-//Load settings
+//#########################
+//### Load settings
 
 
 const readLocalStorage = async (key) => {
@@ -345,20 +526,7 @@ function removePageIdFromArrDiscarded(pageId){
 	});
 }
 
-function refreshDiscardCount(){
-	$("#ext-helper-grid-count").text($("#ext-helper-grid").children().length);
-}
 
-
-async function moveProductTileToGrid(pageId, gridSelector, animate=false){
-	let tile = $("#ext-helper-toolbar-" + pageId).parents(".vvp-item-tile");
-	
-	if(animate)
-		await animateVanish(tile); //Will hide the tile
-	
-	$(tile).detach().appendTo(gridSelector);
-	$(tile).show();
-}
 
 async function animateVanish(tile){
 	let defaultOpacity = $(tile).css("opacity");
@@ -374,20 +542,7 @@ async function animateVanish(tile){
 	}).promise(); //Converting the animation to a promise allow for the await clause to work.
 }
 
-function setVisibilityIcon(pageId, gridId){
-	let icon = $("#ext-helper-hide-link-"+pageId + " div.ext-helper-toolbar-icon");
-	
-	icon.removeClass("ext-helper-icon-hide");
-	icon.removeClass("ext-helper-icon-show");
-	switch (gridId){
-		case "vvp-items-grid":
-			icon.addClass("ext-helper-icon-hide");
-			break;
-		case "ext-helper-grid":
-			icon.addClass("ext-helper-icon-show");
-			break;
-	}
-}
+
 
 async function toggleItemVisibility(event){
 	
@@ -399,18 +554,19 @@ async function toggleItemVisibility(event){
 		case "vvp-items-grid":
 			arrDiscarded.push({"pageId" : pageId, "date": new Date});
 			await tile.moveToGrid(gridDiscard, true);
-			setVisibilityIcon(pageId, "ext-helper-grid");
 			break;
 		case "ext-helper-grid":
 			removePageIdFromArrDiscarded(pageId);
 			await moveToGrid(gridRegular, true);
-			setVisibilityIcon(pageId, "vvp-items-grid");
 			break;
 	}
+	tile.getToolbar().updateVisibilityIcon();
 	
 	//Save the new array
 	chrome.storage.local.set({ 'arrDiscarded': arrDiscarded });
-	refreshDiscardCount();
+	
+	//Refresh discard count
+	$("#ext-helper-grid-count").text(gridDiscard.getTileCount());
 }
 
 
@@ -437,7 +593,9 @@ function init(){
 		
 		tile = new Tile($(this), gridRegular);
 		arrUrl.push(tile.getPageId());
-		createProductToolbar(tile);
+		
+		t = new Toolbar(tile);
+		t.createProductToolbar();
 	});
 
 	//Obtain the data to fill the toolbars with it.
@@ -475,27 +633,7 @@ function createInterface(){
 }
 
 
-function createProductToolbar(tile){
-	let toolbarId = "ext-helper-toolbar-" + tile.getPageId();
-	let context = $("<div />")
-		.attr("id",toolbarId)
-		.addClass("ext-helper-status")
-		.prependTo(tile.getDOM());
-	$("<div />")
-		.addClass("ext-helper-status-container")
-		.appendTo("#"+toolbarId);
-	$("<div />")
-		.addClass("ext-helper-icon ext-helper-icon-info")
-		.appendTo("#"+toolbarId + " .ext-helper-status-container");
-	$("<div />")
-		.addClass("ext-helper-status-container2")
-		.text("Loading...")
-		.appendTo("#"+toolbarId + " .ext-helper-status-container");
-	
-	if(compactToolbar){
-		context.addClass("compact");
-	}
-}
+
 
 
 
@@ -535,130 +673,18 @@ function serverResponse(data){
 			tile.moveToGrid(gridDiscard, false); //This is the main sort, do not animate it
 		}
 		
-		updateToolBar(tile);
+		tile.getToolbar().updateToolbar();
 	});
 	
 	//Calculate how many tiles were moved to the discarded grid
-	refreshDiscardCount();
-}
-
-function updateToolBar(tile){
-	let context = $("#ext-helper-toolbar-" + tile.getPageId());
-	let icon = $(context).find(".ext-helper-icon");
-	let container = $(context).find("div.ext-helper-status-container2");
-	
-	
-	//Remove all images for the icon
-	icon.removeClass("ext-helper-icon-info");
-	icon.removeClass("ext-helper-icon-sad");
-	icon.removeClass("ext-helper-icon-happy");
-	
-	let tileOpacity;
-	let statusText;
-	let statusIcon;
-	let statusColor;
-	let showVisibilityIcon = true;
-	
-	switch (tile.getStatus()){
-		case DISCARDED_WITH_FEES:
-			statusIcon = "ext-helper-icon-sad";
-			statusColor = "ext-helper-background-fees";
-			statusText = "Import fees reported";
-			tileOpacity = 0.3;
-			showVisibilityIcon = false;
-			break;
-		case NOT_DISCARDED_NO_FEES:
-		case NOT_DISCARDED_OWN_VOTE:
-			statusIcon = "ext-helper-icon-happy";
-			statusColor = "ext-helper-background-nofees";
-			statusText = "No import fees!";
-			tileOpacity = 1.0;
-			break;
-		case NOT_DISCARDED_NO_STATUS:
-			//The item is not registered or needs more votes
-			statusIcon = "ext-helper-icon-info";
-			statusColor = "ext-helper-background-neutral";
-			statusText = "Not enough data :-/";
-			tileOpacity = 1.0;
-			break;
-	}
-	
-	if(compactToolbar){ //No icon, no text
-		statusIcon = "";
-		statusText = "";
-		context.addClass(statusColor);
-		context.addClass("compact");
-	}
-	
-	tile.getDOM().css('opacity', tileOpacity);
-	icon.addClass(statusIcon);
-	container.text(statusText);
-	
-	//Add the show/hide icon
-	if(showVisibilityIcon){
-		h = $("<a />")
-			.attr("href", "#"+tile.getPageId())
-			.attr("id", "ext-helper-hide-link-"+tile.getPageId())
-			.addClass("ext-helper-hide-link")
-			.attr("onclick", "return false;")
-			.appendTo(container);
-		hi= $("<div />")
-			.addClass("ext-helper-toolbar-icon")
-			.appendTo(h);
-		
-		h.on('click', {'pageId': tile.getPageId()}, toggleItemVisibility);
-		setVisibilityIcon(tile.getPageId(), tile.getGridId());
-	}
-	
-	createVotingWidget(tile);
+	$("#ext-helper-grid-count").text(gridDiscard.getTileCount());
 }
 
 
 
-function createVotingWidget(tile){
-	let context = $("#ext-helper-toolbar-" + tile.getPageId());
-	let container = $(context).find("div.ext-helper-status-container2");
-	
-	let pe; //Parent Element
-	let v1, v0; //VoteFees(1), VoteNoFees(0)
-	pe = $("<div />").appendTo(container);
-	if(!compactToolbar){
-		pe.text("Any fees?");
-	}
-	v1 = $("<a />")
-		.attr("href", "#" + tile.getPageId())
-		.attr("id", "ext-helper-reportlink-"+tile.getPageId()+"-yes")
-		.addClass("ext-helper-reportlink-bad")
-		.attr("onclick", "return false;")
-		.html("&#11199; Yes ("+tile.getVoteFees()+")")
-		.appendTo(pe);
-	$("<span />")
-		.text(" / ")
-		.appendTo(pe);
-	v0 = $("<a />")
-		.attr("href", "#" + tile.getPageId())
-		.attr("id", "ext-helper-reportlink-"+tile.getPageId()+"-no")
-		.addClass("ext-helper-reportlink-good")
-		.attr("onclick", "return false;")
-		.html("&#9745; No ("+tile.getVoteNoFees()+")")
-		.appendTo(pe);
-	
-	
-	v1.on('click', {'pageId': tile.getPageId(), 'fees': 1}, reportfees);
-	v0.on('click', {'pageId': tile.getPageId(), 'fees': 0}, reportfees);
 
-	//Make the widget transparent if the user voted "no fees"
-	//Note: If we voted "fees", the entire card will be transparent.
-	//      If we have not voted, we want the option to remain visible.
-	pe.css('opacity', (tile.getVoteOwn() == 0) ? 0.4 : 1.0); 
-	
-	if(tile.getVoteOwn() == 1){
-		v1.addClass("selectedVote");
-	}
-	if(tile.getVoteOwn() == 0){
-		v0.addClass("selectedVote");
-	}
-}
+
+
 
 
 //A vote button was pressed
