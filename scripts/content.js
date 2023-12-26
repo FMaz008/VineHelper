@@ -19,7 +19,6 @@ const NOT_DISCARDED_NO_FEES = -1;
 const NOT_DISCARDED = 0; 
 const DISCARDED_WITH_FEES = 1;
 const DISCARDED_OWN_VOTE = 2;
-const DISCARDED_HIDDEN = 3;
 
 
 function Grid(obj)
