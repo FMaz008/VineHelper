@@ -17,7 +17,7 @@ function Toolbar(tileInstance){
 			.addClass("ext-helper-status-container")
 			.appendTo("#"+toolbarId);
 		$("<div />")
-			.addClass("ext-helper-icon ext-helper-icon-info")
+			.addClass("ext-helper-icon ext-helper-icon-loading")
 			.appendTo("#"+toolbarId + " .ext-helper-status-container");
 		container = $("<div />")
 			.addClass("ext-helper-status-container2")
@@ -68,6 +68,23 @@ function Toolbar(tileInstance){
 		}
 	};
 
+	this.setStatusText = function(statusText){
+		let context = $("#ext-helper-toolbar-" + pTile.getPageId());
+		let container = $(context).find("div.ext-helper-status-container2");
+		container.children("span").text(statusText);
+	};
+	this.setStatusIcon = function(iconClass){
+		let context = $("#ext-helper-toolbar-" + pTile.getPageId());
+		let icon = $(context).find(".ext-helper-icon");
+		
+		icon.removeClass("ext-helper-icon-info");
+		icon.removeClass("ext-helper-icon-sad");
+		icon.removeClass("ext-helper-icon-happy");
+		icon.removeClass("ext-helper-icon-loading");
+		
+		icon.addClass(iconClass);
+	};
+	
 	this.updateToolbar = function (){
 		let context = $("#ext-helper-toolbar-" + pTile.getPageId());
 		let icon = $(context).find(".ext-helper-icon");

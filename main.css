@@ -151,6 +151,11 @@ a.selectedVote{
 		background-image: url("chrome-extension://__MSG_@@extension_id__/images/hide.png");
 		background-repeat:no-repeat;
 	}
+	div.ext-helper-icon-loading{
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/images/loading.gif");
+		background-repeat:no-repeat;
+	}
 }
 
 @supports (-moz-appearance:none) {
@@ -177,6 +182,11 @@ a.selectedVote{
 	div.ext-helper-icon-hide{
 		background-size: 100%;
 		background-image: url("/images/hide.png");
+		background-repeat:no-repeat;
+	}
+	div.ext-helper-icon-loading{
+		background-size: 100%;
+		background-image: url("/images/loading.gif");
 		background-repeat:no-repeat;
 	}
 }

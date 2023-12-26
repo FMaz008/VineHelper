@@ -241,7 +241,16 @@ function fetchData(arrUrl){
 	fetch(url)
 		.then((response) => response.json())
 		.then(serverResponse)
-		.catch( error =>  console.log(error) );
+		.catch( 
+			function() {
+				//error =>  console.log(error);
+				$.each(arrUrl, function(key, val){
+					let t = getTileByPageId(val);
+					t.getToolbar().setStatusText("Server offline");
+					t.getToolbar().setStatusIcon("ext-helper-icon-info")
+				});
+			}
+		);
 }
 
 //Process the results obtained from the server
