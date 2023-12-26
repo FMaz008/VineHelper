@@ -140,9 +140,6 @@ function Tile(obj, gridInstance){
 		if(pVoteOwn == 1 && selfDiscard)
 			return DISCARDED_OWN_VOTE;
 		
-		if(isHidden(pPageId))
-			return DISCARDED_HIDDEN;
-		
 		if(getFees() == CONSENSUS_NO_FEES)
 			return NOT_DISCARDED_NO_FEES;
 		
@@ -169,6 +166,10 @@ function Tile(obj, gridInstance){
 	};
 	
 	this.moveToGrid = async function(g, animate = false){
+		//If we are asking to move the tile to the same grid, don't do anything
+		if(g.getId() == pGrid.getId())
+			return false; 
+		
 		if(pGrid != null){
 			pGrid.removeTile(this);
 		}
@@ -203,15 +204,16 @@ function Toolbar(tileInstance){
 		$("<div />")
 			.addClass("ext-helper-icon ext-helper-icon-info")
 			.appendTo("#"+toolbarId + " .ext-helper-status-container");
-		$("<div />")
+		container = $("<div />")
 			.addClass("ext-helper-status-container2")
-			.text("Loading...")
 			.appendTo("#"+toolbarId + " .ext-helper-status-container");
-		
+		$("<span />")
+			.text("Loading...")
+			.appendTo(container);
+			
 		if(compactToolbar){
 			pToolbar.addClass("compact");
 		}
-		
 		
 		let h, hi;
 		h = $("<a />")
@@ -219,16 +221,15 @@ function Toolbar(tileInstance){
 			.attr("id", "ext-helper-hide-link-"+pTile.getPageId())
 			.addClass("ext-helper-hide-link")
 			.attr("onclick", "return false;")
-			.appendTo("#"+toolbarId + " .ext-helper-status-container2");
+			.appendTo(container);
 		hi= $("<div />")
 			.addClass("ext-helper-toolbar-icon")
 			.appendTo(h);
-		
 		h.on('click', {'pageId': pTile.getPageId()}, toggleItemVisibility);
 		
 	};
 	
-	setVisibilityIcon = function(show){
+	function setVisibilityIcon(show){
 		if(show){
 			$("#ext-helper-hide-link-"+pTile.getPageId()).show();
 		}else{
@@ -269,8 +270,10 @@ function Toolbar(tileInstance){
 		let statusColor;
 		
 		setVisibilityIcon(true);
+		this.updateVisibilityIcon();
 		switch (pTile.getStatus()){
 			case DISCARDED_WITH_FEES:
+			case DISCARDED_OWN_VOTE:
 				statusIcon = "ext-helper-icon-sad";
 				statusColor = "ext-helper-background-fees";
 				statusText = "Import fees reported";
@@ -302,9 +305,10 @@ function Toolbar(tileInstance){
 		
 		tile.getDOM().css('opacity', tileOpacity);
 		icon.addClass(statusIcon);
-		container.text(statusText);
+		container.children("span").text(statusText);
 		
 		createVotingWidget();
+		
 	}
 
 	//Create the voting widget part of the toolbar
@@ -557,7 +561,7 @@ async function toggleItemVisibility(event){
 			break;
 		case "ext-helper-grid":
 			removePageIdFromArrDiscarded(pageId);
-			await moveToGrid(gridRegular, true);
+			await tile.moveToGrid(gridRegular, true);
 			break;
 	}
 	tile.getToolbar().updateVisibilityIcon();
@@ -628,7 +632,7 @@ function createInterface(){
 		.attr("id", "ext-helper-grid-collapse-indicator")
 		.prependTo("#ext-helper-grid-header");
 	
-	$("#ext-helper-grid-header").bind('click', {}, toggleDiscardedList);
+	$("#ext-helper-grid-header").on('click', {}, toggleDiscardedList);
 	toggleDiscardedList(); //Hide at first
 }
 
@@ -651,10 +655,10 @@ function fetchData(arrUrl){
 		.catch( error =>  console.log(error) );
 }
 
+//Process the results obtained from the server
+//Update each tile with the data pertaining to it.
 function serverResponse(data){
 	//let arr = $.parseJSON(data); //convert to javascript array
-	let gridId; //Default gridId
-	
 	if(data["api_version"]!=2){
 		console.log("Wrong API version");
 	}
@@ -669,7 +673,7 @@ function serverResponse(data){
 		tile.setVotes(values["v0"], values["v1"], values["s"]);
 		
 		//Assign the tiles to the proper grid
-		if(tile.getStatus() >= NOT_DISCARDED){
+		if(tile.getStatus() >= NOT_DISCARDED || isHidden(tile.getPageId())){
 			tile.moveToGrid(gridDiscard, false); //This is the main sort, do not animate it
 		}
 		
@@ -687,37 +691,37 @@ function serverResponse(data){
 
 
 
-//A vote button was pressed
+//A vote button was pressed, send the vote to the server
+//If a vote changed the discard status, move the tile accordingly
 async function reportfees(event){
 	let pageId = event.data.pageId;
-	let fees = event.data.fees;
+	let fees = event.data.fees; // The vote
 	let tile = getTileByPageId(pageId);
 	
-	//Our vote "Fees"
-	if(fees == 1){
-		// + the self discard option is active: move the item to the Discard grid
-		// or
-		// + the added vote will meet the consensus: move the item to the Discard grid
-		if(
-			selfDiscard
-			||
-			tile.getVoteFees() + 1 - tile.getVoteNoFees() >= consensusThreshold
-		){
-			await tile.moveToGrid(gridDiscard, true);
-		}
-	}
 	
-	//Our vote is "nofees" + there's no consensus, yet the item is still in the Discard Grid: move the item to the regular grid
-	if(fees == 0 && tile.getVoteFees() - tile.getVoteNoFees() < consensusThreshold){
+	//Note: If the tile is already in the grid, the method will exit with false.
+	//Our vote is "Fees" + the self discard option is active: move the item to the Discard grid
+	if(fees == 1 && selfDiscard){
+		await tile.moveToGrid(gridDiscard, true);
+	
+	//Our vote is "Fees" + the added vote will meet the consensus: move the item to the Discard grid
+	}else if(fees == 1 && tile.getVoteFees() + 1 - tile.getVoteNoFees() >= consensusThreshold){
+		await tile.moveToGrid(gridDiscard, true);
+	
+	//Our vote is "nofees" + there's no consensus, move the item to the regular grid
+	}else if(fees == 0 && tile.getVoteFees() - tile.getVoteNoFees() < consensusThreshold){
 		await tile.moveToGrid(gridRegular, true);
 	}
 	
+	
+	//Send the vote to the server
 	let url = "https://francoismazerolle.ca/vinehelperCastVote_v2.php"
 		+ '?data={"url":"' + pageId +'","fees":'+ fees +'}';
 	await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
 
+	//Refresh the data for the toolbar of that specific product only
 	let arrUrl = [pageId];
-	fetchData(arrUrl); //Refresh the toolbar for that specific product only
+	fetchData(arrUrl);
 };
 
 
