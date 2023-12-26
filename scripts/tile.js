@@ -30,6 +30,31 @@ function Tile(obj, gridInstance){
 			return NO_CONSENSUS;
 	}
 	
+	async function animateVanish(tile){
+		let defaultOpacity = $(tile).css("opacity");
+		tile.animate({
+			height: ["20%", "swing"],
+		},
+		{
+			duration: 2000,
+			queue: false
+		});
+		
+		await tile.delay(1000).animate({
+			opacity: "hide"
+		},
+		{
+			duration: 1000,
+			complete: function() {
+				$(tile).css({
+					'opacity': defaultOpacity,
+					'height': '100%'
+				});
+			}
+		}).promise(); //Converting the animation to a promise allow for the await clause to work.
+		
+	}
+	
 	//Public methods
 	this.setToolbar = function(toolbarInstance){
 		pToolbar = toolbarInstance;
@@ -108,4 +133,6 @@ function Tile(obj, gridInstance){
 		$(pTile).detach().appendTo("#" + $(pGrid.getDOM()).attr("id"));
 		$(pTile).show();
 	};
+	
+
 }

@@ -42,6 +42,8 @@ return new Promise((resolve, reject) => {
 
 async function getSettings(){
 	
+	
+
 	await readLocalStorage('settingsThreshold').then(function(result) {if(result > 0 && result <10){
 		consensusThreshold = result;
 	}}).catch((err) => {});
@@ -159,19 +161,7 @@ function removePageIdFromArrDiscarded(pageId){
 
 
 
-async function animateVanish(tile){
-	let defaultOpacity = $(tile).css("opacity");
-	await tile.animate({
-		height: "hide",
-		opacity: "hide"
-	},
-	{
-		duration: 500,
-		complete: function() {
-			$(tile).css('opacity', defaultOpacity);
-		}
-	}).promise(); //Converting the animation to a promise allow for the await clause to work.
-}
+
 
 
 
