@@ -316,9 +316,13 @@ function Toolbar(tileInstance){
 		let context = $("#ext-helper-toolbar-" + pTile.getPageId());
 		let container = $(context).find("div.ext-helper-status-container2");
 		
+		$(container).children(".ext-helper-voting-widget").remove();
+		
 		let pe; //Parent Element
 		let v1, v0; //VoteFees(1), VoteNoFees(0)
-		pe = $("<div />").appendTo(container);
+		pe = $("<div />")
+			.addClass("ext-helper-voting-widget")
+			.appendTo(container);
 		if(!compactToolbar){
 			pe.text("Any fees?");
 		}
