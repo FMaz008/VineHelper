@@ -389,45 +389,21 @@ return new Promise((resolve, reject) => {
 
 async function getSettings(){
 	
-	await readLocalStorage('settingsThreshold')
-		.then(function(result) {
-			if(result > 0 && result <10){
-				consensusThreshold = result;
-			}
-		})
-		.catch((err) => {
-			//Can't retreive the key, probably non-existent
-		});
+	await readLocalStorage('settingsThreshold').then(function(result) {if(result > 0 && result <10){
+		consensusThreshold = result;
+	}}).catch((err) => {});
 
-	await readLocalStorage('settingsSelfDiscard')
-		.then(function(result) {
-			if(result == true || result == false){
-				selfDiscard = result;
-			}
-		})
-		.catch((err) => {
-			//Can't retreive the key, probably non-existent
-		});
+	await readLocalStorage('settingsSelfDiscard').then(function(result) {if(result == true || result == false){
+		selfDiscard = result;
+	}}).catch((err) => {});
 
-	await readLocalStorage('settingsCompactToolbar')
-		.then(function(result) {
-			if(result == true || result == false){
-				compactToolbar = result;
-			}
-		})
-		.catch((err) => {
-			//Can't retreive the key, probably non-existent
-		});
+	await readLocalStorage('settingsCompactToolbar').then(function(result) {if(result == true || result == false){
+		compactToolbar = result;
+	}}).catch((err) => {});
 	
-	
-	await readLocalStorage('arrDiscarded')
-		.then(function(result) {
-			arrDiscarded = result;	
-		})
-		.catch((err) => {
-			//Can't retreive the key, probably non-existent
-		});
-	
+	await readLocalStorage('arrDiscarded').then(function(result) {
+		arrDiscarded = result;	
+	}).catch((err) => {});
 	
 	//Load Thorvarium stylesheets
 	await readLocalStorage('thorvariumSmallItems').then(function(r){if(r == true){
