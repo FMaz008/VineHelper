@@ -28,7 +28,14 @@
   },
   "web_accessible_resources": [
     {
-      "resources": [ "images/rating-bad.png", "images/rating-good.png", "images/info.png", "images/hide.png", "image/show.png", "image/loading.gif"],
+      "resources": [ 
+		"images/rating-bad.png",
+		"images/rating-good.png",
+		"images/info.png",
+		"images/hide.png",
+		"images/show.png",
+		"images/loading.gif"
+		],
       "matches": ["<all_urls>"]
 	}
   ],

@@ -77,6 +77,7 @@ function Toolbar(tileInstance){
 		let context = $("#ext-helper-toolbar-" + pTile.getPageId());
 		let icon = $(context).find(".ext-helper-icon");
 		
+		//Remove all images for the icon
 		icon.removeClass("ext-helper-icon-info");
 		icon.removeClass("ext-helper-icon-sad");
 		icon.removeClass("ext-helper-icon-happy");
@@ -91,14 +92,8 @@ function Toolbar(tileInstance){
 		let container = $(context).find("div.ext-helper-status-container2");
 		
 		
-		//Remove all images for the icon
-		icon.removeClass("ext-helper-icon-info");
-		icon.removeClass("ext-helper-icon-sad");
-		icon.removeClass("ext-helper-icon-happy");
-		
 		let tileOpacity;
 		let statusText;
-		let statusIcon;
 		let statusColor;
 		
 		setVisibilityIcon(true);
@@ -106,38 +101,37 @@ function Toolbar(tileInstance){
 		switch (pTile.getStatus()){
 			case DISCARDED_WITH_FEES:
 			case DISCARDED_OWN_VOTE:
-				statusIcon = "ext-helper-icon-sad";
+				this.setStatusIcon("ext-helper-icon-sad");
+				this.setStatusText("Import fees reported");
 				statusColor = "ext-helper-background-fees";
-				statusText = "Import fees reported";
+				
 				tileOpacity = 0.3;
 				setVisibilityIcon(false);
 				break;
 			case NOT_DISCARDED_NO_FEES:
 			case NOT_DISCARDED_OWN_VOTE:
-				statusIcon = "ext-helper-icon-happy";
+				this.setStatusIcon("ext-helper-icon-happy");
+				this.setStatusText("No import fees!");
 				statusColor = "ext-helper-background-nofees";
-				statusText = "No import fees!";
 				tileOpacity = 1.0;
 				break;
 			case NOT_DISCARDED_NO_STATUS:
 				//The item is not registered or needs more votes
-				statusIcon = "ext-helper-icon-info";
+				this.setStatusIcon("ext-helper-icon-info");
+				this.setStatusText("Not enough data :-/");
 				statusColor = "ext-helper-background-neutral";
-				statusText = "Not enough data :-/";
 				tileOpacity = 1.0;
 				break;
 		}
 		
 		if(compactToolbar){ //No icon, no text
-			statusIcon = "";
-			statusText = "";
+			this.setStatusIcon("");
+			this.setStatusText("");
 			context.addClass(statusColor);
 			context.addClass("compact");
 		}
 		
 		tile.getDOM().css('opacity', tileOpacity);
-		icon.addClass(statusIcon);
-		container.children("span").text(statusText);
 		
 		createVotingWidget();
 		
