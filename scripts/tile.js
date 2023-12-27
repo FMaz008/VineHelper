@@ -13,7 +13,8 @@ function Tile(obj, gridInstance){
 	var pVoteNoFees = 0;
 	var pVoteOwn = null;
 	
-	//Private method
+	//#################
+	//## Private method
 	function findPageId(){
 		let regex = /^(?:.*\/dp\/)(.+?)(?:\?.*)?$/; //Isolate the product ID in the URL.
 		let url = $(pTile).find(".a-link-normal").attr("href");
@@ -36,15 +37,15 @@ function Tile(obj, gridInstance){
 			height: ["20%", "swing"],
 		},
 		{
-			duration: 2000,
+			duration: 1000,
 			queue: false
 		});
 		
-		await tile.delay(1000).animate({
+		await tile.delay(500).animate({
 			opacity: "hide"
 		},
 		{
-			duration: 1000,
+			duration: 500,
 			complete: function() {
 				$(tile).css({
 					'opacity': defaultOpacity,
@@ -54,8 +55,28 @@ function Tile(obj, gridInstance){
 		}).promise(); //Converting the animation to a promise allow for the await clause to work.
 		
 	}
-	
-	//Public methods
+
+	function removePageIdFromArrDiscarded(pageId){
+		$.each(arrDiscarded, function(key, value){
+			if(value != undefined && value.pageId == pageId){
+				arrDiscarded.splice(key, 1);
+			}
+		});
+	}
+
+	function updateDiscardedTileList(){
+		pToolbar.updateVisibilityIcon();
+		
+		//Save the new array
+		chrome.storage.local.set({ 'arrDiscarded': arrDiscarded });
+		
+		//Refresh discard count
+		$("#ext-helper-grid-count").text(gridDiscard.getTileCount());
+	}
+
+
+	//#################
+	//## Public methods
 	this.setToolbar = function(toolbarInstance){
 		pToolbar = toolbarInstance;
 	}
@@ -136,14 +157,29 @@ function Tile(obj, gridInstance){
 	
 	this.isHidden = function(){
 		var found = false;
-		var pageId = this.getPageId();
 		$.each(arrDiscarded, function(key, value){
-			if(value.pageId == pageId){
+			if(value.pageId == pPageId){
 				found = true;
 				return;
 			}
 		});
 		return found;
 	};
+	
+	this.hideTile = async function(){
+		arrDiscarded.push({"pageId" : pPageId, "date": new Date});
+		await this.moveToGrid(gridDiscard, true);
+		
+		updateDiscardedTileList();
+	}
+	
+	this.showTile = async function(){
+		removePageIdFromArrDiscarded(pPageId);
+		await this.moveToGrid(gridRegular, true);
+		
+		updateDiscardedTileList();
+	}
+	
+	
 
 }

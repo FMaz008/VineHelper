@@ -144,44 +144,8 @@ function discardedItemGarbageCollection(){
 	}
 }
 
-function removePageIdFromArrDiscarded(pageId){
-	$.each(arrDiscarded, function(key, value){
-		if(value != undefined && value.pageId == pageId){
-			arrDiscarded.splice(key, 1);
-		}
-	});
-}
 
 
-
-
-
-
-
-async function toggleItemVisibility(event){
-	
-	let pageId = event.data.pageId;
-	let tile = getTileByPageId(pageId);
-	let gridId = tile.getGridId();
-	
-	switch (gridId){ //Current Grid
-		case "vvp-items-grid":
-			arrDiscarded.push({"pageId" : pageId, "date": new Date});
-			await tile.moveToGrid(gridDiscard, true);
-			break;
-		case "ext-helper-grid":
-			removePageIdFromArrDiscarded(pageId);
-			await tile.moveToGrid(gridRegular, true);
-			break;
-	}
-	tile.getToolbar().updateVisibilityIcon();
-	
-	//Save the new array
-	chrome.storage.local.set({ 'arrDiscarded': arrDiscarded });
-	
-	//Refresh discard count
-	$("#ext-helper-grid-count").text(gridDiscard.getTileCount());
-}
 
 
 
@@ -276,6 +240,13 @@ function serverResponse(data){
 }
 
 
+
+
+//#########################
+//## Triggered function (from clicks or whatever)
+
+
+
 //A vote button was pressed, send the vote to the server
 //If a vote changed the discard status, move the tile accordingly
 async function reportfees(event){
@@ -310,4 +281,18 @@ async function reportfees(event){
 };
 
 
-
+//A hide/display item button was pressed
+async function toggleItemVisibility(event){
+	let pageId = event.data.pageId;
+	let tile = getTileByPageId(pageId);
+	let gridId = tile.getGridId();
+	
+	switch (gridId){ //Current Grid
+		case "vvp-items-grid":
+			tile.hideTile();
+			break;
+		case "ext-helper-grid":
+			tile.showTile();
+			break;
+	}
+}

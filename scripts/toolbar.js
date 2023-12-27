@@ -30,6 +30,8 @@ function Toolbar(tileInstance){
 			pToolbar.addClass("compact");
 		}
 		
+		
+		//Display the hide link
 		let h, hi;
 		h = $("<a />")
 			.attr("href", "#"+pTile.getPageId())
@@ -43,7 +45,7 @@ function Toolbar(tileInstance){
 		h.on('click', {'pageId': pTile.getPageId()}, toggleItemVisibility);
 		
 	};
-	
+
 	function setVisibilityIcon(show){
 		if(show){
 			$("#ext-helper-hide-link-"+pTile.getPageId()).show();
