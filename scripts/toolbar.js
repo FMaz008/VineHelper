@@ -152,7 +152,7 @@ function Toolbar(tileInstance){
 			.addClass("ext-helper-voting-widget")
 			.appendTo(container);
 		if(!compactToolbar){
-			pe.text("Any fees?");
+			pe.text("Any fees? ");
 		}
 		v1 = $("<a />")
 			.attr("href", "#" + pTile.getPageId())
