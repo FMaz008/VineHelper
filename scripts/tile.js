@@ -134,5 +134,16 @@ function Tile(obj, gridInstance){
 		$(pTile).show();
 	};
 	
+	this.isHidden = function(){
+		var found = false;
+		var pageId = this.getPageId();
+		$.each(arrDiscarded, function(key, value){
+			if(value.pageId == pageId){
+				found = true;
+				return;
+			}
+		});
+		return found;
+	};
 
 }

@@ -40,10 +40,13 @@ return new Promise((resolve, reject) => {
 });
 };
 
+async function readLocalStorage2(key){
+
+	data = await chrome.storage.local.get([key]);
+	return data;
+}
 async function getSettings(){
 	
-	
-
 	await readLocalStorage('settingsThreshold').then(function(result) {if(result > 0 && result <10){
 		consensusThreshold = result;
 	}}).catch((err) => {});
@@ -51,6 +54,7 @@ async function getSettings(){
 	await readLocalStorage('settingsSelfDiscard').then(function(result) {if(result == true || result == false){
 		selfDiscard = result;
 	}}).catch((err) => {});
+	//console.log("b:" + consensusThreshold + " "+ selfDiscard);
 
 	await readLocalStorage('settingsCompactToolbar').then(function(result) {if(result == true || result == false){
 		compactToolbar = result;
@@ -121,17 +125,6 @@ function getTileByPageId(pageId){
 }
 
 
-
-function isHidden(pageId){
-	var found = false;
-	$.each(arrDiscarded, function(key, value){
-		if(value.pageId == pageId){
-			found = true;
-			return;
-		}
-	});
-	return found;
-}
 
 function discardedItemGarbageCollection(){
 	var change = false;
@@ -271,7 +264,7 @@ function serverResponse(data){
 		tile.setVotes(values["v0"], values["v1"], values["s"]);
 		
 		//Assign the tiles to the proper grid
-		if(tile.getStatus() >= NOT_DISCARDED || isHidden(tile.getPageId())){
+		if(tile.getStatus() >= NOT_DISCARDED || tile.isHidden()){
 			tile.moveToGrid(gridDiscard, false); //This is the main sort, do not animate it
 		}
 		
