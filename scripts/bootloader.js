@@ -40,67 +40,74 @@ return new Promise((resolve, reject) => {
 });
 };
 
-async function readLocalStorage2(key){
-
-	data = await chrome.storage.local.get([key]);
-	return data;
+async function getLocalStorageVariable(key){
+	var r;
+	await readLocalStorage(key).then(function(result) {
+		r = result;
+	}).catch((err) => {
+		r = null; //Setting not stored locally, default value will be used as defined.
+	});
+	return r;
 }
+
+	
 async function getSettings(){
 	
-	await readLocalStorage('settingsThreshold').then(function(result) {if(result > 0 && result <10){
+	let result;
+
+	result = await getLocalStorageVariable("settingsThreshold");
+	if(result > 0 && result <10)
 		consensusThreshold = result;
-	}}).catch((err) => {});
-
-	await readLocalStorage('settingsSelfDiscard').then(function(result) {if(result == true || result == false){
-		selfDiscard = result;
-	}}).catch((err) => {});
-	//console.log("b:" + consensusThreshold + " "+ selfDiscard);
-
-	await readLocalStorage('settingsCompactToolbar').then(function(result) {if(result == true || result == false){
-		compactToolbar = result;
-	}}).catch((err) => {});
 	
-	await readLocalStorage('arrDiscarded').then(function(result) {
-		arrDiscarded = result;	
-	}).catch((err) => {});
+	result = await getLocalStorageVariable("settingsSelfDiscard");
+	if(result == true || result == false)
+		selfDiscard = result;
+	
+	result = await getLocalStorageVariable("settingsCompactToolbar");
+	if(result == true || result == false)
+		compactToolbar = result;
+	
+	result = await getLocalStorageVariable("arrDiscarded");
+		arrDiscarded = result;
 	
 	//Load Thorvarium stylesheets
-	await readLocalStorage('thorvariumSmallItems').then(function(r){if(r == true){
+	if(await getLocalStorageVariable("thorvariumSmallItems"))
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/small-items.css">');
-	}}).catch((err) => {});
-	await readLocalStorage('thorvariumRemoveHeader').then(function(r){if(r == true){
+	
+	
+	
+	if(await getLocalStorageVariable("thorvariumRemoveHeader"))
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/remove-header.css">');
-	}}).catch((err) => {});
-	await readLocalStorage('thorvariumRemoveFooter').then(function(r){if(r == true){
+	
+	if(await getLocalStorageVariable("thorvariumRemoveFooter"))
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/remove-footer.css">');
-	}}).catch((err) => {});
-	await readLocalStorage('thorvariumRemoveAssociateHeader').then(function(r){if(r == true){
+	
+	if(await getLocalStorageVariable("thorvariumRemoveAssociateHeader"))
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/remove-associate-header.css">');
-	}}).catch((err) => {});
-	await readLocalStorage('thorvariumMoreDescriptionText').then(function(r){if(r == true){
+	
+	if(await getLocalStorageVariable("thorvariumMoreDescriptionText"))
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/more-description-text.css">');
-	}}).catch((err) => {});
-	await readLocalStorage('thorvariumETVModalOnTop').then(function(r){if(r == true){
+	
+	if(await getLocalStorageVariable("thorvariumETVModalOnTop"))
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/etv-modal-on-top.css">');
-	}}).catch((err) => {});
-	await readLocalStorage('thorvariumCategoriesWithEmojis').then(function(r){if(r == true){
+	
+	if(await getLocalStorageVariable("thorvariumCategoriesWithEmojis"))
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/categories-with-emojis.css">');
-	}}).catch((err) => {});
-	await readLocalStorage('thorvariumPaginationOnTop').then(function(r){if(r == true){
+	
+	if(await getLocalStorageVariable("thorvariumPaginationOnTop"))
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/pagination-on-top.css">');
-	}}).catch((err) => {});
-	await readLocalStorage('thorvariumCollapsableCategories').then(function(r){if(r == true){
+	
+	if(await getLocalStorageVariable("thorvariumCollapsableCategories"))
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/collapsable-categories.css">');
-	}}).catch((err) => {});
-	await readLocalStorage('thorvariumStripedCategories').then(function(r){if(r == true){
+	
+	if(await getLocalStorageVariable("thorvariumStripedCategories"))
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/striped-categories.css">');
-	}}).catch((err) => {});
-	await readLocalStorage('thorvariumLimitedQuantityIcon').then(function(r){if(r == true){
+	
+	if(await getLocalStorageVariable("thorvariumLimitedQuantityIcon"))
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/limited-quantity-icon.css">');
-	}}).catch((err) => {});
-	await readLocalStorage('thorvariumRFYAFAAITabs').then(function(r){if(r == true){
+	
+	if(await getLocalStorageVariable("thorvariumRFYAFAAITabs"))
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/rfy-afa-ai-tabs.css">');
-	}}).catch((err) => {});
 	
 	init(); // Initialize the app
 	
