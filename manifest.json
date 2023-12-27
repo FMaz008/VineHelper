@@ -28,7 +28,14 @@
   },
   "web_accessible_resources": [
     {
-      "resources": [ "images/rating-bad.png", "images/rating-good.png", "images/info.png", "images/hide.png", "image/show.png"],
+      "resources": [ 
+		"images/rating-bad.png",
+		"images/rating-good.png",
+		"images/info.png",
+		"images/hide.png",
+		"images/show.png",
+		"images/loading.gif"
+		],
       "matches": ["<all_urls>"]
 	}
   ],
@@ -38,7 +45,10 @@
 	  "css":["main.css"],
       "js": [
 		"scripts/jquery-3.7.1.min.js",
-		"scripts/content.js"
+		"scripts/bootloader.js",
+		"scripts/grid.js",
+		"scripts/tile.js",
+		"scripts/toolbar.js"
 	  ],
       "matches": ["*://*.amazon.ca/vine/*"]
     }
