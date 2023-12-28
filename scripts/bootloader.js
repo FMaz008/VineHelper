@@ -244,7 +244,10 @@ function serverResponse(data){
 			tile.moveToGrid(gridDiscard, false); //This is the main sort, do not animate it
 		}else if(consensusDiscard && tile.getStatus() >= NOT_DISCARDED){
 			tile.moveToGrid(gridDiscard, false); //This is the main sort, do not animate it
+		} else if(selfDiscard && tile.getStatus() == DISCARDED_OWN_VOTE){
+			tile.moveToGrid(gridDiscard, false); //This is the main sort, do not animate it
 		}
+			
 		
 		tile.getToolbar().updateToolbar();
 	});
@@ -275,7 +278,7 @@ async function reportfees(event){
 		await tile.moveToGrid(gridDiscard, true);
 	
 	//Our vote is "Fees" + the added vote will meet the consensus: move the item to the Discard grid
-	}else if(fees == 1 && tile.getVoteFees() + 1 - tile.getVoteNoFees() >= consensusThreshold){
+	}else if(fees == 1 && consensusDiscard && tile.getVoteFees() + 1 - tile.getVoteNoFees() >= consensusThreshold){
 		await tile.moveToGrid(gridDiscard, true);
 	
 	//Our vote is "nofees" + there's no consensus, move the item to the regular grid

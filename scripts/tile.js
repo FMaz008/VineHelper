@@ -105,17 +105,17 @@ function Tile(obj, gridInstance){
 	};
 	
 	this.getStatus = function(){
-		if(getFees() == CONSENSUS_FEES)
-			return DISCARDED_WITH_FEES;
-		
 		if(pVoteOwn == 1 && selfDiscard)
 			return DISCARDED_OWN_VOTE;
 		
-		if(getFees() == CONSENSUS_NO_FEES)
-			return NOT_DISCARDED_NO_FEES;
+		if(getFees() == CONSENSUS_FEES)
+			return DISCARDED_WITH_FEES;
 		
 		if(pVoteOwn == 0)
 			return NOT_DISCARDED_OWN_VOTE;
+		
+		if(getFees() == CONSENSUS_NO_FEES)
+			return NOT_DISCARDED_NO_FEES;
 		
 		return NOT_DISCARDED_NO_STATUS;
 	};

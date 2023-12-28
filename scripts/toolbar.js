@@ -102,13 +102,22 @@ function Toolbar(tileInstance){
 		this.updateVisibilityIcon();
 		switch (pTile.getStatus()){
 			case DISCARDED_WITH_FEES:
+				this.setStatusIcon("ext-helper-icon-sad");
+				this.setStatusText("Import fees reported");
+				statusColor = "ext-helper-background-fees";
+				
+				tileOpacity = 0.3;
+				if(consensusDiscard) //If the item is discarded because of the consensus, hide the visibility button
+					setVisibilityIcon(false);
+				break;
 			case DISCARDED_OWN_VOTE:
 				this.setStatusIcon("ext-helper-icon-sad");
 				this.setStatusText("Import fees reported");
 				statusColor = "ext-helper-background-fees";
 				
 				tileOpacity = 0.3;
-				setVisibilityIcon(false);
+				if(selfDiscard) //If the item is discarded because of a self discard, hide the visibility button
+					setVisibilityIcon(false);
 				break;
 			case NOT_DISCARDED_NO_FEES:
 			case NOT_DISCARDED_OWN_VOTE:
