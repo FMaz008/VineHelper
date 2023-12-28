@@ -4,11 +4,14 @@
 var gridRegular = null;
 var gridDiscard = null; //Will be populated after the grid will be created.
 
+//Extension settings
 var consensusThreshold = 2;
+var consensusDiscard= true;
 var selfDiscard = false;
 var arrDiscarded = [];
 var compactToolbar = false;
 
+//Constants
 const CONSENSUS_NO_FEES = 0;
 const CONSENSUS_FEES = 1;
 const NO_CONSENSUS = null;
@@ -27,7 +30,7 @@ const DISCARDED_OWN_VOTE = 2;
 //#########################
 //### Load settings
 
-
+//Copy/pasted voodoo code
 const readLocalStorage = async (key) => {
 return new Promise((resolve, reject) => {
   chrome.storage.local.get([key], function (result) {
@@ -40,6 +43,7 @@ return new Promise((resolve, reject) => {
 });
 };
 
+//Making the voodoo code usable
 async function getLocalStorageVariable(key){
 	var r;
 	await readLocalStorage(key).then(function(result) {
@@ -50,7 +54,7 @@ async function getLocalStorageVariable(key){
 	return r;
 }
 
-	
+//Loading the settings from the local storage	
 async function getSettings(){
 	
 	let result;
@@ -63,6 +67,10 @@ async function getSettings(){
 	if(result == true || result == false)
 		selfDiscard = result;
 	
+	result = await getLocalStorageVariable("settingsConsensusDiscard");
+	if(result == true || result == false)
+		consensusDiscard = result;
+	
 	result = await getLocalStorageVariable("settingsCompactToolbar");
 	if(result == true || result == false)
 		compactToolbar = result;
@@ -70,11 +78,10 @@ async function getSettings(){
 	result = await getLocalStorageVariable("arrDiscarded");
 		arrDiscarded = result;
 	
+	
 	//Load Thorvarium stylesheets
 	if(await getLocalStorageVariable("thorvariumSmallItems"))
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/small-items.css">');
-	
-	
 	
 	if(await getLocalStorageVariable("thorvariumRemoveHeader"))
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/remove-header.css">');
@@ -109,12 +116,16 @@ async function getSettings(){
 	if(await getLocalStorageVariable("thorvariumRFYAFAAITabs"))
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/rfy-afa-ai-tabs.css">');
 	
+	
 	init(); // Initialize the app
 	
 	
 	discardedItemGarbageCollection();
 }
 getSettings();
+
+
+
 
 
 //#########################
@@ -188,12 +199,6 @@ function init(){
 }
 
 
-
-
-
-
-
-
 //Get data from the server about the products listed on this page
 function fetchData(arrUrl){
 	let arrJSON = {"api_version":2, "arr_url":arrUrl};
@@ -235,7 +240,9 @@ function serverResponse(data){
 		tile.setVotes(values["v0"], values["v1"], values["s"]);
 		
 		//Assign the tiles to the proper grid
-		if(tile.getStatus() >= NOT_DISCARDED || tile.isHidden()){
+		if(tile.isHidden()){
+			tile.moveToGrid(gridDiscard, false); //This is the main sort, do not animate it
+		}else if(consensusDiscard && tile.getStatus() >= NOT_DISCARDED){
 			tile.moveToGrid(gridDiscard, false); //This is the main sort, do not animate it
 		}
 		
@@ -250,7 +257,7 @@ function serverResponse(data){
 
 
 //#########################
-//## Triggered function (from clicks or whatever)
+//## Triggered functions (from clicks or whatever)
 
 
 

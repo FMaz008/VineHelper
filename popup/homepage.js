@@ -43,12 +43,15 @@ $("#settingsThreshold").on( "change", function() {
 } );
 
 
-function manageCheckboxSetting(key){
+function manageCheckboxSetting(key, defaultvalue = false){
+	var DV = defaultvalue;
 	chrome.storage.local.get([key], function(data) {
 		if(data && data[key] == true){
 			$( "#" + key ).prop( "checked", true);
-		}else{
+		}else if(data && data[key] == false){
 			$( "#" + key ).prop( "checked", false);
+		}else{
+			$( "#" + key ).prop( "checked", DV);
 		}
 	});
 
@@ -59,6 +62,7 @@ function manageCheckboxSetting(key){
 
 manageCheckboxSetting("settingsSelfDiscard");
 manageCheckboxSetting("settingsCompactToolbar");
+manageCheckboxSetting("settingsConsensusDiscard", true);
 
 manageCheckboxSetting("thorvariumSmallItems");
 manageCheckboxSetting("thorvariumRemoveHeader");

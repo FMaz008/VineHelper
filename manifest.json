@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Amazon Vine Helper Canada",
   "description": "Help identify items with import fees.",
-  "version": "1.5",
+  "version": "1.6",
   
   "permissions": [
     "storage"
@@ -12,6 +12,9 @@
     "gecko": {
       "id": "{5951bf9a-25ae-4043-9fa2-54dc0ac1ce70}",
       "strict_min_version": "109.0"
+	},
+	"gecko_android": {
+      "strict_min_version": "120.0"
 	}
   },
 
@@ -45,12 +48,13 @@
 	  "css":["main.css"],
       "js": [
 		"scripts/jquery-3.7.1.min.js",
-		"scripts/bootloader.js",
 		"scripts/grid.js",
 		"scripts/tile.js",
-		"scripts/toolbar.js"
+		"scripts/toolbar.js",
+		"scripts/bootloader.js"
 	  ],
-      "matches": ["*://*.amazon.ca/vine/*"]
+      "matches": ["*://*.amazon.ca/vine/*"],
+	  "run_at": "document_end"
     }
   ]
 }
