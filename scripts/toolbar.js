@@ -170,7 +170,7 @@ function Toolbar(tileInstance){
 		//Make the widget transparent if the user voted "no fees"
 		//Note: If we voted "fees", the entire card will be transparent.
 		//      If we have not voted, we want the option to remain visible.
-		pe.css('opacity', (pTile.getVoteOwn() == 0) ? 0.4 : 1.0); 
+		pe.css('opacity', (pTile.getVoteOwn() != null) ? 0.4 : 1.0); 
 		
 		if(pTile.getVoteOwn() == 1){
 			v1.addClass("selectedVote");
