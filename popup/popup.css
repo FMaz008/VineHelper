@@ -1,7 +1,8 @@
 body {
 	height: 400px; /* popovers have a max height of 600px */
-	width: 400px;
+	width: 350px;
 	padding: 10px;
+	padding-right:20px;
 	margin: 0;
 }
 
@@ -17,4 +18,15 @@ span.number{
 
 div.options{
 	font-size:12px;
+}
+
+p.options{
+	margin-top:0px;
+	padding-left:10px;
+	margin-bottom:20px;
+}
+
+h3{
+	padding-bottom:0px;
+	margin-bottom:5px;
 }

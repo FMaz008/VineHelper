@@ -35,12 +35,26 @@ chrome.storage.local.get('settingsThreshold', function(data) {
 	}
     $("#settingsThreshold").val(data.settingsThreshold);
 });
-
 $("#settingsThreshold").on( "change", function() {
 	if(isNumeric($(this).val()) && $(this).val()>0 && $(this).val() <10){
 		chrome.storage.local.set({ settingsThreshold: $( this ).val() });
 	}
 } );
+
+
+chrome.storage.local.get('settingsUnavailableOpacity', function(data) {
+	if(!data || !data.settingsUnavailableOpacity || !isNumeric(data.settingsUnavailableOpacity) || data.settingsUnavailableOpacity < 1){
+		data.settingsUnavailableOpacity = 100;
+	}
+    $("#settingsUnavailableOpacity").val(data.settingsUnavailableOpacity);
+});
+$("#settingsUnavailableOpacity").on( "change", function() {
+	if(isNumeric($(this).val()) && $(this).val()>0 && $(this).val() <=100){
+		chrome.storage.local.set({ settingsUnavailableOpacity: $( this ).val() });
+	}
+} );
+
+
 
 
 function manageCheckboxSetting(key, defaultvalue = false){

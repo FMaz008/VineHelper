@@ -45,14 +45,6 @@ function Toolbar(tileInstance){
 		h.on('click', {'pageId': pTile.getPageId()}, toggleItemVisibility);
 		
 	};
-
-	function setVisibilityIcon(show){
-		if(show){
-			$("#ext-helper-hide-link-"+pTile.getPageId()).show();
-		}else{
-			$("#ext-helper-hide-link-"+pTile.getPageId()).hide();
-		}
-	};
 	
 	this.updateVisibilityIcon = function(){
 		let icon = $("#ext-helper-hide-link-"+tile.getPageId() + " div.ext-helper-toolbar-icon");
@@ -62,9 +54,10 @@ function Toolbar(tileInstance){
 		icon.removeClass("ext-helper-icon-show");
 		switch (gridId){
 			case "vvp-items-grid":
+			case "tab-discarded":
 				icon.addClass("ext-helper-icon-hide");
 				break;
-			case "ext-helper-grid":
+			case "tab-hidden":
 				icon.addClass("ext-helper-icon-show");
 				break;
 		}
@@ -98,26 +91,14 @@ function Toolbar(tileInstance){
 		let statusText;
 		let statusColor;
 		
-		setVisibilityIcon(true);
 		this.updateVisibilityIcon();
 		switch (pTile.getStatus()){
 			case DISCARDED_WITH_FEES:
-				this.setStatusIcon("ext-helper-icon-sad");
-				this.setStatusText("Import fees reported");
-				statusColor = "ext-helper-background-fees";
-				
-				tileOpacity = 0.3;
-				if(consensusDiscard) //If the item is discarded because of the consensus, hide the visibility button
-					setVisibilityIcon(false);
-				break;
 			case DISCARDED_OWN_VOTE:
 				this.setStatusIcon("ext-helper-icon-sad");
 				this.setStatusText("Import fees reported");
 				statusColor = "ext-helper-background-fees";
-				
-				tileOpacity = 0.3;
-				if(selfDiscard) //If the item is discarded because of a self discard, hide the visibility button
-					setVisibilityIcon(false);
+				tileOpacity = unavailableOpacity/100;
 				break;
 			case NOT_DISCARDED_NO_FEES:
 			case NOT_DISCARDED_OWN_VOTE:
@@ -161,24 +142,25 @@ function Toolbar(tileInstance){
 			.addClass("ext-helper-voting-widget")
 			.appendTo(container);
 		if(!compactToolbar){
-			pe.text("Any fees? ");
+			pe.text("Available? ");
 		}
-		v1 = $("<a />")
-			.attr("href", "#" + pTile.getPageId())
-			.attr("id", "ext-helper-reportlink-"+pTile.getPageId()+"-yes")
-			.addClass("ext-helper-reportlink-bad")
-			.attr("onclick", "return false;")
-			.html("&#11199; Yes ("+pTile.getVoteFees()+")")
-			.appendTo(pe);
-		$("<span />")
-			.text(" / ")
-			.appendTo(pe);
+		
 		v0 = $("<a />")
 			.attr("href", "#" + pTile.getPageId())
 			.attr("id", "ext-helper-reportlink-"+pTile.getPageId()+"-no")
 			.addClass("ext-helper-reportlink-good")
 			.attr("onclick", "return false;")
-			.html("&#9745; No ("+pTile.getVoteNoFees()+")")
+			.html("&#9745; Yes ("+pTile.getVoteNoFees()+")")
+			.appendTo(pe);
+		$("<span />")
+			.text(" / ")
+			.appendTo(pe);
+		v1 = $("<a />")
+			.attr("href", "#" + pTile.getPageId())
+			.attr("id", "ext-helper-reportlink-"+pTile.getPageId()+"-yes")
+			.addClass("ext-helper-reportlink-bad")
+			.attr("onclick", "return false;")
+			.html("&#11199; No ("+pTile.getVoteFees()+")")
 			.appendTo(pe);
 		
 		

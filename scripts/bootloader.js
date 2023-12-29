@@ -3,10 +3,12 @@
 //Create the 2 grids 
 var gridRegular = null;
 var gridDiscard = null; //Will be populated after the grid will be created.
+var gridHidden = null; //Will be populated after the grid will be created.
 
 //Extension settings
 var consensusThreshold = 2;
 var consensusDiscard= true;
+var unavailableOpacity = 100;
 var selfDiscard = false;
 var arrDiscarded = [];
 var compactToolbar = false;
@@ -62,6 +64,11 @@ async function getSettings(){
 	result = await getLocalStorageVariable("settingsThreshold");
 	if(result > 0 && result <10)
 		consensusThreshold = result;
+	
+	result = await getLocalStorageVariable("settingsUnavailableOpacity");
+	if(result > 0 && result <=100)
+		unavailableOpacity = result;
+	
 	
 	result = await getLocalStorageVariable("settingsSelfDiscard");
 	if(result == true || result == false)
@@ -139,10 +146,19 @@ function getTileByPageId(pageId){
 		return tile;
 	
 	tile = gridDiscard.getTileId(pageId);
+	if(tile != null)
+		return tile;
+	
+	tile = gridHidden.getTileId(pageId);
 	return tile;
 }
 
-
+function updateTileCounts(){
+	//Calculate how many tiles within each grids
+	$("#ext-helper-available-count").text(gridRegular.getTileCount());
+	$("#ext-helper-discarded-count").text(gridDiscard.getTileCount());
+	$("#ext-helper-hidden-count").text(gridHidden.getTileCount());
+}
 
 function discardedItemGarbageCollection(){
 	var change = false;
@@ -178,7 +194,8 @@ function init(){
 	createDiscardGridInterface();
 
 	gridRegular = new Grid($("#vvp-items-grid"));
-	gridDiscard = new Grid($("#ext-helper-grid"));
+	gridDiscard = new Grid($("#tab-discarded"));
+	gridHidden = new Grid($("#tab-hidden"));
 
 	//Browse each items from the Regular grid
 	//- Create an array of all the products listed on the page
@@ -241,7 +258,7 @@ function serverResponse(data){
 		
 		//Assign the tiles to the proper grid
 		if(tile.isHidden()){
-			tile.moveToGrid(gridDiscard, false); //This is the main sort, do not animate it
+			tile.moveToGrid(gridHidden, false); //This is the main sort, do not animate it
 		}else if(consensusDiscard && tile.getStatus() >= NOT_DISCARDED){
 			tile.moveToGrid(gridDiscard, false); //This is the main sort, do not animate it
 		} else if(selfDiscard && tile.getStatus() == DISCARDED_OWN_VOTE){
@@ -252,8 +269,7 @@ function serverResponse(data){
 		tile.getToolbar().updateToolbar();
 	});
 	
-	//Calculate how many tiles were moved to the discarded grid
-	$("#ext-helper-grid-count").text(gridDiscard.getTileCount());
+	updateTileCounts();
 }
 
 
@@ -272,20 +288,22 @@ async function reportfees(event){
 	let tile = getTileByPageId(pageId);
 	
 	
-	//Note: If the tile is already in the grid, the method will exit with false.
-	//Our vote is "Fees" + the self discard option is active: move the item to the Discard grid
-	if(fees == 1 && selfDiscard){
-		await tile.moveToGrid(gridDiscard, true);
-	
-	//Our vote is "Fees" + the added vote will meet the consensus: move the item to the Discard grid
-	}else if(fees == 1 && consensusDiscard && tile.getVoteFees() + 1 - tile.getVoteNoFees() >= consensusThreshold){
-		await tile.moveToGrid(gridDiscard, true);
-	
-	//Our vote is "nofees" + there's no consensus, move the item to the regular grid
-	}else if(fees == 0 && tile.getVoteFees() - tile.getVoteNoFees() < consensusThreshold){
-		await tile.moveToGrid(gridRegular, true);
+	//If the tile is already in the hidden category, a vote won't move it from there.
+	if(!tile.isHidden()){
+		//Note: If the tile is already in the grid, the method will exit with false.
+		//Our vote is "Fees" + the self discard option is active: move the item to the Discard grid
+		if(fees == 1 && selfDiscard){
+			await tile.moveToGrid(gridDiscard, true);
+		
+		//Our vote is "Fees" + the added vote will meet the consensus: move the item to the Discard grid
+		}else if(fees == 1 && consensusDiscard && tile.getVoteFees() + 1 - tile.getVoteNoFees() >= consensusThreshold){
+			await tile.moveToGrid(gridDiscard, true);
+		
+		//Our vote is "nofees" + there's no consensus, move the item to the regular grid
+		}else if(fees == 0 && tile.getVoteFees() - tile.getVoteNoFees() < consensusThreshold){
+			await tile.moveToGrid(gridRegular, true);
+		}
 	}
-	
 	
 	//Send the vote to the server
 	let url = "https://francoismazerolle.ca/vinehelperCastVote_v2.php"
@@ -306,10 +324,13 @@ async function toggleItemVisibility(event){
 	
 	switch (gridId){ //Current Grid
 		case "vvp-items-grid":
+		case "tab-discarded":
 			tile.hideTile();
 			break;
-		case "ext-helper-grid":
+		case "tab-hidden":
 			tile.showTile();
 			break;
 	}
+	
+	updateTileCounts();
 }

@@ -59,40 +59,30 @@ function Grid(obj)
 
 function createDiscardGridInterface(){
 	//Clean up interface (in case of the extension being reloaded)
-	$("div#discardedItems").remove();
-	$(".ext-helper-separator").remove();
+	$("ul#ext-helper-tabs-ul").remove();
+	$("div#tab-discarded").remove();
+	$("div#tab-hidden").remove();
 	$(".ext-helper-status").remove(); //remove all toolbars
 	
-	$("<div />")
-		.attr("id","discardedItems")
-		.insertBefore("#vvp-items-grid");
-	$("<br /><hr /><br />")
-		.addClass("ext-helper-separator")
-		.insertBefore("#vvp-items-grid");
-	$("<div />")
-		.attr("id", "ext-helper-grid-header")
-		.text(" discarded item(s)")
-		.appendTo("#discardedItems");
-	$("<div />")
-		.attr("id", "ext-helper-grid")
-		.hide() //Hide at first
-		.appendTo("#discardedItems");
-	$("<span />")
-		.attr("id", "ext-helper-grid-count")
-		.prependTo("#ext-helper-grid-header");
-	$("<span />")
-		.attr("id", "ext-helper-grid-collapse-indicator")
-		.html("&#11166;")
-		.prependTo("#ext-helper-grid-header");
+	let tabs = $("<div>").attr("id","ext-helper-tabs").appendTo("#vvp-items-grid-container");
+	let ul = $("<ul>").attr("id","ext-helper-tabs-ul").appendTo(tabs);
+	$("#vvp-items-grid").detach().appendTo(tabs);
+	$("<li><a href=\"#vvp-items-grid\">Available (<span id='ext-helper-available-count'></span>)</a></li>").appendTo(ul);
+	$("<li><a href=\"#tab-discarded\">Unavailable (<span id='ext-helper-discarded-count'></span>)</a></li>").appendTo(ul);
+	$("<li><a href=\"#tab-hidden\">Hidden (<span id='ext-helper-hidden-count'></span>)</a></li>").appendTo(ul);
 	
-	//Collapse/toggle function
-	$("#ext-helper-grid-header").on('click', {}, function(){
-		$('#ext-helper-grid').toggle();
-		if($('#ext-helper-grid').is(":hidden")){
-			$("#ext-helper-grid-collapse-indicator").html("&#11166;");	
-		}else{
-			$("#ext-helper-grid-collapse-indicator").html("&#11167;");
-		}
-	});
+	$("<div />")
+		.attr("id","tab-discarded")
+		.addClass("ext-helper-grid")
+		.appendTo(tabs);
+	$("<div />")
+		.attr("id","tab-hidden")
+		.addClass("ext-helper-grid")
+		.appendTo(tabs);
+	
+	$( function() {
+		$( "#ext-helper-tabs" ).tabs();
+	} );
+	
 	
 }

@@ -12,47 +12,33 @@ div.ext-helper-status-container{
 	padding:5px;
 }
 
-div #discardedItems{
-	background-color:#fff6f6;
-}
-div#ext-helper-grid-header{
-	display:block;
-	font-weight:bold;
-}
-div#ext-helper-grid-header:hover{
-	cursor:pointer;
-}
-span#ext-helper-grid-count{
-	padding-left:7px;
-}
-div#ext-helper-grid{
+div.ext-helper-grid, #tab-discarded, #tab-hidden{
 	display: grid;
 	grid-template-columns: repeat(auto-fill,minmax(236px,auto));
 }
-div#ext-helper-grid .vvp-item-tile {
+div.ext-helper-grid .vvp-item-tile {
 	border: 1px solid #ddd;
 	margin-top: -1px;
 	margin-left: -1px;
 }
-div#ext-helper-grid .vvp-item-tile .vvp-item-tile-content {
+div.ext-helper-grid .vvp-item-tile .vvp-item-tile-content {
 	width: 210px;
 	margin: 0 auto;
 }
 
-div#ext-helper-grid .vvp-item-tile .vvp-item-tile-content > .vvp-item-product-title-container {
+div.ext-helper-grid .vvp-item-tile .vvp-item-tile-content > .vvp-item-product-title-container {
 	height: 60px;
 }
 
-div#ext-helper-grid .vvp-item-tile .vvp-item-tile-content > * {
+div.ext-helper-grid .vvp-item-tile .vvp-item-tile-content > * {
 	width: 100%;
 	margin: 20px 0;
 }
 
-div#ext-helper-grid .vvp-item-tile .vvp-item-tile-content > * {
+div.ext-helper-grid .vvp-item-tile .vvp-item-tile-content > * {
 	width: 100%;
 	margin: 20px 0;
 }
-
 
 
 div.ext-helper-status-container div.ext-helper-status-container2, div.ext-helper-info-container span{

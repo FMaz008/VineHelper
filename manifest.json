@@ -45,9 +45,13 @@
   
   "content_scripts": [
     {
-	  "css":["main.css"],
+	  "css":[
+		"jquery-ui.min.css",
+		"main.css"
+	  ],
       "js": [
 		"scripts/jquery-3.7.1.min.js",
+		"scripts/jquery-ui.min.js",
 		"scripts/grid.js",
 		"scripts/tile.js",
 		"scripts/toolbar.js",

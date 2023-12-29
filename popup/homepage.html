@@ -21,29 +21,38 @@
 	</div>
 	<br />
 	<div class="options">
-		<h3>Options</h3>
 		<p>(Reload the page to apply new settings)</p>
-		<input type="checkbox" id="settingsSelfDiscard" value="1" /> Move items I voted "with fees" to the discarded grid.
-		<br />
-		<input type="checkbox" id="settingsCompactToolbar" value="1" /> Compact items toolbar
-		<br />
-		<input type="checkbox" id="settingsConsensusDiscard" value="1" /> Move items with a consensus "with fees" to the discarded grid.
-		<br />
-		Consensus Threshold: <input type="text" id="settingsThreshold" value="" size="1" maxlength="1" /> votes majority.
+		<h3>General Options</h3>
+		<p class="options">
+			<input type="checkbox" id="settingsCompactToolbar" value="1" /> Compact items toolbar
+			<br />
+			Consensus Threshold: <input type="text" id="settingsThreshold" value="" size="1" maxlength="1" /> votes majority.
+			<br />
+			Unavailable items opacity: <input type="text" id="settingsUnavailableOpacity" value="" size="3" maxlength="3" /> %.
+		</p>
+		
+		<h3>Unavailable Tab:</h3>
+		<p class="options">
+			<input type="checkbox" id="settingsSelfDiscard" value="1" /> The items I voted "with fees".
+			<br />
+			<input type="checkbox" id="settingsConsensusDiscard" value="1" />The items with an "unavailable" consensus.
+		</p>
 		
 		<h3>Thorvarium styling</h3>
-		<input type="checkbox" id="thorvariumSmallItems" value="1" /> small-items.css (Tip: activate compact items toolbar)
-		<br /><input type="checkbox" id="thorvariumRemoveHeader" value="1" /> remove-header.css
-		<br /><input type="checkbox" id="thorvariumRemoveFooter" value="1" /> remove-footer.css
-		<br /><input type="checkbox" id="thorvariumRemoveAssociateHeader" value="1" /> remove-associate-header.css
-		<br /><input type="checkbox" id="thorvariumMoreDescriptionText" value="1" /> more-description-text.css
-		<br /><input type="checkbox" id="thorvariumETVModalOnTop" value="1" /> etv-modal-on-top.css
-		<br /><input type="checkbox" id="thorvariumCategoriesWithEmojis" value="1" /> categories-with-emojis.css
-		<br /><input type="checkbox" id="thorvariumPaginationOnTop" value="1" /> pagination-on-top.css (Tip: activate rfy-afa-ai-tabs.css)
-		<br /><input type="checkbox" id="thorvariumCollapsableCategories" value="1" /> collapsable-categories.css
-		<br /><input type="checkbox" id="thorvariumStripedCategories" value="1" /> striped-categories.css
-		<br /><input type="checkbox" id="thorvariumLimitedQuantityIcon" value="1" /> limited-quantity-icon.css
-		<br /><input type="checkbox" id="thorvariumRFYAFAAITabs" value="1" /> rfy-afa-ai-tabs.css
+		<p class="options">
+			<input type="checkbox" id="thorvariumSmallItems" value="1" /> small-items.css (Tip: activate compact items toolbar)
+			<br /><input type="checkbox" id="thorvariumRemoveHeader" value="1" /> remove-header.css
+			<br /><input type="checkbox" id="thorvariumRemoveFooter" value="1" /> remove-footer.css
+			<br /><input type="checkbox" id="thorvariumRemoveAssociateHeader" value="1" /> remove-associate-header.css
+			<br /><input type="checkbox" id="thorvariumMoreDescriptionText" value="1" /> more-description-text.css
+			<br /><input type="checkbox" id="thorvariumETVModalOnTop" value="1" /> etv-modal-on-top.css
+			<br /><input type="checkbox" id="thorvariumCategoriesWithEmojis" value="1" /> categories-with-emojis.css
+			<br /><input type="checkbox" id="thorvariumPaginationOnTop" value="1" /> pagination-on-top.css (Tip: activate rfy-afa-ai-tabs.css)
+			<br /><input type="checkbox" id="thorvariumCollapsableCategories" value="1" /> collapsable-categories.css
+			<br /><input type="checkbox" id="thorvariumStripedCategories" value="1" /> striped-categories.css
+			<br /><input type="checkbox" id="thorvariumLimitedQuantityIcon" value="1" /> limited-quantity-icon.css
+			<br /><input type="checkbox" id="thorvariumRFYAFAAITabs" value="1" /> rfy-afa-ai-tabs.css
+		</p>
 	</div>
 	<br />
 	<div class="ext-helper-info-container">
@@ -57,6 +66,8 @@
 			</ul>
 		</div>
 	</div>
+	<br />
+	<br />
 	<script src="../scripts/jquery-3.7.1.min.js"></script>
 	<script src="homepage.js"></script>
   </body>

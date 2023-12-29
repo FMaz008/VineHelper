@@ -64,7 +64,7 @@ function Tile(obj, gridInstance){
 		});
 	}
 
-	function updateDiscardedTileList(){
+	function updateHiddenTileList(){
 		pToolbar.updateVisibilityIcon();
 		
 		//Save the new array
@@ -168,16 +168,22 @@ function Tile(obj, gridInstance){
 	
 	this.hideTile = async function(){
 		arrDiscarded.push({"pageId" : pPageId, "date": new Date});
-		await this.moveToGrid(gridDiscard, true);
+		await this.moveToGrid(gridHidden, true);
 		
-		updateDiscardedTileList();
+		updateHiddenTileList();
 	}
 	
 	this.showTile = async function(){
 		removePageIdFromArrDiscarded(pPageId);
-		await this.moveToGrid(gridRegular, true);
 		
-		updateDiscardedTileList();
+		if(consensusDiscard && tile.getStatus() >= NOT_DISCARDED){
+			await tile.moveToGrid(gridDiscard, true);
+		} else if(selfDiscard && tile.getStatus() == DISCARDED_OWN_VOTE){
+			await tile.moveToGrid(gridDiscard, true);
+		} else {
+			await this.moveToGrid(gridRegular, true);
+		}
+		updateHiddenTileList();
 	}
 	
 	
