@@ -10,6 +10,7 @@ var consensusThreshold = 2;
 var consensusDiscard= true;
 var unavailableOpacity = 100;
 var selfDiscard = false;
+var bottomPagination = false;
 var arrHidden = [];
 var compactToolbar = false;
 
@@ -81,6 +82,12 @@ async function getSettings(){
 	result = await getLocalStorageVariable("settingsCompactToolbar");
 	if(result == true || result == false)
 		compactToolbar = result;
+	
+	result = await getLocalStorageVariable("settingsBottomPagination");
+	if(result == true || result == false)
+		bottomPagination = result;
+	
+	
 	
 	result = await getLocalStorageVariable("arrHidden");
 		if(result!=null)
@@ -212,6 +219,11 @@ function init(){
 		t.createProductToolbar();
 	});
 
+	//Bottom pagination
+	if(bottomPagination){
+		$(".a-pagination").parent().clone().appendTo("#vvp-items-grid-container");
+	}
+	
 	//Obtain the data to fill the toolbars with it.
 	fetchData(arrUrl);
 }

@@ -76,6 +76,7 @@ function manageCheckboxSetting(key, defaultvalue = false){
 
 manageCheckboxSetting("settingsSelfDiscard");
 manageCheckboxSetting("settingsCompactToolbar");
+manageCheckboxSetting("settingsBottomPagination");
 manageCheckboxSetting("settingsConsensusDiscard", true);
 
 manageCheckboxSetting("thorvariumSmallItems");
