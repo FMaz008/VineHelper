@@ -10,7 +10,7 @@ var consensusThreshold = 2;
 var consensusDiscard= true;
 var unavailableOpacity = 100;
 var selfDiscard = false;
-var arrDiscarded = [];
+var arrHidden = [];
 var compactToolbar = false;
 
 //Constants
@@ -82,8 +82,9 @@ async function getSettings(){
 	if(result == true || result == false)
 		compactToolbar = result;
 	
-	result = await getLocalStorageVariable("arrDiscarded");
-		arrDiscarded = result;
+	result = await getLocalStorageVariable("arrHidden");
+		if(result!=null)
+			arrHidden = result;
 	
 	
 	//Load Thorvarium stylesheets
@@ -165,16 +166,16 @@ function discardedItemGarbageCollection(){
 	let expiredDate = new Date();
 	expiredDate.setDate(expiredDate.getDate() - 90);
 	
-	$.each(arrDiscarded, function(key, value){
-		if(key!=undefined && arrDiscarded[key]["date"] < expiredDate){
-			arrDiscarded.splice(key, 1);
+	$.each(arrHidden, function(key, value){
+		if(key!=undefined && arrHidden[key]["date"] < expiredDate){
+			arrHidden.splice(key, 1);
 			change = true;
 		}
 	});
 	
 	//Save array to local storage
 	if(change){
-		chrome.storage.local.set({ "arrDiscarded": arrDiscarded });
+		chrome.storage.local.set({ "arrHidden": arrHidden });
 	}
 }
 

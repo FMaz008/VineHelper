@@ -56,10 +56,10 @@ function Tile(obj, gridInstance){
 		
 	}
 
-	function removePageIdFromArrDiscarded(pageId){
-		$.each(arrDiscarded, function(key, value){
+	function removePageIdFromArrHidden(pageId){
+		$.each(arrHidden, function(key, value){
 			if(value != undefined && value.pageId == pageId){
-				arrDiscarded.splice(key, 1);
+				arrHidden.splice(key, 1);
 			}
 		});
 	}
@@ -68,10 +68,10 @@ function Tile(obj, gridInstance){
 		pToolbar.updateVisibilityIcon();
 		
 		//Save the new array
-		chrome.storage.local.set({ 'arrDiscarded': arrDiscarded });
+		chrome.storage.local.set({ 'arrHidden': arrHidden });
 		
-		//Refresh discard count
-		$("#ext-helper-grid-count").text(gridDiscard.getTileCount());
+		//Refresh grid counts
+		updateTileCounts();
 	}
 
 
@@ -157,7 +157,7 @@ function Tile(obj, gridInstance){
 	
 	this.isHidden = function(){
 		var found = false;
-		$.each(arrDiscarded, function(key, value){
+		$.each(arrHidden, function(key, value){
 			if(value.pageId == pPageId){
 				found = true;
 				return;
@@ -167,14 +167,14 @@ function Tile(obj, gridInstance){
 	};
 	
 	this.hideTile = async function(){
-		arrDiscarded.push({"pageId" : pPageId, "date": new Date});
+		arrHidden.push({"pageId" : pPageId, "date": new Date});
 		await this.moveToGrid(gridHidden, true);
 		
 		updateHiddenTileList();
 	}
 	
 	this.showTile = async function(){
-		removePageIdFromArrDiscarded(pPageId);
+		removePageIdFromArrHidden(pPageId);
 		
 		if(consensusDiscard && tile.getStatus() >= NOT_DISCARDED){
 			await tile.moveToGrid(gridDiscard, true);
