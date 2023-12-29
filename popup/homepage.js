@@ -15,8 +15,8 @@ function serverResponse(data){
 	$("#votes").text(data["votes"]);
 	$("#contribution").text(percentage.toFixed(3) + "%");
 	$("#rank").text("#" + data["rank"]);
-	$("#confirmed").text(data["totalConfirmed"]);
-	$("#discarded").text(data["totalDiscarded"]);
+	$("#available").text(data["totalConfirmed"]);
+	$("#unavailable").text(data["totalDiscarded"]);
 	$("#totalUsers").text(data["totalUsers"]);
 }
 

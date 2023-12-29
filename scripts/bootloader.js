@@ -221,7 +221,7 @@ function init(){
 
 	//Bottom pagination
 	if(bottomPagination){
-		$(".a-pagination").parent().clone().appendTo("#vvp-items-grid-container");
+		$(".a-pagination").parent().clone().css("margin-top","10px").appendTo("#vvp-items-grid-container");
 	}
 	
 	//Obtain the data to fill the toolbars with it.

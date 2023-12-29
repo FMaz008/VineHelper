@@ -96,14 +96,14 @@ function Toolbar(tileInstance){
 			case DISCARDED_WITH_FEES:
 			case DISCARDED_OWN_VOTE:
 				this.setStatusIcon("ext-helper-icon-sad");
-				this.setStatusText("Import fees reported");
+				this.setStatusText("Not available.");
 				statusColor = "ext-helper-background-fees";
 				tileOpacity = unavailableOpacity/100;
 				break;
 			case NOT_DISCARDED_NO_FEES:
 			case NOT_DISCARDED_OWN_VOTE:
 				this.setStatusIcon("ext-helper-icon-happy");
-				this.setStatusText("No import fees!");
+				this.setStatusText("Available!");
 				statusColor = "ext-helper-background-nofees";
 				tileOpacity = 1.0;
 				break;
