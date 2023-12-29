@@ -2,7 +2,7 @@
 
 //Create the 2 grids 
 var gridRegular = null;
-var gridDiscard = null; //Will be populated after the grid will be created.
+var gridUnavailable = null; //Will be populated after the grid will be created.
 var gridHidden = null; //Will be populated after the grid will be created.
 
 //Extension settings
@@ -153,7 +153,7 @@ function getTileByPageId(pageId){
 	if(tile != null)
 		return tile;
 	
-	tile = gridDiscard.getTileId(pageId);
+	tile = gridUnavailable.getTileId(pageId);
 	if(tile != null)
 		return tile;
 	
@@ -164,7 +164,7 @@ function getTileByPageId(pageId){
 function updateTileCounts(){
 	//Calculate how many tiles within each grids
 	$("#ext-helper-available-count").text(gridRegular.getTileCount());
-	$("#ext-helper-discarded-count").text(gridDiscard.getTileCount());
+	$("#ext-helper-unavailable-count").text(gridUnavailable.getTileCount());
 	$("#ext-helper-hidden-count").text(gridHidden.getTileCount());
 }
 
@@ -202,7 +202,7 @@ function init(){
 	createDiscardGridInterface();
 
 	gridRegular = new Grid($("#vvp-items-grid"));
-	gridDiscard = new Grid($("#tab-discarded"));
+	gridUnavailable = new Grid($("#tab-unavailable"));
 	gridHidden = new Grid($("#tab-hidden"));
 
 	//Browse each items from the Regular grid
@@ -273,9 +273,9 @@ function serverResponse(data){
 		if(tile.isHidden()){
 			tile.moveToGrid(gridHidden, false); //This is the main sort, do not animate it
 		}else if(consensusDiscard && tile.getStatus() >= NOT_DISCARDED){
-			tile.moveToGrid(gridDiscard, false); //This is the main sort, do not animate it
+			tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
 		} else if(selfDiscard && tile.getStatus() == DISCARDED_OWN_VOTE){
-			tile.moveToGrid(gridDiscard, false); //This is the main sort, do not animate it
+			tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
 		}
 			
 		
@@ -306,11 +306,11 @@ async function reportfees(event){
 		//Note: If the tile is already in the grid, the method will exit with false.
 		//Our vote is "Fees" + the self discard option is active: move the item to the Discard grid
 		if(fees == 1 && selfDiscard){
-			await tile.moveToGrid(gridDiscard, true);
+			await tile.moveToGrid(gridUnavailable, true);
 		
 		//Our vote is "Fees" + the added vote will meet the consensus: move the item to the Discard grid
 		}else if(fees == 1 && consensusDiscard && tile.getVoteFees() + 1 - tile.getVoteNoFees() >= consensusThreshold){
-			await tile.moveToGrid(gridDiscard, true);
+			await tile.moveToGrid(gridUnavailable, true);
 		
 		//Our vote is "nofees" + there's no consensus, move the item to the regular grid
 		}else if(fees == 0 && tile.getVoteFees() - tile.getVoteNoFees() < consensusThreshold){

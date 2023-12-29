@@ -177,9 +177,9 @@ function Tile(obj, gridInstance){
 		removePageIdFromArrHidden(pPageId);
 		
 		if(consensusDiscard && tile.getStatus() >= NOT_DISCARDED){
-			await tile.moveToGrid(gridDiscard, true);
+			await tile.moveToGrid(gridUnavailable, true);
 		} else if(selfDiscard && tile.getStatus() == DISCARDED_OWN_VOTE){
-			await tile.moveToGrid(gridDiscard, true);
+			await tile.moveToGrid(gridUnavailable, true);
 		} else {
 			await this.moveToGrid(gridRegular, true);
 		}

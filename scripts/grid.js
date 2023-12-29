@@ -60,7 +60,7 @@ function Grid(obj)
 function createDiscardGridInterface(){
 	//Clean up interface (in case of the extension being reloaded)
 	$("ul#ext-helper-tabs-ul").remove();
-	$("div#tab-discarded").remove();
+	$("div#tab-unavailable").remove();
 	$("div#tab-hidden").remove();
 	$(".ext-helper-status").remove(); //remove all toolbars
 	
@@ -68,11 +68,11 @@ function createDiscardGridInterface(){
 	let ul = $("<ul>").attr("id","ext-helper-tabs-ul").appendTo(tabs);
 	$("#vvp-items-grid").detach().appendTo(tabs);
 	$("<li><a href=\"#vvp-items-grid\">Available (<span id='ext-helper-available-count'></span>)</a></li>").appendTo(ul);
-	$("<li><a href=\"#tab-discarded\">Unavailable (<span id='ext-helper-discarded-count'></span>)</a></li>").appendTo(ul);
+	$("<li><a href=\"#tab-unavailable\">Unavailable (<span id='ext-helper-unavailable-count'></span>)</a></li>").appendTo(ul);
 	$("<li><a href=\"#tab-hidden\">Hidden (<span id='ext-helper-hidden-count'></span>)</a></li>").appendTo(ul);
 	
 	$("<div />")
-		.attr("id","tab-discarded")
+		.attr("id","tab-unavailable")
 		.addClass("ext-helper-grid")
 		.appendTo(tabs);
 	$("<div />")

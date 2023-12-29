@@ -1,18 +1,6 @@
 
-div.ext-helper-status{
-	position:relative;
-}
-div.ext-helper-status-container{
-	position:absolute;
-	z-index:1;
-	width: 100%;
-	background-color: rgba(255, 255, 255, 0.7);
-	border:1px solid #000;
-	border-radius:8px;
-	padding:5px;
-}
-
-div.ext-helper-grid, #tab-discarded, #tab-hidden{
+/* Grid */
+div.ext-helper-grid, #tab-unavailable, #tab-hidden{
 	display: grid;
 	grid-template-columns: repeat(auto-fill,minmax(236px,auto));
 }
@@ -40,6 +28,20 @@ div.ext-helper-grid .vvp-item-tile .vvp-item-tile-content > * {
 	margin: 20px 0;
 }
 
+
+/* Toolbar */
+div.ext-helper-status{
+	position:relative;
+}
+div.ext-helper-status-container{
+	position:absolute;
+	z-index:1;
+	width: 100%;
+	background-color: rgba(255, 255, 255, 0.7);
+	border:1px solid #000;
+	border-radius:8px;
+	padding:5px;
+}
 
 div.ext-helper-status-container div.ext-helper-status-container2, div.ext-helper-info-container span{
 	display:block;
