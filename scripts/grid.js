@@ -57,7 +57,7 @@ function Grid(obj)
 
 
 
-function createDiscardGridInterface(){
+async function createDiscardGridInterface(){
 	//Clean up interface (in case of the extension being reloaded)
 	$("ul#ext-helper-tabs-ul").remove();
 	$("div#tab-unavailable").remove();
@@ -68,20 +68,27 @@ function createDiscardGridInterface(){
 	let ul = $("<ul>").attr("id","ext-helper-tabs-ul").appendTo(tabs);
 	$("#vvp-items-grid").detach().appendTo(tabs);
 	$("<li><a href=\"#vvp-items-grid\">Available (<span id='ext-helper-available-count'></span>)</a></li>").appendTo(ul);
-	$("<li><a href=\"#tab-unavailable\">Unavailable (<span id='ext-helper-unavailable-count'></span>)</a></li>").appendTo(ul);
+	//If voting system enabled
+	if(unavailableTab){
+		$("<li><a href=\"#tab-unavailable\">Unavailable (<span id='ext-helper-unavailable-count'></span>)</a></li>").appendTo(ul);
+	}
 	$("<li><a href=\"#tab-hidden\">Hidden (<span id='ext-helper-hidden-count'></span>)</a></li>").appendTo(ul);
 	
-	$("<div />")
-		.attr("id","tab-unavailable")
-		.addClass("ext-helper-grid")
-		.appendTo(tabs);
+	
+	//If voting system enabled
+	if(unavailableTab){
+		$("<div />")
+			.attr("id","tab-unavailable")
+			.addClass("ext-helper-grid")
+			.appendTo(tabs);
+	}
 	$("<div />")
 		.attr("id","tab-hidden")
 		.addClass("ext-helper-grid")
 		.appendTo(tabs);
 	
-	$( function() {
-		$( "#ext-helper-tabs" ).tabs();
+	await $( async function() {
+		await $( "#ext-helper-tabs" ).tabs();
 	} );
 	
 	

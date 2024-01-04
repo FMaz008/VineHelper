@@ -22,6 +22,20 @@ function serverResponse(data){
 
 
 
+//UI interaction
+$("#settingsUnavailableTab").on("change", function(){
+	if($(this).prop( "checked"))
+		$("#unavailableTabOptions").show();
+	else
+		$("#unavailableTabOptions").hide();
+});
+
+
+
+
+
+
+
 function isNumeric(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);
 }
@@ -79,6 +93,7 @@ manageCheckboxSetting("settingsCompactToolbar");
 manageCheckboxSetting("settingsBottomPagination");
 manageCheckboxSetting("settingsConsensusDiscard", true);
 manageCheckboxSetting("settingsAutofixInfiniteWheel", true);
+manageCheckboxSetting("settingsUnavailableTab", true);
 
 manageCheckboxSetting("thorvariumSmallItems");
 manageCheckboxSetting("thorvariumRemoveHeader");
@@ -93,4 +108,8 @@ manageCheckboxSetting("thorvariumStripedCategories");
 manageCheckboxSetting("thorvariumLimitedQuantityIcon");
 manageCheckboxSetting("thorvariumRFYAFAAITabs");
 		
-		
+
+
+if(!$("#settingsUnavailableTab").prop( "checked")){
+	$("#unavailableTabOptions").hide();
+}

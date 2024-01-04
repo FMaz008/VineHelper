@@ -57,6 +57,10 @@ div.compact div.ext-helper-status-container{
 	position:relative;
 }
 
+div.borderless div.ext-helper-status-container{
+	border:0;
+}
+
 div.compact div.ext-helper-status-container2{
 	padding-left:0px;
 	text-align:center;

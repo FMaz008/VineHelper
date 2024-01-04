@@ -24,22 +24,22 @@
 		<p>(Reload the page to apply new settings)</p>
 		<h3>General Options</h3>
 		<p class="options">
-			<input type="checkbox" id="settingsCompactToolbar" value="1" /> Compact items toolbar
-			<br />
 			<input type="checkbox" id="settingsAutofixInfiniteWheel" value="1" /> Auto-fix <i>infinite loading wheel</i>
 			<br />
 			<input type="checkbox" id="settingsBottomPagination" value="1" /> Pagination also at the bottom
+		</p>
+		
+		<h3><input type="checkbox" id="settingsUnavailableTab" value="1" /> Voting system (Vine Canada only):</h3>
+		<p class="options" id="unavailableTabOptions">
+			<input type="checkbox" id="settingsCompactToolbar" value="1" /> Compact items toolbar
+			<br />
+			<input type="checkbox" id="settingsSelfDiscard" value="1" /> The items I voted "with fees".
+			<br />
+			<input type="checkbox" id="settingsConsensusDiscard" value="1" />The items with an "unavailable" consensus.
 			<br />
 			Consensus Threshold: <input type="text" id="settingsThreshold" value="" size="1" maxlength="1" /> votes majority.
 			<br />
 			Unavailable items opacity: <input type="text" id="settingsUnavailableOpacity" value="" size="3" maxlength="3" /> %.
-		</p>
-		
-		<h3>Unavailable Tab:</h3>
-		<p class="options">
-			<input type="checkbox" id="settingsSelfDiscard" value="1" /> The items I voted "with fees".
-			<br />
-			<input type="checkbox" id="settingsConsensusDiscard" value="1" />The items with an "unavailable" consensus.
 		</p>
 		
 		<h3>Thorvarium styling</h3>

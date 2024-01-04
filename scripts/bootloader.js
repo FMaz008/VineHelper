@@ -17,6 +17,7 @@ var bottomPagination = false;
 var arrHidden = [];
 var compactToolbar = false;
 var autofixInfiniteWheel = true;
+var unavailableTab = true;
 
 //Constants
 const CONSENSUS_NO_FEES = 0;
@@ -29,12 +30,6 @@ const NOT_DISCARDED_NO_FEES = -1;
 const NOT_DISCARDED = 0; 
 const DISCARDED_WITH_FEES = 1;
 const DISCARDED_OWN_VOTE = 2;
-
-
-
-
-
-
 
 
 
@@ -103,11 +98,24 @@ async function getSettings(){
 	if(result == true || result == false)
 		autofixInfiniteWheel = result;
 	
+	result = await getLocalStorageVariable("settingsUnavailableTab");
+	if(result == true || result == false)
+		unavailableTab = result;
+	
 	result = await getLocalStorageVariable("arrHidden");
 		if(result!=null)
 			arrHidden = result;
 	
 	
+	//Figure out what domain the extension is working on
+	//De-activate the unavailableTab (and the voting system) for all non-.ca domains.
+	let currentUrl = window.location.href; 
+	regex = /^(?:.*:\/\/)(?:.+[\.]?)amazon\.(.+)\/vine\/.*$/;
+	arrMatches = currentUrl.match(regex);
+	if(arrMatches[1] != "ca"){
+		unavailableTab = false;
+	}
+
 	//Load Thorvarium stylesheets
 	if(await getLocalStorageVariable("thorvariumSmallItems"))
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/small-items.css">');
@@ -226,6 +234,15 @@ function init(){
 	gridRegular = new Grid($("#vvp-items-grid"));
 	gridUnavailable = new Grid($("#tab-unavailable"));
 	gridHidden = new Grid($("#tab-hidden"));
+
+
+	//Disable voting system
+	if(!unavailableTab){
+		$("#tab-unavailable").parent("ul").hide(); //Doesn't do anything
+		compactToolbar = true;
+		consensusDiscard = false;
+		selfDiscard = false;
+	}
 
 	//Browse each items from the Regular grid
 	//- Create an array of all the products listed on the page

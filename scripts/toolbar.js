@@ -119,14 +119,21 @@ function Toolbar(tileInstance){
 		if(compactToolbar){ //No icon, no text
 			this.setStatusIcon("");
 			this.setStatusText("");
-			context.addClass(statusColor);
 			context.addClass("compact");
+			
+			if(unavailableTab){
+				context.addClass(statusColor);
+			}else{
+				context.addClass("borderless");
+			}
 		}
 		
 		tile.getDOM().css('opacity', tileOpacity);
 		
-		createVotingWidget();
-		
+		//Display voting system is required.
+		if(unavailableTab){
+			createVotingWidget();
+		}
 	}
 
 	//Create the voting widget part of the toolbar
