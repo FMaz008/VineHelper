@@ -8,17 +8,8 @@
   <body>
 	<h1>
 		<img src="../icon.png" width="32px" height="32px" style="vertical-align:middle" />
-		Vine Helper Canada
+		Amazon Vine Helper
 	</h1>
-	
-	<div class="summary">
-		You currently have <span id="votes" class="number">?</span> active votes,
-		contributing to <span id="contribution" class="number">? %</span> of the community votes.
-		You are currently ranked the <span id="rank" class="number"># ?</span> most active out of <span id="totalUsers" class="number">?</span> contributors!
-		<br /><br />
-		With your help, we confirmed  <span id="available" class="number">?</span> items to be available
-		and <span id="unavailable" class="number">?</span> items as unavailable.
-	</div>
 	<br />
 	<div class="options">
 		<p>(Reload the page to apply new settings)</p>
@@ -30,17 +21,27 @@
 		</p>
 		
 		<h3><input type="checkbox" id="settingsUnavailableTab" value="1" /> Voting system (Vine Canada only):</h3>
-		<p class="options" id="unavailableTabOptions">
-			<input type="checkbox" id="settingsCompactToolbar" value="1" /> Compact items toolbar
-			<br />
-			<input type="checkbox" id="settingsSelfDiscard" value="1" /> The items I voted "with fees".
-			<br />
-			<input type="checkbox" id="settingsConsensusDiscard" value="1" />The items with an "unavailable" consensus.
-			<br />
-			Consensus Threshold: <input type="text" id="settingsThreshold" value="" size="1" maxlength="1" /> votes majority.
-			<br />
-			Unavailable items opacity: <input type="text" id="settingsUnavailableOpacity" value="" size="3" maxlength="3" /> %.
-		</p>
+		<div id="unavailableTabOptions">
+			<p class="options">
+				<input type="checkbox" id="settingsCompactToolbar" value="1" /> Compact items toolbar
+				<br />
+				<input type="checkbox" id="settingsSelfDiscard" value="1" /> The items I voted "with fees".
+				<br />
+				<input type="checkbox" id="settingsConsensusDiscard" value="1" />The items with an "unavailable" consensus.
+				<br />
+				Consensus Threshold: <input type="text" id="settingsThreshold" value="" size="1" maxlength="1" /> votes majority.
+				<br />
+				Unavailable items opacity: <input type="text" id="settingsUnavailableOpacity" value="" size="3" maxlength="3" /> %.
+			</p>
+			<div class="summary">
+				You currently have <span id="votes" class="number">?</span> active votes,
+				contributing to <span id="contribution" class="number">? %</span> of the community votes.
+				You are currently ranked the <span id="rank" class="number"># ?</span> most active out of <span id="totalUsers" class="number">?</span> contributors!
+				<br /><br />
+				With your help, we confirmed  <span id="available" class="number">?</span> items to be available
+				and <span id="unavailable" class="number">?</span> items as unavailable.
+			</div>
+		</div>
 		
 		<h3>Thorvarium styling</h3>
 		<p class="options">

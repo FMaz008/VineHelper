@@ -7,9 +7,9 @@ body {
 }
 
 div.summary{
-	display:block;
 	background-color:#EEE;
 	padding:10px;
+	width:300px;
 }
 
 span.number{
@@ -24,6 +24,8 @@ p.options{
 	margin-top:0px;
 	padding-left:10px;
 	margin-bottom:20px;
+	border-left:10px solid black;
+	margin-left:5px;
 }
 
 h3{

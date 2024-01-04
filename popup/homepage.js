@@ -28,11 +28,9 @@ $("#settingsUnavailableTab").on("change", function(){
 		$("#unavailableTabOptions").show();
 	else
 		$("#unavailableTabOptions").hide();
+	
+	
 });
-
-
-
-
 
 
 
@@ -75,11 +73,11 @@ function manageCheckboxSetting(key, defaultvalue = false){
 	var DV = defaultvalue;
 	chrome.storage.local.get([key], function(data) {
 		if(data && data[key] == true){
-			$( "#" + key ).prop( "checked", true);
+			$( "#" + key ).prop( "checked", true).trigger('change');
 		}else if(data && data[key] == false){
-			$( "#" + key ).prop( "checked", false);
+			$( "#" + key ).prop( "checked", false).trigger('change');
 		}else{
-			$( "#" + key ).prop( "checked", DV);
+			$( "#" + key ).prop( "checked", DV).trigger('change');
 		}
 	});
 
@@ -109,7 +107,8 @@ manageCheckboxSetting("thorvariumLimitedQuantityIcon");
 manageCheckboxSetting("thorvariumRFYAFAAITabs");
 		
 
-
-if(!$("#settingsUnavailableTab").prop( "checked")){
+if($("#settingsUnavailableTab").prop( "checked")){
+	$("#unavailableTabOptions").show();
+}else{
 	$("#unavailableTabOptions").hide();
 }
