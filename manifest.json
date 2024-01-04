@@ -37,7 +37,7 @@
 		"images/hide.png",
 		"images/show.png",
 		"images/loading.gif",
-		"scripts/attach.js"
+		"scripts/infiniteWheelFix.js"
 		],
       "matches": ["<all_urls>"]
 	}

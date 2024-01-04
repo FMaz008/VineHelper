@@ -78,6 +78,7 @@ manageCheckboxSetting("settingsSelfDiscard");
 manageCheckboxSetting("settingsCompactToolbar");
 manageCheckboxSetting("settingsBottomPagination");
 manageCheckboxSetting("settingsConsensusDiscard", true);
+manageCheckboxSetting("settingsAutofixInfiniteWheel", true);
 
 manageCheckboxSetting("thorvariumSmallItems");
 manageCheckboxSetting("thorvariumRemoveHeader");

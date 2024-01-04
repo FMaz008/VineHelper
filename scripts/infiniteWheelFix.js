@@ -39,7 +39,6 @@ window.fetch = async (...args) => {
 	  }
 	  
 	  //Return mocked response
-	  //console.log(responseData);
 	  return new Response(JSON.stringify(responseData));
   }else{
 	  console.log("Request is not a product: ", args[0]);

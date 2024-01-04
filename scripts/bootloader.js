@@ -13,6 +13,7 @@ var selfDiscard = false;
 var bottomPagination = false;
 var arrHidden = [];
 var compactToolbar = false;
+var autofixInfiniteWheel = true;
 
 //Constants
 const CONSENSUS_NO_FEES = 0;
@@ -33,10 +34,7 @@ const DISCARDED_OWN_VOTE = 2;
 
 //Inject the script to fix the infinite loading wheel into the main environment.
 var s = document.createElement('script');
-s.src = chrome.runtime.getURL('scripts/attach.js');
-s.onload = function() { this.remove(); };
-// see also "Dynamic values in the injected code" section in this answer
-(document.head || document.documentElement).appendChild(s);
+
 
 
 
@@ -99,7 +97,9 @@ async function getSettings(){
 	if(result == true || result == false)
 		bottomPagination = result;
 	
-	
+	result = await getLocalStorageVariable("settingsAutofixInfiniteWheel");
+	if(result == true || result == false)
+		autofixInfiniteWheel = result;
 	
 	result = await getLocalStorageVariable("arrHidden");
 		if(result!=null)
@@ -209,6 +209,14 @@ function discardedItemGarbageCollection(){
 
 //Initiate the extension
 function init(){
+	
+	//Inject the infinite loading wheel fix to the "main world"
+	if(autofixInfiniteWheel){
+		s.src = chrome.runtime.getURL('scripts/infiniteWheelFix.js');
+		s.onload = function() { this.remove(); };
+		// see also "Dynamic values in the injected code" section in this answer
+		(document.head || document.documentElement).appendChild(s);
+	}
 	
 	//Create the Discard grid
 	createDiscardGridInterface();
