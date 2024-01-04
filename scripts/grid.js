@@ -57,7 +57,7 @@ function Grid(obj)
 
 
 
-async function createDiscardGridInterface(){
+function createDiscardGridInterface(){
 	//Clean up interface (in case of the extension being reloaded)
 	$("ul#ext-helper-tabs-ul").remove();
 	$("div#tab-unavailable").remove();
@@ -87,8 +87,8 @@ async function createDiscardGridInterface(){
 		.addClass("ext-helper-grid")
 		.appendTo(tabs);
 	
-	await $( async function() {
-		await $( "#ext-helper-tabs" ).tabs();
+	$( function() {
+		$( "#ext-helper-tabs" ).tabs();
 	} );
 	
 	

@@ -22,12 +22,16 @@ function Toolbar(tileInstance){
 		container = $("<div />")
 			.addClass("ext-helper-status-container2")
 			.appendTo("#"+toolbarId + " .ext-helper-status-container");
-		$("<span />")
-			.text("Loading...")
+		span = $("<span />")
 			.appendTo(container);
 			
 		if(compactToolbar){
 			pToolbar.addClass("compact");
+		}
+		if(!unavailableTab){
+			pToolbar.addClass("borderless");
+		}else{
+			span.text("Loading...");
 		}
 		
 		
@@ -44,10 +48,12 @@ function Toolbar(tileInstance){
 			.appendTo(h);
 		h.on('click', {'pageId': pTile.getPageId()}, toggleItemVisibility);
 		
+		this.updateVisibilityIcon();
+		
 	};
 	
 	this.updateVisibilityIcon = function(){
-		let icon = $("#ext-helper-hide-link-"+tile.getPageId() + " div.ext-helper-toolbar-icon");
+		let icon = $("#ext-helper-hide-link-"+pTile.getPageId() + " div.ext-helper-toolbar-icon");
 		let gridId = pTile.getGridId();
 		
 		icon.removeClass("ext-helper-icon-hide");
@@ -120,12 +126,7 @@ function Toolbar(tileInstance){
 			this.setStatusIcon("");
 			this.setStatusText("");
 			context.addClass("compact");
-			
-			if(unavailableTab){
-				context.addClass(statusColor);
-			}else{
-				context.addClass("borderless");
-			}
+			context.addClass(statusColor);
 		}
 		
 		tile.getDOM().css('opacity', tileOpacity);

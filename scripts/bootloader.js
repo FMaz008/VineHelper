@@ -254,21 +254,25 @@ function init(){
 		tile = new Tile($(this), gridRegular);
 		arrUrl.push(tile.getPageId());
 		
+		//Move the hidden item to the hidden tab
+		if(tile.isHidden()){
+			tile.moveToGrid(gridHidden, false); //This is the main sort, do not animate it
+		}
+		
 		t = new Toolbar(tile);
 		t.createProductToolbar();
 	});
-
+	updateTileCounts();
+	
 	//Bottom pagination
 	if(bottomPagination){
 		$(".a-pagination").parent().clone().css("margin-top","10px").appendTo("#vvp-items-grid-container");
 	}
 	
 	//Obtain the data to fill the toolbars with it.
-	fetchData(arrUrl);
-	
-	
-	
-	
+	if(unavailableTab){ //Only query the server (to get vote results) if the voting system is active.
+		fetchData(arrUrl);
+	}
 }
 
 //Get data from the server about the products listed on this page
@@ -312,7 +316,7 @@ function serverResponse(data){
 		tile.setVotes(values["v0"], values["v1"], values["s"]);
 		
 		//Assign the tiles to the proper grid
-		if(tile.isHidden()){
+		if(tile.isHidden()){ //The hidden tiles were already moved, but we want to keep them there.
 			tile.moveToGrid(gridHidden, false); //This is the main sort, do not animate it
 		}else if(consensusDiscard && tile.getStatus() >= NOT_DISCARDED){
 			tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
