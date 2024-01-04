@@ -1,13 +1,12 @@
 {
   "manifest_version": 3,
   "name": "Amazon Vine Helper Canada",
-  "description": "Help identify items with import fees.",
-  "version": "1.6",
+  "description": "Help identify items which are unavailable to order.",
+  "version": "1.7",
   
   "permissions": [
     "storage"
   ],
-  
   "browser_specific_settings": {
     "gecko": {
       "id": "{5951bf9a-25ae-4043-9fa2-54dc0ac1ce70}",
@@ -37,7 +36,8 @@
 		"images/info.png",
 		"images/hide.png",
 		"images/show.png",
-		"images/loading.gif"
+		"images/loading.gif",
+		"scripts/attach.js"
 		],
       "matches": ["<all_urls>"]
 	}

@@ -30,6 +30,25 @@ const DISCARDED_OWN_VOTE = 2;
 
 
 
+
+const isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
+
+if(!isFirefox){
+	var s = document.createElement('script');
+	s.src = chrome.runtime.getURL('scripts/attach.js');
+	s.onload = function() { this.remove(); };
+	// see also "Dynamic values in the injected code" section in this answer
+	(document.head || document.documentElement).appendChild(s);
+	
+}else{
+	
+	
+}
+
+
+
+
+
 //#########################
 //### Load settings
 
@@ -226,8 +245,11 @@ function init(){
 	
 	//Obtain the data to fill the toolbars with it.
 	fetchData(arrUrl);
+	
+	
+	
+	
 }
-
 
 //Get data from the server about the products listed on this page
 function fetchData(arrUrl){
@@ -347,3 +369,21 @@ async function toggleItemVisibility(event){
 	
 	updateTileCounts();
 }
+
+
+
+
+
+/*
+async function overcomeInfiniteWheel(){
+e= A2EUQ1WTGCTBG2%23B016A4INZS%23vine.enrollment.e1b69ec6-4845-46bc-9719-5bd9bd427386
+b= B016A4INZS
+c= 180
+fetch(
+                          'api/recommendations/'.concat(e, '/item/').concat(b, '?imageSize=').concat(c)
+                        );
+}
+
+*/
+
+						
