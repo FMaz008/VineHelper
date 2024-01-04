@@ -57,7 +57,10 @@
 		"scripts/toolbar.js",
 		"scripts/bootloader.js"
 	  ],
-      "matches": ["*://*.amazon.*/vine/*"],
+      "matches": [
+		"*://*.amazon.ca/vine/*",
+		"*://*.amazon.com/vine/*"
+	  ],
 	  "run_at": "document_end"
     }
   ]
