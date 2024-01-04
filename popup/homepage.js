@@ -28,8 +28,6 @@ $("#settingsUnavailableTab").on("change", function(){
 		$("#unavailableTabOptions").show();
 	else
 		$("#unavailableTabOptions").hide();
-	
-	
 });
 
 
@@ -107,8 +105,6 @@ manageCheckboxSetting("thorvariumLimitedQuantityIcon");
 manageCheckboxSetting("thorvariumRFYAFAAITabs");
 		
 
-if($("#settingsUnavailableTab").prop( "checked")){
-	$("#unavailableTabOptions").show();
-}else{
+if(!$("#settingsUnavailableTab").is(":checked")){
 	$("#unavailableTabOptions").hide();
 }

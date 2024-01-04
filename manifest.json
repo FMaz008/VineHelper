@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Amazon Vine Helper Canada",
-  "description": "Help identify items which are unavailable to order.",
+  "name": "Amazon Vine Helper",
+  "description": "Improve the Amazon Vine experience.",
   "version": "1.7",
   
   "permissions": [
