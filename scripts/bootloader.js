@@ -5,6 +5,9 @@ var gridRegular = null;
 var gridUnavailable = null; //Will be populated after the grid will be created.
 var gridHidden = null; //Will be populated after the grid will be created.
 
+//Inject the script to fix the infinite loading wheel into the main environment.
+var scriptTag = document.createElement('script');
+
 //Extension settings
 var consensusThreshold = 2;
 var consensusDiscard= true;
@@ -32,8 +35,7 @@ const DISCARDED_OWN_VOTE = 2;
 
 
 
-//Inject the script to fix the infinite loading wheel into the main environment.
-var s = document.createElement('script');
+
 
 
 
@@ -212,10 +214,10 @@ function init(){
 	
 	//Inject the infinite loading wheel fix to the "main world"
 	if(autofixInfiniteWheel){
-		s.src = chrome.runtime.getURL('scripts/infiniteWheelFix.js');
-		s.onload = function() { this.remove(); };
+		scriptTag.src = chrome.runtime.getURL('scripts/infiniteWheelFix.js');
+		scriptTag.onload = function() { this.remove(); };
 		// see also "Dynamic values in the injected code" section in this answer
-		(document.head || document.documentElement).appendChild(s);
+		(document.head || document.documentElement).appendChild(scriptTag);
 	}
 	
 	//Create the Discard grid
