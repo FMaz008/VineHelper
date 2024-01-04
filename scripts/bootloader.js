@@ -31,19 +31,12 @@ const DISCARDED_OWN_VOTE = 2;
 
 
 
-const isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
-
-if(!isFirefox){
-	var s = document.createElement('script');
-	s.src = chrome.runtime.getURL('scripts/attach.js');
-	s.onload = function() { this.remove(); };
-	// see also "Dynamic values in the injected code" section in this answer
-	(document.head || document.documentElement).appendChild(s);
-	
-}else{
-	
-	
-}
+//Inject the script to fix the infinite loading wheel into the main environment.
+var s = document.createElement('script');
+s.src = chrome.runtime.getURL('scripts/attach.js');
+s.onload = function() { this.remove(); };
+// see also "Dynamic values in the injected code" section in this answer
+(document.head || document.documentElement).appendChild(s);
 
 
 
