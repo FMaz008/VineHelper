@@ -209,6 +209,25 @@ function discardedItemGarbageCollection(){
 }
 
 
+window.addEventListener("message", async function(event) {
+    // We only accept messages from ourselves
+    if (event.source != window)
+        return;
+
+    if (event.data.type && (event.data.type == "FROM_PAGE")) {
+        console.log("Content script received message: " + event.data.text);
+		let healingAnim = $("<div>")
+				.attr("id", "ext-helper-healing")
+				.addClass("ext-helper-healing")
+				.prependTo("#a-popover-content-3");
+		$("<div>")
+			.addClass("ext-helper-icon-healing")
+			.appendTo(healingAnim);
+		await healingAnim.delay(1000).animate({opacity: "hide"},{duration: 500}).promise();
+		$("#ext-helper-healing").remove();
+    }
+});
+
 
 
 

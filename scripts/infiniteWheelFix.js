@@ -11,7 +11,7 @@ window.fetch = async (...args) => {
 
   let regex = /^api\/recommendations\/.*$/;
   if(regex.test(args[0])){
-	  console.log("URL match that of a product:", args[0]);
+	  //console.log("URL match that of a product:", args[0]);
 	  
 	  await response
 		.clone()
@@ -24,24 +24,31 @@ window.fetch = async (...args) => {
 	  //Check if the response has variants
 	  if(responseData.result.variations !== undefined){
 		  let variations = responseData.result.variations;
-		  console.log(variations.length, " variations found.");
+		  //console.log(variations.length, " variations found.");
 		  
 		  //Check each variation
+		  let fixed = 0;
 		  for (let i = 0; i < variations.length; ++i) {
 			  let value = variations[i];
 			  if(_.isEmpty(value.dimensions)){
-				  console.log("Dimensions of variance", value.asin, " is empty, attempting to set defaut values.");
+				  //console.log("Dimensions of variance", value.asin, " is empty, attempting to set defaut values.");
 				  responseData.result.variations[i].dimensions = {"asin_no": value.asin};
+				  fixed++;
 			  }
 		  }
+		  
+		  if(fixed > 0){
+			  var data = { type: "FROM_PAGE", text: fixed + " variation(s) fixed." };
+			  window.postMessage(data, "*");
+		  }
 	  }else{
-		  console.log("This product has no variation.");
+		  //console.log("This product has no variation.");
 	  }
 	  
 	  //Return mocked response
 	  return new Response(JSON.stringify(responseData));
   }else{
-	  console.log("Request is not a product: ", args[0]);
+	  //console.log("Request is not a product: ", args[0]);
 	  return response;
   }
 };

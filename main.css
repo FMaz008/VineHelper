@@ -113,6 +113,19 @@ a.selectedVote{
 	background-color:#EEE;
 }
 
+div.ext-helper-healing{
+	position:absolute;
+	display:table;
+	width:50%;
+	left:25%;
+	z-index:20;
+}
+
+div.ext-helper-healing div{
+	display:table-cell;
+	vertical-align:middle;
+	height:400px;
+}
 
 
 /* Chrome 29+ */
@@ -148,6 +161,11 @@ a.selectedVote{
 		background-image: url("chrome-extension://__MSG_@@extension_id__/images/loading.gif");
 		background-repeat:no-repeat;
 	}
+	div.ext-helper-icon-healing{
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/images/healing.gif");
+		background-repeat:no-repeat;
+	}
 }
 
 @supports (-moz-appearance:none) {
@@ -179,6 +197,11 @@ a.selectedVote{
 	div.ext-helper-icon-loading{
 		background-size: 100%;
 		background-image: url("/images/loading.gif");
+		background-repeat:no-repeat;
+	}
+	div.ext-helper-icon-healing{
+		background-size: 100%;
+		background-image: url("/images/healing.gif");
 		background-repeat:no-repeat;
 	}
 }
