@@ -3,7 +3,7 @@ function Grid(obj)
 {
 	//Private variables
 	var pGrid = obj;
-	var pArrTile = [];
+	var pArrTile = [];
 	
 	//Private methods
 	function getId(){
@@ -124,20 +124,26 @@ function createGridInterface(){
 }
 
 
-function hideAllItems(){
-	$("#vvp-items-grid .vvp-item-tile").each(function(){
-		tile = new Tile($(this), gridRegular); //Create a temporary tile
-		tile = getTileByPageId(tile.getPageId()); //Obtain the real tile 
-		tile.hideTile();
-	});
-	$("#ext-helper-available-count").text("0");
+async function hideAllItems(){
+	if ($("#vvp-items-grid .vvp-item-tile").children().length == 0)
+		return true;
+	
+	tDom = $("#vvp-items-grid .vvp-item-tile").children()[0];
+	pageId = getPageIdFromDom(tDom);
+	tile = getTileByPageId(pageId); //Obtain the real tile 
+	await tile.hideTile(false);
+	
+	hideAllItems();
 }
 
-function showAllItems(){
-	$("#tab-hidden .vvp-item-tile").each(function(){
-		tile = new Tile($(this), gridHidden);//Create a temporary tile
-		tile = getTileByPageId(tile.getPageId()); //Obtain the real tile
-		tile.showTile();
-	});
-	$("#ext-helper-hidden-count").text("0");
+async function showAllItems(){
+	if ($("#tab-hidden .vvp-item-tile").children().length == 0)
+		return true;
+	
+	tDom = $("#tab-hidden .vvp-item-tile").children()[0];
+	pageId = getPageIdFromDom(tDom);
+	tile = getTileByPageId(pageId); //Obtain the real tile 
+	await tile.showTile(false);
+	
+	showAllItems();
 }

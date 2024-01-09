@@ -16,10 +16,7 @@ function Tile(obj, gridInstance){
 	//#################
 	//## Private method
 	function findPageId(){
-		let regex = /^(?:.*\/dp\/)(.+?)(?:\?.*)?$/; //Isolate the product ID in the URL.
-		let url = $(pTile).find(".a-link-normal").attr("href");
-		let arrPageId = url.match(regex);
-		return arrPageId[1];
+		return getPageIdFromDom(pTile);
 	}
 	
 	function getFees(){
@@ -152,6 +149,8 @@ function Tile(obj, gridInstance){
 		
 		$(pTile).detach().appendTo("#" + $(pGrid.getDOM()).attr("id"));
 		$(pTile).show();
+		
+		return true;
 	};
 	
 	this.isHidden = function(){

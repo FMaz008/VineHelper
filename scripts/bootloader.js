@@ -190,6 +190,13 @@ function getTileByPageId(pageId){
 	return tile;
 }
 
+function getPageIdFromDom(tileDom){
+	let regex = /^(?:.*\/dp\/)(.+?)(?:\?.*)?$/; //Isolate the product ID in the URL.
+	let url = $(tileDom).find(".a-link-normal").attr("href");
+	let arrPageId = url.match(regex);
+	return arrPageId[1];
+}
+
 function discardedItemGarbageCollection(){
 	var change = false;
 	let expiredDate = new Date();
