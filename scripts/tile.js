@@ -156,6 +156,9 @@ function Tile(obj, gridInstance){
 	};
 	
 	this.isHidden = function(){
+		if(!hiddenTab)
+			return false;
+		
 		var found = false;
 		$.each(arrHidden, function(key, value){
 			if(value.pageId == pPageId){

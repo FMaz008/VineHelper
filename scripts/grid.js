@@ -64,32 +64,36 @@ function createDiscardGridInterface(){
 	$("div#tab-hidden").remove();
 	$(".ext-helper-status").remove(); //remove all toolbars
 	
-	let tabs = $("<div>").attr("id","ext-helper-tabs").appendTo("#vvp-items-grid-container");
+	//Implement the tab system.
+	let tabs = $("<div>").attr("id","ext-helper-tabs").insertBefore("#vvp-items-grid");
 	let ul = $("<ul>").attr("id","ext-helper-tabs-ul").appendTo(tabs);
 	$("#vvp-items-grid").detach().appendTo(tabs);
 	$("<li><a href=\"#vvp-items-grid\">Available (<span id='ext-helper-available-count'></span>)</a></li>").appendTo(ul);
+	
 	//If voting system enabled
 	if(unavailableTab){
 		$("<li><a href=\"#tab-unavailable\">Unavailable (<span id='ext-helper-unavailable-count'></span>)</a></li>").appendTo(ul);
-	}
-	$("<li><a href=\"#tab-hidden\">Hidden (<span id='ext-helper-hidden-count'></span>)</a></li>").appendTo(ul);
-	
-	
-	//If voting system enabled
-	if(unavailableTab){
 		$("<div />")
 			.attr("id","tab-unavailable")
 			.addClass("ext-helper-grid")
 			.appendTo(tabs);
 	}
-	$("<div />")
-		.attr("id","tab-hidden")
-		.addClass("ext-helper-grid")
-		.appendTo(tabs);
 	
+	//If the hidden tab system is activated
+	if(hiddenTab){
+		$("<li><a href=\"#tab-hidden\">Hidden (<span id='ext-helper-hidden-count'></span>)</a></li>").appendTo(ul);
+		$("<div />")
+			.attr("id","tab-hidden")
+			.addClass("ext-helper-grid")
+			.appendTo(tabs);
+	}
+	
+	//Actiate the tab system
 	$( function() {
 		$( "#ext-helper-tabs" ).tabs();
 	} );
+
+	
 	
 	
 }

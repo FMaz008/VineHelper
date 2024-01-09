@@ -86,7 +86,8 @@ function manageCheckboxSetting(key, defaultvalue = false){
 
 manageCheckboxSetting("settingsSelfDiscard");
 manageCheckboxSetting("settingsCompactToolbar");
-manageCheckboxSetting("settingsBottomPagination");
+manageCheckboxSetting("settingsTopPagination");
+manageCheckboxSetting("settingsHiddenTab", true);
 manageCheckboxSetting("settingsConsensusDiscard", true);
 manageCheckboxSetting("settingsAutofixInfiniteWheel", true);
 manageCheckboxSetting("settingsUnavailableTab", true);

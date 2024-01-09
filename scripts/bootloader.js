@@ -13,11 +13,12 @@ var consensusThreshold = 2;
 var consensusDiscard= true;
 var unavailableOpacity = 100;
 var selfDiscard = false;
-var bottomPagination = false;
+var topPagination = false;
+var unavailableTab = true;
+var hiddenTab = true;
 var arrHidden = [];
 var compactToolbar = false;
 var autofixInfiniteWheel = true;
-var unavailableTab = true;
 
 //Constants
 const CONSENSUS_NO_FEES = 0;
@@ -90,9 +91,9 @@ async function getSettings(){
 	if(result == true || result == false)
 		compactToolbar = result;
 	
-	result = await getLocalStorageVariable("settingsBottomPagination");
+	result = await getLocalStorageVariable("settingsTopPagination");
 	if(result == true || result == false)
-		bottomPagination = result;
+		topPagination = result;
 	
 	result = await getLocalStorageVariable("settingsAutofixInfiniteWheel");
 	if(result == true || result == false)
@@ -101,11 +102,17 @@ async function getSettings(){
 	result = await getLocalStorageVariable("settingsUnavailableTab");
 	if(result == true || result == false)
 		unavailableTab = result;
+
+	result = await getLocalStorageVariable("settingsHiddenTab");
+	if(result == true || result == false){
+		hiddenTab = result;
 	
-	result = await getLocalStorageVariable("arrHidden");
-		if(result!=null)
-			arrHidden = result;
-	
+		if(hiddenTab == true){
+			result = await getLocalStorageVariable("arrHidden");
+			if(result!=null)
+				arrHidden = result;
+		}
+	}
 	
 	//Figure out what domain the extension is working on
 	//De-activate the unavailableTab (and the voting system) for all non-.ca domains.
@@ -186,8 +193,12 @@ function getTileByPageId(pageId){
 function updateTileCounts(){
 	//Calculate how many tiles within each grids
 	$("#ext-helper-available-count").text(gridRegular.getTileCount());
-	$("#ext-helper-unavailable-count").text(gridUnavailable.getTileCount());
-	$("#ext-helper-hidden-count").text(gridHidden.getTileCount());
+	
+	if(unavailableTab)
+		$("#ext-helper-unavailable-count").text(gridUnavailable.getTileCount());
+	
+	if(hiddenTab)
+		$("#ext-helper-hidden-count").text(gridHidden.getTileCount());
 }
 
 function discardedItemGarbageCollection(){
@@ -215,7 +226,7 @@ window.addEventListener("message", async function(event) {
         return;
 
     if (event.data.type && (event.data.type == "FROM_PAGE")) {
-        console.log("Content script received message: " + event.data.text);
+        //console.log("Content script received message: " + event.data.text);
 		let healingAnim = $("<div>")
 				.attr("id", "ext-helper-healing")
 				.addClass("ext-helper-healing")
@@ -248,15 +259,19 @@ function init(){
 	}
 	
 	//Create the Discard grid
-	createDiscardGridInterface();
-
+	if(unavailableTab || hiddenTab){
+		createDiscardGridInterface();
+	}
+	
 	gridRegular = new Grid($("#vvp-items-grid"));
-	gridUnavailable = new Grid($("#tab-unavailable"));
-	gridHidden = new Grid($("#tab-hidden"));
-
-
-	//Disable voting system
-	if(!unavailableTab){
+	
+	if(hiddenTab){
+		gridHidden = new Grid($("#tab-hidden"));
+	}
+	
+	if(unavailableTab){
+		gridUnavailable = new Grid($("#tab-unavailable"));
+	}else{ //Disable voting system
 		$("#tab-unavailable").parent("ul").hide(); //Doesn't do anything
 		compactToolbar = true;
 		consensusDiscard = false;
@@ -274,18 +289,23 @@ function init(){
 		arrUrl.push(tile.getPageId());
 		
 		//Move the hidden item to the hidden tab
-		if(tile.isHidden()){
+		if(hiddenTab && tile.isHidden()){
 			tile.moveToGrid(gridHidden, false); //This is the main sort, do not animate it
 		}
 		
-		t = new Toolbar(tile);
-		t.createProductToolbar();
+		if(unavailableTab || hiddenTab){
+			t = new Toolbar(tile);
+			t.createProductToolbar();
+		}
 	});
-	updateTileCounts();
+	
+	if(unavailableTab || hiddenTab){
+		updateTileCounts();
+	}
 	
 	//Bottom pagination
-	if(bottomPagination){
-		$(".a-pagination").parent().clone().css("margin-top","10px").appendTo("#vvp-items-grid-container");
+	if(topPagination){
+		$(".a-pagination").parent().css("margin-top","10px").clone().insertAfter("#vvp-items-grid-container p");
 	}
 	
 	//Obtain the data to fill the toolbars with it.
@@ -335,7 +355,7 @@ function serverResponse(data){
 		tile.setVotes(values["v0"], values["v1"], values["s"]);
 		
 		//Assign the tiles to the proper grid
-		if(tile.isHidden()){ //The hidden tiles were already moved, but we want to keep them there.
+		if(hiddenTab && tile.isHidden()){ //The hidden tiles were already moved, but we want to keep them there.
 			tile.moveToGrid(gridHidden, false); //This is the main sort, do not animate it
 		}else if(consensusDiscard && tile.getStatus() >= NOT_DISCARDED){
 			tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
@@ -413,20 +433,5 @@ async function toggleItemVisibility(event){
 	updateTileCounts();
 }
 
-
-
-
-
-/*
-async function overcomeInfiniteWheel(){
-e= A2EUQ1WTGCTBG2%23B016A4INZS%23vine.enrollment.e1b69ec6-4845-46bc-9719-5bd9bd427386
-b= B016A4INZS
-c= 180
-fetch(
-                          'api/recommendations/'.concat(e, '/item/').concat(b, '?imageSize=').concat(c)
-                        );
-}
-
-*/
 
 						

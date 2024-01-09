@@ -32,6 +32,8 @@ div.ext-helper-grid .vvp-item-tile .vvp-item-tile-content > * {
 /* Toolbar */
 div.ext-helper-status{
 	position:relative;
+	margin-top:5px!important;
+	margin-bottom:0px!important;
 }
 div.ext-helper-status-container{
 	position:absolute;
@@ -67,6 +69,14 @@ div.compact div.ext-helper-status-container2{
 }
 div.compact div.ext-helper-icon{
 	display:none;
+}
+
+div.toolbar-icon-only div.ext-helper-status-container{
+	float:right;
+	height:15px;
+	width:15px;
+	border:none;
+	margin:0;
 }
 div.ext-helper-background-nofees div.ext-helper-status-container{
 	background-color:#99ff99;

@@ -28,31 +28,38 @@ function Toolbar(tileInstance){
 		if(compactToolbar){
 			pToolbar.addClass("compact");
 		}
-		if(!unavailableTab){
-			pToolbar.addClass("borderless");
-		}else{
+		
+		if(unavailableTab){
 			span.text("Loading...");
 		}
 		
+		//Only the hidden tab is activated, only the hide icon has to be shown
+		if(!unavailableTab && hiddenTab){
+			pToolbar.addClass("toolbar-icon-only");
+		}
 		
 		//Display the hide link
-		let h, hi;
-		h = $("<a />")
-			.attr("href", "#"+pTile.getPageId())
-			.attr("id", "ext-helper-hide-link-"+pTile.getPageId())
-			.addClass("ext-helper-hide-link")
-			.attr("onclick", "return false;")
-			.appendTo(container);
-		hi= $("<div />")
-			.addClass("ext-helper-toolbar-icon")
-			.appendTo(h);
-		h.on('click', {'pageId': pTile.getPageId()}, toggleItemVisibility);
-		
-		this.updateVisibilityIcon();
-		
+		if(hiddenTab){
+			let h, hi;
+			h = $("<a />")
+				.attr("href", "#"+pTile.getPageId())
+				.attr("id", "ext-helper-hide-link-"+pTile.getPageId())
+				.addClass("ext-helper-hide-link")
+				.attr("onclick", "return false;")
+				.appendTo(container);
+			hi= $("<div />")
+				.addClass("ext-helper-toolbar-icon")
+				.appendTo(h);
+			h.on('click', {'pageId': pTile.getPageId()}, toggleItemVisibility);
+			
+			this.updateVisibilityIcon();
+		}
 	};
 	
 	this.updateVisibilityIcon = function(){
+		if(!hiddenTab)
+			return false;
+		
 		let icon = $("#ext-helper-hide-link-"+pTile.getPageId() + " div.ext-helper-toolbar-icon");
 		let gridId = pTile.getGridId();
 		
@@ -97,7 +104,10 @@ function Toolbar(tileInstance){
 		let statusText;
 		let statusColor;
 		
-		this.updateVisibilityIcon();
+		//If the hidden tab system is activated, update the visibility icon
+		if(hiddenTab)
+			this.updateVisibilityIcon();
+		
 		switch (pTile.getStatus()){
 			case DISCARDED_WITH_FEES:
 			case DISCARDED_OWN_VOTE:
@@ -131,7 +141,7 @@ function Toolbar(tileInstance){
 		
 		tile.getDOM().css('opacity', tileOpacity);
 		
-		//Display voting system is required.
+		//Display voting system if active.
 		if(unavailableTab){
 			createVotingWidget();
 		}
