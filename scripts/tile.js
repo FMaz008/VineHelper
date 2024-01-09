@@ -150,7 +150,6 @@ function Tile(obj, gridInstance){
 		if(animate)
 			await animateVanish($(pTile)); //Will hide the tile
 		
-		//console.log( pPageId + ' Will be moved to grid ' + "#" + $(pGrid.getDOM()).attr("id"));
 		$(pTile).detach().appendTo("#" + $(pGrid.getDOM()).attr("id"));
 		$(pTile).show();
 	};
@@ -169,22 +168,22 @@ function Tile(obj, gridInstance){
 		return found;
 	};
 	
-	this.hideTile = async function(){
+	this.hideTile = async function(animate=true){
 		arrHidden.push({"pageId" : pPageId, "date": new Date});
-		await this.moveToGrid(gridHidden, true);
+		await this.moveToGrid(gridHidden, animate);
 		
 		updateHiddenTileList();
 	}
 	
-	this.showTile = async function(){
+	this.showTile = async function(animate=true){
 		removePageIdFromArrHidden(pPageId);
 		
 		if(consensusDiscard && tile.getStatus() >= NOT_DISCARDED){
-			await tile.moveToGrid(gridUnavailable, true);
+			await tile.moveToGrid(gridUnavailable, animate);
 		} else if(selfDiscard && tile.getStatus() == DISCARDED_OWN_VOTE){
-			await tile.moveToGrid(gridUnavailable, true);
+			await tile.moveToGrid(gridUnavailable, animate);
 		} else {
-			await this.moveToGrid(gridRegular, true);
+			await this.moveToGrid(gridRegular, animate);
 		}
 		updateHiddenTileList();
 	}

@@ -159,6 +159,7 @@ function Toolbar(tileInstance){
 		pe = $("<div />")
 			.addClass("ext-helper-voting-widget")
 			.appendTo(container);
+		
 		if(!compactToolbar){
 			pe.text("Available? ");
 		}
@@ -181,6 +182,10 @@ function Toolbar(tileInstance){
 			.html("&#11199; No ("+pTile.getVoteFees()+")")
 			.appendTo(pe);
 		
+		if(compactToolbar){
+			v0.html("&#9745; ("+pTile.getVoteNoFees()+")");
+			v1.html("&#11199; ("+pTile.getVoteFees()+")")
+		}
 		
 		v1.on('click', {'pageId': pTile.getPageId(), 'fees': 1}, reportfees);
 		v0.on('click', {'pageId': pTile.getPageId(), 'fees': 0}, reportfees);

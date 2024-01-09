@@ -190,17 +190,6 @@ function getTileByPageId(pageId){
 	return tile;
 }
 
-function updateTileCounts(){
-	//Calculate how many tiles within each grids
-	$("#ext-helper-available-count").text(gridRegular.getTileCount());
-	
-	if(unavailableTab)
-		$("#ext-helper-unavailable-count").text(gridUnavailable.getTileCount());
-	
-	if(hiddenTab)
-		$("#ext-helper-hidden-count").text(gridHidden.getTileCount());
-}
-
 function discardedItemGarbageCollection(){
 	var change = false;
 	let expiredDate = new Date();
@@ -260,7 +249,7 @@ function init(){
 	
 	//Create the Discard grid
 	if(unavailableTab || hiddenTab){
-		createDiscardGridInterface();
+		createGridInterface();
 	}
 	
 	gridRegular = new Grid($("#vvp-items-grid"));

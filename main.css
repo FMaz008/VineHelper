@@ -35,6 +35,14 @@ div.ext-helper-status{
 	margin-top:5px!important;
 	margin-bottom:0px!important;
 }
+
+div.hidden-toolbar{
+	float:right;
+	width:200px;
+	text-align:right;
+	padding-right:5px;
+}
+
 div.ext-helper-status-container{
 	position:absolute;
 	z-index:1;
@@ -53,14 +61,16 @@ div.ext-helper-status-container div.ext-helper-status-container2, div.ext-helper
 }
 
 
-div.compact div.ext-helper-status-container{
-	margin-top:10px;
-	padding:2px;
-	position:relative;
-}
+
 
 div.borderless div.ext-helper-status-container{
 	border:0;
+}
+
+div.compact div.ext-helper-status-container{
+	margin-top:5px;
+	padding:0px;
+	position:relative;
 }
 
 div.compact div.ext-helper-status-container2{
@@ -70,6 +80,13 @@ div.compact div.ext-helper-status-container2{
 div.compact div.ext-helper-icon{
 	display:none;
 }
+.ext-helper-hide-link,
+.ext-helper-show-link{
+	float:right;
+	padding-top:2px;
+	padding-right:4px;
+}
+
 
 div.toolbar-icon-only div.ext-helper-status-container{
 	float:right;
@@ -86,9 +103,8 @@ div.ext-helper-background-fees div.ext-helper-status-container{
 }
 
 
-a.ext-helper-hide-link div.ext-helper-toolbar-icon{
-	float:right;
-	display:block;
+div.ext-helper-toolbar-icon{
+	display:inline-block;
 	width:12px;
 	height:12px;
 }

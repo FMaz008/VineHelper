@@ -53,11 +53,20 @@ function Grid(obj)
 }
 
 
+function updateTileCounts(){
+	//Calculate how many tiles within each grids
+	$("#ext-helper-available-count").text(gridRegular.getTileCount());
+	
+	if(unavailableTab)
+		$("#ext-helper-unavailable-count").text(gridUnavailable.getTileCount());
+	
+	if(hiddenTab)
+		$("#ext-helper-hidden-count").text(gridHidden.getTileCount());
+}
 
 
 
-
-function createDiscardGridInterface(){
+function createGridInterface(){
 	//Clean up interface (in case of the extension being reloaded)
 	$("ul#ext-helper-tabs-ul").remove();
 	$("div#tab-unavailable").remove();
@@ -86,14 +95,49 @@ function createDiscardGridInterface(){
 			.attr("id","tab-hidden")
 			.addClass("ext-helper-grid")
 			.appendTo(tabs);
+			
+			
+		//Add the toolbar for Hide All & Show All
+		a1 = $("<a>")
+			.attr("href", "#")
+			.attr("onclick", "return false;")
+			.html('<div class="ext-helper-toolbar-icon ext-helper-icon-hide"></div> Hide all')
+			.on("click", {}, this.hideAllItems);
+		a2 = $("<a>")
+			.attr("href", "#")
+			.attr("onclick", "return false;")
+			.html('<div class="ext-helper-toolbar-icon ext-helper-icon-show"></div> Show all')
+			.on("click", {}, this.showAllItems);
+		$("<div>")
+			.addClass("hidden-toolbar")
+			.append("All items on this page:<br />")
+			.append(a1, " / ", a2)
+			.prependTo("#ext-helper-tabs");
+
 	}
 	
 	//Actiate the tab system
 	$( function() {
 		$( "#ext-helper-tabs" ).tabs();
 	} );
+	
+}
 
-	
-	
-	
+
+function hideAllItems(){
+	$("#vvp-items-grid .vvp-item-tile").each(function(){
+		tile = new Tile($(this), gridRegular); //Create a temporary tile
+		tile = getTileByPageId(tile.getPageId()); //Obtain the real tile 
+		tile.hideTile();
+	});
+	$("#ext-helper-available-count").text("0");
+}
+
+function showAllItems(){
+	$("#tab-hidden .vvp-item-tile").each(function(){
+		tile = new Tile($(this), gridHidden);//Create a temporary tile
+		tile = getTileByPageId(tile.getPageId()); //Obtain the real tile
+		tile.showTile();
+	});
+	$("#ext-helper-hidden-count").text("0");
 }
