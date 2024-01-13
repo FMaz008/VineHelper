@@ -60,10 +60,6 @@ div.ext-helper-status-container div.ext-helper-status-container2, div.ext-helper
 	font-size:10px;
 }
 
-.ext-helper-voting-widget{
-	clear:right;
-}
-
 
 
 
@@ -94,8 +90,6 @@ div.compact div.ext-helper-icon{
 
 div.toolbar-icon-only div.ext-helper-status-container{
 	float:right;
-	height:15px;
-	width:15px;
 	border:none;
 	margin:0;
 }

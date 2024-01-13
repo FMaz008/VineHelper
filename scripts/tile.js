@@ -20,9 +20,9 @@ function Tile(obj, gridInstance){
 	}
 	
 	function getFees(){
-		if(pVoteFees - pVoteNoFees >= consensusThreshold)
+		if(pVoteFees - pVoteNoFees >= appSettings.unavailableTab.consensusThreshold)
 			return CONSENSUS_FEES;
-		else if(pVoteNoFees - pVoteFees >= consensusThreshold)
+		else if(pVoteNoFees - pVoteFees >= appSettings.unavailableTab.consensusThreshold)
 			return CONSENSUS_NO_FEES;
 		else
 			return NO_CONSENSUS;
@@ -54,9 +54,9 @@ function Tile(obj, gridInstance){
 	}
 
 	function removePageIdFromArrHidden(pageId){
-		$.each(arrHidden, function(key, value){
+		$.each(appSettings.hiddenTab.arrHidden, function(key, value){
 			if(value != undefined && value.pageId == pageId){
-				arrHidden.splice(key, 1);
+				appSettings.hiddenTab.arrHidden.splice(key, 1);
 			}
 		});
 	}
@@ -65,7 +65,7 @@ function Tile(obj, gridInstance){
 		pToolbar.updateVisibilityIcon();
 		
 		//Save the new array
-		chrome.storage.local.set({ 'arrHidden': arrHidden });
+		chrome.storage.local.set({ 'settings': appSettings });
 		
 		//Refresh grid counts
 		updateTileCounts();
@@ -154,11 +154,11 @@ function Tile(obj, gridInstance){
 	};
 	
 	this.isHidden = function(){
-		if(!hiddenTab)
+		if(!appSettings.hiddenTab.active)
 			return false;
 		
 		var found = false;
-		$.each(arrHidden, function(key, value){
+		$.each(appSettings.hiddenTab.arrHidden, function(key, value){
 			if(value.pageId == pPageId){
 				found = true;
 				return;
@@ -168,7 +168,7 @@ function Tile(obj, gridInstance){
 	};
 	
 	this.hideTile = async function(animate=true){
-		arrHidden.push({"pageId" : pPageId, "date": new Date});
+		appSettings.hiddenTab.arrHidden.push({"pageId" : pPageId, "date": new Date});
 		await this.moveToGrid(gridHidden, animate);
 		
 		updateHiddenTileList();
@@ -177,9 +177,9 @@ function Tile(obj, gridInstance){
 	this.showTile = async function(animate=true){
 		removePageIdFromArrHidden(pPageId);
 		
-		if(consensusDiscard && tile.getStatus() >= NOT_DISCARDED){
+		if(appSettings.unavailableTab.consensusDiscard && tile.getStatus() >= NOT_DISCARDED){
 			await tile.moveToGrid(gridUnavailable, animate);
-		} else if(selfDiscard && tile.getStatus() == DISCARDED_OWN_VOTE){
+		} else if(appSettings.unavailableTab.selfDiscard && tile.getStatus() == DISCARDED_OWN_VOTE){
 			await tile.moveToGrid(gridUnavailable, animate);
 		} else {
 			await this.moveToGrid(gridRegular, animate);

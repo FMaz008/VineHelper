@@ -57,10 +57,10 @@ function updateTileCounts(){
 	//Calculate how many tiles within each grids
 	$("#ext-helper-available-count").text(gridRegular.getTileCount());
 	
-	if(unavailableTab)
+	if(appSettings.unavailableTab.active)
 		$("#ext-helper-unavailable-count").text(gridUnavailable.getTileCount());
 	
-	if(hiddenTab)
+	if(appSettings.hiddenTab.active)
 		$("#ext-helper-hidden-count").text(gridHidden.getTileCount());
 }
 
@@ -80,7 +80,7 @@ function createGridInterface(){
 	$("<li><a href=\"#vvp-items-grid\">Available (<span id='ext-helper-available-count'></span>)</a></li>").appendTo(ul);
 	
 	//If voting system enabled
-	if(unavailableTab){
+	if(appSettings.unavailableTab.active){
 		$("<li><a href=\"#tab-unavailable\">Unavailable (<span id='ext-helper-unavailable-count'></span>)</a></li>").appendTo(ul);
 		$("<div />")
 			.attr("id","tab-unavailable")
@@ -89,7 +89,7 @@ function createGridInterface(){
 	}
 	
 	//If the hidden tab system is activated
-	if(hiddenTab){
+	if(appSettings.hiddenTab.active){
 		$("<li><a href=\"#tab-hidden\">Hidden (<span id='ext-helper-hidden-count'></span>)</a></li>").appendTo(ul);
 		$("<div />")
 			.attr("id","tab-hidden")

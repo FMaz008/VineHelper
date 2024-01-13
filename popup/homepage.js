@@ -1,111 +1,166 @@
 //Reminder: This script is executed from the extension popup.
 //          The console used is the browser console, not the inspector console.
 
-//Obtain contribution statistics
-let url = "https://www.francoismazerolle.ca/vinehelperStats.php";
-fetch(url)
-	.then((response) => response.json())
-	.then(serverResponse)
-	.catch( error =>  console.log(error) );
 
 
-function serverResponse(data){
-	let percentage = data["votes"]*100/data["totalVotes"];
-	
-	$("#votes").text(data["votes"]);
-	$("#contribution").text(percentage.toFixed(3) + "%");
-	$("#rank").text("#" + data["rank"]);
-	$("#available").text(data["totalConfirmed"]);
-	$("#unavailable").text(data["totalDiscarded"]);
-	$("#totalUsers").text(data["totalUsers"]);
+var appSettings = null;
+
+//Copy/pasted voodoo code
+const readLocalStorage = async (key) => {
+	return new Promise((resolve, reject) => {
+	  chrome.storage.local.get([key], function (result) {
+		if (result[key] === undefined) {
+		  reject();
+		} else {
+		  resolve(result[key]);
+		}
+	  });
+	});
+};
+
+//Making the voodoo code usable
+async function getLocalStorageVariable(key){
+	var r;
+	await readLocalStorage(key).then(function(result) {
+		r = result;
+	}).catch((err) => {
+		r = null; //Setting not stored locally, default value will be used as defined.
+	});
+	return r;
 }
 
 
 
-//UI interaction
-$("#settingsUnavailableTab").on("change", function(){
-	if($(this).prop( "checked"))
-		$("#unavailableTabOptions").show();
-	else
+
+
+
+async function loadSettings(){
+	appSettings = await getLocalStorageVariable("settings");
+	console.log(appSettings);
+	init();
+}
+loadSettings();
+
+
+function init(){
+	if(appSettings.unavailableTab.active){
+		//Obtain contribution statistics
+		let url = "https://www.francoismazerolle.ca/vinehelperStats.php";
+		fetch(url)
+			.then((response) => response.json())
+			.then(serverResponse)
+			.catch( error =>  console.log(error) );
+
+		function serverResponse(data){
+			let percentage = data["votes"]*100/data["totalVotes"];
+			
+			$("#votes").text(data["votes"]);
+			$("#contribution").text(percentage.toFixed(3) + "%");
+			$("#rank").text("#" + data["rank"]);
+			$("#available").text(data["totalConfirmed"]);
+			$("#unavailable").text(data["totalDiscarded"]);
+			$("#totalUsers").text(data["totalUsers"]);
+		}
+	}
+
+
+	//UI interaction
+	$("#" + $.escapeSelector("unavailableTab.active")).on("change", function(){
+		if($(this).prop( "checked"))
+			$("#unavailableTabOptions").show();
+		else
+			$("#unavailableTabOptions").hide();
+	});
+	if(!appSettings.unavailableTab.active){
 		$("#unavailableTabOptions").hide();
-});
-
-
-
-function isNumeric(n) {
-    return !isNaN(parseFloat(n)) && isFinite(n);
-}
-
-
-//Load/save settings:
-
-chrome.storage.local.get('settingsThreshold', function(data) {
-	if(!data || !data.settingsThreshold || !isNumeric(data.settingsThreshold) || data.settingsThreshold < 1){
-		data.settingsThreshold = 2;
 	}
-    $("#settingsThreshold").val(data.settingsThreshold);
-});
-$("#settingsThreshold").on( "change", function() {
-	if(isNumeric($(this).val()) && $(this).val()>0 && $(this).val() <10){
-		chrome.storage.local.set({ settingsThreshold: $( this ).val() });
-	}
-} );
-
-
-chrome.storage.local.get('settingsUnavailableOpacity', function(data) {
-	if(!data || !data.settingsUnavailableOpacity || !isNumeric(data.settingsUnavailableOpacity) || data.settingsUnavailableOpacity < 1){
-		data.settingsUnavailableOpacity = 100;
-	}
-    $("#settingsUnavailableOpacity").val(data.settingsUnavailableOpacity);
-});
-$("#settingsUnavailableOpacity").on( "change", function() {
-	if(isNumeric($(this).val()) && $(this).val()>0 && $(this).val() <=100){
-		chrome.storage.local.set({ settingsUnavailableOpacity: $( this ).val() });
-	}
-} );
 
 
 
 
-function manageCheckboxSetting(key, defaultvalue = false){
-	var DV = defaultvalue;
-	chrome.storage.local.get([key], function(data) {
-		if(data && data[key] == true){
-			$( "#" + key ).prop( "checked", true).trigger('change');
-		}else if(data && data[key] == false){
-			$( "#" + key ).prop( "checked", false).trigger('change');
-		}else{
-			$( "#" + key ).prop( "checked", DV).trigger('change');
+
+	//Load/save settings:
+	$("#" + $.escapeSelector("unavailableTab.consensusThreshold")).val(appSettings.unavailableTab.consensusThreshold);
+	$("#" + $.escapeSelector("unavailableTab.consensusThreshold")).on( "change", async function() {
+		if(isNumeric($(this).val()) && $(this).val()>0 && $(this).val() <10){
+			appSettings.unavailableTab.consensusThreshold = $(this).val();
+			await chrome.storage.local.set({"settings": appSettings});
 		}
 	});
 
-	$("#" + key).on( "change", function() {
-		chrome.storage.local.set({ [key]: $( this ).is(":checked") });
-	} );
+
+	$("#" + $.escapeSelector("unavailableTab.unavailableOpacity")).val(appSettings.unavailableTab.unavailableOpacity);
+	$("#" + $.escapeSelector("unavailableTab.unavailableOpacity")).on( "change", async function() {
+		if(isNumeric($(this).val()) && $(this).val()>0 && $(this).val() <=100){
+			appSettings.unavailableTab.unavailableOpacity = $(this).val();
+			await chrome.storage.local.set({"settings": appSettings});
+		}
+	});
+
+
+	function manageCheckboxSetting(key){
+		let val = JSONGetPathValue(appSettings, key);
+		if(val == true){
+			$( "#" + $.escapeSelector(key)).prop( "checked", true).trigger('change');
+		}else{
+			$( "#" + $.escapeSelector(key)).prop( "checked", false).trigger('change');
+		}
+
+		$("#" + $.escapeSelector(key)).on( "change", async function() {
+			JSONUpdatePathValue(appSettings, key, $(this).is(":checked"));
+			await chrome.storage.local.set({"settings": appSettings});
+		} );
+	}
+
+
+
+	manageCheckboxSetting("unavailableTab.selfDiscard");
+	manageCheckboxSetting("unavailableTab.compactToolbar");
+	manageCheckboxSetting("general.topPagination");
+	manageCheckboxSetting("hiddenTab.active");
+	manageCheckboxSetting("unavailableTab.consensusDiscard");
+	manageCheckboxSetting("unavailableTab.autofixInfiniteWheel");
+	manageCheckboxSetting("unavailableTab.active");
+
+	manageCheckboxSetting("thorvarium.smallItems");
+	manageCheckboxSetting("thorvarium.removeHeader");
+	manageCheckboxSetting("thorvarium.removeFooter");
+	manageCheckboxSetting("thorvarium.removeAssociateHeader");
+	manageCheckboxSetting("thorvarium.moreDescriptionText");
+	manageCheckboxSetting("thorvarium.ETVModalOnTop");
+	manageCheckboxSetting("thorvarium.categoriesWithEmojis");
+	manageCheckboxSetting("thorvarium.paginationOnTop");
+	manageCheckboxSetting("thorvarium.collapsableCategories");
+	manageCheckboxSetting("thorvarium.stripedCategories");
+	manageCheckboxSetting("thorvarium.limitedQuantityIcon");
+	manageCheckboxSetting("thorvarium.RFYAFAAITabs");
 }
 
-manageCheckboxSetting("settingsSelfDiscard");
-manageCheckboxSetting("settingsCompactToolbar");
-manageCheckboxSetting("settingsTopPagination");
-manageCheckboxSetting("settingsHiddenTab", true);
-manageCheckboxSetting("settingsConsensusDiscard", true);
-manageCheckboxSetting("settingsAutofixInfiniteWheel", true);
-manageCheckboxSetting("settingsUnavailableTab", true);
 
-manageCheckboxSetting("thorvariumSmallItems");
-manageCheckboxSetting("thorvariumRemoveHeader");
-manageCheckboxSetting("thorvariumRemoveFooter");
-manageCheckboxSetting("thorvariumRemoveAssociateHeader");
-manageCheckboxSetting("thorvariumMoreDescriptionText");
-manageCheckboxSetting("thorvariumETVModalOnTop");
-manageCheckboxSetting("thorvariumCategoriesWithEmojis");
-manageCheckboxSetting("thorvariumPaginationOnTop");
-manageCheckboxSetting("thorvariumCollapsableCategories");
-manageCheckboxSetting("thorvariumStripedCategories");
-manageCheckboxSetting("thorvariumLimitedQuantityIcon");
-manageCheckboxSetting("thorvariumRFYAFAAITabs");
 		
+//Utility functions
 
-if(!$("#settingsUnavailableTab").is(":checked")){
-	$("#unavailableTabOptions").hide();
+function isNumeric(n) {
+	return !isNaN(parseFloat(n)) && isFinite(n);
 }
+
+function JSONPathToObject(path, value){
+	const arrPathLvl = path.split(".");
+	var jsonObj = "";
+	var jsonEnd = ""
+	for(let i=0; i<arrPathLvl.length; i++){
+		jsonObj = jsonObj + "{\"" + arrPathLvl[i] + "\":";
+		jsonEnd = "}" + jsonEnd;
+	}
+	return JSON.parse(jsonObj + value + jsonEnd);
+}
+
+function JSONUpdatePathValue(obj, path, value){
+	let newData = JSONPathToObject(path, value);
+	$.extend(true, obj, newData);
+}
+
+function JSONGetPathValue(obj, path){
+	return path.split(".").reduce((c, s) => c[s], obj);
+}
+

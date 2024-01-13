@@ -1,6 +1,6 @@
 
 
-//Create the 2 grids 
+//Create the 2 grids/tabs
 var gridRegular = null;
 var gridUnavailable = null; //Will be populated after the grid will be created.
 var gridHidden = null; //Will be populated after the grid will be created.
@@ -9,16 +9,7 @@ var gridHidden = null; //Will be populated after the grid will be created.
 var scriptTag = document.createElement('script');
 
 //Extension settings
-var consensusThreshold = 2;
-var consensusDiscard= true;
-var unavailableOpacity = 100;
-var selfDiscard = false;
-var topPagination = false;
-var unavailableTab = true;
-var hiddenTab = true;
-var arrHidden = [];
-var compactToolbar = false;
-var autofixInfiniteWheel = true;
+var appSettings = null;
 
 //Constants
 const CONSENSUS_NO_FEES = 0;
@@ -43,15 +34,15 @@ const DISCARDED_OWN_VOTE = 2;
 
 //Copy/pasted voodoo code
 const readLocalStorage = async (key) => {
-return new Promise((resolve, reject) => {
-  chrome.storage.local.get([key], function (result) {
-	if (result[key] === undefined) {
-	  reject();
-	} else {
-	  resolve(result[key]);
-	}
-  });
-});
+	return new Promise((resolve, reject) => {
+	  chrome.storage.local.get([key], function (result) {
+		if (result[key] === undefined) {
+		  reject();
+		} else {
+		  resolve(result[key]);
+		}
+	  });
+	});
 };
 
 //Making the voodoo code usable
@@ -65,11 +56,24 @@ async function getLocalStorageVariable(key){
 	return r;
 }
 
-//Loading the settings from the local storage	
-async function getSettings(){
+//This method will initiate the settings for the first time,
+//and will convert the old style of settings (<=V1.9) to the new JSON style.
+async function convertOldSettingsToNewJSONFormat(){
 	
-	let result;
+	//Default values (useful if this is the first time running the extension)
+	let consensusThreshold = 2;
+	let consensusDiscard= true;
+	let unavailableOpacity = 100;
+	let selfDiscard = false;
+	let topPagination = false;
+	let unavailableTab = true;
+	let hiddenTab = true;
+	let arrHidden = [];
+	let compactToolbar = false;
+	let autofixInfiniteWheel = true;
 
+
+	//Load settings from <=V1.9, if they exist.
 	result = await getLocalStorageVariable("settingsThreshold");
 	if(result > 0 && result <10)
 		consensusThreshold = result;
@@ -77,7 +81,6 @@ async function getSettings(){
 	result = await getLocalStorageVariable("settingsUnavailableOpacity");
 	if(result > 0 && result <=100)
 		unavailableOpacity = result;
-	
 	
 	result = await getLocalStorageVariable("settingsSelfDiscard");
 	if(result == true || result == false)
@@ -104,15 +107,66 @@ async function getSettings(){
 		unavailableTab = result;
 
 	result = await getLocalStorageVariable("settingsHiddenTab");
-	if(result == true || result == false){
+	if(result == true || result == false)
 		hiddenTab = result;
 	
-		if(hiddenTab == true){
-			result = await getLocalStorageVariable("arrHidden");
-			if(result!=null)
-				arrHidden = result;
+	
+	//Craft the new settings in JSON
+	settings = {
+		"unavailableTab":{
+			"active": unavailableTab,
+			"consensusThreshold": consensusThreshold,
+			"unavailableOpacity": unavailableOpacity,
+			"selfDiscard": selfDiscard,
+			"consensusDiscard": consensusDiscard,
+			"compactToolbar": compactToolbar
+		},
+		
+		"general":{
+			"topPagination": topPagination,
+			"autofixInfiniteWheel": autofixInfiniteWheel
+		},
+		
+		"hiddenTab": {
+			"active": hiddenTab,
+			"arrHidden": await getLocalStorageVariable("arrHidden")
+		},
+		
+		"thorvarium": {
+			"smallItems": await getLocalStorageVariable("thorvariumSmallItems") ? true: false,
+			"removeHeader": await getLocalStorageVariable("thorvariumRemoveHeader") ? true: false,
+			"removeFooter": await getLocalStorageVariable("thorvariumRemoveFooter") ? true: false,
+			"removeAssociateHeader": await getLocalStorageVariable("thorvariumRemoveAssociateHeader") ? true: false,
+			"moreDescriptionText": await getLocalStorageVariable("thorvariumMoreDescriptionText") ? true: false,
+			"ETVModalOnTop": await getLocalStorageVariable("thorvariumETVModalOnTop") ? true: false,
+			"categoriesWithEmojis": await getLocalStorageVariable("thorvariumCategoriesWithEmojis") ? true: false,
+			"paginationOnTop": await getLocalStorageVariable("thorvariumPaginationOnTop") ? true: false,
+			"collapsableCategories": await getLocalStorageVariable("thorvariumCollapsableCategories") ? true: false,
+			"collapsableCategories": await getLocalStorageVariable("thorvariumCollapsableCategories") ? true: false,
+			"stripedCategories": await getLocalStorageVariable("thorvariumStripedCategories") ? true: false,
+			"limitedQuantityIcon": await getLocalStorageVariable("thorvariumLimitedQuantityIcon") ? true: false,
+			"RFYAFAAITabs": await getLocalStorageVariable("thorvariumRFYAFAAITabs") ? true: false
 		}
 	}
+	
+	//Delete the old settings
+	await chrome.storage.local.clear();//Delete all local storage
+	
+	await chrome.storage.local.set({"settings": settings});
+	return settings;
+}
+
+//Loading the settings from the local storage	
+async function getSettings(){
+	
+	appSettings = await getLocalStorageVariable("settings");
+	if(appSettings == null){
+		console.log("Settings not found, generating default configuration...");
+		//Load the old settings and convert them to the new format
+		//Will generate default settings if no old settings were found.
+		appSettings = await convertOldSettingsToNewJSONFormat();
+	}
+	
 	
 	//Figure out what domain the extension is working on
 	//De-activate the unavailableTab (and the voting system) for all non-.ca domains.
@@ -120,44 +174,47 @@ async function getSettings(){
 	regex = /^(?:.*:\/\/)(?:.+[\.]?)amazon\.(.+)\/vine\/.*$/;
 	arrMatches = currentUrl.match(regex);
 	if(arrMatches[1] != "ca"){
-		unavailableTab = false;
+		appSettings.unavailableTab.active = false;
+		appSettings.unavailableTab.compactToolbar = true;
+		appSettings.unavailableTab.consensusDiscard = false;
+		appSettings.unavailableTab.selfDiscard = false;
 	}
 
 	//Load Thorvarium stylesheets
-	if(await getLocalStorageVariable("thorvariumSmallItems"))
+	if(appSettings.thorvarium.smallItems)
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/small-items.css">');
 	
-	if(await getLocalStorageVariable("thorvariumRemoveHeader"))
+	if(appSettings.thorvarium.removeHeader)
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/remove-header.css">');
 	
-	if(await getLocalStorageVariable("thorvariumRemoveFooter"))
+	if(appSettings.thorvarium.removeFooter)
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/remove-footer.css">');
 	
-	if(await getLocalStorageVariable("thorvariumRemoveAssociateHeader"))
+	if(appSettings.thorvarium.removeAssociateHeader)
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/remove-associate-header.css">');
 	
-	if(await getLocalStorageVariable("thorvariumMoreDescriptionText"))
+	if(appSettings.thorvarium.moreDescriptionText)
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/more-description-text.css">');
 	
-	if(await getLocalStorageVariable("thorvariumETVModalOnTop"))
+	if(appSettings.thorvarium.ETVModalOnTop)
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/etv-modal-on-top.css">');
 	
-	if(await getLocalStorageVariable("thorvariumCategoriesWithEmojis"))
+	if(appSettings.thorvarium.categoriesWithEmojis)
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/categories-with-emojis.css">');
 	
-	if(await getLocalStorageVariable("thorvariumPaginationOnTop"))
+	if(appSettings.thorvarium.paginationOnTop)
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/pagination-on-top.css">');
 	
-	if(await getLocalStorageVariable("thorvariumCollapsableCategories"))
+	if(appSettings.thorvarium.collapsableCategories)
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/collapsable-categories.css">');
 	
-	if(await getLocalStorageVariable("thorvariumStripedCategories"))
+	if(appSettings.thorvarium.stripedCategories)
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/striped-categories.css">');
 	
-	if(await getLocalStorageVariable("thorvariumLimitedQuantityIcon"))
+	if(appSettings.thorvarium.limitedQuantityIcon)
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/limited-quantity-icon.css">');
 	
-	if(await getLocalStorageVariable("thorvariumRFYAFAAITabs"))
+	if(appSettings.thorvarium.RFYAFAAITabs)
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/rfy-afa-ai-tabs.css">');
 	
 	
@@ -166,7 +223,7 @@ async function getSettings(){
 	
 	discardedItemGarbageCollection();
 }
-getSettings();
+getSettings(); //First call to launch the extension.
 
 
 
@@ -202,20 +259,25 @@ function discardedItemGarbageCollection(){
 	let expiredDate = new Date();
 	expiredDate.setDate(expiredDate.getDate() - 90);
 	
-	$.each(arrHidden, function(key, value){
-		if(key!=undefined && arrHidden[key]["date"] < expiredDate){
-			arrHidden.splice(key, 1);
+	//Splicing inside a foreach might skip the item following the deleted one, 
+	//but this method is called on every page load so it is effectively inconsequential asin
+	//the missing items will be caught on the next pass.
+	$.each(appSettings.hiddenTab.arrHidden, function(key, value){
+		if(key!=undefined && value["date"] < expiredDate){
+			appSettings.hiddenTab.arrHidden.splice(key, 1);
 			change = true;
 		}
 	});
 	
 	//Save array to local storage
 	if(change){
-		chrome.storage.local.set({ "arrHidden": arrHidden });
+		chrome.storage.local.set({ "settings": appSettings }); //Save the settings
 	}
 }
 
 
+//Function to receive a message from the website-end and launch an animation
+//if the infinite wheel fix was used.
 window.addEventListener("message", async function(event) {
     // We only accept messages from ourselves
     if (event.source != window)
@@ -247,7 +309,7 @@ window.addEventListener("message", async function(event) {
 function init(){
 	
 	//Inject the infinite loading wheel fix to the "main world"
-	if(autofixInfiniteWheel){
+	if(appSettings.general.autofixInfiniteWheel){
 		scriptTag.src = chrome.runtime.getURL('scripts/infiniteWheelFix.js');
 		scriptTag.onload = function() { this.remove(); };
 		// see also "Dynamic values in the injected code" section in this answer
@@ -255,23 +317,19 @@ function init(){
 	}
 	
 	//Create the Discard grid
-	if(unavailableTab || hiddenTab){
+	var tabSystem = appSettings.unavailableTab.active || appSettings.hiddenTab.active;
+	if(tabSystem){
 		createGridInterface();
 	}
 	
 	gridRegular = new Grid($("#vvp-items-grid"));
 	
-	if(hiddenTab){
+	if(appSettings.hiddenTab.active){
 		gridHidden = new Grid($("#tab-hidden"));
 	}
 	
-	if(unavailableTab){
+	if(appSettings.unavailableTab.active){
 		gridUnavailable = new Grid($("#tab-unavailable"));
-	}else{ //Disable voting system
-		$("#tab-unavailable").parent("ul").hide(); //Doesn't do anything
-		compactToolbar = true;
-		consensusDiscard = false;
-		selfDiscard = false;
 	}
 
 	//Browse each items from the Regular grid
@@ -285,27 +343,27 @@ function init(){
 		arrUrl.push(tile.getPageId());
 		
 		//Move the hidden item to the hidden tab
-		if(hiddenTab && tile.isHidden()){
+		if(appSettings.hiddenTab.active && tile.isHidden()){
 			tile.moveToGrid(gridHidden, false); //This is the main sort, do not animate it
 		}
 		
-		if(unavailableTab || hiddenTab){
+		if(tabSystem){
 			t = new Toolbar(tile);
 			t.createProductToolbar();
 		}
 	});
 	
-	if(unavailableTab || hiddenTab){
+	if(tabSystem){
 		updateTileCounts();
 	}
 	
 	//Bottom pagination
-	if(topPagination){
+	if(appSettings.general.topPagination){
 		$(".a-pagination").parent().css("margin-top","10px").clone().insertAfter("#vvp-items-grid-container p");
 	}
 	
 	//Obtain the data to fill the toolbars with it.
-	if(unavailableTab){ //Only query the server (to get vote results) if the voting system is active.
+	if(appSettings.unavailableTab.active){ //Only query the server (to get vote results) if the voting system is active.
 		fetchData(arrUrl);
 	}
 }
@@ -336,7 +394,7 @@ function fetchData(arrUrl){
 //Process the results obtained from the server
 //Update each tile with the data pertaining to it.
 function serverResponse(data){
-	//let arr = $.parseJSON(data); //convert to javascript array
+	
 	if(data["api_version"]!=2){
 		console.log("Wrong API version");
 	}
@@ -351,11 +409,11 @@ function serverResponse(data){
 		tile.setVotes(values["v0"], values["v1"], values["s"]);
 		
 		//Assign the tiles to the proper grid
-		if(hiddenTab && tile.isHidden()){ //The hidden tiles were already moved, but we want to keep them there.
+		if(appSettings.hiddenTab.active && tile.isHidden()){ //The hidden tiles were already moved, but we want to keep them there.
 			tile.moveToGrid(gridHidden, false); //This is the main sort, do not animate it
-		}else if(consensusDiscard && tile.getStatus() >= NOT_DISCARDED){
+		}else if(appSettings.unavailableTab.consensusDiscard && tile.getStatus() >= NOT_DISCARDED){
 			tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
-		} else if(selfDiscard && tile.getStatus() == DISCARDED_OWN_VOTE){
+		} else if(appSettings.unavailableTab.selfDiscard && tile.getStatus() == DISCARDED_OWN_VOTE){
 			tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
 		}
 			
@@ -386,15 +444,15 @@ async function reportfees(event){
 	if(!tile.isHidden()){
 		//Note: If the tile is already in the grid, the method will exit with false.
 		//Our vote is "Fees" + the self discard option is active: move the item to the Discard grid
-		if(fees == 1 && selfDiscard){
+		if(fees == 1 && appSettings.unavailableTab.selfDiscard){
 			await tile.moveToGrid(gridUnavailable, true);
 		
 		//Our vote is "Fees" + the added vote will meet the consensus: move the item to the Discard grid
-		}else if(fees == 1 && consensusDiscard && tile.getVoteFees() + 1 - tile.getVoteNoFees() >= consensusThreshold){
+		}else if(fees == 1 && appSettings.unavailableTab.consensusDiscard && tile.getVoteFees() + 1 - tile.getVoteNoFees() >= appSettings.unavailableTab.consensusThreshold){
 			await tile.moveToGrid(gridUnavailable, true);
 		
 		//Our vote is "nofees" + there's no consensus, move the item to the regular grid
-		}else if(fees == 0 && tile.getVoteFees() - tile.getVoteNoFees() < consensusThreshold){
+		}else if(fees == 0 && tile.getVoteFees() - tile.getVoteNoFees() < appSettings.unavailableTab.consensusThreshold){
 			await tile.moveToGrid(gridRegular, true);
 		}
 	}

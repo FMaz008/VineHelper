@@ -16,30 +16,32 @@ function Toolbar(tileInstance){
 		$("<div />")
 			.addClass("ext-helper-status-container")
 			.appendTo("#"+toolbarId);
-		$("<div />")
-			.addClass("ext-helper-icon ext-helper-icon-loading")
-			.appendTo("#"+toolbarId + " .ext-helper-status-container");
+		
 		container = $("<div />")
 			.addClass("ext-helper-status-container2")
 			.appendTo("#"+toolbarId + " .ext-helper-status-container");
-		span = $("<span />")
-			.appendTo(container);
+		
 			
-		if(compactToolbar){
+		if(appSettings.unavailableTab.compactToolbar){
 			pToolbar.addClass("compact");
 		}
 		
-		if(unavailableTab){
-			span.text("Loading...");
+		if(appSettings.unavailableTab.active){
+			$("<div />")
+				.addClass("ext-helper-icon ext-helper-icon-loading")
+				.prependTo("#"+toolbarId + " .ext-helper-status-container");
+			span = $("<span />")
+				.text("Loading...")
+				.appendTo(container);
 		}
 		
 		//Only the hidden tab is activated, only the hide icon has to be shown
-		if(!unavailableTab && hiddenTab){
+		if(!appSettings.unavailableTab.active && appSettings.hiddenTab.active){
 			pToolbar.addClass("toolbar-icon-only");
 		}
 		
 		//Display the hide link
-		if(hiddenTab){
+		if(appSettings.hiddenTab.active){
 			let h, hi;
 			h = $("<a />")
 				.attr("href", "#"+pTile.getPageId())
@@ -57,7 +59,7 @@ function Toolbar(tileInstance){
 	};
 	
 	this.updateVisibilityIcon = function(){
-		if(!hiddenTab)
+		if(!appSettings.hiddenTab.active)
 			return false;
 		
 		let icon = $("#ext-helper-hide-link-"+pTile.getPageId() + " div.ext-helper-toolbar-icon");
@@ -105,7 +107,7 @@ function Toolbar(tileInstance){
 		let statusColor;
 		
 		//If the hidden tab system is activated, update the visibility icon
-		if(hiddenTab)
+		if(appSettings.hiddenTab.active)
 			this.updateVisibilityIcon();
 		
 		switch (pTile.getStatus()){
@@ -114,7 +116,7 @@ function Toolbar(tileInstance){
 				this.setStatusIcon("ext-helper-icon-sad");
 				this.setStatusText("Not available.");
 				statusColor = "ext-helper-background-fees";
-				tileOpacity = unavailableOpacity/100;
+				tileOpacity = appSettings.unavailableTab.unavailableOpacity/100;
 				break;
 			case NOT_DISCARDED_NO_FEES:
 			case NOT_DISCARDED_OWN_VOTE:
@@ -132,7 +134,7 @@ function Toolbar(tileInstance){
 				break;
 		}
 		
-		if(compactToolbar){ //No icon, no text
+		if(appSettings.unavailableTab.compactToolbar){ //No icon, no text
 			this.setStatusIcon("");
 			this.setStatusText("");
 			context.addClass("compact");
@@ -142,7 +144,7 @@ function Toolbar(tileInstance){
 		tile.getDOM().css('opacity', tileOpacity);
 		
 		//Display voting system if active.
-		if(unavailableTab){
+		if(appSettings.unavailableTab.active){
 			createVotingWidget();
 		}
 	}
@@ -160,7 +162,7 @@ function Toolbar(tileInstance){
 			.addClass("ext-helper-voting-widget")
 			.appendTo(container);
 		
-		if(!compactToolbar){
+		if(!appSettings.unavailableTab.compactToolbar){
 			pe.text("Available? ");
 		}
 		
@@ -182,9 +184,12 @@ function Toolbar(tileInstance){
 			.html("&#11199; No ("+pTile.getVoteFees()+")")
 			.appendTo(pe);
 		
-		if(compactToolbar){
+		if(appSettings.unavailableTab.compactToolbar){
 			v0.html("&#9745; ("+pTile.getVoteNoFees()+")");
 			v1.html("&#11199; ("+pTile.getVoteFees()+")")
+		}else{
+			//If we used the regular toolbar, we need to add a clear:right so the voting widget will not be impeded by the right floated hidden icon.
+			$(".ext-helper-voting-widget").css("clear", "right");
 		}
 		
 		v1.on('click', {'pageId': pTile.getPageId(), 'fees': 1}, reportfees);
