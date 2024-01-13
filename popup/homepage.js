@@ -36,7 +36,6 @@ async function getLocalStorageVariable(key){
 
 async function loadSettings(){
 	appSettings = await getLocalStorageVariable("settings");
-	console.log(appSettings);
 	init();
 }
 loadSettings();
@@ -119,7 +118,7 @@ function init(){
 	manageCheckboxSetting("general.topPagination");
 	manageCheckboxSetting("hiddenTab.active");
 	manageCheckboxSetting("unavailableTab.consensusDiscard");
-	manageCheckboxSetting("unavailableTab.autofixInfiniteWheel");
+	manageCheckboxSetting("general.autofixInfiniteWheel");
 	manageCheckboxSetting("unavailableTab.active");
 
 	manageCheckboxSetting("thorvarium.smallItems");
