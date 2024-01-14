@@ -113,14 +113,15 @@ async function getSettings(){
 	
 	showRuntime("PRE: Reading settings from local storage");
 	const data = await chrome.storage.local.get("settings");
-	Object.assign(appSettings, data.settings);
-	//appSettings = data.settings;
 	showRuntime("PRE: Done reading settings");
-	if(appSettings == null){
+	
+	if(data==null){
 		console.log("Settings not found, generating default configuration...");
 		//Load the old settings and convert them to the new format
 		//Will generate default settings if no old settings were found.
 		appSettings = await convertOldSettingsToNewJSONFormat();
+	}else{
+		Object.assign(appSettings, data.settings);
 	}
 	
 	
