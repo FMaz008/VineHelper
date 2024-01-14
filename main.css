@@ -170,6 +170,11 @@ div.ext-helper-healing div{
 		background-image: url("chrome-extension://__MSG_@@extension_id__/images/info.png");
 		background-repeat:no-repeat;
 	}
+	div.ext-helper-icon-question{
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/images/question.png");
+		background-repeat:no-repeat;
+	}
 	div.ext-helper-icon-show{
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/images/show.png");
@@ -206,6 +211,11 @@ div.ext-helper-healing div{
 	div.ext-helper-icon-info{
 		background-size: 100%;
 		background-image: url("/images/info.png");
+		background-repeat:no-repeat;
+	}
+	div.ext-helper-icon-question{
+		background-size: 100%;
+		background-image: url("/images/question.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-show{

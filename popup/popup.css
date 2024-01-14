@@ -16,11 +16,11 @@ span.number{
 	font-weight:bold;
 }
 
-div.options{
+div.all-options{
 	font-size:12px;
 }
 
-p.options{
+div.options{
 	margin-top:0px;
 	padding-left:10px;
 	margin-bottom:20px;
@@ -31,4 +31,8 @@ p.options{
 h3{
 	padding-bottom:0px;
 	margin-bottom:5px;
+}
+
+.ui-tooltip {
+	background:#FFF;
 }

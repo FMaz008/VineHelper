@@ -139,3 +139,8 @@ function JSONGetPathValue(obj, path){
 	return path.split(".").reduce((c, s) => c[s], obj);
 }
 
+
+$('a.tips').each(function () {
+	$( this ).tooltip({tooltipClass:'ui-tooltip'});
+});
+

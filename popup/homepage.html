@@ -2,38 +2,68 @@
 <html>
   <head>
 	<meta charset="utf-8" />
-	<link rel="stylesheet" type="text/css" href="../main.css" />
+	<link rel="stylesheet" type="text/css" href="../jquery-ui.min.css" />
 	<link rel="stylesheet" type="text/css" href="popup.css" />
+	<link rel="stylesheet" type="text/css" href="../main.css" />
   </head>
   <body>
 	<h1>
 		<img src="../icon.png" width="32px" height="32px" style="vertical-align:middle" />
 		Amazon Vine Helper
 	</h1>
-	<div class="options">
+	<div class="all-options">
 		<p>(Reload the page to apply new settings)</p>
 		<h3>General Options</h3>
-		<p class="options">
+		<div class="options">
 			<input type="checkbox" id="general.autofixInfiniteWheel" value="1" /> Auto-fix <i>infinite loading wheel</i>
+			<a href="#" class="tips" title="Some items load indefinitely. This option will automatically fix this problem and display a small visual effect when it does.">
+				<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+			</a>
 			<br />
 			<input type="checkbox" id="general.topPagination" value="1" /> Pagination also at the top
+			<a href="#" class="tips" title="This will add a second pagination bar at the top of the listings.">
+				<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+			</a> 
 			<br />
 			<input type="checkbox" id="hiddenTab.active" value="1" /> Hidden tab
-		</p>
+			<a href="#" class="tips" title="Activate the hidden tab feature, allowing you to move items you are not interested with to a separate tab.">
+				<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+			</a> 
+		</div>
 		
-		<h3><input type="checkbox" id="unavailableTab.active" value="1" /> Voting system (Vine Canada only):</h3>
+		<h3>
+			<input type="checkbox" id="unavailableTab.active" value="1" /> Voting system (Vine Canada only):
+			<a href="#" class="tips" title="In Canada, a lot of items have importation or shipping fees, which makes them impossible to be ordered. This option will activate a community voting toolbar on every items, identifying and placing items that can't be ordered in a separate tab.">
+				<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+			</a>
+		</h3>
 		<div id="unavailableTabOptions">
-			<p class="options">
+			<div class="options">
 				<input type="checkbox" id="unavailableTab.compactToolbar" value="1" /> Compact items toolbar
+				<a href="#" class="tips" title="Make the toolbar smaller and compatible with Thorvarium SmallItems stylesheet.">
+					<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+				</a>
 				<br />
 				<input type="checkbox" id="unavailableTab.selfDiscard" value="1" /> The items I voted "with fees".
+				<a href="#" class="tips" title="Immediately discard the items I vote as unavailable, regardless of the votes concensus.">
+					<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+				</a>
 				<br />
 				<input type="checkbox" id="unavailableTab.consensusDiscard" value="1" />The items with an "unavailable" consensus.
+				<a href="#" class="tips" title="Discard the items which have a voting consensus of being unavailable.">
+					<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+				</a>
 				<br />
 				Consensus Threshold: <input type="text" id="unavailableTab.consensusThreshold" value="" size="1" maxlength="1" /> votes majority.
+				<a href="#" class="tips" title="How much of a vote majority is required for a consensus to be reached regarding an item availability.">
+					<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+				</a>
 				<br />
 				Unavailable items opacity: <input type="text" id="unavailableTab.unavailableOpacity" value="" size="3" maxlength="3" /> %.
-			</p>
+				<a href="#" class="tips" title="Reduce the opacity of items marked as unavailable.">
+					<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+				</a>
+			</div>
 			<div class="summary">
 				You currently have <span id="votes" class="number">?</span> active votes,
 				contributing to <span id="contribution" class="number">? %</span> of the community votes.
@@ -44,7 +74,12 @@
 			</div>
 		</div>
 		
-		<h3>Thorvarium styling</h3>
+		<h3>
+			Thorvarium styling
+			<a href="#" class="tips" title="For a faster load, use the recommended installation method as described in Thorvarium GitHub (see link in attributions below)">
+				<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+			</a>
+		</h3>
 		<p class="options">
 				<input type="checkbox" id="thorvarium.smallItems" value="1" /> small-items.css (Tip: activate compact items toolbar)
 			<br /><input type="checkbox" id="thorvarium.removeHeader" value="1" /> remove-header.css
@@ -68,13 +103,14 @@
 			<ul>
 				<li><a href="https://www.flaticon.com/free-icons/good" title="good icons">Good icons created by Freepik - Flaticon</a></li>
 				<li>Designed by Freepik - <a href="">www.freepik.com</a></li>
-				<li><a href="https://github.com/Thorvarium/vine-styling">Thorvarium styling</a></li>
+				<li><a href="https://github.com/Thorvarium/vine-styling">Thorvarium styling GitHub</a></li>
 			</ul>
 		</div>
 	</div>
 	<br />
 	<br />
 	<script src="../scripts/jquery-3.7.1.min.js"></script>
+	<script src="../scripts/jquery-ui.min.js"></script>
 	<script src="homepage.js"></script>
   </body>
 </html>
