@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Amazon Vine Helper",
   "description": "Improve the Amazon Vine experience.",
-  "version": "1.9",
+  "version": "1.10",
   
   "permissions": [
     "storage"
@@ -25,7 +25,7 @@
   },
   "action": {
     "default_popup": "popup/homepage.html",
-	"default_title": "Vine Helper Canada",
+	"default_title": "Amazon Vine Helper",
     "default_icon": "icon.png"
   },
   "web_accessible_resources": [
