@@ -102,7 +102,7 @@ function Tile(obj, gridInstance){
 	};
 	
 	this.getStatus = function(){
-		if(pVoteOwn == 1 && selfDiscard)
+		if(pVoteOwn == 1 && appSettings.unavailableTab.selfDiscard)
 			return DISCARDED_OWN_VOTE;
 		
 		if(getFees() == CONSENSUS_FEES)
