@@ -3,39 +3,15 @@
 
 
 
-var appSettings = null;
-
-//Copy/pasted voodoo code
-const readLocalStorage = async (key) => {
-	return new Promise((resolve, reject) => {
-	  chrome.storage.local.get([key], function (result) {
-		if (result[key] === undefined) {
-		  reject();
-		} else {
-		  resolve(result[key]);
-		}
-	  });
-	});
-};
-
-//Making the voodoo code usable
-async function getLocalStorageVariable(key){
-	var r;
-	await readLocalStorage(key).then(function(result) {
-		r = result;
-	}).catch((err) => {
-		r = null; //Setting not stored locally, default value will be used as defined.
-	});
-	return r;
-}
-
+var appSettings = {};
 
 
 
 
 
 async function loadSettings(){
-	appSettings = await getLocalStorageVariable("settings");
+	const data = await chrome.storage.local.get("settings");
+	Object.assign(appSettings, data.settings);
 	init();
 }
 loadSettings();

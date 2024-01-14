@@ -1,4 +1,5 @@
-
+showRuntime("BOOT: Booterloader starting");
+var sleepSetTimeout_ctrl;
 
 //Create the 2 grids/tabs
 var gridRegular = null;
@@ -7,9 +8,6 @@ var gridHidden = null; //Will be populated after the grid will be created.
 
 //Inject the script to fix the infinite loading wheel into the main environment.
 var scriptTag = document.createElement('script');
-
-//Extension settings
-var appSettings = null;
 
 //Constants
 const CONSENSUS_NO_FEES = 0;
@@ -24,162 +22,63 @@ const DISCARDED_WITH_FEES = 1;
 const DISCARDED_OWN_VOTE = 2;
 
 
+init();
+
+
+
+//#########################
+//### Utility functions
+
+function sleep(ms) {
+    clearInterval(sleepSetTimeout_ctrl);
+    return new Promise(resolve => sleepSetTimeout_ctrl = setTimeout(resolve, ms));
+}
+
+function getTileByPageId(pageId){
+	tile = null;
+	tile = gridRegular.getTileId(pageId);
+	if(tile != null)
+		return tile;
+	
+	tile = gridUnavailable.getTileId(pageId);
+	if(tile != null)
+		return tile;
+	
+	tile = gridHidden.getTileId(pageId);
+	return tile;
+}
+
+function getPageIdFromDom(tileDom){
+	let regex = /^(?:.*\/dp\/)(.+?)(?:\?.*)?$/; //Isolate the product ID in the URL.
+	let url = $(tileDom).find(".a-link-normal").attr("href");
+	let arrPageId = url.match(regex);
+	return arrPageId[1];
+}
+
+
+
 
 
 
 
 
 //#########################
-//### Load settings
-
-//Copy/pasted voodoo code
-const readLocalStorage = async (key) => {
-	return new Promise((resolve, reject) => {
-	  chrome.storage.local.get([key], function (result) {
-		if (result[key] === undefined) {
-		  reject();
-		} else {
-		  resolve(result[key]);
-		}
-	  });
-	});
-};
-
-//Making the voodoo code usable
-async function getLocalStorageVariable(key){
-	var r;
-	await readLocalStorage(key).then(function(result) {
-		r = result;
-	}).catch((err) => {
-		r = null; //Setting not stored locally, default value will be used as defined.
-	});
-	return r;
-}
-
-//This method will initiate the settings for the first time,
-//and will convert the old style of settings (<=V1.9) to the new JSON style.
-async function convertOldSettingsToNewJSONFormat(){
-	
-	//Default values (useful if this is the first time running the extension)
-	let consensusThreshold = 2;
-	let consensusDiscard= true;
-	let unavailableOpacity = 100;
-	let selfDiscard = false;
-	let topPagination = false;
-	let unavailableTab = true;
-	let hiddenTab = true;
-	let arrHidden = [];
-	let compactToolbar = false;
-	let autofixInfiniteWheel = true;
+//### Main flow
 
 
-	//Load settings from <=V1.9, if they exist.
-	result = await getLocalStorageVariable("settingsThreshold");
-	if(result > 0 && result <10)
-		consensusThreshold = result;
-	
-	result = await getLocalStorageVariable("settingsUnavailableOpacity");
-	if(result > 0 && result <=100)
-		unavailableOpacity = result;
-	
-	result = await getLocalStorageVariable("settingsSelfDiscard");
-	if(result == true || result == false)
-		selfDiscard = result;
-	
-	result = await getLocalStorageVariable("settingsConsensusDiscard");
-	if(result == true || result == false)
-		consensusDiscard = result;
-	
-	result = await getLocalStorageVariable("settingsCompactToolbar");
-	if(result == true || result == false)
-		compactToolbar = result;
-	
-	result = await getLocalStorageVariable("settingsTopPagination");
-	if(result == true || result == false)
-		topPagination = result;
-	
-	result = await getLocalStorageVariable("settingsAutofixInfiniteWheel");
-	if(result == true || result == false)
-		autofixInfiniteWheel = result;
-	
-	result = await getLocalStorageVariable("settingsUnavailableTab");
-	if(result == true || result == false)
-		unavailableTab = result;
 
-	result = await getLocalStorageVariable("settingsHiddenTab");
-	if(result == true || result == false)
-		hiddenTab = result;
+//Initiate the extension
+async function init(){
 	
-	
-	//Craft the new settings in JSON
-	settings = {
-		"unavailableTab":{
-			"active": unavailableTab,
-			"consensusThreshold": consensusThreshold,
-			"unavailableOpacity": unavailableOpacity,
-			"selfDiscard": selfDiscard,
-			"consensusDiscard": consensusDiscard,
-			"compactToolbar": compactToolbar
-		},
-		
-		"general":{
-			"topPagination": topPagination,
-			"autofixInfiniteWheel": autofixInfiniteWheel
-		},
-		
-		"hiddenTab": {
-			"active": hiddenTab,
-			"arrHidden": await getLocalStorageVariable("arrHidden")
-		},
-		
-		"thorvarium": {
-			"smallItems": await getLocalStorageVariable("thorvariumSmallItems") ? true: false,
-			"removeHeader": await getLocalStorageVariable("thorvariumRemoveHeader") ? true: false,
-			"removeFooter": await getLocalStorageVariable("thorvariumRemoveFooter") ? true: false,
-			"removeAssociateHeader": await getLocalStorageVariable("thorvariumRemoveAssociateHeader") ? true: false,
-			"moreDescriptionText": await getLocalStorageVariable("thorvariumMoreDescriptionText") ? true: false,
-			"ETVModalOnTop": await getLocalStorageVariable("thorvariumETVModalOnTop") ? true: false,
-			"categoriesWithEmojis": await getLocalStorageVariable("thorvariumCategoriesWithEmojis") ? true: false,
-			"paginationOnTop": await getLocalStorageVariable("thorvariumPaginationOnTop") ? true: false,
-			"collapsableCategories": await getLocalStorageVariable("thorvariumCollapsableCategories") ? true: false,
-			"collapsableCategories": await getLocalStorageVariable("thorvariumCollapsableCategories") ? true: false,
-			"stripedCategories": await getLocalStorageVariable("thorvariumStripedCategories") ? true: false,
-			"limitedQuantityIcon": await getLocalStorageVariable("thorvariumLimitedQuantityIcon") ? true: false,
-			"RFYAFAAITabs": await getLocalStorageVariable("thorvariumRFYAFAAITabs") ? true: false
-		}
+	//Wait for the config to be loaded before running this script
+	showRuntime("BOOT: Waiting on config to be loaded...");
+	let loopCount = 0;
+	while($.isEmptyObject(appSettings)){
+		await sleep(10);
+		loopCount++;
 	}
+	showRuntime("BOOT: Waited " + (loopCount*10) + "ms for config. Begining init() function");
 	
-	//Delete the old settings
-	await chrome.storage.local.clear();//Delete all local storage
-	
-	await chrome.storage.local.set({"settings": settings});
-	return settings;
-}
-
-//Loading the settings from the local storage	
-async function getSettings(){
-	
-	appSettings = await getLocalStorageVariable("settings");
-	if(appSettings == null){
-		console.log("Settings not found, generating default configuration...");
-		//Load the old settings and convert them to the new format
-		//Will generate default settings if no old settings were found.
-		appSettings = await convertOldSettingsToNewJSONFormat();
-	}
-	
-	
-	//Figure out what domain the extension is working on
-	//De-activate the unavailableTab (and the voting system) for all non-.ca domains.
-	let currentUrl = window.location.href; 
-	regex = /^(?:.*:\/\/)(?:.+[\.]?)amazon\.(.+)\/vine\/.*$/;
-	arrMatches = currentUrl.match(regex);
-	if(arrMatches[1] != "ca"){
-		appSettings.unavailableTab.active = false;
-		appSettings.unavailableTab.compactToolbar = true;
-		appSettings.unavailableTab.consensusDiscard = false;
-		appSettings.unavailableTab.selfDiscard = false;
-	}
-
 	//Load Thorvarium stylesheets
 	if(appSettings.thorvarium.smallItems)
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/small-items.css">');
@@ -217,96 +116,7 @@ async function getSettings(){
 	if(appSettings.thorvarium.RFYAFAAITabs)
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/rfy-afa-ai-tabs.css">');
 	
-	
-	init(); // Initialize the app
-	
-	
-	discardedItemGarbageCollection();
-}
-getSettings(); //First call to launch the extension.
-
-
-
-
-
-//#########################
-//### Utility functions
-
-
-function getTileByPageId(pageId){
-	tile = null;
-	tile = gridRegular.getTileId(pageId);
-	if(tile != null)
-		return tile;
-	
-	tile = gridUnavailable.getTileId(pageId);
-	if(tile != null)
-		return tile;
-	
-	tile = gridHidden.getTileId(pageId);
-	return tile;
-}
-
-function getPageIdFromDom(tileDom){
-	let regex = /^(?:.*\/dp\/)(.+?)(?:\?.*)?$/; //Isolate the product ID in the URL.
-	let url = $(tileDom).find(".a-link-normal").attr("href");
-	let arrPageId = url.match(regex);
-	return arrPageId[1];
-}
-
-function discardedItemGarbageCollection(){
-	var change = false;
-	let expiredDate = new Date();
-	expiredDate.setDate(expiredDate.getDate() - 90);
-	
-	//Splicing inside a foreach might skip the item following the deleted one, 
-	//but this method is called on every page load so it is effectively inconsequential asin
-	//the missing items will be caught on the next pass.
-	$.each(appSettings.hiddenTab.arrHidden, function(key, value){
-		if(key!=undefined && value["date"] < expiredDate){
-			appSettings.hiddenTab.arrHidden.splice(key, 1);
-			change = true;
-		}
-	});
-	
-	//Save array to local storage
-	if(change){
-		chrome.storage.local.set({ "settings": appSettings }); //Save the settings
-	}
-}
-
-
-//Function to receive a message from the website-end and launch an animation
-//if the infinite wheel fix was used.
-window.addEventListener("message", async function(event) {
-    // We only accept messages from ourselves
-    if (event.source != window)
-        return;
-
-    if (event.data.type && (event.data.type == "FROM_PAGE")) {
-        //console.log("Content script received message: " + event.data.text);
-		let healingAnim = $("<div>")
-				.attr("id", "ext-helper-healing")
-				.addClass("ext-helper-healing")
-				.prependTo("#a-popover-content-3");
-		$("<div>")
-			.addClass("ext-helper-icon-healing")
-			.appendTo(healingAnim);
-		await healingAnim.delay(1000).animate({opacity: "hide"},{duration: 500}).promise();
-		$("#ext-helper-healing").remove();
-    }
-});
-
-
-
-
-
-//#########################
-//### Main flow
-
-
-//Initiate the extension
-function init(){
+	showRuntime("BOOT: Thorvarium stylesheets injected");
 	
 	//Inject the infinite loading wheel fix to the "main world"
 	if(appSettings.general.autofixInfiniteWheel){
@@ -314,9 +124,11 @@ function init(){
 		scriptTag.onload = function() { this.remove(); };
 		// see also "Dynamic values in the injected code" section in this answer
 		(document.head || document.documentElement).appendChild(scriptTag);
+		showRuntime("BOOT: Infinite Wheel fix injected");
 	}
 	
 	//Create the Discard grid
+	showRuntime("BOOT: Creating tabs system");
 	var tabSystem = appSettings.unavailableTab.active || appSettings.hiddenTab.active;
 	if(tabSystem){
 		createGridInterface();
@@ -331,7 +143,8 @@ function init(){
 	if(appSettings.unavailableTab.active){
 		gridUnavailable = new Grid($("#tab-unavailable"));
 	}
-
+	showRuntime("BOOT: Grid system completed");
+	
 	//Browse each items from the Regular grid
 	//- Create an array of all the products listed on the page
 	//- Create an empty toolbar for the item tile
@@ -487,5 +300,25 @@ async function toggleItemVisibility(event){
 	updateTileCounts();
 }
 
+//Function to receive a message from the website-end and launch an animation
+//if the infinite wheel fix was used.
+window.addEventListener("message", async function(event) {
+    // We only accept messages from ourselves
+    if (event.source != window)
+        return;
+
+    if (event.data.type && (event.data.type == "FROM_PAGE")) {
+        //console.log("Content script received message: " + event.data.text);
+		let healingAnim = $("<div>")
+				.attr("id", "ext-helper-healing")
+				.addClass("ext-helper-healing")
+				.prependTo("#a-popover-content-3");
+		$("<div>")
+			.addClass("ext-helper-icon-healing")
+			.appendTo(healingAnim);
+		await healingAnim.delay(1000).animate({opacity: "hide"},{duration: 500}).promise();
+		$("#ext-helper-healing").remove();
+    }
+});
 
 						

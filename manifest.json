@@ -51,8 +51,6 @@
 		"main.css"
 	  ],
       "js": [
-		"scripts/jquery-3.7.1.min.js",
-		"scripts/jquery-ui.min.js",
 		"scripts/grid.js",
 		"scripts/tile.js",
 		"scripts/toolbar.js",
@@ -63,6 +61,18 @@
 		"*://*.amazon.com/vine/*"
 	  ],
 	  "run_at": "document_end"
-    }
+    },
+	{
+	  "js":[
+	    "scripts/jquery-3.7.1.min.js",
+		"scripts/jquery-ui.min.js",
+		"scripts/preboot.js"
+	  ],
+	  "matches": [
+		"*://*.amazon.ca/vine/*",
+		"*://*.amazon.com/vine/*"
+	  ],
+	  "run_at": "document_start"
+	}
   ]
 }

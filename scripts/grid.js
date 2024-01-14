@@ -117,9 +117,7 @@ function createGridInterface(){
 	}
 	
 	//Actiate the tab system
-	$( function() {
-		$( "#ext-helper-tabs" ).tabs();
-	} );
+	$( "#ext-helper-tabs" ).tabs();
 	
 }
 
