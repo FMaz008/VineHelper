@@ -8,6 +8,12 @@ var appSettings = {};
 //#########################
 //### Load settings
 
+async function getLocalStorageVariable(varName){
+	let result = await chrome.storage.local.get(varName);
+	if(!$.isEmptyObject(result))
+		return null;
+	return result[varName];
+}
 //This method will initiate the settings for the first time,
 //and will convert the old style of settings (<=V1.9) to the new JSON style.
 async function convertOldSettingsToNewJSONFormat(){
@@ -115,7 +121,7 @@ async function getSettings(){
 	const data = await chrome.storage.local.get("settings");
 	showRuntime("PRE: Done reading settings");
 	
-	if(data==null){
+	if($.isEmptyObject(data)){
 		console.log("Settings not found, generating default configuration...");
 		//Load the old settings and convert them to the new format
 		//Will generate default settings if no old settings were found.
