@@ -75,12 +75,43 @@
 		</div>
 		
 		<h3>
+			<input type="checkbox" id="discord.active" value="1" /> Use Discord server (Vine US/Canada/UK only):
+			<a href="#" class="tips" title="VineHelper is compatible with the (non-official) AmazonVine discord server. By joining the server and linking your account, you will be able to suggest products to be recommended by the bot to the users of your country.">
+				<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+			</a>
+		</h3>
+		<div id="discordOptions">
+			<div class="options">
+				<div id="discord-guid-link">
+					<label>Step 1. Join the Discord server:</label>
+					<br /><a href="https://discord.gg/amazonvine" target="_blank">https://discord.gg/amazonvine</a>
+					<br />
+					<br />
+					<label>Step 2. Obtain your GUID</label>
+					<br /><span>Go to any channel on the server and type the command:</span>
+					<br /><span style="font-weight:bold;">/api-token</span>
+					<br /><span>Copy&amp;paste the API Key in step 3.</span>
+					<br />
+					<br />
+					<label>Step 3. Link your GUID:</label>
+					<br />API Token: <input type="text"  id="discord.guid" value="" size="30" maxlength="50" />
+					<input type="button" id="saveGUID" value="Link" />
+				</div>
+				<div id="discord-guid-unlink">
+					<label>You already linked your Discord account!</label>
+					<br />API Token: <span id="guid-txt"></span>
+					<input type="button" id="unlinkGUID" value="Unlink" />
+				</div>
+			</div>
+		</div>
+		
+		<h3>
 			Thorvarium styling
 			<a href="#" class="tips" title="For a faster load, use the recommended installation method as described in Thorvarium GitHub (see link in attributions below)">
 				<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
 			</a>
 		</h3>
-		<p class="options">
+		<div class="options">
 				<input type="checkbox" id="thorvarium.smallItems" value="1" /> small-items.css (Tip: activate compact items toolbar)
 			<br /><input type="checkbox" id="thorvarium.removeHeader" value="1" /> remove-header.css
 			<br /><input type="checkbox" id="thorvarium.removeFooter" value="1" /> remove-footer.css
@@ -93,7 +124,7 @@
 			<br /><input type="checkbox" id="thorvarium.stripedCategories" value="1" /> striped-categories.css
 			<br /><input type="checkbox" id="thorvarium.limitedQuantityIcon" value="1" /> limited-quantity-icon.css
 			<br /><input type="checkbox" id="thorvarium.RFYAFAAITabs" value="1" /> rfy-afa-ai-tabs.css
-		</p>
+		</div>
 	</div>
 	<br />
 	<div class="ext-helper-info-container">

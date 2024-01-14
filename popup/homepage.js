@@ -6,9 +6,6 @@
 var appSettings = {};
 
 
-
-
-
 async function loadSettings(){
 	const data = await chrome.storage.local.get("settings");
 	Object.assign(appSettings, data.settings);
@@ -38,8 +35,10 @@ function init(){
 		}
 	}
 
-
-	//UI interaction
+	//###################
+	//#### UI interaction
+	
+	//unavailableTab / Voting system interaction
 	$("#" + $.escapeSelector("unavailableTab.active")).on("change", function(){
 		if($(this).prop( "checked"))
 			$("#unavailableTabOptions").show();
@@ -49,6 +48,28 @@ function init(){
 	if(!appSettings.unavailableTab.active){
 		$("#unavailableTabOptions").hide();
 	}
+	
+	
+	//Discord link interaction
+	$("#" + $.escapeSelector("discord.active")).on("change", function(){
+		if($(this).prop( "checked"))
+			$("#discordOptions").show();
+		else
+			$("#discordOptions").hide();
+	});
+	if(!JSONGetPathValue(appSettings, "discord.active")){
+		$("#discordOptions").hide();
+	}
+	if(JSONGetPathValue(appSettings, "discord.guid") == null){
+		$("#discord-guid-link").show();
+		$("#discord-guid-unlink").hide();
+	}else{
+		$("#guid-txt").text(appSettings.discord.guid);
+		$("#discord-guid-link").hide();
+		$("#discord-guid-unlink").show();
+	}
+	
+	
 
 
 
@@ -71,6 +92,53 @@ function init(){
 			await chrome.storage.local.set({"settings": appSettings});
 		}
 	});
+	
+	//Handle the discord.active checkbox manually as it has some specificities.
+	$( "#" + $.escapeSelector("discord.active")).prop( "checked", JSONGetPathValue(appSettings, "discord.active")).trigger('change');
+	$("#" + $.escapeSelector("discord.active")).on( "change", async function() {
+		if(!$(this).is(":checked")){
+			//Anytime is allowed to deactivate the discord feature
+			JSONUpdatePathValue(appSettings, "discord.active", false);
+			await chrome.storage.local.set({"settings": appSettings});
+		}else if($(this).is(":checked") && JSONGetPathValue(appSettings, "discord.guid") != null){
+			//Only allowed to activate the discord feature IF the guid is set.
+			//(Discord will be enabled by default when GUID is set)
+			JSONUpdatePathValue(appSettings, "discord.active", true);
+			await chrome.storage.local.set({"settings": appSettings});
+		}
+	} );
+	
+	
+	$("#saveGUID").on("click", async function(){
+		$("#saveGUID").prop("disabled", true);
+		
+		//Post a fetch request to the Brenda API from the AmazonVine Discord server
+		//We want to check if the guid is valid.
+		let url = "https://api.llamastories.com/brenda/user/" + $("#" + $.escapeSelector("discord.guid")).val();
+		const response = await fetch(url, {method: "GET"});
+		if(response.status == 200){
+			appSettings.discord.active = true;
+			appSettings.discord.guid = $("#" + $.escapeSelector("discord.guid")).val();
+			await chrome.storage.local.set({"settings": appSettings});
+			$("#guid-txt").text(appSettings.discord.guid);
+			$("#discord-guid-link").hide();
+			$("#discord-guid-unlink").show();
+		}else{
+			$("#" + $.escapeSelector("discord.guid")).val("<invalid API Tokens>");
+		}
+		$("#saveGUID").prop("disabled", false);
+	});
+	$("#unlinkGUID").on("click", async function(){
+		appSettings.discord.active = false;
+		appSettings.discord.guid = null;
+		await chrome.storage.local.set({"settings": appSettings});
+		
+		$("#"+ $.escapeSelector("discord.active")).prop("checked", false).trigger("change");
+		$("#discord-guid-link").show();
+		$("#discord-guid-unlink").hide();
+	});
+	
+	
 
 
 	function manageCheckboxSetting(key){
@@ -89,13 +157,15 @@ function init(){
 
 
 
-	manageCheckboxSetting("unavailableTab.selfDiscard");
-	manageCheckboxSetting("unavailableTab.compactToolbar");
+	
+	manageCheckboxSetting("general.autofixInfiniteWheel");
 	manageCheckboxSetting("general.topPagination");
 	manageCheckboxSetting("hiddenTab.active");
-	manageCheckboxSetting("unavailableTab.consensusDiscard");
-	manageCheckboxSetting("general.autofixInfiniteWheel");
+	//manageCheckboxSetting("discord.active"); //Handled manually
 	manageCheckboxSetting("unavailableTab.active");
+	manageCheckboxSetting("unavailableTab.selfDiscard");
+	manageCheckboxSetting("unavailableTab.compactToolbar");
+	manageCheckboxSetting("unavailableTab.consensusDiscard");
 
 	manageCheckboxSetting("thorvarium.smallItems");
 	manageCheckboxSetting("thorvarium.removeHeader");
@@ -136,7 +206,15 @@ function JSONUpdatePathValue(obj, path, value){
 }
 
 function JSONGetPathValue(obj, path){
-	return path.split(".").reduce((c, s) => c[s], obj);
+	try {
+		let val = path.split(".").reduce((c, s) => c[s], obj);
+		if (val == undefined)
+			return null;
+		else
+			return val;
+	}catch(error){
+		return null;
+	}
 }
 
 
