@@ -25,7 +25,7 @@ function Grid(obj)
 	
 	this.removeTile = function(t){
 		$.each(pArrTile, function(key, value){
-			if(value != undefined && value.getPageId() == t.getPageId()){
+			if(value != undefined && value.getAsin() == t.getAsin()){
 				pArrTile.splice(key, 1);
 			}
 		});
@@ -39,10 +39,10 @@ function Grid(obj)
 		}
 	};
 	
-	this.getTileId = function(pageId){
+	this.getTileId = function(asin){
 		var r = null;
 		$.each(pArrTile, function(key, value){
-			if(value != undefined && value.getPageId() == pageId){
+			if(value != undefined && value.getAsin() == asin){
 				r = value;
 				return false; //Stop the loop
 			}
@@ -127,8 +127,8 @@ async function hideAllItems(){
 		return true;
 	
 	tDom = $("#vvp-items-grid .vvp-item-tile").children()[0];
-	pageId = getPageIdFromDom(tDom);
-	tile = getTileByPageId(pageId); //Obtain the real tile 
+	asin = getAsinFromDom(tDom);
+	tile = getTileByAsin(asin); //Obtain the real tile 
 	await tile.hideTile(false);
 	
 	hideAllItems();
@@ -139,8 +139,8 @@ async function showAllItems(){
 		return true;
 	
 	tDom = $("#tab-hidden .vvp-item-tile").children()[0];
-	pageId = getPageIdFromDom(tDom);
-	tile = getTileByPageId(pageId); //Obtain the real tile 
+	asin = getAsinFromDom(tDom);
+	tile = getTileByAsin(asin); //Obtain the real tile 
 	await tile.showTile(false);
 	
 	showAllItems();

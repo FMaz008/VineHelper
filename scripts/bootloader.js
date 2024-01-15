@@ -34,25 +34,25 @@ function sleep(ms) {
     return new Promise(resolve => sleepSetTimeout_ctrl = setTimeout(resolve, ms));
 }
 
-function getTileByPageId(pageId){
+function getTileByAsin(asin){
 	tile = null;
-	tile = gridRegular.getTileId(pageId);
+	tile = gridRegular.getTileId(asin);
 	if(tile != null)
 		return tile;
 	
-	tile = gridUnavailable.getTileId(pageId);
+	tile = gridUnavailable.getTileId(asin);
 	if(tile != null)
 		return tile;
 	
-	tile = gridHidden.getTileId(pageId);
+	tile = gridHidden.getTileId(asin);
 	return tile;
 }
 
-function getPageIdFromDom(tileDom){
+function getAsinFromDom(tileDom){
 	let regex = /^(?:.*\/dp\/)(.+?)(?:\?.*)?$/; //Isolate the product ID in the URL.
 	let url = $(tileDom).find(".a-link-normal").attr("href");
-	let arrPageId = url.match(regex);
-	return arrPageId[1];
+	let arrasin = url.match(regex);
+	return arrasin[1];
 }
 
 
@@ -153,7 +153,7 @@ async function init(){
 	$(".vvp-item-tile").each(function(){
 		
 		tile = new Tile($(this), gridRegular);
-		arrUrl.push(tile.getPageId());
+		arrUrl.push(tile.getAsin());
 		
 		//Move the hidden item to the hidden tab
 		if(appSettings.hiddenTab.active && tile.isHidden()){
@@ -169,6 +169,8 @@ async function init(){
 	if(tabSystem){
 		updateTileCounts();
 	}
+	
+	
 	
 	//Bottom pagination
 	if(appSettings.general.topPagination){
@@ -196,7 +198,7 @@ function fetchData(arrUrl){
 			function() {
 				//error =>  console.log(error);
 				$.each(arrUrl, function(key, val){
-					let t = getTileByPageId(val);
+					let t = getTileByAsin(val);
 					t.getToolbar().setStatusText("Server offline");
 					t.getToolbar().setStatusIcon("ext-helper-icon-info")
 				});
@@ -214,7 +216,7 @@ function serverResponse(data){
 	
 	$.each(data["arr_url"],function(key,values){
 		
-		let tile = getTileByPageId(key);
+		let tile = getTileByAsin(key);
 		
 		if(tile==null)
 			console.log("No tile matching " + key);
@@ -248,9 +250,9 @@ function serverResponse(data){
 //A vote button was pressed, send the vote to the server
 //If a vote changed the discard status, move the tile accordingly
 async function reportfees(event){
-	let pageId = event.data.pageId;
+	let asin = event.data.asin;
 	let fees = event.data.fees; // The vote
-	let tile = getTileByPageId(pageId);
+	let tile = getTileByAsin(asin);
 	
 	
 	//If the tile is already in the hidden category, a vote won't move it from there.
@@ -272,11 +274,11 @@ async function reportfees(event){
 	
 	//Send the vote to the server
 	let url = "https://francoismazerolle.ca/vinehelperCastVote_v2.php"
-		+ '?data={"url":"' + pageId +'","fees":'+ fees +'}';
+		+ '?data={"url":"' + asin +'","fees":'+ fees +'}';
 	await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
 
 	//Refresh the data for the toolbar of that specific product only
-	let arrUrl = [pageId];
+	let arrUrl = [asin];
 	fetchData(arrUrl);
 };
 

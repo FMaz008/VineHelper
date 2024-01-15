@@ -4,7 +4,7 @@ function Tile(obj, gridInstance){
 	
 	//private properties
 	var pTile = obj;
-	var pPageId = findPageId();
+	var pAsin = findasin();
 	var pGrid = gridInstance;
 	pGrid.addTile(this);
 	var pToolbar = null;
@@ -15,8 +15,8 @@ function Tile(obj, gridInstance){
 	
 	//#################
 	//## Private method
-	function findPageId(){
-		return getPageIdFromDom(pTile);
+	function findasin(){
+		return getAsinFromDom(pTile);
 	}
 	
 	function getFees(){
@@ -52,25 +52,6 @@ function Tile(obj, gridInstance){
 		}).promise(); //Converting the animation to a promise allow for the await clause to work.
 		
 	}
-
-	function removePageIdFromArrHidden(pageId){
-		$.each(appSettings.hiddenTab.arrHidden, function(key, value){
-			if(value != undefined && value.pageId == pageId){
-				appSettings.hiddenTab.arrHidden.splice(key, 1);
-			}
-		});
-	}
-
-	function updateHiddenTileList(){
-		pToolbar.updateVisibilityIcon();
-		
-		//Save the new array
-		chrome.storage.local.set({ 'settings': appSettings });
-		
-		//Refresh grid counts
-		updateTileCounts();
-	}
-
 
 	//#################
 	//## Public methods
@@ -117,8 +98,8 @@ function Tile(obj, gridInstance){
 		return NOT_DISCARDED_NO_STATUS;
 	};
 	
-	this.getPageId = function(){
-		return pPageId;
+	this.getAsin = function(){
+		return pAsin;
 	};
 	
 	this.getDOM = function(){
@@ -158,8 +139,8 @@ function Tile(obj, gridInstance){
 			return false;
 		
 		var found = false;
-		$.each(appSettings.hiddenTab.arrHidden, function(key, value){
-			if(value.pageId == pPageId){
+		$.each(appSettings.hiddenTab.arrItems, function(key, value){
+			if(value.asin == pAsin){
 				found = true;
 				return;
 			}
@@ -168,15 +149,30 @@ function Tile(obj, gridInstance){
 	};
 	
 	this.hideTile = async function(animate=true){
-		appSettings.hiddenTab.arrHidden.push({"pageId" : pPageId, "date": new Date});
+		//Add the item to the list of hidden items
+		appSettings.hiddenTab.arrItems.push({"asin" : pAsin, "date": new Date});
+		chrome.storage.local.set({ 'settings': appSettings }); //Save the new array
+		
+		//Move the tile
 		await this.moveToGrid(gridHidden, animate);
 		
-		updateHiddenTileList();
+		pToolbar.updateVisibilityIcon();
+		
+		//Refresh grid counts
+		updateTileCounts();
 	}
 	
 	this.showTile = async function(animate=true){
-		removePageIdFromArrHidden(pPageId);
 		
+		//Remove the item from the array of hidden items
+		$.each(appSettings.hiddenTab.arrItems, function(key, value){
+			if(value != undefined && value.asin == pAsin){
+				appSettings.hiddenTab.arrItems.splice(key, 1);
+			}
+		});
+		chrome.storage.local.set({ 'settings': appSettings }); //Save the new array
+		
+		//Move the tile
 		if(appSettings.unavailableTab.consensusDiscard && tile.getStatus() >= NOT_DISCARDED){
 			await tile.moveToGrid(gridUnavailable, animate);
 		} else if(appSettings.unavailableTab.selfDiscard && tile.getStatus() == DISCARDED_OWN_VOTE){
@@ -184,7 +180,11 @@ function Tile(obj, gridInstance){
 		} else {
 			await this.moveToGrid(gridRegular, animate);
 		}
-		updateHiddenTileList();
+		
+		pToolbar.updateVisibilityIcon();
+		
+		//Refresh grid counts
+		updateTileCounts();
 	}
 	
 	

@@ -7,7 +7,7 @@ function Toolbar(tileInstance){
 	
 	//Create the bare bone structure of the toolbar
 	this.createProductToolbar = function (){
-		let toolbarId = "ext-helper-toolbar-" + pTile.getPageId();
+		let toolbarId = "ext-helper-toolbar-" + pTile.getAsin();
 		let anchorTo = $(pTile.getDOM()).children(".vvp-item-tile-content");
 		pToolbar = $("<div />")
 			.attr("id",toolbarId)
@@ -43,8 +43,8 @@ function Toolbar(tileInstance){
 		if(appSettings.hiddenTab.active){
 			let h, hi;
 			h = $("<a />")
-				.attr("href", "#"+pTile.getPageId())
-				.attr("id", "ext-helper-hide-link-"+pTile.getPageId())
+				.attr("href", "#"+pTile.getAsin())
+				.attr("id", "ext-helper-hide-link-"+pTile.getAsin())
 				.attr("title", "Move a product to, or out of, the hidden tab.")
 				.addClass("ext-helper-floating-icon")
 				.attr("onclick", "return false;")
@@ -52,9 +52,9 @@ function Toolbar(tileInstance){
 			hi= $("<div />")
 				.addClass("ext-helper-toolbar-icon")
 				.appendTo(h);
-			h.on('click', {'pageId': pTile.getPageId()}, async function (event){//A hide/display item button was pressed
-				let pageId = event.data.pageId;
-				let tile = getTileByPageId(pageId);
+			h.on('click', {'asin': pTile.getAsin()}, async function (event){//A hide/display item button was pressed
+				let asin = event.data.asin;
+				let tile = getTileByAsin(asin);
 				let gridId = tile.getGridId();
 				
 				switch (gridId){ //Current Grid
@@ -77,8 +77,8 @@ function Toolbar(tileInstance){
 		if(appSettings.discord.active && appSettings.discord.guid != null && vineQueue != null){
 			let h, hi;
 			h = $("<a />")
-				.attr("href", "#"+pTile.getPageId())
-				.attr("id", "ext-helper-announce-link-"+pTile.getPageId())
+				.attr("href", "#"+pTile.getAsin())
+				.attr("id", "ext-helper-announce-link-"+pTile.getAsin())
 				.attr("title", "Announce the product on discord!")
 				.addClass("ext-helper-floating-icon")
 				.attr("onclick", "return false;")
@@ -87,7 +87,7 @@ function Toolbar(tileInstance){
 				.addClass("ext-helper-toolbar-icon")
 				.addClass("ext-helper-icon-announcement")
 				.appendTo(h);
-			h.on('click', {'pageId': pTile.getPageId()}, async function(event){
+			h.on('click', {'asin': pTile.getAsin()}, async function(event){
 				
 				//Post a fetch request to the Brenda API from the AmazonVine Discord server
 				//We want to check if the guid is valid.
@@ -97,7 +97,7 @@ function Toolbar(tileInstance){
 					'token': appSettings.discord.guid,
 					'domain': "amazon."+vineDomain,
 					'tab': vineQueue,
-					'asin': event.data.pageId
+					'asin': event.data.asin
 					//'etv': '0.00',
 					//'comment': prompt("(Optional) Comment:")
 				};
@@ -129,7 +129,7 @@ function Toolbar(tileInstance){
 		if(!appSettings.hiddenTab.active)
 			return false;
 		
-		let icon = $("#ext-helper-hide-link-"+pTile.getPageId() + " div.ext-helper-toolbar-icon");
+		let icon = $("#ext-helper-hide-link-"+pTile.getAsin() + " div.ext-helper-toolbar-icon");
 		let gridId = pTile.getGridId();
 		
 		icon.removeClass("ext-helper-icon-hide");
@@ -146,12 +146,12 @@ function Toolbar(tileInstance){
 	};
 
 	this.setStatusText = function(statusText){
-		let context = $("#ext-helper-toolbar-" + pTile.getPageId());
+		let context = $("#ext-helper-toolbar-" + pTile.getAsin());
 		let container = $(context).find("div.ext-helper-status-container2");
 		container.children("span").text(statusText);
 	};
 	this.setStatusIcon = function(iconClass){
-		let context = $("#ext-helper-toolbar-" + pTile.getPageId());
+		let context = $("#ext-helper-toolbar-" + pTile.getAsin());
 		let icon = $(context).find(".ext-helper-icon");
 		
 		//Remove all images for the icon
@@ -165,7 +165,7 @@ function Toolbar(tileInstance){
 	
 	//This method is called from bootloader.js, serverResponse() when the voting data has been received, after the tile was moved.
 	this.updateToolbar = function (){
-		let context = $("#ext-helper-toolbar-" + pTile.getPageId());
+		let context = $("#ext-helper-toolbar-" + pTile.getAsin());
 		let icon = $(context).find(".ext-helper-icon");
 		let container = $(context).find("div.ext-helper-status-container2");
 		
@@ -186,7 +186,7 @@ function Toolbar(tileInstance){
 				tileOpacity = appSettings.unavailableTab.unavailableOpacity/100;
 				
 				if(appSettings.discord.active)
-					$("#ext-helper-announce-link-"+pTile.getPageId()).hide();
+					$("#ext-helper-announce-link-"+pTile.getAsin()).hide();
 				
 				break;
 			case NOT_DISCARDED_NO_FEES:
@@ -222,7 +222,7 @@ function Toolbar(tileInstance){
 
 	//Create the voting widget part of the toolbar
 	function createVotingWidget(){
-		let context = $("#ext-helper-toolbar-" + pTile.getPageId());
+		let context = $("#ext-helper-toolbar-" + pTile.getAsin());
 		let container = $(context).find("div.ext-helper-status-container2");
 		
 		//Remove any previous voting widget, we will create a new one.
@@ -235,8 +235,8 @@ function Toolbar(tileInstance){
 			.text("")
 			.appendTo(container);
 		v0 = $("<a />")
-			.attr("href", "#" + pTile.getPageId())
-			.attr("id", "ext-helper-reportlink-"+pTile.getPageId()+"-no")
+			.attr("href", "#" + pTile.getAsin())
+			.attr("id", "ext-helper-reportlink-"+pTile.getAsin()+"-no")
 			.addClass("ext-helper-reportlink-good")
 			.attr("onclick", "return false;")
 			.html("&#9745; Yes ("+pTile.getVoteNoFees()+")")
@@ -245,8 +245,8 @@ function Toolbar(tileInstance){
 			.text(" / ")
 			.appendTo(pe);
 		v1 = $("<a />")
-			.attr("href", "#" + pTile.getPageId())
-			.attr("id", "ext-helper-reportlink-"+pTile.getPageId()+"-yes")
+			.attr("href", "#" + pTile.getAsin())
+			.attr("id", "ext-helper-reportlink-"+pTile.getAsin()+"-yes")
 			.addClass("ext-helper-reportlink-bad")
 			.attr("onclick", "return false;")
 			.html("&#11199; No ("+pTile.getVoteFees()+")")
@@ -262,8 +262,8 @@ function Toolbar(tileInstance){
 			pe.prepend("Available? ");
 		}
 		
-		v1.on('click', {'pageId': pTile.getPageId(), 'fees': 1}, reportfees);
-		v0.on('click', {'pageId': pTile.getPageId(), 'fees': 0}, reportfees);
+		v1.on('click', {'asin': pTile.getAsin(), 'fees': 1}, reportfees);
+		v0.on('click', {'asin': pTile.getAsin(), 'fees': 0}, reportfees);
 
 		//Make the widget transparent if the user voted "no fees"
 		//Note: If we voted "fees", the entire card will be transparent.

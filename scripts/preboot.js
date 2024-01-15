@@ -28,7 +28,6 @@ async function convertOldSettingsToNewJSONFormat(){
 	let topPagination = false;
 	let unavailableTab = true;
 	let hiddenTab = true;
-	let arrHidden = [];
 	let compactToolbar = false;
 	let autofixInfiniteWheel = true;
 
@@ -89,7 +88,7 @@ async function convertOldSettingsToNewJSONFormat(){
 		
 		"hiddenTab": {
 			"active": hiddenTab,
-			"arrHidden": await getLocalStorageVariable("arrHidden")
+			"arrItems": []
 		},
 		
 		"discord":{
@@ -114,6 +113,11 @@ async function convertOldSettingsToNewJSONFormat(){
 		}
 	}
 	
+	//Convert old hidden pageId to asin
+	let arr = await getLocalStorageVariable("arrHidden");
+	if(arr!= undefined)
+		arr.forEach((element) => settings.hiddenTab.arrItems.push({"asin" : element["pageId"], "date": element["date"]}));
+	
 	//Delete the old settings
 	await chrome.storage.local.clear();//Delete all local storage
 	
@@ -125,6 +129,7 @@ async function convertOldSettingsToNewJSONFormat(){
 async function getSettings(){
 	
 	showRuntime("PRE: Reading settings from local storage");
+	
 	const data = await chrome.storage.local.get("settings");
 	showRuntime("PRE: Done reading settings");
 	
@@ -196,9 +201,9 @@ function discardedItemGarbageCollection(){
 	//Splicing inside a foreach might skip the item following the deleted one, 
 	//but this method is called on every page load so it is effectively inconsequential asin
 	//the missing items will be caught on the next pass.
-	$.each(appSettings.hiddenTab.arrHidden, function(key, value){
+	$.each(appSettings.hiddenTab.arrItems, function(key, value){
 		if(key!=undefined && value["date"] < expiredDate){
-			appSettings.hiddenTab.arrHidden.splice(key, 1);
+			appSettings.hiddenTab.arrItems.splice(key, 1);
 			change = true;
 		}
 	});
