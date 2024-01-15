@@ -32,6 +32,8 @@ function init(){
 			$("#available").text(data["totalConfirmed"]);
 			$("#unavailable").text(data["totalDiscarded"]);
 			$("#totalUsers").text(data["totalUsers"]);
+			$("#totalVotes").text(data["totalVotes"]);
+			$("#totalProducts").text(data["totalProducts"]);
 		}
 	}
 
