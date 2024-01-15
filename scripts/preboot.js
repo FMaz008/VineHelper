@@ -3,6 +3,8 @@ const startTime = Date.now();
 //Extension settings
 var appSettings = {};
 
+var vineDomain = null;
+var vineQueue = null
 
 
 //#########################
@@ -90,6 +92,11 @@ async function convertOldSettingsToNewJSONFormat(){
 			"arrHidden": await getLocalStorageVariable("arrHidden")
 		},
 		
+		"discord":{
+			"active": false,
+			"guid": null
+		},
+		
 		"thorvarium": {
 			"smallItems": await getLocalStorageVariable("thorvariumSmallItems") ? true: false,
 			"removeHeader": await getLocalStorageVariable("thorvariumRemoveHeader") ? true: false,
@@ -136,13 +143,35 @@ async function getSettings(){
 	let currentUrl = window.location.href; 
 	regex = /^(?:.*:\/\/)(?:.+[\.]?)amazon\.(.+)\/vine\/.*$/;
 	arrMatches = currentUrl.match(regex);
-	if(arrMatches[1] != "ca"){
+	vineDomain = arrMatches[1];
+	
+	//If the domain is not Canada, de-activate the voting system/unavailable tab
+	if(vineDomain != "ca"){
 		appSettings.unavailableTab.active = false;
 		appSettings.unavailableTab.compactToolbar = true;
 		appSettings.unavailableTab.consensusDiscard = false;
 		appSettings.unavailableTab.selfDiscard = false;
 	}
-
+	
+	//If the domain if not from outside the countries supported by the discord API, disable discord
+	if (["ca", "com", "co.uk"].indexOf(vineDomain) == -1){
+		appSettings.discord.active = false;
+	}
+	
+	
+	//Determine if we are browsing a queue
+	regex = /^(?:.*:\/\/)(?:.+[\.]?)amazon\..+\/vine\/vine-items(?:\?queue=(.+))?$/;
+	arrMatches = currentUrl.match(regex);
+	vineQueue = null;
+	if(arrMatches != null){
+		if(arrMatches[1] == undefined){
+			vineQueue = "last_chance";
+		} else{
+			vineQueue = arrMatches[1];
+		}
+	}
+	
+	
 	showRuntime("PRE: Settings loaded");
 	
 	discardedItemGarbageCollection();
@@ -158,6 +187,12 @@ function discardedItemGarbageCollection(){
 	let expiredDate = new Date();
 	expiredDate.setDate(expiredDate.getDate() - 90);
 	
+	//Not sure why this occurs sometimes, but here's an easy fix
+	if(appSettings.hiddenTab.arrHidden == undefined){
+		appSettings.hiddenTab.arrHidden = [];
+		change=true;
+	}	
+
 	//Splicing inside a foreach might skip the item following the deleted one, 
 	//but this method is called on every page load so it is effectively inconsequential asin
 	//the missing items will be caught on the next pass.
@@ -175,7 +210,7 @@ function discardedItemGarbageCollection(){
 }
 
 function showRuntime(eventName){
-	console.log(eventName+": "+ (Date.now() - startTime) + "ms");
+	//console.log(eventName+": "+ (Date.now() - startTime) + "ms");
 }
 
 

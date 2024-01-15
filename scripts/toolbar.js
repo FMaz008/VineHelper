@@ -16,7 +16,6 @@ function Toolbar(tileInstance){
 		$("<div />")
 			.addClass("ext-helper-status-container")
 			.appendTo("#"+toolbarId);
-		
 		container = $("<div />")
 			.addClass("ext-helper-status-container2")
 			.appendTo("#"+toolbarId + " .ext-helper-status-container");
@@ -46,7 +45,7 @@ function Toolbar(tileInstance){
 			h = $("<a />")
 				.attr("href", "#"+pTile.getPageId())
 				.attr("id", "ext-helper-hide-link-"+pTile.getPageId())
-				.addClass("ext-helper-hide-link")
+				.addClass("ext-helper-floating-icon")
 				.attr("onclick", "return false;")
 				.appendTo(container);
 			hi= $("<div />")
@@ -55,6 +54,55 @@ function Toolbar(tileInstance){
 			h.on('click', {'pageId': pTile.getPageId()}, toggleItemVisibility);
 			
 			this.updateVisibilityIcon();
+		}
+		
+		//Display the announce link
+		if(appSettings.discord.active && appSettings.discord.guid != null){
+			let h, hi;
+			h = $("<a />")
+				.attr("href", "#"+pTile.getPageId())
+				.attr("id", "ext-helper-announce-link-"+pTile.getPageId())
+				.addClass("ext-helper-floating-icon")
+				.attr("onclick", "return false;")
+				.appendTo(container);
+			hi= $("<div />")
+				.addClass("ext-helper-toolbar-icon")
+				.addClass("ext-helper-icon-announcement")
+				.appendTo(h);
+			h.on('click', {'pageId': pTile.getPageId()}, async function(event){
+				
+				//Post a fetch request to the Brenda API from the AmazonVine Discord server
+				//We want to check if the guid is valid.
+				let url = "https://api.llamastories.com/brenda/product";
+				var details = {
+					'token': appSettings.discord.guid,
+					'country': ["com", "ca", "co.uk"].indexOf(vineDomain)+1,
+					'channel': ["potluck", "last_chance", "encore"].indexOf(vineQueue)+1,
+					'asin': event.data.pageId
+					//'etv': 'Password!',
+					//'comment': prompt("(Optional) Comment:")
+				};
+				
+				const response = await fetch(
+					url,
+					{
+						method: "PUT",
+						headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+						body: new URLSearchParams(details)
+					}
+				);
+				if(response.status == 200){
+					alert("Announce successful!");
+				}else if(response.status == 401){
+					alert("API Token invalid, please go in the extension settings to correct it.");
+				}else if(response.status == 422){
+					alert("Unprocessable entity. The request was malformed and rejected.");
+				}else if(response.status == 429){
+					alert("Too many announce. Please wait longer between each of them.");
+				}else{
+					alert("The announce has failed for an unknown reason.");
+				}
+			});
 		}
 	};
 	
@@ -154,18 +202,15 @@ function Toolbar(tileInstance){
 		let context = $("#ext-helper-toolbar-" + pTile.getPageId());
 		let container = $(context).find("div.ext-helper-status-container2");
 		
+		//Remove any previous voting widget, we will create a new one.
 		$(container).children(".ext-helper-voting-widget").remove();
 		
 		let pe; //Parent Element
 		let v1, v0; //VoteFees(1), VoteNoFees(0)
 		pe = $("<div />")
 			.addClass("ext-helper-voting-widget")
+			.text("")
 			.appendTo(container);
-		
-		if(!appSettings.unavailableTab.compactToolbar){
-			pe.text("Available? ");
-		}
-		
 		v0 = $("<a />")
 			.attr("href", "#" + pTile.getPageId())
 			.attr("id", "ext-helper-reportlink-"+pTile.getPageId()+"-no")
@@ -185,11 +230,13 @@ function Toolbar(tileInstance){
 			.appendTo(pe);
 		
 		if(appSettings.unavailableTab.compactToolbar){
+			//Make the content of the toolbar as compact as possible
 			v0.html("&#9745; ("+pTile.getVoteNoFees()+")");
 			v1.html("&#11199; ("+pTile.getVoteFees()+")")
 		}else{
 			//If we used the regular toolbar, we need to add a clear:right so the voting widget will not be impeded by the right floated hidden icon.
 			$(".ext-helper-voting-widget").css("clear", "right");
+			pe.prepend("Available? ");
 		}
 		
 		v1.on('click', {'pageId': pTile.getPageId(), 'fees': 1}, reportfees);
