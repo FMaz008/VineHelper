@@ -121,6 +121,10 @@ function Toolbar(tileInstance){
 				}else{
 					alert("The announce has failed for an unknown reason.");
 				}
+				
+				//Visually deactivate this item, will be reset on the next page load, but it's just to help navigation and avoid double-clicking
+				$(this).off( "click" );
+				$(this).css("opacity", "0.3");
 			});
 		}
 	};
