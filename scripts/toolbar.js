@@ -75,11 +75,12 @@ function Toolbar(tileInstance){
 				//We want to check if the guid is valid.
 				let url = "https://api.llamastories.com/brenda/product";
 				var details = {
+					'version': 1,
 					'token': appSettings.discord.guid,
-					'country': ["com", "ca", "co.uk"].indexOf(vineDomain)+1,
-					'channel': ["potluck", "last_chance", "encore"].indexOf(vineQueue)+1,
+					'domain': "amazon."+vineDomain,
+					'tab': vineQueue,
 					'asin': event.data.pageId
-					//'etv': 'Password!',
+					//'etv': '0.00',
 					//'comment': prompt("(Optional) Comment:")
 				};
 				
@@ -117,7 +118,7 @@ function Toolbar(tileInstance){
 		icon.removeClass("ext-helper-icon-show");
 		switch (gridId){
 			case "vvp-items-grid":
-			case "tab-discarded":
+			case "tab-unavailable":
 				icon.addClass("ext-helper-icon-hide");
 				break;
 			case "tab-hidden":
@@ -144,11 +145,11 @@ function Toolbar(tileInstance){
 		icon.addClass(iconClass);
 	};
 	
+	//This method is called from bootloader.js, serverResponse() when the voting data has been received, after the tile was moved.
 	this.updateToolbar = function (){
 		let context = $("#ext-helper-toolbar-" + pTile.getPageId());
 		let icon = $(context).find(".ext-helper-icon");
 		let container = $(context).find("div.ext-helper-status-container2");
-		
 		
 		let tileOpacity;
 		let statusText;
@@ -157,7 +158,7 @@ function Toolbar(tileInstance){
 		//If the hidden tab system is activated, update the visibility icon
 		if(appSettings.hiddenTab.active)
 			this.updateVisibilityIcon();
-		
+			
 		switch (pTile.getStatus()){
 			case DISCARDED_WITH_FEES:
 			case DISCARDED_OWN_VOTE:
@@ -165,6 +166,10 @@ function Toolbar(tileInstance){
 				this.setStatusText("Not available.");
 				statusColor = "ext-helper-background-fees";
 				tileOpacity = appSettings.unavailableTab.unavailableOpacity/100;
+				
+				if(appSettings.discord.active)
+					$("#ext-helper-announce-link-"+pTile.getPageId()).hide();
+				
 				break;
 			case NOT_DISCARDED_NO_FEES:
 			case NOT_DISCARDED_OWN_VOTE:
