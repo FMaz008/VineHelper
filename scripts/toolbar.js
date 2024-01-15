@@ -74,7 +74,7 @@ function Toolbar(tileInstance){
 		}
 		
 		//Display the announce link
-		if(appSettings.discord.active && appSettings.discord.guid != null){
+		if(appSettings.discord.active && appSettings.discord.guid != null && vineQueue != null){
 			let h, hi;
 			h = $("<a />")
 				.attr("href", "#"+pTile.getPageId())
