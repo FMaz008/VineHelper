@@ -51,7 +51,23 @@ function Toolbar(tileInstance){
 			hi= $("<div />")
 				.addClass("ext-helper-toolbar-icon")
 				.appendTo(h);
-			h.on('click', {'pageId': pTile.getPageId()}, toggleItemVisibility);
+			h.on('click', {'pageId': pTile.getPageId()}, async function (event){//A hide/display item button was pressed
+				let pageId = event.data.pageId;
+				let tile = getTileByPageId(pageId);
+				let gridId = tile.getGridId();
+				
+				switch (gridId){ //Current Grid
+					case "vvp-items-grid":
+					case "tab-unavailable":
+						tile.hideTile();
+						break;
+					case "tab-hidden":
+						tile.showTile();
+						break;
+				}
+				
+				updateTileCounts();
+			});
 			
 			this.updateVisibilityIcon();
 		}

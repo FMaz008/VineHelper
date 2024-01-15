@@ -281,25 +281,6 @@ async function reportfees(event){
 };
 
 
-//A hide/display item button was pressed
-async function toggleItemVisibility(event){
-	let pageId = event.data.pageId;
-	let tile = getTileByPageId(pageId);
-	let gridId = tile.getGridId();
-	
-	switch (gridId){ //Current Grid
-		case "vvp-items-grid":
-		case "tab-discarded":
-			tile.hideTile();
-			break;
-		case "tab-hidden":
-			tile.showTile();
-			break;
-	}
-	
-	updateTileCounts();
-}
-
 //Function to receive a message from the website-end and launch an animation
 //if the infinite wheel fix was used.
 window.addEventListener("message", async function(event) {
