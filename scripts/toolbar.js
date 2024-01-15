@@ -45,6 +45,7 @@ function Toolbar(tileInstance){
 			h = $("<a />")
 				.attr("href", "#"+pTile.getPageId())
 				.attr("id", "ext-helper-hide-link-"+pTile.getPageId())
+				.attr("title", "Move a product to, or out of, the hidden tab.")
 				.addClass("ext-helper-floating-icon")
 				.attr("onclick", "return false;")
 				.appendTo(container);
@@ -78,6 +79,7 @@ function Toolbar(tileInstance){
 			h = $("<a />")
 				.attr("href", "#"+pTile.getPageId())
 				.attr("id", "ext-helper-announce-link-"+pTile.getPageId())
+				.attr("title", "Announce the product on discord!")
 				.addClass("ext-helper-floating-icon")
 				.attr("onclick", "return false;")
 				.appendTo(container);
