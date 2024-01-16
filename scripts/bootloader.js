@@ -72,51 +72,10 @@ async function init(){
 	
 	//Wait for the config to be loaded before running this script
 	showRuntime("BOOT: Waiting on config to be loaded...");
-	let loopCount = 0;
 	while($.isEmptyObject(appSettings)){
 		await sleep(10);
-		loopCount++;
 	}
-	showRuntime("BOOT: Waited " + (loopCount*10) + "ms for config. Begining init() function");
-	
-	//Load Thorvarium stylesheets
-	if(appSettings.thorvarium.smallItems)
-		$('head link:last').after('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/small-items.css">');
-	
-	if(appSettings.thorvarium.removeHeader)
-		$('head link:last').after('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/remove-header.css">');
-	
-	if(appSettings.thorvarium.removeFooter)
-		$('head link:last').after('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/remove-footer.css">');
-	
-	if(appSettings.thorvarium.removeAssociateHeader)
-		$('head link:last').after('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/remove-associate-header.css">');
-	
-	if(appSettings.thorvarium.moreDescriptionText)
-		$('head link:last').after('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/more-description-text.css">');
-	
-	if(appSettings.thorvarium.ETVModalOnTop)
-		$('head link:last').after('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/etv-modal-on-top.css">');
-	
-	if(appSettings.thorvarium.categoriesWithEmojis)
-		$('head link:last').after('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/categories-with-emojis.css">');
-	
-	if(appSettings.thorvarium.paginationOnTop)
-		$('head link:last').after('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/pagination-on-top.css">');
-	
-	if(appSettings.thorvarium.collapsableCategories)
-		$('head link:last').after('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/collapsable-categories.css">');
-	
-	if(appSettings.thorvarium.stripedCategories)
-		$('head link:last').after('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/striped-categories.css">');
-	
-	if(appSettings.thorvarium.limitedQuantityIcon)
-		$('head link:last').after('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/limited-quantity-icon.css">');
-	
-	if(appSettings.thorvarium.RFYAFAAITabs)
-		$('head link:last').after('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/rfy-afa-ai-tabs.css">');
-	
-	showRuntime("BOOT: Thorvarium stylesheets injected");
+	showRuntime("BOOT: Config available. Begining init() function");
 	
 	//Inject the infinite loading wheel fix to the "main world"
 	if(appSettings.general.autofixInfiniteWheel){
