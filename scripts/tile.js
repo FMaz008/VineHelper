@@ -10,12 +10,6 @@ function Tile(obj, gridInstance) {
     var pVoteNoFees = 0;
     var pVoteOwn = null;
 
-    //#################
-    //## Private method
-    function findasin() {
-        return getAsinFromDom(pTile);
-    }
-
     function getFees() {
         if (pVoteFees - pVoteNoFees >= appSettings.unavailableTab.consensusThreshold) return CONSENSUS_FEES;
         else if (pVoteNoFees - pVoteFees >= appSettings.unavailableTab.consensusThreshold) return CONSENSUS_NO_FEES;
