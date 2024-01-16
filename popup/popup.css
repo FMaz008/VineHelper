@@ -1,15 +1,25 @@
 body {
-	height: 400px; /* popovers have a max height of 600px */
+	height: 600px;
 	width: 350px;
-	padding: 10px;
-	padding-right:20px;
 	margin: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.header {
+	padding: 0.2rem 1rem;
+	display: flex;
+	align-items: center;
+}
+
+h1 {
+	flex-grow: 1;
+	text-align: center;
 }
 
 div.summary{
 	background-color:#EEE;
 	padding:10px;
-	width:300px;
 }
 
 span.number{
@@ -18,14 +28,8 @@ span.number{
 
 div.all-options{
 	font-size:12px;
-}
-
-div.options{
-	margin-top:0px;
-	padding-left:10px;
-	margin-bottom:20px;
-	border-left:10px solid black;
-	margin-left:5px;
+	display: flex;
+	flex-grow: 1;
 }
 
 h3{
@@ -35,4 +39,102 @@ h3{
 
 .ui-tooltip {
 	background:#FFF;
+}
+
+#tabs {
+	display: flex;
+	flex-grow: 1;
+	flex-direction: column;
+	border: 0px;
+}
+
+.ui-tabs .ui-tabs-panel {
+	padding: 0;
+	flex-grow: 1;
+	display: flex;
+}
+.ui-tabs-tab {
+	border-radius: 0px;
+}
+
+.ui-tabs-nav {
+	padding: 0px !important;
+	border-top: 0px;
+	border-right: 0px;
+	border-radius: 0px;
+}
+
+.ui-checkboxradio-label {
+	border-radius: 0px;
+}
+
+.options {
+	display: flex;
+	flex-direction: column;
+	margin-top: 0.1rem;
+	flex-grow:1;
+}
+
+.ui-state-active,
+.ui-widget-content .ui-state-active,
+.ui-button.ui-state-active:hover {
+	background: #C1C1C1;
+	border: #ddd solid 1px;
+	display: flex;
+	align-items: center;
+}
+
+.ui-checkboxradio-label {
+	display: flex;
+	align-items: center;
+	height: 2rem;
+	border: 1px solid #ddd;
+	flex-grow: 0;
+	text-align: left;
+	margin: 0px;
+}
+.ui-checkboxradio-label .ui-checkboxradio-icon-space {
+	width: 0.5rem;
+}
+
+.ui-checkboxradio-label .tips {
+	margin-left: 0.5rem;
+}
+
+.ui-tabs-tab.ui-state-active {
+	background: rgb(48, 51, 51);
+	border: 1px solid rgb(48, 51, 51);
+}
+
+.ui-checkboxradio-label.ui-state-active, .ui-checkboxradio-label.ui-state-active:hover, .ui-checkboxradio-label:active {
+	background: #ededed;
+	border: 1px solid #ccc;
+	color: black;
+}
+
+#unavailableTabOptions, #discordOptions {
+	border: 0.35rem solid #ccc;
+	flex-grow: 1;
+	background-color: #ccc;
+	display: flex;
+	flex-direction: column;
+}
+
+
+.expand {
+	flex-grow: 1;
+}
+
+.text {
+	margin-top: 0.5rem;
+	font-weight: bold;
+}
+
+#tabs-4 .ui-checkboxradio-label {
+	height: calc(100% / 13);
+}
+
+#tabs-5 {
+	background-color: #ccc;
+	padding: 1rem;
 }
