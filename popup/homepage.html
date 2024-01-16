@@ -7,157 +7,229 @@
 	<link rel="stylesheet" type="text/css" href="../main.css" />
   </head>
   <body>
-	<h1>
+	<div  class="header">
 		<img src="../icon.png" width="32px" height="32px" style="vertical-align:middle" />
-		Amazon Vine Helper
-	</h1>
+		<h1>Amazon Vine Helper</h1>
+	</div>
 	<div class="all-options">
-		<p>(Reload the page to apply new settings)</p>
-		<h3>General Options</h3>
-		<div class="options">
-			<input type="checkbox" id="general.autofixInfiniteWheel" value="1" /> Auto-fix <i>infinite loading wheel</i>
-			<a href="#" class="tips" title="Some items load indefinitely. This option will automatically fix this problem and display a small visual effect when it does.">
-				<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
-			</a>
-			<br />
-			<input type="checkbox" id="general.topPagination" value="1" /> Pagination also at the top
-			<a href="#" class="tips" title="This will add a second pagination bar at the top of the listings.">
-				<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
-			</a> 
-			<br />
-			<input type="checkbox" id="general.versionInfoPopup" value="1" /> Show version note popup
-			<a href="#" class="tips" title="Will display the version note popup again, once, on the next page load.">
-				<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
-			</a> 
-			<br />
-			<input type="checkbox" id="hiddenTab.active" value="1" /> Hidden tab
-			<a href="#" class="tips" title="Activate the hidden tab feature, allowing you to move items you are not interested with to a separate tab.">
-				<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
-			</a> 
-		</div>
-		
-		<h3>
-			<input type="checkbox" id="unavailableTab.active" value="1" /> Voting system (Vine Canada only):
-			<a href="#" class="tips" title="In Canada, a lot of items have importation or shipping fees, which makes them impossible to be ordered. This option will activate a community voting toolbar on every items, identifying and placing items that can't be ordered in a separate tab.">
-				<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
-			</a>
-		</h3>
-		<div id="unavailableTabOptions">
-			<div class="options">
-				<input type="checkbox" id="unavailableTab.compactToolbar" value="1" /> Compact items toolbar
-				<a href="#" class="tips" title="Make the toolbar smaller and compatible with Thorvarium SmallItems stylesheet.">
-					<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
-				</a>
-				<br />
-				<input type="checkbox" id="unavailableTab.selfDiscard" value="1" /> The items I voted "with fees".
-				<a href="#" class="tips" title="Immediately discard the items I vote as unavailable, regardless of the votes concensus.">
-					<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
-				</a>
-				<br />
-				<input type="checkbox" id="unavailableTab.consensusDiscard" value="1" />The items with an "unavailable" consensus.
-				<a href="#" class="tips" title="Discard the items which have a voting consensus of being unavailable.">
-					<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
-				</a>
-				<br />
-				Consensus Threshold: <input type="text" id="unavailableTab.consensusThreshold" value="" size="1" maxlength="1" /> votes majority.
-				<a href="#" class="tips" title="How much of a vote majority is required for a consensus to be reached regarding an item availability.">
-					<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
-				</a>
-				<br />
-				Unavailable items opacity: <input type="text" id="unavailableTab.unavailableOpacity" value="" size="3" maxlength="3" /> %.
-				<a href="#" class="tips" title="Reduce the opacity of items marked as unavailable.">
-					<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
-				</a>
-				<input type="checkbox" id="general.firstVotePopup" value="1" /> Show first vote popup
-				<a href="#" class="tips" title="Will display the popup following the first vote again, once, on the next vote.">
-					<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
-				</a> 
-				<br />
-				<div class="summary">
-					You currently have <span id="votes" class="number">?</span> active votes,
-					contributing to <span id="contribution" class="number">? %</span> of the community votes.
-					You are currently ranked the <span id="rank" class="number"># ?</span> most active out of <span id="totalUsers" class="number">?</span> contributors!
-					<br /><br />
-					With your help, we confirmed  <span id="available" class="number">?</span> items to be available
-					and <span id="unavailable" class="number">?</span> items as unavailable.
-					<br /><br />
-					<span id="totalVotes" class="number">?</span> votes were casted among <span id="totalProducts" class="number">?</span> products.
-					<br /><br />
-					<span style="font-size:8px;"><em>
-						There is no way to know when products are removed from Vine.
-						Products & votes are purged 90 days after the most recent vote.
-					</em></span>
-				</div>
-			</div>
-		</div>
-		
-		<h3>
-			<input type="checkbox" id="discord.active" value="1" /> Use Discord server (Vine US/Canada/UK only):
-			<a href="#" class="tips" title="VineHelper is compatible with the (non-official) AmazonVine discord server. By joining the server and linking your account, you will be able to suggest products to be recommended by the bot to the users of your country.">
-				<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
-			</a>
-		</h3>
-		<div id="discordOptions">
-			<div class="options">
-				<div id="discord-guid-link">
-					<label>Step 1. Join the Discord server:</label>
-					<br /><a href="https://discord.gg/amazonvine" target="_blank">https://discord.gg/amazonvine</a>
-					<br />
-					<br />
-					<label>Step 2. Obtain your GUID</label>
-					<br /><span>Go to any channel on the server and type the command:</span>
-					<br /><span style="font-weight:bold;">/api-token</span>
-					<br /><span>Copy&amp;paste the API Key in step 3.</span>
-					<br />
-					<br />
-					<label>Step 3. Link your GUID:</label>
-					<br />API Token: <input type="text"  id="discord.guid" value="" size="30" maxlength="50" />
-					<input type="button" id="saveGUID" value="Link" />
-				</div>
-				<div id="discord-guid-unlink">
-					<label>You already linked your Discord account!</label>
-					<br />API Token: <span id="guid-txt" style="word-wrap: break-word;"></span>
-					<input type="button" id="unlinkGUID" value="Unlink" />
-				</div>
-			</div>
-		</div>
-		
-		<h3>
-			Thorvarium styling
-			<a href="#" class="tips" title="For a faster load, use the recommended installation method as described in Thorvarium GitHub (see link in attributions below)">
-				<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
-			</a>
-		</h3>
-		<div class="options">
-				<input type="checkbox" id="thorvarium.smallItems" value="1" /> small-items.css (Tip: activate compact items toolbar)
-			<br /><input type="checkbox" id="thorvarium.removeHeader" value="1" /> remove-header.css
-			<br /><input type="checkbox" id="thorvarium.removeFooter" value="1" /> remove-footer.css
-			<br /><input type="checkbox" id="thorvarium.removeAssociateHeader" value="1" /> remove-associate-header.css
-			<br /><input type="checkbox" id="thorvarium.moreDescriptionText" value="1" /> more-description-text.css
-			<br /><input type="checkbox" id="thorvarium.ETVModalOnTop" value="1" /> etv-modal-on-top.css
-			<br /><input type="checkbox" id="thorvarium.darktheme" value="1" /> dark-theme.css
-			<br /><input type="checkbox" id="thorvarium.categoriesWithEmojis" value="1" /> categories-with-emojis.css
-			<br /><input type="checkbox" id="thorvarium.paginationOnTop" value="1" /> pagination-on-top.css (Tip: activate rfy-afa-ai-tabs.css)
-			<br /><input type="checkbox" id="thorvarium.collapsableCategories" value="1" /> collapsable-categories.css
-			<br /><input type="checkbox" id="thorvarium.stripedCategories" value="1" /> striped-categories.css
-			<br /><input type="checkbox" id="thorvarium.limitedQuantityIcon" value="1" /> limited-quantity-icon.css
-			<br /><input type="checkbox" id="thorvarium.RFYAFAAITabs" value="1" /> rfy-afa-ai-tabs.css
-		</div>
-	</div>
-	<br />
-	<div class="ext-helper-info-container">
-		<div class="ext-helper-icon ext-helper-icon-info"></div>
-		<span>Attributions requirements:</span>
-		<div>
+		<div id="tabs">
 			<ul>
-				<li><a href="https://www.flaticon.com/free-icons/good" title="good icons" target="_blank">Good icons created by Freepik - Flaticon</a></li>
-				<li>Designed by Freepik - <a href="www.freepik.com" target="_blank">www.freepik.com</a></li>
-				<li><a href="https://github.com/Thorvarium/vine-styling" target="_blank">Thorvarium styling GitHub</a></li>
+				<li><a href="#tabs-1">General</a></li>
+				<li><a href="#tabs-2">Voting</a></li>
+				<li><a href="#tabs-3">Brenda</a></li>
+				<li><a href="#tabs-4">Styles</a></li>
+				<li><a href="#tabs-5">?</a></li>
 			</ul>
+			<div id="tabs-1">
+				<div class="options">
+					<label for="general.autofixInfiniteWheel">Auto-fix infinite loading wheel 
+						<a href="#" class="tips" title="Some items load indefinitely. This option will automatically fix this problem and display a small visual effect when it does.">
+							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+						</a>
+						<input type="checkbox" name="general.autofixInfiniteWheel" value="1" >
+					</label>
+
+					
+					<label for="general.topPagination">Pagination also at the top
+						<a href="#" class="tips" title="This will add a second pagination bar at the top of the listings.">
+							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+						</a>
+						<input type="checkbox" name="general.topPagination" value="1">
+					</label>
+
+					<label for="general.versionInfoPopup">Show version note popup
+						<a href="#" class="tips" title="Will display the version note popup again, once, on the next page load.">
+							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+						</a>
+						<input type="checkbox" name="general.versionInfoPopup" value="1">
+					</label>
+
+					<label for="hiddenTab.active">Hidden tab
+						<a href="#" class="tips" title="Activate the hidden tab feature, allowing you to move items you are not interested with to a separate tab.">
+							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+						</a>
+						<input type="checkbox" name="hiddenTab.active" value="1">
+					</label>
+				</div>
+			</div>
+			<div id="tabs-2">
+				<div class="options">
+					<label for="unavailableTab.active">Voting system (Canada):
+						<a href="#" class="tips" title="In Canada, a lot of items have importation or shipping fees, which makes them impossible to be ordered. This option will activate a community voting toolbar on every items, identifying and placing items that can't be ordered in a separate tab.">
+							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+						</a>
+						<input type="checkbox" name="unavailableTab.active" value="1">
+					</label>
+
+					<div id="unavailableTabOptions">
+						<label for="unavailableTab.compactToolbar">Compact items toolbar
+							<a href="#" class="tips" title="Make the toolbar smaller and compatible with Thorvarium SmallItems stylesheet.">
+								<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+							</a>
+							<input type="checkbox" name="unavailableTab.compactToolbar" value="1">
+						</label>
+
+						<label for="unavailableTab.selfDiscard">The items I voted "with fees".
+							<a href="#" class="tips" title="Immediately discard the items I vote as unavailable, regardless of the votes concensus.">
+								<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+							</a>
+							<input type="checkbox" name="unavailableTab.selfDiscard" value="1">
+						</label>
+
+						<label for="unavailableTab.consensusDiscard">The items with an "unavailable"
+							<a href="#" class="tips" title="Discard the items which have a voting consensus of being unavailable.">
+								<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+							</a>
+							<input type="checkbox" name="unavailableTab.consensusDiscard" value="1">
+						</label>
+	
+						<label for="general.firstVotePopup">Show first vote popup
+							<a href="#" class="tips" title="Will display the popup following the first vote again, once, on the next vote.">
+								<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+							</a>
+							<input type="checkbox" name="general.firstVotePopup" value="1">
+						</label>
+
+						<div class="expand text">
+							Consensus Threshold: <input type="text" id="unavailableTab.consensusThreshold" value="" size="1" maxlength="1" />
+							votes majority.
+							<a href="#" class="tips"
+								title="How much of a vote majority is required for a consensus to be reached regarding an item availability.">
+								<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+							</a>
+							<br />
+							Unavailable items opacity: <input type="text" id="unavailableTab.unavailableOpacity" value="" size="3"
+								maxlength="3" /> %.
+							<a href="#" class="tips" title="Reduce the opacity of items marked as unavailable.">
+								<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+							</a>
+						</div>
+
+						<div class="summary">
+							You currently have <span id="votes" class="number">?</span> active votes,
+							contributing to <span id="contribution" class="number">? %</span> of the community votes.
+							You are currently ranked the <span id="rank" class="number"># ?</span> most active out of <span
+								id="totalUsers" class="number">?</span> contributors!
+							<br /><br />
+							With your help, we confirmed <span id="available" class="number">?</span> items to be available
+							and <span id="unavailable" class="number">?</span> items as unavailable.
+							<br /><br />
+							<span id="totalVotes" class="number">?</span> votes were casted among <span id="totalProducts"
+								class="number">?</span> products.
+							<br /><br />
+							<span style="font-size:8px;"><em>
+									There is no way to know when products are removed from Vine.
+									Products & votes are purged 90 days after the most recent vote.
+								</em></span>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="tabs-3">
+				<div class="options">
+					<label for="discord.active">Use Brenda Alerts (US/Canada/UK)
+						<a href="#" class="tips" title="VineHelper is compatible with the (non-official) AmazonVine discord server Brenda bot. By joining the server and linking your account, you will be able to suggest products to be recommended by the bot to the users of your country.">
+							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+						</a>
+						<input type="checkbox" name="discord.active" value="1">
+					</label>
+					<div id="discordOptions">
+						<div id="discord-guid-link">
+							<label>Step 1. Join the Discord server:</label>
+							<br /><a href="https://discord.gg/amazonvine" target="_blank">https://discord.gg/amazonvine</a>
+							<br />
+							<br />
+							<label>Step 2. Obtain your GUID</label>
+							<br /><span>Go to any channel on the server and type the command:</span>
+							<br /><span style="font-weight:bold;">/api-token</span>
+							<br /><span>Copy&amp;paste the API Key in step 3.</span>
+							<br />
+							<br />
+							<label>Step 3. Link your GUID:</label>
+							<br />API Token: <input type="text" id="discord.guid" value="" size="30" maxlength="50" />
+							<input type="button" id="saveGUID" value="Link" />
+						</div>
+						<div id="discord-guid-unlink">
+							<label>You already linked your Discord account!</label>
+							<br />API Token: <span id="guid-txt" style="word-wrap: break-word;"></span>
+							<input type="button" id="unlinkGUID" value="Unlink" />
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="tabs-4">
+				<div class="options">
+					<label for="thorvarium.smallItems">small-items.css (Tip: activate compact items toolbar)
+						<input type="checkbox" name="thorvarium.smallItems" value="1">
+					</label>
+
+					<label for="thorvarium.removeHeader">remove-header.css
+						<input type="checkbox" name="thorvarium.removeHeader" value="1">
+					</label>
+
+					<label for="thorvarium.removeFooter">remove-footer.css
+						<input type="checkbox" name="thorvarium.removeFooter" value="1">
+					</label>
+					
+					<label for="thorvarium.removeAssociateHeader">remove-associate-header.css
+						<input type="checkbox" name="thorvarium.removeAssociateHeader" value="1">
+					</label>
+
+					<label for="thorvarium.moreDescriptionText">more-description-text.css
+						<input type="checkbox" name="thorvarium.moreDescriptionText" value="1">
+					</label>
+
+					<label for="thorvarium.ETVModalOnTop">etv-modal-on-top.css
+						<input type="checkbox" name="thorvarium.ETVModalOnTop" value="1">
+					</label>
+
+					<label for="thorvarium.darktheme">dark-theme.css
+						<input type="checkbox" name="thorvarium.darktheme" value="1">
+					</label>
+
+					<label for="thorvarium.categoriesWithEmojis">categories-with-emojis.css
+						<input type="checkbox" name="thorvarium.categoriesWithEmojis" value="1">
+					</label>
+
+					<label for="thorvarium.paginationOnTop">pagination-on-top.css (Tip: activate rfy-afa-ai-tabs.css)
+						<input type="checkbox" name="thorvarium.paginationOnTop" value="1">
+					</label>
+
+					<label for="thorvarium.collapsableCategories">collapsable-categories.css
+						<input type="checkbox" name="thorvarium.collapsableCategories" value="1">
+					</label>
+
+					<label for="thorvarium.stripedCategories">striped-categories.css
+						<input type="checkbox" name="thorvarium.stripedCategories" value="1">
+					</label>
+
+					<label for="thorvarium.limitedQuantityIcon">limited-quantity-icon.css
+						<input type="checkbox" name="thorvarium.limitedQuantityIcon" value="1">
+					</label>
+
+					<label for="thorvarium.RFYAFAAITabs">rfy-afa-ai-tabs.css
+						<input type="checkbox" name="thorvarium.RFYAFAAITabs" value="1">
+					</label>
+				</div>
+			</div>
+			<div id="tabs-5">
+				<div class="options">
+					<h2>Resources</h2>
+					<ul>
+						<li><a href="https://www.flaticon.com/free-icons/good" title="good icons" target="_blank">Good icons created by
+								Freepik - Flaticon</a></li>
+						<li>Designed by Freepik - <a href="www.freepik.com" target="_blank">www.freepik.com</a></li>
+						<li><a href="https://github.com/Thorvarium/vine-styling" target="_blank">Thorvarium styling GitHub</a></li>
+					</ul>
+				</div>
+			</div>
 		</div>
+		
+		
+		
+		
+		
 	</div>
-	<br />
-	<br />
 	<script src="../scripts/jquery-3.7.1.min.js"></script>
 	<script src="../scripts/jquery-ui.min.js"></script>
 	<script src="homepage.js"></script>
