@@ -153,6 +153,15 @@ div.ext-helper-healing div{
 	height:400px;
 }
 
+/* popups */
+div.ui-dialog{
+	background:white;
+	z-index:300;
+}
+div.ui-widget-overlay{
+	background:black;
+	opacity:0.1;
+}
 
 /* Chrome 29+ */
 @media screen and (-webkit-min-device-pixel-ratio:0)

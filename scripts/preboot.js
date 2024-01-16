@@ -83,7 +83,9 @@ async function convertOldSettingsToNewJSONFormat(){
 		
 		"general":{
 			"topPagination": topPagination,
-			"autofixInfiniteWheel": autofixInfiniteWheel
+			"autofixInfiniteWheel": autofixInfiniteWheel,
+			"versionInfoPopup": true,
+			"firstVotePopup": true
 		},
 		
 		"hiddenTab": {
@@ -218,6 +220,9 @@ function showRuntime(eventName){
 	//console.log(eventName+": "+ (Date.now() - startTime) + "ms");
 }
 
+function saveSettings(){
+	chrome.storage.local.set({ 'settings': appSettings });
+}
 
 
 

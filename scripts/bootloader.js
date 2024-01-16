@@ -145,6 +145,25 @@ async function init(){
 	}
 	showRuntime("BOOT: Grid system completed");
 	
+	
+	
+	//Show version info popup
+	if(appSettings.general.versionInfoPopup){
+		showModalDialog("Vine Helper update info",
+			"<strong>Version 1.10 change notes:</strong><br />"
+			+ "<br />- A <strong>new settings system</strong> was put in place. While yo should not see any difference, hopefully your old settings, if any, migrated well! Feel free to check the extention settings to double check."
+			+ "<br />- <strong>Discord link</strong>: You can now link your account to the non-official AmazonVine discord server and send announcement on interesting products to other users from your country. Note for non-canadian users: I am still working on getting you the ETV value; announced items do not currently report ETV."
+			+ "<br />- <strong>Vote warning</strong> the first time a user cast a vote, a popup will explain how to vote."
+			+ "<br />- <strong>Info bubbles</strong> were added in the extension setting page to explain every option better."
+			+ "<br />- The code was optimized for a <strong>faster loading</strong>."
+			+ "<br />- Several <strong>minor visual improvements</strong> here and there."
+			+ "<br />- Note of intention: To prevent unreliable voting results, I am currently working on a system to implement a <strong>voting reputation</strong>."
+			+ "<br /><br /><em>This message will self destruct after its closure.</em>"
+		,600);
+		appSettings.general.versionInfoPopup = false;
+		saveSettings();
+	}
+	
 	//Browse each items from the Regular grid
 	//- Create an array of all the products listed on the page
 	//- Create an empty toolbar for the item tile
@@ -181,6 +200,37 @@ async function init(){
 	if(appSettings.unavailableTab.active){ //Only query the server (to get vote results) if the voting system is active.
 		fetchData(arrUrl);
 	}
+}
+
+function showModalDialog(title, text, width=400){
+	var w = width;
+	$("#ext-helper-dialog").remove();
+	$("<div id=\"ext-helper-dialog\" title=\"" + title + "\">").appendTo("body")
+		.append("<p>")
+		.html(text);
+	
+	  $( function() {
+		$( "#ext-helper-dialog" ).dialog({
+		  autoOpen: true,
+		  modal:true,
+		  width: w,
+		  show: {
+			effect: "blind",
+			duration: 500
+		  },
+		  hide: {
+			effect: "explode",
+			duration: 1000
+		  },
+          buttons: {
+			Ok: function() {
+			  $( this ).dialog( "close" );
+			}
+		  }
+		});//End dialog
+		$("div.ui-dialog").css("background", "white");
+	  });
+	  $("div.ui-dialog").css("background", "white");
 }
 
 //Get data from the server about the products listed on this page
@@ -280,6 +330,30 @@ async function reportfees(event){
 	//Refresh the data for the toolbar of that specific product only
 	let arrUrl = [asin];
 	fetchData(arrUrl);
+	
+	//Show version info popup
+	if(appSettings.general.firstVotePopup){
+		showModalDialog("Vine Helper - voting feature",
+			"<strong>You casted your first vote!</strong><br />"
+			+ "<br />We vote to mark items available or unavailable to order. (not if we like them or not)"
+			+ "<br />We vote an item unavailable to order (<strong>No</strong>) when it has: "
+			+ "<br />- Shipping fees"
+			+ "<br />- Importation fees"
+			+ "<br />- When a 3rd party seller is selling the same item, but with a fee"
+			+ "<br />- Any <strong>red error</strong> when trying to order an item, <strong>except</strong> those caused by shipping restrictions."
+			+ "<br />"
+			+ "<br />We vote an item available to order (<strong>Yes</strong>) when it has:"
+			+ "<br />- Free shipping, <strong>and</strong>"
+			+ "<br />- no fees, <strong>and</strong>"
+			+ "<br />- no 3rd party sellers with fees"
+			+ "<br />- <strong>OR</strong> when you actually order it successfully."
+			+ "<br />"
+			+ "<br />Happy hunting!"
+			
+		,600);
+		appSettings.general.firstVotePopup = false;
+		saveSettings();
+	}
 };
 
 

@@ -162,6 +162,8 @@ function init(){
 	
 	manageCheckboxSetting("general.autofixInfiniteWheel");
 	manageCheckboxSetting("general.topPagination");
+	manageCheckboxSetting("general.versionInfoPopup");
+	manageCheckboxSetting("general.firstVotePopup");
 	manageCheckboxSetting("hiddenTab.active");
 	//manageCheckboxSetting("discord.active"); //Handled manually
 	manageCheckboxSetting("unavailableTab.active");

@@ -151,7 +151,7 @@ function Tile(obj, gridInstance){
 	this.hideTile = async function(animate=true){
 		//Add the item to the list of hidden items
 		appSettings.hiddenTab.arrItems.push({"asin" : pAsin, "date": new Date});
-		chrome.storage.local.set({ 'settings': appSettings }); //Save the new array
+		saveSettings(); //from preboot.js: Save the new array
 		
 		//Move the tile
 		await this.moveToGrid(gridHidden, animate);
@@ -170,7 +170,7 @@ function Tile(obj, gridInstance){
 				appSettings.hiddenTab.arrItems.splice(key, 1);
 			}
 		});
-		chrome.storage.local.set({ 'settings': appSettings }); //Save the new array
+		saveSettings(); //from preboot.js: Save the new array
 		
 		//Move the tile
 		if(appSettings.unavailableTab.consensusDiscard && tile.getStatus() >= NOT_DISCARDED){
