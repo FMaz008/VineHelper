@@ -40,9 +40,11 @@ function getTileByAsin(asin){
 	if(tile != null)
 		return tile;
 	
-	tile = gridUnavailable.getTileId(asin);
-	if(tile != null)
-		return tile;
+	if(gridUnavailable != null){
+		tile = gridUnavailable.getTileId(asin);
+		if(tile != null)
+			return tile;
+	}
 	
 	tile = gridHidden.getTileId(asin);
 	return tile;
