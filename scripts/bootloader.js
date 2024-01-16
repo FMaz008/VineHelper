@@ -135,9 +135,25 @@ async function init(){
 		tile = new Tile($(this), gridRegular);
 		arrUrl.push(tile.getAsin());
 		
+		//Add a container for the image and place the image in it.
+		let img = $(this).children(".vvp-item-tile-content").children("img");
+		let imgContainer = $("<div>")
+			.addClass("ext-helper-img-container")
+			.insertBefore($(img));
+		$(img).detach().appendTo($(imgContainer));
+		
 		//Move the hidden item to the hidden tab
 		if(appSettings.hiddenTab.active && tile.isHidden()){
 			tile.moveToGrid(gridHidden, false); //This is the main sort, do not animate it
+		}
+		
+		//Check if the item is a parent ASIN (as variants)
+		let variant = $(tile.getDOM()).find(".a-button-input").attr("data-is-parent-asin");
+		if(variant == "true"){
+			$("<div>")
+				.addClass("ext-helper-variant-indicator-container")
+				.append($("<div>").addClass("ext-helper-indicator-icon ext-helper-icon-choice "))
+				.appendTo($(imgContainer));
 		}
 		
 		if(tabSystem){

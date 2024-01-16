@@ -153,6 +153,20 @@ div.ext-helper-healing div{
 	height:400px;
 }
 
+/* Icons overlay on top of product image */
+.ext-helper-img-container{
+	position:relative;
+}
+.ext-helper-variant-indicator-container{
+	position: absolute;
+	margin-top: -20px;
+	right: 0;
+}
+.ext-helper-indicator-icon{
+	width:16px;
+	height:16px;
+}
+
 /* popups */
 div.ui-dialog{
 	background:white;
@@ -189,6 +203,11 @@ div.ui-widget-overlay{
 	div.ext-helper-icon-announcement{
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/images/announcement.png");
+		background-repeat:no-repeat;
+	}
+	div.ext-helper-icon-choice{
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/images/choice.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-show{
@@ -237,6 +256,11 @@ div.ui-widget-overlay{
 	div.ext-helper-icon-announcement{
 		background-size: 100%;
 		background-image: url("/images/announcement.png");
+		background-repeat:no-repeat;
+	}
+	div.ext-helper-icon-choice{
+		background-size: 100%;
+		background-image: url("/images/choice.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-show{
