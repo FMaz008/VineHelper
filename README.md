@@ -1,14 +1,19 @@
 # VineHelper
 Browser Extension to help identify import fees on items from Vine Canada.
 
-Get official releases from:
+# Get official releases from:
+
 Chrome webstore:
+
 https://chromewebstore.google.com/detail/jlglbhebbkfjcofdplbkanckkipkgfle
 
 Mozilla Add-ons:
+
 https://addons.mozilla.org/en-CA/firefox/addon/amazon-vine-helper/
 
-To install manually:
+
+
+# To install manually:
 
 __To install in Firefox:__
 
