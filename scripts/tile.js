@@ -34,15 +34,15 @@ function Tile(obj, gridInstance){
 			height: ["20%", "swing"],
 		},
 		{
-			duration: 1000,
+			duration: 300,
 			queue: false
 		});
 		
-		await tile.delay(500).animate({
+		await tile.delay(150).animate({
 			opacity: "hide"
 		},
 		{
-			duration: 500,
+			duration: 150,
 			complete: function() {
 				$(tile).css({
 					'opacity': defaultOpacity,
