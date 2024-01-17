@@ -341,7 +341,7 @@ window.addEventListener("message", async function(event) {
     if (event.source != window)
         return;
 
-    if (event.data.type && (event.data.type == "FROM_PAGE")) {
+    if (event.data.type && (event.data.type == "infiniteWheelFixed")) {
         //console.log("Content script received message: " + event.data.text);
 		let healingAnim = $("<div>")
 				.attr("id", "ext-helper-healing")
@@ -353,6 +353,11 @@ window.addEventListener("message", async function(event) {
 		await healingAnim.delay(1000).animate({opacity: "hide"},{duration: 500}).promise();
 		$("#ext-helper-healing").remove();
     }
+	
+	if (event.data.type && (event.data.type == "etv")) {
+		console.log(event.data.data);
+	}
+	
 });
 
 						
