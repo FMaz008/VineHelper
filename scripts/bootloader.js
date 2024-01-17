@@ -213,7 +213,6 @@ function serverResponse(data){
 	}
 	
 	if(appSettings.general.displayETV){
-		console.log("displa ETV");
 		$.each(data["arr_etv"],function(key,values){
 			
 			let tile = getTileByAsin(key);
@@ -221,7 +220,6 @@ function serverResponse(data){
 				console.log("No tile matching " + key);
 			
 			if(values.etv_min != null){
-				console.log("set ETV");
 				if(values.etv_min == values.etv_max)
 					tile.getToolbar().setETV(values.etv_min);
 				else

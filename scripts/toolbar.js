@@ -23,7 +23,7 @@ function Toolbar(tileInstance){
 		if(appSettings.general.displayETV){
 			etv = $("<div />")
 				.addClass("ext-helper-toolbar-etv")
-				.append("<div class=\"ext-helper-icon-etv\"></div><span class=\"etv\">?</span></span>")
+				.append("<div class=\"ext-helper-icon-etv\"></div><span class=\"etv\"></span></span>")
 				.appendTo($(container))
 				.hide();
 				
@@ -65,6 +65,13 @@ function Toolbar(tileInstance){
 				.appendTo(h);
 			h.on('click', {'asin': pTile.getAsin()}, async function(event){
 				
+				let tile = getTileByAsin(event.data.asin);
+				let etv = $(tile.getDOM()).find(".etv").text();
+				
+				if(!confirm("Send this product to Brenda over on discord?"))
+					return false;
+				
+				
 				//Post a fetch request to the Brenda API from the AmazonVine Discord server
 				//We want to check if the guid is valid.
 				let url = "https://api.llamastories.com/brenda/product";
@@ -74,9 +81,12 @@ function Toolbar(tileInstance){
 					'domain': "amazon."+vineDomain,
 					'tab': vineQueue,
 					'asin': event.data.asin
-					//'etv': '0.00',
+					//'etv': etv
 					//'comment': prompt("(Optional) Comment:")
 				};
+				
+				if (etv!="")
+					details.etv = etv; 
 				
 				const response = await fetch(
 					url,
@@ -87,7 +97,7 @@ function Toolbar(tileInstance){
 					}
 				);
 				if(response.status == 200){
-					alert("Announce successful!");
+					alert("Announce successful! Brenda still need to process it...");
 				}else if(response.status == 401){
 					alert("API Token invalid, please go in the extension settings to correct it.");
 				}else if(response.status == 422){
