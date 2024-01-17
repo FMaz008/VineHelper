@@ -59,6 +59,22 @@ div.ext-helper-status-container div.ext-helper-status-container2, div.ext-helper
 	font-size:10px;
 }
 
+.ext-helper-toolbar-etv{
+	overflow:hidden;
+	line-height: 16px;
+	display: inline;
+}
+
+.ext-helper-toolbar-etv span, .ext-helper-toolbar-etv div{
+	float:left;
+}
+.ext-helper-toolbar-etv .ext-helper-icon-etv{
+	width:18px;
+	height:14px;
+	margin-right:5px;
+	margin-left:5px;
+	background-position-y: -1px;
+}
 
 
 
@@ -139,6 +155,8 @@ a.selectedVote{
 	background-color:#EEE;
 }
 
+
+/* Infinite Wheel fix animation */
 div.ext-helper-healing{
 	position:absolute;
 	display:table;
@@ -230,6 +248,11 @@ div.ui-widget-overlay{
 		background-image: url("chrome-extension://__MSG_@@extension_id__/images/healing.gif");
 		background-repeat:no-repeat;
 	}
+	div.ext-helper-icon-etv{
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/images/etv.png");
+		background-repeat:no-repeat;
+	}
 }
 
 @supports (-moz-appearance:none) {
@@ -281,6 +304,11 @@ div.ui-widget-overlay{
 	div.ext-helper-icon-healing{
 		background-size: 100%;
 		background-image: url("/images/healing.gif");
+		background-repeat:no-repeat;
+	}
+	div.ext-helper-icon-etv{
+		background-size: 100%;
+		background-image: url("/images/etv.png");
 		background-repeat:no-repeat;
 	}
 }

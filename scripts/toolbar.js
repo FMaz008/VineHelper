@@ -19,8 +19,15 @@ function Toolbar(tileInstance){
 		container = $("<div />")
 			.addClass("ext-helper-status-container2")
 			.appendTo("#"+toolbarId + " .ext-helper-status-container");
-		
 			
+		if(appSettings.general.displayETV){
+			etv = $("<div />")
+				.addClass("ext-helper-toolbar-etv")
+				.append("<div class=\"ext-helper-icon-etv\"></div><span class=\"etv\">?</span></span>")
+				.appendTo($(container))
+				.hide();
+		}
+		
 		if(appSettings.unavailableTab.compactToolbar){
 			pToolbar.addClass("compact");
 		}
@@ -29,9 +36,6 @@ function Toolbar(tileInstance){
 			$("<div />")
 				.addClass("ext-helper-icon ext-helper-icon-loading")
 				.prependTo("#"+toolbarId + " .ext-helper-status-container");
-			span = $("<span />")
-				.text("Loading...")
-				.appendTo(container);
 		}
 		
 		//Only the hidden tab is activated, only the hide icon has to be shown
@@ -39,39 +43,7 @@ function Toolbar(tileInstance){
 			pToolbar.addClass("toolbar-icon-only");
 		}
 		
-		//Display the hide link
-		if(appSettings.hiddenTab.active){
-			let h, hi;
-			h = $("<a />")
-				.attr("href", "#"+pTile.getAsin())
-				.attr("id", "ext-helper-hide-link-"+pTile.getAsin())
-				.attr("title", "Move a product to, or out of, the hidden tab.")
-				.addClass("ext-helper-floating-icon")
-				.attr("onclick", "return false;")
-				.appendTo(container);
-			hi= $("<div />")
-				.addClass("ext-helper-toolbar-icon")
-				.appendTo(h);
-			h.on('click', {'asin': pTile.getAsin()}, async function (event){//A hide/display item button was pressed
-				let asin = event.data.asin;
-				let tile = getTileByAsin(asin);
-				let gridId = tile.getGridId();
-				
-				switch (gridId){ //Current Grid
-					case "vvp-items-grid":
-					case "tab-unavailable":
-						tile.hideTile();
-						break;
-					case "tab-hidden":
-						tile.showTile();
-						break;
-				}
-				
-				updateTileCounts();
-			});
-			
-			this.updateVisibilityIcon();
-		}
+		
 		
 		//Display the announce link
 		if(appSettings.discord.active && appSettings.discord.guid != null && vineQueue != null){
@@ -82,7 +54,7 @@ function Toolbar(tileInstance){
 				.attr("title", "Announce the product on discord!")
 				.addClass("ext-helper-floating-icon")
 				.attr("onclick", "return false;")
-				.appendTo(container);
+				.prependTo(container);
 			hi= $("<div />")
 				.addClass("ext-helper-toolbar-icon")
 				.addClass("ext-helper-icon-announcement")
@@ -127,6 +99,41 @@ function Toolbar(tileInstance){
 				$(this).css("opacity", "0.3");
 			});
 		}
+		
+		//Display the hide link
+		if(appSettings.hiddenTab.active){
+			let h, hi;
+			h = $("<a />")
+				.attr("href", "#"+pTile.getAsin())
+				.attr("id", "ext-helper-hide-link-"+pTile.getAsin())
+				.attr("title", "Move a product to, or out of, the hidden tab.")
+				.addClass("ext-helper-floating-icon")
+				.attr("onclick", "return false;")
+				.prependTo(container);
+			hi= $("<div />")
+				.addClass("ext-helper-toolbar-icon")
+				.appendTo(h);
+			h.on('click', {'asin': pTile.getAsin()}, async function (event){//A hide/display item button was pressed
+				let asin = event.data.asin;
+				let tile = getTileByAsin(asin);
+				let gridId = tile.getGridId();
+				
+				switch (gridId){ //Current Grid
+					case "vvp-items-grid":
+					case "tab-unavailable":
+						tile.hideTile();
+						break;
+					case "tab-hidden":
+						tile.showTile();
+						break;
+				}
+				
+				updateTileCounts();
+			});
+			
+			this.updateVisibilityIcon();
+		}
+		
 	};
 	
 	this.updateVisibilityIcon = function(){
@@ -148,12 +155,7 @@ function Toolbar(tileInstance){
 				break;
 		}
 	};
-
-	this.setStatusText = function(statusText){
-		let context = $("#ext-helper-toolbar-" + pTile.getAsin());
-		let container = $(context).find("div.ext-helper-status-container2");
-		container.children("span").text(statusText);
-	};
+	
 	this.setStatusIcon = function(iconClass){
 		let context = $("#ext-helper-toolbar-" + pTile.getAsin());
 		let icon = $(context).find(".ext-helper-icon");
@@ -166,6 +168,20 @@ function Toolbar(tileInstance){
 		
 		icon.addClass(iconClass);
 	};
+	
+	this.setETV = function(etv, onlyIfEmpty=false){
+		let context = $("#ext-helper-toolbar-" + pTile.getAsin());
+		let span = $(context).find(".ext-helper-toolbar-etv .etv");
+		if(onlyIfEmpty){
+			if(span.text()=="" || span.text()=="?"){
+				span.text(etv);
+				context.find(".ext-helper-toolbar-etv").show();
+			}
+			return;
+		}
+		span.text(etv);
+		context.find(".ext-helper-toolbar-etv").show();
+	}
 	
 	//This method is called from bootloader.js, serverResponse() when the voting data has been received, after the tile was moved.
 	this.updateToolbar = function (){
@@ -185,7 +201,6 @@ function Toolbar(tileInstance){
 			case DISCARDED_WITH_FEES:
 			case DISCARDED_OWN_VOTE:
 				this.setStatusIcon("ext-helper-icon-sad");
-				this.setStatusText("Not available.");
 				statusColor = "ext-helper-background-fees";
 				tileOpacity = appSettings.unavailableTab.unavailableOpacity/100;
 				
@@ -196,14 +211,12 @@ function Toolbar(tileInstance){
 			case NOT_DISCARDED_NO_FEES:
 			case NOT_DISCARDED_OWN_VOTE:
 				this.setStatusIcon("ext-helper-icon-happy");
-				this.setStatusText("Available!");
 				statusColor = "ext-helper-background-nofees";
 				tileOpacity = 1.0;
 				break;
 			case NOT_DISCARDED_NO_STATUS:
 				//The item is not registered or needs more votes
 				this.setStatusIcon("ext-helper-icon-info");
-				this.setStatusText("Not enough data :-/");
 				statusColor = "ext-helper-background-neutral";
 				tileOpacity = 1.0;
 				break;
@@ -211,7 +224,6 @@ function Toolbar(tileInstance){
 		
 		if(appSettings.unavailableTab.compactToolbar){ //No icon, no text
 			this.setStatusIcon("");
-			this.setStatusText("");
 			context.addClass("compact");
 			context.addClass(statusColor);
 		}

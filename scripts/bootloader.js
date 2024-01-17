@@ -111,13 +111,11 @@ async function init(){
 	//Show version info popup
 	if(appSettings.general.versionInfoPopup){
 		showModalDialog("Vine Helper update info",
-			"<strong>Version 1.10 change notes:</strong><br />"
-			+ "<br />- A <strong>new settings system</strong> was put in place. While yo should not see any difference, hopefully your old settings, if any, migrated well! Feel free to check the extention settings to double check."
-			+ "<br />- <strong>Discord link</strong>: You can now link your account to the non-official AmazonVine discord server and send announcement on interesting products to other users from your country. Note for non-canadian users: I am still working on getting you the ETV value; announced items do not currently report ETV."
-			+ "<br />- <strong>Vote warning</strong> the first time a user cast a vote, a popup will explain how to vote."
-			+ "<br />- <strong>Info bubbles</strong> were added in the extension setting page to explain every option better."
-			+ "<br />- The code was optimized for a <strong>faster loading</strong>."
-			+ "<br />- Several <strong>minor visual improvements</strong> here and there."
+			"<strong>Version 1.11 change notes:</strong><br />"
+			+ "<br />- Autofix spinning wheel settings was renamed <strong>allow code injection</strong> and will need to be re-activated."
+			+ "<br />- Bug fix: Users without the voting system could not un-hide items."
+			+ "<br />- New <strong>ETV</strong> features regarding the Estimated Tax Value, which can now be pacively gathered and displayed in the listing. By default ETV sharing is disabled, I encourage you to activate it."
+			+ "<br />- Stylesheets should load even <strong>faster</strong>."
 			+ "<br />- Note of intention: To prevent unreliable voting results, I am currently working on a system to implement a <strong>voting reputation</strong>."
 			+ "<br /><br /><em>This message will self destruct after its closure.</em>"
 		,600);
@@ -147,13 +145,16 @@ async function init(){
 			tile.moveToGrid(gridHidden, false); //This is the main sort, do not animate it
 		}
 		
-		//Check if the item is a parent ASIN (as variants)
-		let variant = $(tile.getDOM()).find(".a-button-input").attr("data-is-parent-asin");
-		if(variant == "true"){
-			$("<div>")
-				.addClass("ext-helper-variant-indicator-container")
-				.append($("<div>").addClass("ext-helper-indicator-icon ext-helper-icon-choice "))
-				.appendTo($(imgContainer));
+		
+		if(appSettings.general.displayVariantIcon){
+			//Check if the item is a parent ASIN (as variants)
+			let variant = $(tile.getDOM()).find(".a-button-input").attr("data-is-parent-asin");
+			if(variant == "true"){
+				$("<div>")
+					.addClass("ext-helper-variant-indicator-container")
+					.append($("<div>").addClass("ext-helper-indicator-icon ext-helper-icon-choice "))
+					.appendTo($(imgContainer));
+			}
 		}
 		
 		if(tabSystem){
@@ -174,49 +175,19 @@ async function init(){
 	}
 	
 	//Obtain the data to fill the toolbars with it.
-	if(appSettings.unavailableTab.active){ //Only query the server (to get vote results) if the voting system is active.
-		fetchData(arrUrl);
-	}
+	fetchData(arrUrl);
 }
 
-function showModalDialog(title, text, width=400){
-	var w = width;
-	$("#ext-helper-dialog").remove();
-	$("<div id=\"ext-helper-dialog\" title=\"" + title + "\">").appendTo("body")
-		.append("<p>")
-		.html(text);
-	
-	  $( function() {
-		$( "#ext-helper-dialog" ).dialog({
-		  autoOpen: true,
-		  modal:true,
-		  width: w,
-		  show: {
-			effect: "blind",
-			duration: 500
-		  },
-		  hide: {
-			effect: "explode",
-			duration: 1000
-		  },
-          buttons: {
-			Ok: function() {
-			  $( this ).dialog( "close" );
-			}
-		  }
-		});//End dialog
-		$("div.ui-dialog").css("background", "white");
-	  });
-	  $("div.ui-dialog").css("background", "white");
-}
+
 
 //Get data from the server about the products listed on this page
 function fetchData(arrUrl){
-	let arrJSON = {"api_version":2, "arr_url":arrUrl};
+	let country = vineDomain.split(".").pop();
+	let arrJSON = {"api_version":3, "country": country, "arr_asin":arrUrl};
 	let jsonArrURL = JSON.stringify(arrJSON);
 	
 	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-	let url = "https://www.francoismazerolle.ca/vinehelper_v2.php"
+	let url = "https://www.francoismazerolle.ca/vinehelper.php"
 			+ "?data=" + jsonArrURL;
 	fetch(url)
 		.then((response) => response.json())
@@ -237,31 +208,51 @@ function fetchData(arrUrl){
 //Update each tile with the data pertaining to it.
 function serverResponse(data){
 	
-	if(data["api_version"]!=2){
+	if(data["api_version"]!=3){
 		console.log("Wrong API version");
 	}
 	
-	$.each(data["arr_url"],function(key,values){
-		
-		let tile = getTileByAsin(key);
-		
-		if(tile==null)
-			console.log("No tile matching " + key);
-		
-		tile.setVotes(values["v0"], values["v1"], values["s"]);
-		
-		//Assign the tiles to the proper grid
-		if(appSettings.hiddenTab.active && tile.isHidden()){ //The hidden tiles were already moved, but we want to keep them there.
-			tile.moveToGrid(gridHidden, false); //This is the main sort, do not animate it
-		}else if(appSettings.unavailableTab.consensusDiscard && tile.getStatus() >= NOT_DISCARDED){
-			tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
-		} else if(appSettings.unavailableTab.selfDiscard && tile.getStatus() == DISCARDED_OWN_VOTE){
-			tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
-		}
+	if(appSettings.general.displayETV){
+		console.log("displa ETV");
+		$.each(data["arr_etv"],function(key,values){
 			
+			let tile = getTileByAsin(key);
+			if(tile==null)
+				console.log("No tile matching " + key);
+			
+			if(values.etv_min != null){
+				console.log("set ETV");
+				if(values.etv_min == values.etv_max)
+					tile.getToolbar().setETV(values.etv_min);
+				else
+					tile.getToolbar().setETV(values.etv_min + "-" + values.etv_max);
+			}
+		});
+	}
+	
+	if(appSettings.unavailableTab.active){ // if the voting system is active.
 		
-		tile.getToolbar().updateToolbar();
-	});
+		$.each(data["arr_votes"],function(key,values){
+			
+			let tile = getTileByAsin(key);
+			if(tile==null)
+				console.log("No tile matching " + key);
+			
+			tile.setVotes(values["v0"], values["v1"], values["s"]);
+			
+			//Assign the tiles to the proper grid
+			if(appSettings.hiddenTab.active && tile.isHidden()){ //The hidden tiles were already moved, but we want to keep them there.
+				tile.moveToGrid(gridHidden, false); //This is the main sort, do not animate it
+			}else if(appSettings.unavailableTab.consensusDiscard && tile.getStatus() >= NOT_DISCARDED){
+				tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
+			} else if(appSettings.unavailableTab.selfDiscard && tile.getStatus() == DISCARDED_OWN_VOTE){
+				tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
+			}
+				
+			
+			tile.getToolbar().updateToolbar();
+		});
+	}
 	
 	updateTileCounts();
 }
@@ -341,6 +332,7 @@ window.addEventListener("message", async function(event) {
     if (event.source != window)
         return;
 
+	//If we got back a message after we fixed an infinite wheel spin.
     if (event.data.type && (event.data.type == "infiniteWheelFixed")) {
         //console.log("Content script received message: " + event.data.text);
 		let healingAnim = $("<div>")
@@ -354,10 +346,63 @@ window.addEventListener("message", async function(event) {
 		$("#ext-helper-healing").remove();
     }
 	
+	//If we got back a message after we found an ETV.
 	if (event.data.type && (event.data.type == "etv")) {
-		console.log(event.data.data);
+		
+		//Send the ETV info to the server
+		country = vineDomain.split(".").pop();
+		
+		let tileASIN;
+		if(event.data.data.parent_asin === null){
+			tileASIN = event.data.data.asin;
+		}else{
+			tileASIN = event.data.data.parent_asin;
+			event.data.data.parent_asin = '"' + event.data.data.parent_asin + '"';
+		}
+		
+		let url = "https://francoismazerolle.ca/vinehelperCastETV.php"
+		+ '?data={"api_version":3, '
+		+ '"country":"' + country + '",'
+		+ '"asin":"' + event.data.data.asin + '",'
+		+ '"parent_asin": ' + event.data.data.parent_asin + ','
+		+ '"etv":"' + event.data.data.etv + '"'
+		+ '}'
+		await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
+	
+		//Update the product tile ETV in the Toolbar
+		let tile = getTileByAsin(tileASIN);
+		tile.getToolbar().setETV(event.data.data.etv, true);
 	}
 	
 });
 
-						
+function showModalDialog(title, text, width=400){
+	var w = width;
+	$("#ext-helper-dialog").remove();
+	$("<div id=\"ext-helper-dialog\" title=\"" + title + "\">").appendTo("body")
+		.append("<p>")
+		.html(text);
+	
+	  $( function() {
+		$( "#ext-helper-dialog" ).dialog({
+		  autoOpen: true,
+		  modal:true,
+		  width: w,
+		  show: {
+			effect: "blind",
+			duration: 500
+		  },
+		  hide: {
+			effect: "explode",
+			duration: 1000
+		  },
+          buttons: {
+			Ok: function() {
+			  $( this ).dialog( "close" );
+			}
+		  }
+		});//End dialog
+		$("div.ui-dialog").css("background", "white");
+	  });
+	  $("div.ui-dialog").css("background", "white");
+}

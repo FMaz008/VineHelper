@@ -29,7 +29,6 @@ async function convertOldSettingsToNewJSONFormat(){
 	let unavailableTab = true;
 	let hiddenTab = true;
 	let compactToolbar = false;
-	let autofixInfiniteWheel = true;
 
 
 	//Load settings from <=V1.9, if they exist.
@@ -57,10 +56,6 @@ async function convertOldSettingsToNewJSONFormat(){
 	if(result == true || result == false)
 		topPagination = result;
 	
-	result = await getLocalStorageVariable("settingsAutofixInfiniteWheel");
-	if(result == true || result == false)
-		autofixInfiniteWheel = result;
-	
 	result = await getLocalStorageVariable("settingsUnavailableTab");
 	if(result == true || result == false)
 		unavailableTab = result;
@@ -83,7 +78,10 @@ async function convertOldSettingsToNewJSONFormat(){
 		
 		"general":{
 			"topPagination": topPagination,
-			"autofixInfiniteWheel": autofixInfiniteWheel,
+			"allowInjection": true,
+			"shareETV": false,
+			"displayETV": true,
+			"displayVariantIcon": false,
 			"versionInfoPopup": true,
 			"firstVotePopup": true
 		},
@@ -145,8 +143,6 @@ async function getSettings(){
 		Object.assign(appSettings, data.settings);
 	}
 	
-	
-	//Load the thorvarium styleSheets
 	
 	//Load Thorvarium stylesheets
 	if(appSettings.thorvarium.smallItems)

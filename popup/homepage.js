@@ -139,10 +139,13 @@ function init() {
         });
     }
 
-    manageCheckboxSetting("general.autofixInfiniteWheel");
+    manageCheckboxSetting("general.allowInjection");
     manageCheckboxSetting("general.topPagination");
     manageCheckboxSetting("general.versionInfoPopup");
     manageCheckboxSetting("general.firstVotePopup");
+    manageCheckboxSetting("general.shareETV");
+    manageCheckboxSetting("general.displayETV");
+    manageCheckboxSetting("general.displayVariantIcon");
     manageCheckboxSetting("hiddenTab.active");
     manageCheckboxSetting("discord.active"); //Handled manually
     manageCheckboxSetting("unavailableTab.active");

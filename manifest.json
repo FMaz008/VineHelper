@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Amazon Vine Helper",
   "description": "Improve the Amazon Vine experience.",
-  "version": "1.10",
+  "version": "1.11",
   
   "permissions": [
     "storage"
@@ -39,6 +39,7 @@
 		"images/question.png",
 		"images/announcement.png",
 		"images/choice.png",
+		"images/etv.png",
 		"images/loading.gif",
 		"images/healing.gif",
 		"images/ui-icons_444444_256x240.png",
