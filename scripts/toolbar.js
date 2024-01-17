@@ -19,18 +19,27 @@ function Toolbar(tileInstance){
 		container = $("<div />")
 			.addClass("ext-helper-status-container2")
 			.appendTo("#"+toolbarId + " .ext-helper-status-container");
+		etv = $("<div />")
+			.addClass("ext-helper-toolbar-etv")
+			.append("<div class=\"ext-helper-icon-etv\"></div><span class=\"etv\"></span>")
+			.appendTo($(container))
+			.hide()
+		
+		$(etv).children(".etv").on("change", {'asin': pTile.getAsin()}, function(event){
+			if($(this).text()=="")
+				return false;
 			
-		if(appSettings.general.displayETV){
-			etv = $("<div />")
-				.addClass("ext-helper-toolbar-etv")
-				.append("<div class=\"ext-helper-icon-etv\"></div><span class=\"etv\"></span></span>")
-				.appendTo($(container))
-				.hide();
-				
-			if(appSettings.thorvarium.smallItems){
-				$(".ext-helper-icon-etv").hide();
-			}
+			let tile = getTileByAsin(event.data.asin);
+			$(tile.getDOM()).find(".ext-helper-icon-announcement")
+				.css("opacity", "1")
+				.parent("a")
+					.on("click", {'asin': pTile.getAsin()}, announceItem);
+		});
+			
+		if(appSettings.thorvarium.smallItems){
+			$(".ext-helper-icon-etv").hide();
 		}
+		
 		
 		if(appSettings.unavailableTab.compactToolbar){
 			pToolbar.addClass("compact");
@@ -55,66 +64,15 @@ function Toolbar(tileInstance){
 			h = $("<a />")
 				.attr("href", "#"+pTile.getAsin())
 				.attr("id", "ext-helper-announce-link-"+pTile.getAsin())
-				.attr("title", "Announce the product on discord!")
+				.attr("title", "Announce the product on discord! (The ETV must be known)")
 				.addClass("ext-helper-floating-icon")
 				.attr("onclick", "return false;")
 				.prependTo(container);
 			hi= $("<div />")
 				.addClass("ext-helper-toolbar-icon")
 				.addClass("ext-helper-icon-announcement")
+				.css("opacity", "0.3") //By default it is disabled
 				.appendTo(h);
-			h.on('click', {'asin': pTile.getAsin()}, async function(event){
-				
-				let tile = getTileByAsin(event.data.asin);
-				let etv = $(tile.getDOM()).find(".etv").text();
-				
-				
-				if (etv==""){
-					alert("ERROR: ETV value not known for this item. Ensure to have the Share ETV option enabled and check the details of the item to make its ETV value known to Vine Helper.")
-					return false; 
-				}
-				
-				if(!confirm("Send this product to Brenda over on discord?"))
-					return false;
-				
-				
-				//Post a fetch request to the Brenda API from the AmazonVine Discord server
-				//We want to check if the guid is valid.
-				let url = "https://api.llamastories.com/brenda/product";
-				var details = {
-					'version': 1,
-					'token': appSettings.discord.guid,
-					'domain': "amazon."+vineDomain,
-					'tab': vineQueue,
-					'asin': event.data.asin,
-					'etv': etv
-					//'comment': prompt("(Optional) Comment:")
-				};
-				
-				const response = await fetch(
-					url,
-					{
-						method: "PUT",
-						headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-						body: new URLSearchParams(details)
-					}
-				);
-				if(response.status == 200){
-					alert("Announce successful! Brenda still need to process it...");
-				}else if(response.status == 401){
-					alert("API Token invalid, please go in the extension settings to correct it.");
-				}else if(response.status == 422){
-					alert("Unprocessable entity. The request was malformed and rejected.");
-				}else if(response.status == 429){
-					alert("Too many announce. Please wait longer between each of them.");
-				}else{
-					alert("The announce has failed for an unknown reason.");
-				}
-				
-				//Visually deactivate this item, will be reset on the next page load, but it's just to help navigation and avoid double-clicking
-				$(this).off( "click" );
-				$(this).css("opacity", "0.3");
-			});
 		}
 		
 		//Display the hide link
@@ -189,15 +147,16 @@ function Toolbar(tileInstance){
 	this.setETV = function(etv, onlyIfEmpty=false){
 		let context = $("#ext-helper-toolbar-" + pTile.getAsin());
 		let span = $(context).find(".ext-helper-toolbar-etv .etv");
-		if(onlyIfEmpty){
-			if(span.text()=="" || span.text()=="?"){
-				span.text(etv);
-				context.find(".ext-helper-toolbar-etv").show();
-			}
-			return;
-		}
+		
+		if(onlyIfEmpty && span.text()!="")
+			return false;
+		
+		
 		span.text(etv);
-		context.find(".ext-helper-toolbar-etv").show();
+		span.trigger("change");
+		
+		if(appSettings.general.displayETV)
+			context.find(".ext-helper-toolbar-etv").show();
 	}
 	
 	//This method is called from bootloader.js, serverResponse() when the voting data has been received, after the tile was moved.
@@ -309,4 +268,52 @@ function Toolbar(tileInstance){
 		}
 	}
 	
+}
+
+
+async function announceItem(event){
+	
+	let tile = getTileByAsin(event.data.asin);
+	let etv = $(tile.getDOM()).find(".etv").text();
+	
+	if(!confirm("Send this product to Brenda over on discord?"))
+		return false;
+	
+	
+	//Post a fetch request to the Brenda API from the AmazonVine Discord server
+	//We want to check if the guid is valid.
+	let url = "https://api.llamastories.com/brenda/product";
+	var details = {
+		'version': 1,
+		'token': appSettings.discord.guid,
+		'domain': "amazon."+vineDomain,
+		'tab': vineQueue,
+		'asin': event.data.asin,
+		'etv': etv
+		//'comment': prompt("(Optional) Comment:")
+	};
+	
+	const response = await fetch(
+		url,
+		{
+			method: "PUT",
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: new URLSearchParams(details)
+		}
+	);
+	if(response.status == 200){
+		alert("Announce successful! Brenda still need to process it...");
+	}else if(response.status == 401){
+		alert("API Token invalid, please go in the extension settings to correct it.");
+	}else if(response.status == 422){
+		alert("Unprocessable entity. The request was malformed and rejected.");
+	}else if(response.status == 429){
+		alert("Too many announce. Please wait longer between each of them.");
+	}else{
+		alert("The announce has failed for an unknown reason.");
+	}
+	
+	//Visually deactivate this item, will be reset on the next page load, but it's just to help navigation and avoid double-clicking
+	$(this).off( "click" );
+	$(this).css("opacity", "0.3");
 }
