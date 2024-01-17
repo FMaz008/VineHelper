@@ -68,6 +68,12 @@ function Toolbar(tileInstance){
 				let tile = getTileByAsin(event.data.asin);
 				let etv = $(tile.getDOM()).find(".etv").text();
 				
+				
+				if (etv==""){
+					alert("ERROR: ETV value not known for this item. Ensure to have the Share ETV option enabled and check the details of the item to make its ETV value known to Vine Helper.")
+					return false; 
+				}
+				
 				if(!confirm("Send this product to Brenda over on discord?"))
 					return false;
 				
@@ -80,13 +86,10 @@ function Toolbar(tileInstance){
 					'token': appSettings.discord.guid,
 					'domain': "amazon."+vineDomain,
 					'tab': vineQueue,
-					'asin': event.data.asin
-					//'etv': etv
+					'asin': event.data.asin,
+					'etv': etv
 					//'comment': prompt("(Optional) Comment:")
 				};
-				
-				if (etv!="")
-					details.etv = etv; 
 				
 				const response = await fetch(
 					url,
