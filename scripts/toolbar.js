@@ -26,6 +26,10 @@ function Toolbar(tileInstance){
 				.append("<div class=\"ext-helper-icon-etv\"></div><span class=\"etv\">?</span></span>")
 				.appendTo($(container))
 				.hide();
+				
+			if(appSettings.thorvarium.smallItems){
+				$(".ext-helper-icon-etv").hide();
+			}
 		}
 		
 		if(appSettings.unavailableTab.compactToolbar){
@@ -273,8 +277,6 @@ function Toolbar(tileInstance){
 			v0.html("&#9745; ("+pTile.getVoteNoFees()+")");
 			v1.html("&#11199; ("+pTile.getVoteFees()+")")
 		}else{
-			//If we used the regular toolbar, we need to add a clear:right so the voting widget will not be impeded by the right floated hidden icon.
-			$(".ext-helper-voting-widget").css("clear", "right");
 			pe.prepend("Available? ");
 		}
 		
