@@ -80,12 +80,12 @@ async function init(){
 	showRuntime("BOOT: Config available. Begining init() function");
 	
 	//Inject the infinite loading wheel fix to the "main world"
-	if(appSettings.general.autofixInfiniteWheel){
-		scriptTag.src = chrome.runtime.getURL('scripts/infiniteWheelFix.js');
+	if(appSettings.general.allowInjection){
+		scriptTag.src = chrome.runtime.getURL('scripts/inj.js');
 		scriptTag.onload = function() { this.remove(); };
 		// see also "Dynamic values in the injected code" section in this answer
 		(document.head || document.documentElement).appendChild(scriptTag);
-		showRuntime("BOOT: Infinite Wheel fix injected");
+		showRuntime("BOOT: Script injected");
 	}
 	
 	//Create the Discard grid
