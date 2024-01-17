@@ -276,6 +276,9 @@ async function announceItem(event){
 	let tile = getTileByAsin(event.data.asin);
 	let etv = $(tile.getDOM()).find(".etv").text();
 	
+	//In case of price range, only send the highest value.
+	etv = etv.split("-").pop();
+	
 	if(!confirm("Send this product to Brenda over on discord?"))
 		return false;
 	

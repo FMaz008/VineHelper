@@ -42,8 +42,9 @@ window.fetch = async (...args) => {
 			}
 			
 			if(isChild){
-				regex = /^.+#(.+?)#.+$/;
+				regex = /^.+?#(.+?)#.+$/;
 				let arrMatchesP = lastParent.recommendationId.match(regex);
+				
 				window.postMessage({type: "etv", data: {
 													"parent_asin": arrMatchesP[1],
 													"asin": datap.asin,

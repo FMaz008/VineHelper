@@ -210,21 +210,20 @@ function serverResponse(data){
 		console.log("Wrong API version");
 	}
 	
-	if(appSettings.general.displayETV){
-		$.each(data["arr_etv"],function(key,values){
-			
-			let tile = getTileByAsin(key);
-			if(tile==null)
-				console.log("No tile matching " + key);
-			
-			if(values.etv_min != null){
-				if(values.etv_min == values.etv_max)
-					tile.getToolbar().setETV(values.etv_min);
-				else
-					tile.getToolbar().setETV(values.etv_min + "-" + values.etv_max);
-			}
-		});
-	}
+	//Load the ETV value
+	$.each(data["arr_etv"],function(key,values){
+		
+		let tile = getTileByAsin(key);
+		if(tile==null)
+			console.log("No tile matching " + key);
+		
+		if(values.etv_min != null){
+			if(values.etv_min == values.etv_max)
+				tile.getToolbar().setETV(values.etv_min);
+			else
+				tile.getToolbar().setETV(values.etv_min + "-" + values.etv_max);
+		}
+	});
 	
 	if(appSettings.unavailableTab.active){ // if the voting system is active.
 		
