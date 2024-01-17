@@ -157,10 +157,8 @@ async function init(){
 			}
 		}
 		
-		if(tabSystem){
-			t = new Toolbar(tile);
-			t.createProductToolbar();
-		}
+		t = new Toolbar(tile);
+		t.createProductToolbar();
 	});
 	
 	if(tabSystem){

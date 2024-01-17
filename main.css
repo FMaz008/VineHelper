@@ -62,7 +62,6 @@ div.ext-helper-status-container div.ext-helper-status-container2, div.ext-helper
 .ext-helper-toolbar-etv{
 	overflow:hidden;
 	line-height: 16px;
-	display: inline-block;
 	height: 16px;
 	float: left;
 }
@@ -111,6 +110,11 @@ div.toolbar-icon-only div.ext-helper-status-container{
 	margin:0;
 	line-height:12px;
 }
+
+div.toolbar-icon-only div.ext-helper-status-container2{
+	padding-left:0px;
+}
+
 div.ext-helper-background-nofees div.ext-helper-status-container{
 	background-color:#99ff99;
 }

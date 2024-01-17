@@ -42,8 +42,8 @@ function Toolbar(tileInstance){
 				.prependTo("#"+toolbarId + " .ext-helper-status-container");
 		}
 		
-		//Only the hidden tab is activated, only the hide icon has to be shown
-		if(!appSettings.unavailableTab.active && appSettings.hiddenTab.active){
+		//If the voting system is off, only the icons have to be shown
+		if(!appSettings.unavailableTab.active){
 			pToolbar.addClass("toolbar-icon-only");
 		}
 		
