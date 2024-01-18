@@ -191,7 +191,7 @@ async function getSettings(){
 	//Figure out what domain the extension is working on
 	//De-activate the unavailableTab (and the voting system) for all non-.ca domains.
 	let currentUrl = window.location.href; 
-	regex = /^(?:.*:\/\/)(?:.+[\.]?)amazon\.(.+)\/vine\/.*$/;
+	regex = /^.+?amazon\.(.+)\/vine\/.*$/;
 	arrMatches = currentUrl.match(regex);
 	vineDomain = arrMatches[1];
 	
@@ -210,7 +210,7 @@ async function getSettings(){
 	
 	
 	//Determine if we are browsing a queue
-	regex = /^(?:.*:\/\/)(?:.+[\.]?)amazon\..+\/vine\/vine-items(?:\?queue=(.+?))?(?:[#&].*)?$/;
+	regex = /^.+?amazon\..+\/vine\/vine-items(?:\?queue=(.+?))?(?:[#&].*)?$/;
 	arrMatches = currentUrl.match(regex);
 	vineQueue = null;
 	if(arrMatches != null){
@@ -220,7 +220,6 @@ async function getSettings(){
 			vineQueue = arrMatches[1];
 		}
 	}
-	
 	
 	showRuntime("PRE: Settings loaded");
 	
