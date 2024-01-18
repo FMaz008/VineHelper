@@ -331,6 +331,7 @@ window.addEventListener("message", async function(event) {
 	//If we got back a message after we fixed an infinite wheel spin.
     if (event.data.type && (event.data.type == "infiniteWheelFixed")) {
         //console.log("Content script received message: " + event.data.text);
+			
 		let healingAnim = $("<div>")
 				.attr("id", "ext-helper-healing")
 				.addClass("ext-helper-healing")
@@ -338,8 +339,22 @@ window.addEventListener("message", async function(event) {
 		$("<div>")
 			.addClass("ext-helper-icon-healing")
 			.appendTo(healingAnim);
+		
+		let textContainer = $("<div>")
+			.attr("id", "ext-helper-healing-text")
+			.addClass("ext-helper-healing-container")
+			.hide()
+			.prependTo($("#a-popover-content-3"));
+		$("<span>")
+			.text("Vine Helper magical fixing in progress...")
+			.appendTo(textContainer);
+		
+		await textContainer.slideDown("slow").promise();
 		await healingAnim.delay(1000).animate({opacity: "hide"},{duration: 500}).promise();
+		await textContainer.slideUp("slow").promise();
 		$("#ext-helper-healing").remove();
+		$("#ext-helper-healing-text").remove();
+		
     }
 	
 	//If we got back a message after we found an ETV.
