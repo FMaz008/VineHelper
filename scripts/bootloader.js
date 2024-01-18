@@ -111,12 +111,11 @@ async function init(){
 	//Show version info popup
 	if(appSettings.general.versionInfoPopup){
 		showModalDialog("Vine Helper update info",
-			"<strong>Version 1.11 change notes:</strong><br />"
-			+ "<br />- Autofix spinning wheel settings was renamed <strong>allow code injection</strong> and will need to be re-activated."
-			+ "<br />- Bug fix: Users without the voting system could not un-hide items."
-			+ "<br />- New <strong>ETV</strong> features regarding the Estimated Tax Value, which can now be pacively gathered and displayed in the listing. By default ETV sharing is disabled, I encourage you to activate it."
-			+ "<br />- Stylesheets should load even <strong>faster</strong>."
-			+ "<br />- Note of intention: To prevent unreliable voting results, I am currently working on a system to implement a <strong>voting reputation</strong>."
+			"<strong>Version 1.12 change notes:</strong><br />"
+			+ "<br />- Autofix spinning wheel animation improved."
+			+ "<br />- Bug fix: compact tool bar was shown on 2 lines when not necessary."
+			+ "<br />- New festure <strong>Display First Seen</strong> which display information, if available, on when the item was first seen on Vine."
+			+ "<br />- Compatibility with Vine UK."
 			+ "<br /><br /><em>This message will self destruct after its closure.</em>"
 		,600);
 		appSettings.general.versionInfoPopup = false;
