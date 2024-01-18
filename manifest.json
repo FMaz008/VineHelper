@@ -68,7 +68,8 @@
 	  ],
       "matches": [
 		"*://*.amazon.ca/vine/*",
-	        "*://*.amazon.es/vine/*",
+	    "*://*.amazon.es/vine/*",
+	    "*://*.amazon.co.uk/vine/*",
 		"*://*.amazon.com/vine/*"
 	  ],
 	  "run_at": "document_end"
@@ -81,7 +82,8 @@
 	  ],
 	  "matches": [
 		"*://*.amazon.ca/vine/*",
-	        "*://*.amazon.es/vine/*",
+	    "*://*.amazon.es/vine/*",
+	    "*://*.amazon.co.uk/vine/*",
 		"*://*.amazon.com/vine/*"
 	  ],
 	  "run_at": "document_start"
