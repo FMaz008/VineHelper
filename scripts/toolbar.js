@@ -244,6 +244,10 @@ function Toolbar(tileInstance){
 			.html("&#11199; No ("+pTile.getVoteFees()+")")
 			.appendTo(pe);
 		
+		if(appSettings.thorvarium.smallItems){
+			$(".compact div.ext-helper-voting-widget").css("clear", "both");
+		}
+		
 		if(appSettings.unavailableTab.compactToolbar){
 			//Make the content of the toolbar as compact as possible
 			v0.html("&#9745; ("+pTile.getVoteNoFees()+")");

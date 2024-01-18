@@ -144,10 +144,16 @@ div.ext-helper-icon-mini{
 	background-position: -16px 0px;
 }
 
+
 div.ext-helper-voting-widget{
 	clear:right;
 	line-height:16px;
 }
+.compact div.ext-helper-voting-widget{
+	clear:none;
+}
+
+
 .ext-helper-reportlink-bad {
 	color: #CC0000 !important;
 }
