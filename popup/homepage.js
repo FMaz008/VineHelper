@@ -32,7 +32,12 @@ async function drawUnavailableTab() {
 
         function serverResponse(data) {
             let percentage = (data["votes"] * 100) / data["totalVotes"];
-
+			let reliability = 0;
+			
+			if(data["reviewedVotes"] > 0)
+				reliability = (data["concensusBackedVotes"] * 100) / data["reviewedVotes"];
+				
+			
             $("#votes").text(data["votes"]);
             $("#contribution").text(percentage.toFixed(3) + "%");
             $("#rank").text("#" + data["rank"]);
@@ -41,6 +46,9 @@ async function drawUnavailableTab() {
             $("#totalUsers").text(data["totalUsers"]);
             $("#totalVotes").text(data["totalVotes"]);
             $("#totalProducts").text(data["totalProducts"]);
+            $("#reviewedVotes").text(data["reviewedVotes"]);
+            $("#concensusBackedVotes").text(data["concensusBackedVotes"]);
+            $("#reliability").text(reliability.toFixed(1) + "%");
         }
     } else {
         $("#unavailableTabOptions").hide();
