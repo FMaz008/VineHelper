@@ -210,7 +210,7 @@ async function getSettings(){
 	
 	
 	//Determine if we are browsing a queue
-	regex = /^(?:.*:\/\/)(?:.+[\.]?)amazon\..+\/vine\/vine-items(?:\?queue=(.+?))?(?:#.*)?$/;
+	regex = /^(?:.*:\/\/)(?:.+[\.]?)amazon\..+\/vine\/vine-items(?:\?queue=(.+?))?(?:[#&].*)?$/;
 	arrMatches = currentUrl.match(regex);
 	vineQueue = null;
 	if(arrMatches != null){
