@@ -146,6 +146,7 @@ function init() {
     manageCheckboxSetting("general.shareETV");
     manageCheckboxSetting("general.displayETV");
     manageCheckboxSetting("general.displayVariantIcon");
+    manageCheckboxSetting("general.displayFirstSeen");
     manageCheckboxSetting("hiddenTab.active");
     manageCheckboxSetting("discord.active"); //Handled manually
     manageCheckboxSetting("unavailableTab.active");
