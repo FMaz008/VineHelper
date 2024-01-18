@@ -114,6 +114,20 @@ function Tile(obj, gridInstance){
 		return pGrid.getId();
 	};
 	
+	this.setDateAdded = function(mysqlDate){
+		if(mysqlDate == undefined)
+			return false;
+		
+		let t = mysqlDate.split(/[- :]/);
+		let jsDate = new Date(Date.UTC(t[0], t[1]-1, t[2], parseInt(t[3])+5, t[4], t[5]));//+5hrs for the server time
+		
+		$("<div>")
+			.addClass("ext-helper-date-added")
+			.text("First seen: " + timeSince(jsDate) + " ago")
+			.appendTo($(pTile).find(".ext-helper-img-container"));
+		
+	}
+	
 	this.moveToGrid = async function(g, animate = false){
 		//If we are asking to move the tile to the same grid, don't do anything
 		if(g.getId() == pGrid.getId())
@@ -189,4 +203,33 @@ function Tile(obj, gridInstance){
 	
 	
 
+}
+
+
+
+function timeSince(date) {
+
+	var seconds = Math.floor((new Date() - date) / 1000);
+	var interval = seconds / 31536000;
+
+	if (interval > 1) 
+	return Math.floor(interval) + " years";
+
+	interval = seconds / 2592000;
+	if (interval > 1) 
+		return Math.floor(interval) + " months";
+
+	interval = seconds / 86400;
+	if (interval > 1)
+		return Math.floor(interval) + " days";
+
+	interval = seconds / 3600;
+	if (interval > 1)
+		return Math.floor(interval) + " hrs";
+
+	interval = seconds / 60;
+	if (interval > 1)
+		return Math.floor(interval) + " mins";
+
+	return Math.floor(seconds) + " secs";
 }

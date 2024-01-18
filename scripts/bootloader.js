@@ -194,9 +194,7 @@ function fetchData(arrUrl){
 			function() {
 				//error =>  console.log(error);
 				$.each(arrUrl, function(key, val){
-					let t = getTileByAsin(val);
-					t.getToolbar().setStatusText("Server offline");
-					t.getToolbar().setStatusIcon("ext-helper-icon-info")
+					let t = getTileByAsin(val);//server offline
 				});
 			}
 		);
@@ -222,7 +220,10 @@ function serverResponse(data){
 				tile.getToolbar().setETV(values.etv_min);
 			else
 				tile.getToolbar().setETV(values.etv_min + "-" + values.etv_max);
+			
+			tile.setDateAdded(values.date_added);
 		}
+		
 	});
 	
 	if(appSettings.unavailableTab.active){ // if the voting system is active.
