@@ -4,6 +4,7 @@ const startTime = Date.now();
 var appSettings = {};
 
 var vineDomain = null;
+var vineCountry = null;
 var vineQueue = null
 
 
@@ -194,6 +195,8 @@ async function getSettings(){
 	regex = /^.+?amazon\.(.+)\/vine\/.*$/;
 	arrMatches = currentUrl.match(regex);
 	vineDomain = arrMatches[1];
+	vineCountry = vineDomain.split(".").pop();
+
 	
 	//If the domain is not Canada, de-activate the voting system/unavailable tab
 	if(vineDomain != "ca"){

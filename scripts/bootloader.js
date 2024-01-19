@@ -180,8 +180,7 @@ async function init(){
 
 //Get data from the server about the products listed on this page
 function fetchData(arrUrl){
-	let country = vineDomain.split(".").pop();
-	let arrJSON = {"api_version":3, "country": country, "arr_asin":arrUrl};
+	let arrJSON = {"api_version":3, "country": vineCountry, "arr_asin":arrUrl};
 	let jsonArrURL = JSON.stringify(arrJSON);
 	
 	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
@@ -289,7 +288,7 @@ async function reportfees(event){
 	
 	//Send the vote to the server
 	let url = "https://francoismazerolle.ca/vinehelperCastVote_v2.php"
-		+ '?data={"url":"' + asin +'","fees":'+ fees +'}';
+		+ '?data={"country": "'+ vineCountry+'", "asin":"' + asin +'","fees":'+ fees +'}';
 	await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
 
 	//Refresh the data for the toolbar of that specific product only
@@ -362,7 +361,6 @@ window.addEventListener("message", async function(event) {
 	if (event.data.type && (event.data.type == "etv")) {
 		
 		//Send the ETV info to the server
-		country = vineDomain.split(".").pop();
 		
 		let tileASIN;
 		if(event.data.data.parent_asin === null){
@@ -374,7 +372,7 @@ window.addEventListener("message", async function(event) {
 		
 		let url = "https://francoismazerolle.ca/vinehelperCastETV.php"
 		+ '?data={"api_version":3, '
-		+ '"country":"' + country + '",'
+		+ '"country":"' + vineCountry + '",'
 		+ '"asin":"' + event.data.data.asin + '",'
 		+ '"parent_asin": ' + event.data.data.parent_asin + ','
 		+ '"etv":"' + event.data.data.etv + '"'
