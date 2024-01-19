@@ -14,12 +14,20 @@ function setCB(key, value) {
     $(`[name='${$.escapeSelector(key)}']`)
         .prop("checked", value)
         .checkboxradio("refresh");
+	handleDynamicFields(key);
 }
 
 function getCB(key) {
     return $(`label[for='${$.escapeSelector(key)}'] input`).is(":checked");
 }
 
+function handleDynamicFields(key){
+	if(key=="general.allowInjection"){
+		$(`[name='${$.escapeSelector("general.shareETV")}']`)
+			.checkboxradio( "option", { "disabled": !$(`label[for='${$.escapeSelector(key)}'] input`).is(":checked") }  )
+			.checkboxradio("refresh");
+	}
+}
 async function drawUnavailableTab() {
     if (appSettings.unavailableTab.active) {
         $("#unavailableTabOptions").show();
@@ -87,9 +95,10 @@ function init() {
     $(`label[for='${$.escapeSelector("discord.active")}']`).on("click", function () {
         setTimeout(() => drawDiscord(), 1);
     });
-
-    //Discord link interaction
-
+	
+	
+	
+	
     //Load/save settings:
     $("#" + $.escapeSelector("unavailableTab.consensusThreshold")).val(appSettings.unavailableTab.consensusThreshold);
     $("#" + $.escapeSelector("unavailableTab.consensusThreshold")).on("change", async function () {
@@ -175,6 +184,7 @@ function init() {
     manageCheckboxSetting("thorvarium.stripedCategories");
     manageCheckboxSetting("thorvarium.limitedQuantityIcon");
     manageCheckboxSetting("thorvarium.RFYAFAAITabs");
+	
 }
 
 //Utility functions

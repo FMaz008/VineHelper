@@ -171,8 +171,9 @@ async function init(){
 		$(".a-pagination").parent().css("margin-top","10px").clone().insertAfter("#vvp-items-grid-container p");
 	}
 	
-	//Obtain the data to fill the toolbars with it.
-	fetchData(arrUrl);
+	//Only contact the 3rd party server is necessary
+	if(appSettings.unavailableTab.active || appSettings.general.displayETV || appSettings.general.displayFirstSeen)
+		fetchData(arrUrl);//Obtain the data to fill the toolbars with it.
 }
 
 
