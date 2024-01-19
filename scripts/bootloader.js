@@ -180,7 +180,7 @@ async function init(){
 
 //Get data from the server about the products listed on this page
 function fetchData(arrUrl){
-	let arrJSON = {"api_version":3, "country": vineCountry, "arr_asin":arrUrl};
+	let arrJSON = {"api_version":4, "country": vineCountry, "arr_asin":arrUrl};
 	let jsonArrURL = JSON.stringify(arrJSON);
 	
 	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
@@ -203,12 +203,12 @@ function fetchData(arrUrl){
 //Update each tile with the data pertaining to it.
 function serverResponse(data){
 	
-	if(data["api_version"]!=3){
+	if(data["api_version"]!=4){
 		console.log("Wrong API version");
 	}
 	
 	//Load the ETV value
-	$.each(data["arr_etv"],function(key,values){
+	$.each(data["products"],function(key,values){
 		
 		let tile = getTileByAsin(key);
 		if(tile==null)
@@ -224,17 +224,9 @@ function serverResponse(data){
 		if(values.date_added != null)
 			tile.setDateAdded(values.date_added);
 		
-	});
-	
-	if(appSettings.unavailableTab.active){ // if the voting system is active.
 		
-		$.each(data["arr_votes"],function(key,values){
-			
-			let tile = getTileByAsin(key);
-			if(tile==null)
-				console.log("No tile matching " + key);
-			
-			tile.setVotes(values["v0"], values["v1"], values["s"]);
+		if(appSettings.unavailableTab.active){ // if the voting system is active.
+			tile.setVotes(values.v0, values.v1, values.s);
 			
 			//Assign the tiles to the proper grid
 			if(appSettings.hiddenTab.active && tile.isHidden()){ //The hidden tiles were already moved, but we want to keep them there.
@@ -244,11 +236,10 @@ function serverResponse(data){
 			} else if(appSettings.unavailableTab.selfDiscard && tile.getStatus() == DISCARDED_OWN_VOTE){
 				tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
 			}
-				
 			
 			tile.getToolbar().updateToolbar();
-		});
-	}
+		}
+	});
 	
 	updateTileCounts();
 }
