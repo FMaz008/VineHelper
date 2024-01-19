@@ -111,11 +111,11 @@ async function init(){
 	//Show version info popup
 	if(appSettings.general.versionInfoPopup){
 		showModalDialog("Vine Helper update info",
-			"<strong>Version 1.12 change notes:</strong><br />"
-			+ "<br />- Autofix spinning wheel animation improved."
-			+ "<br />- Bug fix: compact tool bar was shown on 2 lines when not necessary."
-			+ "<br />- New festure <strong>Display First Seen</strong> which display information, if available, on when the item was first seen on Vine."
-			+ "<br />- Compatibility with Vine UK."
+			"<strong>Version 1.13 change notes:</strong><br />"
+			+ "<br />- Voting system now works with UK."
+			+ "<br />- VH will no longer contact its home server unless necessary."
+			+ "<br />- Clarifications of settings."
+			+ "<br />- Internal optimization and database improvement."
 			+ "<br /><br /><em>This message will self destruct after its closure.</em>"
 		,600);
 		appSettings.general.versionInfoPopup = false;
