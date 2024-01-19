@@ -219,9 +219,10 @@ function serverResponse(data){
 				tile.getToolbar().setETV(values.etv_min);
 			else
 				tile.getToolbar().setETV(values.etv_min + "-" + values.etv_max);
-			
-			tile.setDateAdded(values.date_added);
 		}
+		
+		if(values.date_added != null)
+			tile.setDateAdded(values.date_added);
 		
 	});
 	
