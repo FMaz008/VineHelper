@@ -199,7 +199,7 @@ async function getSettings(){
 
 	
 	//If the domain is not Canada, de-activate the voting system/unavailable tab
-	if(vineDomain != "ca"){
+	if(["ca", "co.uk"].indexOf(vineDomain) == -1){
 		appSettings.unavailableTab.active = false;
 		appSettings.unavailableTab.compactToolbar = true;
 		appSettings.unavailableTab.consensusDiscard = false;
