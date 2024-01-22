@@ -14,12 +14,14 @@ const CONSENSUS_NO_FEES = 0;
 const CONSENSUS_FEES = 1;
 const NO_CONSENSUS = null;
 
+const NOT_DISCARDED_ORDER_SUCCESS = -4;
 const NOT_DISCARDED_NO_STATUS = -3;
 const NOT_DISCARDED_OWN_VOTE = -2;
 const NOT_DISCARDED_NO_FEES = -1;
 const NOT_DISCARDED = 0; 
 const DISCARDED_WITH_FEES = 1;
 const DISCARDED_OWN_VOTE = 2;
+const DISCARDED_ORDER_FAILED = 4;
 
 
 init();
@@ -168,7 +170,8 @@ async function init(){
 	
 	//Bottom pagination
 	if(appSettings.general.topPagination){
-		$(".a-pagination").parent().css("margin-top","10px").clone().insertAfter("#vvp-items-grid-container p");
+		$("#vvp-items-grid-container .topPagination").remove();
+		$(".a-pagination").parent().css("margin-top","10px").clone().insertAfter("#vvp-items-grid-container p").addClass("topPagination");
 	}
 	
 	//Only contact the 3rd party server is necessary
@@ -180,7 +183,7 @@ async function init(){
 
 //Get data from the server about the products listed on this page
 function fetchData(arrUrl){
-	let arrJSON = {"api_version":4, "country": vineCountry, "arr_asin":arrUrl};
+	let arrJSON = {"api_version":4, "action": "getinfo", "country": vineCountry, "arr_asin":arrUrl};
 	let jsonArrURL = JSON.stringify(arrJSON);
 	
 	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
@@ -227,6 +230,7 @@ function serverResponse(data){
 		
 		if(appSettings.unavailableTab.active){ // if the voting system is active.
 			tile.setVotes(values.v0, values.v1, values.s);
+			tile.setOrders(values.order_success, values.order_failed);
 			
 			//Assign the tiles to the proper grid
 			if(appSettings.hiddenTab.active && tile.isHidden()){ //The hidden tiles were already moved, but we want to keep them there.
@@ -349,7 +353,7 @@ window.addEventListener("message", async function(event) {
     }
 	
 	//If we got back a message after we found an ETV.
-	if (event.data.type && (event.data.type == "etv")) {
+	if (appSettings.general.shareETV && event.data.type && (event.data.type == "etv")) {
 		
 		//Send the ETV info to the server
 		
@@ -361,8 +365,9 @@ window.addEventListener("message", async function(event) {
 			event.data.data.parent_asin = '"' + event.data.data.parent_asin + '"';
 		}
 		
-		let url = "https://francoismazerolle.ca/vinehelperCastETV.php"
-		+ '?data={"api_version":3, '
+		let url = "https://francoismazerolle.ca/vinehelper.php"
+		+ '?data={"api_version":4, '
+		+ '"action":"report_etv",'
 		+ '"country":"' + vineCountry + '",'
 		+ '"asin":"' + event.data.data.asin + '",'
 		+ '"parent_asin": ' + event.data.data.parent_asin + ','
@@ -375,6 +380,32 @@ window.addEventListener("message", async function(event) {
 		tile.getToolbar().setETV(event.data.data.etv, true);
 	}
 	
+	//If we got back a message after an order was attempted or placed.
+	if (appSettings.unavailableTab.shareOrder && event.data.type && (event.data.type == "order")) {
+		console.log("Item "+event.data.data.asin+ " (parent:"+event.data.data.parent_asin+") ordered: "+ event.data.data.status);
+		let tileASIN;
+		if(event.data.data.parent_asin === null){
+			tileASIN = event.data.data.asin;
+		}else{
+			tileASIN = event.data.data.parent_asin;
+			event.data.data.parent_asin = '"' + event.data.data.parent_asin + '"';
+		}
+		
+		let url = "https://francoismazerolle.ca/vinehelper.php"
+		+ '?data={"api_version":4, '
+		+ '"action":"report_order",'
+		+ '"country":"' + vineCountry + '",'
+		+ '"asin":"' + event.data.data.asin + '",'
+		+ '"parent_asin": ' + event.data.data.parent_asin + ','
+		+ '"order_status":"' + event.data.data.status + '"'
+		+ '}'
+		await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
+	
+		//Update the product tile ETV in the Toolbar
+		let tile = getTileByAsin(tileASIN);
+		tile.getToolbar().setOrderStatus(event.data.data.status == "success", true);
+
+	}
 });
 
 function showModalDialog(title, text, width=400){

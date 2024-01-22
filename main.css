@@ -60,21 +60,24 @@ div.ext-helper-status-container div.ext-helper-status-container2, div.ext-helper
 }
 
 .ext-helper-toolbar-etv{
+	float:left;
+	vertical-align:middle;
 	overflow:hidden;
 	line-height: 16px;
-	height: 16px;
-	float: left;
+	height:16px;
 }
 
-.ext-helper-toolbar-etv span, .ext-helper-toolbar-etv div{
-	float:left;
-}
 .ext-helper-toolbar-etv .ext-helper-icon-etv{
+	display:inline-block;
 	width:18px;
-	height:14px;
+	height:16px;
 	margin-right:5px;
 	margin-left:5px;
-	background-position-y: -1px;
+	vertical-align:middle;
+}
+
+.ext-helper-toolbar-etv span.etv{
+	vertical-align:middle;
 }
 
 
@@ -100,7 +103,7 @@ div.compact div.ext-helper-icon{
 	float:right;
 	padding-top:2px;
 	padding-right:4px;
-	line-height:12px;
+	line-height:16px;
 }
 
 
@@ -129,6 +132,14 @@ div.ext-helper-toolbar-icon{
 	height:12px;
 }
 
+div.ext-helper-toolbar-large-icon{
+	display:inline-block;
+	width:20px;
+	height:20px;
+	vertical-align:middle;
+	margin:0 3px;
+}
+
 div.ext-helper-icon{
 	float:left;
 	width:30px;
@@ -145,13 +156,15 @@ div.ext-helper-icon-mini{
 }
 
 
-div.ext-helper-voting-widget{
+div.ext-helper-voting-widget, div.ext-helper-order-widget{
 	clear:right;
-	line-height:16px;
+	text-align:center;
 }
-.compact div.ext-helper-voting-widget{
+
+.compact div.ext-helper-voting-widget, .compact div.ext-helper-oorder-widget{
+	display:inline-block;
 	clear:none;
-	margin-right: 35px;
+	height:20px;
 }
 
 
@@ -243,6 +256,7 @@ div.ui-widget-overlay{
 	opacity:0.1;
 }
 
+
 /* Chrome 29+ */
 @media screen and (-webkit-min-device-pixel-ratio:0)
   and (min-resolution:.001dpcm) {
@@ -301,6 +315,21 @@ div.ui-widget-overlay{
 		background-image: url("chrome-extension://__MSG_@@extension_id__/images/etv.png");
 		background-repeat:no-repeat;
 	}
+	div.ext-helper-icon-request{
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/images/request.png");
+		background-repeat:no-repeat;
+	}
+	div.ext-helper-icon-order-success{
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/images/order-success.png");
+		background-repeat:no-repeat;
+	}
+	div.ext-helper-icon-order-failed{
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/images/order-failed.png");
+		background-repeat:no-repeat;
+	}
 }
 
 @supports (-moz-appearance:none) {
@@ -357,6 +386,21 @@ div.ui-widget-overlay{
 	div.ext-helper-icon-etv{
 		background-size: 100%;
 		background-image: url("/images/etv.png");
+		background-repeat:no-repeat;
+	}
+	div.ext-helper-icon-request{
+		background-size: 100%;
+		background-image: url("/images/request.png");
+		background-repeat:no-repeat;
+	}
+	div.ext-helper-icon-order-success{
+		background-size: 100%;
+		background-image: url("/images/order-success.png");
+		background-repeat:no-repeat;
+	}
+	div.ext-helper-icon-order-failed{
+		background-size: 100%;
+		background-image: url("/images/order-failed.png");
 		background-repeat:no-repeat;
 	}
 }

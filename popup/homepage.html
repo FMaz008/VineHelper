@@ -52,7 +52,7 @@
 					</label>
 					<label for="general.shareETV">Share ETV data
 						<a href="#" class="tips" title="This feature anonymously exchange data with Vine Helper's server.">
-							<img src="/images/request.png" width="16" height="16" />
+							<div class="ext-helper-toolbar-icon ext-helper-icon-request"></div>
 						</a>
 						<a href="#" class="tips" title="As you are browsing, Vine Helper will relay ETV info with Vine Helper's server.">
 							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
@@ -61,7 +61,7 @@
 					</label>
 					<label for="general.displayETV">Display ETV in toolbar
 						<a href="#" class="tips" title="This feature anonymously exchange data with Vine Helper's server">
-							<img src="/images/request.png" width="16" height="16" />
+							<div class="ext-helper-toolbar-icon ext-helper-icon-request"></div>
 						</a>
 						<a href="#" class="tips" title="Display previously reported ETV values will be displayed in the toolbar.">
 							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
@@ -71,7 +71,7 @@
 					<label for="general.displayFirstSeen">
 						Display "First seen" time over the image
 						<a href="#" class="tips" title="This feature anonymously exchange data with Vine Helper's server">
-							<img src="/images/request.png" width="16" height="16" />
+							<div class="ext-helper-toolbar-icon ext-helper-icon-request"></div>
 						</a>
 						<a href="#" class="tips" title="If a product has an ETV value, display the time since that value was recorded.">
 							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
@@ -91,15 +91,23 @@
 				<div class="options">
 					<label for="unavailableTab.active">Voting system (Canada/Mainland UK):
 						<a href="#" class="tips" title="This feature exchange data with Vine Helper's server. IPs address are stored as md5 hashes.">
-							<img src="/images/request.png" width="16" height="16" />
+							<div class="ext-helper-toolbar-icon ext-helper-icon-request"></div>
 						</a>
 						<a href="#" class="tips" title="In some countries, a lot of items have importation or shipping fees, which makes them impossible to be ordered. This option will activate a community voting toolbar on every items, identifying and placing items that can't be ordered in a separate tab.">
 							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
 						</a>
 						<input type="checkbox" name="unavailableTab.active" value="1">
 					</label>
-
 					<div id="unavailableTabOptions">
+						<label for="unavailableTab.shareOrder">Share orders status
+							<a href="#" class="tips" title="This feature exchange data with Vine Helper's server: ASIN of the item ordered, if the order was a success or gave an error, an md5 hash of your IP will be stored one server.">
+								<div class="ext-helper-toolbar-icon ext-helper-icon-request"></div>
+							</a>
+							<a href="#" class="tips" title="Share if you were able to order an item or not. When those data are received, they will be used to override the voting system as they are more reliable.">
+								<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+							</a>
+							<input type="checkbox" name="unavailableTab.shareOrder" value="1">
+						</label>
 						<label for="unavailableTab.compactToolbar">Compact items toolbar
 							<a href="#" class="tips" title="Make the toolbar smaller and compatible with Thorvarium SmallItems stylesheet.">
 								<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
@@ -171,7 +179,7 @@
 				<div class="options">
 					<label for="discord.active">Use Brenda Alerts (US/Canada/UK)
 						<a href="#" class="tips" title="This feature exchange data with the Brenda API server for Discord.">
-							<img src="/images/request.png" width="16" height="16" />
+							<div class="ext-helper-toolbar-icon ext-helper-icon-request"></div>
 						</a>
 						<a href="#" class="tips" title="VineHelper is compatible with the (non-official) AmazonVine discord server Brenda bot. By joining the server and linking your account, you will be able to suggest products to be recommended by the bot to the users of your country.">
 							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>

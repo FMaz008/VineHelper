@@ -19,7 +19,7 @@ function Toolbar(tileInstance){
 		container = $("<div />")
 			.addClass("ext-helper-status-container2")
 			.appendTo("#"+toolbarId + " .ext-helper-status-container");
-		etv = $("<div />")
+		etv = $("<span>")
 			.addClass("ext-helper-toolbar-etv")
 			.append("<div class=\"ext-helper-icon-etv\"></div><span class=\"etv\"></span>")
 			.appendTo($(container))
@@ -140,6 +140,8 @@ function Toolbar(tileInstance){
 		icon.removeClass("ext-helper-icon-sad");
 		icon.removeClass("ext-helper-icon-happy");
 		icon.removeClass("ext-helper-icon-loading");
+		icon.removeClass("ext-helper-icon-order-success");
+		icon.removeClass("ext-helper-icon-order-failed");
 		
 		icon.addClass(iconClass);
 	};
@@ -173,26 +175,47 @@ function Toolbar(tileInstance){
 		if(appSettings.hiddenTab.active)
 			this.updateVisibilityIcon();
 			
+		//Set the icons
 		switch (pTile.getStatus()){
+			case DISCARDED_ORDER_FAILED:
+				this.setStatusIcon("ext-helper-icon-order-failed");
+				break;
 			case DISCARDED_WITH_FEES:
 			case DISCARDED_OWN_VOTE:
 				this.setStatusIcon("ext-helper-icon-sad");
+				break;
+			case NOT_DISCARDED_ORDER_SUCCESS:
+				this.setStatusIcon("ext-helper-icon-order-success");
+				break;
+			case NOT_DISCARDED_NO_FEES:
+			case NOT_DISCARDED_OWN_VOTE:
+				this.setStatusIcon("ext-helper-icon-happy");
+				break;
+			case NOT_DISCARDED_NO_STATUS:
+				//The item is not registered or needs more votes
+				this.setStatusIcon("ext-helper-icon-info");
+				break;
+		}
+		
+		//Set other properties
+		switch (pTile.getStatus()){
+			case DISCARDED_ORDER_FAILED:
+			case DISCARDED_WITH_FEES:
+			case DISCARDED_OWN_VOTE:
 				statusColor = "ext-helper-background-fees";
 				tileOpacity = appSettings.unavailableTab.unavailableOpacity/100;
 				
 				if(appSettings.discord.active)
 					$("#ext-helper-announce-link-"+pTile.getAsin()).hide();
-				
 				break;
+			case NOT_DISCARDED_ORDER_SUCCESS:
 			case NOT_DISCARDED_NO_FEES:
 			case NOT_DISCARDED_OWN_VOTE:
-				this.setStatusIcon("ext-helper-icon-happy");
 				statusColor = "ext-helper-background-nofees";
 				tileOpacity = 1.0;
 				break;
 			case NOT_DISCARDED_NO_STATUS:
 				//The item is not registered or needs more votes
-				this.setStatusIcon("ext-helper-icon-info");
 				statusColor = "ext-helper-background-neutral";
 				tileOpacity = 1.0;
 				break;
@@ -208,7 +231,11 @@ function Toolbar(tileInstance){
 		
 		//Display voting system if active.
 		if(appSettings.unavailableTab.active){
-			createVotingWidget();
+			if(tile.wasOrdered()){
+				createOrderWidget();
+			}else{
+				createVotingWidget();
+			}
 		}
 	}
 
@@ -218,6 +245,7 @@ function Toolbar(tileInstance){
 		let container = $(context).find("div.ext-helper-status-container2");
 		
 		//Remove any previous voting widget, we will create a new one.
+		$(container).children(".ext-helper-order-widget").remove();
 		$(container).children(".ext-helper-voting-widget").remove();
 		
 		let pe; //Parent Element
@@ -272,6 +300,37 @@ function Toolbar(tileInstance){
 		}
 	}
 	
+	
+	//Create the order widget part of the toolbar
+	function createOrderWidget(){
+		let context = $("#ext-helper-toolbar-" + pTile.getAsin());
+		let container = $(context).find("div.ext-helper-status-container2");
+		
+		//Remove any previous order widget, we will create a new one.
+		$(container).children(".ext-helper-order-widget").remove();
+		$(container).children(".ext-helper-voting-widget").remove();
+		
+		let pe; //Parent Element
+		let oS, oF; //VoteFees(1), VoteNoFees(0)
+		pe = $("<div />")
+			.addClass("ext-helper-order-widget")
+			.text("")
+			.appendTo(container);
+		oS = $("<span>")
+			.html("<div class='ext-helper-toolbar-large-icon ext-helper-icon-order-success'></div>" + pTile.getOrderSuccess())
+			.appendTo(pe);
+		$("<span />")
+			.html("&nbsp;&nbsp;&nbsp;")
+			.appendTo(pe);
+		oF = $("<span>")
+			.html("<div class='ext-helper-toolbar-large-icon ext-helper-icon-order-failed'></div>" + pTile.getOrderFailed())
+			.appendTo(pe);
+		
+		if(appSettings.thorvarium.smallItems){
+			$(".compact div.ext-helper-order-widget").css("clear", "both");
+		}
+		
+	}
 }
 
 

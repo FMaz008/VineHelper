@@ -70,6 +70,7 @@ async function convertOldSettingsToNewJSONFormat(){
 	settings = {
 		"unavailableTab":{
 			"active": unavailableTab,
+			"shareOrder": false,
 			"consensusThreshold": consensusThreshold,
 			"unavailableOpacity": unavailableOpacity,
 			"selfDiscard": selfDiscard,
@@ -201,6 +202,7 @@ async function getSettings(){
 	//If the domain is not Canada, de-activate the voting system/unavailable tab
 	if(["ca", "co.uk"].indexOf(vineDomain) == -1){
 		appSettings.unavailableTab.active = false;
+		appSettings.unavailableTab.shareOrder = false;
 		appSettings.unavailableTab.compactToolbar = true;
 		appSettings.unavailableTab.consensusDiscard = false;
 		appSettings.unavailableTab.selfDiscard = false;

@@ -167,6 +167,7 @@ function init() {
     manageCheckboxSetting("hiddenTab.active");
     manageCheckboxSetting("discord.active"); //Handled manually
     manageCheckboxSetting("unavailableTab.active");
+    manageCheckboxSetting("unavailableTab.shareOrder");
     manageCheckboxSetting("unavailableTab.selfDiscard");
     manageCheckboxSetting("unavailableTab.compactToolbar");
     manageCheckboxSetting("unavailableTab.consensusDiscard");
@@ -219,6 +220,12 @@ function JSONGetPathValue(obj, path) {
     }
 }
 
+/*
+Does't work in popup window for some reason
 $("a.tips").each(function () {
-    $(this).tooltip({ tooltipClass: "ui-tooltip" });
+	if($(this).attr("title") != "tooltip")
+		$(this).tooltip({ tooltipClass: "ui-tooltip" });
 });
+*/
+
+

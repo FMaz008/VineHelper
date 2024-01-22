@@ -13,6 +13,9 @@ function Tile(obj, gridInstance){
 	var pVoteNoFees = 0;
 	var pVoteOwn = null;
 	
+	var pOrderSuccess = 0;
+	var pOrderFailed = 0;
+	
 	//#################
 	//## Private method
 	function findasin(){
@@ -68,6 +71,11 @@ function Tile(obj, gridInstance){
 		pVoteOwn = own;
 	};
 	
+	this.setOrders = function(success, failed){
+		pOrderSuccess = success;
+		pOrderFailed = failed;
+	}
+	
 	this.getVoteFees = function(){
 		return pVoteFees;
 	};
@@ -77,12 +85,28 @@ function Tile(obj, gridInstance){
 	this.getVoteOwn = function(){
 		return pVoteOwn;
 	};
+	this.getOrderSuccess = function(){
+		return pOrderSuccess;
+	};
+	this.getOrderFailed = function(){
+		return pOrderFailed;
+	};
 	
 	this.getFees = function(){
 		return getFees();
 	};
 	
+	this.wasOrdered = function(){
+		return pOrderSuccess>0 || pOrderFailed>0;
+	};
+	
 	this.getStatus = function(){
+		if(pOrderSuccess > 0  &&  pOrderSuccess > pOrderFailed)
+			return NOT_DISCARDED_ORDER_SUCCESS;
+		
+		if(pOrderFailed > 0 && pOrderFailed > pOrderSuccess)
+			return DISCARDED_ORDER_FAILED;
+		
 		if(pVoteOwn == 1 && appSettings.unavailableTab.selfDiscard)
 			return DISCARDED_OWN_VOTE;
 		
