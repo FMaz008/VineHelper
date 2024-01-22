@@ -90,6 +90,10 @@ async function init(){
 		showRuntime("BOOT: Script injected");
 	}
 	
+	//If the sync hidden items is enable, load the hidden item from the server
+	if(appSettings.hiddenTab.remote)
+		loadHiddenItems(); //from tile.js
+	
 	//Create the Discard grid
 	showRuntime("BOOT: Creating tabs system");
 	var tabSystem = appSettings.unavailableTab.active || appSettings.hiddenTab.active;
@@ -111,16 +115,16 @@ async function init(){
 	
 	
 	//Show version info popup
-	if(appSettings.general.versionInfoPopup){
+	if(appVersion != appSettings.general.versionInfoPopup){
 		showModalDialog("Vine Helper update info",
-			"<strong>Version 1.13 change notes:</strong><br />"
-			+ "<br />- Voting system now works with UK."
-			+ "<br />- VH will no longer contact its home server unless necessary."
-			+ "<br />- Clarifications of settings."
-			+ "<br />- Internal optimization and database improvement."
+			"<strong>Version " + appVersion + " change notes:</strong><br />"
+			+ "<br />- Vine Helper can now detect when an item is ordered, or failed to be ordered and use that data to overule the votes."
+			+ "<br />- Bugfix: using the compact toolbar, a voted item could not be hidden."
+			+ "<br />- The hidden items can now be stored on the server to allow for multi-device shared use."
+			+ "<br />- Note: The mobile browser <strong>Kiwi</strong> for android support Vine Helper."
 			+ "<br /><br /><em>This message will self destruct after its closure.</em>"
 		,600);
-		appSettings.general.versionInfoPopup = false;
+		appSettings.general.versionInfoPopup = appVersion;
 		saveSettings();
 	}
 	

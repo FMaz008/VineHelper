@@ -1,4 +1,4 @@
-
+var timeoutHandle;
 
 function Tile(obj, gridInstance){
 	
@@ -191,8 +191,13 @@ function Tile(obj, gridInstance){
 	
 	this.hideTile = async function(animate=true){
 		//Add the item to the list of hidden items
+		
 		appSettings.hiddenTab.arrItems.push({"asin" : pAsin, "date": new Date});
 		saveSettings(); //from preboot.js: Save the new array
+		
+		if(appSettings.hiddenTab.remote)
+			saveHiddenItems();
+		
 		
 		//Move the tile
 		await this.moveToGrid(gridHidden, animate);
@@ -213,6 +218,15 @@ function Tile(obj, gridInstance){
 		});
 		saveSettings(); //from preboot.js: Save the new array
 		
+		if(appSettings.hiddenTab.remote){
+			//As this function can be called over 30 times if someone hide all the items on the page, 
+			//Always wait 1s before saving the item to the server.
+			window.clearTimeout(timeoutHandle);
+			timeoutHandle = window.setTimeout(function() {
+				saveHiddenItems();
+			}, 1000);
+		}
+		
 		//Move the tile
 		if(appSettings.unavailableTab.consensusDiscard && tile.getStatus() >= NOT_DISCARDED){
 			await tile.moveToGrid(gridUnavailable, animate);
@@ -232,6 +246,58 @@ function Tile(obj, gridInstance){
 
 }
 
+async function saveHiddenItems(){
+	//Retreive the arr from the local settings
+	let arrJSON = {"api_version":4, "action": "save_hidden_list", "country": vineCountry};
+	let jsonArrURL = JSON.stringify(arrJSON);
+	
+	//Post an AJAX request to the home server, to store the hidden items
+	let url = "https://www.francoismazerolle.ca/vinehelper.php"
+			+ "?data=" + jsonArrURL;
+			
+	var details = {
+		'arr_asin': JSON.stringify(appSettings.hiddenTab.arrItems)
+	};
+	
+	const response = await fetch(
+		url,
+		{
+			method: "POST",
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: new URLSearchParams(details)
+		}
+	);
+}
+
+
+async function loadHiddenItems(){
+	//Retreive the arr from the local settings
+	let arrJSON = {"api_version":4, "action": "load_hidden_list", "country": vineCountry};
+	let jsonArrURL = JSON.stringify(arrJSON);
+	
+	//Post an AJAX request to the home server, to store the hidden items
+	let url = "https://www.francoismazerolle.ca/vinehelper.php"
+			+ "?data=" + jsonArrURL;
+			
+	const response = await fetch(url)
+		.then((response) => response.json())
+		.then(retreiveHiddenData)
+		.catch( 
+			function() {
+				error =>  console.log(error);
+			}
+	);
+}
+
+function retreiveHiddenData(data){
+	if(data["arr_asin"] != null){
+		appSettings.hiddenTab.arrItems = [];
+		$.each(data['arr_asin'], function(key, val){
+			appSettings.hiddenTab.arrItems.push(val);
+		});
+		saveSettings();
+	}
+}
 
 
 function timeSince(date) {

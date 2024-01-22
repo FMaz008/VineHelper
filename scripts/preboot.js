@@ -7,6 +7,7 @@ var vineDomain = null;
 var vineCountry = null;
 var vineQueue = null
 
+var appVersion = 0;
 
 //#########################
 //### Load settings
@@ -84,7 +85,7 @@ async function convertOldSettingsToNewJSONFormat(){
 			"shareETV": false,
 			"displayETV": true,
 			"displayVariantIcon": false,
-			"versionInfoPopup": true,
+			"versionInfoPopup": 0,
 			"firstVotePopup": true
 		},
 		
@@ -198,6 +199,9 @@ async function getSettings(){
 	vineDomain = arrMatches[1];
 	vineCountry = vineDomain.split(".").pop();
 
+	let manifest = chrome.runtime.getManifest();
+	appVersion = manifest.version;
+	
 	
 	//If the domain is not Canada, de-activate the voting system/unavailable tab
 	if(["ca", "co.uk"].indexOf(vineDomain) == -1){

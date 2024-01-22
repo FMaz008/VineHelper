@@ -26,6 +26,15 @@ function handleDynamicFields(key){
 		$(`[name='${$.escapeSelector("general.shareETV")}']`)
 			.checkboxradio( "option", { "disabled": !$(`label[for='${$.escapeSelector(key)}'] input`).is(":checked") }  )
 			.checkboxradio("refresh");
+			
+		$(`[name='${$.escapeSelector("unavailableTab.shareOrder")}']`)
+			.checkboxradio( "option", { "disabled": !$(`label[for='${$.escapeSelector(key)}'] input`).is(":checked") }  )
+			.checkboxradio("refresh");
+	}
+	if(key=="hiddenTab.active"){
+		$(`[name='${$.escapeSelector("hiddenTab.remote")}']`)
+			.checkboxradio( "option", { "disabled": !$(`label[for='${$.escapeSelector(key)}'] input`).is(":checked") }  )
+			.checkboxradio("refresh");
 	}
 }
 async function drawUnavailableTab() {
@@ -165,6 +174,7 @@ function init() {
     manageCheckboxSetting("general.displayVariantIcon");
     manageCheckboxSetting("general.displayFirstSeen");
     manageCheckboxSetting("hiddenTab.active");
+    manageCheckboxSetting("hiddenTab.remote");
     manageCheckboxSetting("discord.active"); //Handled manually
     manageCheckboxSetting("unavailableTab.active");
     manageCheckboxSetting("unavailableTab.shareOrder");
