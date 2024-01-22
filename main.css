@@ -161,7 +161,7 @@ div.ext-helper-voting-widget, div.ext-helper-order-widget{
 	text-align:center;
 }
 
-.compact div.ext-helper-voting-widget, .compact div.ext-helper-oorder-widget{
+.compact div.ext-helper-voting-widget, .compact div.ext-helper-order-widget{
 	display:inline-block;
 	clear:none;
 	height:20px;

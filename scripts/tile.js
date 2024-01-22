@@ -147,10 +147,10 @@ function Tile(obj, gridInstance){
 		
 		let t = mysqlDate.split(/[- :]/);
 		let jsDate = new Date(Date.UTC(t[0], t[1]-1, t[2], parseInt(t[3])+5, t[4], t[5]));//+5hrs for the server time
-		
+		let textDate = timeSince(jsDate);
 		$("<div>")
 			.addClass("ext-helper-date-added")
-			.text("First seen: " + timeSince(jsDate) + " ago")
+			.text("First seen: " + textDate + " ago")
 			.appendTo($(pTile).find(".ext-helper-img-container"));
 		
 	}
