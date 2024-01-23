@@ -6,26 +6,26 @@ function Toolbar(tileInstance){
 	pTile.setToolbar(this);
 	
 	//Create the bare bone structure of the toolbar
-	this.createProductToolbar = function (){
+	this.createProductToolbar = async function (){
 		let toolbarId = "ext-helper-toolbar-" + pTile.getAsin();
 		let anchorTo = $(pTile.getDOM()).children(".vvp-item-tile-content");
-		pToolbar = $("<div />")
-			.attr("id",toolbarId)
-			.addClass("ext-helper-status")
-			.prependTo(anchorTo);
-		$("<div />")
-			.addClass("ext-helper-status-container")
-			.appendTo("#"+toolbarId);
-		container = $("<div />")
-			.addClass("ext-helper-status-container2")
-			.appendTo("#"+toolbarId + " .ext-helper-status-container");
-		etv = $("<span>")
-			.addClass("ext-helper-toolbar-etv")
-			.append("<div class=\"ext-helper-icon-etv\"></div><span class=\"etv\"></span>")
-			.appendTo($(container))
-			.hide()
 		
-		$(etv).children(".etv").on("change", {'asin': pTile.getAsin()}, function(event){
+		//Load the toolbar template
+		let tpl = new Template();
+		await tpl.loadFile(chrome.runtime.getURL("view/toolbar.html"));
+		tpl.setVar("toolbarId", toolbarId);
+		tpl.setVar("asin", pTile.getAsin());
+		tpl.setIf("announce", appSettings.discord.active && appSettings.discord.guid != null && vineQueue != null);
+		tpl.setIf("toggleview", appSettings.hiddenTab.active);
+		let content = tpl.render();
+		
+		pToolbar = $(content).prependTo(anchorTo);
+		let container = $("#" + toolbarId + " .ext-helper-status-container2");
+		$("#" + toolbarId + " .ext-helper-toolbar-etv").hide();
+		
+		
+		//Activate the announce button
+		container.find(".etv").on("change", {'asin': pTile.getAsin()}, function(event){
 			if($(this).text()=="")
 				return false;
 			
@@ -33,6 +33,7 @@ function Toolbar(tileInstance){
 			$(tile.getDOM()).find(".ext-helper-icon-announcement")
 				.css("opacity", "1")
 				.parent("a")
+					.off("click")
 					.on("click", {'asin': pTile.getAsin()}, announceItem);
 		});
 			
@@ -56,38 +57,9 @@ function Toolbar(tileInstance){
 			pToolbar.addClass("toolbar-icon-only");
 		}
 		
-		
-		
-		//Display the announce link
-		if(appSettings.discord.active && appSettings.discord.guid != null && vineQueue != null){
-			let h, hi;
-			h = $("<a />")
-				.attr("href", "#"+pTile.getAsin())
-				.attr("id", "ext-helper-announce-link-"+pTile.getAsin())
-				.attr("title", "Announce the product on discord! (The ETV must be known)")
-				.addClass("ext-helper-floating-icon")
-				.attr("onclick", "return false;")
-				.prependTo(container);
-			hi= $("<div />")
-				.addClass("ext-helper-toolbar-icon")
-				.addClass("ext-helper-icon-announcement")
-				.css("opacity", "0.3") //By default it is disabled
-				.appendTo(h);
-		}
-		
 		//Display the hide link
 		if(appSettings.hiddenTab.active){
-			let h, hi;
-			h = $("<a />")
-				.attr("href", "#"+pTile.getAsin())
-				.attr("id", "ext-helper-hide-link-"+pTile.getAsin())
-				.attr("title", "Move a product to, or out of, the hidden tab.")
-				.addClass("ext-helper-floating-icon")
-				.attr("onclick", "return false;")
-				.prependTo(container);
-			hi= $("<div />")
-				.addClass("ext-helper-toolbar-icon")
-				.appendTo(h);
+			h = $("#ext-helper-hide-link-"+pTile.getAsin());
 			h.on('click', {'asin': pTile.getAsin()}, async function (event){//A hide/display item button was pressed
 				let asin = event.data.asin;
 				let tile = getTileByAsin(asin);
@@ -382,4 +354,59 @@ async function announceItem(event){
 	//Visually deactivate this item, will be reset on the next page load, but it's just to help navigation and avoid double-clicking
 	$(this).off( "click" );
 	$(this).css("opacity", "0.3");
+}
+
+
+
+function Template(){
+	var content = null;
+	var arrVar = [];
+	var arrIf = [];
+	
+	this.loadFile = async function(url){
+		var c;
+		await fetch(url)
+			.then(function(response) {
+				return response.text();
+			})
+			.then(function(response) {
+				c = response;
+			})
+			.catch( 
+				function() {
+					error =>  console.log(error);
+				}
+			);
+		this.loadContent(c);
+	}
+	this.loadContent = function(html){
+		content = html;
+	}
+	this.setVar = function(name, value){
+		arrVar.push({"name":name, "value":value});
+	}
+	this.setIf = function(name, value){
+		arrIf.push({"name":name, "value":value});
+	}
+	this.render = function(){
+		if(content == null){
+			console.log("No content, did you await loadFile()) ?");
+			return "";
+		}
+		var output = content;
+		for(let i=0; i<arrVar.length; i++){
+			output = output.replaceAll("{{$"+ arrVar[i]["name"] + "}}", arrVar[i]["value"]);
+		}
+		for(let j=0; j<arrIf.length; j++){
+			if(arrIf[j]["value"] == true){
+				//Remove the if tags
+				output = output.replaceAll(new RegExp('{{if '+ arrIf[j]["name"] + '}}(.*?){{endif}}', 'sg'), `$1`);
+			}else{
+				//Remove the if block entirely
+				output = output.replaceAll(new RegExp('{{if '+ arrIf[j]["name"] + '}}(.*?){{endif}}', 'sg'), "");
+			}
+			
+		}
+		return output;
+	}
 }

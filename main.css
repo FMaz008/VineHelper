@@ -106,6 +106,10 @@ div.compact div.ext-helper-icon{
 	line-height:16px;
 }
 
+div.ext-helper-icon-announcement{
+	opacity:0.3;
+}
+
 
 div.toolbar-icon-only div.ext-helper-status-container{
 	float:right;
