@@ -45,12 +45,12 @@
 		"images/healing.gif",
 		"images/order-success.png",
 		"images/order-failed.png",
-		"images/ui-icons_444444_256x240.png",
-		"images/ui-icons_555555_256x240.png",
-		"images/ui-icons_777620_256x240.png",
-		"images/ui-icons_777777_256x240.png",
-		"images/ui-icons_cc0000_256x240.png",
-		"images/ui-icons_ffffff_256x240.png",
+		"lib/jquery_ui/images/ui-icons_444444_256x240.png",
+		"lib/jquery_ui/images/ui-icons_555555_256x240.png",
+		"lib/jquery_ui/images/ui-icons_777620_256x240.png",
+		"lib/jquery_ui/images/ui-icons_777777_256x240.png",
+		"lib/jquery_ui/images/ui-icons_cc0000_256x240.png",
+		"lib/jquery_ui/images/ui-icons_ffffff_256x240.png",
 		"scripts/inj.js"
 		],
       "matches": ["<all_urls>"]
@@ -60,7 +60,7 @@
   "content_scripts": [
     {
 	  "css":[
-		"jquery-ui.min.css",
+		"lib/jquery_ui/jquery-ui.min.css",
 		"main.css"
 	  ],
       "js": [
@@ -79,8 +79,8 @@
     },
 	{
 	  "js":[
-	    "scripts/jquery-3.7.1.min.js",
-		"scripts/jquery-ui.min.js",
+	    "lib/jquery/jquery-3.7.1.min.js",
+		"lib/jquery_ui/jquery-ui.min.js",
 		"scripts/preboot.js"
 	  ],
 	  "matches": [
