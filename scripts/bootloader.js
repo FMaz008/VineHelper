@@ -92,7 +92,7 @@ async function init(){
 	
 	//If the sync hidden items is enable, load the hidden item from the server
 	if(appSettings.hiddenTab.remote)
-		loadHiddenItems(); //from tile.js
+		await loadHiddenItems(); //from tile.js
 	
 	//Create the Discard grid
 	showRuntime("BOOT: Creating tabs system");
@@ -128,18 +128,53 @@ async function init(){
 		saveSettings();
 	}
 	
+	//Bottom pagination
+	if(appSettings.general.topPagination){
+		$("#vvp-items-grid-container .topPagination").remove();
+		$(".a-pagination").parent().css("margin-top","10px").clone().insertAfter("#vvp-items-grid-container p").addClass("topPagination");
+	}
+	
+	
 	//Browse each items from the Regular grid
 	//- Create an array of all the products listed on the page
 	//- Create an empty toolbar for the item tile
+	await generateToolbars();
+	showRuntime("done creating toolbars.");
+	
+	//Only contact the 3rd party server is necessary
+	
+	if(appSettings.unavailableTab.active || appSettings.general.displayETV || appSettings.general.displayFirstSeen){
+		fetchData(getAllAsin());//Obtain the data to fill the toolbars with it.
+	}
+	
+	
+	if(tabSystem){
+		updateTileCounts();
+	}
+}
+
+function getAllAsin(){
 	var tile;
 	var arrUrl = []; //Will be use to store the URL identifier of the listed products.
-	$(".vvp-item-tile").each(function(){
-		
-		tile = new Tile($(this), gridRegular);
+	var arrObj = $(".vvp-item-tile");
+	for(let i = 0; i < arrObj.length; i++){
+		tile = new Tile($(arrObj[i]), gridRegular);
 		arrUrl.push(tile.getAsin());
+	}
+	return arrUrl;
+}
+
+async function generateToolbars(){
+	var tile;
+	var arrObj = $(".vvp-item-tile");
+	var obj = null;
+	for(let i = 0; i < arrObj.length; i++){
+		obj = arrObj[i];
+		tile = new Tile($(obj), gridRegular);
+		
 		
 		//Add a container for the image and place the image in it.
-		let img = $(this).children(".vvp-item-tile-content").children("img");
+		let img = $(obj).children(".vvp-item-tile-content").children("img");
 		let imgContainer = $("<div>")
 			.addClass("ext-helper-img-container")
 			.insertBefore($(img));
@@ -163,32 +198,18 @@ async function init(){
 		}
 		
 		t = new Toolbar(tile);
-		t.createProductToolbar();
-	});
-	
-	if(tabSystem){
-		updateTileCounts();
+		await t.createProductToolbar();
 	}
 	
-	
-	
-	//Bottom pagination
-	if(appSettings.general.topPagination){
-		$("#vvp-items-grid-container .topPagination").remove();
-		$(".a-pagination").parent().css("margin-top","10px").clone().insertAfter("#vvp-items-grid-container p").addClass("topPagination");
-	}
-	
-	//Only contact the 3rd party server is necessary
-	if(appSettings.unavailableTab.active || appSettings.general.displayETV || appSettings.general.displayFirstSeen)
-		fetchData(arrUrl);//Obtain the data to fill the toolbars with it.
 }
-
 
 
 //Get data from the server about the products listed on this page
 function fetchData(arrUrl){
 	let arrJSON = {"api_version":4, "action": "getinfo", "country": vineCountry, "arr_asin":arrUrl};
 	let jsonArrURL = JSON.stringify(arrJSON);
+	
+	showRuntime("Fetching products data...");
 	
 	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
 	let url = "https://www.francoismazerolle.ca/vinehelper.php"
@@ -209,7 +230,6 @@ function fetchData(arrUrl){
 //Process the results obtained from the server
 //Update each tile with the data pertaining to it.
 function serverResponse(data){
-	
 	if(data["api_version"]!=4){
 		console.log("Wrong API version");
 	}
@@ -221,6 +241,7 @@ function serverResponse(data){
 		if(tile==null)
 			console.log("No tile matching " + key);
 		
+		showRuntime("updating toolbar...");
 		if(values.etv_min != null){
 			if(values.etv_min == values.etv_max)
 				tile.getToolbar().setETV(values.etv_min);

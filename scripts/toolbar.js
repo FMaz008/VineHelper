@@ -81,6 +81,8 @@ function Toolbar(tileInstance){
 			this.updateVisibilityIcon();
 		}
 		
+		
+		showRuntime("Toolbar created");
 	};
 	
 	this.updateVisibilityIcon = function(){

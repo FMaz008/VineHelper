@@ -98,6 +98,8 @@ function createGridInterface(){
 			
 			
 		//Add the toolbar for Hide All & Show All
+		//Delete the previous one if any exist:
+		$("#ext-helper-tabs .hidden-toolbar").remove();
 		a1 = $("<a>")
 			.attr("href", "#")
 			.attr("onclick", "return false;")
