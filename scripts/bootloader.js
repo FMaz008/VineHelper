@@ -145,14 +145,68 @@ async function init(){
 	
 	if(appSettings.unavailableTab.active || appSettings.general.displayETV || appSettings.general.displayFirstSeen){
 		fetchData(getAllAsin());//Obtain the data to fill the toolbars with it.
+		
+		if(appSettings.general.newItemNotification){
+			//Display a notification to activate the sound
+			soundUrl = chrome.runtime.getURL("notification.mp3");
+			let note = new ScreenNotification();
+			note.title = "Activate your browser sound";
+			note.lifespan = 10;
+			note.content = "Sounds are only allowed to play if enough interaction has been done on the page. To ensure your sound works, click this button: <input type='button' onclick='new Audio(\""+soundUrl+"\").play();' value='Sound check' />";
+			await Notifications.pushNotification(note);
+			
+			
+			checkNewItems();
+		}
 	}
-	
 	
 	if(tabSystem){
 		updateTileCounts();
 	}
 }
-
+function checkNewItems(){
+	let arrJSON = {"api_version":4, "country": vineCountry, "orderby":"date", "limit":1};
+	let jsonArrURL = JSON.stringify(arrJSON);
+	
+	showRuntime("Fetching most recent products data...");
+	
+	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
+	let url = "https://francoismazerolle.ca/vineHelperLatest.php"
+			+ "?data=" + jsonArrURL;
+	fetch(url)
+		.then((response) => response.json())
+		.then(async function(response){
+			latestProduct = response.products[0];
+			if(appSettings.general.latestProduct == undefined || latestProduct.date > appSettings.general.latestProduct){
+				appSettings.general.latestProduct = latestProduct.date;
+				saveSettings();
+				
+				let note = new ScreenNotification();
+				note.title = "New item(s) detected !";
+				note.lifespan = 60;
+				note.sound = "notification.mp3";
+				note.content = "Most recent item: <a href='/dp/" + latestProduct.asin + "' target='_blank'>" + latestProduct.asin + "</a><br />Server time: " + latestProduct.date;
+				await Notifications.pushNotification(note);
+				
+				
+			}
+			
+			//Display a notification that we have checked for items.
+			let note = new ScreenNotification();
+			note.title = "Checking for new items...";
+			note.lifespan = 3;
+			note.content = "Vine Helper just checked for new items.<br />Most recent item's (server time):<br /> " + appSettings.general.latestProduct;
+			await Notifications.pushNotification(note);
+			
+			//Repeat another check in 30 seconds.
+			setTimeout(function(){checkNewItems()}, 30000);
+		})
+		.catch( 
+			function() {
+				error =>  console.log(error);
+			}
+		);
+}
 function getAllAsin(){
 	var tile;
 	var arrUrl = []; //Will be use to store the URL identifier of the listed products.

@@ -173,6 +173,7 @@ function init() {
     manageCheckboxSetting("general.displayETV");
     manageCheckboxSetting("general.displayVariantIcon");
     manageCheckboxSetting("general.displayFirstSeen");
+    manageCheckboxSetting("general.newItemNotification");
     manageCheckboxSetting("hiddenTab.active");
     manageCheckboxSetting("hiddenTab.remote");
     manageCheckboxSetting("discord.active"); //Handled manually
