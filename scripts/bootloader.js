@@ -210,7 +210,9 @@ function getAllAsin(){
 	var arrUrl = []; //Will be use to store the URL identifier of the listed products.
 	var arrObj = $(".vvp-item-tile");
 	for(let i = 0; i < arrObj.length; i++){
-		tile = new Tile($(arrObj[i]), gridRegular);
+		//Create the tile and assign it to the main grid
+		obj = arrObj[i];
+		tile = getTileByAsin(getAsinFromDom(obj));
 		arrUrl.push(tile.getAsin());
 	}
 	return arrUrl;
@@ -221,9 +223,8 @@ async function generateToolbars(){
 	var arrObj = $(".vvp-item-tile");
 	var obj = null;
 	for(let i = 0; i < arrObj.length; i++){
-		obj = arrObj[i];
-		tile = new Tile($(obj), gridRegular);
 		
+		tile = new Tile($(arrObj[i]), gridRegular);
 		
 		//Add a container for the image and place the image in it.
 		let img = $(obj).children(".vvp-item-tile-content").children("img");
