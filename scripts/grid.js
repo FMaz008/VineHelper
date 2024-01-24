@@ -55,13 +55,14 @@ function Grid(obj)
 
 function updateTileCounts(){
 	//Calculate how many tiles within each grids
-	$("#ext-helper-available-count").text(gridRegular.getTileCount());
+	if(appSettings.unavailableTab.active || appSettings.hiddenTab.active)
+		$("#ext-helper-available-count").text(gridRegular.getTileCount(true));
 	
 	if(appSettings.unavailableTab.active)
-		$("#ext-helper-unavailable-count").text(gridUnavailable.getTileCount());
+		$("#ext-helper-unavailable-count").text(gridUnavailable.getTileCount(true));
 	
 	if(appSettings.hiddenTab.active)
-		$("#ext-helper-hidden-count").text(gridHidden.getTileCount());
+		$("#ext-helper-hidden-count").text(gridHidden.getTileCount(true));
 }
 
 

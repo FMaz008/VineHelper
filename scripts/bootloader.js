@@ -145,7 +145,7 @@ async function init(){
 	//Only contact the 3rd party server is necessary
 	
 	if(appSettings.unavailableTab.active || appSettings.general.displayETV || appSettings.general.displayFirstSeen){
-		fetchData(getAllAsin());//Obtain the data to fill the toolbars with it.
+		await fetchData(getAllAsin());//Obtain the data to fill the toolbars with it.
 		
 		if(appSettings.general.newItemNotification){
 			//Display a notification to activate the sound
@@ -159,10 +159,6 @@ async function init(){
 			
 			checkNewItems();
 		}
-	}
-	
-	if(tabSystem){
-		updateTileCounts();
 	}
 }
 function checkNewItems(){
@@ -325,6 +321,7 @@ function serverResponse(data){
 			tile.getToolbar().updateToolbar();
 		}
 	});
+	
 	
 	updateTileCounts();
 }
