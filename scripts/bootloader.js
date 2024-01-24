@@ -189,14 +189,15 @@ function checkNewItems(){
 				await Notifications.pushNotification(note);
 				
 				
-			}
+			} else {
 			
-			//Display a notification that we have checked for items.
-			let note = new ScreenNotification();
-			note.title = "Checking for new items...";
-			note.lifespan = 3;
-			note.content = "Vine Helper just checked for new items.<br />Most recent item's (server time):<br /> " + appSettings.general.latestProduct;
-			await Notifications.pushNotification(note);
+				//Display a notification that we have checked for items.
+				let note = new ScreenNotification();
+				note.title = "No new items...";
+				note.lifespan = 3;
+				note.content = "Vine Helper just checked for new items.<br />Most recent item's (server time):<br /> " + appSettings.general.latestProduct;
+				await Notifications.pushNotification(note);
+			}
 			
 			//Repeat another check in 30 seconds.
 			setTimeout(function(){checkNewItems()}, 30000);
