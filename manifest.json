@@ -52,9 +52,11 @@
 		"lib/jquery_ui/images/ui-icons_cc0000_256x240.png",
 		"lib/jquery_ui/images/ui-icons_ffffff_256x240.png",
 		"view/toolbar.html",
+		"view/notification_container.html",
 		"view/notification_default.html",
 		"view/notification_sound.html",
-		"view/notification_container.html",
+		"view/widget_voting.html",
+		"view/widget_voting_compact.html",
 		"notification.mp3",
 		"scripts/inj.js"
 		],

@@ -1,0 +1,6 @@
+<div class="ext-helper-voting-widget">
+	Available?
+	<a href="#{{$asin}}" id="ext-helper-reportlink-{{$asin}}-no" class="ext-helper-reportlink-good {{if selected_yes}}selectedVote{{endif}}" onclick="return false;">Yes ({{$vote_no_fees}})</a>
+	/
+	<a href="#{{$asin}}" id="ext-helper-reportlink-{{$asin}}-yes" class="ext-helper-reportlink-bad {{if selected_no}}selectedVote{{endif}}" onclick="return false;">No ({{$vote_with_fees}})</a>
+</div>

@@ -11,13 +11,12 @@ function Toolbar(tileInstance){
 		let anchorTo = $(pTile.getDOM()).children(".vvp-item-tile-content");
 		
 		//Load the toolbar template
-		let tpl = new Template();
-		await tpl.loadFile(chrome.runtime.getURL("view/toolbar.html"));
-		tpl.setVar("toolbarId", toolbarId);
-		tpl.setVar("asin", pTile.getAsin());
-		tpl.setIf("announce", appSettings.discord.active && appSettings.discord.guid != null && vineQueue != null);
-		tpl.setIf("toggleview", appSettings.hiddenTab.active);
-		let content = tpl.render();
+		const prom = await Tpl.loadFile(chrome.runtime.getURL("view/toolbar.html"));
+		Tpl.setVar("toolbarId", toolbarId);
+		Tpl.setVar("asin", pTile.getAsin());
+		Tpl.setIf("announce", appSettings.discord.active && appSettings.discord.guid != null && vineQueue != null);
+		Tpl.setIf("toggleview", appSettings.hiddenTab.active);
+		let content = Tpl.render(prom);
 		
 		pToolbar = $(content).prependTo(anchorTo);
 		let container = $("#" + toolbarId + " .ext-helper-status-container2");
@@ -81,8 +80,6 @@ function Toolbar(tileInstance){
 			this.updateVisibilityIcon();
 		}
 		
-		
-		showRuntime("Toolbar created");
 	};
 	
 	this.updateVisibilityIcon = function(){
@@ -136,7 +133,7 @@ function Toolbar(tileInstance){
 	}
 	
 	//This method is called from bootloader.js, serverResponse() when the voting data has been received, after the tile was moved.
-	this.updateToolbar = function (){
+	this.updateToolbar = async function (){
 		let context = $("#ext-helper-toolbar-" + pTile.getAsin());
 		let icon = $(context).find(".ext-helper-icon");
 		let container = $(context).find("div.ext-helper-status-container2");
@@ -206,15 +203,15 @@ function Toolbar(tileInstance){
 		//Display voting system if active.
 		if(appSettings.unavailableTab.active){
 			if(tile.wasOrdered()){
-				createOrderWidget();
+				await createOrderWidget();
 			}else{
-				createVotingWidget();
+				await createVotingWidget();
 			}
 		}
 	}
 
 	//Create the voting widget part of the toolbar
-	function createVotingWidget(){
+	async function createVotingWidget(){
 		let context = $("#ext-helper-toolbar-" + pTile.getAsin());
 		let container = $(context).find("div.ext-helper-status-container2");
 		
@@ -222,57 +219,37 @@ function Toolbar(tileInstance){
 		$(container).children(".ext-helper-order-widget").remove();
 		$(container).children(".ext-helper-voting-widget").remove();
 		
-		let pe; //Parent Element
-		let v1, v0; //VoteFees(1), VoteNoFees(0)
-		pe = $("<div />")
-			.addClass("ext-helper-voting-widget")
-			.text("")
-			.appendTo(container);
-		v0 = $("<a />")
-			.attr("href", "#" + pTile.getAsin())
-			.attr("id", "ext-helper-reportlink-"+pTile.getAsin()+"-no")
-			.addClass("ext-helper-reportlink-good")
-			.attr("onclick", "return false;")
-			.html("&#9745; Yes ("+pTile.getVoteNoFees()+")")
-			.appendTo(pe);
-		$("<span />")
-			.text(" / ")
-			.appendTo(pe);
-		v1 = $("<a />")
-			.attr("href", "#" + pTile.getAsin())
-			.attr("id", "ext-helper-reportlink-"+pTile.getAsin()+"-yes")
-			.addClass("ext-helper-reportlink-bad")
-			.attr("onclick", "return false;")
-			.html("&#11199; No ("+pTile.getVoteFees()+")")
-			.appendTo(pe);
+		//Generate the html for the voting widget
+		let prom;
+		if(appSettings.unavailableTab.compactToolbar)
+			prom = await Tpl.loadFile(chrome.runtime.getURL("view/widget_voting_compact.html"));
+		else
+			prom = await Tpl.loadFile(chrome.runtime.getURL("view/widget_voting.html"));
+		
+		Tpl.setVar("asin", pTile.getAsin());
+		Tpl.setVar("vote_no_fees", pTile.getVoteNoFees());
+		Tpl.setVar("vote_with_fees", pTile.getVoteFees());
+		Tpl.setIf("selected_yes", pTile.getVoteOwn() == 0);
+		Tpl.setIf("selected_no", pTile.getVoteOwn() == 1);
+		let content = Tpl.render(prom);
+		$(content).appendTo(container);
+		
 		
 		if(appSettings.thorvarium.smallItems){
 			$(".compact div.ext-helper-voting-widget").css("clear", "both");
 		}
 		
-		if(appSettings.unavailableTab.compactToolbar){
-			//Make the content of the toolbar as compact as possible
-			v0.html("&#9745; ("+pTile.getVoteNoFees()+")");
-			v1.html("&#11199; ("+pTile.getVoteFees()+")")
-		}else{
-			pe.prepend("Available? ");
-		}
+		//Bind the click events
+		context.find(".ext-helper-reportlink-bad").on('click', {'asin': pTile.getAsin(), 'fees': 1}, reportfees);
+		context.find(".ext-helper-reportlink-good").on('click', {'asin': pTile.getAsin(), 'fees': 0}, reportfees);
 		
-		v1.on('click', {'asin': pTile.getAsin(), 'fees': 1}, reportfees);
-		v0.on('click', {'asin': pTile.getAsin(), 'fees': 0}, reportfees);
-
 		//Make the widget transparent if the user voted "no fees"
 		//Note: If we voted "fees", the entire card will be transparent.
 		//      If we have not voted, we want the option to remain visible.
-		pe.css('opacity', (pTile.getVoteOwn() != null) ? 0.4 : 1.0); 
+		context.find(".ext-helper-voting-widget").css('opacity', (pTile.getVoteOwn() != null) ? 0.4 : 1.0); 
 		
-		if(pTile.getVoteOwn() == 1){
-			v1.addClass("selectedVote");
-		}
-		if(pTile.getVoteOwn() == 0){
-			v0.addClass("selectedVote");
-		}
 	}
+	
 	
 	
 	//Create the order widget part of the toolbar

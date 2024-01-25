@@ -294,7 +294,6 @@ function serverResponse(data){
 		if(tile==null)
 			console.log("No tile matching " + key);
 		
-		showRuntime("updating toolbar...");
 		if(values.etv_min != null){
 			if(values.etv_min == values.etv_max)
 				tile.getToolbar().setETV(values.etv_min);

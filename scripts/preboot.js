@@ -267,6 +267,9 @@ function discardedItemGarbageCollection(){
 	}
 }
 
+function getRunTime(){
+	return (Date.now() - startTime);
+}
 function showRuntime(eventName){
 	//console.log(eventName+": "+ (Date.now() - startTime) + "ms");
 }

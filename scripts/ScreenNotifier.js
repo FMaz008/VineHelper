@@ -12,12 +12,11 @@ function ScreenNotification(){
 	//Render the notification HTML.
 	this.render = async function(){
 		
-		let tpl = new Template();
-		await tpl.loadFile(this.template);
-		tpl.setVar("id", this.id);
-		tpl.setVar("title", this.title);
-		tpl.setVar("content", this.content);
-		return tpl.render();
+		const prom = await Tpl.loadFile(this.template);
+		Tpl.setVar("id", this.id);
+		Tpl.setVar("title", this.title);
+		Tpl.setVar("content", this.content);
+		return Tpl.render(prom);
 	}
 	
 }
@@ -28,9 +27,8 @@ function ScreenNotifier(){
 		//Delete preexisting containers
 		$("#ext-helper-notifications-container").remove();
 		//Load the container
-		let tpl = new Template();
-		await tpl.loadFile( chrome.runtime.getURL("view/notification_container.html"));
-		$("body").append(tpl.render());
+		const prom = await Tpl.loadFile( chrome.runtime.getURL("view/notification_container.html"));
+		$("body").append(Tpl.render(prom));
 	}
 	init();
 	
