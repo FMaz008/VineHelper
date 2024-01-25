@@ -152,9 +152,9 @@ function init() {
         $("#discord-guid-unlink").hide();
     });
 
-    function manageCheckboxSetting(key) {
-        let val = JSONGetPathValue(appSettings, key);
-
+    function manageCheckboxSetting(key, def = null) {
+		let val = def===null ? JSONGetPathValue(appSettings, key) : def;
+		
         setCB(key, val);
 
         $(`label[for='${$.escapeSelector(key)}']`).on("click", async function () {
@@ -164,10 +164,12 @@ function init() {
             await chrome.storage.local.set({ settings: appSettings });
         });
     }
+	
+	
 
     manageCheckboxSetting("general.allowInjection");
     manageCheckboxSetting("general.topPagination");
-    manageCheckboxSetting("general.versionInfoPopup");
+    manageCheckboxSetting("general.versionInfoPopup", false);
     manageCheckboxSetting("general.firstVotePopup");
     manageCheckboxSetting("general.shareETV");
     manageCheckboxSetting("general.displayETV");

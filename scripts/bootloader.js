@@ -223,14 +223,14 @@ async function generateToolbars(){
 	var arrObj = $(".vvp-item-tile");
 	var obj = null;
 	for(let i = 0; i < arrObj.length; i++){
-		
-		tile = new Tile($(arrObj[i]), gridRegular);
+		obj = $(arrObj[i]);
+		tile = new Tile(obj, gridRegular);
 		
 		//Add a container for the image and place the image in it.
-		let img = $(obj).children(".vvp-item-tile-content").children("img");
+		let img = obj.children(".vvp-item-tile-content").children("img");
 		let imgContainer = $("<div>")
 			.addClass("ext-helper-img-container")
-			.insertBefore($(img));
+			.insertBefore(img);
 		$(img).detach().appendTo($(imgContainer));
 		
 		//Move the hidden item to the hidden tab
@@ -241,7 +241,7 @@ async function generateToolbars(){
 		
 		if(appSettings.general.displayVariantIcon){
 			//Check if the item is a parent ASIN (as variants)
-			let variant = $(tile.getDOM()).find(".a-button-input").attr("data-is-parent-asin");
+			let variant = obj.find(".a-button-input").attr("data-is-parent-asin");
 			if(variant == "true"){
 				$("<div>")
 					.addClass("ext-helper-variant-indicator-container")
