@@ -186,9 +186,8 @@ function checkNewItems(){
 			
 				//Display a notification that we have checked for items.
 				let note = new ScreenNotification();
-				note.title = "No new items...";
+				note.template = chrome.runtime.getURL("view/notification_loading.html")
 				note.lifespan = 3;
-				note.content = "Vine Helper just checked for new items.<br />Most recent item's (server time):<br /> " + appSettings.general.latestProduct;
 				await Notifications.pushNotification(note);
 			}
 			

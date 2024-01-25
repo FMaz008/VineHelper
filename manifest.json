@@ -54,6 +54,7 @@
 		"view/toolbar.html",
 		"view/notification_container.html",
 		"view/notification_default.html",
+		"view/notification_loading.html",
 		"view/notification_sound.html",
 		"view/widget_voting.html",
 		"view/widget_voting_compact.html",
