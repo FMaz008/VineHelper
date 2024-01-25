@@ -42,14 +42,14 @@ window.fetch = async (...args) => {
 					"parent_asin": lastParent,
 					"asin": asin}}, "*");
 		}else if(datap.error == null){
-			if (datap.result.itemAsin == asin){
+			//if (datap.result.itemAsin == asin){
 				
 				window.postMessage({type: "order", data: {
 					"status": "success",
 					"error": null,
 					"parent_asin": lastParent,
 					"asin": asin}}, "*");
-			}
+			//}
 		}
 		
 	}
