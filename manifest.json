@@ -57,6 +57,9 @@
 		"view/notification_sound.html",
 		"view/widget_voting.html",
 		"view/widget_voting_compact.html",
+		"view/popup_firstvote.html",
+		"view/popup_changelog.html",
+		"view/infinite_wheel_fix.html",
 		"notification.mp3",
 		"scripts/inj.js"
 		],

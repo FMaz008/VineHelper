@@ -116,15 +116,10 @@ async function init(){
 	
 	//Show version info popup
 	if(appVersion != appSettings.general.versionInfoPopup){
-		showModalDialog("Vine Helper update info",
-			"<strong>Version " + appVersion + " change notes:</strong><br />"
-			+ "<br />- Vine Helper can now detect when an item is ordered, or failed to be ordered and use that data to overule the votes."
-			+ "<br />- Bugfix: using the compact toolbar, a voted item could not be hidden."
-			+ "<br />- The hidden items can now be stored on the server to allow for multi-device shared use."
-			+ "<br />- Get notified when new items are reported to the home server."
-			+ "<br />- Note: The mobile browser <strong>Kiwi</strong> for android support Vine Helper."
-			+ "<br /><br /><em>This message will self destruct after its closure.</em>"
-		,600);
+		prom = await Tpl.loadFile(chrome.runtime.getURL("view/popup_changelog.html"));
+		Tpl.setVar("appVersion", appVersion);
+		let content = Tpl.render(prom);
+		showModalDialog("Vine Helper update info", content ,600);
 		appSettings.general.versionInfoPopup = appVersion;
 		saveSettings();
 	}
@@ -149,13 +144,14 @@ async function init(){
 		
 		if(appSettings.general.newItemNotification){
 			//Display a notification to activate the sound
+			/*
 			soundUrl = chrome.runtime.getURL("notification.mp3");
 			let note = new ScreenNotification();
 			note.title = "Activate your browser sound";
 			note.lifespan = 10;
 			note.content = "Sounds are only allowed to play if enough interaction has been done on the page. To ensure your sound works, click this button: <input type='button' onclick='new Audio(\""+soundUrl+"\").play();' value='Sound check' />";
 			await Notifications.pushNotification(note);
-			
+			*/
 			
 			checkNewItems();
 		}
@@ -370,24 +366,9 @@ async function reportfees(event){
 	
 	//Show version info popup
 	if(appSettings.general.firstVotePopup){
-		showModalDialog("Vine Helper - voting feature",
-			"<strong>You casted your first vote!</strong><br />"
-			+ "<br />We vote to mark items available or unavailable to order. (not if we like them or not)"
-			+ "<br />We vote an item unavailable to order (<strong>No</strong>) when it has: "
-			+ "<br />- Shipping fees"
-			+ "<br />- Importation fees"
-			+ "<br />- When a 3rd party seller is selling the same item, but with a fee"
-			+ "<br />- Any <strong>red error</strong> when trying to order an item, <strong>except</strong> those caused by shipping restrictions."
-			+ "<br />"
-			+ "<br />We vote an item available to order (<strong>Yes</strong>) when it has:"
-			+ "<br />- Free shipping, <strong>and</strong>"
-			+ "<br />- no fees, <strong>and</strong>"
-			+ "<br />- no 3rd party sellers with fees"
-			+ "<br />- <strong>OR</strong> when you actually order it successfully."
-			+ "<br />"
-			+ "<br />Happy hunting!"
-			
-		,600);
+		prom = await Tpl.loadFile(chrome.runtime.getURL("view/popup_firstvote.html"));
+		let content = Tpl.render(prom);
+		showModalDialog("Vine Helper - voting feature", content ,600);
 		appSettings.general.firstVotePopup = false;
 		saveSettings();
 	}
@@ -404,23 +385,13 @@ window.addEventListener("message", async function(event) {
 	//If we got back a message after we fixed an infinite wheel spin.
     if (event.data.type && (event.data.type == "infiniteWheelFixed")) {
         //console.log("Content script received message: " + event.data.text);
-			
-		let healingAnim = $("<div>")
-				.attr("id", "ext-helper-healing")
-				.addClass("ext-helper-healing")
-				.prependTo("#a-popover-content-3");
-		$("<div>")
-			.addClass("ext-helper-icon-healing")
-			.appendTo(healingAnim);
 		
-		let textContainer = $("<div>")
-			.attr("id", "ext-helper-healing-text")
-			.addClass("ext-helper-healing-container")
-			.hide()
-			.prependTo($("#a-popover-content-3"));
-		$("<span>")
-			.text("Vine Helper magical fixing in progress...")
-			.appendTo(textContainer);
+		prom = await Tpl.loadFile(chrome.runtime.getURL("view/infinite_wheel_fix.html"));
+		let content = Tpl.render(prom);
+		
+		$("#a-popover-content-3").prepend(content);
+		let textContainer = $("#ext-helper-healing-text").hide();//Begin the animation hidden
+		let healingAnim = $("#ext-helper-healing");
 		
 		await textContainer.slideDown("slow").promise();
 		await healingAnim.delay(1000).animate({opacity: "hide"},{duration: 500}).promise();

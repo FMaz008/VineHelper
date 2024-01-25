@@ -33,7 +33,7 @@ window.fetch = async (...args) => {
 		}
 		
 		let datap = extHelper_responseData;
-		if(datap.error == "CROSS_BORDER_SHIPMENT"){
+		if(datap.error == "CROSS_BORDER_SHIPMENT"){ //SCHEDULED_DELIVERY_REQUIRED
 			console.log("Item "+asin+ " (parent:"+lastParent+") order failed: " +datap.error);
 			
 			window.postMessage({type: "order", data: {
@@ -133,6 +133,7 @@ window.fetch = async (...args) => {
 		//Return mocked response
 		return new Response(JSON.stringify(extHelper_responseData));
 	}else{
+		
 		//console.log("Request is not a product: ", args[0]);
 		return response;
 	}
