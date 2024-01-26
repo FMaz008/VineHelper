@@ -192,7 +192,7 @@ function checkNewItems(){
 			}
 			
 			//Repeat another check in 30 seconds.
-			setTimeout(function(){checkNewItems()}, 30000);
+			setTimeout(function(){checkNewItems()}, 60000);
 		})
 		.catch( 
 			function() {

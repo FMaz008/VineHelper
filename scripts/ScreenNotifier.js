@@ -60,7 +60,13 @@ function ScreenNotifier(){
 	}
 	
 	this.removeNote = async function(obj){
-		await $(obj).fadeOut().promise();
+		//await $(obj).fadeOut().promise();
+		await $(obj).animate({
+			opacity: 0,
+			left: "+=50",
+		  }, 1000, function() {
+			// Animation complete.
+		  }).promise();
 		$(obj).remove();
 	}
 }

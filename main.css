@@ -442,6 +442,7 @@ div.ext-helper-info-container{
 	border:1px solid #000;
 	pointer-events: auto;
 	margin-bottom:10px;
+	position:relative;
 }
 
 .ext-helper-notification-toolbar{
@@ -456,4 +457,12 @@ div.ext-helper-info-container{
 
 .ext-helper-notification-close{
 	float:right;
+}
+
+.ext-helper-notification-loading{
+	position: relative;
+	margin-left:auto;
+	margin-right: 0;
+	width: 30px;
+	height: 30px;
 }
