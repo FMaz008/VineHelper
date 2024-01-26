@@ -157,11 +157,17 @@ async function init(){
 		}
 	}
 }
-function checkNewItems(){
-	let arrJSON = {"api_version":4, "country": vineCountry, "orderby":"date", "limit":1};
+async function checkNewItems(){
+	let arrJSON = {"api_version":4, "country": vineCountry, "orderby":"date", "limit":10};
 	let jsonArrURL = JSON.stringify(arrJSON);
 	
 	showRuntime("Fetching most recent products data...");
+	
+	//Display a notification that we have checked for items.
+	let note = new ScreenNotification();
+	note.template = chrome.runtime.getURL("view/notification_loading.html")
+	note.lifespan = 3;
+	await Notifications.pushNotification(note);
 	
 	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
 	let url = "https://francoismazerolle.ca/vineHelperLatest.php"
@@ -169,29 +175,25 @@ function checkNewItems(){
 	fetch(url)
 		.then((response) => response.json())
 		.then(async function(response){
-			latestProduct = response.products[0];
-			if(appSettings.general.latestProduct == undefined || latestProduct.date > appSettings.general.latestProduct){
-				appSettings.general.latestProduct = latestProduct.date;
-				saveSettings();
+			for(let i = response.products.length-1; i>=0; i--){
+				if(appSettings.general.latestProduct == undefined || response.products[i].date > appSettings.general.latestProduct){
 				
-				let note = new ScreenNotification();
-				note.title = "New item(s) detected !";
-				note.lifespan = 60;
-				note.sound = "resource/sound/notification.mp3";
-				note.content = "Most recent item: <a href='/dp/" + latestProduct.asin + "' target='_blank'>" + latestProduct.asin + "</a><br />Server time: " + latestProduct.date;
-				await Notifications.pushNotification(note);
-				
-				
-			} else {
-			
-				//Display a notification that we have checked for items.
-				let note = new ScreenNotification();
-				note.template = chrome.runtime.getURL("view/notification_loading.html")
-				note.lifespan = 3;
-				await Notifications.pushNotification(note);
+					let note = new ScreenNotification();
+					note.title = "New item(s) detected !";
+					note.lifespan = 60;
+					note.sound = "resource/sound/notification.mp3";
+					note.content = "Most recent item: <a href='/dp/" + response.products[i].asin + "' target='_blank'>" + response.products[i].asin + "</a><br />Server time: " + response.products[i].date;
+					await Notifications.pushNotification(note);
+					
+					if(i ==0){
+						appSettings.general.latestProduct = response.products[0].date;
+						saveSettings();
+					}
+				}
 			}
 			
-			//Repeat another check in 30 seconds.
+			
+			//Repeat another check in 60 seconds.
 			setTimeout(function(){checkNewItems()}, 60000);
 		})
 		.catch( 
@@ -472,7 +474,6 @@ function showModalDialog(title, text, width=400, sound=null){
 	
 	  $( function() {
 		$( "#ext-helper-dialog" ).dialog({
-		  autoOpen: true,
 		  modal:true,
 		  width: w,
 		  show: {
