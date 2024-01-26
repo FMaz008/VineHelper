@@ -2,6 +2,9 @@
 //          The console used is the browser console, not the inspector console.
 
 var appSettings = {};
+let manifest = chrome.runtime.getManifest();
+appVersion = manifest.version;
+$("#version").text(appVersion);
 
 async function loadSettings() {
     const data = await chrome.storage.local.get("settings");
