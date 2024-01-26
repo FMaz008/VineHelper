@@ -428,7 +428,7 @@ div.ext-helper-info-container{
 	top:0;
 	bottom:0;
 	width:300px;
-	z-index:99999;
+	z-index:1008;
 	pointer-events: none;
 	display: flex;
 	justify-content: flex-end;

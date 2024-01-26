@@ -203,7 +203,7 @@ function Toolbar(tileInstance){
 		//Display voting system if active.
 		if(appSettings.unavailableTab.active){
 			if(tile.wasOrdered()){
-				await createOrderWidget();
+				await this.createOrderWidget();
 			}else{
 				await createVotingWidget();
 			}
@@ -253,7 +253,17 @@ function Toolbar(tileInstance){
 	
 	
 	//Create the order widget part of the toolbar
-	function createOrderWidget(){
+	//Can ben called by bootloader when receiving order messages
+	this.createOrderWidget = function(status = null){
+		
+		if(status!=null){
+			//Get the current order info
+			let success = status ? pTile.getOrderSuccess() +1 : pTile.getOrderSuccess();
+			let failed  = !status ? pTile.getOrderFailed() +1 : pTile.getOrderFailed();
+			pTile.setOrders(success, failed);
+		}
+		
+		
 		let context = $("#ext-helper-toolbar-" + pTile.getAsin());
 		let container = $(context).find("div.ext-helper-status-container2");
 		

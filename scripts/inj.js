@@ -33,7 +33,7 @@ window.fetch = async (...args) => {
 		}
 		
 		let datap = extHelper_responseData;
-		if(datap.error == "CROSS_BORDER_SHIPMENT"){ //SCHEDULED_DELIVERY_REQUIRED
+		if(datap.error == "CROSS_BORDER_SHIPMENT"){
 			console.log("Item "+asin+ " (parent:"+lastParent+") order failed: " +datap.error);
 			
 			window.postMessage({type: "order", data: {
@@ -50,7 +50,9 @@ window.fetch = async (...args) => {
 					"parent_asin": lastParent,
 					"asin": asin}}, "*");
 			//}
-		}
+		} else { //SCHEDULED_DELIVERY_REQUIRED
+			
+		} //Other errors
 		
 	}
 	
