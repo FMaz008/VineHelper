@@ -119,7 +119,7 @@ async function init(){
 		prom = await Tpl.loadFile(chrome.runtime.getURL("view/popup_changelog.html"));
 		Tpl.setVar("appVersion", appVersion);
 		let content = Tpl.render(prom);
-		showModalDialog("Vine Helper update info", content ,600, "resource/sound/upgrade.mp3");
+		showModalDialog("Vine Helper update info", content ,600);
 		appSettings.general.versionInfoPopup = appVersion;
 		saveSettings();
 	}
