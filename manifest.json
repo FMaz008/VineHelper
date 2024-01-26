@@ -62,6 +62,7 @@
 		"view/popup_changelog.html",
 		"view/infinite_wheel_fix.html",
 		"resource/sound/notification.mp3",
+		"resource/sound/upgrade.mp3",
 		"scripts/inj.js"
 		],
       "matches": ["<all_urls>"]

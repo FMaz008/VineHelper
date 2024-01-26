@@ -114,12 +114,12 @@ async function init(){
 	
 	
 	
-	//Show version info popup
+	//Show version info popup : new version
 	if(appVersion != appSettings.general.versionInfoPopup){
 		prom = await Tpl.loadFile(chrome.runtime.getURL("view/popup_changelog.html"));
 		Tpl.setVar("appVersion", appVersion);
 		let content = Tpl.render(prom);
-		showModalDialog("Vine Helper update info", content ,600);
+		showModalDialog("Vine Helper update info", content ,600, "resource/sound/upgrade.mp3");
 		appSettings.general.versionInfoPopup = appVersion;
 		saveSettings();
 	}
@@ -363,11 +363,12 @@ async function reportfees(event){
 	let arrUrl = [asin];
 	fetchData(arrUrl);
 	
-	//Show version info popup
+	//Show first vote popup
 	if(appSettings.general.firstVotePopup){
+		
 		prom = await Tpl.loadFile(chrome.runtime.getURL("view/popup_firstvote.html"));
 		let content = Tpl.render(prom);
-		showModalDialog("Vine Helper - voting feature", content ,600);
+		showModalDialog("Vine Helper - voting feature", content ,600, "resource/sound/upgrade.mp3");
 		appSettings.general.firstVotePopup = false;
 		saveSettings();
 	}
@@ -456,8 +457,14 @@ window.addEventListener("message", async function(event) {
 	}
 });
 
-function showModalDialog(title, text, width=400){
+function showModalDialog(title, text, width=400, sound=null){
 	var w = width;
+	
+	if(sound){
+		const audioElement = new Audio(chrome.runtime.getURL(sound));
+		audioElement.play();
+	}
+	
 	$("#ext-helper-dialog").remove();
 	$("<div id=\"ext-helper-dialog\" title=\"" + title + "\">").appendTo("body")
 		.append("<p>")
