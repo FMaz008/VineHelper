@@ -203,8 +203,8 @@ async function getSettings(){
 	appVersion = manifest.version;
 	
 	
-	//If the domain is not Canada, de-activate the voting system/unavailable tab
-	if(["ca", "co.uk"].indexOf(vineDomain) == -1){
+	//If the domain is not Canada, UK or France, de-activate the voting system/unavailable tab
+	if(["ca", "co.uk", "fr"].indexOf(vineDomain) == -1){
 		appSettings.unavailableTab.active = false;
 		appSettings.unavailableTab.shareOrder = false;
 		appSettings.unavailableTab.compactToolbar = true;
