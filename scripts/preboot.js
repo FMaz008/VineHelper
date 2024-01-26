@@ -71,7 +71,7 @@ async function convertOldSettingsToNewJSONFormat(){
 	settings = {
 		"unavailableTab":{
 			"active": unavailableTab,
-			"shareOrder": false,
+			"shareOrder": true,
 			"consensusThreshold": consensusThreshold,
 			"unavailableOpacity": unavailableOpacity,
 			"selfDiscard": selfDiscard,
@@ -82,11 +82,12 @@ async function convertOldSettingsToNewJSONFormat(){
 		"general":{
 			"topPagination": topPagination,
 			"allowInjection": true,
-			"shareETV": false,
+			"shareETV": true,
 			"displayETV": true,
 			"displayVariantIcon": false,
 			"versionInfoPopup": 0,
-			"firstVotePopup": true
+			"firstVotePopup": true,
+			"newItemNotification": false
 		},
 		
 		"hiddenTab": {
