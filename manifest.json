@@ -83,6 +83,7 @@
       "matches": [
 		"*://*.amazon.ca/vine/*",
 	    "*://*.amazon.es/vine/*",
+	    "*://*.amazon.fr/vine/*",
 	    "*://*.amazon.co.uk/vine/*",
 		"*://*.amazon.com/vine/*"
 	  ],
@@ -99,6 +100,7 @@
 	  "matches": [
 		"*://*.amazon.ca/vine/*",
 	    "*://*.amazon.es/vine/*",
+	    "*://*.amazon.fr/vine/*",
 	    "*://*.amazon.co.uk/vine/*",
 		"*://*.amazon.com/vine/*"
 	  ],
