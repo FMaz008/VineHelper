@@ -65,7 +65,13 @@
 		"resource/sound/upgrade.mp3",
 		"scripts/inj.js"
 		],
-      "matches": ["<all_urls>"]
+		"matches": [
+			"*://*.amazon.ca/*",
+			"*://*.amazon.es/*",
+			"*://*.amazon.fr/*",
+			"*://*.amazon.co.uk/*",
+			"*://*.amazon.com/*"
+		]
 	}
   ],
   
