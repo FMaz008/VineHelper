@@ -6,6 +6,7 @@ var appSettings = {};
 var vineDomain = null;
 var vineCountry = null;
 var vineQueue = null
+var uuid = null;
 
 var appVersion = 0;
 
@@ -80,6 +81,7 @@ async function convertOldSettingsToNewJSONFormat(){
 		},
 		
 		"general":{
+			"uuid": null,
 			"topPagination": topPagination,
 			"allowInjection": true,
 			"shareETV": true,
@@ -230,6 +232,33 @@ async function getSettings(){
 			vineQueue = arrMatches[1];
 		}
 	}
+	
+	
+	//Generate a UUID for the user
+	if(appSettings.general.uuid == undefined || appSettings.general.uuid == null){
+		//Request a new UUID from the server
+		let arrJSON = {"api_version":4, "action": "get_uuid", "country": vineCountry};
+		let jsonArrURL = JSON.stringify(arrJSON);
+		
+		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
+		let url = "https://www.francoismazerolle.ca/vinehelper.php"
+				+ "?data=" + jsonArrURL;
+		fetch(url)
+			.then((response) => response.json())
+			.then(function(serverResponse){
+				if(serverResponse["ok"] == "ok"){
+					appSettings.general.uuid = serverResponse["uuid"];
+					uuid = appSettings.general.uuid;
+					saveSettings();
+				}
+			})
+			.catch( 
+				function() {
+					error =>  console.log(error);
+				}
+			);
+	}
+	uuid = appSettings.general.uuid;
 	
 	showRuntime("PRE: Settings loaded");
 	

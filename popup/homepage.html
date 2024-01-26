@@ -22,6 +22,14 @@
 			</ul>
 			<div id="tabs-1">
 				<div class="options">
+					<label for="general.uuid">UUID:
+						<a href="#" class="tips"
+							title="Your unique user ID. If you have multiple devices, you may want to sync them up to the same value.">
+							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+						</a>
+						<input type="text" name="general.uuid" id="general.uuid" value="" size="32" maxlength="36" />
+						<input type="button" id="saveUUID" value="Save" />
+					</label>
 					<label for="general.allowInjection">Allow the extension to inject code in Amazon Vine
 						<a href="#" class="tips" title="This option will automatically fix the infinite spinning wheel issue and enable other options.">
 							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>

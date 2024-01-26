@@ -357,8 +357,12 @@ async function reportfees(event){
 	}
 	
 	//Send the vote to the server
-	let url = "https://francoismazerolle.ca/vinehelperCastVote_v2.php"
-		+ '?data={"country": "'+ vineCountry+'", "asin":"' + asin +'","fees":'+ fees +'}';
+	let arrJSON = {"api_version":4, "action": "report_fee", "country": vineCountry, "uuid":uuid, "asin": asin, "fees": fees};
+	let jsonArrURL = JSON.stringify(arrJSON);
+	
+	let url = "https://www.francoismazerolle.ca/vinehelper.php"
+				+ "?data=" + jsonArrURL;
+	
 	await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
 
 	//Refresh the data for the toolbar of that specific product only

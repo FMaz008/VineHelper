@@ -127,7 +127,35 @@ function init() {
             await chrome.storage.local.set({ settings: appSettings });
         }
     });
+	
+	$("#" + $.escapeSelector("general.uuid")).val(appSettings.general.uuid);
+    $("#saveUUID").on("click", async function () {
+        $("#saveUUID").prop("disabled", true);
 
+        //Post a fetch request to confirm if the UUID is valid
+		let arrJSON = {"api_version":4, "action": "validate_uuid", "uuid": $("#" + $.escapeSelector("general.uuid")).val(), "country": "loremipsum"};
+		let jsonArrURL = JSON.stringify(arrJSON);
+		
+        let url = "https://www.francoismazerolle.ca/vinehelper.php"
+				+ "?data=" + jsonArrURL;
+        await fetch(url)
+			.then((response) => response.json())
+			.then(async function(serverResponse){
+				if(serverResponse["ok"] == "ok"){
+					appSettings.general.uuid = serverResponse["uuid"];
+					await chrome.storage.local.set({ settings: appSettings });
+				}else{
+					$("#" + $.escapeSelector("general.uuid")).val(appSettings.general.uuid);
+				}
+			})
+			.catch( 
+				function() {
+					error =>  console.log(error);
+				}
+			);
+        $("#saveUUID").prop("disabled", false);
+    });
+	
     $("#saveGUID").on("click", async function () {
         $("#saveGUID").prop("disabled", true);
 
