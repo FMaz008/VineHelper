@@ -160,7 +160,6 @@ async function init(){
 async function checkNewItems(){
 	let arrJSON = {"api_version":4, "country": vineCountry, "orderby":"date", "limit":10};
 	let jsonArrURL = JSON.stringify(arrJSON);
-	
 	showRuntime("Fetching most recent products data...");
 	
 	//Display a notification that we have checked for items.
@@ -178,12 +177,12 @@ async function checkNewItems(){
 			for(let i = response.products.length-1; i>=0; i--){
 				if(appSettings.general.latestProduct == undefined || response.products[i].date > appSettings.general.latestProduct){
 				
-					let note = new ScreenNotification();
-					note.title = "New item(s) detected !";
-					note.lifespan = 60;
-					note.sound = "resource/sound/notification.mp3";
-					note.content = "Most recent item: <a href='/dp/" + response.products[i].asin + "' target='_blank'>" + response.products[i].asin + "</a><br />Server time: " + response.products[i].date;
-					await Notifications.pushNotification(note);
+					let note2 = new ScreenNotification();
+					note2.title = "New item(s) detected !";
+					note2.lifespan = 60;
+					note2.sound = "resource/sound/notification.mp3";
+					note2.content = "Most recent item: <a href='/dp/" + response.products[i].asin + "' target='_blank'>" + response.products[i].asin + "</a><br />Server time: " + response.products[i].date;
+					await Notifications.pushNotification(note2);
 					
 					if(i ==0){
 						appSettings.general.latestProduct = response.products[0].date;

@@ -1,8 +1,10 @@
 
 var Notifications = new ScreenNotifier();
+var lastSoundPlayedAt = Date.now();
+var noteCounter = 0;
 
 function ScreenNotification(){
-	this.id = 0;
+	this.id = noteCounter++;
 	this.title = "";
 	this.content = "";
 	this.lifespan = 0; //Will not auto-delete
@@ -34,7 +36,6 @@ function ScreenNotifier(){
 	
 	
 	this.pushNotification = async function(note){
-		note.id = $(".ext-helper-notification-box").length;
 		
 		//Render the notification and insert it into the container
 		let content = await note.render();
@@ -54,8 +55,11 @@ function ScreenNotifier(){
 		
 		//Play a sound
 		if(note.sound != null){
-			const audioElement = new Audio(chrome.runtime.getURL(note.sound));
-			audioElement.play();
+			if(Date.now() - lastSoundPlayedAt > 30000){ // Don't play the notification sound again within 30 sec.
+				lastSoundPlayedAt = Date.now();
+				const audioElement = new Audio(chrome.runtime.getURL(note.sound));
+				audioElement.play();
+			}
 		}
 	}
 	
