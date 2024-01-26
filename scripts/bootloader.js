@@ -91,8 +91,8 @@ async function init(){
 	}
 	
 	//If the sync hidden items is enable, load the hidden item from the server
-	if(appSettings.hiddenTab.remote)
-		await loadHiddenItems(); //from tile.js
+	//if(appSettings.hiddenTab.remote)
+	//	await loadHiddenItems(); //from tile.js
 	
 	//Create the Discard grid
 	showRuntime("BOOT: Creating tabs system");
