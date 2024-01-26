@@ -145,7 +145,7 @@ async function init(){
 		if(appSettings.general.newItemNotification){
 			//Display a notification to activate the sound
 			/*
-			soundUrl = chrome.runtime.getURL("notification.mp3");
+			soundUrl = chrome.runtime.getURL("resource/sound/notification.mp3");
 			let note = new ScreenNotification();
 			note.title = "Activate your browser sound";
 			note.lifespan = 10;
@@ -177,7 +177,7 @@ function checkNewItems(){
 				let note = new ScreenNotification();
 				note.title = "New item(s) detected !";
 				note.lifespan = 60;
-				note.sound = "notification.mp3";
+				note.sound = "resource/sound/notification.mp3";
 				note.content = "Most recent item: <a href='/dp/" + latestProduct.asin + "' target='_blank'>" + latestProduct.asin + "</a><br />Server time: " + latestProduct.date;
 				await Notifications.pushNotification(note);
 				

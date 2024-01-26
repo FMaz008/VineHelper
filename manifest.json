@@ -18,33 +18,33 @@
   },
 
   "icons": {
-    "16": "images/icon-16.png",
-    "32": "images/icon-32.png",
-    "48": "images/icon-48.png",
-    "128": "images/icon-128.png"
+    "16": "resource/image/icon-16.png",
+    "32": "resource/image/icon-32.png",
+    "48": "resource/image/icon-48.png",
+    "128": "resource/image/icon-128.png"
   },
   "action": {
     "default_popup": "popup/homepage.html",
 	"default_title": "Amazon Vine Helper",
-    "default_icon": "icon.png"
+    "default_icon": "resource/image/icon-128.png"
   },
   "web_accessible_resources": [
     {
       "resources": [ 
-		"images/rating-bad.png",
-		"images/rating-good.png",
-		"images/info.png",
-		"images/hide.png",
-		"images/show.png",
-		"images/question.png",
-		"images/announcement.png",
-		"images/choice.png",
-		"images/etv.png",
-		"images/request.png",
-		"images/loading.gif",
-		"images/healing.gif",
-		"images/order-success.png",
-		"images/order-failed.png",
+		"resource/images/rating-bad.png",
+		"resource/images/rating-good.png",
+		"resource/images/info.png",
+		"resource/images/hide.png",
+		"resource/images/show.png",
+		"resource/images/question.png",
+		"resource/images/announcement.png",
+		"resource/images/choice.png",
+		"resource/images/etv.png",
+		"resource/images/request.png",
+		"resource/images/loading.gif",
+		"resource/images/healing.gif",
+		"resource/images/order-success.png",
+		"resource/images/order-failed.png",
 		"lib/jquery_ui/images/ui-icons_444444_256x240.png",
 		"lib/jquery_ui/images/ui-icons_555555_256x240.png",
 		"lib/jquery_ui/images/ui-icons_777620_256x240.png",
@@ -61,7 +61,7 @@
 		"view/popup_firstvote.html",
 		"view/popup_changelog.html",
 		"view/infinite_wheel_fix.html",
-		"notification.mp3",
+		"resource/sound/notification.mp3",
 		"scripts/inj.js"
 		],
       "matches": ["<all_urls>"]
@@ -72,7 +72,7 @@
     {
 	  "css":[
 		"lib/jquery_ui/jquery-ui.min.css",
-		"main.css"
+		"resource/css/main.css"
 	  ],
       "js": [
 		"scripts/grid.js",

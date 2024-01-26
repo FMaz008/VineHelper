@@ -266,72 +266,72 @@ div.ui-widget-overlay{
   and (min-resolution:.001dpcm) {
 	div.ext-helper-icon-sad, div.ext-helper-icon-no{
 		background-size: 200%;
-		background-image: url("chrome-extension://__MSG_@@extension_id__/images/rating-bad.png");
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/rating-bad.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-happy, div.ext-helper-icon-yes{
 		background-size: 200%;
-		background-image: url("chrome-extension://__MSG_@@extension_id__/images/rating-good.png");
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/rating-good.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-info{
 		background-size: 100%;
-		background-image: url("chrome-extension://__MSG_@@extension_id__/images/info.png");
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/info.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-question{
 		background-size: 100%;
-		background-image: url("chrome-extension://__MSG_@@extension_id__/images/question.png");
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/question.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-announcement{
 		background-size: 100%;
-		background-image: url("chrome-extension://__MSG_@@extension_id__/images/announcement.png");
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/announcement.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-choice{
 		background-size: 100%;
-		background-image: url("chrome-extension://__MSG_@@extension_id__/images/choice.png");
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/choice.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-show{
 		background-size: 100%;
-		background-image: url("chrome-extension://__MSG_@@extension_id__/images/show.png");
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/show.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-hide{
 		background-size: 100%;
-		background-image: url("chrome-extension://__MSG_@@extension_id__/images/hide.png");
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/hide.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-loading{
 		background-size: 100%;
-		background-image: url("chrome-extension://__MSG_@@extension_id__/images/loading.gif");
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/loading.gif");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-healing{
 		background-size: 100%;
-		background-image: url("chrome-extension://__MSG_@@extension_id__/images/healing.gif");
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/healing.gif");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-etv{
 		background-size: 100%;
-		background-image: url("chrome-extension://__MSG_@@extension_id__/images/etv.png");
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/etv.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-request{
 		background-size: 100%;
-		background-image: url("chrome-extension://__MSG_@@extension_id__/images/request.png");
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/request.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-order-success{
 		background-size: 100%;
-		background-image: url("chrome-extension://__MSG_@@extension_id__/images/order-success.png");
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/order-success.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-order-failed{
 		background-size: 100%;
-		background-image: url("chrome-extension://__MSG_@@extension_id__/images/order-failed.png");
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/order-failed.png");
 		background-repeat:no-repeat;
 	}
 }
@@ -339,72 +339,72 @@ div.ui-widget-overlay{
 @supports (-moz-appearance:none) {
 	div.ext-helper-icon-sad, div.ext-helper-icon-no{
 		background-size: 200%;
-		background-image: url("/images/rating-bad.png");
+		background-image: url("/resource/image/rating-bad.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-happy, div.ext-helper-icon-yes{
 		background-size: 200%;
-		background-image: url("/images/rating-good.png");
+		background-image: url("/resource/image/rating-good.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-info{
 		background-size: 100%;
-		background-image: url("/images/info.png");
+		background-image: url("/resource/image/info.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-question{
 		background-size: 100%;
-		background-image: url("/images/question.png");
+		background-image: url("/resource/image/question.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-announcement{
 		background-size: 100%;
-		background-image: url("/images/announcement.png");
+		background-image: url("/resource/image/announcement.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-choice{
 		background-size: 100%;
-		background-image: url("/images/choice.png");
+		background-image: url("/resource/image/choice.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-show{
 		background-size: 100%;
-		background-image: url("/images/show.png");
+		background-image: url("/resource/image/show.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-hide{
 		background-size: 100%;
-		background-image: url("/images/hide.png");
+		background-image: url("/resource/image/hide.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-loading{
 		background-size: 100%;
-		background-image: url("/images/loading.gif");
+		background-image: url("/resource/image/loading.gif");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-healing{
 		background-size: 100%;
-		background-image: url("/images/healing.gif");
+		background-image: url("/resource/image/healing.gif");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-etv{
 		background-size: 100%;
-		background-image: url("/images/etv.png");
+		background-image: url("/resource/image/etv.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-request{
 		background-size: 100%;
-		background-image: url("/images/request.png");
+		background-image: url("/resource/image/request.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-order-success{
 		background-size: 100%;
-		background-image: url("/images/order-success.png");
+		background-image: url("/resource/image/order-success.png");
 		background-repeat:no-repeat;
 	}
 	div.ext-helper-icon-order-failed{
 		background-size: 100%;
-		background-image: url("/images/order-failed.png");
+		background-image: url("/resource/image/order-failed.png");
 		background-repeat:no-repeat;
 	}
 }
