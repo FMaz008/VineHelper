@@ -20,72 +20,27 @@ async function getLocalStorageVariable(varName){
 	return result[varName];
 }
 //This method will initiate the settings for the first time,
-//and will convert the old style of settings (<=V1.9) to the new JSON style.
-async function convertOldSettingsToNewJSONFormat(){
-	
-	//Default values (useful if this is the first time running the extension)
-	let consensusThreshold = 2;
-	let consensusDiscard= true;
-	let unavailableOpacity = 100;
-	let selfDiscard = false;
-	let topPagination = false;
-	let unavailableTab = true;
-	let hiddenTab = true;
-	let compactToolbar = false;
-
-
-	//Load settings from <=V1.9, if they exist.
-	result = await getLocalStorageVariable("settingsThreshold");
-	if(result > 0 && result <10)
-		consensusThreshold = result;
-	
-	result = await getLocalStorageVariable("settingsUnavailableOpacity");
-	if(result > 0 && result <=100)
-		unavailableOpacity = result;
-	
-	result = await getLocalStorageVariable("settingsSelfDiscard");
-	if(result == true || result == false)
-		selfDiscard = result;
-	
-	result = await getLocalStorageVariable("settingsConsensusDiscard");
-	if(result == true || result == false)
-		consensusDiscard = result;
-	
-	result = await getLocalStorageVariable("settingsCompactToolbar");
-	if(result == true || result == false)
-		compactToolbar = result;
-	
-	result = await getLocalStorageVariable("settingsTopPagination");
-	if(result == true || result == false)
-		topPagination = result;
-	
-	result = await getLocalStorageVariable("settingsUnavailableTab");
-	if(result == true || result == false)
-		unavailableTab = result;
-
-	result = await getLocalStorageVariable("settingsHiddenTab");
-	if(result == true || result == false)
-		hiddenTab = result;
-	
+function getDefaultSettings(){
 	
 	//Craft the new settings in JSON
 	settings = {
 		"unavailableTab":{
-			"active": unavailableTab,
+			"active": true,
 			"shareOrder": true,
-			"consensusThreshold": consensusThreshold,
-			"unavailableOpacity": unavailableOpacity,
-			"selfDiscard": selfDiscard,
-			"consensusDiscard": consensusDiscard,
-			"compactToolbar": compactToolbar
+			"consensusThreshold": 2,
+			"unavailableOpacity": 100,
+			"selfDiscard": true,
+			"consensusDiscard": true,
+			"compactToolbar": false
 		},
 		
 		"general":{
 			"uuid": null,
-			"topPagination": topPagination,
+			"topPagination": true,
 			"allowInjection": true,
 			"shareETV": true,
 			"displayETV": true,
+			"displayFirstSeen": true,
 			"displayVariantIcon": false,
 			"versionInfoPopup": 0,
 			"firstVotePopup": true,
@@ -103,31 +58,23 @@ async function convertOldSettingsToNewJSONFormat(){
 		},
 		
 		"thorvarium": {
-			"smallItems": await getLocalStorageVariable("thorvariumSmallItems") ? true: false,
-			"removeHeader": await getLocalStorageVariable("thorvariumRemoveHeader") ? true: false,
-			"removeFooter": await getLocalStorageVariable("thorvariumRemoveFooter") ? true: false,
-			"removeAssociateHeader": await getLocalStorageVariable("thorvariumRemoveAssociateHeader") ? true: false,
-			"moreDescriptionText": await getLocalStorageVariable("thorvariumMoreDescriptionText") ? true: false,
-			"ETVModalOnTop": await getLocalStorageVariable("thorvariumETVModalOnTop") ? true: false,
-			"categoriesWithEmojis": await getLocalStorageVariable("thorvariumCategoriesWithEmojis") ? true: false,
-			"paginationOnTop": await getLocalStorageVariable("thorvariumPaginationOnTop") ? true: false,
-			"collapsableCategories": await getLocalStorageVariable("thorvariumCollapsableCategories") ? true: false,
-			"collapsableCategories": await getLocalStorageVariable("thorvariumCollapsableCategories") ? true: false,
-			"stripedCategories": await getLocalStorageVariable("thorvariumStripedCategories") ? true: false,
-			"limitedQuantityIcon": await getLocalStorageVariable("thorvariumLimitedQuantityIcon") ? true: false,
-			"RFYAFAAITabs": await getLocalStorageVariable("thorvariumRFYAFAAITabs") ? true: false
+			"smallItems": false,
+			"removeHeader": false,
+			"removeFooter": false,
+			"removeAssociateHeader": false,
+			"moreDescriptionText": false,
+			"ETVModalOnTop": false,
+			"categoriesWithEmojis": false,
+			"paginationOnTop": false,
+			"collapsableCategories": false,
+			"collapsableCategories": false,
+			"stripedCategories": false,
+			"limitedQuantityIcon": false,
+			"RFYAFAAITabs": false
 		}
 	}
 	
-	//Convert old hidden pageId to asin
-	let arr = await getLocalStorageVariable("arrHidden");
-	if(arr!= undefined)
-		arr.forEach((element) => settings.hiddenTab.arrItems.push({"asin" : element["pageId"], "date": element["date"]}));
 	
-	//Delete the old settings
-	await chrome.storage.local.clear();//Delete all local storage
-	
-	await chrome.storage.local.set({"settings": settings});
 	return settings;
 }
 
@@ -142,9 +89,10 @@ async function getSettings(){
 	//If no settings exist already, create the default ones
 	if($.isEmptyObject(data)){
 		console.log("Settings not found, generating default configuration...");
-		//Load the old settings and convert them to the new format
-		//Will generate default settings if no old settings were found.
-		appSettings = await convertOldSettingsToNewJSONFormat();
+		//Will generate default settings
+		await chrome.storage.local.clear();//Delete all local storage		
+		appSettings = getDefaultSettings();
+		await chrome.storage.local.set({"settings": appSettings});
 	}else{
 		Object.assign(appSettings, data.settings);
 	}

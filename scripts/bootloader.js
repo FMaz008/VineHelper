@@ -1,5 +1,4 @@
 showRuntime("BOOT: Booterloader starting");
-var sleepSetTimeout_ctrl;
 
 //Create the 2 grids/tabs
 var gridRegular = null;
@@ -31,10 +30,6 @@ init();
 //#########################
 //### Utility functions
 
-function sleep(ms) {
-    clearInterval(sleepSetTimeout_ctrl);
-    return new Promise(resolve => sleepSetTimeout_ctrl = setTimeout(resolve, ms));
-}
 
 function getTileByAsin(asin){
 	tile = null;
@@ -77,7 +72,7 @@ async function init(){
 	//Wait for the config to be loaded before running this script
 	showRuntime("BOOT: Waiting on config to be loaded...");
 	while($.isEmptyObject(appSettings)){
-		await sleep(10);
+		await new Promise(r => setTimeout(r, 10));
 	}
 	showRuntime("BOOT: Config available. Begining init() function");
 	
@@ -137,10 +132,9 @@ async function init(){
 	await generateToolbars();
 	showRuntime("done creating toolbars.");
 	
-	//Only contact the 3rd party server is necessary
-	
+	//Only contact the home server is necessary
 	if(appSettings.unavailableTab.active || appSettings.general.displayETV || appSettings.general.displayFirstSeen){
-		await fetchData(getAllAsin());//Obtain the data to fill the toolbars with it.
+		await fetchProductsData(getAllAsin());//Obtain the data to fill the toolbars with it.
 		
 		if(appSettings.general.newItemNotification){
 			//Display a notification to activate the sound
@@ -202,9 +196,9 @@ async function checkNewItems(){
 		);
 }
 function getAllAsin(){
-	var tile;
-	var arrUrl = []; //Will be use to store the URL identifier of the listed products.
-	var arrObj = $(".vvp-item-tile");
+	let tile;
+	let arrUrl = []; //Will be use to store the URL identifier of the listed products.
+	const arrObj = $(".vvp-item-tile");
 	for(let i = 0; i < arrObj.length; i++){
 		//Create the tile and assign it to the main grid
 		obj = arrObj[i];
@@ -215,9 +209,9 @@ function getAllAsin(){
 }
 
 async function generateToolbars(){
-	var tile;
-	var arrObj = $(".vvp-item-tile");
-	var obj = null;
+	let tile;
+	const arrObj = $(".vvp-item-tile");
+	let obj = null;
 	for(let i = 0; i < arrObj.length; i++){
 		obj = $(arrObj[i]);
 		tile = new Tile(obj, gridRegular);
@@ -254,7 +248,7 @@ async function generateToolbars(){
 
 
 //Get data from the server about the products listed on this page
-function fetchData(arrUrl){
+function fetchProductsData(arrUrl){
 	let arrJSON = {"api_version":4, "action": "getinfo", "country": vineCountry, "arr_asin":arrUrl};
 	let jsonArrURL = JSON.stringify(arrJSON);
 	
@@ -265,7 +259,7 @@ function fetchData(arrUrl){
 			+ "?data=" + jsonArrURL;
 	fetch(url)
 		.then((response) => response.json())
-		.then(serverResponse)
+		.then(serverProductsResponse)
 		.catch( 
 			function() {
 				//error =>  console.log(error);
@@ -278,7 +272,7 @@ function fetchData(arrUrl){
 
 //Process the results obtained from the server
 //Update each tile with the data pertaining to it.
-function serverResponse(data){
+function serverProductsResponse(data){
 	if(data["api_version"]!=4){
 		console.log("Wrong API version");
 	}
