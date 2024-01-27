@@ -139,8 +139,9 @@ async function checkNewItems(){
 	fetch(url)
 		.then((response) => response.json())
 		.then(async function(response){
+			let latestProduct = await chrome.storage.local.get('latestProduct');
 			for(let i = response.products.length-1; i>=0; i--){
-				if(appSettings.general.latestProduct == undefined || response.products[i].date > appSettings.general.latestProduct){
+				if($.isEmptyObject(latestProduct) || response.products[i].date > latestProduct){
 				
 					let note2 = new ScreenNotification();
 					note2.title = "New item(s) detected !";
@@ -151,8 +152,7 @@ async function checkNewItems(){
 					await Notifications.pushNotification(note2);
 					
 					if(i ==0){
-						appSettings.general.latestProduct = response.products[0].date;
-						saveSettings();
+						await chrome.storage.local.set({ 'latestProduct':  response.products[0].date });
 					}
 				}
 			}
