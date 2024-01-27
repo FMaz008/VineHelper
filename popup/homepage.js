@@ -128,7 +128,16 @@ function init() {
         }
     });
 	
-	$("#" + $.escapeSelector("general.uuid")).val(appSettings.general.uuid);
+
+    //UUID:
+    $("#" + $.escapeSelector("general.uuid")).on("mouseenter", function(){
+        $("#" + $.escapeSelector("general.uuid")).attr("type", "text");
+    });
+    $("#" + $.escapeSelector("general.uuid")).on("mouseleave", function(){
+        $("#" + $.escapeSelector("general.uuid")).attr("type", "password");
+    });
+    
+    $("#" + $.escapeSelector("general.uuid")).val(appSettings.general.uuid);
     $("#saveUUID").on("click", async function () {
         $("#saveUUID").prop("disabled", true);
 
