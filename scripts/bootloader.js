@@ -145,7 +145,8 @@ async function checkNewItems(){
 					let note2 = new ScreenNotification();
 					note2.title = "New item(s) detected !";
 					note2.lifespan = 60;
-					note2.sound = "resource/sound/notification.mp3";
+					if(appSettings.general.newItemNotificationSound)
+						note2.sound = "resource/sound/notification.mp3";
 					note2.content = "Most recent item: <a href='/dp/" + response.products[i].asin + "' target='_blank'>" + response.products[i].asin + "</a><br />Server time: " + response.products[i].date;
 					await Notifications.pushNotification(note2);
 					

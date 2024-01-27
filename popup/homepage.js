@@ -39,6 +39,11 @@ function handleDynamicFields(key){
 			.checkboxradio( "option", { "disabled": !$(`label[for='${$.escapeSelector(key)}'] input`).is(":checked") }  )
 			.checkboxradio("refresh");
 	}
+    if(key=="general.newItemNotification"){
+        $(`[name='${$.escapeSelector("general.newItemNotificationSound")}']`)
+			.checkboxradio( "option", { "disabled": !$(`label[for='${$.escapeSelector(key)}'] input`).is(":checked") }  )
+			.checkboxradio("refresh");
+    }
 }
 async function drawUnavailableTab() {
     if (appSettings.unavailableTab.active) {
@@ -216,6 +221,7 @@ function init() {
     manageCheckboxSetting("general.displayVariantIcon");
     manageCheckboxSetting("general.displayFirstSeen");
     manageCheckboxSetting("general.newItemNotification");
+    manageCheckboxSetting("general.newItemNotificationSound");
     manageCheckboxSetting("hiddenTab.active");
     manageCheckboxSetting("hiddenTab.remote");
     manageCheckboxSetting("discord.active"); //Handled manually
