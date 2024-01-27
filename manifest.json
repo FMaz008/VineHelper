@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Amazon Vine Helper",
   "description": "Improve the Amazon Vine experience.",
-  "version": "1.16",
+  "version": "1.17",
   
   "permissions": [
     "storage"
@@ -56,8 +56,8 @@
 		"view/notification_default.html",
 		"view/notification_loading.html",
 		"view/notification_sound.html",
+		"view/widget_order.html",
 		"view/widget_voting.html",
-		"view/widget_voting_compact.html",
 		"view/popup_firstvote.html",
 		"view/popup_changelog.html",
 		"view/infinite_wheel_fix.html",
@@ -79,7 +79,11 @@
     {
 	  "css":[
 		"lib/jquery_ui/jquery-ui.min.css",
-		"resource/css/main.css"
+		"resource/css/grid.css",
+		"resource/css/icon.css",
+		"resource/css/main.css",
+		"resource/css/notification.css",
+		"resource/css/toolbar.css"
 	  ],
       "js": [
 		"scripts/grid.js",

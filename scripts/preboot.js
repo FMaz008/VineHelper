@@ -38,8 +38,8 @@ function getDefaultSettings(){
 			"uuid": null,
 			"topPagination": true,
 			"allowInjection": true,
-			"shareETV": true,
-			"displayETV": true,
+			"shareETV": false,
+			"displayETV": false,
 			"displayFirstSeen": true,
 			"displayVariantIcon": false,
 			"versionInfoPopup": 0,
@@ -88,11 +88,11 @@ async function getSettings(){
 	
 	//If no settings exist already, create the default ones
 	if($.isEmptyObject(data)){
-		console.log("Settings not found, generating default configuration...");
+		showRuntime("Settings not found, generating default configuration...");
 		//Will generate default settings
-		await chrome.storage.local.clear();//Delete all local storage		
+		await chrome.storage.local.clear();//Delete all local storage
 		appSettings = getDefaultSettings();
-		await chrome.storage.local.set({"settings": appSettings});
+		saveSettings();
 	}else{
 		Object.assign(appSettings, data.settings);
 	}

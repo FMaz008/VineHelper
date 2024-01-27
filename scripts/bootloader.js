@@ -27,32 +27,7 @@ init();
 
 
 
-//#########################
-//### Utility functions
 
-
-function getTileByAsin(asin){
-	tile = null;
-	tile = gridRegular.getTileId(asin);
-	if(tile != null)
-		return tile;
-	
-	if(gridUnavailable != null){
-		tile = gridUnavailable.getTileId(asin);
-		if(tile != null)
-			return tile;
-	}
-	
-	tile = gridHidden.getTileId(asin);
-	return tile;
-}
-
-function getAsinFromDom(tileDom){
-	let regex = /^(?:.*\/dp\/)(.+?)(?:\?.*)?$/; //Isolate the product ID in the URL.
-	let url = $(tileDom).find(".a-link-normal").attr("href");
-	let arrasin = url.match(regex);
-	return arrasin[1];
-}
 
 
 
@@ -129,24 +104,20 @@ async function init(){
 	//Browse each items from the Regular grid
 	//- Create an array of all the products listed on the page
 	//- Create an empty toolbar for the item tile
-	await generateToolbars();
+	const arrObj = $(".vvp-item-tile");
+	let tile = null;
+	for(let i = 0; i < arrObj.length; i++){
+		tile = generateTile(arrObj[i]);
+		t = new Toolbar(tile);
+		await t.createProductToolbar();
+	}
 	showRuntime("done creating toolbars.");
 	
 	//Only contact the home server is necessary
 	if(appSettings.unavailableTab.active || appSettings.general.displayETV || appSettings.general.displayFirstSeen){
-		await fetchProductsData(getAllAsin());//Obtain the data to fill the toolbars with it.
+		fetchProductsData(getAllAsin());//Obtain the data to fill the toolbars with it.
 		
 		if(appSettings.general.newItemNotification){
-			//Display a notification to activate the sound
-			/*
-			soundUrl = chrome.runtime.getURL("resource/sound/notification.mp3");
-			let note = new ScreenNotification();
-			note.title = "Activate your browser sound";
-			note.lifespan = 10;
-			note.content = "Sounds are only allowed to play if enough interaction has been done on the page. To ensure your sound works, click this button: <input type='button' onclick='new Audio(\""+soundUrl+"\").play();' value='Sound check' />";
-			await Notifications.pushNotification(note);
-			*/
-			
 			checkNewItems();
 		}
 	}
@@ -208,41 +179,35 @@ function getAllAsin(){
 	return arrUrl;
 }
 
-async function generateToolbars(){
+//Convert the regular tile to the Vine Helper version.
+function generateTile(obj){
 	let tile;
-	const arrObj = $(".vvp-item-tile");
-	let obj = null;
-	for(let i = 0; i < arrObj.length; i++){
-		obj = $(arrObj[i]);
-		tile = new Tile(obj, gridRegular);
-		
-		//Add a container for the image and place the image in it.
-		let img = obj.children(".vvp-item-tile-content").children("img");
-		let imgContainer = $("<div>")
-			.addClass("ext-helper-img-container")
-			.insertBefore(img);
-		$(img).detach().appendTo($(imgContainer));
-		
-		//Move the hidden item to the hidden tab
-		if(appSettings.hiddenTab.active && tile.isHidden()){
-			tile.moveToGrid(gridHidden, false); //This is the main sort, do not animate it
-		}
-		
-		
-		if(appSettings.general.displayVariantIcon){
-			//Check if the item is a parent ASIN (as variants)
-			let variant = obj.find(".a-button-input").attr("data-is-parent-asin");
-			if(variant == "true"){
-				$("<div>")
-					.addClass("ext-helper-variant-indicator-container")
-					.append($("<div>").addClass("ext-helper-indicator-icon ext-helper-icon-choice "))
-					.appendTo($(imgContainer));
-			}
-		}
-		
-		t = new Toolbar(tile);
-		await t.createProductToolbar();
+	tile = new Tile(obj, gridRegular);
+	
+	//Add a container for the image and place the image in it.
+	let img = $(obj).children(".vvp-item-tile-content").children("img");
+	let imgContainer = $("<div>")
+		.addClass("ext-helper-img-container")
+		.insertBefore(img);
+	$(img).detach().appendTo($(imgContainer));
+	
+	//Move the hidden item to the hidden tab
+	if(appSettings.hiddenTab.active && tile.isHidden()){
+		tile.moveToGrid(gridHidden, false); //This is the main sort, do not animate it
 	}
+	
+	if(appSettings.general.displayVariantIcon){
+		//Check if the item is a parent ASIN (as variants)
+		let variant = $(obj).find(".a-button-input").attr("data-is-parent-asin");
+		if(variant == "true"){
+			$("<div>")
+				.addClass("ext-helper-variant-indicator-container")
+				.append($("<div>").addClass("ext-helper-indicator-icon ext-helper-icon-choice "))
+				.appendTo($(imgContainer));
+		}
+	}
+	
+	return tile;
 	
 }
 
@@ -360,7 +325,7 @@ async function reportfees(event){
 
 	//Refresh the data for the toolbar of that specific product only
 	let arrUrl = [asin];
-	fetchData(arrUrl);
+	fetchProductsData(arrUrl);
 	
 	//Show first vote popup
 	if(appSettings.general.firstVotePopup){

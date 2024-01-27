@@ -198,11 +198,11 @@ function Toolbar(tileInstance){
 			context.addClass(statusColor);
 		}
 		
-		tile.getDOM().css('opacity', tileOpacity);
+		$(pTile.getDOM()).css('opacity', tileOpacity);
 		
 		//Display voting system if active.
 		if(appSettings.unavailableTab.active){
-			if(tile.wasOrdered()){
+			if(pTile.wasOrdered()){
 				await this.createOrderWidget();
 			}else{
 				await createVotingWidget();
@@ -220,17 +220,13 @@ function Toolbar(tileInstance){
 		$(container).children(".ext-helper-voting-widget").remove();
 		
 		//Generate the html for the voting widget
-		let prom;
-		if(appSettings.unavailableTab.compactToolbar)
-			prom = await Tpl.loadFile(chrome.runtime.getURL("view/widget_voting_compact.html"));
-		else
-			prom = await Tpl.loadFile(chrome.runtime.getURL("view/widget_voting.html"));
-		
+		let prom = await Tpl.loadFile(chrome.runtime.getURL("view/widget_voting.html"));
 		Tpl.setVar("asin", pTile.getAsin());
 		Tpl.setVar("vote_no_fees", pTile.getVoteNoFees());
 		Tpl.setVar("vote_with_fees", pTile.getVoteFees());
 		Tpl.setIf("selected_yes", pTile.getVoteOwn() == 0);
 		Tpl.setIf("selected_no", pTile.getVoteOwn() == 1);
+		Tpl.setIf("not_compact", !appSettings.unavailableTab.compactToolbar);
 		let content = Tpl.render(prom);
 		$(content).appendTo(container);
 		
@@ -254,7 +250,7 @@ function Toolbar(tileInstance){
 	
 	//Create the order widget part of the toolbar
 	//Can ben called by bootloader when receiving order messages
-	this.createOrderWidget = function(status = null){
+	this.createOrderWidget = async function(status = null){
 		
 		if(status!=null){
 			//Get the current order info
@@ -271,21 +267,12 @@ function Toolbar(tileInstance){
 		$(container).children(".ext-helper-order-widget").remove();
 		$(container).children(".ext-helper-voting-widget").remove();
 		
-		let pe; //Parent Element
-		let oS, oF; //VoteFees(1), VoteNoFees(0)
-		pe = $("<div />")
-			.addClass("ext-helper-order-widget")
-			.text("")
-			.appendTo(container);
-		oS = $("<span>")
-			.html("<div class='ext-helper-toolbar-large-icon ext-helper-icon-order-success'></div>" + pTile.getOrderSuccess())
-			.appendTo(pe);
-		$("<span />")
-			.html("&nbsp;&nbsp;&nbsp;")
-			.appendTo(pe);
-		oF = $("<span>")
-			.html("<div class='ext-helper-toolbar-large-icon ext-helper-icon-order-failed'></div>" + pTile.getOrderFailed())
-			.appendTo(pe);
+		//Generate the HTML for the widget
+		prom = await Tpl.loadFile(chrome.runtime.getURL("view/widget_order.html"));
+		Tpl.setVar("order_success", pTile.getOrderSuccess());
+		Tpl.setVar("order_failed", pTile.getOrderFailed());
+		let content = Tpl.render(prom);
+		$(content).appendTo(container);
 		
 		if(appSettings.thorvarium.smallItems){
 			$(".compact div.ext-helper-order-widget").css("clear", "both");

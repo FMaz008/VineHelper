@@ -1,0 +1,164 @@
+
+
+
+/* Toolbar */
+div.ext-helper-status{
+	position:relative;
+	margin-top:5px!important;
+	margin-bottom:0px!important;
+}
+
+div.hidden-toolbar{
+	float:right;
+	width:200px;
+	text-align:right;
+	padding-right:5px;
+}
+
+div.ext-helper-status-container{
+	position:absolute;
+	z-index:1;
+	width: 100%;
+	background-color: rgba(255, 255, 255, 0.7);
+	border:1px solid #000;
+	border-radius:8px;
+}
+
+div.ext-helper-status-container div.ext-helper-status-container2{
+	display:block;
+	padding-left:35px;
+	font-weight:bold;
+	font-size:10px;
+}
+
+.ext-helper-toolbar-etv{
+	float:left;
+	vertical-align:middle;
+	overflow:hidden;
+	line-height: 16px;
+	height:16px;
+}
+
+.ext-helper-toolbar-etv .ext-helper-icon-etv{
+	display:inline-block;
+	width:18px;
+	height:16px;
+	margin-right:5px;
+	margin-left:5px;
+	vertical-align:middle;
+}
+
+.ext-helper-toolbar-etv span.etv{
+	vertical-align:middle;
+}
+
+
+
+div.borderless div.ext-helper-status-container{
+	border:0;
+}
+
+div.compact div.ext-helper-status-container{
+	margin-top:5px;
+	padding:0px;
+	position:relative;
+}
+
+div.compact div.ext-helper-status-container2{
+	padding-left:0px;
+	text-align:center;
+}
+div.compact div.ext-helper-icon{
+	display:none;
+}
+.ext-helper-floating-icon{
+	float:right;
+	padding-top:2px;
+	padding-right:4px;
+	line-height:16px;
+}
+
+div.ext-helper-icon-announcement{
+	opacity:0.3;
+}
+
+
+div.toolbar-icon-only div.ext-helper-status-container{
+	float:right;
+	border:none;
+	margin:0;
+	line-height:12px;
+}
+
+div.toolbar-icon-only div.ext-helper-status-container2{
+	padding-left:0px;
+}
+
+div.ext-helper-background-nofees div.ext-helper-status-container{
+	background-color:#99ff99;
+}
+div.ext-helper-background-fees div.ext-helper-status-container{
+	background-color:#ff9999;
+}
+
+
+div.ext-helper-toolbar-icon{
+	display:inline-block;
+	width:12px;
+	height:12px;
+}
+
+div.ext-helper-toolbar-large-icon{
+	display:inline-block;
+	width:20px;
+	height:20px;
+	vertical-align:middle;
+	margin:0 3px;
+}
+
+div.ext-helper-icon{
+	float:left;
+	width:30px;
+	height:30px;
+	background-position: 0px 0px;
+	margin:5px;
+}
+
+div.ext-helper-icon-mini{
+	display:inline-block;
+	width:16px;
+	height:16px;
+	background-position: -16px 0px;
+}
+
+
+/* Voting/order Widgets */
+div.ext-helper-voting-widget, div.ext-helper-order-widget{
+	clear:right;
+	text-align:center;
+}
+
+.compact div.ext-helper-voting-widget, .compact div.ext-helper-order-widget{
+	display:inline-block;
+	clear:none;
+	height:20px;
+}
+
+
+.ext-helper-reportlink-bad {
+	color: #CC0000 !important;
+}
+.ext-helper-reportlink-good {
+	color: #33CC33 !important;
+}
+
+a.selectedVote{
+	border:1px solid #666;
+	border-radius:4px;
+	padding:2px;
+	background-color:#EEE;
+}
+
+
+
+

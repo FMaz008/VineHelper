@@ -1,0 +1,46 @@
+
+/* Notifications */
+#ext-helper-notifications-container{
+	position:fixed;
+	right:0;
+	top:0;
+	bottom:0;
+	width:300px;
+	z-index:1008;
+	pointer-events: none;
+	display: flex;
+	justify-content: flex-end;
+	flex-direction: column;
+	padding-right:10px;
+}
+
+.ext-helper-notification-box{
+	width:100%;
+	background-color:#FFF;
+	border:1px solid #000;
+	pointer-events: auto;
+	margin-bottom:10px;
+	position:relative;
+}
+
+.ext-helper-notification-toolbar{
+	border:1px solid #444;
+	background-color:#EEE;
+	padding:3px;
+	margin:3px;
+}
+.ext-helper-notification-content{
+	padding:5px;
+}
+
+.ext-helper-notification-close{
+	float:right;
+}
+
+.ext-helper-notification-loading{
+	position: relative;
+	margin-left:auto;
+	margin-right: 0;
+	width: 30px;
+	height: 30px;
+}

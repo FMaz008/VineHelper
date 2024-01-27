@@ -326,3 +326,27 @@ function timeSince(date) {
 
 	return Math.floor(seconds) + " secs";
 }
+
+
+function getTileByAsin(asin){
+	let tile = null;
+	tile = gridRegular.getTileId(asin);
+	if(tile != null)
+		return tile;
+	
+	if(gridUnavailable != null){
+		tile = gridUnavailable.getTileId(asin);
+		if(tile != null)
+			return tile;
+	}
+	
+	tile = gridHidden.getTileId(asin);
+	return tile;
+}
+
+function getAsinFromDom(tileDom){
+	let regex = /^(?:.*\/dp\/)(.+?)(?:\?.*)?$/; //Isolate the product ID in the URL.
+	let url = $(tileDom).find(".a-link-normal").attr("href");
+	let arrasin = url.match(regex);
+	return arrasin[1];
+}
