@@ -456,7 +456,6 @@ window.addEventListener("message", async function(event) {
 			tileASIN = event.data.data.asin;
 		}else{
 			tileASIN = event.data.data.parent_asin;
-			event.data.data.parent_asin = '"' + event.data.data.parent_asin + '"';
 		}
 		
 		if(event.data.data.status == "success" || event.data.data.error == "CROSS_BORDER_SHIPMENT"){
