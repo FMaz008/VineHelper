@@ -34,22 +34,22 @@ window.fetch = async (...args) => {
 		
 		let datap = extHelper_responseData;
 		if(datap.error == "CROSS_BORDER_SHIPMENT"){
-			console.log("Item "+asin+ " (parent:"+lastParent+") order failed: " +datap.error);
-			
+			//Order had a CROSS_BORDER_SHIPMENT error.
 			window.postMessage({type: "order", data: {
 					"status": "failed",
 					"error": datap.error,
 					"parent_asin": lastParent,
 					"asin": asin}}, "*");
 		}else if(datap.error == null){
-			//if (datap.result.itemAsin == asin){
-				
-				window.postMessage({type: "order", data: {
-					"status": "success",
-					"error": null,
-					"parent_asin": lastParent,
-					"asin": asin}}, "*");
-			//}
+			//Order successful
+			window.postMessage({type: "order", data: {
+				"status": "success",
+				"error": null,
+				"parent_asin": lastParent,
+				"asin": asin}}, "*");
+			
+			//Wait 500ms following an order to allow for the order report query to go through before the redirect happens.
+			await new Promise(r => setTimeout(r, 500));
 		} else { //SCHEDULED_DELIVERY_REQUIRED
 			
 		} //Other errors
