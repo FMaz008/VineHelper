@@ -2,6 +2,7 @@ const startTime = Date.now();
 
 //Extension settings
 var appSettings = {};
+var arrHidden = [];
 
 var vineDomain = null;
 var vineCountry = null;
@@ -84,7 +85,16 @@ async function getSettings(){
 	showRuntime("PRE: Reading settings from local storage");
 	
 	const data = await chrome.storage.local.get("settings");
+	const data2 = await chrome.storage.local.get("hiddenItems");
+	
 	showRuntime("PRE: Done reading settings");
+
+	//Load hidden items
+	if($.isEmptyObject(data2)){
+		await chrome.storage.local.set({ 'hiddenItems': [] });
+	}else{
+		Object.assign(arrHidden, data2.hiddenItems);
+	}
 	
 	//If no settings exist already, create the default ones
 	if($.isEmptyObject(data)){
@@ -97,6 +107,14 @@ async function getSettings(){
 		Object.assign(appSettings, data.settings);
 	}
 	
+	
+	//V0.17: Move the hidden item to a separate local storage
+	if(appSettings.hiddenTab.hasOwnProperty('arrItems')){
+		await chrome.storage.local.set({ 'hiddenItems': appSettings.hiddenTab.arrItems });
+		delete appSettings.hiddenTab['arrItems'];
+		saveSettings();
+	}
+
 	
 	//Load Thorvarium stylesheets
 	if(appSettings.thorvarium.smallItems)
@@ -232,9 +250,9 @@ function discardedItemGarbageCollection(){
 	//Splicing inside a foreach might skip the item following the deleted one, 
 	//but this method is called on every page load so it is effectively inconsequential asin
 	//the missing items will be caught on the next pass.
-	$.each(appSettings.hiddenTab.arrItems, function(key, value){
+	$.each(arrHidden, function(key, value){
 		if(key!=undefined && value["date"] < expiredDate){
-			appSettings.hiddenTab.arrItems.splice(key, 1);
+			arrHidden.splice(key, 1);
 			change = true;
 		}
 	});

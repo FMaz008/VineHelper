@@ -180,7 +180,7 @@ function Tile(obj, gridInstance){
 			return false;
 		
 		var found = false;
-		$.each(appSettings.hiddenTab.arrItems, function(key, value){
+		$.each(arrHidden, function(key, value){
 			if(value.asin == pAsin){
 				found = true;
 				return;
@@ -191,9 +191,9 @@ function Tile(obj, gridInstance){
 	
 	this.hideTile = async function(animate=true){
 		//Add the item to the list of hidden items
-		
-		appSettings.hiddenTab.arrItems.push({"asin" : pAsin, "date": new Date});
-		saveSettings(); //from preboot.js: Save the new array
+		console.log(arrHidden);
+		arrHidden.push({"asin" : pAsin, "date": new Date});
+		await chrome.storage.local.set({ 'hiddenItems': arrHidden });
 		
 		if(appSettings.hiddenTab.remote)
 			saveHiddenItems();
@@ -211,12 +211,12 @@ function Tile(obj, gridInstance){
 	this.showTile = async function(animate=true){
 		
 		//Remove the item from the array of hidden items
-		$.each(appSettings.hiddenTab.arrItems, function(key, value){
+		$.each(arrHidden, function(key, value){
 			if(value != undefined && value.asin == pAsin){
-				appSettings.hiddenTab.arrItems.splice(key, 1);
+				arrHidden.splice(key, 1);
 			}
 		});
-		saveSettings(); //from preboot.js: Save the new array
+		await chrome.storage.local.set({ 'hiddenItems': arrHidden });
 		
 		if(appSettings.hiddenTab.remote){
 			//As this function can be called over 30 times if someone hide all the items on the page, 
@@ -228,10 +228,10 @@ function Tile(obj, gridInstance){
 		}
 		
 		//Move the tile
-		if(appSettings.unavailableTab.consensusDiscard && tile.getStatus() >= NOT_DISCARDED){
-			await tile.moveToGrid(gridUnavailable, animate);
-		} else if(appSettings.unavailableTab.selfDiscard && tile.getStatus() == DISCARDED_OWN_VOTE){
-			await tile.moveToGrid(gridUnavailable, animate);
+		if(appSettings.unavailableTab.consensusDiscard && this.getStatus() >= NOT_DISCARDED){
+			await this.moveToGrid(gridUnavailable, animate);
+		} else if(appSettings.unavailableTab.selfDiscard && this.getStatus() == DISCARDED_OWN_VOTE){
+			await this.moveToGrid(gridUnavailable, animate);
 		} else {
 			await this.moveToGrid(gridRegular, animate);
 		}
@@ -256,7 +256,7 @@ async function saveHiddenItems(){
 			+ "?data=" + jsonArrURL;
 			
 	var details = {
-		'arr_asin': JSON.stringify(appSettings.hiddenTab.arrItems)
+		'arr_asin': JSON.stringify(arrHidden)
 	};
 	
 	const response = await fetch(
@@ -291,11 +291,11 @@ async function loadHiddenItems(){
 
 function retreiveHiddenData(data){
 	if(data["arr_asin"] != null){
-		appSettings.hiddenTab.arrItems = [];
+		arrHidden = [];
 		$.each(data['arr_asin'], function(key, val){
-			appSettings.hiddenTab.arrItems.push(val);
+			arrHidden.push(val);
 		});
-		saveSettings();
+		chrome.storage.local.set({ 'hiddenItems': arrHidden});
 	}
 }
 
