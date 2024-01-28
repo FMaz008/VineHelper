@@ -49,7 +49,7 @@ function getDefaultSettings(){
 		},
 		
 		"hiddenTab": {
-			"active": hiddenTab,
+			"active": true,
 			"arrItems": []
 		},
 		
