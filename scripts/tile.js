@@ -31,9 +31,10 @@ function Tile(obj, gridInstance){
 			return NO_CONSENSUS;
 	}
 	
-	async function animateVanish(tile){
-		let defaultOpacity = $(tile).css("opacity");
-		tile.animate({
+	this.animateVanish = async function(){
+		let defaultOpacity = $(pTile).css("opacity");
+		
+		$(pTile).animate({
 			height: ["20%", "swing"],
 		},
 		{
@@ -41,19 +42,19 @@ function Tile(obj, gridInstance){
 			queue: false
 		});
 		
-		await tile.delay(150).animate({
+		await $(pTile).delay(150).animate({
 			opacity: "hide"
 		},
 		{
 			duration: 150,
 			complete: function() {
-				$(tile).css({
+				$(pTile).css({
 					'opacity': defaultOpacity,
 					'height': '100%'
 				});
 			}
 		}).promise(); //Converting the animation to a promise allow for the await clause to work.
-		
+		$(pTile).css('height', '100%');
 	}
 
 	//#################
@@ -160,17 +161,16 @@ function Tile(obj, gridInstance){
 		if(g.getId() == pGrid.getId())
 			return false; 
 		
-		if(pGrid != null){
-			pGrid.removeTile(this);
-		}
-		pGrid = g;
-		pGrid.addTile(this);
-		
 		if(animate)
-			await animateVanish($(pTile)); //Will hide the tile
+			await pGrid.removeTile(this, true);
+		else
+			pGrid.removeTile(this, false); //Avoiding the await keep the method synchronous
 		
-		$(pTile).detach().appendTo("#" + $(pGrid.getDOM()).attr("id"));
-		$(pTile).show();
+
+		pGrid = g; //Update the new grid as the current one
+		pGrid.addTile(this);
+
+		
 		
 		return true;
 	};
@@ -191,7 +191,7 @@ function Tile(obj, gridInstance){
 	
 	this.hideTile = async function(animate=true){
 		//Add the item to the list of hidden items
-		console.log(arrHidden);
+		
 		arrHidden.push({"asin" : pAsin, "date": new Date});
 		await chrome.storage.local.set({ 'hiddenItems': arrHidden });
 		

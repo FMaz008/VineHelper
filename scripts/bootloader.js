@@ -68,7 +68,7 @@ async function init(){
 	showRuntime("BOOT: Creating tabs system");
 	var tabSystem = appSettings.unavailableTab.active || appSettings.hiddenTab.active;
 	if(tabSystem){
-		createGridInterface();
+		await createGridInterface();
 	}
 	
 	gridRegular = new Grid($("#vvp-items-grid"));
@@ -244,7 +244,7 @@ function serverProductsResponse(data){
 	}
 	
 	//Load the ETV value
-	$.each(data["products"],function(key,values){
+	$.each(data["products"], function(key,values){
 		
 		let tile = getTileByAsin(key);
 		if(tile==null)
@@ -277,8 +277,6 @@ function serverProductsResponse(data){
 			tile.getToolbar().updateToolbar();
 		}
 	});
-	
-	
 	updateTileCounts();
 }
 

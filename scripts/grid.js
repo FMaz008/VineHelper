@@ -1,56 +1,59 @@
 
-function Grid(obj)
-{
-	//Private variables
-	var pGrid = obj;
-	var pArrTile = [];
-	
-	//Private methods
-	function getId(){
-		return $(pGrid).attr("id");
+class Grid {
+	pGrid = null;
+	pArrTile = [];
+
+	constructor(obj) {
+		this.pGrid = obj;
 	}
 	
-	//Public methods
-	this.getId = function(){
-		return getId();
+	getId() {
+		return $(this.pGrid).attr("id");
 	}
-	
-	this.getDOM = function(){
-		return pGrid;
-	};
-	
-	this.addTile = function(t){
-		pArrTile.push(t);
-	};
-	
-	this.removeTile = function(t){
-		$.each(pArrTile, function(key, value){
-			if(value != undefined && value.getAsin() == t.getAsin()){
-				pArrTile.splice(key, 1);
-			}
-		});
-	};
-	
-	this.getTileCount = function(trueCount=false){
-		if(trueCount){
-			return $(pGrid).children().length;
-		}else{
-			return pArrTile.length;
+
+	getDOM () {
+		return this.pGrid;
+	}
+
+	addTile(t) {
+		this.pArrTile.push(t);
+		
+		if(!$.isEmptyObject(t)){
+			$(t.getDOM()).detach().appendTo("#" + this.getId());
+			$(t.getDOM()).show();
 		}
-	};
-	
-	this.getTileId = function(asin){
+	}
+
+	async removeTile(t, animate = false) {
+		$.each(this.pArrTile, function (key, value) {
+			if (value != undefined && value.getAsin() == t.getAsin()) {
+				this.pArrTile.splice(key, 1);
+			}
+		}.bind(this));
+
+		if(animate)
+			await t.animateVanish(); //Will hide the tile
+	}
+
+	getTileCount (trueCount = false) {
+		if (trueCount)
+			return $(this.pGrid).children().length;
+		else
+			return this.pArrTile.length;
+	}
+
+	getTileId (asin) {
 		var r = null;
-		$.each(pArrTile, function(key, value){
-			if(value != undefined && value.getAsin() == asin){
+		$.each(this.pArrTile, function (key, value) {
+			if (value != undefined && value.getAsin() == asin) {
 				r = value;
 				return false; //Stop the loop
 			}
 		});
 		return r;
-	};
-	
+	}
 }
+
 
 
 function updateTileCounts(){
@@ -76,13 +79,14 @@ async function createGridInterface(){
 	
 	//Implement the tab system.
 	let tabs = $("<div>").attr("id","ext-helper-tabs").insertBefore("#vvp-items-grid");
-	let ul = $("<ul>").attr("id","ext-helper-tabs-ul").appendTo(tabs);
 	$("#vvp-items-grid").detach().appendTo(tabs);
-	$("<li><a href=\"#vvp-items-grid\">Available (<span id='ext-helper-available-count'></span>)</a></li>").appendTo(ul);
-	
+
+	let tplTabs = await Tpl.loadFile(chrome.runtime.getURL("view/tabs.html"));
+
 	//If voting system enabled
 	if(appSettings.unavailableTab.active){
-		$("<li><a href=\"#tab-unavailable\">Unavailable (<span id='ext-helper-unavailable-count'></span>)</a></li>").appendTo(ul);
+		Tpl.setIf("unavailable", true);
+		
 		$("<div />")
 			.attr("id","tab-unavailable")
 			.addClass("ext-helper-grid")
@@ -91,13 +95,17 @@ async function createGridInterface(){
 	
 	//If the hidden tab system is activated
 	if(appSettings.hiddenTab.active){
-		$("<li><a href=\"#tab-hidden\">Hidden (<span id='ext-helper-hidden-count'></span>)</a></li>").appendTo(ul);
+		Tpl.setIf("hidden", true);
 		$("<div />")
 			.attr("id","tab-hidden")
 			.addClass("ext-helper-grid")
 			.appendTo(tabs);
-			
-			
+	}
+
+	let tabsHtml = Tpl.render(tplTabs);
+	$(tabs).prepend(tabsHtml);
+	
+	if(appSettings.hiddenTab.active){
 		//Add the toolbar for Hide All & Show All
 		//Delete the previous one if any exist:
 		$("#ext-helper-tabs .hidden-toolbar").remove();
