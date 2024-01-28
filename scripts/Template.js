@@ -27,13 +27,6 @@ function Template(){
 			return entry.promise;
 	}
 	
-	function findContentIndex(url){
-		for(let i=0; i<arrContent.length; i++)
-			if(arrContent[i].url != undefined && arrContent[i].url == url)
-				return i;
-		return null;
-	}
-	
 	this.setVar = function( name, value){
 		let variable = arrVar.find(e => e.name === name)
 		if(variable == null)
