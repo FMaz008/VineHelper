@@ -58,6 +58,7 @@
 		"view/notification_sound.html",
 		"view/widget_order.html",
 		"view/widget_voting.html",
+		"view/widget_hideall.html",
 		"view/popup_firstvote.html",
 		"view/popup_changelog.html",
 		"view/infinite_wheel_fix.html",

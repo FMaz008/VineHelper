@@ -67,7 +67,7 @@ function updateTileCounts(){
 
 
 
-function createGridInterface(){
+async function createGridInterface(){
 	//Clean up interface (in case of the extension being reloaded)
 	$("ul#ext-helper-tabs-ul").remove();
 	$("div#tab-unavailable").remove();
@@ -101,22 +101,15 @@ function createGridInterface(){
 		//Add the toolbar for Hide All & Show All
 		//Delete the previous one if any exist:
 		$("#ext-helper-tabs .hidden-toolbar").remove();
-		a1 = $("<a>")
-			.attr("href", "#")
-			.attr("onclick", "return false;")
-			.html('<div class="ext-helper-toolbar-icon ext-helper-icon-hide"></div> Hide all')
-			.on("click", {}, this.hideAllItems);
-		a2 = $("<a>")
-			.attr("href", "#")
-			.attr("onclick", "return false;")
-			.html('<div class="ext-helper-toolbar-icon ext-helper-icon-show"></div> Show all')
-			.on("click", {}, this.showAllItems);
-		$("<div>")
-			.addClass("hidden-toolbar")
-			.append("All items on this page:<br />")
-			.append(a1, " / ", a2)
-			.prependTo("#ext-helper-tabs");
+		//Generate the html for the hide all and show all widget
+		let prom = await Tpl.loadFile(chrome.runtime.getURL("view/widget_hideall.html"));
+		let content = Tpl.render(prom);
+		$(content).prependTo("#ext-helper-tabs");
+		$(content).appendTo("#ext-helper-tabs").css("margin-top", "5px");
 
+		$("#ext-helper-hideall").on("click", {}, this.hideAllItems);
+		$("#ext-helper-showall").on("click", {}, this.showAllItems);
+		
 	}
 	
 	//Actiate the tab system
