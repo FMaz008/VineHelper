@@ -6,7 +6,9 @@ var arrHidden = [];
 
 var vineDomain = null;
 var vineCountry = null;
-var vineQueue = null
+var vineLocale = null;
+var vineCurrency = null;
+var vineQueue = null;
 var uuid = null;
 
 var appVersion = 0;
@@ -184,6 +186,29 @@ async function getSettings(){
 	//If the domain if not from outside the countries supported by the discord API, disable discord
 	if (["ca", "com", "co.uk"].indexOf(vineDomain) == -1){
 		appSettings.discord.active = false;
+	}
+
+	switch(vineDomain){
+		case "ca":
+			vineLocale = "en-CA";
+			vineCurrency = "CAD";
+			break;
+		case "com":
+			vineLocale = "en-US";
+			vineCurrency = "USD";
+			break;
+		case "co.uk":
+			vineLocale = "en_GB";
+			vineCurrency = "GBP";
+			break;
+		case "fr":
+			vineLocale = "fr-FR";
+			vineCurrency = "EUR";
+			break;
+		case "es":
+			vineLocale = "es-ES";
+			vineCurrency = "EUR";
+			break;
 	}
 	
 	

@@ -125,7 +125,7 @@ function Toolbar(tileInstance){
 			return false;
 		
 		
-		span.text(etv);
+		span.text(new Intl.NumberFormat(vineLocale, { style: 'currency', currency: vineCurrency }).format(etv));
 		span.trigger("change");
 		
 		if(appSettings.general.displayETV)
