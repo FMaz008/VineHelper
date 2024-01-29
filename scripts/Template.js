@@ -54,7 +54,7 @@ class Template {
 		return output;
 	}
 }
-var Tpl = new Template();
+
 class TemplateMgr{
 	arrTemplate = [];
 
@@ -102,8 +102,7 @@ class TemplateMgr{
 	
 	async flushLocalStorage(){
 		showRuntime("TEMPLATE: Flushed template cache.");
-		await chrome.storage.local.set({ 'arrTemplate': {} });
+		await chrome.storage.local.set({ 'arrTemplate': [] });
 	}
 
 }
-var TplMgr = new TemplateMgr();

@@ -9,3 +9,10 @@
         <li><a href="#tab-hidden">Hidden (<span id='ext-helper-hidden-count'></span>)</a></li>
     {{endif}}
 </ul>
+
+{{if unavailable}}
+<div id="tab-unavailable" class="ext-helper-grid"></div>
+{{endif}}
+{{if hidden}}
+<div id="tab-hidden" class="ext-helper-grid"></div>
+{{endif}}

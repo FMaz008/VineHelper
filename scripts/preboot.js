@@ -13,6 +13,10 @@ var uuid = null;
 
 var appVersion = 0;
 
+var Tpl = new Template();
+var TplMgr = new TemplateMgr();
+var Notifications = new ScreenNotifier();
+
 //#########################
 //### Load settings
 

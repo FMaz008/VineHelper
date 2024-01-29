@@ -84,23 +84,10 @@ async function createGridInterface(){
 	let tplTabs = await Tpl.loadFile("view/tabs.html");
 
 	//If voting system enabled
-	if(appSettings.unavailableTab.active){
-		Tpl.setIf("unavailable", true);
-		
-		$("<div />")
-			.attr("id","tab-unavailable")
-			.addClass("ext-helper-grid")
-			.appendTo(tabs);
-	}
+	Tpl.setIf("unavailable", appSettings.unavailableTab.active);
 	
 	//If the hidden tab system is activated
-	if(appSettings.hiddenTab.active){
-		Tpl.setIf("hidden", true);
-		$("<div />")
-			.attr("id","tab-hidden")
-			.addClass("ext-helper-grid")
-			.appendTo(tabs);
-	}
+	Tpl.setIf("hidden", appSettings.hiddenTab.active);
 
 	let tabsHtml = Tpl.render(tplTabs);
 	$(tabs).prepend(tabsHtml);

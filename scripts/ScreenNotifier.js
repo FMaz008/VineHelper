@@ -93,4 +93,3 @@ class ScreenNotifier {
 	}
 }
 
-var Notifications = new ScreenNotifier();
