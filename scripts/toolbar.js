@@ -286,7 +286,8 @@ async function announceItem(event){
 	
 	//In case of price range, only send the highest value.
 	etv = etv.split("-").pop();
-	
+	etv = Number(etv.replace(/[^0-9\.-]+/g,""));
+
 	if(!confirm("Send this product to Brenda over on discord?"))
 		return false;
 	
