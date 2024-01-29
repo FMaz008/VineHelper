@@ -50,7 +50,8 @@ function getDefaultSettings(){
 		
 		"hiddenTab": {
 			"active": true,
-			"arrItems": []
+			"remote": false,
+			"arrItems": [] //deprecated
 		},
 		
 		"discord":{
@@ -216,7 +217,7 @@ async function getSettings(){
 	vineQueue = null;
 	if(arrMatches != null){
 		if(arrMatches[1] == undefined){
-			vineQueue = "last_chance";
+			vineQueue = null; //Could be the default AFA or a search.
 		} else{
 			vineQueue = arrMatches[1];
 		}

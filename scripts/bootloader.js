@@ -216,7 +216,14 @@ function generateTile(obj){
 
 //Get data from the server about the products listed on this page
 function fetchProductsData(arrUrl){
-	let arrJSON = {"api_version":4, "action": "getinfo", "country": vineCountry, "arr_asin":arrUrl};
+	let arrJSON = {
+		"api_version":4,
+		"action": "getinfo",
+		"country": vineCountry,
+		"uuid": appSettings.general.uuid,
+		"queue": vineQueue,
+		"arr_asin":arrUrl
+	};
 	let jsonArrURL = JSON.stringify(arrJSON);
 	
 	showRuntime("Fetching products data...");
@@ -261,14 +268,21 @@ function serverProductsResponse(data){
 		if(values.date_added != null)
 			tile.setDateAdded(values.date_added);
 		
+		//If there is a remote value for the hidden item, ensure it is sync'ed up with the local list
+		if(appSettings.hiddenTab.remote == true && values.hidden != null){
+			if(values.hidden == true && !tile.isHidden())
+				tile.hideTile(); //Will update the placement and list
+			else if(values.hidden == false && tile.isHidden())
+				tile.showTile(); //Will update the placement and list
+		}
 		
 		if(appSettings.unavailableTab.active){ // if the voting system is active.
 			tile.setVotes(values.v0, values.v1, values.s);
 			tile.setOrders(values.order_success, values.order_failed);
 			
 			//Assign the tiles to the proper grid
-			if(appSettings.hiddenTab.active && tile.isHidden()){ //The hidden tiles were already moved, but we want to keep them there.
-				tile.moveToGrid(gridHidden, false); //This is the main sort, do not animate it
+			if(appSettings.hiddenTab.active && tile.isHidden()){
+				//The hidden tiles were already moved, keep the there.
 			}else if(appSettings.unavailableTab.consensusDiscard && tile.getStatus() >= NOT_DISCARDED){
 				tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
 			} else if(appSettings.unavailableTab.selfDiscard && tile.getStatus() == DISCARDED_OWN_VOTE){

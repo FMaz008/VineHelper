@@ -114,25 +114,48 @@ async function createGridInterface(){
 
 
 async function hideAllItems(){
-	if ($("#vvp-items-grid .vvp-item-tile").children().length == 0)
-		return true;
-	
-	tDom = $("#vvp-items-grid .vvp-item-tile").children()[0];
-	asin = getAsinFromDom(tDom);
-	tile = getTileByAsin(asin); //Obtain the real tile 
-	await tile.hideTile(false);
-	
-	hideAllItems();
+	let arrTile = [];
+	while($("#vvp-items-grid .vvp-item-tile").children().length > 0){	
+		tDom = $("#vvp-items-grid .vvp-item-tile").children()[0];
+		asin = getAsinFromDom(tDom);
+		arrTile.push({asin, "hidden": true});
+		tile = getTileByAsin(asin); //Obtain the real tile 
+		await tile.hideTile(false);
+	}
+
+	notifyServerOfHiddenItem(arrTile);
 }
 
 async function showAllItems(){
-	if ($("#tab-hidden .vvp-item-tile").children().length == 0)
-		return true;
+	let arrTile = [];
+	while ($("#tab-hidden .vvp-item-tile").children().length > 0){
+		tDom = $("#tab-hidden .vvp-item-tile").children()[0];
+		asin = getAsinFromDom(tDom);
+		arrTile.push({asin, "hidden": false});
+		tile = getTileByAsin(asin); //Obtain the real tile 
+		await tile.showTile(false);
+	}
+	notifyServerOfHiddenItem(arrTile);
+}
+
+/**
+ * Send new items on the server to be added or removed from the hidden list.
+ * @param [{"asin": "abc", "hidden": true}, ...] arr 
+ */
+function notifyServerOfHiddenItem(arr){
+	let arrJSON = {
+		"api_version":4,
+		"country": vineCountry,
+		"action": "save_hidden_list",
+		"uuid": appSettings.general.uuid,
+		"arr":arr
+	};
+	let jsonArrURL = JSON.stringify(arrJSON);
 	
-	tDom = $("#tab-hidden .vvp-item-tile").children()[0];
-	asin = getAsinFromDom(tDom);
-	tile = getTileByAsin(asin); //Obtain the real tile 
-	await tile.showTile(false);
+	showRuntime("Saving hidden item(s) remotely...");
 	
-	showAllItems();
+	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
+	let url = "https://www.francoismazerolle.ca/vinehelper.php"
+			+ "?data=" + jsonArrURL;
+	fetch(url);
 }

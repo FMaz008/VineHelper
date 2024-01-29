@@ -195,10 +195,6 @@ function Tile(obj, gridInstance){
 		arrHidden.push({"asin" : pAsin, "date": new Date});
 		await chrome.storage.local.set({ 'hiddenItems': arrHidden });
 		
-		if(appSettings.hiddenTab.remote)
-			saveHiddenItems();
-		
-		
 		//Move the tile
 		await this.moveToGrid(gridHidden, animate);
 		
@@ -217,15 +213,6 @@ function Tile(obj, gridInstance){
 			}
 		});
 		await chrome.storage.local.set({ 'hiddenItems': arrHidden });
-		
-		if(appSettings.hiddenTab.remote){
-			//As this function can be called over 30 times if someone hide all the items on the page, 
-			//Always wait 1s before saving the item to the server.
-			window.clearTimeout(timeoutHandle);
-			timeoutHandle = window.setTimeout(function() {
-				saveHiddenItems();
-			}, 1000);
-		}
 		
 		//Move the tile
 		if(appSettings.unavailableTab.consensusDiscard && this.getStatus() >= NOT_DISCARDED){
@@ -246,58 +233,7 @@ function Tile(obj, gridInstance){
 
 }
 
-async function saveHiddenItems(){
-	//Retreive the arr from the local settings
-	let arrJSON = {"api_version":4, "action": "save_hidden_list", "country": vineCountry};
-	let jsonArrURL = JSON.stringify(arrJSON);
-	
-	//Post an AJAX request to the home server, to store the hidden items
-	let url = "https://www.francoismazerolle.ca/vinehelper.php"
-			+ "?data=" + jsonArrURL;
-			
-	var details = {
-		'arr_asin': JSON.stringify(arrHidden)
-	};
-	
-	const response = await fetch(
-		url,
-		{
-			method: "POST",
-			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-			body: new URLSearchParams(details)
-		}
-	);
-}
 
-
-async function loadHiddenItems(){
-	//Retreive the arr from the local settings
-	let arrJSON = {"api_version":4, "action": "load_hidden_list", "country": vineCountry};
-	let jsonArrURL = JSON.stringify(arrJSON);
-	
-	//Post an AJAX request to the home server, to store the hidden items
-	let url = "https://www.francoismazerolle.ca/vinehelper.php"
-			+ "?data=" + jsonArrURL;
-			
-	const response = await fetch(url)
-		.then((response) => response.json())
-		.then(retreiveHiddenData)
-		.catch( 
-			function() {
-				error =>  console.log(error);
-			}
-	);
-}
-
-function retreiveHiddenData(data){
-	if(data["arr_asin"] != null){
-		arrHidden = [];
-		$.each(data['arr_asin'], function(key, val){
-			arrHidden.push(val);
-		});
-		chrome.storage.local.set({ 'hiddenItems': arrHidden});
-	}
-}
 
 
 function timeSince(date) {
