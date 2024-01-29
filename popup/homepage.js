@@ -44,6 +44,11 @@ function handleDynamicFields(key){
 			.checkboxradio( "option", { "disabled": !$(`label[for='${$.escapeSelector(key)}'] input`).is(":checked") }  )
 			.checkboxradio("refresh");
     }
+    if(key=="general.displayFirstSeen"){
+        $(`[name='${$.escapeSelector("general.bookmark")}']`)
+			.checkboxradio( "option", { "disabled": !$(`label[for='${$.escapeSelector(key)}'] input`).is(":checked") }  )
+			.checkboxradio("refresh");
+    }
 }
 async function drawUnavailableTab() {
     if (appSettings.unavailableTab.active) {
@@ -220,6 +225,7 @@ function init() {
     manageCheckboxSetting("general.displayETV");
     manageCheckboxSetting("general.displayVariantIcon");
     manageCheckboxSetting("general.displayFirstSeen");
+    manageCheckboxSetting("general.bookmark");
     manageCheckboxSetting("general.newItemNotification");
     manageCheckboxSetting("general.newItemNotificationSound");
     manageCheckboxSetting("hiddenTab.active");

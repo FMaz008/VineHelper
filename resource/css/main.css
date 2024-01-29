@@ -71,3 +71,18 @@ div.ui-widget-overlay{
 	background:black;
 	opacity:0.1;
 }
+
+button.bookmark{
+	margin-left:10px;
+	display: inline-block;
+	border-radius: 8px;
+	color: #0F1111;
+	border: 1px solid #6c6e73;
+	line-height: 16px;
+	padding: 8px 12px 7px 13px;
+	vertical-align: top;
+}
+#vvp-items-grid .bookmark-highlight{
+	border:3px solid #FFD814;
+	background-color: #FF6;
+}

@@ -100,7 +100,31 @@ async function init(){
 		$("#vvp-items-grid-container .topPagination").remove();
 		$(".a-pagination").parent().css("margin-top","10px").clone().insertAfter("#vvp-items-grid-container p").addClass("topPagination");
 	}
-	
+
+	//Insert bookmark button
+	if(appSettings.general.displayFirstSeen && appSettings.general.bookmark){
+		$("button.bookmark").remove();
+		prom = await Tpl.loadFile("view/bookmark.html");
+		let bookmarkContent = Tpl.render(prom);
+		$(".a-pagination").parent().append(bookmarkContent);
+		$("button.bookmark").on("click", function(event){
+			
+			//Fetch the current date/time from the server
+			let arrJSON = {"api_version":4, "country": vineCountry, "action":"date"};
+			let url = "https://francoismazerolle.ca/vinehelper.php"
+					+ "?data=" + JSON.stringify(arrJSON);
+			fetch(url)
+				.then((response) => response.json())
+				.then(async function(response){
+					let t = response.date.split(/[- :]/);
+					let jsDate = new Date(Date.UTC(t[0], t[1]-1, t[2], parseInt(t[3])+5, t[4], t[5]));//+5hrs for the server time
+					
+					appSettings.general.bookmarkDate = jsDate;
+					saveSettings();
+					alert("Bookmark set for \n" + appSettings.general.bookmarkDate + "\nItems newer will be highlighted.\n\nNote: Settings pertaining to this tab were saved.");
+				});
+		})
+	}
 	
 	//Browse each items from the Regular grid
 	//- Create an array of all the products listed on the page
@@ -251,6 +275,8 @@ function serverProductsResponse(data){
 		console.log("Wrong API version");
 	}
 	
+	$timenow = data["current_time"];
+
 	//Load the ETV value
 	$.each(data["products"], function(key,values){
 		
@@ -266,7 +292,7 @@ function serverProductsResponse(data){
 		}
 		
 		if(values.date_added != null)
-			tile.setDateAdded(values.date_added);
+			tile.setDateAdded($timenow, values.date_added);
 		
 		//If there is a remote value for the hidden item, ensure it is sync'ed up with the local list
 		if(appSettings.hiddenTab.remote == true && values.hidden != null){

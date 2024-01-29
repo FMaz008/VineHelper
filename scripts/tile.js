@@ -139,7 +139,7 @@ function Tile(obj, gridInstance){
 		return pGrid.getId();
 	};
 	
-	this.setDateAdded = function(mysqlDate){
+	this.setDateAdded = function(timenow, mysqlDate){
 		if(mysqlDate == undefined)
 			return false;
 		
@@ -147,13 +147,18 @@ function Tile(obj, gridInstance){
 			return false;
 		
 		let t = mysqlDate.split(/[- :]/);
-		let jsDate = new Date(Date.UTC(t[0], t[1]-1, t[2], parseInt(t[3])+5, t[4], t[5]));//+5hrs for the server time
-		let textDate = timeSince(jsDate);
+		let jsDate = new Date(Date.UTC(t[0], t[1]-1, t[2], parseInt(t[3]), t[4], t[5]));
+		t = timenow.split(/[- :]/);
+		timenow = new Date(Date.UTC(t[0], t[1]-1, t[2], parseInt(t[3]), t[4], t[5]));
+		let textDate = timeSince(timenow, jsDate);
 		$("<div>")
 			.addClass("ext-helper-date-added")
 			.text("First seen: " + textDate + " ago")
 			.appendTo($(pTile).find(".ext-helper-img-container"));
 		
+		if(appSettings.general.bookmark && jsDate > appSettings.general.bookmarkDate){
+			$(pTile).addClass("bookmark-highlight");
+		}
 	}
 	
 	this.moveToGrid = async function(g, animate = false){
@@ -236,9 +241,9 @@ function Tile(obj, gridInstance){
 
 
 
-function timeSince(date) {
+function timeSince(timenow, date) {
 
-	var seconds = Math.floor((new Date() - date) / 1000);
+	var seconds = Math.floor((timenow - date) / 1000);
 	var interval = seconds / 31536000;
 
 	if (interval > 1) 

@@ -53,6 +53,7 @@
 		"lib/jquery_ui/images/ui-icons_ffffff_256x240.png",
 		"view/tabs.html",
 		"view/toolbar.html",
+		"view/bookmark.html",
 		"view/notification_container.html",
 		"view/notification_default.html",
 		"view/notification_loading.html",
