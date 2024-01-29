@@ -16,12 +16,6 @@ var appVersion = 0;
 //#########################
 //### Load settings
 
-async function getLocalStorageVariable(varName){
-	let result = await chrome.storage.local.get(varName);
-	if(!$.isEmptyObject(result))
-		return null;
-	return result[varName];
-}
 //This method will initiate the settings for the first time,
 function getDefaultSettings(){
 	

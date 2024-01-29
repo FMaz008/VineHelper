@@ -4,14 +4,14 @@ function Toolbar(tileInstance){
 	var pToolbar = null;
 	var pTile = tileInstance;
 	pTile.setToolbar(this);
-	
+
 	//Create the bare bone structure of the toolbar
 	this.createProductToolbar = async function (){
 		let toolbarId = "ext-helper-toolbar-" + pTile.getAsin();
 		let anchorTo = $(pTile.getDOM()).children(".vvp-item-tile-content");
 		
 		//Load the toolbar template
-		const prom = await Tpl.loadFile(chrome.runtime.getURL("view/toolbar.html"));
+		const prom = await Tpl.loadFile("view/toolbar.html");
 		Tpl.setVar("toolbarId", toolbarId);
 		Tpl.setVar("asin", pTile.getAsin());
 		Tpl.setIf("announce", appSettings.discord.active && appSettings.discord.guid != null && vineQueue != null);
@@ -135,11 +135,8 @@ function Toolbar(tileInstance){
 	//This method is called from bootloader.js, serverResponse() when the voting data has been received, after the tile was moved.
 	this.updateToolbar = async function (){
 		let context = $("#ext-helper-toolbar-" + pTile.getAsin());
-		let icon = $(context).find(".ext-helper-icon");
-		let container = $(context).find("div.ext-helper-status-container2");
 		
 		let tileOpacity;
-		let statusText;
 		let statusColor;
 		
 		//If the hidden tab system is activated, update the visibility icon
@@ -220,7 +217,7 @@ function Toolbar(tileInstance){
 		$(container).children(".ext-helper-voting-widget").remove();
 		
 		//Generate the html for the voting widget
-		let prom = await Tpl.loadFile(chrome.runtime.getURL("view/widget_voting.html"));
+		let prom = await Tpl.loadFile("view/widget_voting.html");
 		Tpl.setVar("asin", pTile.getAsin());
 		Tpl.setVar("vote_no_fees", pTile.getVoteNoFees());
 		Tpl.setVar("vote_with_fees", pTile.getVoteFees());
@@ -268,7 +265,7 @@ function Toolbar(tileInstance){
 		$(container).children(".ext-helper-voting-widget").remove();
 		
 		//Generate the HTML for the widget
-		prom = await Tpl.loadFile(chrome.runtime.getURL("view/widget_order.html"));
+		prom = await Tpl.loadFile("view/widget_order.html");
 		Tpl.setVar("order_success", pTile.getOrderSuccess());
 		Tpl.setVar("order_failed", pTile.getOrderFailed());
 		let content = Tpl.render(prom);

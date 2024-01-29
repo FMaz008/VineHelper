@@ -17,7 +17,7 @@ class Grid {
 
 	addTile(t) {
 		this.pArrTile.push(t);
-		
+
 		if(!$.isEmptyObject(t)){
 			$(t.getDOM()).detach().appendTo("#" + this.getId());
 			$(t.getDOM()).show();
@@ -81,7 +81,7 @@ async function createGridInterface(){
 	let tabs = $("<div>").attr("id","ext-helper-tabs").insertBefore("#vvp-items-grid");
 	$("#vvp-items-grid").detach().appendTo(tabs);
 
-	let tplTabs = await Tpl.loadFile(chrome.runtime.getURL("view/tabs.html"));
+	let tplTabs = await Tpl.loadFile("view/tabs.html");
 
 	//If voting system enabled
 	if(appSettings.unavailableTab.active){
@@ -110,7 +110,7 @@ async function createGridInterface(){
 		//Delete the previous one if any exist:
 		$("#ext-helper-tabs .hidden-toolbar").remove();
 		//Generate the html for the hide all and show all widget
-		let prom = await Tpl.loadFile(chrome.runtime.getURL("view/widget_hideall.html"));
+		let prom = await Tpl.loadFile("view/widget_hideall.html");
 		let content = Tpl.render(prom);
 		$(content).prependTo("#ext-helper-tabs");
 		$(content).appendTo("#ext-helper-tabs").css("margin-top", "5px");

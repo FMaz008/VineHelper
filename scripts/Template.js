@@ -11,23 +11,8 @@ class Template {
 	async loadFile(url) {
 
 		this.currentURL = url;
-
-		// Check if the content was already loading
-		let entry = this.arrCache.find(e => e.url === url);
-		if (entry == null) { // The template already exist, simply load it from memory
-			//Content is not aready in arrCache, load it from the url
-			const promise = fetch(url)
-				.then(response => {
-					if (!response.ok) throw new Error(response.statusText);
-					//Reset the stored variables
-					this.arrVar = [];
-					this.arrIf = [];
-					return response.text();
-				});
-			entry = { url, promise };
-			this.arrCache.push(entry);
-		}
-		return entry.promise;
+		
+		return TplMgr.getTemplate(url);
 	}
 
 	setVar(name, value) {
@@ -69,5 +54,56 @@ class Template {
 		return output;
 	}
 }
-
 var Tpl = new Template();
+class TemplateMgr{
+	arrTemplate = [];
+
+	constructor(){
+		this.loadTempateFromLocalStorage();
+	}
+
+	async loadTempateFromLocalStorage(){
+		const data = await chrome.storage.local.get("arrTemplate");
+		if($.isEmptyObject(data)){
+			showRuntime("TEMPLATE: No template in localstorage, will load them from files as needed...");
+			return;
+		}
+		this.arrTemplate = data.arrTemplate;
+	}
+
+	async getTemplate(url){
+		let content = this.arrTemplate.find(e => e.url === url);
+		if(content != null){
+			showRuntime("TEMPLATE: Loaded template " + url + " from memory.");
+			return content.prom;
+		}
+
+		//Not found in memory, which was loaded from local storage. Fetch the file.
+		const prom = await this.loadTemplateFromFile(url);
+		this.arrTemplate.push({url , prom});
+
+		//Save new file to local storage
+		await chrome.storage.local.set({ 'arrTemplate': this.arrTemplate });
+
+		return prom;
+	}
+
+
+	async loadTemplateFromFile(url) {
+		showRuntime("TEMPLATE: Loading template " + url + " from file.");
+		const promise = fetch(chrome.runtime.getURL(url))
+			.then(response => {
+				if (!response.ok) throw new Error(response.statusText);
+					return response.text();
+				});
+		return promise;
+
+	}
+	
+	async flushLocalStorage(){
+		showRuntime("TEMPLATE: Flushed template cache.");
+		await chrome.storage.local.set({ 'arrTemplate': {} });
+	}
+
+}
+var TplMgr = new TemplateMgr();

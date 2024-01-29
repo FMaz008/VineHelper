@@ -86,12 +86,13 @@ async function init(){
 	
 	//Show version info popup : new version
 	if(appVersion != appSettings.general.versionInfoPopup){
-		prom = await Tpl.loadFile(chrome.runtime.getURL("view/popup_changelog.html"));
+		prom = await Tpl.loadFile("view/popup_changelog.html");
 		Tpl.setVar("appVersion", appVersion);
 		let content = Tpl.render(prom);
 		showModalDialog("Vine Helper update info", content ,600);
 		appSettings.general.versionInfoPopup = appVersion;
 		saveSettings();
+		TplMgr.flushLocalStorage(); //Delete all template from cache
 	}
 	
 	//Bottom pagination
@@ -129,7 +130,7 @@ async function checkNewItems(){
 	
 	//Display a notification that we have checked for items.
 	let note = new ScreenNotification();
-	note.template = chrome.runtime.getURL("view/notification_loading.html")
+	note.template = "view/notification_loading.html";
 	note.lifespan = 3;
 	await Notifications.pushNotification(note);
 	
@@ -278,6 +279,7 @@ function serverProductsResponse(data){
 		}
 	});
 	updateTileCounts();
+	showRuntime("Done updating products");
 }
 
 
@@ -329,7 +331,7 @@ async function reportfees(event){
 	//Show first vote popup
 	if(appSettings.general.firstVotePopup){
 		
-		prom = await Tpl.loadFile(chrome.runtime.getURL("view/popup_firstvote.html"));
+		prom = await Tpl.loadFile("view/popup_firstvote.html");
 		let content = Tpl.render(prom);
 		showModalDialog("Vine Helper - voting feature", content ,600, "resource/sound/upgrade.mp3");
 		appSettings.general.firstVotePopup = false;
@@ -349,7 +351,7 @@ window.addEventListener("message", async function(event) {
     if (event.data.type && (event.data.type == "infiniteWheelFixed")) {
         //console.log("Content script received message: " + event.data.text);
 		
-		prom = await Tpl.loadFile(chrome.runtime.getURL("view/infinite_wheel_fix.html"));
+		prom = await Tpl.loadFile("view/infinite_wheel_fix.html");
 		let content = Tpl.render(prom);
 		
 		$("#a-popover-content-3").prepend(content);

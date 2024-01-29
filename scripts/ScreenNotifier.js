@@ -25,7 +25,7 @@ class ScreenNotification {
 	
 	//Render the notification HTML.
 	async render(){
-		const prom = await Tpl.loadFile(chrome.runtime.getURL(this.template));
+		const prom = await Tpl.loadFile(this.template);
 		Tpl.setVar("id", this.id);
 		Tpl.setVar("title", this.title);
 		Tpl.setVar("content", this.content);
@@ -47,7 +47,7 @@ class ScreenNotifier {
 		//Delete preexisting containers
 		$("#ext-helper-notifications-container").remove();
 		//Load the container
-		const prom = await Tpl.loadFile( chrome.runtime.getURL("view/notification_container.html"));
+		const prom = await Tpl.loadFile("view/notification_container.html");
 		$("body").append(Tpl.render(prom));
 	}
 	
