@@ -285,10 +285,7 @@ function serverProductsResponse(data){
 			console.log("No tile matching " + key);
 		
 		if(values.etv_min != null){
-			if(values.etv_min == values.etv_max)
-				tile.getToolbar().setETV(values.etv_min);
-			else
-				tile.getToolbar().setETV(values.etv_min + "-" + values.etv_max);
+			tile.getToolbar().setETV(values.etv_min, values.etv_max);
 		}
 		
 		if(values.date_added != null)
@@ -438,7 +435,7 @@ window.addEventListener("message", async function(event) {
 	
 		//Update the product tile ETV in the Toolbar
 		let tile = getTileByAsin(tileASIN);
-		tile.getToolbar().setETV(event.data.data.etv, true);
+		tile.getToolbar().setETV(event.data.data.etv, event.data.data.etv, true);
 		
 		//Show a notification
 		let note = new ScreenNotification();

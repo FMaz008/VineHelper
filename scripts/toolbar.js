@@ -119,15 +119,21 @@ function Toolbar(tileInstance){
 		icon.addClass(iconClass);
 	};
 	
-	this.setETV = function(etv, onlyIfEmpty=false){
+	this.setETV = function(etv1, etv2, onlyIfEmpty=false){
 		let context = $("#ext-helper-toolbar-" + pTile.getAsin());
 		let span = $(context).find(".ext-helper-toolbar-etv .etv");
 		
 		if(onlyIfEmpty && span.text()!="")
 			return false;
 		
-		
-		span.text(new Intl.NumberFormat(vineLocale, { style: 'currency', currency: vineCurrency }).format(etv));
+		etv1 = new Intl.NumberFormat(vineLocale, { style: 'currency', currency: vineCurrency }).format(etv1);
+		etv2 = new Intl.NumberFormat(vineLocale, { style: 'currency', currency: vineCurrency }).format(etv2);
+		if(etv1 == etv2){
+			span.text(etv2);
+		}else{
+			span.text(etv1 +"-" + etv2);
+			
+		}
 		span.trigger("change");
 		
 		if(appSettings.general.displayETV)
