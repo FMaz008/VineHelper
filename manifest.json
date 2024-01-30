@@ -28,6 +28,9 @@
 	"default_title": "Amazon Vine Helper",
     "default_icon": "resource/image/icon-128.png"
   },
+  "options_ui": {
+	"page": "popup/homepage.html"
+  },
   "web_accessible_resources": [
     {
       "resources": [ 
