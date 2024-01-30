@@ -24,6 +24,7 @@ function getCB(key) {
     return $(`label[for='${$.escapeSelector(key)}'] input`).is(":checked");
 }
 
+
 function handleDynamicFields(key){
 	if(key=="general.allowInjection"){
 		$(`[name='${$.escapeSelector("general.shareETV")}']`)
@@ -237,6 +238,8 @@ function init() {
     manageCheckboxSetting("unavailableTab.compactToolbar");
     manageCheckboxSetting("unavailableTab.consensusDiscard");
 
+    manageCheckboxSetting("thorvarium.mobileios");
+    manageCheckboxSetting("thorvarium.mobileandroid");
     manageCheckboxSetting("thorvarium.smallItems");
     manageCheckboxSetting("thorvarium.removeHeader");
     manageCheckboxSetting("thorvarium.removeFooter");

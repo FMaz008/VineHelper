@@ -62,6 +62,8 @@ function getDefaultSettings(){
 		},
 		
 		"thorvarium": {
+			"mobileios": false,
+			"mobileandroid": false,
 			"smallItems": false,
 			"removeHeader": false,
 			"removeFooter": false,
@@ -120,6 +122,12 @@ async function getSettings(){
 
 	
 	//Load Thorvarium stylesheets
+	if(appSettings.thorvarium.mobileios)
+		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/mobile/ios-with-bugfix.css">');
+	
+	if(appSettings.thorvarium.mobileandroid)
+		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/mobile/mobile.css">');
+	
 	if(appSettings.thorvarium.smallItems)
 		$('head').append('<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/small-items.css">');
 	
