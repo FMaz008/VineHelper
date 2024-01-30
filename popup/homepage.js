@@ -4,7 +4,8 @@
 var appSettings = {};
 let manifest = chrome.runtime.getManifest();
 appVersion = manifest.version;
-$("#version").text(appVersion);
+document.querySelectorAll("#version")[0].innerText= appVersion;
+
 
 async function loadSettings() {
     const data = await chrome.storage.local.get("settings");
@@ -13,47 +14,64 @@ async function loadSettings() {
 }
 loadSettings();
 
+
+
 function setCB(key, value) {
-    $(`[name='${$.escapeSelector(key)}']`)
-        .prop("checked", value)
-        .checkboxradio("refresh");
+    let keyE = CSS.escape(key);
+
+    let cb = document.querySelector(`input[name='${keyE}']`);
+    cb.checked = value;
+    
 	handleDynamicFields(key);
 }
 
 function getCB(key) {
-    return $(`label[for='${$.escapeSelector(key)}'] input`).is(":checked");
+    key = CSS.escape(key);
+    let cb = document.querySelector(`input[name='${key}']`);
+    
+    return cb.checked==true;
 }
 
+function handleChildrenOptions(parent_key){
+    let key = CSS.escape(parent_key);
+    let parentObj = document.querySelector(key);
+
+    //$(parentObj).next("div").children("label").toggle();
+}
 
 function handleDynamicFields(key){
+    let keyE = CSS.escape(key);
+    let checked = document.querySelector(`input[name='${keyE}']`).checked;
+    let keyF = null;
+
 	if(key=="general.allowInjection"){
-		$(`[name='${$.escapeSelector("general.shareETV")}']`)
-			.checkboxradio( "option", { "disabled": !$(`label[for='${$.escapeSelector(key)}'] input`).is(":checked") }  )
-			.checkboxradio("refresh");
-			
-		$(`[name='${$.escapeSelector("unavailableTab.shareOrder")}']`)
-			.checkboxradio( "option", { "disabled": !$(`label[for='${$.escapeSelector(key)}'] input`).is(":checked") }  )
-			.checkboxradio("refresh");
+        keyF = CSS.escape("general.shareETV");
+        document.querySelector(`input[name='${keyF}']`).disabled = !checked;
+		
+        keyF = CSS.escape("unavailableTab.shareOrder");
+        document.querySelector(`input[name='${keyF}']`).disabled = !checked;
 	}
 	if(key=="hiddenTab.active"){
-		$(`[name='${$.escapeSelector("hiddenTab.remote")}']`)
-			.checkboxradio( "option", { "disabled": !$(`label[for='${$.escapeSelector(key)}'] input`).is(":checked") }  )
-			.checkboxradio("refresh");
+        keyF = CSS.escape("hiddenTab.remote");
+        document.querySelector(`[name='${keyF}']`).disabled = !checked;
 	}
     if(key=="general.newItemNotification"){
-        $(`[name='${$.escapeSelector("general.newItemNotificationSound")}']`)
-			.checkboxradio( "option", { "disabled": !$(`label[for='${$.escapeSelector(key)}'] input`).is(":checked") }  )
-			.checkboxradio("refresh");
+        keyF = CSS.escape("general.newItemNotificationSound");
+        document.querySelector(`[name='${keyF}']`).disabled = !checked;
     }
+    //handleChildrenOptions(key);
+    
     if(key=="general.displayFirstSeen"){
-        $(`[name='${$.escapeSelector("general.bookmark")}']`)
-			.checkboxradio( "option", { "disabled": !$(`label[for='${$.escapeSelector(key)}'] input`).is(":checked") }  )
-			.checkboxradio("refresh");
+        keyF = CSS.escape("general.bookmark");
+        document.querySelector(`[name='${keyF}']`).disabled = !checked;
     }
+    
 }
 async function drawUnavailableTab() {
+    document.querySelector("#unavailableTabOptions").style.display = appSettings.unavailableTab.active ? "flex" :"none";
+
     if (appSettings.unavailableTab.active) {
-        $("#unavailableTabOptions").show();
+        
         //Obtain contribution statistics
         let url = "https://www.francoismazerolle.ca/vinehelperStats.php";
         fetch(url)
@@ -69,40 +87,72 @@ async function drawUnavailableTab() {
 				reliability = (data["concensusBackedVotes"] * 100) / data["reviewedVotes"];
 				
 			
-            $("#votes").text(data["votes"]);
-            $("#contribution").text(percentage.toFixed(3) + "%");
-            $("#rank").text("#" + data["rank"]);
-            $("#available").text(data["totalConfirmed"]);
-            $("#unavailable").text(data["totalDiscarded"]);
-            $("#totalUsers").text(data["totalUsers"]);
-            $("#totalVotes").text(data["totalVotes"]);
-            $("#totalProducts").text(data["totalProducts"]);
-            $("#reviewedVotes").text(data["reviewedVotes"]);
-            $("#concensusBackedVotes").text(data["concensusBackedVotes"]);
-            $("#reliability").text(reliability.toFixed(1) + "%");
+            document.querySelector("#votes").innerText= data["votes"];
+            document.querySelector("#contribution").innerText= percentage.toFixed(3) + "%";
+            document.querySelector("#rank").innerText= "#" + data["rank"];
+            document.querySelector("#available").innerText= data["totalConfirmed"];
+            document.querySelector("#unavailable").innerText= data["totalDiscarded"];
+            document.querySelector("#totalUsers").innerText= data["totalUsers"];
+            document.querySelector("#totalVotes").innerText= data["totalVotes"];
+            document.querySelector("#totalProducts").innerText= data["totalProducts"];
+            document.querySelector("#reviewedVotes").innerText= data["reviewedVotes"];
+            document.querySelector("#concensusBackedVotes").innerText= data["concensusBackedVotes"];
+            document.querySelector("#reliability").innerText= reliability.toFixed(1) + "%";
         }
-    } else {
-        $("#unavailableTabOptions").hide();
-    }
+    } 
 }
 
 async function drawDiscord() {
+    
+    //Show or hide the discord options
+    document.querySelector("#discordOptions").style.display = appSettings.discord.active ? "flex" : "none";
+   
     if (appSettings.discord.active) {
-        $("#discordOptions").show();
+        let showLink = JSONGetPathValue(appSettings, "discord.guid") === null;
 
-        if (JSONGetPathValue(appSettings, "discord.guid") === null) {
-            $("#discord-guid-link").show();
-            $("#discord-guid-unlink").hide();
-        } else {
-            $("#discord-guid-link").hide();
-            $("#discord-guid-unlink").show();
-        }
-    } else $("#discordOptions").hide();
+        document.querySelector("#discord-guid-link").style.display = showLink ? "block" : "none";
+        document.querySelector("#discord-guid-unlink").style.display = showLink ? "none" : "block";
+        
+    }
 }
 
+var currentTab = "tabs-1";
+
+function selectCurrentTab(firstRun = false){
+    //Hide all tabs
+    document.querySelectorAll(".options").forEach(function(item){;
+        item.style.display = "none";
+    });
+
+    if(!firstRun)
+        document.querySelectorAll("#tabs li").forEach(function(item){;
+            item.classList.remove("active");
+        });
+    
+    //Display the current tab
+    document.querySelector("#"+currentTab).style.display = "flex";
+}
 function init() {
-    $("#tabs").tabs();
-    $("input[type='checkbox']").checkboxradio();
+ 
+    //Bind the click event for the tabs
+    document.querySelectorAll("#tabs li").forEach(function(item){
+        item.onclick = function(event){
+            currentTab = this.querySelector("a").href.split("#").pop();
+            selectCurrentTab();
+            this.classList.add("active");
+        }
+    });
+    //Prevent links from being clickable
+    document.querySelectorAll("#tabs li a").forEach(function(item){
+        item.onclick = function(event){
+            event.preventDefault();
+        }
+    });
+    selectCurrentTab(true);
+    
+
+    //$("#tabs").tabs();
+    //$("input[type='checkbox']").checkboxradio();
 
     drawUnavailableTab();
     drawDiscord();
@@ -111,49 +161,60 @@ function init() {
     //#### UI interaction
 
     //unavailableTab / Voting system interaction
-    $(`label[for='${$.escapeSelector("unavailableTab.active")}']`).on("click", function () {
+    let key;
+    key = CSS.escape("unavailableTab.active");
+    document.querySelector(`label[for='${key}'] input`).onclick = function () {
         setTimeout(() => drawUnavailableTab(), 1);
-    });
+    }
 
-    $(`label[for='${$.escapeSelector("discord.active")}']`).on("click", function () {
+    key = CSS.escape("discord.active");
+    document.querySelector(`label[for='${key}'] input`).onclick = function () {
         setTimeout(() => drawDiscord(), 1);
-    });
+    };
 	
 	
 	
 	
     //Load/save settings:
-    $("#" + $.escapeSelector("unavailableTab.consensusThreshold")).val(appSettings.unavailableTab.consensusThreshold);
-    $("#" + $.escapeSelector("unavailableTab.consensusThreshold")).on("change", async function () {
-        if (isNumeric($(this).val()) && $(this).val() > 0 && $(this).val() < 10) {
-            appSettings.unavailableTab.consensusThreshold = $(this).val();
+    key = CSS.escape("unavailableTab.consensusThreshold");
+    document.querySelector(`#${key}`).value = appSettings.unavailableTab.consensusThreshold;
+    document.querySelector(`#${key}`).onchange = async function () {
+        let val = this.value;
+        if (isNumeric(val) && val > 0 && val < 10) {
+            appSettings.unavailableTab.consensusThreshold = val;
             await chrome.storage.local.set({ settings: appSettings });
         }
-    });
+    }
 
-    $("#" + $.escapeSelector("unavailableTab.unavailableOpacity")).val(appSettings.unavailableTab.unavailableOpacity);
-    $("#" + $.escapeSelector("unavailableTab.unavailableOpacity")).on("change", async function () {
-        if (isNumeric($(this).val()) && $(this).val() > 0 && $(this).val() <= 100) {
-            appSettings.unavailableTab.unavailableOpacity = $(this).val();
+    key = CSS.escape("unavailableTab.unavailableOpacity");
+    document.querySelector(`#${key}`).value = appSettings.unavailableTab.unavailableOpacity;
+    document.querySelector(`#${key}`).onchange = async function () {
+        let val = this.value;
+        if (isNumeric(val) && val > 0 && val <= 100) {
+            appSettings.unavailableTab.unavailableOpacity = val;
             await chrome.storage.local.set({ settings: appSettings });
         }
-    });
+    }
 	
 
     //UUID:
-    $("#" + $.escapeSelector("general.uuid")).on("mouseenter", function(){
-        $("#" + $.escapeSelector("general.uuid")).attr("type", "text");
-    });
-    $("#" + $.escapeSelector("general.uuid")).on("mouseleave", function(){
-        $("#" + $.escapeSelector("general.uuid")).attr("type", "password");
-    });
+    key = CSS.escape("general.uuid");
+    document.querySelector(`#${key}`).onmouseenter = function(){
+        let key = CSS.escape("general.uuid");
+        document.querySelector(`#${key}`).type = "text";
+    }
+    document.querySelector(`#${key}`).onmouseleave = function(){
+        let key = CSS.escape("general.uuid");
+        document.querySelector(`#${key}`).type = "password";
+    }
     
-    $("#" + $.escapeSelector("general.uuid")).val(appSettings.general.uuid);
-    $("#saveUUID").on("click", async function () {
-        $("#saveUUID").prop("disabled", true);
+    document.querySelector(`#${key}`).value = appSettings.general.uuid;
 
+    document.querySelector("#saveUUID").onclick= async function () {
+        document.querySelector("#saveUUID").disabled = true;
+        let key = CSS.escape("general.uuid");
         //Post a fetch request to confirm if the UUID is valid
-		let arrJSON = {"api_version":4, "action": "validate_uuid", "uuid": $("#" + $.escapeSelector("general.uuid")).val(), "country": "loremipsum"};
+		let arrJSON = {"api_version":4, "action": "validate_uuid", "uuid": document.querySelector("#" + key).value, "country": "loremipsum"};
 		let jsonArrURL = JSON.stringify(arrJSON);
 		
         let url = "https://www.francoismazerolle.ca/vinehelper.php"
@@ -165,7 +226,8 @@ function init() {
 					appSettings.general.uuid = serverResponse["uuid"];
 					await chrome.storage.local.set({ settings: appSettings });
 				}else{
-					$("#" + $.escapeSelector("general.uuid")).val(appSettings.general.uuid);
+                    key = CSS.escape("general.uuid")
+					document.querySelector(`#${key}`).value =appSettings.general.uuid;
 				}
 			})
 			.catch( 
@@ -173,48 +235,37 @@ function init() {
 					error =>  console.log(error);
 				}
 			);
-        $("#saveUUID").prop("disabled", false);
-    });
+            document.querySelector("#saveUUID").disabled = false;
+    }
 	
-    $("#saveGUID").on("click", async function () {
-        $("#saveGUID").prop("disabled", true);
-
+    document.querySelector("#saveGUID").onclick= async function () {
+        document.querySelector("#saveGUID").disabled = true;
+        let key = CSS.escape("discord.guid");
         //Post a fetch request to the Brenda API from the AmazonVine Discord server
         //We want to check if the guid is valid.
-        let url = "https://api.llamastories.com/brenda/user/" + $("#" + $.escapeSelector("discord.guid")).val();
+        let url = "https://api.llamastories.com/brenda/user/" + document.querySelector("#" + key).value;
         const response = await fetch(url, { method: "GET" });
         if (response.status == 200) {
-            appSettings.discord.guid = $("#" + $.escapeSelector("discord.guid")).val();
+            appSettings.discord.guid = document.querySelector(`#${key}`).value;
             await chrome.storage.local.set({ settings: appSettings });
-            $("#guid-txt").text(appSettings.discord.guid);
-            $("#discord-guid-link").hide();
-            $("#discord-guid-unlink").show();
+            document.querySelector("#guid-txt").innerText = appSettings.discord.guid;
+            document.querySelector("#discord-guid-link").style.display = "none";
+            document.querySelector("#discord-guid-unlink").style.display = "block";
         } else {
-            $("#" + $.escapeSelector("discord.guid")).val("");
+            document.querySelector(`#${key}`).value = "";
             alert("invalid API Token.");
         }
-        $("#saveGUID").prop("disabled", false);
-    });
-    $("#unlinkGUID").on("click", async function () {
+        document.querySelector("#saveGUID").disabled = false;
+    }
+    document.querySelector("#unlinkGUID").onclick = async function () {
         appSettings.discord.guid = null;
         await chrome.storage.local.set({ settings: appSettings });
-
-        $("#discord-guid-link").show();
-        $("#discord-guid-unlink").hide();
-    });
-
-    function manageCheckboxSetting(key, def = null) {
-		let val = def===null ? JSONGetPathValue(appSettings, key) : def;
-		
-        setCB(key, val);
-
-        $(`label[for='${$.escapeSelector(key)}']`).on("click", async function () {
-            const newValue = !getCB(key);
-            JSONUpdatePathValue(appSettings, key, newValue);
-            setCB(key, newValue);
-            await chrome.storage.local.set({ settings: appSettings });
-        });
+        
+        document.querySelector("#discord-guid-link").style.display = "block";
+        document.querySelector("#discord-guid-unlink").style.display = "none";
     }
+
+
 	
 	
 
@@ -256,12 +307,27 @@ function init() {
 	
 }
 
+function manageCheckboxSetting(key, def = null) {
+    let val = def===null ? JSONGetPathValue(appSettings, key) : def;
+    setCB(key, val); //Initial setup
+
+    let keyE = CSS.escape(key);
+    document.querySelector(`label[for='${keyE}']`).onclick= async function () {
+        //Change in value
+        handleDynamicFields(key);
+        const newValue = getCB(key);
+        deepSet(appSettings, key, newValue);
+        await chrome.storage.local.set({ settings: appSettings });
+    }
+}
+
 //Utility functions
 
 function isNumeric(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
+/*
 function JSONPathToObject(path, value) {
     const arrPathLvl = path.split(".");
     var jsonObj = "";
@@ -272,11 +338,31 @@ function JSONPathToObject(path, value) {
     }
     return JSON.parse(jsonObj + value + jsonEnd);
 }
+*/
 
-function JSONUpdatePathValue(obj, path, value) {
-    let newData = JSONPathToObject(path, value);
-    $.extend(true, obj, newData);
-}
+const deepSet = (obj, path, val) => {
+    path = path.replaceAll("[", ".[");
+    const keys = path.split(".");
+
+    for (let i = 0; i < keys.length; i++) {
+        let currentKey = keys[i] ;
+        let nextKey = keys[i + 1] ;
+        if (currentKey.includes("[")) {
+            currentKey = parseInt(currentKey.substring(1, currentKey.length - 1));
+        }
+        if (nextKey && nextKey.includes("[")) {
+            nextKey = parseInt(nextKey.substring(1, nextKey.length - 1));
+        }
+
+        if (typeof nextKey !== "undefined") {
+            obj[currentKey] = obj[currentKey] ? obj[currentKey] : (isNaN(nextKey) ? {} : []);
+        } else {
+            obj[currentKey] = val;
+        }
+
+        obj = obj[currentKey];
+    }
+};
 
 function JSONGetPathValue(obj, path) {
     try {

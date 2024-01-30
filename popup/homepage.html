@@ -2,7 +2,6 @@
 <html>
   <head>
 	<meta charset="utf-8" />
-	<link rel="stylesheet" type="text/css" href="../lib/jquery_ui/jquery-ui.min.css" />
 	<link rel="stylesheet" type="text/css" href="popup.css" />
 	<link rel="stylesheet" type="text/css" href="../resource/css/icon.css" />
 	<link rel="stylesheet" type="text/css" href="../resource/css/toolbar.css" />
@@ -15,7 +14,7 @@
 	<div class="all-options">
 		<div id="tabs">
 			<ul>
-				<li><a href="#tabs-1">General</a></li>
+				<li class="active"><a href="#tabs-1">General</a></li>
 				<li><a href="#tabs-2">Voting</a></li>
 				<li><a href="#tabs-3">Brenda</a></li>
 				<li><a href="#tabs-4">Styles</a></li>
@@ -28,7 +27,7 @@
 						title="Your unique user ID. If you have multiple devices, you may want to sync them up to the same value.">
 						<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
 					</a>
-					<input type="password" name="general.uuid" id="general.uuid" value="" size="32" maxlength="36" />
+					<input type="password" name="general.uuid" id="general.uuid" value="" size="26" maxlength="36" />
 					<input type="button" id="saveUUID" value="Save" />
 				</label>
 				<label for="general.allowInjection">Allow the extension to inject code in Amazon Vine
@@ -86,6 +85,7 @@
 					</a>
 					<input type="checkbox" name="general.displayETV" value="1">
 				</label>
+			
 				<label for="general.displayFirstSeen">
 					Display "First seen" time over the image
 					<a href="#" class="tips" title="This feature anonymously exchange data with Vine Helper's server">
@@ -103,6 +103,9 @@
 					</a>
 					<input type="checkbox" name="general.bookmark" value="1">
 				</label>
+				
+				
+				
 				<label for="general.newItemNotification">Notify me when new items are reported
 					<a href="#" class="tips" title="This feature anonymously exchange data with Vine Helper's server">
 						<div class="ext-helper-toolbar-icon ext-helper-icon-request"></div>
@@ -340,8 +343,6 @@
 		
 		
 	</div>
-	<script src="../lib/jquery/jquery-3.7.1.min.js"></script>
-	<script src="../lib/jquery_ui/jquery-ui.min.js"></script>
 	<script src="homepage.js"></script>
   </body>
 </html>

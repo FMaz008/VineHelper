@@ -1,5 +1,5 @@
 body {
-	height: 600px;
+	height: 550px;
 	width: 350px;
 	margin: 0;
 	display: flex;
@@ -40,9 +40,6 @@ h3{
 	margin-bottom:5px;
 }
 
-.ui-tooltip {
-	background:#FFF;
-}
 
 #tabs {
 	display: flex;
@@ -51,13 +48,25 @@ h3{
 	border: 0px;
 }
 
-.ui-tabs .ui-tabs-panel {
-	padding: 0;
-	flex-grow: 1;
-	display: flex;
+#tabs > ul{
+	padding-left: 0px;
+	margin: 0px;
 }
-.ui-tabs-tab {
-	border-radius: 0px;
+
+#tabs > ul > li{
+	list-style: none;
+	float: left;
+	border: 1px solid #333;
+	min-width: 30px;
+	text-align: center;
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+	margin-right: 3px;
+	padding:10px;
+	cursor:pointer;
+}
+#tabs > ul > li.active{
+	background-color: rgb(162, 162, 197);
 }
 
 .ui-tabs-nav {
@@ -67,40 +76,48 @@ h3{
 	border-radius: 0px;
 }
 
-.ui-checkboxradio-label {
-	border-radius: 0px;
-}
 
 .options {
+	width: 340px;
+	padding: 0;
 	display: flex;
 	flex-direction: column;
 	margin-top: 0.1rem;
 	flex-grow:1;
+	background-color:#EEE;
+}
+.subheader{
+	margin-top:5px;
+	padding:5px;
+	font-weight:bold;
 }
 
-.ui-state-active,
-.ui-widget-content .ui-state-active,
-.ui-button.ui-state-active:hover {
+.button:hover {
 	background: #C1C1C1;
 	border: #ddd solid 1px;
 	display: flex;
 	align-items: center;
 }
 
-.ui-checkboxradio-label {
+label {
 	display: flex;
 	align-items: center;
 	height: 2rem;
 	border: 1px solid #ddd;
+	background-color:#F6F6F6;
 	flex-grow: 0;
 	text-align: left;
-	margin: 0px;
-}
-.ui-checkboxradio-label .ui-checkboxradio-icon-space {
-	width: 0.5rem;
+	margin: 1px;
+	padding:5px;
+	padding-left:10px;
 }
 
-.ui-checkboxradio-label .tips {
+label input[type='checkbox']{
+	margin-right:20px;
+	margin-left:auto;
+}
+
+label .tips {
 	margin-left: 0.5rem;
 }
 
@@ -109,7 +126,7 @@ h3{
 	border: 1px solid rgb(48, 51, 51);
 }
 
-.ui-checkboxradio-label.ui-state-active, .ui-checkboxradio-label.ui-state-active:hover, .ui-checkboxradio-label:active {
+.label:active {
 	background: #ededed;
 	border: 1px solid #ccc;
 	color: black;
@@ -133,8 +150,14 @@ h3{
 	font-weight: bold;
 }
 
+#tabs-1 label {
+	height: calc(100% / 12);
+}
+#tabs-2 label {
+	height: calc(100% / 6);
+}
 #tabs-4 .ui-checkboxradio-label {
-	height: calc(100% / 13);
+	height: calc(100% / 15);
 }
 
 #tabs-5 {
