@@ -503,6 +503,32 @@ window.addEventListener("message", async function(event) {
 	}
 });
 
+
+//Key binding for navigation
+window.addEventListener('keydown', function(e) {
+	let nodeName = document.activeElement.nodeName;
+	let excl = ["INPUT", "TEXTAREA", "SELECT", "LI"];
+	if(excl.indexOf(nodeName)==-1){
+		if(appSettings.hiddenTab.active){
+			if(e.key == "h")
+				hideAllItems();
+			if(e.key == "s")
+				showAllItems();
+		}
+		if(e.key == "n"){
+			let link = document.querySelector('ul.a-pagination li:last-child a');
+			if(link!=null)
+				window.location.href = link.href;
+		}
+		if(e.key == "p"){
+			let link = document.querySelector('ul.a-pagination li:first-child a');
+			if(link!=null)
+				window.location.href = link.href;
+		}
+	}
+});
+
+
 function showModalDialog(title, text, width=400, sound=null){
 	var w = width;
 	
