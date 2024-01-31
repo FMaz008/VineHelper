@@ -207,8 +207,10 @@ function Toolbar(tileInstance){
 		if(appSettings.unavailableTab.active){
 			if(pTile.wasOrdered()){
 				await this.createOrderWidget();
-			}else{
+			}else if(appSettings.unavailableTab.votingToolbar){
 				await createVotingWidget();
+			}else{
+				await this.createOrderWidget();
 			}
 		}
 	}

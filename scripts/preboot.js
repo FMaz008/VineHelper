@@ -29,6 +29,7 @@ function getDefaultSettings(){
 	settings = {
 		"unavailableTab":{
 			"active": true,
+			"votingToolbar":true,
 			"shareOrder": true,
 			"consensusThreshold": 2,
 			"unavailableOpacity": 100,
@@ -166,7 +167,12 @@ async function getSettings(){
 	showRuntime("BOOT: Thorvarium stylesheets injected");
 	
 	
-	
+	//V1.20 New setting update default value
+	if(appSettings.unavailableTab.votingToolbar==undefined){
+		appSettings.unavailableTab.votingToolbar = appSettings.unavailableTab.active;
+		saveSettings();
+	}
+
 	//Figure out what domain the extension is working on
 	//De-activate the unavailableTab (and the voting system) for all non-.ca domains.
 	let currentUrl = window.location.href; 
@@ -181,9 +187,7 @@ async function getSettings(){
 	
 	//If the domain is not Canada, UK or France, de-activate the voting system/unavailable tab
 	if(["ca", "co.uk", "fr"].indexOf(vineDomain) == -1){
-		appSettings.unavailableTab.active = false;
-		appSettings.unavailableTab.shareOrder = false;
-		appSettings.unavailableTab.compactToolbar = true;
+		appSettings.unavailableTab.votingToolbar = false;
 		appSettings.unavailableTab.consensusDiscard = false;
 		appSettings.unavailableTab.selfDiscard = false;
 	}

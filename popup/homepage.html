@@ -130,11 +130,11 @@
 			</div>
 			<div id="tabs-2" class="options">
 			
-				<label for="unavailableTab.active">Voting system (Canada/Mainland UK):
-					<a href="#" class="tips" title="This feature exchange data with Vine Helper's server. IPs address are stored as md5 hashes.">
+				<label for="unavailableTab.active">Order confirmation system:
+					<a href="#" class="tips" title="This feature exchange data with Vine Helper's server.">
 						<div class="ext-helper-toolbar-icon ext-helper-icon-request"></div>
 					</a>
-					<a href="#" class="tips" title="In some countries, a lot of items have importation or shipping fees, which makes them impossible to be ordered. This option will activate a community voting toolbar on every items, identifying and placing items that can't be ordered in a separate tab.">
+					<a href="#" class="tips" title="Display if an item was ordered by others. If order(s) were unsuccessful, move the item to the unavailable tab.">
 						<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
 					</a>
 					<input type="checkbox" name="unavailableTab.active" value="1">
@@ -144,7 +144,7 @@
 						<a href="#" class="tips" title="This feature exchange data with Vine Helper's server: ASIN of the item ordered, if the order was a success or gave an error, an md5 hash of your IP will be stored on the server.">
 							<div class="ext-helper-toolbar-icon ext-helper-icon-request"></div>
 						</a>
-						<a href="#" class="tips" title="Share if you were able to order an item or not. When those data are received, they will be used to override the voting system as they are more reliable.">
+						<a href="#" class="tips" title="Share if you were able to order an item or not. When those data are available, they will override the voting system as they are more reliable.">
 							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
 						</a>
 						<input type="checkbox" name="unavailableTab.shareOrder" value="1">
@@ -155,7 +155,18 @@
 						</a>
 						<input type="checkbox" name="unavailableTab.compactToolbar" value="1">
 					</label>
-
+					<div class="subheader">
+						Voting system (Canada/Mainland UK):
+					</div>
+					<label for="unavailableTab.votingToolbar">Enable voting system when no order were recorded 
+						<a href="#" class="tips" title="This feature exchange data with Vine Helper's server: ASIN of the item ordered, if the order was a success or gave an error, an md5 hash of your IP will be stored on the server.">
+							<div class="ext-helper-toolbar-icon ext-helper-icon-request"></div>
+						</a>
+						<a href="#" class="tips" title="Display and allow to cast votes on items wether they have import fees or not.">
+							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+						</a>
+						<input type="checkbox" name="unavailableTab.votingToolbar" value="1">
+					</label>
 					<label for="unavailableTab.selfDiscard">Discard the items I voted "with fees".
 						<a href="#" class="tips" title="Immediately discard the items I vote as unavailable, regardless of the votes concensus.">
 							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
@@ -191,7 +202,7 @@
 							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
 						</a>
 					</div>
-
+					<!--
 					<div class="summary">
 						You currently have <span id="votes" class="number">?</span> active votes,
 						contributing to <span id="contribution" class="number">? %</span> of the community votes.
@@ -213,6 +224,7 @@
 								Products & votes are purged 90 days after the most recent vote.
 							</em></span>
 					</div>
+					-->
 				</div>
 				
 			</div>

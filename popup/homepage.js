@@ -284,6 +284,7 @@ function init() {
     manageCheckboxSetting("hiddenTab.remote");
     manageCheckboxSetting("discord.active"); //Handled manually
     manageCheckboxSetting("unavailableTab.active");
+    manageCheckboxSetting("unavailableTab.votingToolbar");
     manageCheckboxSetting("unavailableTab.shareOrder");
     manageCheckboxSetting("unavailableTab.selfDiscard");
     manageCheckboxSetting("unavailableTab.compactToolbar");
