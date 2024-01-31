@@ -151,7 +151,7 @@ function Tile(obj, gridInstance){
 		let jsDate = Date.UTC(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
 		t = timenow.split(/[- :]/);
 		timenow = Date.UTC(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
-		
+
 		let textDate = timeSince(timenow, jsDate);
 		$("<div>")
 			.addClass("ext-helper-date-added")
@@ -169,9 +169,9 @@ function Tile(obj, gridInstance){
 			return false; 
 		
 		if(animate)
-			await pGrid.removeTile(this, true);
+			await pGrid.removeTileAnimate(this);
 		else
-			pGrid.removeTile(this, false); //Avoiding the await keep the method synchronous
+			pGrid.removeTile(this); //Avoiding the await keep the method synchronous
 		
 
 		pGrid = g; //Update the new grid as the current one
@@ -196,40 +196,52 @@ function Tile(obj, gridInstance){
 		return found;
 	};
 	
-	this.hideTile = async function(animate=true){
+
+	this.hideTile = async function(animate=true, updateLocalStorage=true){
 		//Add the item to the list of hidden items
 		
-		arrHidden.push({"asin" : pAsin, "date": new Date});
-		await chrome.storage.local.set({ 'hiddenItems': arrHidden });
-		
+		if(updateLocalStorage){
+			arrHidden.push({"asin" : pAsin, "date": new Date});
+			await chrome.storage.local.set({ 'hiddenItems': arrHidden });
+		}
+
 		//Move the tile
-		await this.moveToGrid(gridHidden, animate);
-		
+		if(animate)
+			await this.moveToGrid(gridHidden, true);
+		else //If there is no animation, we don't want an await
+			this.moveToGrid(gridHidden, false);
+
 		pToolbar.updateVisibilityIcon();
 		
 		//Refresh grid counts
 		updateTileCounts();
 	}
 	
-	this.showTile = async function(animate=true){
+	this.showTile = async function(animate=true, updateLocalStorage=true){
 		
 		//Remove the item from the array of hidden items
-		$.each(arrHidden, function(key, value){
-			if(value != undefined && value.asin == pAsin){
-				arrHidden.splice(key, 1);
-			}
-		});
-		await chrome.storage.local.set({ 'hiddenItems': arrHidden });
-		
-		//Move the tile
-		if(appSettings.unavailableTab.consensusDiscard && this.getStatus() >= NOT_DISCARDED){
-			await this.moveToGrid(gridUnavailable, animate);
-		} else if(appSettings.unavailableTab.selfDiscard && this.getStatus() == DISCARDED_OWN_VOTE){
-			await this.moveToGrid(gridUnavailable, animate);
-		} else {
-			await this.moveToGrid(gridRegular, animate);
+		if(updateLocalStorage){
+			$.each(arrHidden, function(key, value){
+				if(value != undefined && value.asin == pAsin){
+					arrHidden.splice(key, 1);
+				}
+			});
+			await chrome.storage.local.set({ 'hiddenItems': arrHidden });
 		}
-		
+
+		//Move the tile
+		let moveToGrid = gridRegular;
+		if(
+			appSettings.unavailableTab.consensusDiscard && this.getStatus() >= NOT_DISCARDED
+		||	appSettings.unavailableTab.selfDiscard && this.getStatus() == DISCARDED_OWN_VOTE
+		){
+			moveToGrid = gridUnavailable;
+		}
+		if(animate)
+			await this.moveToGrid(moveToGrid, true);
+		else //If there is no animatin, we don't want an await.
+			this.moveToGrid(moveToGrid, false);
+
 		pToolbar.updateVisibilityIcon();
 		
 		//Refresh grid counts

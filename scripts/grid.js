@@ -24,15 +24,18 @@ class Grid {
 		}
 	}
 
-	async removeTile(t, animate = false) {
+	removeTile(t) {
 		$.each(this.pArrTile, function (key, value) {
 			if (value != undefined && value.getAsin() == t.getAsin()) {
 				this.pArrTile.splice(key, 1);
 			}
 		}.bind(this));
+	}
 
-		if(animate)
-			await t.animateVanish(); //Will hide the tile
+	async removeTileAnimate(t) {
+		this.removeTile(t);
+
+		await t.animateVanish(); //Will hide the tile
 	}
 
 	getTileCount (trueCount = false) {
@@ -115,14 +118,22 @@ async function createGridInterface(){
 
 async function hideAllItems(){
 	let arrTile = [];
+	let counter=0;
 	while($("#vvp-items-grid .vvp-item-tile").children().length > 0){	
 		tDom = $("#vvp-items-grid .vvp-item-tile").children()[0];
 		asin = getAsinFromDom(tDom);
 		arrTile.push({asin, "hidden": true});
 		tile = getTileByAsin(asin); //Obtain the real tile 
-		await tile.hideTile(false);
+		await tile.hideTile(false, false); //Do not update local storage
 	}
 
+	//Update local storage
+	for(const tile of arrTile){
+		arrHidden.push({"asin" : tile.asin, "date": new Date});
+	}
+	await chrome.storage.local.set({ 'hiddenItems': arrHidden });
+
+	//Update server
 	notifyServerOfHiddenItem(arrTile);
 }
 
@@ -133,8 +144,20 @@ async function showAllItems(){
 		asin = getAsinFromDom(tDom);
 		arrTile.push({asin, "hidden": false});
 		tile = getTileByAsin(asin); //Obtain the real tile 
-		await tile.showTile(false);
+		await tile.showTile(false, false); //Do not update local storage
 	}
+
+	//Update local storage
+	for(const tile of arrTile){
+		$.each(arrHidden, function(key, value){
+			if(value != undefined && value.asin == tile.asin){
+				arrHidden.splice(key, 1);
+			}
+		}.bind(tile));
+	}
+	await chrome.storage.local.set({ 'hiddenItems': arrHidden });
+
+	//Update server
 	notifyServerOfHiddenItem(arrTile);
 }
 
