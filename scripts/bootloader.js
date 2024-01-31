@@ -447,7 +447,7 @@ window.addEventListener("message", async function(event) {
 	}
 	
 	//If we got back a message after an order was attempted or placed.
-	if (appSettings.unavailableTab.shareOrder && event.data.type && (event.data.type == "order")) {
+	if (event.data.type && (event.data.type == "order")) {
 		console.log("Item "+event.data.data.asin+ " (parent:"+event.data.data.parent_asin+") ordered: "+ event.data.data.status);
 		let tileASIN;
 		if(event.data.data.parent_asin === null){
@@ -456,23 +456,30 @@ window.addEventListener("message", async function(event) {
 			tileASIN = event.data.data.parent_asin;
 		}
 		
-		if(event.data.data.status == "success" || event.data.data.error == "CROSS_BORDER_SHIPMENT"){
-			//Report the order status to the server
-			let arrJSON = {
-				"api_version":4, "action": "report_order", "country": vineCountry, "uuid": uuid,
-				"asin": event.data.data.asin,
-				"parent_asin": event.data.data.parent_asin,
-				"order_status": event.data.data.status
-			};
+		if(appSettings.unavailableTab.shareOrder){
+			if(
+				event.data.data.status == "success"
+				|| event.data.data.error == "CROSS_BORDER_SHIPMENT"
+				|| event.data.data.error == "ITEM_NOT_IN_ENROLLMENT"
+			){
 			
-			//Form the full URL
-			let url = "https://www.francoismazerolle.ca/vinehelper.php"
-					+ "?data=" + JSON.stringify(arrJSON);
-			await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
-			
-			//Update the product tile ETV in the Toolbar
-			let tile = getTileByAsin(tileASIN);
-			tile.getToolbar().createOrderWidget(event.data.data.status == "success");
+				//Report the order status to the server
+				let arrJSON = {
+					"api_version":4, "action": "report_order", "country": vineCountry, "uuid": uuid,
+					"asin": event.data.data.asin,
+					"parent_asin": event.data.data.parent_asin,
+					"order_status": event.data.data.status
+				};
+				
+				//Form the full URL
+				let url = "https://www.francoismazerolle.ca/vinehelper.php"
+						+ "?data=" + JSON.stringify(arrJSON);
+				await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
+				
+				//Update the product tile ETV in the Toolbar
+				let tile = getTileByAsin(tileASIN);
+				tile.getToolbar().createOrderWidget(event.data.data.status == "success");
+			}
 		}
 		
 		if(event.data.data.status == "success"){
@@ -480,22 +487,14 @@ window.addEventListener("message", async function(event) {
 			let note = new ScreenNotification();
 			note.title = "Successful order detected!";
 			note.lifespan = 5;
-			note.content = "Recorded item " + event.data.data.asin +" as orderable.";
+			note.content = "Detected item " + event.data.data.asin +" as orderable.";
 			await Notifications.pushNotification(note);
-		}
-		if(event.data.data.error == "CROSS_BORDER_SHIPMENT"){
+		}else{
 			//Show a notification
 			let note = new ScreenNotification();
 			note.title = "Failed order detected.";
 			note.lifespan = 5;
-			note.content = "Recorded item " + event.data.data.asin +" as not orderable with error CROSS_BORDER_SHIPMENT.";
-			await Notifications.pushNotification(note);
-		}else if(event.data.data.error !== null){
-			//Show a notification
-			let note = new ScreenNotification();
-			note.title = "Failed order detected.";
-			note.lifespan = 5;
-			note.content = "Item " + event.data.data.asin +" could not be ordered with error " + event.data.data.error + ". This error has not been recorded.";
+			note.content = "Detected item " + event.data.data.asin +" as not orderable with error " + event.data.data.error + ".";
 			await Notifications.pushNotification(note);
 		}
 		

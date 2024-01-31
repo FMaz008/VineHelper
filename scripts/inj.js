@@ -33,27 +33,24 @@ window.fetch = async (...args) => {
 		}
 		
 		let datap = extHelper_responseData;
-		if(datap.error == "CROSS_BORDER_SHIPMENT"){
-			//Order had a CROSS_BORDER_SHIPMENT error.
-			window.postMessage({type: "order", data: {
-					"status": "failed",
-					"error": datap.error,
-					"parent_asin": lastParent,
-					"asin": asin}}, "*");
-		}else if(datap.error == null){
+		if(datap.error == null){
 			//Order successful
 			window.postMessage({type: "order", data: {
 				"status": "success",
 				"error": null,
 				"parent_asin": lastParent,
 				"asin": asin}}, "*");
-			
-			//Wait 500ms following an order to allow for the order report query to go through before the redirect happens.
-			await new Promise(r => setTimeout(r, 500));
-		} else { //SCHEDULED_DELIVERY_REQUIRED
-			
-		} //Other errors
-		
+		} else {//CROSS_BORDER_SHIPMENT.
+				//SCHEDULED_DELIVERY_REQUIRED
+				//ITEM_NOT_IN_ENROLLMENT
+			window.postMessage({type: "order", data: {
+				"status": "failed",
+				"error": datap.error,
+				"parent_asin": lastParent,
+				"asin": asin}}, "*");
+		} 
+		//Wait 500ms following an order to allow for the order report query to go through before the redirect happens.
+		await new Promise(r => setTimeout(r, 500));
 	}
 	
 	regex = /^api\/recommendations\/.*$/;
@@ -67,7 +64,31 @@ window.fetch = async (...args) => {
 				extHelper_responseData = data;
 				})
 			.catch(err => console.error(err));
-	
+		
+		
+		//Intercept errors
+		if(extHelper_responseData.result==null){
+			if(extHelper_responseData.error != null){
+				console.log(extHelper_responseData.error);
+				if(extHelper_responseData.error.length != undefined){
+					console.log(extHelper_responseData.error.length);
+					if(typeof extHelper_responseData.error[0] === "object"){
+						if(extHelper_responseData.error[0].exceptionType != undefined){
+							window.postMessage({
+								type: "error",
+								data: {
+									"error": extHelper_responseData.error[0].exceptionType
+								}
+							}, "*");
+						}
+					}
+				}
+			}
+		}
+		
+		
+		
+		
 		let datap = extHelper_responseData.result;
 		
 		//Find if the item is a parent
