@@ -146,10 +146,12 @@ function Tile(obj, gridInstance){
 		if(!appSettings.general.displayFirstSeen)
 			return false;
 		
+		
 		let t = mysqlDate.split(/[- :]/);
-		let jsDate = new Date(Date.UTC(t[0], t[1]-1, t[2], parseInt(t[3]), t[4], t[5]));
+		let jsDate = Date.UTC(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
 		t = timenow.split(/[- :]/);
-		timenow = new Date(Date.UTC(t[0], t[1]-1, t[2], parseInt(t[3]), t[4], t[5]));
+		timenow = Date.UTC(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
+		
 		let textDate = timeSince(timenow, jsDate);
 		$("<div>")
 			.addClass("ext-helper-date-added")

@@ -117,13 +117,13 @@ async function init(){
 				.then((response) => response.json())
 				.then(async function(response){
 					let t = response.date.split(/[- :]/);
-					let jsDate = new Date(Date.UTC(t[0], t[1]-1, t[2], parseInt(t[3]), t[4], t[5]));//+5hrs for the server time
+					let jsDate = Date.UTC(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
 					
 					appSettings.general.bookmarkDate = jsDate;
 					saveSettings();
 					alert("Bookmark set for \n" + appSettings.general.bookmarkDate + "\nItems newer will be highlighted.\n\nNote: Settings pertaining to this tab were saved.");
 				});
-		})
+		});
 	}
 	
 	//Browse each items from the Regular grid
@@ -275,7 +275,7 @@ function serverProductsResponse(data){
 		console.log("Wrong API version");
 	}
 	
-	$timenow = data["current_time"];
+	timenow = data["current_time"];
 
 	//Load the ETV value
 	$.each(data["products"], function(key,values){
@@ -288,9 +288,9 @@ function serverProductsResponse(data){
 			tile.getToolbar().setETV(values.etv_min, values.etv_max);
 		}
 		
-		if(values.date_added != null)
-			tile.setDateAdded($timenow, values.date_added);
-		
+		if(values.date_added != null){
+			tile.setDateAdded(timenow, values.date_added);
+		}
 		//If there is a remote value for the hidden item, ensure it is sync'ed up with the local list
 		if(appSettings.hiddenTab.remote == true && values.hidden != null){
 			if(values.hidden == true && !tile.isHidden())
