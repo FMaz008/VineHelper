@@ -1,4 +1,4 @@
-
+//No JQuery
 
 class HiddenListMgr{
     arrHidden = [];
@@ -12,7 +12,7 @@ class HiddenListMgr{
     async loadFromLocalStorage(){
         const data = await chrome.storage.local.get("hiddenItems");
 		//Load hidden items
-        if(isEmpty(data)){
+        if(isEmptyObj(data)){
             await chrome.storage.local.set({ 'hiddenItems': [] });
         }else{
             Object.assign(this.arrHidden, data.hiddenItems);
@@ -124,10 +124,4 @@ class HiddenListMgr{
             this.saveList();
         }
     }
-}
-
-function isEmpty(obj){
-    for(i in obj)
-        return false;
-    return true;
 }

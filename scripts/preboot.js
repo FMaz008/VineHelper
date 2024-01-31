@@ -264,6 +264,14 @@ showRuntime("PRE: Begining to load settings");
 getSettings(); //First call to launch the extension.
 
 
+//#################################################3
+//### UTILITY FUNCTIONS
+function isEmptyObj(obj){
+    for(i in obj)
+        return false;
+    return true;
+}
+
 function getRunTime(){
 	return (Date.now() - startTime);
 }

@@ -1,4 +1,4 @@
-
+//No JQuery
 class Template {
 	arrCache = [];
 	arrVar = [];
@@ -64,7 +64,7 @@ class TemplateMgr{
 
 	async loadTempateFromLocalStorage(){
 		const data = await chrome.storage.local.get("arrTemplate");
-		if($.isEmptyObject(data)){
+		if(isEmptyObj(data)){
 			showRuntime("TEMPLATE: No template in localstorage, will load them from files as needed...");
 			return;
 		}
