@@ -77,7 +77,7 @@ async function init(){
 		gridHidden = new Grid($("#tab-hidden"));
 	}
 	
-	if(appSettings.unavailableTab.active){
+	if(appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar){
 		gridUnavailable = new Grid($("#tab-unavailable"));
 	}
 	showRuntime("BOOT: Grid system completed");
@@ -139,7 +139,7 @@ async function init(){
 	showRuntime("done creating toolbars.");
 	
 	//Only contact the home server is necessary
-	if(appSettings.unavailableTab.active || appSettings.general.displayETV || appSettings.general.displayFirstSeen){
+	if(appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar ||appSettings.general.displayETV || appSettings.general.displayFirstSeen){
 		fetchProductsData(getAllAsin());//Obtain the data to fill the toolbars with it.
 		
 		if(appSettings.general.newItemNotification){
@@ -299,7 +299,7 @@ function serverProductsResponse(data){
 				tile.showTile(); //Will update the placement and list
 		}
 		
-		if(appSettings.unavailableTab.active){ // if the voting system is active.
+		if(appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar){ // if the voting system is active.
 			tile.setVotes(values.v0, values.v1, values.s);
 			tile.setOrders(values.order_success, values.order_failed);
 			

@@ -102,12 +102,13 @@ function Tile(obj, gridInstance){
 	};
 	
 	this.getStatus = function(){
-		if(pOrderSuccess > 0  &&  pOrderSuccess > pOrderFailed)
-			return NOT_DISCARDED_ORDER_SUCCESS;
-		
-		if(pOrderFailed > 0 && pOrderFailed > pOrderSuccess)
-			return DISCARDED_ORDER_FAILED;
-		
+		if(appSettings.unavailableTab.active){
+			if(pOrderSuccess > 0  &&  pOrderSuccess > pOrderFailed)
+				return NOT_DISCARDED_ORDER_SUCCESS;
+			
+			if(pOrderFailed > 0 && pOrderFailed > pOrderSuccess)
+				return DISCARDED_ORDER_FAILED;
+		}
 		if(appSettings.unavailableTab.votingToolbar){
 			if(pVoteOwn == 1 && appSettings.unavailableTab.selfDiscard)
 				return DISCARDED_OWN_VOTE;

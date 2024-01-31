@@ -64,7 +64,7 @@ function updateTileCounts(){
 	if(appSettings.unavailableTab.active || appSettings.hiddenTab.active)
 		$("#ext-helper-available-count").text(gridRegular.getTileCount(true));
 	
-	if(appSettings.unavailableTab.active)
+	if(appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar)
 		$("#ext-helper-unavailable-count").text(gridUnavailable.getTileCount(true));
 	
 	if(appSettings.hiddenTab.active)
@@ -87,7 +87,7 @@ async function createGridInterface(){
 	let tplTabs = await Tpl.loadFile("view/tabs.html");
 
 	//If voting system enabled
-	Tpl.setIf("unavailable", appSettings.unavailableTab.active);
+	Tpl.setIf("unavailable", appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar);
 	
 	//If the hidden tab system is activated
 	Tpl.setIf("hidden", appSettings.hiddenTab.active);

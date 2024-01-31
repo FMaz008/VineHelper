@@ -45,14 +45,14 @@ function Toolbar(tileInstance){
 			pToolbar.addClass("compact");
 		}
 		
-		if(appSettings.unavailableTab.active){
+		if(appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar){
 			$("<div />")
 				.addClass("ext-helper-icon ext-helper-icon-loading")
 				.prependTo("#"+toolbarId + " .ext-helper-status-container");
 		}
 		
 		//If the voting system is off, only the icons have to be shown
-		if(!appSettings.unavailableTab.active){
+		if(!appSettings.unavailableTab.active && !appSettings.unavailableTab.votingToolbar){
 			pToolbar.addClass("toolbar-icon-only");
 		}
 		
@@ -204,8 +204,9 @@ function Toolbar(tileInstance){
 		$(pTile.getDOM()).css('opacity', tileOpacity);
 		
 		//Display voting system if active.
-		if(appSettings.unavailableTab.active){
-			if(pTile.wasOrdered()){
+		//WTF
+		if(appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar){
+			if(appSettings.unavailableTab.active && pTile.wasOrdered()){
 				await this.createOrderWidget();
 			}else if(appSettings.unavailableTab.votingToolbar){
 				await createVotingWidget();

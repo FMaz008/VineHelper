@@ -139,8 +139,7 @@
 					</a>
 					<input type="checkbox" name="unavailableTab.active" value="1">
 				</label>
-				<div id="unavailableTabOptions">
-					<label for="unavailableTab.shareOrder">Share orders status
+					<label for="unavailableTab.shareOrder" style="margin-left:10px;">Share orders status
 						<a href="#" class="tips" title="This feature exchange data with Vine Helper's server: ASIN of the item ordered, if the order was a success or gave an error, an md5 hash of your IP will be stored on the server.">
 							<div class="ext-helper-toolbar-icon ext-helper-icon-request"></div>
 						</a>
@@ -156,9 +155,9 @@
 						<input type="checkbox" name="unavailableTab.compactToolbar" value="1">
 					</label>
 					<div class="subheader">
-						Voting system (Canada/Mainland UK):
+						Voting toolbar (Canada/Mainland UK):
 					</div>
-					<label for="unavailableTab.votingToolbar">Enable voting system when no order were recorded 
+					<label for="unavailableTab.votingToolbar">Enable voting toolbar before orders 
 						<a href="#" class="tips" title="This feature exchange data with Vine Helper's server: ASIN of the item ordered, if the order was a success or gave an error, an md5 hash of your IP will be stored on the server.">
 							<div class="ext-helper-toolbar-icon ext-helper-icon-request"></div>
 						</a>
@@ -167,40 +166,42 @@
 						</a>
 						<input type="checkbox" name="unavailableTab.votingToolbar" value="1">
 					</label>
-					<label for="unavailableTab.selfDiscard">Discard the items I voted "with fees".
-						<a href="#" class="tips" title="Immediately discard the items I vote as unavailable, regardless of the votes concensus.">
-							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
-						</a>
-						<input type="checkbox" name="unavailableTab.selfDiscard" value="1">
-					</label>
+					<div id="votingToolbarOptions">
+						<label for="unavailableTab.selfDiscard">Discard the items I voted "with fees".
+							<a href="#" class="tips" title="Immediately discard the items I vote as unavailable, regardless of the votes concensus.">
+								<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+							</a>
+							<input type="checkbox" name="unavailableTab.selfDiscard" value="1">
+						</label>
 
-					<label for="unavailableTab.consensusDiscard">Discard the items with a "No" concensus
-						<a href="#" class="tips" title="Discard the items which have a voting consensus of being unavailable.">
-							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
-						</a>
-						<input type="checkbox" name="unavailableTab.consensusDiscard" value="1">
-					</label>
+						<label for="unavailableTab.consensusDiscard">Discard the items with a "No" concensus
+							<a href="#" class="tips" title="Discard the items which have a voting consensus of being unavailable.">
+								<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+							</a>
+							<input type="checkbox" name="unavailableTab.consensusDiscard" value="1">
+						</label>
 
-					<label for="general.firstVotePopup">Show first vote popup
-						<a href="#" class="tips" title="Will display the popup following the first vote again, once, on the next vote.">
-							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
-						</a>
-						<input type="checkbox" name="general.firstVotePopup" value="1">
-					</label>
+						<label for="general.firstVotePopup">Show first vote popup
+							<a href="#" class="tips" title="Will display the popup following the first vote again, once, on the next vote.">
+								<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+							</a>
+							<input type="checkbox" name="general.firstVotePopup" value="1">
+						</label>
 
-					<div class="expand text">
-						Consensus Threshold: <input type="text" id="unavailableTab.consensusThreshold" value="" size="1" maxlength="1" />
-						votes majority.
-						<a href="#" class="tips"
-							title="How much of a vote majority is required for a consensus to be reached regarding an item availability.">
-							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
-						</a>
-						<br />
-						Unavailable items opacity: <input type="text" id="unavailableTab.unavailableOpacity" value="" size="3"
-							maxlength="3" /> %.
-						<a href="#" class="tips" title="Reduce the opacity of items marked as unavailable.">
-							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
-						</a>
+						<div class="expand">
+							Consensus Threshold: <input type="text" id="unavailableTab.consensusThreshold" value="" size="1" maxlength="1" />
+							votes majority.
+							<a href="#" class="tips"
+								title="How much of a vote majority is required for a consensus to be reached regarding an item availability.">
+								<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+							</a>
+							<br />
+							Unavailable items opacity: <input type="text" id="unavailableTab.unavailableOpacity" value="" size="3"
+								maxlength="3" /> %.
+							<a href="#" class="tips" title="Reduce the opacity of items marked as unavailable.">
+								<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+							</a>
+						</div>
 					</div>
 					<!--
 					<div class="summary">
@@ -225,7 +226,7 @@
 							</em></span>
 					</div>
 					-->
-				</div>
+				
 				
 			</div>
 			<div id="tabs-3" class="options">

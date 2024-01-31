@@ -47,9 +47,12 @@ function handleDynamicFields(key){
 	if(key=="general.allowInjection"){
         keyF = CSS.escape("general.shareETV");
         document.querySelector(`input[name='${keyF}']`).disabled = !checked;
-		
+	
+        let keyG = CSS.escape("unavailableTab.active");
+        let checked2 = document.querySelector(`input[name='${keyG}']`).checked;
+    
         keyF = CSS.escape("unavailableTab.shareOrder");
-        document.querySelector(`input[name='${keyF}']`).disabled = !checked;
+        document.querySelector(`input[name='${keyF}']`).disabled = !checked || !checked2;
 	}
 	if(key=="hiddenTab.active"){
         keyF = CSS.escape("hiddenTab.remote");
@@ -59,19 +62,27 @@ function handleDynamicFields(key){
         keyF = CSS.escape("general.newItemNotificationSound");
         document.querySelector(`[name='${keyF}']`).disabled = !checked;
     }
-    //handleChildrenOptions(key);
-    
+
     if(key=="general.displayFirstSeen"){
         keyF = CSS.escape("general.bookmark");
         document.querySelector(`[name='${keyF}']`).disabled = !checked;
     }
+
+    if(key=="unavailableTab.active"){
+        let keyG = CSS.escape("general.allowInjection");
+        let checked2 = document.querySelector(`input[name='${keyG}']`).checked;
+
+        keyF = CSS.escape("unavailableTab.shareOrder");
+        document.querySelector(`[name='${keyF}']`).disabled = !checked || !checked2;
+    }
     
 }
 async function drawUnavailableTab() {
-    document.querySelector("#unavailableTabOptions").style.display = appSettings.unavailableTab.active ? "flex" :"none";
+    console.log(appSettings.unavailableTab.votingToolbar);
+    document.querySelector("#votingToolbarOptions").style.display = appSettings.unavailableTab.votingToolbar ? "block" :"none";
 
-    if (appSettings.unavailableTab.active) {
-        
+    if (appSettings.unavailableTab.votingToolbar) {
+        /*
         //Obtain contribution statistics
         let url = "https://www.francoismazerolle.ca/vinehelperStats.php";
         fetch(url)
@@ -99,13 +110,14 @@ async function drawUnavailableTab() {
             document.querySelector("#concensusBackedVotes").innerText= data["concensusBackedVotes"];
             document.querySelector("#reliability").innerText= reliability.toFixed(1) + "%";
         }
+        */
     } 
 }
 
 async function drawDiscord() {
     
     //Show or hide the discord options
-    document.querySelector("#discordOptions").style.display = appSettings.discord.active ? "flex" : "none";
+    document.querySelector("#discordOptions").style.display = appSettings.discord.active ? "block" : "none";
    
     if (appSettings.discord.active) {
         let showLink = JSONGetPathValue(appSettings, "discord.guid") === null;
@@ -162,7 +174,7 @@ function init() {
 
     //unavailableTab / Voting system interaction
     let key;
-    key = CSS.escape("unavailableTab.active");
+    key = CSS.escape("unavailableTab.votingToolbar");
     document.querySelector(`label[for='${key}'] input`).onclick = function () {
         setTimeout(() => drawUnavailableTab(), 1);
     }
