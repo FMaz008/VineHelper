@@ -102,8 +102,8 @@ async function createGridInterface(){
 		$(content).prependTo("#ext-helper-tabs");
 		$(content).appendTo("#ext-helper-tabs").css("margin-top", "5px");
 
-		$("#ext-helper-hideall").on("click", {}, this.hideAllItems);
-		$("#ext-helper-showall").on("click", {}, this.showAllItems);
+		$(".ext-helper-hideall").on("click", {}, this.hideAllItems);
+		$(".ext-helper-showall").on("click", {}, this.showAllItems);
 		
 	}
 	
