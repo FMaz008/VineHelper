@@ -423,14 +423,15 @@ window.addEventListener("message", async function(event) {
 			event.data.data.parent_asin = '"' + event.data.data.parent_asin + '"';
 		}
 		
-		let url = "https://francoismazerolle.ca/vinehelper.php"
-		+ '?data={"api_version":4, '
-		+ '"action":"report_etv",'
-		+ '"country":"' + vineCountry + '",'
-		+ '"asin":"' + event.data.data.asin + '",'
-		+ '"parent_asin": ' + event.data.data.parent_asin + ','
-		+ '"etv":"' + event.data.data.etv + '"'
-		+ '}'
+		let arrJSON = {
+			"api_version":4, "action": "report_etv", "country": vineCountry, "uuid": uuid,
+			"asin": event.data.data.asin,
+			"parent_asin": event.data.data.parent_asin,
+			"queue": vineQueue,
+			"etv": event.data.data.etv
+		};
+
+		let url = "https://francoismazerolle.ca/vinehelper.php?data=" + JSON.stringify(arrJSON);
 		await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
 	
 		//Update the product tile ETV in the Toolbar
@@ -463,11 +464,10 @@ window.addEventListener("message", async function(event) {
 				"parent_asin": event.data.data.parent_asin,
 				"order_status": event.data.data.status
 			};
-			let jsonArrURL = JSON.stringify(arrJSON);
 			
 			//Form the full URL
 			let url = "https://www.francoismazerolle.ca/vinehelper.php"
-					+ "?data=" + jsonArrURL;
+					+ "?data=" + JSON.stringify(arrJSON);
 			await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
 			
 			//Update the product tile ETV in the Toolbar
