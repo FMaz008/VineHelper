@@ -112,6 +112,7 @@
 		"lib/jquery_ui/jquery-ui.min.js",
 		"scripts/Template.js",
 		"scripts/ScreenNotifier.js",
+		"scripts/HiddenListMgr.js",
 		"scripts/preboot.js"
 	  ],
 	  "matches": [

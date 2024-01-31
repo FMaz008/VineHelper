@@ -16,6 +16,8 @@ var appVersion = 0;
 var Tpl = new Template();
 var TplMgr = new TemplateMgr();
 var Notifications = new ScreenNotifier();
+var HiddenList = new HiddenListMgr();
+
 
 //#########################
 //### Load settings
@@ -90,16 +92,10 @@ async function getSettings(){
 	showRuntime("PRE: Reading settings from local storage");
 	
 	const data = await chrome.storage.local.get("settings");
-	const data2 = await chrome.storage.local.get("hiddenItems");
 	
 	showRuntime("PRE: Done reading settings");
 
-	//Load hidden items
-	if($.isEmptyObject(data2)){
-		await chrome.storage.local.set({ 'hiddenItems': [] });
-	}else{
-		Object.assign(arrHidden, data2.hiddenItems);
-	}
+	
 	
 	//If no settings exist already, create the default ones
 	if($.isEmptyObject(data)){
@@ -262,40 +258,11 @@ async function getSettings(){
 	
 	showRuntime("PRE: Settings loaded");
 	
-	discardedItemGarbageCollection();
-	
-	showRuntime("PRE: Garbage collection completed.");
+
 }
 showRuntime("PRE: Begining to load settings");
 getSettings(); //First call to launch the extension.
 
-
-function discardedItemGarbageCollection(){
-	var change = false;
-	let expiredDate = new Date();
-	expiredDate.setDate(expiredDate.getDate() - 90);
-	
-	//Not sure why this occurs sometimes, but here's an easy fix
-	if(appSettings.hiddenTab.arrHidden == undefined){
-		appSettings.hiddenTab.arrHidden = [];
-		change=true;
-	}	
-
-	//Splicing inside a foreach might skip the item following the deleted one, 
-	//but this method is called on every page load so it is effectively inconsequential asin
-	//the missing items will be caught on the next pass.
-	$.each(arrHidden, function(key, value){
-		if(key!=undefined && value["date"] < expiredDate){
-			arrHidden.splice(key, 1);
-			change = true;
-		}
-	});
-	
-	//Save array to local storage
-	if(change){
-		chrome.storage.local.set({ "settings": appSettings }); //Save the settings
-	}
-}
 
 function getRunTime(){
 	return (Date.now() - startTime);

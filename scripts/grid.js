@@ -126,15 +126,7 @@ async function hideAllItems(){
 		tile = getTileByAsin(asin); //Obtain the real tile 
 		await tile.hideTile(false, false); //Do not update local storage
 	}
-
-	//Update local storage
-	for(const tile of arrTile){
-		arrHidden.push({"asin" : tile.asin, "date": new Date});
-	}
-	await chrome.storage.local.set({ 'hiddenItems': arrHidden });
-
-	//Update server
-	notifyServerOfHiddenItem(arrTile);
+	HiddenList.saveList();
 }
 
 async function showAllItems(){
@@ -146,39 +138,6 @@ async function showAllItems(){
 		tile = getTileByAsin(asin); //Obtain the real tile 
 		await tile.showTile(false, false); //Do not update local storage
 	}
-
-	//Update local storage
-	for(const tile of arrTile){
-		$.each(arrHidden, function(key, value){
-			if(value != undefined && value.asin == tile.asin){
-				arrHidden.splice(key, 1);
-			}
-		}.bind(tile));
-	}
-	await chrome.storage.local.set({ 'hiddenItems': arrHidden });
-
-	//Update server
-	notifyServerOfHiddenItem(arrTile);
+	HiddenList.saveList();
 }
 
-/**
- * Send new items on the server to be added or removed from the hidden list.
- * @param [{"asin": "abc", "hidden": true}, ...] arr 
- */
-function notifyServerOfHiddenItem(arr){
-	let arrJSON = {
-		"api_version":4,
-		"country": vineCountry,
-		"action": "save_hidden_list",
-		"uuid": appSettings.general.uuid,
-		"arr":arr
-	};
-	let jsonArrURL = JSON.stringify(arrJSON);
-	
-	showRuntime("Saving hidden item(s) remotely...");
-	
-	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-	let url = "https://www.francoismazerolle.ca/vinehelper.php"
-			+ "?data=" + jsonArrURL;
-	fetch(url);
-}

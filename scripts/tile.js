@@ -186,30 +186,17 @@ function Tile(obj, gridInstance){
 		if(!appSettings.hiddenTab.active)
 			return false;
 		
-		var found = false;
-		$.each(arrHidden, function(key, value){
-			if(value.asin == pAsin){
-				found = true;
-				return;
-			}
-		});
-		return found;
+		return HiddenList.isHidden(pAsin);
 	};
 	
 
 	this.hideTile = async function(animate=true, updateLocalStorage=true){
 		//Add the item to the list of hidden items
 		
-		if(updateLocalStorage){
-			arrHidden.push({"asin" : pAsin, "date": new Date});
-			await chrome.storage.local.set({ 'hiddenItems': arrHidden });
-		}
+		HiddenList.addItem(pAsin, updateLocalStorage);
 
 		//Move the tile
-		if(animate)
-			await this.moveToGrid(gridHidden, true);
-		else //If there is no animation, we don't want an await
-			this.moveToGrid(gridHidden, false);
+		await this.moveToGrid(gridHidden, animate);
 
 		pToolbar.updateVisibilityIcon();
 		
@@ -220,14 +207,7 @@ function Tile(obj, gridInstance){
 	this.showTile = async function(animate=true, updateLocalStorage=true){
 		
 		//Remove the item from the array of hidden items
-		if(updateLocalStorage){
-			$.each(arrHidden, function(key, value){
-				if(value != undefined && value.asin == pAsin){
-					arrHidden.splice(key, 1);
-				}
-			});
-			await chrome.storage.local.set({ 'hiddenItems': arrHidden });
-		}
+		HiddenList.removeItem(pAsin, updateLocalStorage);
 
 		//Move the tile
 		let moveToGrid = gridRegular;
@@ -237,10 +217,7 @@ function Tile(obj, gridInstance){
 		){
 			moveToGrid = gridUnavailable;
 		}
-		if(animate)
-			await this.moveToGrid(moveToGrid, true);
-		else //If there is no animatin, we don't want an await.
-			this.moveToGrid(moveToGrid, false);
+		await this.moveToGrid(moveToGrid, animate);
 
 		pToolbar.updateVisibilityIcon();
 		

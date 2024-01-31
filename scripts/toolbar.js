@@ -68,11 +68,9 @@ function Toolbar(tileInstance){
 					case "vvp-items-grid":
 					case "tab-unavailable":
 						tile.hideTile();
-						notifyServerOfHiddenItem([{asin, "hidden": true}]);
 						break;
 					case "tab-hidden":
 						tile.showTile();
-						notifyServerOfHiddenItem([{asin, "hidden": false}]);
 						break;
 				}
 				
