@@ -17,7 +17,7 @@ const NOT_DISCARDED_ORDER_SUCCESS = -4;
 const NOT_DISCARDED_NO_STATUS = -3;
 const NOT_DISCARDED_OWN_VOTE = -2;
 const NOT_DISCARDED_NO_FEES = -1;
-const NOT_DISCARDED = 0; 
+const NOT_DISCARDED = 0;
 const DISCARDED_WITH_FEES = 1;
 const DISCARDED_OWN_VOTE = 2;
 const DISCARDED_ORDER_FAILED = 4;
@@ -42,161 +42,158 @@ init();
 
 
 //Initiate the extension
-async function init(){
-	
+async function init() {
+
 	//Wait for the config to be loaded before running this script
 	showRuntime("BOOT: Waiting on config to be loaded...");
-	while($.isEmptyObject(appSettings)){
+	while ($.isEmptyObject(appSettings)) {
 		await new Promise(r => setTimeout(r, 10));
 	}
 	showRuntime("BOOT: Config available. Begining init() function");
-	
+
 	//Inject the infinite loading wheel fix to the "main world"
-	if(appSettings.general.allowInjection){
+	if (appSettings.general.allowInjection) {
 		scriptTag.src = chrome.runtime.getURL('scripts/inj.js');
-		scriptTag.onload = function() { this.remove(); };
+		scriptTag.onload = function () { this.remove(); };
 		// see also "Dynamic values in the injected code" section in this answer
 		(document.head || document.documentElement).appendChild(scriptTag);
 		showRuntime("BOOT: Script injected");
 	}
-	
+
 	//If the sync hidden items is enable, load the hidden item from the server
 	//if(appSettings.hiddenTab.remote)
 	//	await loadHiddenItems(); //from tile.js
-	
+
 	//Create the Discard grid
 	showRuntime("BOOT: Creating tabs system");
 	var tabSystem = appSettings.unavailableTab.active || appSettings.hiddenTab.active;
-	if(tabSystem){
+	if (tabSystem) {
 		await createGridInterface();
 	}
-	
+
 	gridRegular = new Grid($("#vvp-items-grid"));
-	
-	if(appSettings.hiddenTab.active){
+
+	if (appSettings.hiddenTab.active) {
 		gridHidden = new Grid($("#tab-hidden"));
 	}
-	
-	if(appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar){
+
+	if (appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar) {
 		gridUnavailable = new Grid($("#tab-unavailable"));
 	}
 	showRuntime("BOOT: Grid system completed");
-	
-	
-	
+
+
+
 	//Show version info popup : new version
-	if(appVersion != appSettings.general.versionInfoPopup){
+	if (appVersion != appSettings.general.versionInfoPopup) {
 		prom = await Tpl.loadFile("view/popup_changelog.html");
 		Tpl.setVar("appVersion", appVersion);
 		let content = Tpl.render(prom);
-		showModalDialog("Vine Helper update info", content ,600);
+		showModalDialog("Vine Helper update info", content, 600);
 		appSettings.general.versionInfoPopup = appVersion;
 		saveSettings();
 		TplMgr.flushLocalStorage(); //Delete all template from cache
 	}
-	
+
 	//Bottom pagination
-	if(appSettings.general.topPagination){
+	if (appSettings.general.topPagination) {
 		$("#vvp-items-grid-container .topPagination").remove();
-		$(".a-pagination").parent().css("margin-top","10px").clone().insertAfter("#vvp-items-grid-container p").addClass("topPagination");
+		$(".a-pagination").parent().css("margin-top", "10px").clone().insertAfter("#vvp-items-grid-container p").addClass("topPagination");
 	}
 
 	//Insert bookmark button
-	if(appSettings.general.displayFirstSeen && appSettings.general.bookmark){
+	if (appSettings.general.displayFirstSeen && appSettings.general.bookmark) {
 		$("button.bookmark").remove();
 		prom = await Tpl.loadFile("view/bookmark.html");
 		let bookmarkContent = Tpl.render(prom);
 		$(".a-pagination").parent().append(bookmarkContent);
-		$("button.bookmark").on("click", function(event){
-			
+		$("button.bookmark").on("click", function (event) {
+
 			//Fetch the current date/time from the server
-			let arrJSON = {"api_version":4, "country": vineCountry, "action":"date"};
+			let arrJSON = { "api_version": 4, "country": vineCountry, "action": "date" };
 			let url = "https://francoismazerolle.ca/vinehelper.php"
-					+ "?data=" + JSON.stringify(arrJSON);
+				+ "?data=" + JSON.stringify(arrJSON);
 			fetch(url)
 				.then((response) => response.json())
-				.then(async function(response){
-					let t = response.date.split(/[- :]/);
-					let jsDate = Date.UTC(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
-					
-					appSettings.general.bookmarkDate = jsDate;
+			  	.then(async function (response) {
+					appSettings.general.bookmarkDate = new Date(response.date + " GMT").toString();
 					saveSettings();
 					alert("Bookmark set for \n" + appSettings.general.bookmarkDate + "\nItems newer will be highlighted.\n\nNote: Settings pertaining to this tab were saved.");
-				});
+			});
 		});
 	}
-	
+
 	//Browse each items from the Regular grid
 	//- Create an array of all the products listed on the page
 	//- Create an empty toolbar for the item tile
 	const arrObj = $(".vvp-item-tile");
 	let tile = null;
-	for(let i = 0; i < arrObj.length; i++){
+	for (let i = 0; i < arrObj.length; i++) {
 		tile = generateTile(arrObj[i]);
 		t = new Toolbar(tile);
 		await t.createProductToolbar();
 	}
 	showRuntime("done creating toolbars.");
-	
+
 	//Only contact the home server is necessary
-	if(appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar ||appSettings.general.displayETV || appSettings.general.displayFirstSeen){
+	if (appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar || appSettings.general.displayETV || appSettings.general.displayFirstSeen) {
 		fetchProductsData(getAllAsin());//Obtain the data to fill the toolbars with it.
-		
-		if(appSettings.general.newItemNotification){
+
+		if (appSettings.general.newItemNotification) {
 			checkNewItems();
 		}
 	}
 }
-async function checkNewItems(){
-	let arrJSON = {"api_version":4, "country": vineCountry, "orderby":"date", "limit":10};
+async function checkNewItems() {
+	let arrJSON = { "api_version": 4, "country": vineCountry, "orderby": "date", "limit": 10 };
 	let jsonArrURL = JSON.stringify(arrJSON);
 	showRuntime("Fetching most recent products data...");
-	
+
 	//Display a notification that we have checked for items.
 	let note = new ScreenNotification();
 	note.template = "view/notification_loading.html";
 	note.lifespan = 3;
 	await Notifications.pushNotification(note);
-	
+
 	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
 	let url = "https://francoismazerolle.ca/vineHelperLatest.php"
-			+ "?data=" + jsonArrURL;
+		+ "?data=" + jsonArrURL;
 	fetch(url)
 		.then((response) => response.json())
-		.then(async function(response){
+		.then(async function (response) {
 			let latestProduct = await chrome.storage.local.get('latestProduct');
-			for(let i = response.products.length-1; i>=0; i--){
-				if($.isEmptyObject(latestProduct) || response.products[i].date > latestProduct){
-				
+			for (let i = response.products.length - 1; i >= 0; i--) {
+				if ($.isEmptyObject(latestProduct) || response.products[i].date > latestProduct) {
+
 					let note2 = new ScreenNotification();
 					note2.title = "New item(s) detected !";
 					note2.lifespan = 60;
-					if(appSettings.general.newItemNotificationSound)
+					if (appSettings.general.newItemNotificationSound)
 						note2.sound = "resource/sound/notification.mp3";
 					note2.content = "Most recent item: <a href='/dp/" + response.products[i].asin + "' target='_blank'>" + response.products[i].asin + "</a><br />Server time: " + response.products[i].date;
 					await Notifications.pushNotification(note2);
-					
-					if(i ==0){
-						await chrome.storage.local.set({ 'latestProduct':  response.products[0].date });
+
+					if (i == 0) {
+						await chrome.storage.local.set({ 'latestProduct': response.products[0].date });
 					}
 				}
 			}
-			
-			
+
+
 			//Repeat another check in 60 seconds.
-			setTimeout(function(){checkNewItems()}, 60000);
+			setTimeout(function () { checkNewItems() }, 60000);
 		})
-		.catch( 
-			function() {
-				error =>  console.log(error);
+		.catch(
+			function () {
+				error => console.log(error);
 			}
 		);
 }
-function getAllAsin(){
+function getAllAsin() {
 	let tile;
 	let arrUrl = []; //Will be use to store the URL identifier of the listed products.
 	const arrObj = $(".vvp-item-tile");
-	for(let i = 0; i < arrObj.length; i++){
+	for (let i = 0; i < arrObj.length; i++) {
 		//Create the tile and assign it to the main grid
 		obj = arrObj[i];
 		tile = getTileByAsin(getAsinFromDom(obj));
@@ -206,62 +203,62 @@ function getAllAsin(){
 }
 
 //Convert the regular tile to the Vine Helper version.
-function generateTile(obj){
+function generateTile(obj) {
 	let tile;
 	tile = new Tile(obj, gridRegular);
-	
+
 	//Add a container for the image and place the image in it.
 	let img = $(obj).children(".vvp-item-tile-content").children("img");
 	let imgContainer = $("<div>")
 		.addClass("ext-helper-img-container")
 		.insertBefore(img);
 	$(img).detach().appendTo($(imgContainer));
-	
+
 	//Move the hidden item to the hidden tab
-	if(appSettings.hiddenTab.active && tile.isHidden()){
+	if (appSettings.hiddenTab.active && tile.isHidden()) {
 		tile.moveToGrid(gridHidden, false); //This is the main sort, do not animate it
 	}
-	
-	if(appSettings.general.displayVariantIcon){
+
+	if (appSettings.general.displayVariantIcon) {
 		//Check if the item is a parent ASIN (as variants)
 		let variant = $(obj).find(".a-button-input").attr("data-is-parent-asin");
-		if(variant == "true"){
+		if (variant == "true") {
 			$("<div>")
 				.addClass("ext-helper-variant-indicator-container")
 				.append($("<div>").addClass("ext-helper-indicator-icon ext-helper-icon-choice "))
 				.appendTo($(imgContainer));
 		}
 	}
-	
+
 	return tile;
-	
+
 }
 
 
 //Get data from the server about the products listed on this page
-function fetchProductsData(arrUrl){
+function fetchProductsData(arrUrl) {
 	let arrJSON = {
-		"api_version":4,
+		"api_version": 4,
 		"action": "getinfo",
 		"country": vineCountry,
 		"uuid": appSettings.general.uuid,
 		"queue": vineQueue,
-		"arr_asin":arrUrl
+		"arr_asin": arrUrl
 	};
 	let jsonArrURL = JSON.stringify(arrJSON);
-	
+
 	showRuntime("Fetching products data...");
-	
+
 	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
 	let url = "https://www.francoismazerolle.ca/vinehelper.php"
-			+ "?data=" + jsonArrURL;
+		+ "?data=" + jsonArrURL;
 	fetch(url)
 		.then((response) => response.json())
 		.then(serverProductsResponse)
-		.catch( 
-			function() {
+		.catch(
+			function () {
 				//error =>  console.log(error);
-				$.each(arrUrl, function(key, val){
+				$.each(arrUrl, function (key, val) {
 					let t = getTileByAsin(val);//server offline
 				});
 			}
@@ -270,48 +267,48 @@ function fetchProductsData(arrUrl){
 
 //Process the results obtained from the server
 //Update each tile with the data pertaining to it.
-function serverProductsResponse(data){
-	if(data["api_version"]!=4){
+function serverProductsResponse(data) {
+	if (data["api_version"] != 4) {
 		console.log("Wrong API version");
 	}
-	
+
 	timenow = data["current_time"];
 
 	//Load the ETV value
-	$.each(data["products"], function(key,values){
-		
+	$.each(data["products"], function (key, values) {
+
 		let tile = getTileByAsin(key);
-		if(tile==null)
+		if (tile == null)
 			console.log("No tile matching " + key);
-		
-		if(values.etv_min != null){
+
+		if (values.etv_min != null) {
 			tile.getToolbar().setETV(values.etv_min, values.etv_max);
 		}
-		
-		if(values.date_added != null){
+
+		if (values.date_added != null) {
 			tile.setDateAdded(timenow, values.date_added);
 		}
 		//If there is a remote value for the hidden item, ensure it is sync'ed up with the local list
-		if(appSettings.hiddenTab.remote == true && values.hidden != null){
-			if(values.hidden == true && !tile.isHidden())
+		if (appSettings.hiddenTab.remote == true && values.hidden != null) {
+			if (values.hidden == true && !tile.isHidden())
 				tile.hideTile(); //Will update the placement and list
-			else if(values.hidden == false && tile.isHidden())
+			else if (values.hidden == false && tile.isHidden())
 				tile.showTile(); //Will update the placement and list
 		}
-		
-		if(appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar){ // if the voting system is active.
+
+		if (appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar) { // if the voting system is active.
 			tile.setVotes(values.v0, values.v1, values.s);
 			tile.setOrders(values.order_success, values.order_failed);
-			
+
 			//Assign the tiles to the proper grid
-			if(appSettings.hiddenTab.active && tile.isHidden()){
+			if (appSettings.hiddenTab.active && tile.isHidden()) {
 				//The hidden tiles were already moved, keep the there.
-			}else if(appSettings.unavailableTab.consensusDiscard && tile.getStatus() >= NOT_DISCARDED){
+			} else if (appSettings.unavailableTab.consensusDiscard && tile.getStatus() >= NOT_DISCARDED) {
 				tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
-			} else if(appSettings.unavailableTab.selfDiscard && tile.getStatus() == DISCARDED_OWN_VOTE){
+			} else if (appSettings.unavailableTab.selfDiscard && tile.getStatus() == DISCARDED_OWN_VOTE) {
 				tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
 			}
-			
+
 			tile.getToolbar().updateToolbar();
 		}
 	});
@@ -329,48 +326,48 @@ function serverProductsResponse(data){
 
 //A vote button was pressed, send the vote to the server
 //If a vote changed the discard status, move the tile accordingly
-async function reportfees(event){
+async function reportfees(event) {
 	let asin = event.data.asin;
 	let fees = event.data.fees; // The vote
 	let tile = getTileByAsin(asin);
-	
-	
+
+
 	//If the tile is already in the hidden category, a vote won't move it from there.
-	if(!tile.isHidden()){
+	if (!tile.isHidden()) {
 		//Note: If the tile is already in the grid, the method will exit with false.
 		//Our vote is "Fees" + the self discard option is active: move the item to the Discard grid
-		if(fees == 1 && appSettings.unavailableTab.selfDiscard){
+		if (fees == 1 && appSettings.unavailableTab.selfDiscard) {
 			await tile.moveToGrid(gridUnavailable, true);
-		
-		//Our vote is "Fees" + the added vote will meet the consensus: move the item to the Discard grid
-		}else if(fees == 1 && appSettings.unavailableTab.consensusDiscard && tile.getVoteFees() + 1 - tile.getVoteNoFees() >= appSettings.unavailableTab.consensusThreshold){
+
+			//Our vote is "Fees" + the added vote will meet the consensus: move the item to the Discard grid
+		} else if (fees == 1 && appSettings.unavailableTab.consensusDiscard && tile.getVoteFees() + 1 - tile.getVoteNoFees() >= appSettings.unavailableTab.consensusThreshold) {
 			await tile.moveToGrid(gridUnavailable, true);
-		
-		//Our vote is "nofees" + there's no consensus, move the item to the regular grid
-		}else if(fees == 0 && tile.getVoteFees() - tile.getVoteNoFees() < appSettings.unavailableTab.consensusThreshold){
+
+			//Our vote is "nofees" + there's no consensus, move the item to the regular grid
+		} else if (fees == 0 && tile.getVoteFees() - tile.getVoteNoFees() < appSettings.unavailableTab.consensusThreshold) {
 			await tile.moveToGrid(gridRegular, true);
 		}
 	}
-	
+
 	//Send the vote to the server
-	let arrJSON = {"api_version":4, "action": "report_fee", "country": vineCountry, "uuid":uuid, "asin": asin, "fees": fees};
+	let arrJSON = { "api_version": 4, "action": "report_fee", "country": vineCountry, "uuid": uuid, "asin": asin, "fees": fees };
 	let jsonArrURL = JSON.stringify(arrJSON);
-	
+
 	let url = "https://www.francoismazerolle.ca/vinehelper.php"
-				+ "?data=" + jsonArrURL;
-	
+		+ "?data=" + jsonArrURL;
+
 	await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
 
 	//Refresh the data for the toolbar of that specific product only
 	let arrUrl = [asin];
 	fetchProductsData(arrUrl);
-	
+
 	//Show first vote popup
-	if(appSettings.general.firstVotePopup){
-		
+	if (appSettings.general.firstVotePopup) {
+
 		prom = await Tpl.loadFile("view/popup_firstvote.html");
 		let content = Tpl.render(prom);
-		showModalDialog("Vine Helper - voting feature", content ,600, "resource/sound/upgrade.mp3");
+		showModalDialog("Vine Helper - voting feature", content, 600, "resource/sound/upgrade.mp3");
 		appSettings.general.firstVotePopup = false;
 		saveSettings();
 	}
@@ -379,52 +376,52 @@ async function reportfees(event){
 
 //Function to receive a message from the website-end and launch an animation
 //if the infinite wheel fix was used.
-window.addEventListener("message", async function(event) {
-    // We only accept messages from ourselves
-    if (event.source != window)
-        return;
+window.addEventListener("message", async function (event) {
+	// We only accept messages from ourselves
+	if (event.source != window)
+		return;
 
 	//If we got back a message after we fixed an infinite wheel spin.
-    if (event.data.type && (event.data.type == "infiniteWheelFixed")) {
-        //console.log("Content script received message: " + event.data.text);
-		
+	if (event.data.type && (event.data.type == "infiniteWheelFixed")) {
+		//console.log("Content script received message: " + event.data.text);
+
 		prom = await Tpl.loadFile("view/infinite_wheel_fix.html");
 		let content = Tpl.render(prom);
-		
+
 		$("#a-popover-content-3").prepend(content);
 		let textContainer = $("#ext-helper-healing-text").hide();//Begin the animation hidden
 		let healingAnim = $("#ext-helper-healing");
-		
+
 		await textContainer.slideDown("slow").promise();
-		await healingAnim.delay(1000).animate({opacity: "hide"},{duration: 500}).promise();
+		await healingAnim.delay(1000).animate({ opacity: "hide" }, { duration: 500 }).promise();
 		await textContainer.slideUp("slow").promise();
 		$("#ext-helper-healing").remove();
 		$("#ext-helper-healing-text").remove();
-		
-		
+
+
 		//Show a notification
 		let note = new ScreenNotification();
 		note.title = "Infinite spinner fixed!";
 		note.lifespan = 10;
 		note.content = "Vine Helper fixed an item that was bugged with the infinite spinner problem.";
 		await Notifications.pushNotification(note);
-    }
-	
+	}
+
 	//If we got back a message after we found an ETV.
 	if (appSettings.general.shareETV && event.data.type && (event.data.type == "etv")) {
-		
+
 		//Send the ETV info to the server
-		
+
 		let tileASIN;
-		if(event.data.data.parent_asin === null){
+		if (event.data.data.parent_asin === null) {
 			tileASIN = event.data.data.asin;
-		}else{
+		} else {
 			tileASIN = event.data.data.parent_asin;
 			event.data.data.parent_asin = '"' + event.data.data.parent_asin + '"';
 		}
-		
+
 		let arrJSON = {
-			"api_version":4, "action": "report_etv", "country": vineCountry, "uuid": uuid,
+			"api_version": 4, "action": "report_etv", "country": vineCountry, "uuid": uuid,
 			"asin": event.data.data.asin,
 			"parent_asin": event.data.data.parent_asin,
 			"queue": vineQueue,
@@ -433,133 +430,133 @@ window.addEventListener("message", async function(event) {
 
 		let url = "https://francoismazerolle.ca/vinehelper.php?data=" + JSON.stringify(arrJSON);
 		await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
-	
+
 		//Update the product tile ETV in the Toolbar
 		let tile = getTileByAsin(tileASIN);
 		tile.getToolbar().setETV(event.data.data.etv, event.data.data.etv, true);
-		
+
 		//Show a notification
 		let note = new ScreenNotification();
 		note.title = "ETV data shared";
 		note.lifespan = 2;
-		note.content = "Vine Helper shared the ETV value of " +event.data.data.etv+" for item " + event.data.data.asin +".";
+		note.content = "Vine Helper shared the ETV value of " + event.data.data.etv + " for item " + event.data.data.asin + ".";
 		await Notifications.pushNotification(note);
 	}
-	
+
 	//If we got back a message after an order was attempted or placed.
 	if (event.data.type && (event.data.type == "order")) {
-		console.log("Item "+event.data.data.asin+ " (parent:"+event.data.data.parent_asin+") ordered: "+ event.data.data.status);
+		console.log("Item " + event.data.data.asin + " (parent:" + event.data.data.parent_asin + ") ordered: " + event.data.data.status);
 		let tileASIN;
-		if(event.data.data.parent_asin === null){
+		if (event.data.data.parent_asin === null) {
 			tileASIN = event.data.data.asin;
-		}else{
+		} else {
 			tileASIN = event.data.data.parent_asin;
 		}
-		
-		if(appSettings.unavailableTab.shareOrder){
-			if(
+
+		if (appSettings.unavailableTab.shareOrder) {
+			if (
 				event.data.data.status == "success"
 				|| event.data.data.error == "CROSS_BORDER_SHIPMENT"
 				|| event.data.data.error == "ITEM_NOT_IN_ENROLLMENT"
-			){
-			
+			) {
+
 				//Report the order status to the server
 				let arrJSON = {
-					"api_version":4, "action": "report_order", "country": vineCountry, "uuid": uuid,
+					"api_version": 4, "action": "report_order", "country": vineCountry, "uuid": uuid,
 					"asin": event.data.data.asin,
 					"parent_asin": event.data.data.parent_asin,
 					"order_status": event.data.data.status
 				};
-				
+
 				//Form the full URL
 				let url = "https://www.francoismazerolle.ca/vinehelper.php"
-						+ "?data=" + JSON.stringify(arrJSON);
+					+ "?data=" + JSON.stringify(arrJSON);
 				await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
-				
+
 				//Update the product tile ETV in the Toolbar
 				let tile = getTileByAsin(tileASIN);
 				tile.getToolbar().createOrderWidget(event.data.data.status == "success");
 			}
 		}
-		
-		if(event.data.data.status == "success"){
+
+		if (event.data.data.status == "success") {
 			//Show a notification
 			let note = new ScreenNotification();
 			note.title = "Successful order detected!";
 			note.lifespan = 5;
-			note.content = "Detected item " + event.data.data.asin +" as orderable.";
+			note.content = "Detected item " + event.data.data.asin + " as orderable.";
 			await Notifications.pushNotification(note);
-		}else{
+		} else {
 			//Show a notification
 			let note = new ScreenNotification();
 			note.title = "Failed order detected.";
 			note.lifespan = 5;
-			note.content = "Detected item " + event.data.data.asin +" as not orderable with error " + event.data.data.error + ".";
+			note.content = "Detected item " + event.data.data.asin + " as not orderable with error " + event.data.data.error + ".";
 			await Notifications.pushNotification(note);
 		}
-		
-		
+
+
 	}
 });
 
 
 //Key binding for navigation
-window.addEventListener('keydown', function(e) {
+window.addEventListener('keydown', function (e) {
 	let nodeName = document.activeElement.nodeName;
 	let excl = ["INPUT", "TEXTAREA", "SELECT", "LI"];
-	if(excl.indexOf(nodeName)==-1){
-		if(appSettings.hiddenTab.active){
-			if(e.key == "h")
+	if (excl.indexOf(nodeName) == -1) {
+		if (appSettings.hiddenTab.active) {
+			if (e.key == "h")
 				hideAllItems();
-			if(e.key == "s")
+			if (e.key == "s")
 				showAllItems();
 		}
-		if(e.key == "n"){
+		if (e.key == "n") {
 			let link = document.querySelector('ul.a-pagination li:last-child a');
-			if(link!=null)
+			if (link != null)
 				window.location.href = link.href;
 		}
-		if(e.key == "p"){
+		if (e.key == "p") {
 			let link = document.querySelector('ul.a-pagination li:first-child a');
-			if(link!=null)
+			if (link != null)
 				window.location.href = link.href;
 		}
 	}
 });
 
 
-function showModalDialog(title, text, width=400, sound=null){
+function showModalDialog(title, text, width = 400, sound = null) {
 	var w = width;
-	
-	if(sound){
+
+	if (sound) {
 		const audioElement = new Audio(chrome.runtime.getURL(sound));
 		audioElement.play();
 	}
-	
+
 	$("#ext-helper-dialog").remove();
 	$("<div id=\"ext-helper-dialog\" title=\"" + title + "\">").appendTo("body")
 		.append("<p>")
 		.html(text);
-	
-	  $( function() {
-		$( "#ext-helper-dialog" ).dialog({
-		  modal:true,
-		  width: w,
-		  show: {
-			effect: "blind",
-			duration: 500
-		  },
-		  hide: {
-			effect: "explode",
-			duration: 1000
-		  },
-          buttons: {
-			Ok: function() {
-			  $( this ).dialog( "close" );
+
+	$(function () {
+		$("#ext-helper-dialog").dialog({
+			modal: true,
+			width: w,
+			show: {
+				effect: "blind",
+				duration: 500
+			},
+			hide: {
+				effect: "explode",
+				duration: 1000
+			},
+			buttons: {
+				Ok: function () {
+					$(this).dialog("close");
+				}
 			}
-		  }
 		});//End dialog
 		$("div.ui-dialog").css("background", "white");
-	  });
-	  $("div.ui-dialog").css("background", "white");
+	});
+	$("div.ui-dialog").css("background", "white");
 }
