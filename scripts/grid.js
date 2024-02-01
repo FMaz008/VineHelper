@@ -119,6 +119,7 @@ async function createGridInterface(){
 async function hideAllItems(){
 	let arrTile = [];
 	let counter=0;
+	HiddenList.loadFromLocalStorage(); //Refresh the list in case it was altered in a different tab
 	while($("#vvp-items-grid .vvp-item-tile").children().length > 0){	
 		tDom = $("#vvp-items-grid .vvp-item-tile").children()[0];
 		asin = getAsinFromDom(tDom);
@@ -131,6 +132,7 @@ async function hideAllItems(){
 
 async function showAllItems(){
 	let arrTile = [];
+	HiddenList.loadFromLocalStorage(); //Refresh the list in case it was altered in a different tab
 	while ($("#tab-hidden .vvp-item-tile").children().length > 0){
 		tDom = $("#tab-hidden .vvp-item-tile").children()[0];
 		asin = getAsinFromDom(tDom);

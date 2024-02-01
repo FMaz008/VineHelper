@@ -20,6 +20,9 @@ class HiddenListMgr{
     }
 
     removeItem(asin, save=true){
+        if(save)
+            this.loadFromLocalStorage(); //Load the list in case it was altered in a different tab
+
         for(const id in this.arrHidden){
             if(this.arrHidden[id].asin == asin){
                 this.arrHidden.splice(id, 1);
