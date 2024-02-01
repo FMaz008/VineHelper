@@ -571,12 +571,12 @@ function showModalDialog(title, text, width = 400, sound = null) {
 }
 
 function compareVersion(oldVer, newVer){
-	if(oldVer == null || oldVer == undefined)
+	if(oldVer == null || oldVer == undefined || oldVer === true)
 		return VERSION_MAJOR_CHANGE;
-	
-	if(oldVer == newVer)
-		return VERSION_NO_CHANGE;
 
+	if(oldVer === false || oldVer == newVer)
+		return VERSION_NO_CHANGE;
+	
 	const regex = /^([0-9]+)\.([0-9]+)(?:\.([0-9]+))?$/;
 	const arrOldVer = oldVer.match(regex);
 	const arrNewVer = newVer.match(regex);
