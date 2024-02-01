@@ -38,6 +38,9 @@ class HiddenListMgr{
     }
 
     addItem(asin, save=true){
+        if(save)
+            this.loadFromLocalStorage(); //Load the list in case it was altered in a different tab
+        
         if(!this.isHidden(asin))
             this.arrHidden.push({"asin" : asin, "date": new Date});
 
