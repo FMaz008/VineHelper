@@ -149,12 +149,10 @@ function Tile(obj, gridInstance){
 			return false;
 		
 		
-		let t = mysqlDate.split(/[- :]/);
-		let jsDate = Date.UTC(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
-		t = timenow.split(/[- :]/);
-		timenow = Date.UTC(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
+		let currentTime = new Date(timenow + " GMT");
+		let jsDate = new Date(mysqlDate + " GMT");    
 
-		let textDate = timeSince(timenow, jsDate);
+		let textDate = timeSince(currentTime, jsDate);
 		$("<div>")
 			.addClass("ext-helper-date-added")
 			.text("First seen: " + textDate + " ago")

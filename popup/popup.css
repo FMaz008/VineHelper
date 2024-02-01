@@ -72,6 +72,10 @@ h3{
 	background-color: #ccc;
 }
 
+#tabs > ul > li > a {
+	text-decoration: none;
+	}
+
 .ui-tabs-nav {
 	padding: 0px !important;
 	border-top: 0px;
