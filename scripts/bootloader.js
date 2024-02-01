@@ -22,6 +22,10 @@ const DISCARDED_WITH_FEES = 1;
 const DISCARDED_OWN_VOTE = 2;
 const DISCARDED_ORDER_FAILED = 4;
 
+const VERSION_MAJOR_CHANGE = 3;
+const VERSION_MINOR_CHANGE = 2;
+const VERSION_REVISION_CHANGE = 1;
+const VERSION_NO_CHANGE = 0;
 
 init();
 
@@ -89,11 +93,16 @@ async function init() {
 		prom = await Tpl.loadFile("view/popup_changelog.html");
 		Tpl.setVar("appVersion", appVersion);
 		let content = Tpl.render(prom);
-		showModalDialog("Vine Helper update info", content, 600);
+		
+		TplMgr.flushLocalStorage(); //Delete all template from cache
+		if(compareVersion(appSettings.general.versionInfoPopup, appVersion)>VERSION_REVISION_CHANGE)
+			showModalDialog("Vine Helper update info", content, 600);
+		
 		appSettings.general.versionInfoPopup = appVersion;
 		saveSettings();
-		TplMgr.flushLocalStorage(); //Delete all template from cache
 	}
+
+
 
 	//Bottom pagination
 	if (appSettings.general.topPagination) {
@@ -559,4 +568,25 @@ function showModalDialog(title, text, width = 400, sound = null) {
 		$("div.ui-dialog").css("background", "white");
 	});
 	$("div.ui-dialog").css("background", "white");
+}
+
+function compareVersion(oldVer, newVer){
+	if(oldVer == newVer)
+		return VERSION_NO_CHANGE;
+
+	const regex = /^([0-9]+)\.([0-9]+)(?:\.([0-9]+))?$/;
+	const arrOldVer = oldVer.match(regex);
+	const arrNewVer = newVer.match(regex);
+	
+	if(arrOldVer[1] != arrNewVer[1])
+		return VERSION_MAJOR_CHANGE;
+	if(arrOldVer[2] != arrNewVer[2])
+		return VERSION_MINOR_CHANGE;
+	if(arrOldVer.length == 4 && arrNewVer.length == 4){
+		if(arrOldVer[3] != arrNewVer[3])
+			return VERSION_REVISION_CHANGE;
+		else
+			return VERSION_NO_CHANGE
+	}else
+		return VERSION_REVISION_CHANGE
 }

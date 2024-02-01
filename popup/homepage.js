@@ -326,6 +326,8 @@ function manageCheckboxSetting(key, def = null) {
     setCB(key, val); //Initial setup
 
     let keyE = CSS.escape(key);
+
+    //Clicking the label will check the checkbox
     document.querySelector(`label[for='${keyE}']`).onclick= async function (event) {
         
         if(event.target.nodeName=="INPUT")
