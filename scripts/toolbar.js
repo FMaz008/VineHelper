@@ -206,7 +206,7 @@ function Toolbar(tileInstance){
 		//Display voting system if active.
 		//WTF
 		if(appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar){
-			if(appSettings.unavailableTab.active && pTile.wasOrdered()){
+			if(pTile.wasOrdered()){
 				await this.createOrderWidget();
 			}else if(appSettings.unavailableTab.votingToolbar){
 				await createVotingWidget();
