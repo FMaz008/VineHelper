@@ -127,7 +127,7 @@ async function init() {
 			  	.then(async function (response) {
 					appSettings.general.bookmarkDate = new Date(response.date + " GMT").toString();
 					saveSettings();
-					alert("Bookmark set for \n" + appSettings.general.bookmarkDate + "\nItems newer will be highlighted.\n\nNote: Settings pertaining to this tab were saved.");
+					alert("Bookmark set for \n" + appSettings.general.bookmarkDate + "\nNewer items will be highlighted.\n\nNote: Settings pertaining to this tab were saved.");
 			});
 		});
 	}
@@ -287,12 +287,16 @@ function serverProductsResponse(data) {
 
 	//Load the ETV value
 	$.each(data["products"], function (key, values) {
-
+		showRuntime("DRAW: Processing ASIN #" + key);
+		//console.log(values);
 		let tile = getTileByAsin(key);
+		//console.log(tile);
+		
 		if (tile == null){
 			console.log("No tile matching " + key);
 			return;//Continue the loop with the next item
 		}
+
 
 		if (values.etv_min != null) {
 			tile.getToolbar().setETV(values.etv_min, values.etv_max);

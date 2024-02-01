@@ -142,6 +142,11 @@ function Toolbar(tileInstance){
 	this.updateToolbar = async function (){
 		let context = $("#ext-helper-toolbar-" + pTile.getAsin());
 		
+		if(context.length==0){
+			console.log("Count not find #ext-helper-toolbar-" + pTile.getAsin())
+			console.log(pTile);
+			return;
+		}
 		let tileOpacity;
 		let statusColor;
 		
@@ -204,7 +209,6 @@ function Toolbar(tileInstance){
 		$(pTile.getDOM()).css('opacity', tileOpacity);
 		
 		//Display voting system if active.
-		//WTF
 		if(appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar){
 			if(pTile.wasOrdered()){
 				await this.createOrderWidget();
