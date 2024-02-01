@@ -326,8 +326,12 @@ function manageCheckboxSetting(key, def = null) {
     setCB(key, val); //Initial setup
 
     let keyE = CSS.escape(key);
-    document.querySelector(`label[for='${keyE}']`).onclick= async function () {
-        //Change in value
+    document.querySelector(`label[for='${keyE}']`).onclick= async function (event) {
+        
+        if(event.target.nodeName=="INPUT")
+            return false;
+
+        //Change the value
         const newValue = getCB(key);
         setCB(key, !newValue);
     }
