@@ -287,8 +287,10 @@ function serverProductsResponse(data) {
 	$.each(data["products"], function (key, values) {
 
 		let tile = getTileByAsin(key);
-		if (tile == null)
+		if (tile == null){
 			console.log("No tile matching " + key);
+			return;//Continue the loop with the next item
+		}
 
 		if (values.etv_min != null) {
 			tile.getToolbar().setETV(values.etv_min, values.etv_max);

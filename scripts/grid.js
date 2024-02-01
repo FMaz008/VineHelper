@@ -50,7 +50,7 @@ class Grid {
 		$.each(this.pArrTile, function (key, value) {
 			if (value != undefined && value.getAsin() == asin) {
 				r = value;
-				return false; //Stop the loop
+				return null; //Stop the loop
 			}
 		});
 		return r;
