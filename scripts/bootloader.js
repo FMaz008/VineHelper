@@ -571,6 +571,9 @@ function showModalDialog(title, text, width = 400, sound = null) {
 }
 
 function compareVersion(oldVer, newVer){
+	if(oldVer == null || oldVer == undefined)
+		return VERSION_MAJOR_CHANGE;
+	
 	if(oldVer == newVer)
 		return VERSION_NO_CHANGE;
 
