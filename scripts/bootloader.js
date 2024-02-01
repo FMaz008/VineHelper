@@ -232,10 +232,12 @@ function generateTile(obj) {
 		//Check if the item is a parent ASIN (as variants)
 		let variant = $(obj).find(".a-button-input").attr("data-is-parent-asin");
 		if (variant == "true") {
-			$("<div>")
+			let div = $("<div>")
 				.addClass("ext-helper-variant-indicator-container")
-				.append($("<div>").addClass("ext-helper-indicator-icon ext-helper-icon-choice "))
 				.appendTo($(imgContainer));
+			let alink = $("<a href='#' onclick='return false;' title='The item has variant(s).'>").appendTo(div);
+			alink.append($("<div>").addClass("ext-helper-indicator-icon ext-helper-icon-choice "))
+				
 		}
 	}
 

@@ -159,6 +159,8 @@ a.selectedVote{
 	background-color:#EEE;
 }
 
-
+a.tooltip{
+	text-decoration: none;
+}
 
 
