@@ -238,6 +238,7 @@ function init() {
 					appSettings.general.uuid = serverResponse["uuid"];
 					await chrome.storage.local.set({ settings: appSettings });
 				}else{
+                    alert("Invalid UUID");
                     key = CSS.escape("general.uuid")
 					document.querySelector(`#${key}`).value =appSettings.general.uuid;
 				}
@@ -326,6 +327,11 @@ function manageCheckboxSetting(key, def = null) {
 
     let keyE = CSS.escape(key);
     document.querySelector(`label[for='${keyE}']`).onclick= async function () {
+        //Change in value
+        const newValue = getCB(key);
+        setCB(key, !newValue);
+    }
+    document.querySelector(`input[name='${keyE}']`).onchange= async function () {
         //Change in value
         handleDynamicFields(key);
         const newValue = getCB(key);

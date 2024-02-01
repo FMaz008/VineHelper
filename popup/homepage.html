@@ -15,8 +15,8 @@
 		<div id="tabs">
 			<ul>
 				<li class="active"><a href="#tabs-1">General</a></li>
-				<li><a href="#tabs-2">Voting</a></li>
-				<li><a href="#tabs-3">Brenda</a></li>
+				<li><a href="#tabs-2">Auto-sorting</a></li>
+				<li><a href="#tabs-3">"Brenda"</a></li>
 				<li><a href="#tabs-4">Styles</a></li>
 				<li><a href="#tabs-5">?</a></li>
 			</ul>
@@ -148,8 +148,8 @@
 						</a>
 						<input type="checkbox" name="unavailableTab.shareOrder" value="1">
 					</label>
-					<label for="unavailableTab.compactToolbar">Compact items toolbar
-						<a href="#" class="tips" title="Make the toolbar smaller and compatible with Thorvarium SmallItems stylesheet.">
+					<label for="unavailableTab.compactToolbar">Compact toolbar
+						<a href="#" class="tips" title="Make the toolbar smaller and compatible with Thorvarium SmallItems & mobile stylesheet.">
 							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
 						</a>
 						<input type="checkbox" name="unavailableTab.compactToolbar" value="1">
@@ -243,23 +243,35 @@
 				<div id="discordOptions">
 					<div id="discord-guid-link">
 						<label>Step 1. Join the Discord server:</label>
-						<br /><a href="https://discord.gg/amazonvine" target="_blank">https://discord.gg/amazonvine</a>
-						<br />
-						<br />
+						<div class="padded">
+							<br /><a href="https://discord.gg/amazonvine" target="_blank">https://discord.gg/amazonvine</a>
+							<br />
+							<br />
+						</div>
 						<label>Step 2. Obtain your GUID</label>
-						<br /><span>Go to any channel on the server and type the command:</span>
-						<br /><span style="font-weight:bold;">/api-token</span>
-						<br /><span>Copy&amp;paste the API Key in step 3.</span>
-						<br />
-						<br />
+						<div class="padded">
+							<ul>
+								<li>
+									Go to any channel on the server and type the command:
+									<br /><span style="font-weight:bold;">/api-token</span>
+								</li>
+								<li>The Karen bot will reply with an API key</li>
+								<li>Copy&amp;paste the API Key in step 3.</li>
+							</ul>
+							<br />
+						</div>
 						<label>Step 3. Link your GUID:</label>
-						<br />API Token: <input type="text" id="discord.guid" value="" size="30" maxlength="50" />
-						<input type="button" id="saveGUID" value="Link" />
+						<div class="padded">
+							<br />API Token: <input type="text" id="discord.guid" value="" size="30" maxlength="50" />
+							<input type="button" id="saveGUID" value="Link" />
+						</div>
 					</div>
 					<div id="discord-guid-unlink">
-						<label>You already linked your Discord account!</label>
-						<br />API Token: <span id="guid-txt" style="word-wrap: break-word;"></span>
-						<input type="button" id="unlinkGUID" value="Unlink" />
+						<div class="padded">
+							<label>You already linked your Discord account!</label>
+							<br />API Token: <span id="guid-txt" style="word-wrap: break-word;"></span>
+							<input type="button" id="unlinkGUID" value="Unlink" />
+						</div>
 					</div>
 				</div>
 				
@@ -268,16 +280,16 @@
 				<div class="subheader">
 					Mobile stylesheets:
 				</div>
-				<label for="thorvarium.mobileios">ios-with-bugfix.css (for iOs)
+				<label for="thorvarium.mobileios">ios-with-bugfix.css (for iOs) (Tip: enable compact toolbar)
 					<input type="checkbox" name="thorvarium.mobileios" value="1">
 				</label>
-				<label for="thorvarium.mobileandroid">mobile.css (for Android)
+				<label for="thorvarium.mobileandroid">mobile.css (for Android) (Tip: enable compact toolbar)
 					<input type="checkbox" name="thorvarium.mobileandroid" value="1">
 				</label>
 				<div class="subheader">
 					Desktop stylesheets:
 				</div>
-				<label for="thorvarium.smallItems">small-items.css (Tip: activate compact items toolbar)
+				<label for="thorvarium.smallItems">small-items.css (Tip: enable compact toolbar)
 					<input type="checkbox" name="thorvarium.smallItems" value="1">
 				</label>
 
@@ -331,23 +343,41 @@
 				
 			</div>
 			<div id="tabs-5" class="options">
-				
-				<h2>Support</h2>
-				
-				<form action="https://www.paypal.com/donate" method="post" target="_blank">
-				<input type="hidden" name="hosted_button_id" value="MMS5MYRDRALBG" />
-				<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
-				<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" />
-				</form>
+				<div class="padded">
+					<h3>Mission</h3>
+					<p>
+						Vine Helper's mission is to improve the user experience of Vine users accross the world.
+						Doing so in an ethical manner that complies with the Conditions of Use or both Amazon and Vine.
+					</p>
 
-				<h2>Resources</h2>
-				<ul>
-					<li><a href="https://www.flaticon.com/free-icons/good" title="good icons" target="_blank">Good icons created by
-							Freepik - Flaticon</a></li>
-					<li>Designed by Freepik - <a href="www.freepik.com" target="_blank">www.freepik.com</a></li>
-					<li><a href="https://github.com/Thorvarium/vine-styling" target="_blank">Thorvarium styling GitHub</a></li>
-				</ul>
-				
+					<h3>Support</h3>
+					<p>
+						Vine Helper is totally free and made out of passion.
+						Donations will <strong>not</strong> grant you anything more in term of feature or access.
+						While donations help covering server costs, you should consider it as tipping.
+						Thank you so much for using Vine Helper and for your consideration.
+					</p>
+					<form action="https://www.paypal.com/donate" method="post" target="_blank">
+					<input type="hidden" name="hosted_button_id" value="MMS5MYRDRALBG" />
+					<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
+					<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" />
+					</form>
+
+					<h3>Resources</h3>
+					<ul>
+						<li><a href="https://discord.gg/amazonvine" target="_blank">(unofficial) Amazon Vine Discor Server</a></li>
+						<li><a href="https://github.com/FMaz008/VineHelper" target="_blank">Vine Helper GitHub</a></li>
+						<li><a href="https://github.com/Thorvarium/vine-styling" target="_blank">Thorvarium styling GitHub</a></li>
+					</ul>
+					
+					<h3>Mandatory licencing attributions</h3>
+					<ul>
+						<li><a href="https://www.flaticon.com/free-icons/good" title="good icons" target="_blank">Good icons created by
+								Freepik - Flaticon</a></li>
+						<li>Designed by Freepik - <a href="www.freepik.com" target="_blank">www.freepik.com</a></li>
+						<li><a href="https://github.com/Thorvarium/vine-styling" target="_blank">Thorvarium styling GitHub</a></li>
+					</ul>
+				</div>
 			</div>
 		</div>
 		

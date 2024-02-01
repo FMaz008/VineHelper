@@ -51,6 +51,7 @@ h3{
 #tabs > ul{
 	padding-left: 0px;
 	margin: 0px;
+	z-index:1;
 }
 
 #tabs > ul > li{
@@ -65,16 +66,16 @@ h3{
 	padding:10px;
 	cursor:pointer;
 }
-#tabs > ul > li a{
-	color:#333;
-}
+
 #tabs > ul > li.active{
-	background-color: #ccc;
+	background-color: #EEE;
+	border-bottom:1px solid #EEE;
 }
 
 #tabs > ul > li > a {
+	color:#333;
 	text-decoration: none;
-	}
+}
 
 .ui-tabs-nav {
 	padding: 0px !important;
@@ -92,6 +93,8 @@ h3{
 	margin-top: 0.1rem;
 	flex-grow:1;
 	background-color:#EEE;
+	margin-top:-1px;
+	border:1px solid #333;
 }
 .subheader{
 	margin-top:5px;
@@ -117,6 +120,7 @@ label {
 	margin: 1px;
 	padding:5px;
 	padding-left:10px;
+	cursor: pointer;
 }
 
 label input[type='checkbox']{
@@ -125,7 +129,8 @@ label input[type='checkbox']{
 }
 
 label .tips {
-	margin-left: 0.5rem;
+	margin-left: 5px;
+	margin-right:5px;
 }
 
 .label:active {
@@ -134,10 +139,10 @@ label .tips {
 	color: black;
 }
 
-#unavailableTabOptions, #discordOptions {
+#votingToolbarOptions, #discordOptions {
 	border: 0.35rem solid #ccc;
 	flex-grow: 1;
-	background-color: #ccc;
+	background-color: #eee;
 	display: flex;
 	flex-direction: column;
 }
@@ -149,6 +154,13 @@ label .tips {
 	font-weight: bold;
 	padding: 10px;
   	line-height: 30px;
+}
+.padded{
+	padding-left:20px;
+	padding-right:20px;
+}
+.padded ul{
+	padding-left:10px;
 }
 
 #tabs-1 label {
@@ -162,6 +174,5 @@ label .tips {
 }
 
 #tabs-5 {
-	background-color: #ccc;
-	padding: 1rem;
+	background-color: #eee;
 }
