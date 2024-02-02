@@ -86,3 +86,20 @@ button.bookmark{
 	border:3px solid #FFD814;
 	background-color: #FF6;
 }
+
+
+/* Add visual cues for the keybinding */
+a.ext-helper-hideall span, 
+a.ext-helper-showall span,
+.ext-helper-pagination-previous
+{
+	display:inline-block;
+}
+
+ul.a-pagination li:first-child a span:last-child::first-letter,
+ul.a-pagination li:last-child a::first-letter,
+a.ext-helper-hideall span::first-letter,
+a.ext-helper-showall span::first-letter{
+	text-decoration:underline;
+}
+

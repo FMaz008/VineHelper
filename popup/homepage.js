@@ -132,7 +132,7 @@ var currentTab = "tabs-1";
 
 function selectCurrentTab(firstRun = false){
     //Hide all tabs
-    document.querySelectorAll(".options").forEach(function(item){;
+    document.querySelectorAll(".options").forEach(function(item){
         item.style.display = "none";
     });
 
