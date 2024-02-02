@@ -341,18 +341,26 @@ async function announceItem(event){
 			body: new URLSearchParams(details)
 		}
 	);
+	let message = "";
 	if(response.status == 200){
-		alert("Announce successful! Brenda still need to process it...");
+		message = "Announce successful! Brenda still need to process it...";
 	}else if(response.status == 401){
-		alert("API Token invalid, please go in the extension settings to correct it.");
+		message = "API Token invalid, please go in the extension settings to correct it.";
 	}else if(response.status == 422){
-		alert("Unprocessable entity. The request was malformed and rejected.");
+		message = "Unprocessable entity. The request was malformed and rejected.";
 	}else if(response.status == 429){
-		alert("Too many announce. Please wait longer between each of them.");
+		message = "Too many announce. Please wait longer between each of them.";
 	}else{
-		alert("The announce has failed for an unknown reason.");
+		message = "The announce has failed for an unknown reason.";
 	}
 	
+	//Show a notification
+	let note = new ScreenNotification();
+	note.title = "Announce to Brenda";
+	note.lifespan = 5;
+	note.content = message;
+	await Notifications.pushNotification(note);
+
 	//Visually deactivate this item, will be reset on the next page load, but it's just to help navigation and avoid double-clicking
 	$(this).off( "click" );
 	$(this).css("opacity", "0.3");
