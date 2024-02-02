@@ -443,7 +443,6 @@ window.addEventListener("message", async function (event) {
 			tileASIN = event.data.data.asin;
 		} else {
 			tileASIN = event.data.data.parent_asin;
-			event.data.data.parent_asin = '"' + event.data.data.parent_asin + '"';
 		}
 
 		let arrJSON = {
