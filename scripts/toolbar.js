@@ -316,8 +316,11 @@ async function announceItem(event){
 	etv = etv.split("-").pop();
 	etv = Number(etv.replace(/[^0-9\.-]+/g,""));
 
-	if(!confirm("Send this product from the " + vineQueueAbbr + " queue to Brenda over on discord?"))
-		return false;
+	let note = new ScreenNotification();
+	note.title = "Announce to Brenda";
+	note.lifespan = 10;
+	note.content = "Sending this product " + event.data.asin + " from the " + vineQueueAbbr + " queue to Brenda over on discord";
+	await Notifications.pushNotification(note);
 	
 	
 	//Post a fetch request to the Brenda API from the AmazonVine Discord server
@@ -355,9 +358,9 @@ async function announceItem(event){
 	}
 	
 	//Show a notification
-	let note = new ScreenNotification();
+	note = new ScreenNotification();
 	note.title = "Announce to Brenda";
-	note.lifespan = 5;
+	note.lifespan = 10;
 	note.content = message;
 	await Notifications.pushNotification(note);
 
