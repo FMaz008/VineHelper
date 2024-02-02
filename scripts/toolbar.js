@@ -36,8 +36,13 @@ function Toolbar(tileInstance){
 					.off("click")
 					.on("click", {'asin': pTile.getAsin()}, announceItem);
 		});
-			
-		if(appSettings.thorvarium.smallItems){
+		
+		//It the small tiles will be shown, hide the ETV icon to gain space
+		if(
+			appSettings.thorvarium.smallItems
+		|| appSettings.thorvarium.mobileios
+		|| appSettings.thorvarium.mobileandroid
+		){
 			$(".ext-helper-icon-etv").hide();
 		}
 		
