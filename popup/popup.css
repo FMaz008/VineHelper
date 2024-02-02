@@ -20,26 +20,25 @@ h1 {
 	font-family: "Segoe UI", Tahoma, sans-serif;
 }
 
-div.summary{
-	background-color:#EEE;
-	padding:10px;
+div.summary {
+	background-color: #eee;
+	padding: 10px;
 }
 
-span.number{
-	font-weight:bold;
+span.number {
+	font-weight: bold;
 }
 
-div.all-options{
-	font-size:12px;
+div.all-options {
+	font-size: 12px;
 	display: flex;
 	flex-grow: 1;
 }
 
-h3{
-	padding-bottom:0px;
-	margin-bottom:5px;
+h3 {
+	padding-bottom: 0px;
+	margin-bottom: 5px;
 }
-
 
 #tabs {
 	display: flex;
@@ -48,13 +47,13 @@ h3{
 	border: 0px;
 }
 
-#tabs > ul{
+#tabs > ul {
 	padding-left: 0px;
 	margin: 0px;
-	z-index:1;
+	z-index: 1;
 }
 
-#tabs > ul > li{
+#tabs > ul > li {
 	list-style: none;
 	float: left;
 	border: 1px solid #333;
@@ -63,17 +62,17 @@ h3{
 	border-top-left-radius: 5px;
 	border-top-right-radius: 5px;
 	margin-right: 3px;
-	padding:10px;
-	cursor:pointer;
+	padding: 10px;
+	cursor: pointer;
 }
 
-#tabs > ul > li.active{
-	background-color: #EEE;
-	border-bottom:1px solid #EEE;
+#tabs > ul > li.active {
+	background-color: #eee;
+	border-bottom: 1px solid #eee;
 }
 
 #tabs > ul > li > a {
-	color:#333;
+	color: #333;
 	text-decoration: none;
 }
 
@@ -84,26 +83,25 @@ h3{
 	border-radius: 0px;
 }
 
-
 .options {
 	width: 340px;
 	padding: 0;
 	display: flex;
 	flex-direction: column;
 	margin-top: 0.1rem;
-	flex-grow:1;
-	background-color:#EEE;
-	margin-top:-1px;
-	border:1px solid #333;
+	flex-grow: 1;
+	background-color: #eee;
+	margin-top: -1px;
+	border: 1px solid #333;
 }
-.subheader{
-	margin-top:5px;
-	padding:5px;
-	font-weight:bold;
+.subheader {
+	margin-top: 5px;
+	padding: 5px;
+	font-weight: bold;
 }
 
 .button:hover {
-	background: #C1C1C1;
+	background: #c1c1c1;
 	border: #ddd solid 1px;
 	display: flex;
 	align-items: center;
@@ -114,23 +112,23 @@ label {
 	align-items: center;
 	height: 2rem;
 	border: 1px solid #ddd;
-	background-color:#F6F6F6;
+	background-color: #f6f6f6;
 	flex-grow: 0;
 	text-align: left;
 	margin: 1px;
-	padding:5px;
-	padding-left:10px;
+	padding: 5px;
+	padding-left: 10px;
 	cursor: pointer;
 }
 
-label input[type='checkbox']{
-	margin-right:20px;
-	margin-left:auto;
+label input[type="checkbox"] {
+	margin-right: 20px;
+	margin-left: auto;
 }
 
 label .tips {
 	margin-left: 5px;
-	margin-right:5px;
+	margin-right: 5px;
 }
 
 .label:active {
@@ -139,7 +137,8 @@ label .tips {
 	color: black;
 }
 
-#votingToolbarOptions, #discordOptions {
+#votingToolbarOptions,
+#discordOptions {
 	border: 0.35rem solid #ccc;
 	flex-grow: 1;
 	background-color: #eee;
@@ -147,20 +146,19 @@ label .tips {
 	flex-direction: column;
 }
 
-
 .expand {
 	flex-grow: 1;
 	margin-top: 0.5rem;
 	font-weight: bold;
 	padding: 10px;
-  	line-height: 30px;
+	line-height: 30px;
 }
-.padded{
-	padding-left:20px;
-	padding-right:20px;
+.padded {
+	padding-left: 20px;
+	padding-right: 20px;
 }
-.padded ul{
-	padding-left:10px;
+.padded ul {
+	padding-left: 10px;
 }
 
 #tabs-1 label {

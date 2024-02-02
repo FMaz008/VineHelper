@@ -2,17 +2,35 @@
 	<div class="ext-helper-status-container">
 		<div class="ext-helper-status-container2">
 			{{if toggleview}}
-			<a href="#{{$asin}}" id="ext-helper-hide-link-{{$asin}}" class="ext-helper-floating-icon" title="Move a product to, or out of, the hidden tab." onclick="return false;">
+			<a
+				href="#{{$asin}}"
+				id="ext-helper-hide-link-{{$asin}}"
+				class="ext-helper-floating-icon"
+				title="Move a product to, or out of, the hidden tab."
+				onclick="return false;"
+			>
 				<div class="ext-helper-toolbar-icon"></div>
 			</a>
-			{{endif}}
-			{{if announce}}
-			<a href="#{{$asin}}" id="ext-helper-announce-link-{{$asin}}" class="ext-helper-floating-icon" title="Announce the product on discord! (The ETV must be known)" onclick="return false;">
-				<div class="ext-helper-toolbar-icon ext-helper-icon-announcement"></div>
+			{{endif}} {{if announce}}
+			<a
+				href="#{{$asin}}"
+				id="ext-helper-announce-link-{{$asin}}"
+				class="ext-helper-floating-icon"
+				title="Announce the product on discord! (The ETV must be known)"
+				onclick="return false;"
+			>
+				<div
+					class="ext-helper-toolbar-icon ext-helper-icon-announcement"
+				></div>
 			</a>
 			{{endif}}
 			<span class="ext-helper-toolbar-etv">
-				<a href="#" class="tooltip" onclick="return false;" title="Estimated Tax Value">
+				<a
+					href="#"
+					class="tooltip"
+					onclick="return false;"
+					title="Estimated Tax Value"
+				>
 					<div class="ext-helper-icon-etv"></div>
 				</a>
 				<span class="etv"></span>
@@ -20,4 +38,3 @@
 		</div>
 	</div>
 </div>
-

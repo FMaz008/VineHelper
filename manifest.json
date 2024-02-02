@@ -1,129 +1,127 @@
 {
-  "manifest_version": 3,
-  "name": "Amazon Vine Helper",
-  "description": "Improve the Amazon Vine experience.",
-  "version": "2.0.7",
-  
-  "permissions": [
-    "storage"
-  ],
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "{5951bf9a-25ae-4043-9fa2-54dc0ac1ce70}",
-      "strict_min_version": "109.0"
-	},
-	"gecko_android": {
-      "strict_min_version": "120.0"
-	}
-  },
+	"manifest_version": 3,
+	"name": "Amazon Vine Helper",
+	"description": "Improve the Amazon Vine experience.",
+	"version": "2.0.7",
 
-  "icons": {
-    "16": "resource/image/icon-16.png",
-    "32": "resource/image/icon-32.png",
-    "48": "resource/image/icon-48.png",
-    "128": "resource/image/icon-128.png"
-  },
-  "action": {
-    "default_popup": "popup/homepage.html",
-	"default_title": "Amazon Vine Helper",
-    "default_icon": "resource/image/icon-128.png"
-  },
-  "options_ui": {
-	"page": "popup/homepage.html"
-  },
-  "web_accessible_resources": [
-    {
-      "resources": [ 
-		"resource/image/rating-bad.png",
-		"resource/image/rating-good.png",
-		"resource/image/info.png",
-		"resource/image/hide.png",
-		"resource/image/show.png",
-		"resource/image/question.png",
-		"resource/image/announcement.png",
-		"resource/image/choice.png",
-		"resource/image/etv.png",
-		"resource/image/request.png",
-		"resource/image/bookmark.png",
-		"resource/image/loading.gif",
-		"resource/image/healing.gif",
-		"resource/image/order-success.png",
-		"resource/image/order-failed.png",
-		"lib/jquery_ui/images/ui-icons_444444_256x240.png",
-		"lib/jquery_ui/images/ui-icons_555555_256x240.png",
-		"lib/jquery_ui/images/ui-icons_777620_256x240.png",
-		"lib/jquery_ui/images/ui-icons_777777_256x240.png",
-		"lib/jquery_ui/images/ui-icons_cc0000_256x240.png",
-		"lib/jquery_ui/images/ui-icons_ffffff_256x240.png",
-		"view/tabs.html",
-		"view/toolbar.html",
-		"view/bookmark.html",
-		"view/notification_container.html",
-		"view/notification_default.html",
-		"view/notification_loading.html",
-		"view/notification_sound.html",
-		"view/widget_order.html",
-		"view/widget_voting.html",
-		"view/widget_hideall.html",
-		"view/popup_firstvote.html",
-		"view/popup_changelog.html",
-		"view/infinite_wheel_fix.html",
-		"resource/sound/notification.mp3",
-		"resource/sound/upgrade.mp3",
-		"scripts/inj.js"
-		],
-		"matches": [
-			"*://*.amazon.ca/*",
-			"*://*.amazon.es/*",
-			"*://*.amazon.fr/*",
-			"*://*.amazon.co.uk/*",
-			"*://*.amazon.com/*"
-		]
-	}
-  ],
-  
-  "content_scripts": [
-    {
-	  "css":[
-		"lib/jquery_ui/jquery-ui.min.css",
-		"resource/css/grid.css",
-		"resource/css/icon.css",
-		"resource/css/main.css",
-		"resource/css/notification.css",
-		"resource/css/toolbar.css"
-	  ],
-      "js": [
-		"scripts/grid.js",
-		"scripts/tile.js",
-		"scripts/toolbar.js",
-		"scripts/bootloader.js"
-	  ],
-      "matches": [
-		"*://*.amazon.ca/vine/*",
-	    "*://*.amazon.es/vine/*",
-	    "*://*.amazon.fr/vine/*",
-	    "*://*.amazon.co.uk/vine/*",
-		"*://*.amazon.com/vine/*"
-	  ],
-	  "run_at": "document_end"
-    },
-	{
-	  "js":[
-	    "lib/jquery/jquery-3.7.1.min.js",
-		"lib/jquery_ui/jquery-ui.min.js",
-		"scripts/Template.js",
-		"scripts/ScreenNotifier.js",
-		"scripts/HiddenListMgr.js",
-		"scripts/preboot.js"
-	  ],
-	  "matches": [
-		"*://*.amazon.ca/vine/*",
-	    "*://*.amazon.es/vine/*",
-	    "*://*.amazon.fr/vine/*",
-	    "*://*.amazon.co.uk/vine/*",
-		"*://*.amazon.com/vine/*"
-	  ],
-	  "run_at": "document_start"
-	}
-  ]
+	"permissions": ["storage"],
+	"browser_specific_settings": {
+		"gecko": {
+			"id": "{5951bf9a-25ae-4043-9fa2-54dc0ac1ce70}",
+			"strict_min_version": "109.0"
+		},
+		"gecko_android": {
+			"strict_min_version": "120.0"
+		}
+	},
+
+	"icons": {
+		"16": "resource/image/icon-16.png",
+		"32": "resource/image/icon-32.png",
+		"48": "resource/image/icon-48.png",
+		"128": "resource/image/icon-128.png"
+	},
+	"action": {
+		"default_popup": "popup/homepage.html",
+		"default_title": "Amazon Vine Helper",
+		"default_icon": "resource/image/icon-128.png"
+	},
+	"options_ui": {
+		"page": "popup/homepage.html"
+	},
+	"web_accessible_resources": [
+		{
+			"resources": [
+				"resource/image/rating-bad.png",
+				"resource/image/rating-good.png",
+				"resource/image/info.png",
+				"resource/image/hide.png",
+				"resource/image/show.png",
+				"resource/image/question.png",
+				"resource/image/announcement.png",
+				"resource/image/choice.png",
+				"resource/image/etv.png",
+				"resource/image/request.png",
+				"resource/image/bookmark.png",
+				"resource/image/loading.gif",
+				"resource/image/healing.gif",
+				"resource/image/order-success.png",
+				"resource/image/order-failed.png",
+				"lib/jquery_ui/images/ui-icons_444444_256x240.png",
+				"lib/jquery_ui/images/ui-icons_555555_256x240.png",
+				"lib/jquery_ui/images/ui-icons_777620_256x240.png",
+				"lib/jquery_ui/images/ui-icons_777777_256x240.png",
+				"lib/jquery_ui/images/ui-icons_cc0000_256x240.png",
+				"lib/jquery_ui/images/ui-icons_ffffff_256x240.png",
+				"view/tabs.html",
+				"view/toolbar.html",
+				"view/bookmark.html",
+				"view/notification_container.html",
+				"view/notification_default.html",
+				"view/notification_loading.html",
+				"view/notification_sound.html",
+				"view/widget_order.html",
+				"view/widget_voting.html",
+				"view/widget_hideall.html",
+				"view/popup_firstvote.html",
+				"view/popup_changelog.html",
+				"view/infinite_wheel_fix.html",
+				"resource/sound/notification.mp3",
+				"resource/sound/upgrade.mp3",
+				"scripts/inj.js"
+			],
+			"matches": [
+				"*://*.amazon.ca/*",
+				"*://*.amazon.es/*",
+				"*://*.amazon.fr/*",
+				"*://*.amazon.co.uk/*",
+				"*://*.amazon.com/*"
+			]
+		}
+	],
+
+	"content_scripts": [
+		{
+			"css": [
+				"lib/jquery_ui/jquery-ui.min.css",
+				"resource/css/grid.css",
+				"resource/css/icon.css",
+				"resource/css/main.css",
+				"resource/css/notification.css",
+				"resource/css/toolbar.css"
+			],
+			"js": [
+				"scripts/grid.js",
+				"scripts/tile.js",
+				"scripts/toolbar.js",
+				"scripts/bootloader.js"
+			],
+			"matches": [
+				"*://*.amazon.ca/vine/*",
+				"*://*.amazon.es/vine/*",
+				"*://*.amazon.fr/vine/*",
+				"*://*.amazon.co.uk/vine/*",
+				"*://*.amazon.com/vine/*"
+			],
+			"run_at": "document_end"
+		},
+		{
+			"js": [
+				"lib/jquery/jquery-3.7.1.min.js",
+				"lib/jquery_ui/jquery-ui.min.js",
+				"scripts/Template.js",
+				"scripts/ScreenNotifier.js",
+				"scripts/HiddenListMgr.js",
+				"scripts/preboot.js"
+			],
+			"matches": [
+				"*://*.amazon.ca/vine/*",
+				"*://*.amazon.es/vine/*",
+				"*://*.amazon.fr/vine/*",
+				"*://*.amazon.co.uk/vine/*",
+				"*://*.amazon.com/vine/*"
+			],
+			"run_at": "document_start"
+		}
+	]
 }

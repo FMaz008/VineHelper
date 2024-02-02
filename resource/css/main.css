@@ -1,82 +1,79 @@
-
 /* Infinite Wheel fix animation */
-div.ext-helper-healing{
-	position:absolute;
-	top:0;
-	bottom:0;
-	left:0;
-	right:0;
-	margin:auto;
-	
-	z-index:1200;
+div.ext-helper-healing {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	margin: auto;
+
+	z-index: 1200;
 }
 
-div.ext-helper-healing div{
-	height:400px;
+div.ext-helper-healing div {
+	height: 400px;
 }
 
+div#ext-helper-healing-text {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	margin: auto;
+	z-index: 1201;
 
-div#ext-helper-healing-text{
-	position:absolute;
-	top:0;
-	bottom:0;
-	left:0;
-	right:0;
-	margin:auto;
-	z-index:1201;
-	
-	width:500px;
-	height:50px;
-	background-color:#fff;
-	border:5px solid #cfc;
-	text-align:center;
-	font-size:20px;
-	font-weight:bold;
-	padding:10px;
+	width: 500px;
+	height: 50px;
+	background-color: #fff;
+	border: 5px solid #cfc;
+	text-align: center;
+	font-size: 20px;
+	font-weight: bold;
+	padding: 10px;
 }
-
 
 /* Icons overlay on top of product image */
-.ext-helper-img-container{
-	position:relative;
+.ext-helper-img-container {
+	position: relative;
 }
-.ext-helper-variant-indicator-container{
+.ext-helper-variant-indicator-container {
 	position: absolute;
 	margin-top: -20px;
 	right: 0;
 }
-.ext-helper-indicator-icon{
-	width:16px;
-	height:16px;
+.ext-helper-indicator-icon {
+	width: 16px;
+	height: 16px;
 }
 
-.ext-helper-date-added{
-	position:absolute;
-	margin-top:-14px;
-	left:0;
+.ext-helper-date-added {
+	position: absolute;
+	margin-top: -14px;
+	left: 0;
 	height: 14px;
 	line-height: 10px;
 	padding: 2px;
-	font-size:10px;
-	text-shadow:0px 0px 1px #fff;
-	background-color:rgba(255, 255, 255, 0.5);
+	font-size: 10px;
+	text-shadow: 0px 0px 1px #fff;
+	background-color: rgba(255, 255, 255, 0.5);
 }
 
 /* popups */
-div.ui-dialog{
-	background:white;
-	z-index:300;
+div.ui-dialog {
+	background: white;
+	z-index: 300;
 }
-div.ui-widget-overlay{
-	background:black;
-	opacity:0.1;
+div.ui-widget-overlay {
+	background: black;
+	opacity: 0.1;
 }
 
-button.bookmark{
-	margin-left:10px;
+button.bookmark {
+	margin-left: 10px;
 	display: inline-block;
 	border-radius: 8px;
-	color: #0F1111;
+	color: #0f1111;
 	border: 1px solid #6c6e73;
 	line-height: 16px;
 	padding: 8px 12px 7px 13px;
@@ -86,24 +83,21 @@ button.bookmark{
 	background-position-y: center;
 	background-position-x: 4px;
 }
-#vvp-items-grid .bookmark-highlight{
-	border:3px solid #FFD814;
-	background-color: #FF6;
+#vvp-items-grid .bookmark-highlight {
+	border: 3px solid #ffd814;
+	background-color: #ff6;
 }
 
-
 /* Add visual cues for the keybinding */
-a.ext-helper-hideall span, 
+a.ext-helper-hideall span,
 a.ext-helper-showall span,
-.ext-helper-pagination-previous
-{
-	display:inline-block;
+.ext-helper-pagination-previous {
+	display: inline-block;
 }
 
 ul.a-pagination li:first-child a span:last-child::first-letter,
 ul.a-pagination li:last-child a::first-letter,
 a.ext-helper-hideall span::first-letter,
-a.ext-helper-showall span::first-letter{
-	text-decoration:underline;
+a.ext-helper-showall span::first-letter {
+	text-decoration: underline;
 }
-

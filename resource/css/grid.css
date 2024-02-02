@@ -1,8 +1,9 @@
-
 /* Grid */
-div.ext-helper-grid, #tab-unavailable, #tab-hidden{
+div.ext-helper-grid,
+#tab-unavailable,
+#tab-hidden {
 	display: grid;
-	grid-template-columns: repeat(auto-fill,minmax(236px,auto));
+	grid-template-columns: repeat(auto-fill, minmax(236px, auto));
 }
 div.ext-helper-grid .vvp-item-tile {
 	border: 1px solid #ddd;
@@ -14,7 +15,10 @@ div.ext-helper-grid .vvp-item-tile .vvp-item-tile-content {
 	margin: 0 auto;
 }
 
-div.ext-helper-grid .vvp-item-tile .vvp-item-tile-content > .vvp-item-product-title-container {
+div.ext-helper-grid
+	.vvp-item-tile
+	.vvp-item-tile-content
+	> .vvp-item-product-title-container {
 	height: 60px;
 }
 
@@ -27,4 +31,3 @@ div.ext-helper-grid .vvp-item-tile .vvp-item-tile-content > * {
 	width: 100%;
 	margin: 20px 0;
 }
-

@@ -6,7 +6,7 @@ var gridUnavailable = null; //Will be populated after the grid will be created.
 var gridHidden = null; //Will be populated after the grid will be created.
 
 //Inject the script to fix the infinite loading wheel into the main environment.
-var scriptTag = document.createElement('script');
+var scriptTag = document.createElement("script");
 
 //Constants
 const CONSENSUS_NO_FEES = 0;
@@ -29,36 +29,24 @@ const VERSION_NO_CHANGE = 0;
 
 init();
 
-
-
-
-
-
-
-
-
-
-
-
 //#########################
 //### Main flow
 
-
-
 //Initiate the extension
 async function init() {
-
 	//Wait for the config to be loaded before running this script
 	showRuntime("BOOT: Waiting on config to be loaded...");
 	while ($.isEmptyObject(appSettings)) {
-		await new Promise(r => setTimeout(r, 10));
+		await new Promise((r) => setTimeout(r, 10));
 	}
 	showRuntime("BOOT: Config available. Begining init() function");
 
 	//Inject the infinite loading wheel fix to the "main world"
 	if (appSettings.general.allowInjection) {
-		scriptTag.src = chrome.runtime.getURL('scripts/inj.js');
-		scriptTag.onload = function () { this.remove(); };
+		scriptTag.src = chrome.runtime.getURL("scripts/inj.js");
+		scriptTag.onload = function () {
+			this.remove();
+		};
 		// see also "Dynamic values in the injected code" section in this answer
 		(document.head || document.documentElement).appendChild(scriptTag);
 		showRuntime("BOOT: Script injected");
@@ -68,12 +56,9 @@ async function init() {
 	let currentUrl = window.location.href;
 	regex = /^.+?amazon\..+\/vine\/.*[\?\&]search=(.*)$/;
 	arrMatches = currentUrl.match(regex);
-	if(arrMatches != null)
-		$("title").text("Amazon Vine - S:" + arrMatches[1])
-	else if(vineQueue != null)
-		$("title").text("Amazon Vine - " + vineQueueAbbr)
-	
-
+	if (arrMatches != null) $("title").text("Amazon Vine - S:" + arrMatches[1]);
+	else if (vineQueue != null)
+		$("title").text("Amazon Vine - " + vineQueueAbbr);
 
 	//If the sync hidden items is enable, load the hidden item from the server
 	//if(appSettings.hiddenTab.remote)
@@ -81,7 +66,8 @@ async function init() {
 
 	//Create the Discard grid
 	showRuntime("BOOT: Creating tabs system");
-	var tabSystem = appSettings.unavailableTab.active || appSettings.hiddenTab.active;
+	var tabSystem =
+		appSettings.unavailableTab.active || appSettings.hiddenTab.active;
 	if (tabSystem) {
 		await createGridInterface();
 	}
@@ -92,66 +78,94 @@ async function init() {
 		gridHidden = new Grid($("#tab-hidden"));
 	}
 
-	if (appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar) {
+	if (
+		appSettings.unavailableTab.active ||
+		appSettings.unavailableTab.votingToolbar
+	) {
 		gridUnavailable = new Grid($("#tab-unavailable"));
 	}
 	showRuntime("BOOT: Grid system completed");
-
-
 
 	//Show version info popup : new version
 	if (appVersion != appSettings.general.versionInfoPopup) {
 		prom = await Tpl.loadFile("view/popup_changelog.html");
 		Tpl.setVar("appVersion", appVersion);
 		let content = Tpl.render(prom);
-		
+
 		TplMgr.flushLocalStorage(); //Delete all template from cache
-		if(compareVersion(appSettings.general.versionInfoPopup, appVersion)>VERSION_REVISION_CHANGE)
+		if (
+			compareVersion(appSettings.general.versionInfoPopup, appVersion) >
+			VERSION_REVISION_CHANGE
+		)
 			showModalDialog("Vine Helper update info", content, 600);
-		
+
 		appSettings.general.versionInfoPopup = appVersion;
 		saveSettings();
 	}
 
-
-
 	//Top pagination
 	if (appSettings.general.topPagination) {
 		$("#vvp-items-grid-container .topPagination").remove();
-		$(".a-pagination").parent().css("margin-top", "10px").clone().insertAfter("#vvp-items-grid-container p").addClass("topPagination");
+		$(".a-pagination")
+			.parent()
+			.css("margin-top", "10px")
+			.clone()
+			.insertAfter("#vvp-items-grid-container p")
+			.addClass("topPagination");
 	}
 
 	//Insert bookmark button
-	if (appSettings.general.displayFirstSeen && appSettings.general.bookmark && appSettings.general.bookmarkDate != 0) {
+	if (
+		appSettings.general.displayFirstSeen &&
+		appSettings.general.bookmark &&
+		appSettings.general.bookmarkDate != 0
+	) {
 		$("button.bookmark").remove();
 		prom = await Tpl.loadFile("view/bookmark.html");
 		Tpl.setVar("date", appSettings.general.bookmarkDate);
 		let bookmarkContent = Tpl.render(prom);
-		$("#vvp-items-grid-container .a-pagination").parent().append(bookmarkContent);
+		$("#vvp-items-grid-container .a-pagination")
+			.parent()
+			.append(bookmarkContent);
 		$("button.bookmark").on("click", function (event) {
-
 			//Fetch the current date/time from the server
-			let arrJSON = { "api_version": 4, "country": vineCountry, "action": "date" };
-			let url = "https://francoismazerolle.ca/vinehelper.php"
-				+ "?data=" + JSON.stringify(arrJSON);
+			let arrJSON = {
+				api_version: 4,
+				country: vineCountry,
+				action: "date",
+			};
+			let url =
+				"https://francoismazerolle.ca/vinehelper.php" +
+				"?data=" +
+				JSON.stringify(arrJSON);
 			fetch(url)
 				.then((response) => response.json())
-			  	.then(async function (response) {
-					appSettings.general.bookmarkDate = new Date(response.date + " GMT").toString();
+				.then(async function (response) {
+					appSettings.general.bookmarkDate = new Date(
+						response.date + " GMT"
+					).toString();
 					saveSettings();
-					alert("Bookmark set for \n" + appSettings.general.bookmarkDate + "\nNewer items will be highlighted.\n\nNote: Settings pertaining to this tab were saved.");
-			});
+					alert(
+						"Bookmark set for \n" +
+							appSettings.general.bookmarkDate +
+							"\nNewer items will be highlighted.\n\nNote: Settings pertaining to this tab were saved."
+					);
+				});
 		});
 
 		//Place the text-content of the Previous button before the other child elements.
 
 		//let text = $("ul.a-pagination li:first-child a").innerText;
-		document.querySelectorAll("ul.a-pagination li:first-child a").forEach(function(item){
-			item.childNodes[3].nodeValue = "";
-		});
+		document
+			.querySelectorAll("ul.a-pagination li:first-child a")
+			.forEach(function (item) {
+				item.childNodes[3].nodeValue = "";
+			});
 		//console.log(text);
-		$('.ext-helper-pagination-previous').remove();
-		$("ul.a-pagination li:first-child a").append("<span class='ext-helper-pagination-previous'>Previous</span>");
+		$(".ext-helper-pagination-previous").remove();
+		$("ul.a-pagination li:first-child a").append(
+			"<span class='ext-helper-pagination-previous'>Previous</span>"
+		);
 		//$("ul.a-pagination li:first-child a").prepend(text);
 	}
 
@@ -168,8 +182,13 @@ async function init() {
 	showRuntime("done creating toolbars.");
 
 	//Only contact the home server is necessary
-	if (appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar || appSettings.general.displayETV || appSettings.general.displayFirstSeen) {
-		fetchProductsData(getAllAsin());//Obtain the data to fill the toolbars with it.
+	if (
+		appSettings.unavailableTab.active ||
+		appSettings.unavailableTab.votingToolbar ||
+		appSettings.general.displayETV ||
+		appSettings.general.displayFirstSeen
+	) {
+		fetchProductsData(getAllAsin()); //Obtain the data to fill the toolbars with it.
 
 		if (appSettings.general.newItemNotification) {
 			checkNewItems();
@@ -177,7 +196,12 @@ async function init() {
 	}
 }
 async function checkNewItems() {
-	let arrJSON = { "api_version": 4, "country": vineCountry, "orderby": "date", "limit": 10 };
+	let arrJSON = {
+		api_version: 4,
+		country: vineCountry,
+		orderby: "date",
+		limit: 10,
+	};
 	let jsonArrURL = JSON.stringify(arrJSON);
 	showRuntime("Fetching most recent products data...");
 
@@ -188,38 +212,49 @@ async function checkNewItems() {
 	await Notifications.pushNotification(note);
 
 	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-	let url = "https://francoismazerolle.ca/vineHelperLatest.php"
-		+ "?data=" + jsonArrURL;
+	let url =
+		"https://francoismazerolle.ca/vineHelperLatest.php" +
+		"?data=" +
+		jsonArrURL;
 	fetch(url)
 		.then((response) => response.json())
 		.then(async function (response) {
-			let latestProduct = await chrome.storage.local.get('latestProduct');
+			let latestProduct = await chrome.storage.local.get("latestProduct");
 			for (let i = response.products.length - 1; i >= 0; i--) {
-				if ($.isEmptyObject(latestProduct) || response.products[i].date > latestProduct) {
-
+				if (
+					$.isEmptyObject(latestProduct) ||
+					response.products[i].date > latestProduct
+				) {
 					let note2 = new ScreenNotification();
 					note2.title = "New item(s) detected !";
 					note2.lifespan = 60;
 					if (appSettings.general.newItemNotificationSound)
 						note2.sound = "resource/sound/notification.mp3";
-					note2.content = "Most recent item: <a href='/dp/" + response.products[i].asin + "' target='_blank'>" + response.products[i].asin + "</a><br />Server time: " + response.products[i].date;
+					note2.content =
+						"Most recent item: <a href='/dp/" +
+						response.products[i].asin +
+						"' target='_blank'>" +
+						response.products[i].asin +
+						"</a><br />Server time: " +
+						response.products[i].date;
 					await Notifications.pushNotification(note2);
 
 					if (i == 0) {
-						await chrome.storage.local.set({ 'latestProduct': response.products[0].date });
+						await chrome.storage.local.set({
+							latestProduct: response.products[0].date,
+						});
 					}
 				}
 			}
 
-
 			//Repeat another check in 60 seconds.
-			setTimeout(function () { checkNewItems() }, 60000);
+			setTimeout(function () {
+				checkNewItems();
+			}, 60000);
 		})
-		.catch(
-			function () {
-				error => console.log(error);
-			}
-		);
+		.catch(function () {
+			(error) => console.log(error);
+		});
 }
 function getAllAsin() {
 	let tile;
@@ -253,50 +288,55 @@ function generateTile(obj) {
 
 	if (appSettings.general.displayVariantIcon) {
 		//Check if the item is a parent ASIN (as variants)
-		let variant = $(obj).find(".a-button-input").attr("data-is-parent-asin");
+		let variant = $(obj)
+			.find(".a-button-input")
+			.attr("data-is-parent-asin");
 		if (variant == "true") {
 			let div = $("<div>")
 				.addClass("ext-helper-variant-indicator-container")
 				.appendTo($(imgContainer));
-			let alink = $("<a href='#' onclick='return false;' title='The item has variant(s).'>").appendTo(div);
-			alink.append($("<div>").addClass("ext-helper-indicator-icon ext-helper-icon-choice "))
-				
+			let alink = $(
+				"<a href='#' onclick='return false;' title='The item has variant(s).'>"
+			).appendTo(div);
+			alink.append(
+				$("<div>").addClass(
+					"ext-helper-indicator-icon ext-helper-icon-choice "
+				)
+			);
 		}
 	}
 
 	return tile;
-
 }
-
 
 //Get data from the server about the products listed on this page
 function fetchProductsData(arrUrl) {
 	let arrJSON = {
-		"api_version": 4,
-		"action": "getinfo",
-		"country": vineCountry,
-		"uuid": appSettings.general.uuid,
-		"queue": vineQueue,
-		"arr_asin": arrUrl
+		api_version: 4,
+		action: "getinfo",
+		country: vineCountry,
+		uuid: appSettings.general.uuid,
+		queue: vineQueue,
+		arr_asin: arrUrl,
 	};
 	let jsonArrURL = JSON.stringify(arrJSON);
 
 	showRuntime("Fetching products data...");
 
 	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-	let url = "https://www.francoismazerolle.ca/vinehelper.php"
-		+ "?data=" + jsonArrURL;
+	let url =
+		"https://www.francoismazerolle.ca/vinehelper.php" +
+		"?data=" +
+		jsonArrURL;
 	fetch(url)
 		.then((response) => response.json())
 		.then(serverProductsResponse)
-		.catch(
-			function () {
-				//error =>  console.log(error);
-				$.each(arrUrl, function (key, val) {
-					let t = getTileByAsin(val);//server offline
-				});
-			}
-		);
+		.catch(function () {
+			//error =>  console.log(error);
+			$.each(arrUrl, function (key, val) {
+				let t = getTileByAsin(val); //server offline
+			});
+		});
 }
 
 //Process the results obtained from the server
@@ -314,12 +354,11 @@ function serverProductsResponse(data) {
 		//console.log(values);
 		let tile = getTileByAsin(key);
 		//console.log(tile);
-		
-		if (tile == null){
-			console.log("No tile matching " + key);
-			return;//Continue the loop with the next item
-		}
 
+		if (tile == null) {
+			console.log("No tile matching " + key);
+			return; //Continue the loop with the next item
+		}
 
 		if (values.etv_min != null) {
 			showRuntime("DRAW: Setting ETV");
@@ -335,11 +374,14 @@ function serverProductsResponse(data) {
 			showRuntime("DRAW: Remote is ordering to show or hide item");
 			if (values.hidden == true && !tile.isHidden())
 				tile.hideTile(); //Will update the placement and list
-			else if (values.hidden == false && tile.isHidden())
-				tile.showTile(); //Will update the placement and list
+			else if (values.hidden == false && tile.isHidden()) tile.showTile(); //Will update the placement and list
 		}
 
-		if (appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar) { // if the voting system is active.
+		if (
+			appSettings.unavailableTab.active ||
+			appSettings.unavailableTab.votingToolbar
+		) {
+			// if the voting system is active.
 			showRuntime("DRAW: Setting votes");
 			tile.setVotes(values.v0, values.v1, values.s);
 
@@ -349,10 +391,16 @@ function serverProductsResponse(data) {
 			//Assign the tiles to the proper grid
 			if (appSettings.hiddenTab.active && tile.isHidden()) {
 				//The hidden tiles were already moved, keep the there.
-			} else if (appSettings.unavailableTab.consensusDiscard && tile.getStatus() >= NOT_DISCARDED) {
+			} else if (
+				appSettings.unavailableTab.consensusDiscard &&
+				tile.getStatus() >= NOT_DISCARDED
+			) {
 				showRuntime("DRAW: moving the tile to Unavailable (consensus)");
 				tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
-			} else if (appSettings.unavailableTab.selfDiscard && tile.getStatus() == DISCARDED_OWN_VOTE) {
+			} else if (
+				appSettings.unavailableTab.selfDiscard &&
+				tile.getStatus() == DISCARDED_OWN_VOTE
+			) {
 				showRuntime("DRAW: moving the tile to Unavailable (own vote)");
 				tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
 			}
@@ -365,13 +413,8 @@ function serverProductsResponse(data) {
 	showRuntime("Done updating products");
 }
 
-
-
-
 //#########################
 //## Triggered functions (from clicks or whatever)
-
-
 
 //A vote button was pressed, send the vote to the server
 //If a vote changed the discard status, move the tile accordingly
@@ -379,7 +422,6 @@ async function reportfees(event) {
 	let asin = event.data.asin;
 	let fees = event.data.fees; // The vote
 	let tile = getTileByAsin(asin);
-
 
 	//If the tile is already in the hidden category, a vote won't move it from there.
 	if (!tile.isHidden()) {
@@ -389,21 +431,39 @@ async function reportfees(event) {
 			await tile.moveToGrid(gridUnavailable, true);
 
 			//Our vote is "Fees" + the added vote will meet the consensus: move the item to the Discard grid
-		} else if (fees == 1 && appSettings.unavailableTab.consensusDiscard && tile.getVoteFees() + 1 - tile.getVoteNoFees() >= appSettings.unavailableTab.consensusThreshold) {
+		} else if (
+			fees == 1 &&
+			appSettings.unavailableTab.consensusDiscard &&
+			tile.getVoteFees() + 1 - tile.getVoteNoFees() >=
+				appSettings.unavailableTab.consensusThreshold
+		) {
 			await tile.moveToGrid(gridUnavailable, true);
 
 			//Our vote is "nofees" + there's no consensus, move the item to the regular grid
-		} else if (fees == 0 && tile.getVoteFees() - tile.getVoteNoFees() < appSettings.unavailableTab.consensusThreshold) {
+		} else if (
+			fees == 0 &&
+			tile.getVoteFees() - tile.getVoteNoFees() <
+				appSettings.unavailableTab.consensusThreshold
+		) {
 			await tile.moveToGrid(gridRegular, true);
 		}
 	}
 
 	//Send the vote to the server
-	let arrJSON = { "api_version": 4, "action": "report_fee", "country": vineCountry, "uuid": uuid, "asin": asin, "fees": fees };
+	let arrJSON = {
+		api_version: 4,
+		action: "report_fee",
+		country: vineCountry,
+		uuid: uuid,
+		asin: asin,
+		fees: fees,
+	};
 	let jsonArrURL = JSON.stringify(arrJSON);
 
-	let url = "https://www.francoismazerolle.ca/vinehelper.php"
-		+ "?data=" + jsonArrURL;
+	let url =
+		"https://www.francoismazerolle.ca/vinehelper.php" +
+		"?data=" +
+		jsonArrURL;
 
 	await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
 
@@ -413,52 +473,60 @@ async function reportfees(event) {
 
 	//Show first vote popup
 	if (appSettings.general.firstVotePopup) {
-
 		prom = await Tpl.loadFile("view/popup_firstvote.html");
 		let content = Tpl.render(prom);
-		showModalDialog("Vine Helper - voting feature", content, 600, "resource/sound/upgrade.mp3");
+		showModalDialog(
+			"Vine Helper - voting feature",
+			content,
+			600,
+			"resource/sound/upgrade.mp3"
+		);
 		appSettings.general.firstVotePopup = false;
 		saveSettings();
 	}
-};
-
+}
 
 //Function to receive a message from the website-end and launch an animation
 //if the infinite wheel fix was used.
 window.addEventListener("message", async function (event) {
 	// We only accept messages from ourselves
-	if (event.source != window)
-		return;
+	if (event.source != window) return;
 
 	//If we got back a message after we fixed an infinite wheel spin.
-	if (event.data.type && (event.data.type == "infiniteWheelFixed")) {
+	if (event.data.type && event.data.type == "infiniteWheelFixed") {
 		//console.log("Content script received message: " + event.data.text);
 
 		prom = await Tpl.loadFile("view/infinite_wheel_fix.html");
 		let content = Tpl.render(prom);
 
 		$("#a-popover-content-3").prepend(content);
-		let textContainer = $("#ext-helper-healing-text").hide();//Begin the animation hidden
+		let textContainer = $("#ext-helper-healing-text").hide(); //Begin the animation hidden
 		let healingAnim = $("#ext-helper-healing");
 
 		await textContainer.slideDown("slow").promise();
-		await healingAnim.delay(1000).animate({ opacity: "hide" }, { duration: 500 }).promise();
+		await healingAnim
+			.delay(1000)
+			.animate({ opacity: "hide" }, { duration: 500 })
+			.promise();
 		await textContainer.slideUp("slow").promise();
 		$("#ext-helper-healing").remove();
 		$("#ext-helper-healing-text").remove();
-
 
 		//Show a notification
 		let note = new ScreenNotification();
 		note.title = "Infinite spinner fixed!";
 		note.lifespan = 10;
-		note.content = "Vine Helper fixed an item that was bugged with the infinite spinner problem.";
+		note.content =
+			"Vine Helper fixed an item that was bugged with the infinite spinner problem.";
 		await Notifications.pushNotification(note);
 	}
 
 	//If we got back a message after we found an ETV.
-	if (appSettings.general.shareETV && event.data.type && (event.data.type == "etv")) {
-
+	if (
+		appSettings.general.shareETV &&
+		event.data.type &&
+		event.data.type == "etv"
+	) {
 		//Send the ETV info to the server
 
 		let tileASIN;
@@ -469,31 +537,52 @@ window.addEventListener("message", async function (event) {
 		}
 
 		let arrJSON = {
-			"api_version": 4, "action": "report_etv", "country": vineCountry, "uuid": uuid,
-			"asin": event.data.data.asin,
-			"parent_asin": event.data.data.parent_asin,
-			"queue": vineQueue,
-			"etv": event.data.data.etv
+			api_version: 4,
+			action: "report_etv",
+			country: vineCountry,
+			uuid: uuid,
+			asin: event.data.data.asin,
+			parent_asin: event.data.data.parent_asin,
+			queue: vineQueue,
+			etv: event.data.data.etv,
 		};
 
-		let url = "https://francoismazerolle.ca/vinehelper.php?data=" + JSON.stringify(arrJSON);
+		let url =
+			"https://francoismazerolle.ca/vinehelper.php?data=" +
+			JSON.stringify(arrJSON);
 		await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
 
 		//Update the product tile ETV in the Toolbar
 		let tile = getTileByAsin(tileASIN);
-		tile.getToolbar().setETV(event.data.data.etv, event.data.data.etv, true);
+		tile.getToolbar().setETV(
+			event.data.data.etv,
+			event.data.data.etv,
+			true
+		);
 
 		//Show a notification
 		let note = new ScreenNotification();
 		note.title = "ETV data shared";
 		note.lifespan = 2;
-		note.content = "Vine Helper shared the ETV value of " + event.data.data.etv + " for item " + event.data.data.asin + ".";
+		note.content =
+			"Vine Helper shared the ETV value of " +
+			event.data.data.etv +
+			" for item " +
+			event.data.data.asin +
+			".";
 		await Notifications.pushNotification(note);
 	}
 
 	//If we got back a message after an order was attempted or placed.
-	if (event.data.type && (event.data.type == "order")) {
-		console.log("Item " + event.data.data.asin + " (parent:" + event.data.data.parent_asin + ") ordered: " + event.data.data.status);
+	if (event.data.type && event.data.type == "order") {
+		console.log(
+			"Item " +
+				event.data.data.asin +
+				" (parent:" +
+				event.data.data.parent_asin +
+				") ordered: " +
+				event.data.data.status
+		);
 		let tileASIN;
 		if (event.data.data.parent_asin === null) {
 			tileASIN = event.data.data.asin;
@@ -503,27 +592,33 @@ window.addEventListener("message", async function (event) {
 
 		if (appSettings.unavailableTab.shareOrder) {
 			if (
-				event.data.data.status == "success"
-				|| event.data.data.error == "CROSS_BORDER_SHIPMENT"
-				|| event.data.data.error == "ITEM_NOT_IN_ENROLLMENT"
+				event.data.data.status == "success" ||
+				event.data.data.error == "CROSS_BORDER_SHIPMENT" ||
+				event.data.data.error == "ITEM_NOT_IN_ENROLLMENT"
 			) {
-
 				//Report the order status to the server
 				let arrJSON = {
-					"api_version": 4, "action": "report_order", "country": vineCountry, "uuid": uuid,
-					"asin": event.data.data.asin,
-					"parent_asin": event.data.data.parent_asin,
-					"order_status": event.data.data.status
+					api_version: 4,
+					action: "report_order",
+					country: vineCountry,
+					uuid: uuid,
+					asin: event.data.data.asin,
+					parent_asin: event.data.data.parent_asin,
+					order_status: event.data.data.status,
 				};
 
 				//Form the full URL
-				let url = "https://www.francoismazerolle.ca/vinehelper.php"
-					+ "?data=" + JSON.stringify(arrJSON);
+				let url =
+					"https://www.francoismazerolle.ca/vinehelper.php" +
+					"?data=" +
+					JSON.stringify(arrJSON);
 				await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
 
 				//Update the product tile ETV in the Toolbar
 				let tile = getTileByAsin(tileASIN);
-				tile.getToolbar().createOrderWidget(event.data.data.status == "success");
+				tile.getToolbar().createOrderWidget(
+					event.data.data.status == "success"
+				);
 			}
 		}
 
@@ -532,46 +627,48 @@ window.addEventListener("message", async function (event) {
 			let note = new ScreenNotification();
 			note.title = "Successful order detected!";
 			note.lifespan = 5;
-			note.content = "Detected item " + event.data.data.asin + " as orderable.";
+			note.content =
+				"Detected item " + event.data.data.asin + " as orderable.";
 			await Notifications.pushNotification(note);
 		} else {
 			//Show a notification
 			let note = new ScreenNotification();
 			note.title = "Failed order detected.";
 			note.lifespan = 5;
-			note.content = "Detected item " + event.data.data.asin + " as not orderable with error " + event.data.data.error + ".";
+			note.content =
+				"Detected item " +
+				event.data.data.asin +
+				" as not orderable with error " +
+				event.data.data.error +
+				".";
 			await Notifications.pushNotification(note);
 		}
-
-
 	}
 });
 
-
 //Key binding for navigation
-window.addEventListener('keydown', function (e) {
+window.addEventListener("keydown", function (e) {
 	let nodeName = document.activeElement.nodeName;
 	let excl = ["INPUT", "TEXTAREA", "SELECT", "LI"];
 	if (excl.indexOf(nodeName) == -1) {
 		if (appSettings.hiddenTab.active) {
-			if (e.key == "h")
-				hideAllItems();
-			if (e.key == "s")
-				showAllItems();
+			if (e.key == "h") hideAllItems();
+			if (e.key == "s") showAllItems();
 		}
 		if (e.key == "n") {
-			let link = document.querySelector('ul.a-pagination li:last-child a');
-			if (link != null)
-				window.location.href = link.href;
+			let link = document.querySelector(
+				"ul.a-pagination li:last-child a"
+			);
+			if (link != null) window.location.href = link.href;
 		}
 		if (e.key == "p") {
-			let link = document.querySelector('ul.a-pagination li:first-child a');
-			if (link != null)
-				window.location.href = link.href;
+			let link = document.querySelector(
+				"ul.a-pagination li:first-child a"
+			);
+			if (link != null) window.location.href = link.href;
 		}
 	}
 });
-
 
 function showModalDialog(title, text, width = 400, sound = null) {
 	var w = width;
@@ -582,7 +679,8 @@ function showModalDialog(title, text, width = 400, sound = null) {
 	}
 
 	$("#ext-helper-dialog").remove();
-	$("<div id=\"ext-helper-dialog\" title=\"" + title + "\">").appendTo("body")
+	$('<div id="ext-helper-dialog" title="' + title + '">')
+		.appendTo("body")
 		.append("<p>")
 		.html(text);
 
@@ -592,43 +690,37 @@ function showModalDialog(title, text, width = 400, sound = null) {
 			width: w,
 			show: {
 				effect: "blind",
-				duration: 500
+				duration: 500,
 			},
 			hide: {
 				effect: "explode",
-				duration: 1000
+				duration: 1000,
 			},
 			buttons: {
 				Ok: function () {
 					$(this).dialog("close");
-				}
-			}
-		});//End dialog
+				},
+			},
+		}); //End dialog
 		$("div.ui-dialog").css("background", "white");
 	});
 	$("div.ui-dialog").css("background", "white");
 }
 
-function compareVersion(oldVer, newVer){
-	if(oldVer == null || oldVer == undefined || oldVer == true)
+function compareVersion(oldVer, newVer) {
+	if (oldVer == null || oldVer == undefined || oldVer == true)
 		return VERSION_MAJOR_CHANGE;
 
-	if(oldVer == false || oldVer == newVer)
-		return VERSION_NO_CHANGE;
-	
+	if (oldVer == false || oldVer == newVer) return VERSION_NO_CHANGE;
+
 	const regex = /^([0-9]+)\.([0-9]+)(?:\.([0-9]+))?$/;
 	const arrOldVer = oldVer.match(regex);
 	const arrNewVer = newVer.match(regex);
-	
-	if(arrOldVer[1] != arrNewVer[1])
-		return VERSION_MAJOR_CHANGE;
-	if(arrOldVer[2] != arrNewVer[2])
-		return VERSION_MINOR_CHANGE;
-	if(arrOldVer.length == 4 && arrNewVer.length == 4){
-		if(arrOldVer[3] != arrNewVer[3])
-			return VERSION_REVISION_CHANGE;
-		else
-			return VERSION_NO_CHANGE
-	}else
-		return VERSION_REVISION_CHANGE
+
+	if (arrOldVer[1] != arrNewVer[1]) return VERSION_MAJOR_CHANGE;
+	if (arrOldVer[2] != arrNewVer[2]) return VERSION_MINOR_CHANGE;
+	if (arrOldVer.length == 4 && arrNewVer.length == 4) {
+		if (arrOldVer[3] != arrNewVer[3]) return VERSION_REVISION_CHANGE;
+		else return VERSION_NO_CHANGE;
+	} else return VERSION_REVISION_CHANGE;
 }
