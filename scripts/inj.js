@@ -70,6 +70,14 @@ window.fetch = async (...args) => {
 		if(extHelper_responseData.result==null){
 			if(extHelper_responseData.error != null){
 				console.log(extHelper_responseData.error);
+				if(extHelper_responseData.error.exceptionType != undefined){
+					window.postMessage({
+						type: "error",
+						data: {
+							"error": extHelper_responseData.error.exceptionType
+						}
+					}, "*");
+				}
 				if(extHelper_responseData.error.length != undefined){
 					console.log(extHelper_responseData.error.length);
 					if(typeof extHelper_responseData.error[0] === "object"){
