@@ -151,14 +151,13 @@ function Tile(obj, gridInstance){
 		
 		let currentTime = new Date(timenow + " GMT");
 		let jsDate = new Date(mysqlDate + " GMT");    
-
+		let bookmarkDate = new Date(appSettings.general.bookmarkDate);
 		let textDate = timeSince(currentTime, jsDate);
 		$("<div>")
 			.addClass("ext-helper-date-added")
 			.text("First seen: " + textDate + " ago")
 			.appendTo($(pTile).find(".ext-helper-img-container"));
-		
-		if(appSettings.general.bookmark && jsDate > appSettings.general.bookmarkDate){
+		if(appSettings.general.bookmark && jsDate > bookmarkDate){
 			$(pTile).addClass("bookmark-highlight");
 		}
 	}

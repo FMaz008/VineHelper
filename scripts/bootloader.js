@@ -125,6 +125,7 @@ async function init() {
 	if (appSettings.general.displayFirstSeen && appSettings.general.bookmark && appSettings.general.bookmarkDate != 0) {
 		$("button.bookmark").remove();
 		prom = await Tpl.loadFile("view/bookmark.html");
+		Tpl.setVar("date", appSettings.general.bookmarkDate);
 		let bookmarkContent = Tpl.render(prom);
 		$(".a-pagination").parent().append(bookmarkContent);
 		$("button.bookmark").on("click", function (event) {
