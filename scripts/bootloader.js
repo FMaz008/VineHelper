@@ -115,7 +115,7 @@ async function init() {
 
 
 
-	//Bottom pagination
+	//Top pagination
 	if (appSettings.general.topPagination) {
 		$("#vvp-items-grid-container .topPagination").remove();
 		$(".a-pagination").parent().css("margin-top", "10px").clone().insertAfter("#vvp-items-grid-container p").addClass("topPagination");
@@ -127,7 +127,7 @@ async function init() {
 		prom = await Tpl.loadFile("view/bookmark.html");
 		Tpl.setVar("date", appSettings.general.bookmarkDate);
 		let bookmarkContent = Tpl.render(prom);
-		$(".a-pagination").parent().append(bookmarkContent);
+		$("#vvp-items-grid-container .a-pagination").parent().append(bookmarkContent);
 		$("button.bookmark").on("click", function (event) {
 
 			//Fetch the current date/time from the server
