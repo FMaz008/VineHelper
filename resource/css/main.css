@@ -81,6 +81,10 @@ button.bookmark{
 	line-height: 16px;
 	padding: 8px 12px 7px 13px;
 	vertical-align: top;
+	padding-left: 22px;
+	background-size: 16px;
+	background-position-y: center;
+	background-position-x: 4px;
 }
 #vvp-items-grid .bookmark-highlight{
 	border:3px solid #FFD814;
