@@ -299,14 +299,17 @@ function serverProductsResponse(data) {
 
 
 		if (values.etv_min != null) {
+			showRuntime("DRAW: Setting ETV");
 			tile.getToolbar().setETV(values.etv_min, values.etv_max);
 		}
 
 		if (values.date_added != null) {
+			showRuntime("DRAW: Setting Date");
 			tile.setDateAdded(timenow, values.date_added);
 		}
 		//If there is a remote value for the hidden item, ensure it is sync'ed up with the local list
 		if (appSettings.hiddenTab.remote == true && values.hidden != null) {
+			showRuntime("DRAW: Remote is ordering to show or hide item");
 			if (values.hidden == true && !tile.isHidden())
 				tile.hideTile(); //Will update the placement and list
 			else if (values.hidden == false && tile.isHidden())
@@ -314,19 +317,25 @@ function serverProductsResponse(data) {
 		}
 
 		if (appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar) { // if the voting system is active.
+			showRuntime("DRAW: Setting votes");
 			tile.setVotes(values.v0, values.v1, values.s);
+
+			showRuntime("DRAW: Setting orders");
 			tile.setOrders(values.order_success, values.order_failed);
 
 			//Assign the tiles to the proper grid
 			if (appSettings.hiddenTab.active && tile.isHidden()) {
 				//The hidden tiles were already moved, keep the there.
 			} else if (appSettings.unavailableTab.consensusDiscard && tile.getStatus() >= NOT_DISCARDED) {
+				showRuntime("DRAW: moving the tile to Unavailable (consensus)");
 				tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
 			} else if (appSettings.unavailableTab.selfDiscard && tile.getStatus() == DISCARDED_OWN_VOTE) {
+				showRuntime("DRAW: moving the tile to Unavailable (own vote)");
 				tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
 			}
-
+			showRuntime("DRAW: Updating the toolbar");
 			tile.getToolbar().updateToolbar();
+			showRuntime("DRAW: Done updating the toolbar");
 		}
 	});
 	updateTileCounts();

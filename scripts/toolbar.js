@@ -11,6 +11,7 @@ function Toolbar(tileInstance){
 		let anchorTo = $(pTile.getDOM()).children(".vvp-item-tile-content");
 		
 		//Load the toolbar template
+		showRuntime("DRAW: Creating #" + toolbarId);
 		const prom = await Tpl.loadFile("view/toolbar.html");
 		Tpl.setVar("toolbarId", toolbarId);
 		Tpl.setVar("asin", pTile.getAsin());
@@ -140,6 +141,7 @@ function Toolbar(tileInstance){
 	
 	//This method is called from bootloader.js, serverResponse() when the voting data has been received, after the tile was moved.
 	this.updateToolbar = async function (){
+		showRuntime("DRAW-UPDATE-TOOLBAR: Updating ##ext-helper-toolbar-" + pTile.getAsin());
 		let context = $("#ext-helper-toolbar-" + pTile.getAsin());
 		
 		if(context.length==0){
@@ -155,6 +157,7 @@ function Toolbar(tileInstance){
 			this.updateVisibilityIcon();
 			
 		//Set the icons
+		showRuntime("DRAW-UPDATE-TOOLBAR: Setting icon status");
 		switch (pTile.getStatus()){
 			case DISCARDED_ORDER_FAILED:
 				this.setStatusIcon("ext-helper-icon-order-failed");
@@ -177,6 +180,7 @@ function Toolbar(tileInstance){
 		}
 		
 		//Set other properties
+		showRuntime("DRAW-UPDATE-TOOLBAR: Setting status related properties");
 		switch (pTile.getStatus()){
 			case DISCARDED_ORDER_FAILED:
 			case DISCARDED_WITH_FEES:
@@ -211,10 +215,13 @@ function Toolbar(tileInstance){
 		//Display voting system if active.
 		if(appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar){
 			if(pTile.wasOrdered()){
+				showRuntime("DRAW-UPDATE-TOOLBAR: Create order widget");
 				await this.createOrderWidget();
 			}else if(appSettings.unavailableTab.votingToolbar){
+				showRuntime("DRAW-UPDATE-TOOLBAR: Create voting widget");
 				await createVotingWidget();
 			}else{
+				showRuntime("DRAW-UPDATE-TOOLBAR: Create order widget (#2)");
 				await this.createOrderWidget();
 			}
 		}
