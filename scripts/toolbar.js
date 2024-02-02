@@ -308,7 +308,13 @@ async function announceItem(event){
 	etv = etv.split("-").pop();
 	etv = Number(etv.replace(/[^0-9\.-]+/g,""));
 
-	if(!confirm("Send this product to Brenda over on discord?"))
+	let queues = {
+		"potluck":"RFY",
+		"last_chance": "AFA",
+		"encore": "AI"
+	}; 
+
+	if(!confirm("Send this product from the " + queues[vineQueue] + " queue to Brenda over on discord?"))
 		return false;
 	
 	
