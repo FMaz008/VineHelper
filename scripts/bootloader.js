@@ -111,7 +111,7 @@ async function init() {
 	}
 
 	//Insert bookmark button
-	if (appSettings.general.displayFirstSeen && appSettings.general.bookmark) {
+	if (appSettings.general.displayFirstSeen && appSettings.general.bookmark && appSettings.general.bookmarkDate != 0) {
 		$("button.bookmark").remove();
 		prom = await Tpl.loadFile("view/bookmark.html");
 		let bookmarkContent = Tpl.render(prom);

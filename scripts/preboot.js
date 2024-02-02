@@ -45,7 +45,7 @@ function getDefaultSettings(){
 			"shareETV": false,
 			"displayETV": false,
 			"displayFirstSeen": true,
-			"bookmark": false,
+			"bookmark": true,
 			"bookmarkDate": 0,
 			"displayVariantIcon": false,
 			"versionInfoPopup": 0,
