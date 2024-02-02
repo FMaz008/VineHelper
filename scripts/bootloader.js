@@ -64,6 +64,17 @@ async function init() {
 		showRuntime("BOOT: Script injected");
 	}
 
+	//Update the page title
+	let currentUrl = window.location.href;
+	regex = /^.+?amazon\..+\/vine\/.*[\?\&]search=(.*)$/;
+	arrMatches = currentUrl.match(regex);
+	if(arrMatches != null)
+		$("title").text("Amazon Vine - S:" + arrMatches[1])
+	else if(vineQueue != null)
+		$("title").text("Amazon Vine - " + vineQueueAbbr)
+	
+
+
 	//If the sync hidden items is enable, load the hidden item from the server
 	//if(appSettings.hiddenTab.remote)
 	//	await loadHiddenItems(); //from tile.js

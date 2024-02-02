@@ -306,6 +306,9 @@ function Toolbar(tileInstance){
 
 async function announceItem(event){
 	
+	if(vineQueue == null)
+		throw new Exception("Cannot announce an item in an unknown queue.");
+
 	let tile = getTileByAsin(event.data.asin);
 	let etv = $(tile.getDOM()).find(".etv").text();
 	
@@ -313,13 +316,7 @@ async function announceItem(event){
 	etv = etv.split("-").pop();
 	etv = Number(etv.replace(/[^0-9\.-]+/g,""));
 
-	let queues = {
-		"potluck":"RFY",
-		"last_chance": "AFA",
-		"encore": "AI"
-	}; 
-
-	if(!confirm("Send this product from the " + queues[vineQueue] + " queue to Brenda over on discord?"))
+	if(!confirm("Send this product from the " + vineQueueAbbr + " queue to Brenda over on discord?"))
 		return false;
 	
 	

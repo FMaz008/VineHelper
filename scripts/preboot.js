@@ -9,6 +9,7 @@ var vineCountry = null;
 var vineLocale = null;
 var vineCurrency = null;
 var vineQueue = null;
+var vineQueueAbbr = null;
 var uuid = null;
 
 var appVersion = 0;
@@ -232,6 +233,10 @@ async function getSettings(){
 			vineQueue = arrMatches[1];
 		}
 	}
+
+	let arrQueues = {"potluck":"RFY","last_chance": "AFA","encore": "AI"}; 
+	if(vineQueue != null)
+		vineQueueAbbr = arrQueues[vineQueue];
 	
 	
 	//Generate a UUID for the user
