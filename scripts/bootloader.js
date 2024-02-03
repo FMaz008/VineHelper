@@ -56,7 +56,7 @@ async function init() {
 	let currentUrl = window.location.href;
 	regex = /^.+?amazon\..+\/vine\/.*[\?\&]search=(.*)$/;
 	arrMatches = currentUrl.match(regex);
-	if (arrMatches != null) $("title").text("Amazon Vine - S:" + arrMatches[1]);
+	if (arrMatches != null) $("title").text("Amazon Vine - S: " + arrMatches[1]);
 	else if (vineQueue != null)
 		$("title").text("Amazon Vine - " + vineQueueAbbr);
 
