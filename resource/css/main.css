@@ -70,7 +70,7 @@ div.ui-widget-overlay {
 }
 
 button.bookmark {
-	margin-left: 10px;
+	margin-left: 50px;
 	display: inline-block;
 	border-radius: 8px;
 	color: #0f1111;
@@ -81,7 +81,7 @@ button.bookmark {
 	padding-left: 22px;
 	background-size: 16px;
 	background-position-y: center;
-	background-position-x: 4px;
+	background-position-x: center;
 }
 #vvp-items-grid .bookmark-highlight {
 	border: 3px solid #ffd814;
