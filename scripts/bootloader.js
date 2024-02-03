@@ -56,7 +56,8 @@ async function init() {
 	let currentUrl = window.location.href;
 	regex = /^.+?amazon\..+\/vine\/.*[\?\&]search=(.*)$/;
 	arrMatches = currentUrl.match(regex);
-	if (arrMatches != null) $("title").text("Amazon Vine - S: " + arrMatches[1]);
+	if (arrMatches != null)
+		$("title").text("Amazon Vine - S: " + arrMatches[1]);
 	else if (vineQueue != null)
 		$("title").text("Amazon Vine - " + vineQueueAbbr);
 
@@ -124,9 +125,9 @@ async function init() {
 		prom = await Tpl.loadFile("view/bookmark.html");
 		Tpl.setVar("date", appSettings.general.bookmarkDate);
 		let bookmarkContent = Tpl.render(prom);
-		$("#vvp-items-grid-container .a-pagination")
-			.parent()
-			.append(bookmarkContent);
+		$("#vvp-items-button-container ~ .vvp-container-right-align").prepend(
+			bookmarkContent
+		);
 		$("button.bookmark").on("click", function (event) {
 			//Fetch the current date/time from the server
 			let arrJSON = {
