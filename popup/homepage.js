@@ -143,7 +143,7 @@ function selectCurrentTab(firstRun = false) {
 	});
 
 	if (!firstRun)
-		document.querySelectorAll("#tabs li").forEach(function (item) {
+		document.querySelectorAll("#tabs > ul li").forEach(function (item) {
 			item.classList.remove("active");
 		});
 
@@ -152,7 +152,7 @@ function selectCurrentTab(firstRun = false) {
 }
 function init() {
 	//Bind the click event for the tabs
-	document.querySelectorAll("#tabs li").forEach(function (item) {
+	document.querySelectorAll("#tabs > ul li").forEach(function (item) {
 		item.onclick = function (event) {
 			currentTab = this.querySelector("a").href.split("#").pop();
 			selectCurrentTab();
@@ -160,7 +160,7 @@ function init() {
 		};
 	});
 	//Prevent links from being clickable
-	document.querySelectorAll("#tabs li a").forEach(function (item) {
+	document.querySelectorAll("#tabs > ul li a").forEach(function (item) {
 		item.onclick = function (event) {
 			event.preventDefault();
 		};
