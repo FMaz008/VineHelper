@@ -146,11 +146,15 @@ async function init() {
 						response.date + " GMT"
 					).toString();
 					saveSettings();
-					alert(
-						"Bookmark set for \n" +
-							appSettings.general.bookmarkDate +
-							"\nNewer items will be highlighted.\n\nNote: Settings pertaining to this tab were saved."
-					);
+
+					let note = new ScreenNotification();
+					note.title = "Bookmark set !";
+					note.lifespan = 30;
+					note.content =
+						"Bookmark set for <br />" +
+						appSettings.general.bookmarkDate +
+						"<br />Newer items will be highlighted.";
+					await Notifications.pushNotification(note);
 				});
 		});
 
