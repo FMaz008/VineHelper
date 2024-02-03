@@ -1,195 +1,195 @@
 :root {
-  --myHeight: 550px;
-  --headerHeight: 60px;
+	--myHeight: 550px;
+	--headerHeight: 60px;
 }
 html {
-  height: (var);
-  overflow: hidden;
-  scrollbar-width: none;
+	height: (var);
+	overflow: hidden;
+	scrollbar-width: none;
 }
 
 body {
-  max-height: var(--myHeight);
+	max-height: var(--myHeight);
 
-  width: 346px;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  scrollbar-width: none;
+	width: 346px;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	scrollbar-width: none;
 }
 
 .header {
-  height: var(--headerHeight);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+	height: var(--headerHeight);
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 h1 {
-  flex-grow: 1;
+	flex-grow: 1;
 
-  font-size: 1.4rem;
-  font-family: "Segoe UI", Tahoma, sans-serif;
+	font-size: 1.4rem;
+	font-family: "Segoe UI", Tahoma, sans-serif;
 }
 
 div.summary {
-  background-color: #eee;
-  padding: 10px;
+	background-color: #eee;
+	padding: 10px;
 }
 
 span.number {
-  font-weight: bold;
+	font-weight: bold;
 }
 
 div.all-options {
-  font-size: 12px;
-  display: flex;
-  flex-grow: 1;
+	font-size: 12px;
+	display: flex;
+	flex-grow: 1;
 }
 
 h3 {
-  padding-bottom: 0px;
-  margin-bottom: 5px;
+	padding-bottom: 0px;
+	margin-bottom: 5px;
 }
 
 #tabs {
-  display: flex;
+	display: flex;
 
-  flex-direction: row;
-  border: 0px;
+	flex-direction: row;
+	border: 0px;
 }
 
 #tabs > ul {
-  padding-left: 0px;
-  margin: 0px;
-  z-index: 1;
+	padding-left: 0px;
+	margin: 0px;
+	z-index: 1;
 }
 
 #tabs > ul > li {
-  list-style: none;
-  float: left;
-  border: 1px solid #333;
-  min-width: 30px;
-  text-align: center;
-  border-top-left-radius: 5px;
-  border-top-right-radius: 5px;
-  margin-right: 3px;
-  padding: 10px;
-  cursor: pointer;
+	list-style: none;
+	float: left;
+	border: 1px solid #333;
+	min-width: 30px;
+	text-align: center;
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+	margin-right: 3px;
+	padding: 10px;
+	cursor: pointer;
 }
 
 #tabs > ul > li.active {
-  background-color: #eee;
-  border-bottom: 1px solid #eee;
+	background-color: #eee;
+	border-bottom: 1px solid #eee;
 }
 
 #tabs > ul > li > a {
-  color: #333;
-  text-decoration: none;
+	color: #333;
+	text-decoration: none;
 }
 
 .ui-tabs-nav {
-  padding: 0px !important;
-  border-top: 0px;
-  border-right: 0px;
-  border-radius: 0px;
+	padding: 0px !important;
+	border-top: 0px;
+	border-right: 0px;
+	border-radius: 0px;
 }
 /* Lets us scroll the tabs*/
 .all-options {
-  max-height: calc(var(--myHeight) - var(--headerHeight));
-  overflow-x: hidden;
+	max-height: calc(var(--myHeight) - var(--headerHeight));
+	overflow-x: hidden;
 }
 
 .options {
-  width: 346px;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
+	width: 346px;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
 
-  flex-grow: 1;
-  background-color: #eee;
-  margin-top: -1px;
+	flex-grow: 1;
+	background-color: #eee;
+	margin-top: -1px;
 
-  border: 1px solid #333;
+	border: 1px solid #333;
 }
 .subheader {
-  margin-top: 5px;
-  padding: 5px;
-  font-weight: bold;
+	margin-top: 5px;
+	padding: 5px;
+	font-weight: bold;
 }
 
 .button:hover {
-  background: #c1c1c1;
-  border: #ddd solid 1px;
-  display: flex;
-  align-items: center;
+	background: #c1c1c1;
+	border: #ddd solid 1px;
+	display: flex;
+	align-items: center;
 }
 
 label {
-  display: flex;
-  align-items: center;
-  height: 2rem;
-  border: 1px solid #ddd;
-  background-color: #f6f6f6;
-  flex-grow: 0;
-  text-align: left;
-  margin: 1px;
-  padding: 5px;
-  padding-left: 10px;
-  cursor: pointer;
+	display: flex;
+	align-items: center;
+	height: 2rem;
+	border: 1px solid #ddd;
+	background-color: #f6f6f6;
+	flex-grow: 0;
+	text-align: left;
+	margin: 1px;
+	padding: 5px;
+	padding-left: 10px;
+	cursor: pointer;
 }
 
 label input[type="checkbox"] {
-  margin-right: 20px;
-  margin-left: auto;
+	margin-right: 20px;
+	margin-left: auto;
 }
 
 label .tips {
-  margin-left: 5px;
-  margin-right: 5px;
+	margin-left: 5px;
+	margin-right: 5px;
 }
 
 .label:active {
-  background: #ededed;
-  border: 1px solid #ccc;
-  color: black;
+	background: #ededed;
+	border: 1px solid #ccc;
+	color: black;
 }
 
 #votingToolbarOptions,
 #discordOptions {
-  border: 0.35rem solid #ccc;
-  flex-grow: 1;
-  background-color: #eee;
-  display: flex;
-  flex-direction: column;
+	border: 0.35rem solid #ccc;
+	flex-grow: 1;
+	background-color: #eee;
+	display: flex;
+	flex-direction: column;
 }
 
 .expand {
-  flex-grow: 1;
-  margin-top: 0.5rem;
-  font-weight: bold;
-  padding: 10px;
-  line-height: 30px;
+	flex-grow: 1;
+	margin-top: 0.5rem;
+	font-weight: bold;
+	padding: 10px;
+	line-height: 30px;
 }
 .padded {
-  padding-left: 20px;
-  padding-right: 20px;
+	padding-left: 20px;
+	padding-right: 20px;
 }
 .padded ul {
-  padding-left: 10px;
+	padding-left: 10px;
 }
 
 #tabs-1 label {
-  height: calc(100% / 12);
+	height: calc(100% / 12);
 }
 #tabs-2 label {
-  height: 30px;
+	height: 30px;
 }
 #tabs-4 label {
-  height: calc(100% / 15);
+	height: calc(100% / 15);
 }
 
 #tabs-5 {
-  background-color: #eee;
+	background-color: #eee;
 }
