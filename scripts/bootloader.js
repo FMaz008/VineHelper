@@ -89,7 +89,6 @@ async function init() {
 
 	//Show version info popup : new version
 	let modal = null;
-	console.log(appVersion, appSettings.general.versionInfoPopup);
 	if (appVersion != appSettings.general.versionInfoPopup) {
 		TplMgr.flushLocalStorage(); //Delete all template from cache
 		if (
