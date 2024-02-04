@@ -231,7 +231,7 @@ async function getSettings() {
 			vineCurrency = "USD";
 			break;
 		case "co.uk":
-			vineLocale = "en_GB";
+			vineLocale = "en-GB";
 			vineCurrency = "GBP";
 			break;
 		case "fr":
