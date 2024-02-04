@@ -324,6 +324,7 @@ function Toolbar(tileInstance) {
 		prom = await Tpl.loadFile("view/widget_order.html");
 		Tpl.setVar("order_success", pTile.getOrderSuccess());
 		Tpl.setVar("order_failed", pTile.getOrderFailed());
+		Tpl.setIf("not-compact", !appSettings.unavailableTab.compactToolbar);
 		let content = Tpl.render(prom);
 		$(content).appendTo(container);
 

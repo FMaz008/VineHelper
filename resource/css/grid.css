@@ -31,3 +31,7 @@ div.ext-helper-grid .vvp-item-tile .vvp-item-tile-content > * {
 	width: 100%;
 	margin: 20px 0;
 }
+
+.vvp-item-tile {
+	margin-bottom: 20px;
+}

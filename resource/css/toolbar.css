@@ -66,6 +66,11 @@ div.compact div.ext-helper-status-container2 {
 div.compact div.ext-helper-icon {
 	display: none;
 }
+div.compact .ext-helper-announce-link {
+	float: left;
+	margin-left: 3px;
+}
+
 .ext-helper-floating-icon {
 	float: right;
 	padding-top: 2px;
