@@ -56,6 +56,26 @@ async function init() {
 		}
 	}
 
+	//Show version info popup : new version
+	if (appVersion != appSettings.general.versionInfoPopup) {
+		await TplMgr.flushLocalStorage(); //Delete all template from cache
+		if (
+			compareVersion(appSettings.general.versionInfoPopup, appVersion) >
+			VERSION_REVISION_CHANGE
+		) {
+			prom = await Tpl.loadFile("view/popup_changelog.html");
+			Tpl.setVar("appVersion", appVersion);
+			let content = Tpl.render(prom);
+
+			DialogMgr.title = "Vine Helper update info";
+			DialogMgr.content = content;
+			DialogMgr.displayModalOk();
+		}
+
+		appSettings.general.versionInfoPopup = appVersion;
+		saveSettings();
+	}
+
 	//Inject the infinite loading wheel fix to the "main world"
 	if (appSettings.general.allowInjection) {
 		scriptTag.src = chrome.runtime.getURL("scripts/inj.js");
@@ -101,27 +121,6 @@ async function init() {
 		gridUnavailable = new Grid($("#tab-unavailable"));
 	}
 	showRuntime("BOOT: Grid system completed");
-
-	//Show version info popup : new version
-	let modal = null;
-	if (appVersion != appSettings.general.versionInfoPopup) {
-		TplMgr.flushLocalStorage(); //Delete all template from cache
-		if (
-			compareVersion(appSettings.general.versionInfoPopup, appVersion) >
-			VERSION_REVISION_CHANGE
-		) {
-			prom = await Tpl.loadFile("view/popup_changelog.html");
-			Tpl.setVar("appVersion", appVersion);
-			let content = Tpl.render(prom);
-
-			DialogMgr.title = "Vine Helper update info";
-			DialogMgr.content = content;
-			DialogMgr.displayModalOk();
-		}
-
-		appSettings.general.versionInfoPopup = appVersion;
-		saveSettings();
-	}
 
 	//Top pagination
 	if (appSettings.general.topPagination) {
@@ -269,7 +268,6 @@ async function checkNewItems() {
 		});
 }
 function getAllAsin() {
-	let tile;
 	let arrUrl = []; //Will be use to store the URL identifier of the listed products.
 	const arrObj = $(".vvp-item-tile");
 	for (let i = 0; i < arrObj.length; i++) {
