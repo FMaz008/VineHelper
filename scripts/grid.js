@@ -183,5 +183,5 @@ function selectCurrentTab(firstRun = false) {
 	}
 
 	//Display the current tab
-	document.querySelector("#" + currentTab).style.display = "flex";
+	document.querySelector("#" + currentTab).style.display = "grid";
 }
