@@ -27,6 +27,7 @@ const VERSION_MINOR_CHANGE = 2;
 const VERSION_REVISION_CHANGE = 1;
 const VERSION_NO_CHANGE = 0;
 
+var toolbarsDrawn = false;
 init();
 
 //#########################
@@ -40,6 +41,20 @@ async function init() {
 		await new Promise((r) => setTimeout(r, 10));
 	}
 	showRuntime("BOOT: Config available. Begining init() function");
+
+	//Only contact the home server is necessary
+	if (
+		appSettings.unavailableTab.active ||
+		appSettings.unavailableTab.votingToolbar ||
+		appSettings.general.displayETV ||
+		appSettings.general.displayFirstSeen
+	) {
+		fetchProductsData(getAllAsin()); //Obtain the data to fill the toolbars with it.
+
+		if (appSettings.general.newItemNotification) {
+			checkNewItems();
+		}
+	}
 
 	//Inject the infinite loading wheel fix to the "main world"
 	if (appSettings.general.allowInjection) {
@@ -190,19 +205,7 @@ async function init() {
 	}
 	showRuntime("done creating toolbars.");
 
-	//Only contact the home server is necessary
-	if (
-		appSettings.unavailableTab.active ||
-		appSettings.unavailableTab.votingToolbar ||
-		appSettings.general.displayETV ||
-		appSettings.general.displayFirstSeen
-	) {
-		fetchProductsData(getAllAsin()); //Obtain the data to fill the toolbars with it.
-
-		if (appSettings.general.newItemNotification) {
-			checkNewItems();
-		}
-	}
+	toolbarsDrawn = true;
 }
 async function checkNewItems() {
 	let arrJSON = {
@@ -272,8 +275,8 @@ function getAllAsin() {
 	for (let i = 0; i < arrObj.length; i++) {
 		//Create the tile and assign it to the main grid
 		obj = arrObj[i];
-		tile = getTileByAsin(getAsinFromDom(obj));
-		arrUrl.push(tile.getAsin());
+		asin = getAsinFromDom(obj);
+		arrUrl.push(asin);
 	}
 	return arrUrl;
 }
@@ -350,12 +353,18 @@ function fetchProductsData(arrUrl) {
 
 //Process the results obtained from the server
 //Update each tile with the data pertaining to it.
-function serverProductsResponse(data) {
+async function serverProductsResponse(data) {
 	if (data["api_version"] != 4) {
 		console.log("Wrong API version");
 	}
 
 	timenow = data["current_time"];
+
+	showRuntime("FETCH: Waiting toolbars to be drawn...");
+	while (toolbarsDrawn == false) {
+		await new Promise((r) => setTimeout(r, 10));
+	}
+	showRuntime("FETCH: Interface loaded, processing fetch data...");
 
 	//Load the ETV value
 	$.each(data["products"], function (key, values) {
