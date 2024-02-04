@@ -1,9 +1,12 @@
 /* Grid */
 div.ext-helper-grid,
+#vvp-items-grid,
 #tab-unavailable,
 #tab-hidden {
 	display: grid;
+	border: 1px solid #ccc;
 	grid-template-columns: repeat(auto-fill, minmax(236px, auto));
+	padding: 1px;
 }
 div.ext-helper-grid .vvp-item-tile {
 	border: 1px solid #ddd;

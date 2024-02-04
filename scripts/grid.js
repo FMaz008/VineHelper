@@ -1,3 +1,5 @@
+var currentTab = "vvp-items-grid";
+
 class Grid {
 	pGrid = null;
 	pArrTile = [];
@@ -78,7 +80,7 @@ function updateTileCounts() {
 
 async function createGridInterface() {
 	//Clean up interface (in case of the extension being reloaded)
-	$("ul#ext-helper-tabs-ul").remove();
+	$("ul#ext-helper-tabs").remove();
 	$("div#tab-unavailable").remove();
 	$("div#tab-hidden").remove();
 	$(".ext-helper-status").remove(); //remove all toolbars
@@ -88,6 +90,7 @@ async function createGridInterface() {
 		.attr("id", "ext-helper-tabs")
 		.insertBefore("#vvp-items-grid");
 	$("#vvp-items-grid").detach().appendTo(tabs);
+	$("#vvp-items-grid").addClass("tab-grid");
 
 	let tplTabs = await Tpl.loadFile("view/tabs.html");
 
@@ -119,7 +122,21 @@ async function createGridInterface() {
 	}
 
 	//Actiate the tab system
-	$("#ext-helper-tabs").tabs();
+	//Bind the click event for the tabs
+	document.querySelectorAll("#tabs > ul li").forEach(function (item) {
+		item.onclick = function (event) {
+			currentTab = this.querySelector("a").href.split("#").pop();
+			selectCurrentTab();
+			this.classList.add("active");
+		};
+	});
+	//Prevent links from being clickable
+	document.querySelectorAll("#tabs > ul li a").forEach(function (item) {
+		item.onclick = function (event) {
+			event.preventDefault();
+		};
+	});
+	selectCurrentTab(true);
 }
 
 async function hideAllItems() {
@@ -147,4 +164,24 @@ async function showAllItems() {
 		await tile.showTile(false, false); //Do not update local storage
 	}
 	HiddenList.saveList();
+}
+
+function selectCurrentTab(firstRun = false) {
+	//Hide all tabs
+	document.querySelectorAll(".tab-grid").forEach(function (item) {
+		item.style.display = "none";
+	});
+
+	if (!firstRun) {
+		document.querySelectorAll("#tabs > ul li").forEach(function (item) {
+			item.classList.remove("active");
+		});
+	} else {
+		document
+			.querySelector("#tabs > ul li:first-child")
+			.classList.add("active");
+	}
+
+	//Display the current tab
+	document.querySelector("#" + currentTab).style.display = "flex";
 }

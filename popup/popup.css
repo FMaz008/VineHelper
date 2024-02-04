@@ -52,42 +52,7 @@ h3 {
 	margin-bottom: 5px;
 }
 
-#tabs {
-	display: flex;
 
-	flex-direction: row;
-	border: 0px;
-}
-
-#tabs > ul {
-	padding-left: 0px;
-	margin: 0px;
-	z-index: 1;
-}
-
-#tabs > ul > li {
-	list-style: none;
-	float: left;
-	border: 1px solid #333;
-	min-width: 30px;
-	text-align: center;
-	border-top-left-radius: 5px;
-	border-top-right-radius: 5px;
-	margin-right: 3px;
-	padding: 10px;
-	cursor: pointer;
-}
-
-#tabs > ul > li.active {
-	background-color: #eee;
-	border-bottom: 1px solid #eee;
-}
-
-#tabs > ul > li > a {
-	color: #333;
-	text-decoration: none;
-	font-size: 12px;
-}
 
 .ui-tabs-nav {
 	padding: 0px !important;
