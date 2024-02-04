@@ -1,0 +1,49 @@
+.overlay {
+	position: fixed;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	z-index: 1009;
+	background-color: black;
+	opacity: 0.2;
+}
+
+.modal {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+
+	min-width: 400;
+	min-height: 200px;
+	border: 2px solid #333;
+	background-color: #eee;
+	border-radius: 10px;
+	z-index: 1010;
+	color: #333;
+}
+
+.modal .header {
+	width: 100%;
+	border: 1px solid #333;
+	margin-bottom: 10px;
+	padding: 6px;
+}
+
+.modal .header .close-btn {
+	float: right;
+	margin-bottom: 3px;
+}
+
+.modal .content {
+	padding: 10px;
+}
+
+.modal .footer {
+	padding: 20px;
+}
+
+.modal .header .close-btn {
+	margin: 0 auto;
+}

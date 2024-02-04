@@ -47,13 +47,8 @@
 				"resource/image/healing.gif",
 				"resource/image/order-success.png",
 				"resource/image/order-failed.png",
-				"lib/jquery_ui/images/ui-icons_444444_256x240.png",
-				"lib/jquery_ui/images/ui-icons_555555_256x240.png",
-				"lib/jquery_ui/images/ui-icons_777620_256x240.png",
-				"lib/jquery_ui/images/ui-icons_777777_256x240.png",
-				"lib/jquery_ui/images/ui-icons_cc0000_256x240.png",
-				"lib/jquery_ui/images/ui-icons_ffffff_256x240.png",
 				"view/tabs.html",
+				"view/modal.html",
 				"view/toolbar.html",
 				"view/bookmark.html",
 				"view/notification_container.html",
@@ -83,11 +78,11 @@
 	"content_scripts": [
 		{
 			"css": [
-				"lib/jquery_ui/jquery-ui.min.css",
 				"resource/css/tabs.css",
 				"resource/css/grid.css",
 				"resource/css/icon.css",
 				"resource/css/main.css",
+				"resource/css/modal.css",
 				"resource/css/notification.css",
 				"resource/css/toolbar.css"
 			],
@@ -109,10 +104,10 @@
 		{
 			"js": [
 				"lib/jquery/jquery-3.7.1.min.js",
-				"lib/jquery_ui/jquery-ui.min.js",
 				"scripts/Template.js",
 				"scripts/ScreenNotifier.js",
 				"scripts/HiddenListMgr.js",
+				"scripts/ModalMgr.js",
 				"scripts/preboot.js"
 			],
 			"matches": [

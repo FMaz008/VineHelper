@@ -88,17 +88,22 @@ async function init() {
 	showRuntime("BOOT: Grid system completed");
 
 	//Show version info popup : new version
+	let modal = null;
+	console.log(appVersion, appSettings.general.versionInfoPopup);
 	if (appVersion != appSettings.general.versionInfoPopup) {
-		prom = await Tpl.loadFile("view/popup_changelog.html");
-		Tpl.setVar("appVersion", appVersion);
-		let content = Tpl.render(prom);
-
 		TplMgr.flushLocalStorage(); //Delete all template from cache
 		if (
 			compareVersion(appSettings.general.versionInfoPopup, appVersion) >
 			VERSION_REVISION_CHANGE
-		)
-			showModalDialog("Vine Helper update info", content, 600);
+		) {
+			prom = await Tpl.loadFile("view/popup_changelog.html");
+			Tpl.setVar("appVersion", appVersion);
+			let content = Tpl.render(prom);
+
+			DialogMgr.title = "Vine Helper update info";
+			DialogMgr.content = content;
+			DialogMgr.displayModalOk();
+		}
 
 		appSettings.general.versionInfoPopup = appVersion;
 		saveSettings();
@@ -480,12 +485,11 @@ async function reportfees(event) {
 	if (appSettings.general.firstVotePopup) {
 		prom = await Tpl.loadFile("view/popup_firstvote.html");
 		let content = Tpl.render(prom);
-		showModalDialog(
-			"Vine Helper - voting feature",
-			content,
-			600,
-			"resource/sound/upgrade.mp3"
-		);
+
+		DialogMgr.title = "Vine Helper - voting feature";
+		DialogMgr.content = content;
+		DialogMgr.displayModalOk();
+
 		appSettings.general.firstVotePopup = false;
 		saveSettings();
 	}
@@ -674,43 +678,6 @@ window.addEventListener("keydown", function (e) {
 		}
 	}
 });
-
-function showModalDialog(title, text, width = 400, sound = null) {
-	var w = width;
-
-	if (sound) {
-		const audioElement = new Audio(chrome.runtime.getURL(sound));
-		audioElement.play();
-	}
-
-	$("#ext-helper-dialog").remove();
-	$('<div id="ext-helper-dialog" title="' + title + '">')
-		.appendTo("body")
-		.append("<p>")
-		.html(text);
-
-	$(function () {
-		$("#ext-helper-dialog").dialog({
-			modal: true,
-			width: w,
-			show: {
-				effect: "blind",
-				duration: 500,
-			},
-			hide: {
-				effect: "explode",
-				duration: 1000,
-			},
-			buttons: {
-				Ok: function () {
-					$(this).dialog("close");
-				},
-			},
-		}); //End dialog
-		$("div.ui-dialog").css("background", "white");
-	});
-	$("div.ui-dialog").css("background", "white");
-}
 
 function compareVersion(oldVer, newVer) {
 	if (oldVer == null || oldVer == undefined || oldVer == true)

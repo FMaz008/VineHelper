@@ -1,0 +1,16 @@
+{{if overlay}}
+<div id="overlay-{{$id}}" class="overlay"></div>
+{{endif}}
+
+<div id="modal-{{$id}}" class="modal">
+	<div class="header">
+		<span class="title">{{$title}}</span>
+		<div class="close-btn">
+			<button class="modal-ok">X</button>
+		</div>
+	</div>
+	<div class="content">{{$content}}</div>
+	<div class="footer">
+		<button class="modal-ok">Close</button>
+	</div>
+</div>

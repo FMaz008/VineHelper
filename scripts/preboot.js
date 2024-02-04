@@ -16,6 +16,7 @@ var appVersion = 0;
 
 var Tpl = new Template();
 var TplMgr = new TemplateMgr();
+var DialogMgr = new ModalMgr();
 var Notifications = new ScreenNotifier();
 var HiddenList = new HiddenListMgr();
 
