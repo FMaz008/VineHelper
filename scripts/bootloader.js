@@ -58,7 +58,9 @@ async function init() {
 
 	//Show version info popup : new version
 	if (appVersion != appSettings.general.versionInfoPopup) {
+		showRuntime("BOOT: Flushing template cache");
 		await TplMgr.flushLocalStorage(); //Delete all template from cache
+		
 		if (
 			compareVersion(appSettings.general.versionInfoPopup, appVersion) >
 			VERSION_REVISION_CHANGE

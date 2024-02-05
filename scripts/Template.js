@@ -115,7 +115,14 @@ class TemplateMgr {
 	}
 
 	async flushLocalStorage() {
-		showRuntime("TEMPLATE: Flushed template cache.");
 		await chrome.storage.local.set({ arrTemplate: [] });
+		this.arrTemplate = [];
+		showRuntime("TEMPLATE: Flushed template cache.");
+
+		let note = new ScreenNotification();
+		note.title = "Template cache flushed.";
+		note.lifespan = 3;
+		note.content = "";
+		Notifications.pushNotification(note);
 	}
 }

@@ -305,13 +305,19 @@ function isEmptyObj(obj) {
 	return true;
 }
 
+function saveSettings() {
+	chrome.storage.local.set({ settings: appSettings });
+
+	let note = new ScreenNotification();
+	note.title = "Settings saved.";
+	note.lifespan = 3;
+	note.content = "";
+	Notifications.pushNotification(note);
+}
+
 function getRunTime() {
 	return Date.now() - startTime;
 }
 function showRuntime(eventName) {
-	//console.log(eventName+": "+ (Date.now() - startTime) + "ms");
-}
-
-function saveSettings() {
-	chrome.storage.local.set({ settings: appSettings });
+	//console.log(eventName + ": " + (Date.now() - startTime) + "ms");
 }
