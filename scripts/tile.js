@@ -170,7 +170,11 @@ function Tile(obj, gridInstance) {
 				.text("First seen: " + textDate + " ago")
 				.appendTo($(pTile).find(".ext-helper-img-container"));
 		}
-		if (appSettings.general.bookmark && jsDate > bookmarkDate) {
+		if (
+			appSettings.general.bookmark &&
+			jsDate > bookmarkDate &&
+			bookmarkDate != 0
+		) {
 			$(pTile).addClass("bookmark-highlight");
 		}
 	};
