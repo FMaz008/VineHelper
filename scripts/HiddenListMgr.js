@@ -103,22 +103,23 @@ class HiddenListMgr {
 	}
 
 	garbageCollection() {
-		var change = false;
+		if (!this.arrHidden) {
+			return;
+		}
+		const originalLength = this.arrHidden.length;
 		let expiredDate = new Date();
 		expiredDate.setDate(expiredDate.getDate() - 90);
 
-		//Splicing inside a foreach might skip the item following the deleted one,
-		//but this method is called on every page load so it is effectively inconsequential asin
-		//the missing items will be caught on the next pass.
-		$.each(this.arrHidden, function (key, value) {
-			if (key != undefined && value["date"] < expiredDate) {
-				this.arrHidden.splice(key, 1);
-				change = true;
+		let idx = 0;
+		while (idx < this.arrHidden.length) {
+			if (this.arrHidden[idx]["date"] < expiredDate) {
+				this.arrHidden.splice(idx, 1);
+			} else {
+				++idx;
 			}
-		});
+		}
 
-		//Save array to local storage
-		if (change) {
+		if (this.arrHidden.length != originalLength) {
 			this.saveList();
 		}
 	}
