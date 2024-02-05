@@ -104,7 +104,7 @@ async function createGridInterface() {
 		Tpl.setVar("hidden", "H");
 	} else {
 		Tpl.setVar("available", "Available");
-		Tpl.setVar("unavailable", "Unavailabe");
+		Tpl.setVar("unavailable", "Unavailable");
 		Tpl.setVar("hidden", "Hidden");
 	}
 	//If voting system enabled
