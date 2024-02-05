@@ -19,13 +19,12 @@ class HiddenListMgr {
 		}
 	}
 
-	removeItem(asin, save = true) {
-		if (save) this.loadFromLocalStorage(); //Load the list in case it was altered in a different tab
+	async removeItem(asin, save = true) {
+		if (save) await this.loadFromLocalStorage(); //Load the list in case it was altered in a different tab
 
 		for (const id in this.arrHidden) {
 			if (this.arrHidden[id].asin == asin) {
 				this.arrHidden.splice(id, 1);
-				return this.removeItem(asin, save); //Ensure the removal of duplicate items
 			}
 		}
 
@@ -35,8 +34,8 @@ class HiddenListMgr {
 		if (save) this.saveList();
 	}
 
-	addItem(asin, save = true) {
-		if (save) this.loadFromLocalStorage(); //Load the list in case it was altered in a different tab
+	async addItem(asin, save = true) {
+		if (save) await this.loadFromLocalStorage(); //Load the list in case it was altered in a different tab
 
 		if (!this.isHidden(asin))
 			this.arrHidden.push({ asin: asin, date: new Date() });
