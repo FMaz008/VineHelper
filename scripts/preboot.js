@@ -94,8 +94,6 @@ async function loadStyleSheet(path) {
 
 //Loading the settings from the local storage
 async function getSettings() {
-	showRuntime("PRE: Reading settings from local storage");
-
 	const data = await chrome.storage.local.get("settings");
 
 	showRuntime("PRE: Done reading settings");

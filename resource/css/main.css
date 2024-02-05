@@ -57,16 +57,7 @@ div#ext-helper-healing-text {
 	font-size: 10px;
 	text-shadow: 0px 0px 1px #fff;
 	background-color: rgba(255, 255, 255, 0.5);
-}
-
-/* popups */
-div.ui-dialog {
-	background: white;
-	z-index: 300;
-}
-div.ui-widget-overlay {
-	background: black;
-	opacity: 0.1;
+	color: #0f1111;
 }
 
 button.bookmark {
