@@ -86,6 +86,12 @@ function getDefaultSettings() {
 	return settings;
 }
 
+async function loadStyleSheet(path) {
+	prom = await Tpl.loadFile(path);
+	let content = Tpl.render(prom);
+	$("head").append("<style type='text/css'>" + content + "</style>");
+}
+
 //Loading the settings from the local storage
 async function getSettings() {
 	showRuntime("PRE: Reading settings from local storage");
@@ -116,79 +122,49 @@ async function getSettings() {
 
 	//Load Thorvarium stylesheets
 	if (appSettings.thorvarium.mobileios)
-		$("head").append(
-			'<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/mobile/ios-with-bugfix.css">'
-		);
+		loadStyleSheet("lib/vine-styling/mobile/ios-with-bugfix.css");
 
 	if (appSettings.thorvarium.mobileandroid)
-		$("head").append(
-			'<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/mobile/mobile.css">'
-		);
+		loadStyleSheet("lib/vine-styling/mobile/mobile.css");
 
 	if (appSettings.thorvarium.smallItems)
-		$("head").append(
-			'<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/small-items.css">'
-		);
+		loadStyleSheet("lib/vine-styling/desktop/small-items.css");
 
 	if (appSettings.thorvarium.removeHeader)
-		$("head").append(
-			'<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/remove-header.css">'
-		);
+		loadStyleSheet("lib/vine-styling/desktop/remove-header.css");
 
 	if (appSettings.thorvarium.removeFooter)
-		$("head").append(
-			'<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/remove-footer.css">'
-		);
+		loadStyleSheet("lib/vine-styling/desktop/remove-footer.css");
 
 	if (appSettings.thorvarium.removeAssociateHeader)
-		$("head").append(
-			'<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/remove-associate-header.css">'
-		);
+		loadStyleSheet("lib/vine-styling/desktop/remove-associate-header.css");
 
 	if (appSettings.thorvarium.moreDescriptionText)
-		$("head").append(
-			'<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/more-description-text.css">'
-		);
+		loadStyleSheet("lib/vine-styling/desktop/more-description-text.css");
 
 	if (appSettings.thorvarium.darktheme)
-		$("head").append(
-			'<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/dark-theme.css">'
-		);
+		loadStyleSheet("lib/vine-styling/desktop/dark-theme.css");
 
 	if (appSettings.thorvarium.ETVModalOnTop)
-		$("head").append(
-			'<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/etv-modal-on-top.css">'
-		);
+		loadStyleSheet("lib/vine-styling/desktop/etv-modal-on-top.css");
 
 	if (appSettings.thorvarium.categoriesWithEmojis)
-		$("head").append(
-			'<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/categories-with-emojis.css">'
-		);
+		loadStyleSheet("lib/vine-styling/desktop/categories-with-emojis.css");
 
 	if (appSettings.thorvarium.paginationOnTop)
-		$("head").append(
-			'<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/pagination-on-top.css">'
-		);
+		loadStyleSheet("lib/vine-styling/desktop/pagination-on-top.css");
 
 	if (appSettings.thorvarium.collapsableCategories)
-		$("head").append(
-			'<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/collapsable-categories.css">'
-		);
+		loadStyleSheet("lib/vine-styling/desktop/collapsable-categories.css");
 
 	if (appSettings.thorvarium.stripedCategories)
-		$("head").append(
-			'<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/striped-categories.css">'
-		);
+		loadStyleSheet("lib/vine-styling/desktop/striped-categories.css");
 
 	if (appSettings.thorvarium.limitedQuantityIcon)
-		$("head").append(
-			'<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/limited-quantity-icon.css">'
-		);
+		loadStyleSheet("lib/vine-styling/desktop/limited-quantity-icon.css");
 
 	if (appSettings.thorvarium.RFYAFAAITabs)
-		$("head").append(
-			'<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/Thorvarium/vine-styling/desktop/rfy-afa-ai-tabs.css">'
-		);
+		loadStyleSheet("lib/vine-styling/desktop/rfy-afa-ai-tabs.css");
 
 	showRuntime("BOOT: Thorvarium stylesheets injected");
 
