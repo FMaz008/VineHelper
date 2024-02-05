@@ -126,6 +126,7 @@ async function createGridInterface() {
 		$("#ext-helper-tabs .hidden-toolbar").remove();
 		//Generate the html for the hide all and show all widget
 		let prom = await Tpl.loadFile("view/widget_hideall.html");
+		Tpl.setVar("class", appSettings.thorvarium.darktheme ? "invert" : "");
 		let content = Tpl.render(prom);
 		$(content).prependTo("#ext-helper-tabs");
 		$(content).appendTo("#ext-helper-tabs").css("margin-top", "5px");
