@@ -11,6 +11,7 @@
 	justify-content: flex-end;
 	flex-direction: column;
 	padding-right: 10px;
+	color: #0f1111;
 }
 
 .ext-helper-notification-box {

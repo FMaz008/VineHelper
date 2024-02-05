@@ -342,7 +342,11 @@ function manageCheckboxSetting(key, def = null) {
 		//Change the value
 		const newValue = getCB(key);
 		setCB(key, !newValue);
-	};
+
+		const e = new Event("change");
+		const element = document.querySelector(`input[name='${keyE}']`);
+		element.dispatchEvent(e);
+	}.bind(keyE);
 	document.querySelector(`input[name='${keyE}']`).onchange =
 		async function () {
 			//Change in value
