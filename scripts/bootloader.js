@@ -60,7 +60,7 @@ async function init() {
 	if (appVersion != appSettings.general.versionInfoPopup) {
 		showRuntime("BOOT: Flushing template cache");
 		await TplMgr.flushLocalStorage(); //Delete all template from cache
-		
+
 		if (
 			compareVersion(appSettings.general.versionInfoPopup, appVersion) >
 			VERSION_REVISION_CHANGE
@@ -409,6 +409,11 @@ async function serverProductsResponse(data) {
 			//Assign the tiles to the proper grid
 			if (appSettings.hiddenTab.active && tile.isHidden()) {
 				//The hidden tiles were already moved, keep the there.
+			} else if (tile.getStatus() >= DISCARDED_ORDER_FAILED) {
+				showRuntime(
+					"DRAW: moving the tile to Unavailable (failed order(s))"
+				);
+				tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
 			} else if (
 				appSettings.unavailableTab.consensusDiscard &&
 				tile.getStatus() >= NOT_DISCARDED
