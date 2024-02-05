@@ -94,6 +94,19 @@ async function createGridInterface() {
 
 	let tplTabs = await Tpl.loadFile("view/tabs.html");
 
+	Tpl.setIf("not_mobile", true);
+	if (
+		appSettings.thorvarium.mobileandroid ||
+		appSettings.thorvarium.mobileios
+	) {
+		Tpl.setVar("available", "A");
+		Tpl.setVar("unavailable", "U");
+		Tpl.setVar("hidden", "H");
+	} else {
+		Tpl.setVar("available", "Available");
+		Tpl.setVar("unavailable", "Unavailabe");
+		Tpl.setVar("hidden", "Hidden");
+	}
 	//If voting system enabled
 	Tpl.setIf(
 		"unavailable",
