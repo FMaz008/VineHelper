@@ -702,3 +702,8 @@ function compareVersion(oldVer, newVer) {
 		else return VERSION_NO_CHANGE;
 	} else return VERSION_REVISION_CHANGE;
 }
+
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+	console.log(request, sender, sendResponse);
+	sendResponse("error：" + JSON.stringify("request"));
+});

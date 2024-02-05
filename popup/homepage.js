@@ -76,7 +76,6 @@ function handleDynamicFields(key) {
 	}
 }
 async function drawUnavailableTab() {
-	console.log(appSettings.unavailableTab.votingToolbar);
 	document.querySelector("#votingToolbarOptions").style.display = appSettings
 		.unavailableTab.votingToolbar
 		? "block"
