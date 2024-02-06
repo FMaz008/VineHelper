@@ -357,6 +357,19 @@ async function serverProductsResponse(data) {
 
 	timenow = data["current_time"];
 
+	//Display notification from the server
+	if (Array.isArray(data["notification"])) {
+		if (data["notification"].length > 0) {
+			data["notification"].forEach((msg) => {
+				let note = new ScreenNotification();
+				note.title = "Server message";
+				note.lifespan = 10;
+				note.content = msg;
+				Notifications.pushNotification(note);
+			});
+		}
+	}
+
 	showRuntime("FETCH: Waiting toolbars to be drawn...");
 	while (toolbarsDrawn == false) {
 		await new Promise((r) => setTimeout(r, 10));
