@@ -19,6 +19,7 @@ div.ext-helper-status-container {
 	background-color: rgba(255, 255, 255, 0.7);
 	border: 1px solid #000;
 	border-radius: 8px;
+	color: #0f1111;
 }
 
 div.ext-helper-status-container div.ext-helper-status-container2 {

@@ -47,7 +47,8 @@ async function init() {
 		appSettings.unavailableTab.active ||
 		appSettings.unavailableTab.votingToolbar ||
 		appSettings.general.displayETV ||
-		appSettings.general.displayFirstSeen
+		appSettings.general.displayFirstSeen ||
+		appSettings.general.bookmark
 	) {
 		fetchProductsData(getAllAsin()); //Obtain the data to fill the toolbars with it.
 
