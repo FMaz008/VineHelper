@@ -93,16 +93,32 @@ async function init() {
 
 	//Update the page title
 	let currentUrl = window.location.href;
-	regex = /^.+?amazon\..+\/vine\/.*[\?\&]search=(.*)$/;
+	regex = /^.+?amazon\..+\/vine\/.*[\?\&]search=(.*?)(?:[\&].*)?$/;
 	arrMatches = currentUrl.match(regex);
 	if (arrMatches != null)
 		$("title").text("Amazon Vine - S: " + arrMatches[1]);
-	else if (vineQueue != null)
+	else if (vineQueue != null) {
 		$("title").text("Amazon Vine - " + vineQueueAbbr);
+	}
 
-	//If the sync hidden items is enable, load the hidden item from the server
-	//if(appSettings.hiddenTab.remote)
-	//	await loadHiddenItems(); //from tile.js
+	//Add the category, is any, that is currently being browsed to the title of the page.
+	regex =
+		/^.+?amazon\..+\/vine\/.*[\?\&]pn=(.*?)(?:[\&]cn=(.*?))?(?:[\&].*)?$/;
+	arrMatches = currentUrl.match(regex);
+	if (arrMatches != null && arrMatches.length == 3) {
+		let categoryText = "";
+		if (arrMatches[2] == undefined) {
+			categoryText = $(
+				"#vvp-browse-nodes-container > .parent-node > a.selectedNode"
+			).text();
+		} else {
+			categoryText = $(
+				"#vvp-browse-nodes-container > .child-node > a.selectedNode"
+			).text();
+		}
+
+		$("title").append(" - " + categoryText);
+	}
 
 	//Create the Discard grid
 	showRuntime("BOOT: Creating tabs system");
