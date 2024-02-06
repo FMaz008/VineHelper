@@ -171,8 +171,8 @@ function Toolbar(tileInstance) {
 		let context = $("#ext-helper-toolbar-" + pTile.getAsin());
 
 		if (context.length == 0) {
-			console.log(
-				"Count not find #ext-helper-toolbar-" + pTile.getAsin()
+			showRuntime(
+				"! Count not find #ext-helper-toolbar-" + pTile.getAsin()
 			);
 			console.log(pTile);
 			return;

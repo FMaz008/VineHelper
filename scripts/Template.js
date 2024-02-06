@@ -29,9 +29,8 @@ class Template {
 
 	render(html) {
 		if (html == null) {
-			console.log(
-				getRunTime() +
-					"No content for " +
+			showRuntime(
+				"No content for " +
 					this.currentURL +
 					", did you await loadFile()) ?"
 			);

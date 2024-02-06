@@ -385,7 +385,7 @@ async function serverProductsResponse(data) {
 		//console.log(tile);
 
 		if (tile == null) {
-			console.log("No tile matching " + key);
+			showRunTime("No tile matching " + key);
 			return; //Continue the loop with the next item
 		}
 
@@ -730,6 +730,6 @@ function compareVersion(oldVer, newVer) {
 }
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-	console.log(request, sender, sendResponse);
+	console.log("Cross message intercepted", request, sender, sendResponse);
 	sendResponse("error：" + JSON.stringify("request"));
 });

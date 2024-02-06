@@ -159,7 +159,16 @@ function Tile(obj, gridInstance) {
 		let bookmarkDate = new Date(appSettings.general.bookmarkDate);
 		let textDate = timeSince(currentTime, jsDate);
 		if (textDate == NaN) {
-			console.log(currentTime, jsDate, timenow, mysqlDate);
+			showRuntime(
+				"! Time firstseen wrong: currenttime:" +
+					currentTime +
+					" jstime:" +
+					jsDate +
+					"preformated current time: " +
+					timenow +
+					"preformatted item time" +
+					mysqlDate
+			);
 		}
 		if (appSettings.unavailableTab.compactToolbar) {
 			$("<div>")

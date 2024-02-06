@@ -298,5 +298,4 @@ function getRunTimeJSON() {
 }
 function showRuntime(eventName) {
 	arrDebug.push({ time: Date.now() - startTime, event: eventName });
-	//console.log(eventName + ": " + (Date.now() - startTime) + "ms");
 }
