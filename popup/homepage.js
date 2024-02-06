@@ -41,17 +41,6 @@ function handleDynamicFields(key) {
 	let checked = document.querySelector(`input[name='${keyE}']`).checked;
 	let keyF = null;
 
-	if (key == "general.allowInjection") {
-		keyF = CSS.escape("general.shareETV");
-		document.querySelector(`input[name='${keyF}']`).disabled = !checked;
-
-		let keyG = CSS.escape("unavailableTab.active");
-		let checked2 = document.querySelector(`input[name='${keyG}']`).checked;
-
-		keyF = CSS.escape("unavailableTab.shareOrder");
-		document.querySelector(`input[name='${keyF}']`).disabled =
-			!checked || !checked2;
-	}
 	if (key == "hiddenTab.active") {
 		keyF = CSS.escape("hiddenTab.remote");
 		document.querySelector(`[name='${keyF}']`).disabled = !checked;
@@ -64,15 +53,6 @@ function handleDynamicFields(key) {
 	if (key == "general.displayFirstSeen") {
 		keyF = CSS.escape("general.bookmark");
 		document.querySelector(`[name='${keyF}']`).disabled = !checked;
-	}
-
-	if (key == "unavailableTab.active") {
-		let keyG = CSS.escape("general.allowInjection");
-		let checked2 = document.querySelector(`input[name='${keyG}']`).checked;
-
-		keyF = CSS.escape("unavailableTab.shareOrder");
-		document.querySelector(`[name='${keyF}']`).disabled =
-			!checked || !checked2;
 	}
 }
 async function drawUnavailableTab() {
@@ -161,7 +141,7 @@ function init() {
 	//Prevent links from being clickable
 	document.querySelectorAll("#tabs > ul li a").forEach(function (item) {
 		item.onclick = function (event) {
-			event.preventDefault();
+			if (event.target.href == "#") event.preventDefault();
 		};
 	});
 	selectCurrentTab(true);
@@ -293,7 +273,7 @@ function init() {
 	manageCheckboxSetting("general.topPagination");
 	manageCheckboxSetting("general.versionInfoPopup", false);
 	manageCheckboxSetting("general.firstVotePopup");
-	manageCheckboxSetting("general.shareETV");
+	manageCheckboxSetting("general.shareData");
 	manageCheckboxSetting("general.displayETV");
 	manageCheckboxSetting("general.displayVariantIcon");
 	manageCheckboxSetting("general.displayFirstSeen");
@@ -305,7 +285,6 @@ function init() {
 	manageCheckboxSetting("discord.active"); //Handled manually
 	manageCheckboxSetting("unavailableTab.active");
 	manageCheckboxSetting("unavailableTab.votingToolbar");
-	manageCheckboxSetting("unavailableTab.shareOrder");
 	manageCheckboxSetting("unavailableTab.selfDiscard");
 	manageCheckboxSetting("unavailableTab.compactToolbar");
 	manageCheckboxSetting("unavailableTab.consensusDiscard");

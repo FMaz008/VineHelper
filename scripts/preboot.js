@@ -31,7 +31,6 @@ function getDefaultSettings() {
 		unavailableTab: {
 			active: true,
 			votingToolbar: true,
-			shareOrder: true,
 			consensusThreshold: 2,
 			unavailableOpacity: 100,
 			selfDiscard: true,
@@ -43,8 +42,7 @@ function getDefaultSettings() {
 			uuid: null,
 			topPagination: true,
 			allowInjection: true,
-			shareETV: false,
-			displayETV: false,
+			shareData: true,
 			displayFirstSeen: true,
 			bookmark: true,
 			bookmarkDate: 0,
@@ -57,7 +55,6 @@ function getDefaultSettings() {
 		hiddenTab: {
 			active: true,
 			remote: false,
-			arrItems: [], //deprecated
 		},
 
 		discord: {
@@ -110,12 +107,30 @@ async function getSettings() {
 		Object.assign(appSettings, data.settings);
 	}
 
-	//V0.17: Move the hidden item to a separate local storage
+	//V1.17: Move the hidden item to a separate local storage
 	if (appSettings.hiddenTab.hasOwnProperty("arrItems")) {
 		await chrome.storage.local.set({
 			hiddenItems: appSettings.hiddenTab.arrItems,
 		});
 		delete appSettings.hiddenTab["arrItems"];
+		saveSettings();
+	}
+
+	//v2.0.14: replace the setting general.shareETV and unavailableTab.shareOrder
+	if (
+		appSettings.general.shareETV != undefined &&
+		appSettings.unavailableTab.shareOrder != undefined
+	) {
+		if (
+			appSettings.general.shareETV ||
+			appSettings.unavailableTab.shareOrder
+		) {
+			appSettings.general.shareData = true;
+		} else {
+			appSettings.general.shareData = false;
+		}
+		appSettings.general.shareETV = undefined;
+		appSettings.unavailableTab.shareOrder = undefined;
 		saveSettings();
 	}
 

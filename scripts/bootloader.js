@@ -557,7 +557,7 @@ window.addEventListener("message", async function (event) {
 
 	//If we got back a message after we found an ETV.
 	if (
-		appSettings.general.shareETV &&
+		appSettings.general.shareData &&
 		event.data.type &&
 		event.data.type == "etv"
 	) {
@@ -624,7 +624,7 @@ window.addEventListener("message", async function (event) {
 			tileASIN = event.data.data.parent_asin;
 		}
 
-		if (appSettings.unavailableTab.shareOrder) {
+		if (appSettings.unavailableTab.shareData) {
 			if (
 				event.data.data.status == "success" ||
 				event.data.data.error == "CROSS_BORDER_SHIPMENT" ||
