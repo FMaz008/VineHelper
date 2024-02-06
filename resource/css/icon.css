@@ -162,3 +162,7 @@
 .invert {
 	filter: invert(1);
 }
+
+div[role="navigation"] > ul > li {
+	overflow: hidden;
+}
