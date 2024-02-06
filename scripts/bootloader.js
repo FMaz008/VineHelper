@@ -679,7 +679,7 @@ window.addEventListener("message", async function (event) {
 });
 
 //Key binding for navigation
-window.addEventListener("keydown", function (e) {
+window.addEventListener("keydown", async function (e) {
 	let nodeName = document.activeElement.nodeName;
 	let excl = ["INPUT", "TEXTAREA", "SELECT", "LI"];
 	if (excl.indexOf(nodeName) == -1) {
@@ -698,6 +698,14 @@ window.addEventListener("keydown", function (e) {
 				"ul.a-pagination li:first-child a"
 			);
 			if (link != null) window.location.href = link.href;
+		}
+		if (e.key == "d") {
+			//Display a dialog with the debugging info
+			let m = await DialogMgr.newModal();
+			m.title = "Viner Helper - Debugger";
+			m.content = getRunTimeJSON();
+			console.log(m);
+			m.show();
 		}
 	}
 });

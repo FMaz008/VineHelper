@@ -1,24 +1,17 @@
-class ModalMgr {
+class ModalElement {
 	overlay = true;
 	title = "";
 	content = "";
 	id = 0;
 
-	constructor() {}
+	constructor(id) {
+		this.id = id;
+	}
 
-	async displayModalOk(template = "view/modal.html") {
-		this.id++;
-
-		let prom = await Tpl.loadFile(template);
-		Tpl.setIf("overlay", this.overlay);
-		Tpl.setVar("title", this.title);
-		Tpl.setVar("id", this.id);
-		Tpl.setVar("content", this.content);
-
-		let content = Tpl.render(prom);
-		$("body").append(content);
-
+	show = async function (template = "view/modal.html") {
 		$("#modal-" + this.id).hide();
+
+		await this.getContent(template);
 
 		await $("#modal-" + this.id)
 			.slideDown("slow")
@@ -47,6 +40,16 @@ class ModalMgr {
 					);
 				}.bind(this)
 			);
+	};
+
+	async getContent(template = "view/modal.html") {
+		let prom = await Tpl.loadFile(template);
+		Tpl.setIf("overlay", this.overlay);
+		Tpl.setVar("title", this.title);
+		Tpl.setVar("id", this.id);
+		Tpl.setVar("content", this.content);
+		let content = Tpl.render(prom);
+		$("body").append(content);
 	}
 
 	async close() {
@@ -57,5 +60,18 @@ class ModalMgr {
 
 		//document.querySelector("#modal-" + this.id).remove();
 		//document.querySelector("#overlay-" + this.id).remove();
+	}
+}
+
+class ModalMgr {
+	arrModal = [];
+
+	constructor() {}
+
+	async newModal() {
+		let idx = this.arrModal.length;
+		let m = new ModalElement(idx);
+		this.arrModal.push(m);
+		return m;
 	}
 }

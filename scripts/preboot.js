@@ -3,6 +3,7 @@ const startTime = Date.now();
 //Extension settings
 var appSettings = {};
 var arrHidden = [];
+var arrDebug = [];
 
 var vineDomain = null;
 var vineCountry = null;
@@ -292,6 +293,10 @@ function saveSettings() {
 function getRunTime() {
 	return Date.now() - startTime;
 }
+function getRunTimeJSON() {
+	return JSON.stringify(arrDebug);
+}
 function showRuntime(eventName) {
+	arrDebug.push({ time: Date.now() - startTime, event: eventName });
 	//console.log(eventName + ": " + (Date.now() - startTime) + "ms");
 }
