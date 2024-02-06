@@ -294,7 +294,7 @@ function getRunTime() {
 	return Date.now() - startTime;
 }
 function getRunTimeJSON() {
-	return JSON.stringify(arrDebug);
+	return JSON.stringify(arrDebug, null, 2).replaceAll("\n", "<br/>\n");
 }
 function showRuntime(eventName) {
 	arrDebug.push({ time: Date.now() - startTime, event: eventName });
