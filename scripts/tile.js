@@ -158,7 +158,9 @@ function Tile(obj, gridInstance) {
 		let jsDate = new Date(mysqlDate + " GMT");
 		let bookmarkDate = new Date(appSettings.general.bookmarkDate);
 		let textDate = timeSince(currentTime, jsDate);
-
+		if (textDate == NaN) {
+			console.log(currentTime, jsDate, timenow, mysqlDate);
+		}
 		if (appSettings.unavailableTab.compactToolbar) {
 			$("<div>")
 				.addClass("ext-helper-date-added")
