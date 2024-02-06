@@ -70,9 +70,10 @@ async function init() {
 			Tpl.setVar("appVersion", appVersion);
 			let content = Tpl.render(prom);
 
-			DialogMgr.title = "Vine Helper update info";
-			DialogMgr.content = content;
-			DialogMgr.displayModalOk();
+			let m = await DialogMgr.newModal();
+			m.title = "Vine Helper update info";
+			m.content = content;
+			m.show();
 		}
 
 		appSettings.general.versionInfoPopup = appVersion;
@@ -509,9 +510,10 @@ async function reportfees(event) {
 		prom = await Tpl.loadFile("view/popup_firstvote.html");
 		let content = Tpl.render(prom);
 
-		DialogMgr.title = "Vine Helper - voting feature";
-		DialogMgr.content = content;
-		DialogMgr.displayModalOk();
+		let m = await DialogMgr.newModal();
+		m.title = "Vine Helper - voting feature";
+		m.content = content;
+		m.show();
 
 		appSettings.general.firstVotePopup = false;
 		saveSettings();
@@ -704,7 +706,6 @@ window.addEventListener("keydown", async function (e) {
 			let m = await DialogMgr.newModal();
 			m.title = "Viner Helper - Debugger";
 			m.content = getRunTimeJSON();
-			console.log(m);
 			m.show();
 		}
 	}
