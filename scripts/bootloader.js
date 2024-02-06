@@ -625,14 +625,6 @@ window.addEventListener("message", async function (event) {
 
 	//If we got back a message after an order was attempted or placed.
 	if (event.data.type && event.data.type == "order") {
-		console.log(
-			"Item " +
-				event.data.data.asin +
-				" (parent:" +
-				event.data.data.parent_asin +
-				") ordered: " +
-				event.data.data.status
-		);
 		let tileASIN;
 		if (event.data.data.parent_asin === null) {
 			tileASIN = event.data.data.asin;
@@ -640,7 +632,7 @@ window.addEventListener("message", async function (event) {
 			tileASIN = event.data.data.parent_asin;
 		}
 
-		if (appSettings.unavailableTab.shareData) {
+		if (appSettings.general.shareData) {
 			if (
 				event.data.data.status == "success" ||
 				event.data.data.error == "CROSS_BORDER_SHIPMENT" ||
@@ -693,6 +685,15 @@ window.addEventListener("message", async function (event) {
 				".";
 			await Notifications.pushNotification(note);
 		}
+	}
+
+	if (event.data.type && event.data.type == "error") {
+		//Show a notification
+		let note = new ScreenNotification();
+		note.title = "Broken product detected.";
+		note.lifespan = 10;
+		note.content = "Item broken with error " + event.data.data.error + ".";
+		await Notifications.pushNotification(note);
 	}
 });
 
