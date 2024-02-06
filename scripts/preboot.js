@@ -41,7 +41,6 @@ function getDefaultSettings() {
 		general: {
 			uuid: null,
 			topPagination: true,
-			allowInjection: true,
 			shareData: true,
 			displayFirstSeen: true,
 			bookmark: true,

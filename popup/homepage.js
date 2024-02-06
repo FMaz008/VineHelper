@@ -269,7 +269,6 @@ function init() {
 		document.querySelector("#discord-guid-unlink").style.display = "none";
 	};
 
-	manageCheckboxSetting("general.allowInjection");
 	manageCheckboxSetting("general.topPagination");
 	manageCheckboxSetting("general.versionInfoPopup", false);
 	manageCheckboxSetting("general.firstVotePopup");

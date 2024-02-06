@@ -81,15 +81,13 @@ async function init() {
 	}
 
 	//Inject the infinite loading wheel fix to the "main world"
-	if (appSettings.general.allowInjection) {
-		scriptTag.src = chrome.runtime.getURL("scripts/inj.js");
-		scriptTag.onload = function () {
-			this.remove();
-		};
-		// see also "Dynamic values in the injected code" section in this answer
-		(document.head || document.documentElement).appendChild(scriptTag);
-		showRuntime("BOOT: Script injected");
-	}
+	scriptTag.src = chrome.runtime.getURL("scripts/inj.js");
+	scriptTag.onload = function () {
+		this.remove();
+	};
+	// see also "Dynamic values in the injected code" section in this answer
+	(document.head || document.documentElement).appendChild(scriptTag);
+	showRuntime("BOOT: Script injected");
 
 	//Update the page title
 	let currentUrl = window.location.href;
