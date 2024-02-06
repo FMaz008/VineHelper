@@ -245,11 +245,13 @@ async function checkNewItems() {
 		.then((response) => response.json())
 		.then(async function (response) {
 			let latestProduct = await chrome.storage.local.get("latestProduct");
+			if (isEmptyObj(latestProduct)) {
+				latestProduct = 0;
+			} else {
+				latestProduct = latestProduct.latestProduct;
+			}
 			for (let i = response.products.length - 1; i >= 0; i--) {
-				if (
-					$.isEmptyObject(latestProduct) ||
-					response.products[i].date > latestProduct
-				) {
+				if (response.products[i].date > latestProduct) {
 					let note2 = new ScreenNotification();
 					note2.title = "New item(s) detected !";
 					note2.lifespan = 60;
