@@ -6,7 +6,6 @@ class HiddenListMgr {
 
 	constructor() {
 		this.loadFromLocalStorage();
-		this.garbageCollection();
 	}
 
 	async loadFromLocalStorage() {
@@ -17,6 +16,7 @@ class HiddenListMgr {
 		} else {
 			Object.assign(this.arrHidden, data.hiddenItems);
 		}
+		this.garbageCollection();
 	}
 
 	async removeItem(asin, save = true) {
@@ -36,9 +36,8 @@ class HiddenListMgr {
 
 	async addItem(asin, save = true) {
 		if (save) await this.loadFromLocalStorage(); //Load the list in case it was altered in a different tab
-
 		if (!this.isHidden(asin))
-			this.arrHidden.push({ asin: asin, date: new Date() });
+			this.arrHidden.push({ asin: asin, date: new Date().toString() });
 
 		//The server may not be in sync with the local list, and will deal with duplicate.
 		this.updateArrChange({ asin: asin, hidden: true });
@@ -111,7 +110,9 @@ class HiddenListMgr {
 
 		let idx = 0;
 		while (idx < this.arrHidden.length) {
-			if (this.arrHidden[idx]["date"] < expiredDate) {
+			if (this.arrHidden[idx].date == "") {
+				this.arrHidden[idx].date = new Date().toString();
+			} else if (this.arrHidden[idx].date < expiredDate) {
 				this.arrHidden.splice(idx, 1);
 			} else {
 				++idx;
