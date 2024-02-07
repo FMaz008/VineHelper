@@ -14,6 +14,7 @@ class HiddenListMgr {
 		if (isEmptyObj(data)) {
 			await chrome.storage.local.set({ hiddenItems: [] });
 		} else {
+			this.arrHidden = [];
 			Object.assign(this.arrHidden, data.hiddenItems);
 		}
 		this.garbageCollection();
@@ -36,6 +37,7 @@ class HiddenListMgr {
 
 	async addItem(asin, save = true) {
 		if (save) await this.loadFromLocalStorage(); //Load the list in case it was altered in a different tab
+
 		if (!this.isHidden(asin))
 			this.arrHidden.push({ asin: asin, date: new Date().toString() });
 
