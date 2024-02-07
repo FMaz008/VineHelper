@@ -15,7 +15,7 @@ class HiddenListMgr {
 			await chrome.storage.local.set({ hiddenItems: [] });
 		} else {
 			this.arrHidden = [];
-			Object.assign(this.arrHidden, data.hiddenItems);
+			this.arrHidden = data.hiddenItems;
 		}
 		this.garbageCollection();
 	}
@@ -23,9 +23,12 @@ class HiddenListMgr {
 	async removeItem(asin, save = true) {
 		if (save) await this.loadFromLocalStorage(); //Load the list in case it was altered in a different tab
 
-		for (const id in this.arrHidden) {
-			if (this.arrHidden[id].asin == asin) {
-				this.arrHidden.splice(id, 1);
+		let idx = 0;
+		while (idx < this.arrHidden.length) {
+			if (this.arrHidden[idx].asin == asin) {
+				this.arrHidden.splice(idx, 1);
+			} else {
+				++idx;
 			}
 		}
 
