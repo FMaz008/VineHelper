@@ -8,6 +8,14 @@ div.ext-helper-grid,
 	grid-template-columns: repeat(auto-fill, minmax(236px, auto));
 	padding: 1px;
 }
+
+#vvp-items-grid .vvp-item-tile,
+#tab-unavailable .vvp-item-tile,
+#tab-hidden .vvp-item-tile {
+	margin-bottom: 0;
+	margin-top: auto;
+}
+
 div.ext-helper-grid .vvp-item-tile {
 	border: 1px solid #ddd;
 	margin-top: -1px;

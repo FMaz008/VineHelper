@@ -42,6 +42,10 @@
 	overflow-y: scroll;
 }
 
+.modal .content ul {
+	color: #333;
+}
+
 .modal .footer {
 	padding: 20px;
 }
