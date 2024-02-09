@@ -3,131 +3,134 @@
 =====================================================*/
 
 #vvp-header {
-  margin: 0px;
+	margin: 0px;
 }
 
 .a-container.vvp-body {
-  padding: 0px;
-  max-width: unset !important;
-  min-width: unset !important;
+	padding: 0px;
+	max-width: unset !important;
+	min-width: unset !important;
 }
 
 #vvp-logo-link img {
-  height: var(--logo-link-height, 30px);
+	height: var(--logo-link-height, 30px);
 }
 
 #vvp-header ~ .a-section {
-  display: none;
+	display: none;
 }
 
 .vvp-body > * + * {
-  margin-top: 0px !important;
+	margin-top: 0px !important;
 }
 
 .vvp-header-links-container {
-  margin-right: 0.5rem;
+	margin-right: 0.5rem;
 }
 
-#vvp-items-grid, #tab-unavailable, #tab-hidden, #tab-favourite {
-  grid-template-columns: repeat(
-    auto-fill,
-    minmax(var(--grid-column-width, 110px), auto)
-  ) !important;
-  margin-bottom: 0px !important;
+#vvp-items-grid,
+#tab-unavailable,
+#tab-hidden,
+#tab-favourite {
+	grid-template-columns: repeat(
+		auto-fill,
+		minmax(var(--grid-column-width, 110px), auto)
+	) !important;
+	margin-bottom: 0px !important;
 }
 
 #vvp-items-grid-container .vvp-item-tile .vvp-item-tile-content {
-  width: var(--grid-column-width, 110px) !important;
+	width: var(--grid-column-width, 110px) !important;
 }
 
 #vvp-items-grid-container .vvp-item-tile .vvp-item-tile-content > * {
-  margin: 0 !important;
+	margin: 0 !important;
 }
 
 #vvp-items-grid-container .vvp-item-tile .vvp-item-tile-content > img {
-  margin-top: 0.5rem !important;
+	margin-top: 0.5rem !important;
 }
 
 .vvp-item-tile,
 .a-tab-content {
-  border: none !important;
+	border: none !important;
 }
 
 .a-button-primary {
-  border-radius: 0 !important;
-  margin-bottom: 0.5rem !important;
-  background: #303333;
-  border-color: #303333;
-  transition: 0.2s !important;
+	border-radius: 0 !important;
+	margin-bottom: 0.5rem !important;
+	background: #303333;
+	border-color: #303333;
+	transition: 0.2s !important;
 }
 
 .a-button-primary:hover {
-  background: #303333;
-  border-color: #303333;
-  opacity: 0.85;
+	background: #303333;
+	border-color: #303333;
+	opacity: 0.85;
 }
 
 .a-button-primary:focus:hover {
-  background: #303333;
-  border-color: #303333;
+	background: #303333;
+	border-color: #303333;
 }
 
 .a-button:focus .a-button-inner .a-button-text,
 .a-button .a-button-text:hover,
 .a-button-primary:active:not(.a-button-disabled) .a-button-text {
-  color: white;
+	color: white;
 }
 
 .a-button-primary:active:not(.a-button-disabled) {
-  background: #303333;
-  border-color: #303333;
+	background: #303333;
+	border-color: #303333;
 }
 
 .a-button-primary .a-button-text {
-  color: white;
+	color: white;
 }
 
 .a-button-primary:hover .a-button-text,
 .a-button-primary:focus .a-button-text {
-  color: white;
+	color: white;
 }
 
 .a-button-base {
-  border-radius: 0 !important;
-  margin-bottom: 0.5rem !important;
+	border-radius: 0 !important;
+	margin-bottom: 0.5rem !important;
 }
 
 .a-button-primary .a-button-inner {
-  background-color: transparent;
+	background-color: transparent;
 }
 
-#vvp-items-grid
-  .vvp-item-tile
-  .vvp-item-tile-content
-  > .vvp-item-product-title-container {
-  height: var(--item-tile-height, 40px) !important;
+#vvp-items-grid-container
+	.vvp-item-tile
+	.vvp-item-tile-content
+	> .vvp-item-product-title-container {
+	height: var(--item-tile-height, 40px) !important;
 }
 
 /*  Button */
 #vvp-beta-tag {
-  display: none;
+	display: none;
 }
 
 #vvp-search-button,
 #vvp-search-text-input {
-  border-radius: 0rem !important;
+	border-radius: 0rem !important;
 }
 
 #vvp-search-button #vvp-search-button-announce {
-  line-height: 1 !important;
+	line-height: 1 !important;
 }
 
 #vvp-search-button .a-button-inner {
-  display: flex;
-  align-items: center;
+	display: flex;
+	align-items: center;
 }
 
 #vvp-logo-link img {
-  content: url(https://file.llamastories.com/discordlogo.png) !important;
-  margin-bottom: 3px;
+	content: url(https://file.llamastories.com/discordlogo.png) !important;
+	margin-bottom: 3px;
 }
