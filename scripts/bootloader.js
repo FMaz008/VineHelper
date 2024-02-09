@@ -250,6 +250,20 @@ async function checkNewItems() {
 			} else {
 				latestProduct = latestProduct.latestProduct;
 			}
+
+			//Display notification from the server
+			if (Array.isArray(latestProduct["notification"])) {
+				if (latestProduct["notification"].length > 0) {
+					latestProduct["notification"].forEach((msg) => {
+						let note = new ScreenNotification();
+						note.title = "Server message";
+						note.lifespan = 10;
+						note.content = msg;
+						Notifications.pushNotification(note);
+					});
+				}
+			}
+
 			for (let i = response.products.length - 1; i >= 0; i--) {
 				if (response.products[i].date > latestProduct) {
 					let note2 = new ScreenNotification();
