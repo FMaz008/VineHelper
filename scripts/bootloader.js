@@ -193,15 +193,20 @@ async function init() {
 		//Place the text-content of the Previous button before the other child elements.
 
 		//let text = $("ul.a-pagination li:first-child a").innerText;
+		let textContent = "";
 		document
 			.querySelectorAll("ul.a-pagination li:first-child a")
 			.forEach(function (item) {
+				textContent = item.childNodes[3].nodeValue;
 				item.childNodes[3].nodeValue = "";
 			});
+
 		//console.log(text);
 		$(".ext-helper-pagination-previous").remove();
 		$("ul.a-pagination li:first-child a").append(
-			"<span class='ext-helper-pagination-previous'>Previous</span>"
+			"<span class='ext-helper-pagination-previous'>" +
+				textContent +
+				"</span>"
 		);
 		//$("ul.a-pagination li:first-child a").prepend(text);
 	}
