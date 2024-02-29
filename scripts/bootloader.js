@@ -168,7 +168,7 @@ async function init() {
 				action: "date",
 			};
 			let url =
-				"https://francoismazerolle.ca/vinehelper.php" +
+				"https://vinehelper.ovh/vinehelper.php" +
 				"?data=" +
 				JSON.stringify(arrJSON);
 			fetch(url)
@@ -243,9 +243,7 @@ async function checkNewItems() {
 
 	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
 	let url =
-		"https://francoismazerolle.ca/vineHelperLatest.php" +
-		"?data=" +
-		jsonArrURL;
+		"https://vinehelper.ovh/vineHelperLatest.php" + "?data=" + jsonArrURL;
 	fetch(url)
 		.then((response) => response.json())
 		.then(async function (response) {
@@ -370,9 +368,7 @@ function fetchProductsData(arrUrl) {
 
 	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
 	let url =
-		"https://www.francoismazerolle.ca/vinehelper.php" +
-		"?data=" +
-		jsonArrURL;
+		"https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
 	fetch(url)
 		.then((response) => response.json())
 		.then(serverProductsResponse)
@@ -530,9 +526,7 @@ async function reportfees(event) {
 	let jsonArrURL = JSON.stringify(arrJSON);
 
 	let url =
-		"https://www.francoismazerolle.ca/vinehelper.php" +
-		"?data=" +
-		jsonArrURL;
+		"https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
 
 	await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
 
@@ -617,7 +611,7 @@ window.addEventListener("message", async function (event) {
 		};
 
 		let url =
-			"https://francoismazerolle.ca/vinehelper.php?data=" +
+			"https://vinehelper.ovh/vinehelper.php?data=" +
 			JSON.stringify(arrJSON);
 		await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
 
@@ -670,7 +664,7 @@ window.addEventListener("message", async function (event) {
 
 				//Form the full URL
 				let url =
-					"https://www.francoismazerolle.ca/vinehelper.php" +
+					"https://www.vinehelper.ovh/vinehelper.php" +
 					"?data=" +
 					JSON.stringify(arrJSON);
 				await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
