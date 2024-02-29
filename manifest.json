@@ -2,7 +2,7 @@
 	"manifest_version": 3,
 	"name": "Amazon Vine Helper",
 	"description": "Improve the Amazon Vine experience.",
-	"version": "2.0.15",
+	"version": "2.0.16",
 
 	"permissions": ["storage"],
 	"browser_specific_settings": {
@@ -68,6 +68,7 @@
 			],
 			"matches": [
 				"*://*.amazon.ca/vine/*",
+				"*://*.amazon.de/vine/*",
 				"*://*.amazon.es/vine/*",
 				"*://*.amazon.fr/vine/*",
 				"*://*.amazon.co.uk/vine/*",
@@ -86,6 +87,7 @@
 			],
 			"matches": [
 				"*://*.amazon.ca/vine/*",
+				"*://*.amazon.de/vine/*",
 				"*://*.amazon.es/vine/*",
 				"*://*.amazon.fr/vine/*",
 				"*://*.amazon.co.uk/vine/*",
