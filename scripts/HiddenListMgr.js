@@ -99,7 +99,7 @@ class HiddenListMgr {
 
 		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
 		let url =
-			"https://www.francoismazerolle.ca/vinehelper.php" +
+			"https://www.vinehelper.ovh/vinehelper.php" +
 			"?data=" +
 			jsonArrURL;
 		fetch(url);
