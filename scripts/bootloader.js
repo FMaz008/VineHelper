@@ -312,6 +312,21 @@ function getAllAsin() {
 	return arrUrl;
 }
 
+//This function will return an array of all the product on the page, with their description and thumbnail url
+function getAllProductData() {
+	let arrUrl = []; //Will be use to store the URL identifier of the listed products.
+	const arrObj = $(".vvp-item-tile");
+	for (let i = 0; i < arrObj.length; i++) {
+		//Create the tile and assign it to the main grid
+		obj = arrObj[i];
+		asin = getAsinFromDom(obj);
+		title = getTitleFromDom(obj);
+		thumbnail = getThumbnailURLFromDom(obj);
+		arrUrl.push({ asin: asin, title: title, thumbnail: thumbnail });
+	}
+	return arrUrl;
+}
+
 //Convert the regular tile to the Vine Helper version.
 function generateTile(obj) {
 	let tile;
@@ -369,7 +384,12 @@ function fetchProductsData(arrUrl) {
 	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
 	let url =
 		"https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
-	fetch(url)
+	let content = getAllProductData();
+	fetch(url, {
+		method: "POST",
+		headers: { "Content-Type": "application/x-www-form-urlencoded" },
+		body: JSON.stringify(content),
+	})
 		.then((response) => response.json())
 		.then(serverProductsResponse)
 		.catch(function () {

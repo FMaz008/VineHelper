@@ -287,3 +287,13 @@ function getAsinFromDom(tileDom) {
 	let arrasin = url.match(regex);
 	return arrasin[1];
 }
+
+function getTitleFromDom(tileDom) {
+	return $(tileDom).find(".a-truncate-full").text();
+}
+
+function getThumbnailURLFromDom(tileDom) {
+	let url = $(tileDom).find(".vvp-item-tile-content > img").attr("src");
+	if (url == undefined) return null;
+	else return url;
+}
