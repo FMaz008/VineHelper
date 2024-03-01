@@ -11,6 +11,7 @@ var vineLocale = null;
 var vineCurrency = null;
 var vineQueue = null;
 var vineQueueAbbr = null;
+var vineSearch = false;
 var uuid = null;
 
 var appVersion = 0;
@@ -225,7 +226,7 @@ async function getSettings() {
 			vineCurrency = "GBP";
 			break;
 		case "de":
-			vineLocale = "de_DE";
+			vineLocale = "de-DE";
 			vineCurrency = "EUR";
 			break;
 		case "fr":
@@ -252,6 +253,18 @@ async function getSettings() {
 
 	let arrQueues = { potluck: "RFY", last_chance: "AFA", encore: "AI" };
 	if (vineQueue != null) vineQueueAbbr = arrQueues[vineQueue];
+
+	//Determine if we are currently searching for an item
+	regex =
+		/^.+?amazon\..+\/vine\/vine-items(?:.*?)(?:[\?&]search=(.+?))(?:[#&].*?)?$/;
+	arrMatches = currentUrl.match(regex);
+	if (arrMatches != null) {
+		if (arrMatches[1] == undefined) {
+			vineSearch = false;
+		} else {
+			vineSearch = true;
+		}
+	}
 
 	//Generate a UUID for the user
 	if (
