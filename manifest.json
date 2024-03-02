@@ -2,7 +2,7 @@
 	"manifest_version": 3,
 	"name": "Amazon Vine Helper",
 	"description": "Improve the Amazon Vine experience.",
-	"version": "2.0.16",
+	"version": "2.0.17",
 
 	"permissions": ["storage"],
 	"browser_specific_settings": {
@@ -42,6 +42,7 @@
 			"matches": [
 				"*://*.amazon.ca/*",
 				"*://*.amazon.es/*",
+				"*://*.amazon.de/*",
 				"*://*.amazon.fr/*",
 				"*://*.amazon.co.uk/*",
 				"*://*.amazon.com/*"
