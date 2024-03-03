@@ -274,13 +274,28 @@ async function checkNewItems() {
 					note2.lifespan = 60;
 					if (appSettings.general.newItemNotificationSound)
 						note2.sound = "resource/sound/notification.mp3";
-					note2.content =
-						"Most recent item: <a href='/dp/" +
-						response.products[i].asin +
-						"' target='_blank'>" +
-						response.products[i].asin +
-						"</a><br />Server time: " +
-						response.products[i].date;
+
+					note2.content = "";
+					if (response.products[i].img_url != null)
+						note2.content +=
+							"<img src='" +
+							response.products[i].img_url +
+							"' style='float:left;' width='50' height='50' />";
+
+					if (response.products[i].title != null)
+						note2.content +=
+							"<a href='/dp/" +
+							response.products[i].asin +
+							"' target='_blank'>" +
+							response.products[i].title +
+							"</a>";
+					else
+						note2.content +=
+							"<a href='/dp/" +
+							response.products[i].asin +
+							"' target='_blank'>" +
+							response.products[i].asin +
+							"</a>";
 					await Notifications.pushNotification(note2);
 
 					if (i == 0) {
