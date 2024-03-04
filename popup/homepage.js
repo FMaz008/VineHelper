@@ -64,7 +64,7 @@ async function drawUnavailableTab() {
 	if (appSettings.unavailableTab.votingToolbar) {
 		/*
         //Obtain contribution statistics
-        let url = "https://www.francoismazerolle.ca/vinehelperStats.php";
+        let url = "https://www.vinehelper.ovh/vinehelperStats.php";
         fetch(url)
             .then((response) => response.json())
             .then(serverResponse)
@@ -216,7 +216,7 @@ function init() {
 		let jsonArrURL = JSON.stringify(arrJSON);
 
 		let url =
-			"https://www.francoismazerolle.ca/vinehelper.php" +
+			"https://www.vinehelper.ovh/vinehelper.php" +
 			"?data=" +
 			jsonArrURL;
 		await fetch(url)

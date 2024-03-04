@@ -274,13 +274,28 @@ async function checkNewItems() {
 					note2.lifespan = 60;
 					if (appSettings.general.newItemNotificationSound)
 						note2.sound = "resource/sound/notification.mp3";
-					note2.content =
-						"Most recent item: <a href='/dp/" +
-						response.products[i].asin +
-						"' target='_blank'>" +
-						response.products[i].asin +
-						"</a><br />Server time: " +
-						response.products[i].date;
+
+					note2.content = "";
+					if (response.products[i].img_url != null)
+						note2.content +=
+							"<img src='" +
+							response.products[i].img_url +
+							"' style='float:left;' width='50' height='50' />";
+
+					if (response.products[i].title != null)
+						note2.content +=
+							"<a href='/dp/" +
+							response.products[i].asin +
+							"' target='_blank'>" +
+							response.products[i].title +
+							"</a>";
+					else
+						note2.content +=
+							"<a href='/dp/" +
+							response.products[i].asin +
+							"' target='_blank'>" +
+							response.products[i].asin +
+							"</a>";
 					await Notifications.pushNotification(note2);
 
 					if (i == 0) {
@@ -308,6 +323,21 @@ function getAllAsin() {
 		obj = arrObj[i];
 		asin = getAsinFromDom(obj);
 		arrUrl.push(asin);
+	}
+	return arrUrl;
+}
+
+//This function will return an array of all the product on the page, with their description and thumbnail url
+function getAllProductData() {
+	let arrUrl = []; //Will be use to store the URL identifier of the listed products.
+	const arrObj = $(".vvp-item-tile");
+	for (let i = 0; i < arrObj.length; i++) {
+		//Create the tile and assign it to the main grid
+		obj = arrObj[i];
+		asin = getAsinFromDom(obj);
+		title = getTitleFromDom(obj);
+		thumbnail = getThumbnailURLFromDom(obj);
+		arrUrl.push({ asin: asin, title: title, thumbnail: thumbnail });
 	}
 	return arrUrl;
 }
@@ -369,7 +399,12 @@ function fetchProductsData(arrUrl) {
 	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
 	let url =
 		"https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
-	fetch(url)
+	let content = getAllProductData();
+	fetch(url, {
+		method: "POST",
+		headers: { "Content-Type": "application/x-www-form-urlencoded" },
+		body: JSON.stringify(content),
+	})
 		.then((response) => response.json())
 		.then(serverProductsResponse)
 		.catch(function () {

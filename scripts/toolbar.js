@@ -17,7 +17,8 @@ function Toolbar(tileInstance) {
 			"announce",
 			appSettings.discord.active &&
 				appSettings.discord.guid != null &&
-				vineQueue != null
+				vineQueue != null &&
+				vineSearch == false
 		);
 		Tpl.setIf("toggleview", appSettings.hiddenTab.active);
 		let content = Tpl.render(prom);
@@ -31,6 +32,7 @@ function Toolbar(tileInstance) {
 			.find(".etv")
 			.on("change", { asin: pTile.getAsin() }, function (event) {
 				if ($(this).text() == "") return false;
+				if (vineSearch == true) return false;
 
 				let tile = getTileByAsin(event.data.asin);
 				$(tile.getDOM())
