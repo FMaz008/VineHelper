@@ -3,97 +3,106 @@
 	"name": "Amazon Vine Helper",
 	"description": "Improve the Amazon Vine experience.",
 	"version": "2.0.16",
-
 	"permissions": ["storage"],
 	"browser_specific_settings": {
-		"gecko": {
-			"id": "{5951bf9a-25ae-4043-9fa2-54dc0ac1ce70}",
-			"strict_min_version": "109.0"
-		},
-		"gecko_android": {
-			"strict_min_version": "120.0"
-		}
+	  "gecko": {
+		"id": "{5951bf9a-25ae-4043-9fa2-54dc0ac1ce70}",
+		"strict_min_version": "109.0"
+	  },
+	  "gecko_android": {
+		"strict_min_version": "120.0"
+	  }
 	},
-
 	"icons": {
-		"16": "resource/image/icon-16.png",
-		"32": "resource/image/icon-32.png",
-		"48": "resource/image/icon-48.png",
-		"128": "resource/image/icon-128.png"
+	  "16": "resource/image/icon-16.png",
+	  "32": "resource/image/icon-32.png",
+	  "48": "resource/image/icon-48.png",
+	  "128": "resource/image/icon-128.png"
 	},
 	"action": {
-		"default_popup": "popup/homepage.html",
-		"default_title": "Amazon Vine Helper",
-		"default_icon": "resource/image/icon-128.png"
+	  "default_popup": "popup/homepage.html",
+	  "default_title": "Amazon Vine Helper",
+	  "default_icon": "resource/image/icon-128.png"
 	},
 	"options_ui": {
-		"page": "popup/homepage.html"
+	  "page": "popup/homepage.html"
 	},
 	"web_accessible_resources": [
-		{
-			"resources": [
-				"resource/image/*",
-				"view/*",
-				"resource/sound/*",
-				"lib/vine-styling/desktop/*",
-				"lib/vine-styling/mobile/*",
-				"scripts/inj.js"
-			],
-			"matches": [
-				"*://*.amazon.ca/*",
-				"*://*.amazon.es/*",
-				"*://*.amazon.fr/*",
-				"*://*.amazon.co.uk/*",
-				"*://*.amazon.com/*"
-			]
-		}
+	  {
+		"resources": [
+		  "resource/image/*",
+		  "view/*",
+		  "resource/sound/*",
+		  "lib/vine-styling/desktop/*",
+		  "lib/vine-styling/mobile/*",
+		  "scripts/inj.js"
+		],
+		"matches": [
+		  "*://*.amazon.ca/*",
+		  "*://*.amazon.es/*",
+		  "*://*.amazon.fr/*",
+		  "*://*.amazon.co.uk/*",
+		  "*://*.amazon.com/*"
+		]
+	  }
 	],
-
 	"content_scripts": [
-		{
-			"css": [
-				"resource/css/tabs.css",
-				"resource/css/grid.css",
-				"resource/css/icon.css",
-				"resource/css/main.css",
-				"resource/css/modal.css",
-				"resource/css/notification.css",
-				"resource/css/toolbar.css"
-			],
-			"js": [
-				"scripts/grid.js",
-				"scripts/tile.js",
-				"scripts/toolbar.js",
-				"scripts/bootloader.js"
-			],
-			"matches": [
-				"*://*.amazon.ca/vine/*",
-				"*://*.amazon.de/vine/*",
-				"*://*.amazon.es/vine/*",
-				"*://*.amazon.fr/vine/*",
-				"*://*.amazon.co.uk/vine/*",
-				"*://*.amazon.com/vine/*"
-			],
-			"run_at": "document_end"
-		},
-		{
-			"js": [
-				"lib/jquery/jquery-3.7.1.min.js",
-				"scripts/Template.js",
-				"scripts/ScreenNotifier.js",
-				"scripts/HiddenListMgr.js",
-				"scripts/ModalMgr.js",
-				"scripts/preboot.js"
-			],
-			"matches": [
-				"*://*.amazon.ca/vine/*",
-				"*://*.amazon.de/vine/*",
-				"*://*.amazon.es/vine/*",
-				"*://*.amazon.fr/vine/*",
-				"*://*.amazon.co.uk/vine/*",
-				"*://*.amazon.com/vine/*"
-			],
-			"run_at": "document_start"
-		}
+	  {
+		"css": [
+		  "resource/css/tabs.css",
+		  "resource/css/grid.css",
+		  "resource/css/icon.css",
+		  "resource/css/main.css",
+		  "resource/css/modal.css",
+		  "resource/css/notification.css",
+		  "resource/css/toolbar.css"
+		],
+		"js": [
+		  "scripts/grid.js",
+		  "scripts/tile.js",
+		  "scripts/toolbar.js",
+		  "scripts/bootloader.js",
+		  "scripts/review.js"
+		],
+		"matches": [
+		  "*://*.amazon.ca/vine/*",
+		  "*://*.amazon.de/vine/*",
+		  "*://*.amazon.es/vine/*",
+		  "*://*.amazon.fr/vine/*",
+		  "*://*.amazon.co.uk/vine/*",
+		  "*://*.amazon.com/vine/*"
+		],
+		"run_at": "document_end"
+	  },
+	  {
+		"js": [
+		  "lib/jquery/jquery-3.7.1.min.js",
+		  "scripts/Template.js",
+		  "scripts/ScreenNotifier.js",
+		  "scripts/HiddenListMgr.js",
+		  "scripts/ModalMgr.js",
+		  "scripts/preboot.js"
+		],
+		"matches": [
+		  "*://*.amazon.ca/vine/*",
+		  "*://*.amazon.de/vine/*",
+		  "*://*.amazon.es/vine/*",
+		  "*://*.amazon.fr/vine/*",
+		  "*://*.amazon.co.uk/vine/*",
+		  "*://*.amazon.com/vine/*"
+		],
+		"run_at": "document_start"
+	  },
+	  {
+		"js": [
+		  "scripts/Review.js"
+		],
+		"matches": [
+		  "*://*.amazon.co.uk/review/create-review*",
+		  "*://*.amazon.co.uk/reviews/create-review*"
+		],
+		"run_at": "document_end"
+	  }
 	]
-}
+  }
+  

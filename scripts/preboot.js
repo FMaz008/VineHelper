@@ -78,6 +78,11 @@ function getDefaultSettings() {
 			limitedQuantityIcon: false,
 			RFYAFAAITabs: false,
 		},
+
+		reviews: {
+			showProductTitle: undefined,
+			fancyButtonStyling: false,
+		}
 	};
 
 	return settings;
@@ -285,7 +290,14 @@ async function getSettings() {
 	uuid = appSettings.general.uuid;
 
 	showRuntime("PRE: Settings loaded");
+
+	if (appSettings.reviews.showProductTitle === undefined) {
+		appSettings.reviews.showProductTitle = true;
+		saveSettings();
+		showRuntime();
+	 }
 }
+
 showRuntime("PRE: Begining to load settings");
 getSettings(); //First call to launch the extension.
 

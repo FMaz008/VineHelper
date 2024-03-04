@@ -303,6 +303,9 @@ function init() {
 	manageCheckboxSetting("thorvarium.stripedCategories");
 	manageCheckboxSetting("thorvarium.limitedQuantityIcon");
 	manageCheckboxSetting("thorvarium.RFYAFAAITabs");
+
+	manageCheckboxSetting("reviews.showProductTitle"); 
+	manageCheckboxSetting("reviews.fancyButtonStyling"); 
 }
 
 function manageCheckboxSetting(key, def = null) {
