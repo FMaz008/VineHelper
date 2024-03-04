@@ -399,7 +399,11 @@ function fetchProductsData(arrUrl) {
 	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
 	let url =
 		"https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
-	let content = getAllProductData();
+
+	let content = {};
+	if (appSettings.general.shareData) {
+		let content = getAllProductData();
+	}
 	fetch(url, {
 		method: "POST",
 		headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -772,6 +776,15 @@ window.addEventListener("keydown", async function (e) {
 			m.title = "Viner Helper - Debugger";
 			m.content = getRunTimeJSON();
 			m.show();
+		}
+		if (e.key == "r") {
+			window.location.href = "/vine/vine-items?queue=potluck";
+		}
+		if (e.key == "a") {
+			window.location.href = "/vine/vine-items?queue=last_chance";
+		}
+		if (e.key == "i") {
+			window.location.href = "/vine/vine-items?queue=encore";
 		}
 	}
 });
