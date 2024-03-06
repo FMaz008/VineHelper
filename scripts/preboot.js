@@ -44,7 +44,7 @@ function getDefaultSettings() {
 			topPagination: true,
 			shareData: true,
 			displayFirstSeen: true,
-			bookmark: true,
+			bookmark: false,
 			bookmarkDate: 0,
 			displayVariantIcon: false,
 			versionInfoPopup: 0,

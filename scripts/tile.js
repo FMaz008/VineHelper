@@ -184,7 +184,7 @@ function Tile(obj, gridInstance) {
 		if (
 			appSettings.general.bookmark &&
 			jsDate > bookmarkDate &&
-			bookmarkDate != 0
+			appSettings.general.bookmarkDate != 0
 		) {
 			$(pTile).addClass("bookmark-highlight");
 		}
