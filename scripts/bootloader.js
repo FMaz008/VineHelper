@@ -180,10 +180,10 @@ async function init() {
 					saveSettings();
 
 					let note = new ScreenNotification();
-					note.title = "Bookmark set !";
+					note.title = "Flag set !";
 					note.lifespan = 30;
 					note.content =
-						"Bookmark set for <br />" +
+						"Flag set for <br />" +
 						appSettings.general.bookmarkDate +
 						"<br />Newer items will be highlighted.";
 					await Notifications.pushNotification(note);
