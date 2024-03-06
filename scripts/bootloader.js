@@ -42,13 +42,27 @@ async function init() {
 	}
 	showRuntime("BOOT: Config available. Begining init() function");
 
+	//Run the boot sequence
+	initFetchProductData();
+	await initFlushTplCache(); //And display the version changelog popup
+	initInjectScript();
+	initSetPageTitle();
+	await initCreateTabs();
+	initInsertTopPagination();
+	await initInsertBookmarkButton();
+	initFixPreviousButton();
+	await initDrawToolbars();
+}
+
+function initFetchProductData() {
 	//Only contact the home server is necessary
 	if (
-		appSettings.unavailableTab.active ||
-		appSettings.unavailableTab.votingToolbar ||
-		appSettings.general.displayETV ||
-		appSettings.general.displayFirstSeen ||
-		appSettings.general.bookmark
+		appSettings.unavailableTab.active || //Order confirmation system
+		appSettings.unavailableTab.votingToolbar || //Voting system
+		appSettings.general.displayETV || //ETV
+		appSettings.general.displayFirstSeen || //Display first seen
+		appSettings.general.bookmark || //Highlight new items
+		appSettings.general.shareData //Share data (url+thumbnail)
 	) {
 		fetchProductsData(getAllAsin()); //Obtain the data to fill the toolbars with it.
 
@@ -56,7 +70,9 @@ async function init() {
 			checkNewItems();
 		}
 	}
+}
 
+async function initFlushTplCache() {
 	//Show version info popup : new version
 	if (appVersion != appSettings.general.versionInfoPopup) {
 		showRuntime("BOOT: Flushing template cache");
@@ -79,7 +95,9 @@ async function init() {
 		appSettings.general.versionInfoPopup = appVersion;
 		saveSettings();
 	}
+}
 
+function initInjectScript() {
 	//Inject the infinite loading wheel fix to the "main world"
 	scriptTag.src = chrome.runtime.getURL("scripts/inj.js");
 	scriptTag.onload = function () {
@@ -88,7 +106,9 @@ async function init() {
 	// see also "Dynamic values in the injected code" section in this answer
 	(document.head || document.documentElement).appendChild(scriptTag);
 	showRuntime("BOOT: Script injected");
+}
 
+function initSetPageTitle() {
 	//Update the page title
 	let currentUrl = window.location.href;
 	regex = /^.+?amazon\..+\/vine\/.*[\?\&]search=(.*?)(?:[\&].*)?$/;
@@ -117,7 +137,9 @@ async function init() {
 
 		$("title").append(" - " + categoryText);
 	}
+}
 
+async function initCreateTabs() {
 	//Create the Discard grid
 	showRuntime("BOOT: Creating tabs system");
 	var tabSystem =
@@ -139,7 +161,9 @@ async function init() {
 		gridUnavailable = new Grid($("#tab-unavailable"));
 	}
 	showRuntime("BOOT: Grid system completed");
+}
 
+function initInsertTopPagination() {
 	//Top pagination
 	if (appSettings.general.topPagination) {
 		$("#vvp-items-grid-container .topPagination").remove();
@@ -150,7 +174,9 @@ async function init() {
 			.insertAfter("#vvp-items-grid-container p")
 			.addClass("topPagination");
 	}
+}
 
+async function initInsertBookmarkButton() {
 	//Insert bookmark button
 	if (appSettings.general.displayFirstSeen && appSettings.general.bookmark) {
 		$("button.bookmark").remove();
@@ -180,37 +206,41 @@ async function init() {
 					saveSettings();
 
 					let note = new ScreenNotification();
-					note.title = "Flag set !";
+					note.title = "Marker set !";
 					note.lifespan = 30;
 					note.content =
-						"Flag set for <br />" +
+						"Marker set for <br />" +
 						appSettings.general.bookmarkDate +
 						"<br />Newer items will be highlighted.";
 					await Notifications.pushNotification(note);
 				});
 		});
-
-		//Place the text-content of the Previous button before the other child elements.
-
-		//let text = $("ul.a-pagination li:first-child a").innerText;
-		let textContent = "";
-		document
-			.querySelectorAll("ul.a-pagination li:first-child a")
-			.forEach(function (item) {
-				textContent = item.childNodes[3].nodeValue;
-				item.childNodes[3].nodeValue = "";
-			});
-
-		//console.log(text);
-		$(".ext-helper-pagination-previous").remove();
-		$("ul.a-pagination li:first-child a").append(
-			"<span class='ext-helper-pagination-previous'>" +
-				textContent +
-				"</span>"
-		);
-		//$("ul.a-pagination li:first-child a").prepend(text);
 	}
+}
 
+function initFixPreviousButton() {
+	//Place the text-content of the Previous button before the other child elements.
+	//This is to enable the first letter of the previous button to be styled for the keybinding.
+
+	//let text = $("ul.a-pagination li:first-child a").innerText;
+	let textContent = "";
+	document
+		.querySelectorAll("ul.a-pagination li:first-child a")
+		.forEach(function (item) {
+			textContent = item.childNodes[3].nodeValue;
+			item.childNodes[3].nodeValue = "";
+		});
+
+	//console.log(text);
+	$(".ext-helper-pagination-previous").remove();
+	$("ul.a-pagination li:first-child a").append(
+		"<span class='ext-helper-pagination-previous'>" +
+			textContent +
+			"</span>"
+	);
+	//$("ul.a-pagination li:first-child a").prepend(text);
+}
+async function initDrawToolbars() {
 	//Browse each items from the Regular grid
 	//- Create an array of all the products listed on the page
 	//- Create an empty toolbar for the item tile
@@ -225,6 +255,7 @@ async function init() {
 
 	toolbarsDrawn = true;
 }
+
 async function checkNewItems() {
 	let arrJSON = {
 		api_version: 4,
