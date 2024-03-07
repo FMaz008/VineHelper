@@ -307,13 +307,13 @@ async function checkNewItems() {
 						note2.sound = "resource/sound/notification.mp3";
 
 					note2.content = "";
-					if (response.products[i].img_url != null)
+					if (response.products[i].img_url != "")
 						note2.content +=
 							"<img src='" +
 							response.products[i].img_url +
 							"' style='float:left;' width='50' height='50' />";
 
-					if (response.products[i].title != null)
+					if (response.products[i].title != "")
 						note2.content +=
 							"<a href='/dp/" +
 							response.products[i].asin +
