@@ -28,7 +28,12 @@ const VERSION_REVISION_CHANGE = 1;
 const VERSION_NO_CHANGE = 0;
 
 var toolbarsDrawn = false;
-init();
+
+//Do not run the extension if ultraviner is running
+regex = /^.+?amazon\..+\/vine\/ultraviner.*?$/;
+if (!regex.test(window.location.href)) {
+	init();
+}
 
 //#########################
 //### Main flow
@@ -301,7 +306,7 @@ async function checkNewItems() {
 			for (let i = response.products.length - 1; i >= 0; i--) {
 				if (response.products[i].date > latestProduct) {
 					let note2 = new ScreenNotification();
-					note2.title = "New item(s) detected !";
+					note2.title = "New item detected !";
 					note2.lifespan = 60;
 					if (appSettings.general.newItemNotificationSound)
 						note2.sound = "resource/sound/notification.mp3";
@@ -622,6 +627,12 @@ async function reportfees(event) {
 //Function to receive a message from the website-end and launch an animation
 //if the infinite wheel fix was used.
 window.addEventListener("message", async function (event) {
+	//Do not run the extension if ultraviner is running
+	regex = /^.+?amazon\..+\/vine\/ultraviner.*?$/;
+	if (regex.test(window.location.href)) {
+		return;
+	}
+
 	// We only accept messages from ourselves
 	if (event.source != window) return;
 
@@ -782,6 +793,15 @@ window.addEventListener("message", async function (event) {
 
 //Key binding for navigation
 window.addEventListener("keydown", async function (e) {
+	//Do not run the extension if ultraviner is running
+	regex = /^.+?amazon\..+\/vine\/ultraviner.*?$/;
+	if (regex.test(window.location.href)) {
+		return;
+	}
+	
+	if(!appSettings.general.keyBindings)
+		return false;
+	
 	let nodeName = document.activeElement.nodeName;
 	let excl = ["INPUT", "TEXTAREA", "SELECT", "LI"];
 	if (excl.indexOf(nodeName) == -1) {

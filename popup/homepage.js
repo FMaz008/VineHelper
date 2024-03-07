@@ -216,9 +216,7 @@ function init() {
 		let jsonArrURL = JSON.stringify(arrJSON);
 
 		let url =
-			"https://www.vinehelper.ovh/vinehelper.php" +
-			"?data=" +
-			jsonArrURL;
+			"https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
 		await fetch(url)
 			.then((response) => response.json())
 			.then(async function (serverResponse) {
@@ -279,6 +277,7 @@ function init() {
 	manageCheckboxSetting("general.bookmark");
 	manageCheckboxSetting("general.newItemNotification");
 	manageCheckboxSetting("general.newItemNotificationSound");
+	manageCheckboxSetting("general.keyBindings");
 	manageCheckboxSetting("hiddenTab.active");
 	manageCheckboxSetting("hiddenTab.remote");
 	manageCheckboxSetting("discord.active"); //Handled manually

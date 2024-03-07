@@ -50,6 +50,7 @@ function getDefaultSettings() {
 			versionInfoPopup: 0,
 			firstVotePopup: true,
 			newItemNotification: false,
+			keyBindings: true,
 		},
 
 		hiddenTab: {
@@ -300,7 +301,16 @@ async function getSettings() {
 	showRuntime("PRE: Settings loaded");
 }
 showRuntime("PRE: Begining to load settings");
-getSettings(); //First call to launch the extension.
+
+//Do not run the extension if ultraviner is running
+regex = /^.+?amazon\..+\/vine\/ultraviner.*?$/;
+if (!regex.test(window.location.href)) {
+	getSettings(); //First call to launch the extension.
+} else {
+	console.log(
+		"VineHelper detected UltraViner. Disabling VineHelper on this page."
+	);
+}
 
 //#################################################3
 //### UTILITY FUNCTIONS
