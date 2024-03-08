@@ -298,14 +298,17 @@ function isEmptyObj(obj) {
 	return true;
 }
 
-function saveSettings() {
+async function saveSettings() {
 	try {
 		chrome.storage.local.set({ settings: appSettings });
 	} catch (e) {
 		if (e.name === "QuotaExceededError") {
 			// The local storage space has been exceeded
-			alert("Local storage quota exceeded!");
-			return false;
+			alert(
+				"Local storage quota exceeded! Hidden items will be cleared to make space."
+			);
+			await chrome.storage.local.set({ hiddenItems: [] });
+			saveSettings();
 		} else {
 			// Some other error occurred
 			alert("Error:", e);

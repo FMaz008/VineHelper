@@ -56,7 +56,10 @@ class HiddenListMgr {
 		} catch (e) {
 			if (e.name === "QuotaExceededError") {
 				// The local storage space has been exceeded
-				alert("Local storage quota exceeded!");
+				alert(
+					"Local storage quota exceeded! Hidden items will be cleared to make space."
+				);
+				await chrome.storage.local.set({ hiddenItems: [] });
 				return false;
 			} else {
 				// Some other error occurred
