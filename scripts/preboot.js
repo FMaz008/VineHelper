@@ -117,24 +117,6 @@ async function getSettings() {
 		saveSettings();
 	}
 
-	//v2.0.14: replace the setting general.shareETV and unavailableTab.shareOrder
-	if (
-		appSettings.general.shareETV != undefined &&
-		appSettings.unavailableTab.shareOrder != undefined
-	) {
-		if (
-			appSettings.general.shareETV ||
-			appSettings.unavailableTab.shareOrder
-		) {
-			appSettings.general.shareData = true;
-		} else {
-			appSettings.general.shareData = false;
-		}
-		appSettings.general.shareETV = undefined;
-		appSettings.unavailableTab.shareOrder = undefined;
-		saveSettings();
-	}
-
 	//Load Thorvarium stylesheets
 	if (appSettings.thorvarium.mobileios)
 		loadStyleSheet("lib/vine-styling/mobile/ios-with-bugfix.css");
@@ -183,13 +165,6 @@ async function getSettings() {
 
 	showRuntime("BOOT: Thorvarium stylesheets injected");
 
-	//V1.20 New setting update default value
-	if (appSettings.unavailableTab.votingToolbar == undefined) {
-		appSettings.unavailableTab.votingToolbar =
-			appSettings.unavailableTab.active;
-		saveSettings();
-	}
-
 	//Figure out what domain the extension is working on
 	//De-activate the unavailableTab (and the voting system) for all non-.ca domains.
 	let currentUrl = window.location.href;
@@ -225,6 +200,10 @@ async function getSettings() {
 		case "co.uk":
 			vineLocale = "en-GB";
 			vineCurrency = "GBP";
+			break;
+		case "co.jp":
+			vineLocale = "ja-JP";
+			vineCurrency = "JPY";
 			break;
 		case "de":
 			vineLocale = "de-DE";

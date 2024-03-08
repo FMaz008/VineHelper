@@ -45,6 +45,7 @@
 				"*://*.amazon.de/*",
 				"*://*.amazon.fr/*",
 				"*://*.amazon.co.uk/*",
+				"*://*.amazon.co.jp/*",
 				"*://*.amazon.com/*"
 			]
 		}
@@ -73,6 +74,7 @@
 				"*://*.amazon.es/vine/*",
 				"*://*.amazon.fr/vine/*",
 				"*://*.amazon.co.uk/vine/*",
+				"*://*.amazon.co.jp/vine/*",
 				"*://*.amazon.com/vine/*"
 			],
 			"run_at": "document_end"
@@ -92,6 +94,7 @@
 				"*://*.amazon.es/vine/*",
 				"*://*.amazon.fr/vine/*",
 				"*://*.amazon.co.uk/vine/*",
+				"*://*.amazon.co.jp/vine/*",
 				"*://*.amazon.com/vine/*"
 			],
 			"run_at": "document_start"

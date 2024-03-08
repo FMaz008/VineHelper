@@ -832,13 +832,13 @@ window.addEventListener("keydown", async function (e) {
 		m.content = getRunTimeJSON();
 		m.show();
 	}
-	if (e.key == "r") {
+	if (e.key == "r" || e.key == "q") {
 		window.location.href = "/vine/vine-items?queue=potluck";
 	}
-	if (e.key == "a") {
+	if (e.key == "a" || e.key == "w") {
 		window.location.href = "/vine/vine-items?queue=last_chance";
 	}
-	if (e.key == "i") {
+	if (e.key == "i" || e.key == "e") {
 		window.location.href = "/vine/vine-items?queue=encore";
 	}
 });
