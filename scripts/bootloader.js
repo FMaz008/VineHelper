@@ -798,45 +798,48 @@ window.addEventListener("keydown", async function (e) {
 	if (regex.test(window.location.href)) {
 		return;
 	}
-	
-	if(!appSettings.general.keyBindings)
+
+	if (!appSettings.general.keyBindings) {
 		return false;
-	
+	}
+
+	if (e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) {
+		return false;
+	}
+
 	let nodeName = document.activeElement.nodeName;
 	let excl = ["INPUT", "TEXTAREA", "SELECT", "LI"];
-	if (excl.indexOf(nodeName) == -1) {
-		if (appSettings.hiddenTab.active) {
-			if (e.key == "h") hideAllItems();
-			if (e.key == "s") showAllItems();
-		}
-		if (e.key == "n") {
-			let link = document.querySelector(
-				"ul.a-pagination li:last-child a"
-			);
-			if (link != null) window.location.href = link.href;
-		}
-		if (e.key == "p") {
-			let link = document.querySelector(
-				"ul.a-pagination li:first-child a"
-			);
-			if (link != null) window.location.href = link.href;
-		}
-		if (e.key == "d") {
-			//Display a dialog with the debugging info
-			let m = await DialogMgr.newModal();
-			m.title = "Viner Helper - Debugger";
-			m.content = getRunTimeJSON();
-			m.show();
-		}
-		if (e.key == "r") {
-			window.location.href = "/vine/vine-items?queue=potluck";
-		}
-		if (e.key == "a") {
-			window.location.href = "/vine/vine-items?queue=last_chance";
-		}
-		if (e.key == "i") {
-			window.location.href = "/vine/vine-items?queue=encore";
-		}
+	if (excl.indexOf(nodeName) != -1) {
+		return false;
+	}
+
+	if (appSettings.hiddenTab.active) {
+		if (e.key == "h") hideAllItems();
+		if (e.key == "s") showAllItems();
+	}
+	if (e.key == "n") {
+		let link = document.querySelector("ul.a-pagination li:last-child a");
+		if (link != null) window.location.href = link.href;
+	}
+	if (e.key == "p") {
+		let link = document.querySelector("ul.a-pagination li:first-child a");
+		if (link != null) window.location.href = link.href;
+	}
+	if (e.key == "d") {
+		//Display a dialog with the debugging info
+		let m = await DialogMgr.newModal();
+		m.title = "Viner Helper - Debugger";
+		m.content = getRunTimeJSON();
+		m.show();
+	}
+	if (e.key == "r") {
+		window.location.href = "/vine/vine-items?queue=potluck";
+	}
+	if (e.key == "a") {
+		window.location.href = "/vine/vine-items?queue=last_chance";
+	}
+	if (e.key == "i") {
+		window.location.href = "/vine/vine-items?queue=encore";
 	}
 });
 
