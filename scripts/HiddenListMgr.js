@@ -51,8 +51,19 @@ class HiddenListMgr {
 	}
 
 	async saveList() {
-		await chrome.storage.local.set({ hiddenItems: this.arrHidden });
-
+		try {
+			await chrome.storage.local.set({ hiddenItems: this.arrHidden });
+		} catch (e) {
+			if (e.name === "QuotaExceededError") {
+				// The local storage space has been exceeded
+				alert("Local storage quota exceeded!");
+				return false;
+			} else {
+				// Some other error occurred
+				alert("Error:", e);
+				return false;
+			}
+		}
 		if (appSettings.hiddenTab.remote) {
 			this.notifyServerOfHiddenItem();
 			this.arrChanges = [];
@@ -99,9 +110,7 @@ class HiddenListMgr {
 
 		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
 		let url =
-			"https://www.vinehelper.ovh/vinehelper.php" +
-			"?data=" +
-			jsonArrURL;
+			"https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
 		fetch(url);
 	}
 

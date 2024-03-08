@@ -299,7 +299,19 @@ function isEmptyObj(obj) {
 }
 
 function saveSettings() {
-	chrome.storage.local.set({ settings: appSettings });
+	try {
+		chrome.storage.local.set({ settings: appSettings });
+	} catch (e) {
+		if (e.name === "QuotaExceededError") {
+			// The local storage space has been exceeded
+			alert("Local storage quota exceeded!");
+			return false;
+		} else {
+			// Some other error occurred
+			alert("Error:", e);
+			return false;
+		}
+	}
 
 	let note = new ScreenNotification();
 	note.title = "Settings saved.";
