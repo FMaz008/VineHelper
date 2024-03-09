@@ -297,7 +297,10 @@ async function checkNewItems() {
 
 			for (let i = response.products.length - 1; i >= 0; i--) {
 				//Only display notification for product more recent than the last displayed notification
-				if (response.products[i].date > latestProduct) {
+				if (
+					response.products[i].date > latestProduct ||
+					latestProduct == 0
+				) {
 					//Only display notification for products with a title and image url
 					if (
 						response.products[i].img_url != "" &&
@@ -320,7 +323,7 @@ async function checkNewItems() {
 							"<a href='/dp/" +
 							response.products[i].asin +
 							"' target='_blank'>" +
-							response.products[i].asin +
+							response.products[i].title +
 							"</a>";
 						await Notifications.pushNotification(note2);
 
