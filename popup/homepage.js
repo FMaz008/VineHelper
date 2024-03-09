@@ -393,6 +393,16 @@ function JSONGetPathValue(obj, path) {
 	}
 }
 
+document.getElementById("BTC").addEventListener("click", () => copyToClipboard(document.getElementById("BTC").innerText));
+document.getElementById("ETH").addEventListener("click", () => copyToClipboard(document.getElementById("ETH").innerText));
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text)
+        .then(() => alert("Text copied to clipboard: " + text))
+        .catch((error) => console.error("Error copying text to clipboard:", error));
+}
+
+
 /*
 Does't work in popup window for some reason
 $("a.tips").each(function () {

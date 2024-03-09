@@ -1,77 +1,71 @@
 class ModalElement {
-	overlay = true;
-	title = "";
-	content = "";
-	id = 0;
+    constructor(id) {
+        this.id = id;
+        this.overlay = true;
+        this.title = "";
+        this.content = "";
+    }
 
-	constructor(id) {
-		this.id = id;
-	}
+    async show(template = "view/modal.html") {
+        const modalId = `#modal-${this.id}`;
+        const modal = $(modalId);
 
-	show = async function (template = "view/modal.html") {
-		$("#modal-" + this.id).hide();
+		if (modal.is(":visible")) {
+            this.close();
+			return;
+        }
 
-		await this.getContent(template);
+        await this.getContent(template);
+        await modal.slideDown("slow").promise();
 
-		await $("#modal-" + this.id)
-			.slideDown("slow")
-			.promise();
+        const closeModal = () => this.close();
+        const closeOnKey = (event) => {
+            if (["Escape", " ", "Enter"].includes(event.key)) {
+                closeModal();
+            }
+        };
 
-		//Bind the click events
-		document
-			.querySelectorAll("#modal-" + this.id + " button.modal-ok")
-			.forEach(
-				function (value, key) {
-					value.addEventListener(
-						"click",
-						async function (event) {
-							this.close();
-						}.bind(this)
-					);
-					window.addEventListener(
-						"keydown",
-						function (event) {
-							if (
-								["Escape", " ", "Enter"].indexOf(event.key) !=
-								-1
-							)
-								this.close();
-						}.bind(this)
-					);
-				}.bind(this)
-			);
-	};
+        document
+            .querySelectorAll(`${modalId} button.modal-ok`)
+            .forEach((value) => {
+                value.addEventListener("click", closeModal);
+            });
 
-	async getContent(template = "view/modal.html") {
-		let prom = await Tpl.loadFile(template);
-		Tpl.setIf("overlay", this.overlay);
-		Tpl.setVar("title", this.title);
-		Tpl.setVar("id", this.id);
-		Tpl.setVar("content", this.content);
-		let content = Tpl.render(prom);
-		$("body").append(content);
-	}
+        window.addEventListener("keydown", closeOnKey);
 
-	async close() {
-		$("#overlay-" + this.id).animate({ opacity: "hide" }, 300);
-		await $("#modal-" + this.id)
-			.animate({ opacity: "hide" }, 300)
-			.promise();
+    }
 
-		//document.querySelector("#modal-" + this.id).remove();
-		//document.querySelector("#overlay-" + this.id).remove();
-	}
+    async getContent(template = "view/modal.html") {
+        const prom = await Tpl.loadFile(template);
+        Tpl.setIf("overlay", this.overlay);
+        Tpl.setVar("title", this.title);
+        Tpl.setVar("id", this.id);
+        Tpl.setVar("content", this.content);
+        const content = Tpl.render(prom);
+        $("body").append(content);
+    }
+
+    close() {
+        const modalId = `#modal-${this.id}`;
+        const modal = $(modalId);
+        const overlay = $(`#overlay-${this.id}`);
+
+        modal.animate({ opacity: "hide" }, 300);
+        overlay.animate({ opacity: "hide" }, 300, () => {
+            modal.remove();
+            overlay.remove();
+        });
+    }
 }
 
 class ModalMgr {
-	arrModal = [];
+    constructor() {
+        this.arrModal = [];
+    }
 
-	constructor() {}
-
-	async newModal() {
-		let idx = this.arrModal.length;
-		let m = new ModalElement(idx);
-		this.arrModal.push(m);
-		return m;
-	}
+    newModal(id) {
+        const m = new ModalElement(id);
+        this.arrModal.push(m);
+        return m;
+    }
 }

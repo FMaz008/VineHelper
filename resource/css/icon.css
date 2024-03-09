@@ -166,3 +166,13 @@
 div[role="navigation"] > ul > li {
 	overflow: hidden;
 }
+
+@media (prefers-color-scheme: dark) {
+	.ext-helper-icon-question {
+		filter: invert(1)
+	}
+
+	.ext-helper-icon-request {
+		filter: invert(1)
+	}
+}

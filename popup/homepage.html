@@ -1,497 +1,232 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="utf-8" />
-		<link rel="stylesheet" type="text/css" href="popup.css" />
-		<link
-			rel="stylesheet"
-			type="text/css"
-			href="../resource/css/tabs.css"
-		/>
-		<link
-			rel="stylesheet"
-			type="text/css"
-			href="../resource/css/icon.css"
-		/>
-		<link
-			rel="stylesheet"
-			type="text/css"
-			href="../resource/css/toolbar.css"
-		/>
-	</head>
-	<body>
-		<div class="header">
-			<div class="header-logo ext-helper-icon-logo">
-				<div class="header-text">
-					<h1>
-						Vine Helper <br />
-						<span id="version"></span>
-					</h1>
-				</div>
+
+<head>
+	<meta charset="utf-8" />
+	<link rel="stylesheet" type="text/css" href="popup.css" />
+	<link rel="stylesheet" type="text/css" href="../resource/css/tabs.css" />
+	<link rel="stylesheet" type="text/css" href="../resource/css/icon.css" />
+	<link rel="stylesheet" type="text/css" href="../resource/css/toolbar.css" />
+</head>
+
+<body>
+	<div class="header">
+		<div class="header-logo ext-helper-icon-logo">
+			<div class="header-text">
+				<h1>
+					Vine Helper <br />
+					<span id="version"></span>
+				</h1>
 			</div>
 		</div>
-		<div id="tabs" style="height: auto">
-			<ul>
-				<li class="active"><a href="#tabs-1">General</a></li>
-				<li><a href="#tabs-2">Auto-sorting</a></li>
-				<li><a href="#tabs-3">"Brenda"</a></li>
-				<li><a href="#tabs-4">Styles</a></li>
-				<li><a href="#tabs-5">?</a></li>
-			</ul>
-		</div>
-		<div class="all-options">
-			<div>
-				<div id="tabs-1" class="options">
-					<label for="general.uuid"
-						>UUID:
-						<a
-							href="https://github.com/FMaz008/VineHelper/wiki/Configuration#uuid"
-							target="_blank"
-							class="tips"
-							title="Your unique user ID. If you have multiple devices, you may want to sync them up to the same value."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-question"
-							></div>
-						</a>
-						<input
-							type="password"
-							name="general.uuid"
-							id="general.uuid"
-							value=""
-							size="26"
-							maxlength="36"
-						/>
-						<input type="button" id="saveUUID" value="Save" />
-					</label>
+	</div>
+	<div id="tabs" style="height: auto">
+		<ul>
+			<li class="active"><a href="#tabs-1">General</a></li>
+			<li><a href="#tabs-2">Auto-sorting</a></li>
+			<li><a href="#tabs-3">"Brenda"</a></li>
+			<li><a href="#tabs-4">Styles</a></li>
+			<li><a href="#tabs-5">?</a></li>
+		</ul>
+	</div>
+	<div class="all-options">
+		<div>
+			<div id="tabs-1" class="options">
+				<label for="general.uuid">UUID:
+					<a href="https://github.com/FMaz008/VineHelper/wiki/Configuration#uuid" target="_blank" class="tips"
+						title="Your unique user ID. If you have multiple devices, you may want to sync them up to the same value.">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+					</a>
+					<input type="password" name="general.uuid" id="general.uuid" value="" size="26" maxlength="36" />
+					<input type="button" id="saveUUID" value="Save" />
+				</label>
 
-					<label for="general.topPagination"
-						>Pagination also at the top
-						<a
-							href="#"
-							class="tips"
-							title="This will add a second pagination bar at the top of the listings."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-question"
-							></div>
-						</a>
-						<input
-							type="checkbox"
-							name="general.topPagination"
-							value="1"
-						/>
-					</label>
+				<label for="general.topPagination">Pagination also at the top
+					<a href="#" class="tips" title="This will add a second pagination bar at the top of the listings.">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+					</a>
+					<input type="checkbox" name="general.topPagination" value="1" />
+				</label>
 
-					<label for="general.versionInfoPopup"
-						>Reset template cache
-						<a
-							href="#"
-							class="tips"
-							title="Will reload the templates from their current file and will display the version note popup again, once, on the next page load."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-question"
-							></div>
-						</a>
-						<input
-							type="checkbox"
-							name="general.versionInfoPopup"
-							value="1"
-						/>
-					</label>
+				<label for="general.versionInfoPopup">Reset template cache
+					<a href="#" class="tips"
+						title="Will reload the templates from their current file and will display the version note popup again, once, on the next page load.">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+					</a>
+					<input type="checkbox" name="general.versionInfoPopup" value="1" />
+				</label>
 
-					<label for="hiddenTab.active"
-						>Hidden tab
-						<a
-							href="https://github.com/FMaz008/VineHelper/wiki/Configuration#hidden-tab"
-							target="_blank"
-							class="tips"
-							title="Activate the hidden tab feature, allowing you to move items you are not interested with to a separate tab."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-question"
-							></div>
-						</a>
-						<input
-							type="checkbox"
-							name="hiddenTab.active"
-							value="1"
-						/>
-					</label>
-					<label for="hiddenTab.remote" style="margin-left: 10px"
-						>Store hidden items remotely.
-						<a
-							href="https://github.com/FMaz008/VineHelper/wiki/Configuration#store-hidden-items-remotely"
-							target="_blank"
-							class="tips"
-							title="This feature exchange data to Vine Helper's server, and store the UUID and the ASIN of the hidden items."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-request"
-							></div>
-						</a>
-						<a
-							href="#"
-							class="tips"
-							title="Hidden items will also be stored on the home server under your UUID. If you have multiple devices, use the same UUID accross all devices."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-question"
-							></div>
-						</a>
-						<input
-							type="checkbox"
-							name="hiddenTab.remote"
-							value="1"
-						/>
-					</label>
-					<label for="general.shareData"
-						>Share community data
-						<a
-							href="https://github.com/FMaz008/VineHelper/wiki/ConfigurationGeneral#share-community-data"
-							target="_blank"
-							class="tips"
-							title="This feature submit various data to Vine Helper's server to make the community features work."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-request"
-							></div>
-						</a>
-						<a
-							href="#"
-							class="tips"
-							title="As you are browsing, Vine Helper will relay ETV, order status (ASIN + success or fail) info with Vine Helper's server."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-question"
-							></div>
-						</a>
-						<input
-							type="checkbox"
-							name="general.shareData"
-							value="1"
-						/>
-					</label>
-					<label for="general.keyBindings"
-						>Keyboard shortcuts
-						<a
-							href="https://github.com/FMaz008/VineHelper/wiki/UX#keybindings-keyboard-shortcuts"
-							target="_blank"
-							class="tips"
-							title="Activate the keyboard shortcuts. Click for details."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-question"
-							></div>
-						</a>
-						<input
-							type="checkbox"
-							name="general.keyBindings"
-							value="1"
-						/>
-					</label>
-					<label for="general.displayETV"
-						>Display ETV in toolbar
-						<a
-							href="#"
-							class="tips"
-							title="This feature anonymously exchange data with Vine Helper's server"
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-request"
-							></div>
-						</a>
-						<a
-							href="https://github.com/FMaz008/VineHelper/wiki/ConfigurationGeneral#display-etv-in-toolbar"
-							target="_blank"
-							class="tips"
-							title="Display previously reported ETV values in the toolbar."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-question"
-							></div>
-						</a>
-						<input
-							type="checkbox"
-							name="general.displayETV"
-							value="1"
-						/>
-					</label>
+				<label for="hiddenTab.active">Hidden tab
+					<a href="https://github.com/FMaz008/VineHelper/wiki/Configuration#hidden-tab" target="_blank"
+						class="tips"
+						title="Activate the hidden tab feature, allowing you to move items you are not interested with to a separate tab.">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+					</a>
+					<input type="checkbox" name="hiddenTab.active" value="1" />
+				</label>
+				<label for="hiddenTab.remote" style="margin-left: 10px">Store hidden items remotely.
+					<a href="https://github.com/FMaz008/VineHelper/wiki/Configuration#store-hidden-items-remotely"
+						target="_blank" class="tips"
+						title="This feature exchange data to Vine Helper's server, and store the UUID and the ASIN of the hidden items.">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-request"></div>
+					</a>
+					<a href="#" class="tips"
+						title="Hidden items will also be stored on the home server under your UUID. If you have multiple devices, use the same UUID accross all devices.">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+					</a>
+					<input type="checkbox" name="hiddenTab.remote" value="1" />
+				</label>
+				<label for="general.shareData">Share community data
+					<a href="https://github.com/FMaz008/VineHelper/wiki/ConfigurationGeneral#share-community-data"
+						target="_blank" class="tips"
+						title="This feature submit various data to Vine Helper's server to make the community features work.">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-request"></div>
+					</a>
+					<a href="#" class="tips"
+						title="As you are browsing, Vine Helper will relay ETV, order status (ASIN + success or fail) info with Vine Helper's server.">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+					</a>
+					<input type="checkbox" name="general.shareData" value="1" />
+				</label>
+				<label for="general.keyBindings">Keyboard shortcuts
+					<a href="https://github.com/FMaz008/VineHelper/wiki/UX#keybindings-keyboard-shortcuts"
+						target="_blank" class="tips" title="Activate the keyboard shortcuts. Click for details.">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+					</a>
+					<input type="checkbox" name="general.keyBindings" value="1" />
+				</label>
+				<label for="general.displayETV">Display ETV in toolbar
+					<a href="#" class="tips" title="This feature anonymously exchange data with Vine Helper's server">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-request"></div>
+					</a>
+					<a href="https://github.com/FMaz008/VineHelper/wiki/ConfigurationGeneral#display-etv-in-toolbar"
+						target="_blank" class="tips" title="Display previously reported ETV values in the toolbar.">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+					</a>
+					<input type="checkbox" name="general.displayETV" value="1" />
+				</label>
 
-					<label for="general.displayFirstSeen">
-						Display "First seen" time over the image
-						<a
-							href="https://github.com/FMaz008/VineHelper/wiki/ConfigurationGeneral#display-first-time-seen"
-							target="_blank"
-							class="tips"
-							title="Display the time since that product was first seen by a user."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-question"
-							></div>
-						</a>
-						<input
-							type="checkbox"
-							name="general.displayFirstSeen"
-							value="1"
-						/>
-					</label>
-					<label for="general.bookmark" style="margin-left: 10px">
-						Highlight Recently Added Items
-						<a
-							href="Highlight Recently Added Items"
-							target="_blank"
-							class="tips"
-							title="Highlight items which are newer than when the marker was set. The marker button will be placed next to the search bar."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-question"
-							></div>
-						</a>
-						<input
-							type="checkbox"
-							name="general.bookmark"
-							value="1"
-						/>
-					</label>
+				<label for="general.displayFirstSeen">
+					Display "First seen" time over the image
+					<a href="https://github.com/FMaz008/VineHelper/wiki/ConfigurationGeneral#display-first-time-seen"
+						target="_blank" class="tips"
+						title="Display the time since that product was first seen by a user.">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+					</a>
+					<input type="checkbox" name="general.displayFirstSeen" value="1" />
+				</label>
+				<label for="general.bookmark" style="margin-left: 10px">
+					Highlight Recently Added Items
+					<a href="Highlight Recently Added Items" target="_blank" class="tips"
+						title="Highlight items which are newer than when the marker was set. The marker button will be placed next to the search bar.">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+					</a>
+					<input type="checkbox" name="general.bookmark" value="1" />
+				</label>
 
-					<label for="general.newItemNotification"
-						>Notify me when new items are reported
-						<a
-							href="#"
-							class="tips"
-							title="This feature anonymously exchange data with Vine Helper's server"
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-request"
-							></div>
-						</a>
-						<a
-							href="#"
-							class="tips"
-							title="When a new item is reported to the Home server, show & play a notification sound to let you know to refresh your page. Note: False positives will occur when RFY or gold status items are reported."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-question"
-							></div>
-						</a>
-						<input
-							type="checkbox"
-							name="general.newItemNotification"
-							value="1"
-						/>
-					</label>
-					<label
-						for="general.newItemNotificationSound"
-						style="margin-left: 10px"
-						>Item notifications with sound
-						<a
-							href="#"
-							class="tips"
-							title="Play a notification sound when new items are reported."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-question"
-							></div>
-						</a>
-						<input
-							type="checkbox"
-							name="general.newItemNotificationSound"
-							value="1"
-						/>
-					</label>
-					<label for="general.displayVariantIcon"
-						>Display variant icon over the image
-						<a
-							href="https://github.com/FMaz008/VineHelper/wiki/ConfigurationGeneral#display-variant-icon-over-the-image"
-							target="none"
-							class="tips"
-							title="If a product has variants, display a small icon in the bottom right of the product image"
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-question"
-							></div>
-						</a>
-						<input
-							type="checkbox"
-							name="general.displayVariantIcon"
-							value="1"
-						/>
-					</label>
+				<label for="general.newItemNotification">Notify me when new items are reported
+					<a href="#" class="tips" title="This feature anonymously exchange data with Vine Helper's server">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-request"></div>
+					</a>
+					<a href="#" class="tips"
+						title="When a new item is reported to the Home server, show & play a notification sound to let you know to refresh your page. Note: False positives will occur when RFY or gold status items are reported.">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+					</a>
+					<input type="checkbox" name="general.newItemNotification" value="1" />
+				</label>
+				<label for="general.newItemNotificationSound" style="margin-left: 10px">Item notifications with sound
+					<a href="#" class="tips" title="Play a notification sound when new items are reported.">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+					</a>
+					<input type="checkbox" name="general.newItemNotificationSound" value="1" />
+				</label>
+				<label for="general.displayVariantIcon">Display variant icon over the image
+					<a href="https://github.com/FMaz008/VineHelper/wiki/ConfigurationGeneral#display-variant-icon-over-the-image"
+						target="none" class="tips"
+						title="If a product has variants, display a small icon in the bottom right of the product image">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+					</a>
+					<input type="checkbox" name="general.displayVariantIcon" value="1" />
+				</label>
+			</div>
+			<div id="tabs-2" class="options">
+				<label for="unavailableTab.active">Order confirmation system:
+					<a href="#" class="tips" title="This feature exchange data with Vine Helper's server.">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-request"></div>
+					</a>
+					<a href="https://github.com/FMaz008/VineHelper/wiki/ConfigurationAutoSorting#order-confirmation-system"
+						target="_blank" class="tips"
+						title="Display if an item was ordered by others. If order(s) were unsuccessful, move the item to the unavailable tab.">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+					</a>
+					<input type="checkbox" name="unavailableTab.active" value="1" />
+				</label>
+				<label for="unavailableTab.compactToolbar">Compact toolbar
+					<a href="https://github.com/FMaz008/VineHelper/wiki/ConfigurationAutoSorting#compact-toolbar"
+						target="_blank" class="tips"
+						title="Make the toolbar smaller and compatible with Thorvarium SmallItems & mobile stylesheet.">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+					</a>
+					<input type="checkbox" name="unavailableTab.compactToolbar" value="1" />
+				</label>
+				<div class="subheader">
+					Voting toolbar (Canada/Mainland UK):
 				</div>
-				<div id="tabs-2" class="options">
-					<label for="unavailableTab.active"
-						>Order confirmation system:
-						<a
-							href="#"
-							class="tips"
-							title="This feature exchange data with Vine Helper's server."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-request"
-							></div>
+				<label for="unavailableTab.votingToolbar">Enable voting toolbar before orders
+					<a href="#" class="tips"
+						title="This feature exchange data with Vine Helper's server: ASIN of the item ordered, if the order was a success or gave an error, an md5 hash of your IP will be stored on the server.">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-request"></div>
+					</a>
+					<a href="https://github.com/FMaz008/VineHelper/wiki/ConfigurationAutoSorting#voting-system-ca-and-couk-only"
+						target="_blank" class="tips"
+						title="Display and allow to cast votes on items wether they have import fees or not.">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+					</a>
+					<input type="checkbox" name="unavailableTab.votingToolbar" value="1" />
+				</label>
+				<div id="votingToolbarOptions">
+					<label for="unavailableTab.selfDiscard">Discard the items I voted "with fees".
+						<a href="#" class="tips"
+							title="Immediately discard the items I vote as unavailable, regardless of the votes concensus.">
+							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
 						</a>
-						<a
-							href="https://github.com/FMaz008/VineHelper/wiki/ConfigurationAutoSorting#order-confirmation-system"
-							target="_blank"
-							class="tips"
-							title="Display if an item was ordered by others. If order(s) were unsuccessful, move the item to the unavailable tab."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-question"
-							></div>
-						</a>
-						<input
-							type="checkbox"
-							name="unavailableTab.active"
-							value="1"
-						/>
+						<input type="checkbox" name="unavailableTab.selfDiscard" value="1" />
 					</label>
-					<label for="unavailableTab.compactToolbar"
-						>Compact toolbar
-						<a
-							href="https://github.com/FMaz008/VineHelper/wiki/ConfigurationAutoSorting#compact-toolbar"
-							target="_blank"
-							class="tips"
-							title="Make the toolbar smaller and compatible with Thorvarium SmallItems & mobile stylesheet."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-question"
-							></div>
+
+					<label for="unavailableTab.consensusDiscard">Discard the items with a "No" concensus
+						<a href="#" class="tips"
+							title="Discard the items which have a voting consensus of being unavailable.">
+							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
 						</a>
-						<input
-							type="checkbox"
-							name="unavailableTab.compactToolbar"
-							value="1"
-						/>
+						<input type="checkbox" name="unavailableTab.consensusDiscard" value="1" />
 					</label>
-					<div class="subheader">
-						Voting toolbar (Canada/Mainland UK):
+
+					<label for="general.firstVotePopup">Show first vote popup
+						<a href="#" class="tips"
+							title="Will display the popup following the first vote again, once, on the next vote.">
+							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+						</a>
+						<input type="checkbox" name="general.firstVotePopup" value="1" />
+					</label>
+
+					<div class="expand">
+						Consensus Threshold:
+						<input type="text" id="unavailableTab.consensusThreshold" value="" size="1" maxlength="1" />
+						votes majority.
+						<a href="#" class="tips"
+							title="How much of a vote majority is required for a consensus to be reached regarding an item availability.">
+							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+						</a>
+						<br />
+						Unavailable items opacity:
+						<input type="text" id="unavailableTab.unavailableOpacity" value="" size="3" maxlength="3" />
+						%.
+						<a href="#" class="tips" title="Reduce the opacity of items marked as unavailable.">
+							<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+						</a>
 					</div>
-					<label for="unavailableTab.votingToolbar"
-						>Enable voting toolbar before orders
-						<a
-							href="#"
-							class="tips"
-							title="This feature exchange data with Vine Helper's server: ASIN of the item ordered, if the order was a success or gave an error, an md5 hash of your IP will be stored on the server."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-request"
-							></div>
-						</a>
-						<a
-							href="https://github.com/FMaz008/VineHelper/wiki/ConfigurationAutoSorting#voting-system-ca-and-couk-only"
-							target="_blank"
-							class="tips"
-							title="Display and allow to cast votes on items wether they have import fees or not."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-question"
-							></div>
-						</a>
-						<input
-							type="checkbox"
-							name="unavailableTab.votingToolbar"
-							value="1"
-						/>
-					</label>
-					<div id="votingToolbarOptions">
-						<label for="unavailableTab.selfDiscard"
-							>Discard the items I voted "with fees".
-							<a
-								href="#"
-								class="tips"
-								title="Immediately discard the items I vote as unavailable, regardless of the votes concensus."
-							>
-								<div
-									class="ext-helper-toolbar-icon ext-helper-icon-question"
-								></div>
-							</a>
-							<input
-								type="checkbox"
-								name="unavailableTab.selfDiscard"
-								value="1"
-							/>
-						</label>
-
-						<label for="unavailableTab.consensusDiscard"
-							>Discard the items with a "No" concensus
-							<a
-								href="#"
-								class="tips"
-								title="Discard the items which have a voting consensus of being unavailable."
-							>
-								<div
-									class="ext-helper-toolbar-icon ext-helper-icon-question"
-								></div>
-							</a>
-							<input
-								type="checkbox"
-								name="unavailableTab.consensusDiscard"
-								value="1"
-							/>
-						</label>
-
-						<label for="general.firstVotePopup"
-							>Show first vote popup
-							<a
-								href="#"
-								class="tips"
-								title="Will display the popup following the first vote again, once, on the next vote."
-							>
-								<div
-									class="ext-helper-toolbar-icon ext-helper-icon-question"
-								></div>
-							</a>
-							<input
-								type="checkbox"
-								name="general.firstVotePopup"
-								value="1"
-							/>
-						</label>
-
-						<div class="expand">
-							Consensus Threshold:
-							<input
-								type="text"
-								id="unavailableTab.consensusThreshold"
-								value=""
-								size="1"
-								maxlength="1"
-							/>
-							votes majority.
-							<a
-								href="#"
-								class="tips"
-								title="How much of a vote majority is required for a consensus to be reached regarding an item availability."
-							>
-								<div
-									class="ext-helper-toolbar-icon ext-helper-icon-question"
-								></div>
-							</a>
-							<br />
-							Unavailable items opacity:
-							<input
-								type="text"
-								id="unavailableTab.unavailableOpacity"
-								value=""
-								size="3"
-								maxlength="3"
-							/>
-							%.
-							<a
-								href="#"
-								class="tips"
-								title="Reduce the opacity of items marked as unavailable."
-							>
-								<div
-									class="ext-helper-toolbar-icon ext-helper-icon-question"
-								></div>
-							</a>
-						</div>
-					</div>
-					<!--
+				</div>
+				<!--
 					<div class="summary">
 						You currently have <span id="votes" class="number">?</span> active votes,
 						contributing to <span id="contribution" class="number">? %</span> of the community votes.
@@ -514,346 +249,200 @@
 							</em></span>
 					</div>
 					-->
-				</div>
-				<div id="tabs-3" class="options">
-					<label for="discord.active"
-						>Share items with Brenda (US/Canada/UK)
-						<a
-							href="#"
-							class="tips"
-							title="This feature exchange data (API token, country, queue, asin, etv, etc.) with the Brenda API server for Discord."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-request"
-							></div>
-						</a>
-						<a
-							href="https://github.com/FMaz008/VineHelper/wiki/ConfigurationBrenda"
-							target="_blank"
-							class="tips"
-							title="VineHelper is compatible with the (non-official) AmazonVine discord server Brenda bot. By joining the server and linking your account, you will be able to suggest products to be recommended by the bot to the users of your country."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-question"
-							></div>
-						</a>
-						<input
-							type="checkbox"
-							name="discord.active"
-							value="1"
-						/>
-					</label>
-					<div id="discordOptions">
-						<div id="discord-guid-link">
-							<label>Step 1. Join the Discord server:</label>
-							<div class="padded">
-								<br /><a
-									href="https://discord.gg/amazonvine"
-									target="_blank"
-									>https://discord.gg/amazonvine</a
-								>
-								<br />
-								<br />
-							</div>
-							<label>Step 2. Obtain your GUID</label>
-							<div class="padded">
-								<ul>
-									<li>
-										Go to any channel on the server and type
-										the command:
-										<br /><span style="font-weight: bold"
-											>/api-token</span
-										>
-									</li>
-									<li>
-										The Karen bot will reply with an API key
-									</li>
-									<li>
-										Copy&amp;paste the API Key in step 3.
-									</li>
-								</ul>
-								<br />
-							</div>
-							<label>Step 3. Link your GUID:</label>
-							<div class="padded">
-								<br />API Token:
-								<input
-									type="text"
-									id="discord.guid"
-									value=""
-									size="30"
-									maxlength="50"
-								/>
-								<input
-									type="button"
-									id="saveGUID"
-									value="Link"
-								/>
-							</div>
+			</div>
+			<div id="tabs-3" class="options">
+				<label for="discord.active">Share items with Brenda (US/Canada/UK)
+					<a href="#" class="tips"
+						title="This feature exchange data (API token, country, queue, asin, etv, etc.) with the Brenda API server for Discord.">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-request"></div>
+					</a>
+					<a href="https://github.com/FMaz008/VineHelper/wiki/ConfigurationBrenda" target="_blank"
+						class="tips"
+						title="VineHelper is compatible with the (non-official) AmazonVine discord server Brenda bot. By joining the server and linking your account, you will be able to suggest products to be recommended by the bot to the users of your country.">
+						<div class="ext-helper-toolbar-icon ext-helper-icon-question"></div>
+					</a>
+					<input type="checkbox" name="discord.active" value="1" />
+				</label>
+				<div id="discordOptions">
+					<div id="discord-guid-link">
+						<label>Step 1. Join the Discord server:</label>
+						<div class="padded">
+							<br /><a href="https://discord.gg/amazonvine"
+								target="_blank">https://discord.gg/amazonvine</a>
+							<br />
+							<br />
 						</div>
-						<div id="discord-guid-unlink">
-							<div class="padded">
-								<label
-									>You already linked your Discord
-									account!</label
-								>
-								<br />API Token:
-								<span
-									id="guid-txt"
-									style="word-wrap: break-word"
-								></span>
-								<input
-									type="button"
-									id="unlinkGUID"
-									value="Unlink"
-								/>
-							</div>
+						<label>Step 2. Obtain your GUID</label>
+						<div class="padded">
+							<ul>
+								<li>
+									Go to any channel on the server and type
+									the command:
+									<br /><span style="font-weight: bold">/api-token</span>
+								</li>
+								<li>
+									The Karen bot will reply with an API key
+								</li>
+								<li>
+									Copy&amp;paste the API Key in step 3.
+								</li>
+							</ul>
+							<br />
+						</div>
+						<label>Step 3. Link your GUID:</label>
+						<div class="padded">
+							<br />API Token:
+							<input type="text" id="discord.guid" value="" size="30" maxlength="50" />
+							<input type="button" id="saveGUID" value="Link" />
 						</div>
 					</div>
-				</div>
-				<div id="tabs-4" class="options">
-					<div class="subheader">Mobile stylesheets:</div>
-					<label for="thorvarium.mobileios"
-						>ios-with-bugfix.css (for iOs) (Tip: enable compact
-						toolbar)
-						<input
-							type="checkbox"
-							name="thorvarium.mobileios"
-							value="1"
-						/>
-					</label>
-					<label for="thorvarium.mobileandroid"
-						>mobile.css (for Android) (Tip: enable compact toolbar)
-						<input
-							type="checkbox"
-							name="thorvarium.mobileandroid"
-							value="1"
-						/>
-					</label>
-					<div class="subheader">Desktop stylesheets:</div>
-					<label for="thorvarium.smallItems"
-						>small-items.css (Tip: enable compact toolbar)
-						<input
-							type="checkbox"
-							name="thorvarium.smallItems"
-							value="1"
-						/>
-					</label>
-
-					<label for="thorvarium.removeHeader"
-						>remove-header.css
-						<input
-							type="checkbox"
-							name="thorvarium.removeHeader"
-							value="1"
-						/>
-					</label>
-
-					<label for="thorvarium.removeFooter"
-						>remove-footer.css
-						<input
-							type="checkbox"
-							name="thorvarium.removeFooter"
-							value="1"
-						/>
-					</label>
-
-					<label for="thorvarium.removeAssociateHeader"
-						>remove-associate-header.css
-						<input
-							type="checkbox"
-							name="thorvarium.removeAssociateHeader"
-							value="1"
-						/>
-					</label>
-
-					<label for="thorvarium.moreDescriptionText"
-						>more-description-text.css
-						<input
-							type="checkbox"
-							name="thorvarium.moreDescriptionText"
-							value="1"
-						/>
-					</label>
-
-					<label for="thorvarium.ETVModalOnTop"
-						>etv-modal-on-top.css
-						<input
-							type="checkbox"
-							name="thorvarium.ETVModalOnTop"
-							value="1"
-						/>
-					</label>
-
-					<label for="thorvarium.darktheme"
-						>dark-theme.css
-						<input
-							type="checkbox"
-							name="thorvarium.darktheme"
-							value="1"
-						/>
-					</label>
-
-					<label for="thorvarium.categoriesWithEmojis"
-						>categories-with-emojis.css
-						<input
-							type="checkbox"
-							name="thorvarium.categoriesWithEmojis"
-							value="1"
-						/>
-					</label>
-
-					<label for="thorvarium.paginationOnTop"
-						>pagination-on-top.css (Tip: activate
-						rfy-afa-ai-tabs.css)
-						<input
-							type="checkbox"
-							name="thorvarium.paginationOnTop"
-							value="1"
-						/>
-					</label>
-
-					<label for="thorvarium.collapsableCategories"
-						>collapsable-categories.css
-						<input
-							type="checkbox"
-							name="thorvarium.collapsableCategories"
-							value="1"
-						/>
-					</label>
-
-					<label for="thorvarium.stripedCategories"
-						>striped-categories.css
-						<input
-							type="checkbox"
-							name="thorvarium.stripedCategories"
-							value="1"
-						/>
-					</label>
-
-					<label for="thorvarium.limitedQuantityIcon"
-						>limited-quantity-icon.css
-						<input
-							type="checkbox"
-							name="thorvarium.limitedQuantityIcon"
-							value="1"
-						/>
-					</label>
-
-					<label for="thorvarium.RFYAFAAITabs"
-						>rfy-afa-ai-tabs.css
-						<input
-							type="checkbox"
-							name="thorvarium.RFYAFAAITabs"
-							value="1"
-						/>
-					</label>
-				</div>
-				<div id="tabs-5" class="options">
-					<div class="padded">
-						<h3>Mission</h3>
-						<p>
-							Vine Helper's mission is to improve the user
-							experience of Vine users accross the world. Doing so
-							in an ethical manner that complies with the
-							Conditions of Use or both Amazon and Vine.
-						</p>
-
-						<h3>Support</h3>
-						<p>
-							Vine Helper is totally free and made out of passion.
-							Donations will <strong>not</strong> grant you
-							anything more in term of feature or access. While
-							donations help covering server costs, you should
-							consider it as tipping. Thank you so much for using
-							Vine Helper and for your consideration.
-						</p>
-						<form
-							action="https://www.paypal.com/donate"
-							method="post"
-							target="_blank"
-						>
-							<input
-								type="hidden"
-								name="hosted_button_id"
-								value="MMS5MYRDRALBG"
-							/>
-							<input
-								type="image"
-								src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif"
-								border="0"
-								name="submit"
-								title="PayPal - The safer, easier way to pay online!"
-								alt="Donate with PayPal button"
-							/>
-							<img
-								alt=""
-								border="0"
-								src="https://www.paypal.com/en_US/i/scr/pixel.gif"
-								width="1"
-								height="1"
-							/>
-						</form>
-
-						<br /><strong>BTC:</strong>
-						bc1q0f82vk79u7hzxcrqe6q2levzvhdrqe72fm5w8z <br /><strong
-							>ETH:</strong
-						>
-						0xF5b68799b43C358E0A54482f0D8445DFBEA9BDF1
-
-						<h3>Resources</h3>
-						<ul>
-							<li>
-								<a
-									href="https://discord.gg/amazonvine"
-									target="_blank"
-									>(unofficial) Amazon Vine Discord Server</a
-								>
-							</li>
-							<li>
-								<a
-									href="https://github.com/FMaz008/VineHelper"
-									target="_blank"
-									>Vine Helper GitHub</a
-								>
-							</li>
-							<li>
-								<a
-									href="https://github.com/Thorvarium/vine-styling"
-									target="_blank"
-									>Thorvarium styling GitHub</a
-								>
-							</li>
-						</ul>
-
-						<h3>Mandatory licencing attributions</h3>
-						<ul>
-							<li>
-								<a
-									href="https://www.flaticon.com/free-icons/good"
-									title="good icons"
-									target="_blank"
-									>Good icons created by Freepik - Flaticon</a
-								>
-							</li>
-							<li>
-								Designed by Freepik -
-								<a href="www.freepik.com" target="_blank"
-									>www.freepik.com</a
-								>
-							</li>
-							<li>
-								<a
-									href="https://github.com/Thorvarium/vine-styling"
-									target="_blank"
-									>Thorvarium styling GitHub</a
-								>
-							</li>
-						</ul>
+					<div id="discord-guid-unlink">
+						<div class="padded">
+							<label>You already linked your Discord
+								account!</label>
+							<br />API Token:
+							<span id="guid-txt" style="word-wrap: break-word"></span>
+							<input type="button" id="unlinkGUID" value="Unlink" />
+						</div>
 					</div>
 				</div>
 			</div>
+			<div id="tabs-4" class="options">
+				<div class="subheader">Mobile stylesheets:</div>
+				<label for="thorvarium.mobileios">ios-with-bugfix.css (for iOs) (Tip: enable compact
+					toolbar)
+					<input type="checkbox" name="thorvarium.mobileios" value="1" />
+				</label>
+				<label for="thorvarium.mobileandroid">mobile.css (for Android) (Tip: enable compact toolbar)
+					<input type="checkbox" name="thorvarium.mobileandroid" value="1" />
+				</label>
+				<div class="subheader">Desktop stylesheets:</div>
+				<label for="thorvarium.smallItems">small-items.css (Tip: enable compact toolbar)
+					<input type="checkbox" name="thorvarium.smallItems" value="1" />
+				</label>
+
+				<label for="thorvarium.removeHeader">remove-header.css
+					<input type="checkbox" name="thorvarium.removeHeader" value="1" />
+				</label>
+
+				<label for="thorvarium.removeFooter">remove-footer.css
+					<input type="checkbox" name="thorvarium.removeFooter" value="1" />
+				</label>
+
+				<label for="thorvarium.removeAssociateHeader">remove-associate-header.css
+					<input type="checkbox" name="thorvarium.removeAssociateHeader" value="1" />
+				</label>
+
+				<label for="thorvarium.moreDescriptionText">more-description-text.css
+					<input type="checkbox" name="thorvarium.moreDescriptionText" value="1" />
+				</label>
+
+				<label for="thorvarium.ETVModalOnTop">etv-modal-on-top.css
+					<input type="checkbox" name="thorvarium.ETVModalOnTop" value="1" />
+				</label>
+
+				<label for="thorvarium.darktheme">dark-theme.css
+					<input type="checkbox" name="thorvarium.darktheme" value="1" />
+				</label>
+
+				<label for="thorvarium.categoriesWithEmojis">categories-with-emojis.css
+					<input type="checkbox" name="thorvarium.categoriesWithEmojis" value="1" />
+				</label>
+
+				<label for="thorvarium.paginationOnTop">pagination-on-top.css (Tip: activate
+					rfy-afa-ai-tabs.css)
+					<input type="checkbox" name="thorvarium.paginationOnTop" value="1" />
+				</label>
+
+				<label for="thorvarium.collapsableCategories">collapsable-categories.css
+					<input type="checkbox" name="thorvarium.collapsableCategories" value="1" />
+				</label>
+
+				<label for="thorvarium.stripedCategories">striped-categories.css
+					<input type="checkbox" name="thorvarium.stripedCategories" value="1" />
+				</label>
+
+				<label for="thorvarium.limitedQuantityIcon">limited-quantity-icon.css
+					<input type="checkbox" name="thorvarium.limitedQuantityIcon" value="1" />
+				</label>
+
+				<label for="thorvarium.RFYAFAAITabs">rfy-afa-ai-tabs.css
+					<input type="checkbox" name="thorvarium.RFYAFAAITabs" value="1" />
+				</label>
+			</div>
+			<div id="tabs-5" class="options">
+				<div class="padded">
+					<h3>Mission</h3>
+					<p>
+						Vine Helper's mission is to improve the user
+						experience of Vine users accross the world. Doing so
+						in an ethical manner that complies with the
+						Conditions of Use or both Amazon and Vine.
+					</p>
+
+					<h3>Support</h3>
+					<p>
+						Vine Helper is totally free and made out of passion.
+						Donations will <strong>not</strong> grant you
+						anything more in term of feature or access. While
+						donations help covering server costs, you should
+						consider it as tipping. Thank you so much for using
+						Vine Helper and for your consideration.
+					</p>
+					<form action="https://www.paypal.com/donate" method="post" target="_blank">
+						<input type="hidden" name="hosted_button_id" value="MMS5MYRDRALBG" />
+						<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0"
+							name="submit" title="PayPal - The safer, easier way to pay online!"
+							alt="Donate with PayPal button" />
+						<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1"
+							height="1" />
+					</form>
+
+					<div class="crypto-addresses">
+						<strong>BTC:</strong>
+						<span id="BTC" aria-label="Click to Copy BTC address">
+							bc1q0f82vk79u7hzxcrqe6q2levzvhdrqe72fm5w8z
+						</span>
+						<br />
+						<strong>ETH:</strong>
+						<span id="ETH" aria-label="Click to Copy ETH address">
+							0xF5b68799b43C358E0A54482f0D8445DFBEA9BDF1</span>
+					</div>
+					<h3>Resources</h3>
+					<ul>
+						<li>
+							<a href="https://discord.gg/amazonvine" target="_blank">(unofficial) Amazon Vine Discord
+								Server</a>
+						</li>
+						<li>
+							<a href="https://github.com/FMaz008/VineHelper" target="_blank">Vine Helper GitHub</a>
+						</li>
+						<li>
+							<a href="https://github.com/Thorvarium/vine-styling" target="_blank">Thorvarium styling
+								GitHub</a>
+						</li>
+					</ul>
+
+					<h3>Mandatory licencing attributions</h3>
+					<ul>
+						<li>
+							<a href="https://www.flaticon.com/free-icons/good" title="good icons" target="_blank">Good
+								icons created by Freepik - Flaticon</a>
+						</li>
+						<li>
+							Designed by Freepik -
+							<a href="https://www.freepik.com" target="_blank">www.freepik.com</a>
+						</li>
+						<li>
+							<a href="https://github.com/Thorvarium/vine-styling" target="_blank">Thorvarium styling
+								GitHub</a>
+						</li>
+					</ul>
+				</div>
+			</div>
 		</div>
-		<script src="homepage.js"></script>
-	</body>
+	</div>
+	<script src="homepage.js"></script>
+</body>
+
 </html>

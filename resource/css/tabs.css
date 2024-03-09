@@ -27,7 +27,7 @@
 
 #tabs > ul > li.active {
 	background-color: #ccc;
-	border-bottom: 1px solid #ccc;
+	border: 1px solid #ccc;
 }
 
 #tabs > ul > li > a {
