@@ -146,14 +146,19 @@ label .tips {
 #tabs-1 label {
 	height: calc(100% / 13);
 }
-#tabs-2 label {
-	height: 30px;
+#tabs-2 label,
+#tabs-3 label {
+	height: 20px;
 }
+
 #tabs-4 label {
+	height: calc(100% / 9);
+}
+#tabs-5 label {
 	height: calc(100% / 15);
 }
 
-#tabs-5 {
+#tabs-6 {
 	background-color: #eee;
 }
 

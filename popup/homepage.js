@@ -60,38 +60,6 @@ async function drawUnavailableTab() {
 		.unavailableTab.votingToolbar
 		? "block"
 		: "none";
-
-	if (appSettings.unavailableTab.votingToolbar) {
-		/*
-        //Obtain contribution statistics
-        let url = "https://www.vinehelper.ovh/vinehelperStats.php";
-        fetch(url)
-            .then((response) => response.json())
-            .then(serverResponse)
-            .catch((error) => console.log(error));
-
-        function serverResponse(data) {
-            let percentage = (data["votes"] * 100) / data["totalVotes"];
-			let reliability = 0;
-			
-			if(data["reviewedVotes"] > 0)
-				reliability = (data["concensusBackedVotes"] * 100) / data["reviewedVotes"];
-				
-			
-            document.querySelector("#votes").innerText= data["votes"];
-            document.querySelector("#contribution").innerText= percentage.toFixed(3) + "%";
-            document.querySelector("#rank").innerText= "#" + data["rank"];
-            document.querySelector("#available").innerText= data["totalConfirmed"];
-            document.querySelector("#unavailable").innerText= data["totalDiscarded"];
-            document.querySelector("#totalUsers").innerText= data["totalUsers"];
-            document.querySelector("#totalVotes").innerText= data["totalVotes"];
-            document.querySelector("#totalProducts").innerText= data["totalProducts"];
-            document.querySelector("#reviewedVotes").innerText= data["reviewedVotes"];
-            document.querySelector("#concensusBackedVotes").innerText= data["concensusBackedVotes"];
-            document.querySelector("#reliability").innerText= reliability.toFixed(1) + "%";
-        }
-        */
-	}
 }
 
 async function drawDiscord() {
@@ -130,6 +98,22 @@ function selectCurrentTab(firstRun = false) {
 	document.querySelector("#" + currentTab).style.display = "flex";
 }
 function init() {
+	//Factory reset
+	document
+		.getElementById("factoryReset")
+		.addEventListener("click", async function () {
+			if (
+				confirm(
+					"Reset all Vine Helper settings & local storage to default?"
+				)
+			) {
+				await chrome.storage.local.clear();
+				alert(
+					"All settings were deleted. Reload Amazon Vine to restaure default settings."
+				);
+			}
+		});
+
 	//Bind the click event for the tabs
 	document.querySelectorAll("#tabs > ul li").forEach(function (item) {
 		item.onclick = function (event) {
