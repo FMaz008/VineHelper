@@ -60,6 +60,7 @@ function getDefaultSettings() {
 			AIPage: "i",
 			hideAll: "h",
 			showAll: "s",
+			debug: "d",
 		},
 
 		hiddenTab: {
@@ -128,6 +129,7 @@ async function getSettings() {
 		appSettings.keyBindings.AIPage = "i";
 		appSettings.keyBindings.hideAll = "h";
 		appSettings.keyBindings.showAll = "s";
+		appSettings.keyBindings.debug = "d";
 		appSettings.general.keyBindings = undefined;
 		saveSettings();
 	}
