@@ -267,6 +267,29 @@ function init() {
 		document.querySelector("#discord-guid-unlink").style.display = "none";
 	};
 
+	document.getElementById("copyBTC").addEventListener("click", function () {
+		navigator.clipboard
+			.writeText("bc1q0f82vk79u7hzxcrqe6q2levzvhdrqe72fm5w8z")
+			.then(() => {
+				// Alert the user that the text has been copied
+				alert("BTC address copied to clipboard: ");
+			})
+			.catch((err) => {
+				console.error("Failed to copy: ", err);
+			});
+	});
+	document.getElementById("copyETH").addEventListener("click", function () {
+		navigator.clipboard
+			.writeText("0xF5b68799b43C358E0A54482f0D8445DFBEA9BDF1")
+			.then(() => {
+				// Alert the user that the text has been copied
+				alert("ETH address copied to clipboard");
+			})
+			.catch((err) => {
+				console.error("Failed to copy: ", err);
+			});
+	});
+
 	manageCheckboxSetting("general.topPagination");
 	manageCheckboxSetting("general.versionInfoPopup", false);
 	manageCheckboxSetting("general.firstVotePopup");
