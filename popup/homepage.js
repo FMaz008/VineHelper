@@ -293,7 +293,6 @@ function init() {
 	manageCheckboxSetting("general.topPagination");
 	manageCheckboxSetting("general.versionInfoPopup", false);
 	manageCheckboxSetting("general.firstVotePopup");
-	manageCheckboxSetting("general.shareData");
 	manageCheckboxSetting("general.displayETV");
 	manageCheckboxSetting("general.displayVariantIcon");
 	manageCheckboxSetting("general.displayFirstSeen");

@@ -42,7 +42,6 @@ function getDefaultSettings() {
 		general: {
 			uuid: null,
 			topPagination: true,
-			shareData: true,
 			displayFirstSeen: true,
 			bookmark: false,
 			bookmarkDate: 0,

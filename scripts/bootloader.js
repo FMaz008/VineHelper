@@ -60,20 +60,12 @@ async function init() {
 }
 
 function initFetchProductData() {
-	//Only contact the home server is necessary
-	if (
-		appSettings.unavailableTab.active || //Order confirmation system
-		appSettings.unavailableTab.votingToolbar || //Voting system
-		appSettings.general.displayETV || //ETV
-		appSettings.general.displayFirstSeen || //Display first seen
-		appSettings.general.bookmark || //Highlight new items
-		appSettings.general.shareData //Share data (url+thumbnail)
-	) {
-		fetchProductsData(getAllAsin()); //Obtain the data to fill the toolbars with it.
+	fetchProductsData(getAllAsin()); //Obtain the data to fill the toolbars with it.
 
-		if (appSettings.general.newItemNotification) {
+	if (appSettings.general.newItemNotification) {
+		setTimeout(function () {
 			checkNewItems();
-		}
+		}, 10000);
 	}
 }
 
@@ -436,10 +428,8 @@ function fetchProductsData(arrUrl) {
 	let url =
 		"https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
 
-	let content = {};
-	if (appSettings.general.shareData) {
-		let content = getAllProductData();
-	}
+	let content = getAllProductData();
+
 	fetch(url, {
 		method: "POST",
 		headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -666,11 +656,7 @@ window.addEventListener("message", async function (event) {
 	}
 
 	//If we got back a message after we found an ETV.
-	if (
-		appSettings.general.shareData &&
-		event.data.type &&
-		event.data.type == "etv"
-	) {
+	if (event.data.type && event.data.type == "etv") {
 		//Send the ETV info to the server
 
 		let tileASIN;
@@ -726,36 +712,34 @@ window.addEventListener("message", async function (event) {
 			tileASIN = event.data.data.parent_asin;
 		}
 
-		if (appSettings.general.shareData) {
-			if (
-				event.data.data.status == "success" ||
-				event.data.data.error == "CROSS_BORDER_SHIPMENT" ||
-				event.data.data.error == "ITEM_NOT_IN_ENROLLMENT"
-			) {
-				//Report the order status to the server
-				let arrJSON = {
-					api_version: 4,
-					action: "report_order",
-					country: vineCountry,
-					uuid: uuid,
-					asin: event.data.data.asin,
-					parent_asin: event.data.data.parent_asin,
-					order_status: event.data.data.status,
-				};
+		if (
+			event.data.data.status == "success" ||
+			event.data.data.error == "CROSS_BORDER_SHIPMENT" ||
+			event.data.data.error == "ITEM_NOT_IN_ENROLLMENT"
+		) {
+			//Report the order status to the server
+			let arrJSON = {
+				api_version: 4,
+				action: "report_order",
+				country: vineCountry,
+				uuid: uuid,
+				asin: event.data.data.asin,
+				parent_asin: event.data.data.parent_asin,
+				order_status: event.data.data.status,
+			};
 
-				//Form the full URL
-				let url =
-					"https://www.vinehelper.ovh/vinehelper.php" +
-					"?data=" +
-					JSON.stringify(arrJSON);
-				await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
+			//Form the full URL
+			let url =
+				"https://www.vinehelper.ovh/vinehelper.php" +
+				"?data=" +
+				JSON.stringify(arrJSON);
+			await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
 
-				//Update the product tile ETV in the Toolbar
-				let tile = getTileByAsin(tileASIN);
-				tile.getToolbar().createOrderWidget(
-					event.data.data.status == "success"
-				);
-			}
+			//Update the product tile ETV in the Toolbar
+			let tile = getTileByAsin(tileASIN);
+			tile.getToolbar().createOrderWidget(
+				event.data.data.status == "success"
+			);
 		}
 
 		if (event.data.data.status == "success") {
