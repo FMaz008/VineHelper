@@ -184,3 +184,14 @@ label .tips {
 	text-align: center;
 	width: 100%;
 }
+
+#keyBindingsNextPage,
+#keyBindingsPreviousPage,
+#keyBindingsRFYPage,
+#keyBindingsAFAPage,
+#keyBindingsAIPage,
+#keyBindingsHideAll,
+#keyBindingsShowAll,
+#keyBindingsDebug {
+	margin-left: auto;
+}

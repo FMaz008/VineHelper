@@ -49,7 +49,17 @@ function getDefaultSettings() {
 			versionInfoPopup: 0,
 			firstVotePopup: true,
 			newItemNotification: false,
-			keyBindings: true,
+		},
+
+		keyBindings: {
+			active: true,
+			nextPage: "n",
+			previousPage: "p",
+			RFYPage: "r",
+			AFAPage: "a",
+			AIPage: "i",
+			hideAll: "h",
+			showAll: "s",
 		},
 
 		hiddenTab: {
@@ -107,12 +117,18 @@ async function getSettings() {
 		Object.assign(appSettings, data.settings);
 	}
 
-	//V1.17: Move the hidden item to a separate local storage
-	if (appSettings.hiddenTab.hasOwnProperty("arrItems")) {
-		await chrome.storage.local.set({
-			hiddenItems: appSettings.hiddenTab.arrItems,
-		});
-		delete appSettings.hiddenTab["arrItems"];
+	//V2.2.0: Move the keybinding settings
+	if (appSettings.general.keyBindings !== undefined) {
+		appSettings.keyBindings = {};
+		appSettings.keyBindings.active = appSettings.general.keyBindings;
+		appSettings.keyBindings.nextPage = "n";
+		appSettings.keyBindings.previousPage = "p";
+		appSettings.keyBindings.RFYPage = "r";
+		appSettings.keyBindings.AFAPage = "a";
+		appSettings.keyBindings.AIPage = "i";
+		appSettings.keyBindings.hideAll = "h";
+		appSettings.keyBindings.showAll = "s";
+		appSettings.general.keyBindings = undefined;
 		saveSettings();
 	}
 

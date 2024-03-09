@@ -267,6 +267,7 @@ function init() {
 		document.querySelector("#discord-guid-unlink").style.display = "none";
 	};
 
+	//Copy buttons
 	document.getElementById("copyBTC").addEventListener("click", function () {
 		navigator.clipboard
 			.writeText("bc1q0f82vk79u7hzxcrqe6q2levzvhdrqe72fm5w8z")
@@ -290,6 +291,104 @@ function init() {
 			});
 	});
 
+	//Keybindings
+
+	if (appSettings.keyBindings == undefined) {
+		appSettings.keyBindings = {};
+		appSettings.keyBindings.nextPage = "n";
+		appSettings.keyBindings.previousPage = "p";
+		appSettings.keyBindings.RFYPage = "r";
+		appSettings.keyBindings.AFAPage = "a";
+		appSettings.keyBindings.AIPage = "i";
+		appSettings.keyBindings.hideAll = "h";
+		appSettings.keyBindings.showAll = "s";
+		appSettings.keyBindings.debug = "d";
+		chrome.storage.local.set({ settings: appSettings });
+	}
+
+	document.getElementById("keyBindingsNextPage").value =
+		appSettings.keyBindings.nextPage;
+	document.getElementById("keyBindingsPreviousPage").value =
+		appSettings.keyBindings.previousPage;
+	document.getElementById("keyBindingsRFYPage").value =
+		appSettings.keyBindings.RFYPage;
+	document.getElementById("keyBindingsAFAPage").value =
+		appSettings.keyBindings.AFAPage;
+	document.getElementById("keyBindingsAIPage").value =
+		appSettings.keyBindings.AIPage;
+	document.getElementById("keyBindingsHideAll").value =
+		appSettings.keyBindings.hideAll;
+	document.getElementById("keyBindingsShowAll").value =
+		appSettings.keyBindings.showAll;
+	document.getElementById("keyBindingsDebug").value =
+		appSettings.keyBindings.debug;
+
+	document
+		.getElementById("keyBindingsNextPage")
+		.addEventListener("change", function () {
+			if (this.value == "") return false;
+
+			appSettings.keyBindings.nextPage = this.value;
+			chrome.storage.local.set({ settings: appSettings });
+		});
+	document
+		.getElementById("keyBindingsPreviousPage")
+		.addEventListener("change", function () {
+			if (this.value == "") return false;
+
+			appSettings.keyBindings.previousPage = this.value;
+			chrome.storage.local.set({ settings: appSettings });
+		});
+	document
+		.getElementById("keyBindingsRFYPage")
+		.addEventListener("change", function () {
+			if (this.value == "") return false;
+
+			appSettings.keyBindings.RFYPage = this.value;
+			chrome.storage.local.set({ settings: appSettings });
+		});
+	document
+		.getElementById("keyBindingsAFAPage")
+		.addEventListener("change", function () {
+			if (this.value == "") return false;
+
+			appSettings.keyBindings.AFAPage = this.value;
+			chrome.storage.local.set({ settings: appSettings });
+		});
+	document
+		.getElementById("keyBindingsAIPage")
+		.addEventListener("change", function () {
+			if (this.value == "") return false;
+
+			appSettings.keyBindings.AIPage = this.value;
+			chrome.storage.local.set({ settings: appSettings });
+		});
+	document
+		.getElementById("keyBindingsHideAll")
+		.addEventListener("change", function () {
+			if (this.value == "") return false;
+
+			appSettings.keyBindings.hideAll = this.value;
+			chrome.storage.local.set({ settings: appSettings });
+		});
+	document
+		.getElementById("keyBindingsShowAll")
+		.addEventListener("change", function () {
+			if (this.value == "") return false;
+
+			appSettings.keyBindings.showAll = this.value;
+			chrome.storage.local.set({ settings: appSettings });
+		});
+	document
+		.getElementById("keyBindingsDebug")
+		.addEventListener("change", function () {
+			if (this.value == "") return false;
+
+			appSettings.keyBindings.debug = this.value;
+			chrome.storage.local.set({ settings: appSettings });
+		});
+
+	//Manage checkboxes load and save
 	manageCheckboxSetting("general.topPagination");
 	manageCheckboxSetting("general.versionInfoPopup", false);
 	manageCheckboxSetting("general.firstVotePopup");
@@ -299,7 +398,7 @@ function init() {
 	manageCheckboxSetting("general.bookmark");
 	manageCheckboxSetting("general.newItemNotification");
 	manageCheckboxSetting("general.newItemNotificationSound");
-	manageCheckboxSetting("general.keyBindings");
+	manageCheckboxSetting("keyBindings.active");
 	manageCheckboxSetting("hiddenTab.active");
 	manageCheckboxSetting("hiddenTab.remote");
 	manageCheckboxSetting("discord.active"); //Handled manually

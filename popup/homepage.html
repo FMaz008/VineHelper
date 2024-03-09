@@ -35,8 +35,9 @@
 				<li class="active"><a href="#tabs-1">General</a></li>
 				<li><a href="#tabs-2">Auto-sorting</a></li>
 				<li><a href="#tabs-3">"Brenda"</a></li>
-				<li><a href="#tabs-4">Styles</a></li>
-				<li><a href="#tabs-5">?</a></li>
+				<li><a href="#tabs-4">Key bindings</a></li>
+				<li><a href="#tabs-5">Styles</a></li>
+				<li><a href="#tabs-6">?</a></li>
 			</ul>
 		</div>
 		<div class="all-options">
@@ -143,24 +144,6 @@
 						<input
 							type="checkbox"
 							name="hiddenTab.remote"
-							value="1"
-						/>
-					</label>
-					<label for="general.keyBindings"
-						>Keyboard shortcuts
-						<a
-							href="https://github.com/FMaz008/VineHelper/wiki/UX#keybindings-keyboard-shortcuts"
-							target="_blank"
-							class="tips"
-							title="Activate the keyboard shortcuts. Click for details."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-question"
-							></div>
-						</a>
-						<input
-							type="checkbox"
-							name="general.keyBindings"
 							value="1"
 						/>
 					</label>
@@ -562,6 +545,118 @@
 					</div>
 				</div>
 				<div id="tabs-4" class="options">
+					<div class="subheader">Key bindings:</div>
+					<label for="keyBindings.active"
+						>Keyboard shortcuts
+						<a
+							href="https://github.com/FMaz008/VineHelper/wiki/UX#keybindings-keyboard-shortcuts"
+							target="_blank"
+							class="tips"
+							title="Activate the keyboard shortcuts. Click for details."
+						>
+							<div
+								class="ext-helper-toolbar-icon ext-helper-icon-question"
+							></div>
+						</a>
+						<input
+							type="checkbox"
+							name="keyBindings.active"
+							value="1"
+						/>
+					</label>
+
+					<label for="keyBindings.nextPage">
+						Next Page
+						<input
+							type="text"
+							name="keyBindings.nextPage"
+							id="keyBindingsNextPage"
+							size="1"
+							maxlength="1"
+							value=""
+						/>
+					</label>
+					<label for="keyBindings.previousPage">
+						Previous Page
+						<input
+							type="text"
+							name="keyBindings.previousPage"
+							id="keyBindingsPreviousPage"
+							size="1"
+							maxlength="1"
+							value=""
+						/>
+					</label>
+
+					<label for="keyBindings.RFYPage">
+						Goto RFY
+						<input
+							type="text"
+							name="keyBindings.RFYPage"
+							id="keyBindingsRFYPage"
+							size="1"
+							maxlength="1"
+							value=""
+						/>
+					</label>
+					<label for="keyBindings.AFAPage">
+						Goto AFA
+						<input
+							type="text"
+							name="keyBindings.AFAPage"
+							id="keyBindingsAFAPage"
+							size="1"
+							maxlength="1"
+							value=""
+						/>
+					</label>
+					<label for="keyBindings.AIPage">
+						Goto AI
+						<input
+							type="text"
+							name="keyBindings.AIPage"
+							id="keyBindingsAIPage"
+							size="1"
+							maxlength="1"
+							value=""
+						/>
+					</label>
+
+					<label for="keyBindings.hideAll">
+						Hide All
+						<input
+							type="text"
+							name="keyBindings.hideAll"
+							id="keyBindingsHideAll"
+							size="1"
+							maxlength="1"
+							value=""
+						/>
+					</label>
+					<label for="keyBindings.showAll">
+						Show all
+						<input
+							type="text"
+							name="keyBindings.showAll"
+							id="keyBindingsShowAll"
+							size="1"
+							maxlength="1"
+							value=""
+						/>
+					</label>
+					<label for="keyBindings.debug">
+						Show debug info
+						<input
+							type="text"
+							name="keyBindings.debug"
+							id="keyBindingsDebug"
+							size="1"
+							maxlength="1"
+							value=""
+						/>
+					</label>
+				</div>
+				<div id="tabs-5" class="options">
 					<div class="subheader">Mobile stylesheets:</div>
 					<label for="thorvarium.mobileios"
 						>ios-with-bugfix.css (for iOs) (Tip: enable compact
@@ -699,7 +794,7 @@
 						/>
 					</label>
 				</div>
-				<div id="tabs-5" class="options">
+				<div id="tabs-6" class="options">
 					<div class="padded">
 						<h3>Mission</h3>
 						<p>

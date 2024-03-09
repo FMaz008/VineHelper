@@ -782,7 +782,7 @@ window.addEventListener("keydown", async function (e) {
 		return;
 	}
 
-	if (!appSettings.general.keyBindings) {
+	if (!appSettings.keyBindings.active) {
 		return false;
 	}
 
@@ -797,31 +797,31 @@ window.addEventListener("keydown", async function (e) {
 	}
 
 	if (appSettings.hiddenTab.active) {
-		if (e.key == "h") hideAllItems();
-		if (e.key == "s") showAllItems();
+		if (e.key == appSettings.keyBindings.hideAll) hideAllItems();
+		if (e.key == appSettings.keyBindings.showAll) showAllItems();
 	}
-	if (e.key == "n") {
+	if (e.key == appSettings.keyBindings.nextPage) {
 		let link = document.querySelector("ul.a-pagination li:last-child a");
 		if (link != null) window.location.href = link.href;
 	}
-	if (e.key == "p") {
+	if (e.key == appSettings.keyBindings.previousPage) {
 		let link = document.querySelector("ul.a-pagination li:first-child a");
 		if (link != null) window.location.href = link.href;
 	}
-	if (e.key == "d") {
+	if (e.key == appSettings.keyBindings.debug) {
 		//Display a dialog with the debugging info
 		let m = await DialogMgr.newModal();
 		m.title = "Viner Helper - Debugger";
 		m.content = getRunTimeJSON();
 		m.show();
 	}
-	if (e.key == "r" || e.key == "q") {
+	if (e.key == appSettings.keyBindings.RFYPage) {
 		window.location.href = "/vine/vine-items?queue=potluck";
 	}
-	if (e.key == "a" || e.key == "w") {
+	if (e.key == appSettings.keyBindings.AFAPage) {
 		window.location.href = "/vine/vine-items?queue=last_chance";
 	}
-	if (e.key == "i" || e.key == "e") {
+	if (e.key == appSettings.keyBindings.AIPage) {
 		window.location.href = "/vine/vine-items?queue=encore";
 	}
 });
