@@ -147,7 +147,7 @@ class HiddenListMgr {
 			note.content =
 				"You've hidden so many items that your quota in the local storage has exceeded 9MB. To prevent issues, " +
 				itemDeleted +
-				" oldest items have been deleted. Some of these items may re-appear in your listing.";
+				" of the oldest items have been deleted. Some of these items may re-appear in your listing.";
 			await Notifications.pushNotification(note);
 		}
 
