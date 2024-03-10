@@ -331,7 +331,7 @@ async function saveSettings() {
 			saveSettings();
 		} else {
 			// Some other error occurred
-			alert("Error:", e);
+			alert("Error:", e.name, e.message);
 			return false;
 		}
 	}
@@ -377,7 +377,6 @@ function bytesToSize(bytes, decimals = 2) {
 	}`;
 }
 
-
 async function generateStorageUsageForDebug() {
 	try {
 		const items = await getStorageItems();
@@ -408,25 +407,25 @@ async function generateStorageUsageForDebug() {
 
 // Helper function to get storage items as a promise
 function getStorageItems() {
-    return new Promise((resolve, reject) => {
-        chrome.storage.local.get(null, (items) => {
-            if (chrome.runtime.lastError) {
-                reject(new Error(chrome.runtime.lastError.message));
-            } else {
-                resolve(items);
-            }
-        });
-    });
+	return new Promise((resolve, reject) => {
+		chrome.storage.local.get(null, (items) => {
+			if (chrome.runtime.lastError) {
+				reject(new Error(chrome.runtime.lastError.message));
+			} else {
+				resolve(items);
+			}
+		});
+	});
 }
 
 function getStorageData(key) {
-    return new Promise((resolve, reject) => {
-        chrome.storage.local.get(key, (result) => {
-            if (chrome.runtime.lastError) {
-                reject(new Error(chrome.runtime.lastError.message));
-            } else {
-                resolve(result[key]);
-            }
-        });
-    });
+	return new Promise((resolve, reject) => {
+		chrome.storage.local.get(key, (result) => {
+			if (chrome.runtime.lastError) {
+				reject(new Error(chrome.runtime.lastError.message));
+			} else {
+				resolve(result[key]);
+			}
+		});
+	});
 }
