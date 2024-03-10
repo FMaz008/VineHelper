@@ -6,13 +6,6 @@
 	--text-light: hsla(0, 0%, 20%, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-	.modal {
-		background-color: var(--background-dark, #333);
-		color: var(--text-dark, #f9f9f9);
-	}
-}
-
 .overlay {
 	position: fixed;
 	top: 0;
@@ -64,4 +57,11 @@
 	border-top: 1px solid var(--border-light, #ddd);
 	padding-top: 10px;
 	text-align: left;
+}
+
+@media (prefers-color-scheme: dark) {
+	.modal {
+		background-color: var(--background-dark, #333);
+		color: var(--text-dark, #f9f9f9);
+	}
 }

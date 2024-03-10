@@ -4,6 +4,7 @@ const startTime = Date.now();
 var appSettings = {};
 var arrHidden = [];
 var arrDebug = [];
+let debugMessage = "";
 
 var vineDomain = null;
 var vineCountry = null;
@@ -345,9 +346,87 @@ async function saveSettings() {
 function getRunTime() {
 	return Date.now() - startTime;
 }
-function getRunTimeJSON() {
-	return JSON.stringify(arrDebug, null, 2).replaceAll("\n", "<br/>\n");
+
+async function getRunTimeJSON() {
+	try {
+		await generateStorageUsageForDebug();
+	} catch (error) {
+		console.error("Error generating runtime json");
+	} finally {
+		return JSON.stringify(arrDebug, null, 2).replaceAll("\n", "<br/>\n");
+	}
 }
+
 function showRuntime(eventName) {
 	arrDebug.push({ time: Date.now() - startTime, event: eventName });
+}
+
+function bytesToSize(bytes, decimals = 2) {
+	if (!Number(bytes)) {
+		return "0 Bytes";
+	}
+
+	const kbToBytes = 1024;
+	const dm = decimals < 0 ? 0 : decimals;
+	const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+
+	const index = Math.floor(Math.log(bytes) / Math.log(kbToBytes));
+
+	return `${parseFloat((bytes / Math.pow(kbToBytes, index)).toFixed(dm))} ${
+		sizes[index]
+	}`;
+}
+
+
+async function generateStorageUsageForDebug() {
+	try {
+		const items = await getStorageItems();
+		for (let key in items) {
+			try {
+				let itemCount = "";
+				const bytesUsed = await chrome.storage.local.getBytesInUse(key);
+				const storageData = await getStorageData(key);
+
+				if (key != "settings") {
+					itemCount = `representing ${storageData.length} items`;
+				}
+				showRuntime(
+					`Storage used by ${key}: ${bytesToSize(
+						bytesUsed
+					)} ${itemCount}`
+				);
+			} catch (error) {
+				console.error(
+					`Error retrieving storage data for ${key}: ${error.message}`
+				);
+			}
+		}
+	} catch (error) {
+		console.error("Error fetching storage items:", error.message);
+	}
+}
+
+// Helper function to get storage items as a promise
+function getStorageItems() {
+    return new Promise((resolve, reject) => {
+        chrome.storage.local.get(null, (items) => {
+            if (chrome.runtime.lastError) {
+                reject(new Error(chrome.runtime.lastError.message));
+            } else {
+                resolve(items);
+            }
+        });
+    });
+}
+
+function getStorageData(key) {
+    return new Promise((resolve, reject) => {
+        chrome.storage.local.get(key, (result) => {
+            if (chrome.runtime.lastError) {
+                reject(new Error(chrome.runtime.lastError.message));
+            } else {
+                resolve(result[key]);
+            }
+        });
+    });
 }

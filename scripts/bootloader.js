@@ -487,7 +487,7 @@ async function serverProductsResponse(data) {
 		//console.log(tile);
 
 		if (tile == null) {
-			showRunTime("No tile matching " + key);
+			showRuntime("No tile matching " + key);
 			return; //Continue the loop with the next item
 		}
 
@@ -816,7 +816,7 @@ window.addEventListener("keydown", async function (e) {
 	if (e.key == appSettings.keyBindings.debug) {
 		let m = DialogMgr.newModal("debug");
 		m.title = DEBUGGER_TITLE;
-		m.content = this.getRunTimeJSON();
+		m.content = await this.getRunTimeJSON();
 		m.show();
 	}
 	if (e.key == appSettings.keyBindings.RFYPage) {
