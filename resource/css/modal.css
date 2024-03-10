@@ -1,12 +1,26 @@
+:root {
+	--border-light: hsla(0, 0%, 87%, 1);
+	--background-dark: hsla(0, 0%, 20%, 1);
+	--text-dark: hsla(0, 0%, 98%, 0.8);
+	--background-light: hsla(0, 0%, 98%, 1);
+	--text-light: hsla(0, 0%, 20%, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+	.modal {
+		background-color: var(--background-dark, #333);
+		color: var(--text-dark, #f9f9f9);
+	}
+}
+
 .overlay {
 	position: fixed;
-	right: 0;
 	top: 0;
-	bottom: 0;
 	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.5);
 	z-index: 1009;
-	background-color: black;
-	opacity: 0.2;
 }
 
 .modal {
@@ -14,21 +28,22 @@
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
-
-	min-width: 400;
-	min-height: 200px;
-	border: 2px solid #333;
-	background-color: #eee;
+	min-width: 400px;
+	max-width: 80%;
+	padding: 20px;
+	border: 2px solid #000;
 	border-radius: 10px;
 	z-index: 1010;
 	color: #333;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+	background-color: var(--background-light, #f9f9f9);
+	color: var(--text-light, #333);
 }
 
 .modal .header {
-	width: 100%;
-	border: 1px solid #333;
+	border-bottom: 1px solid var(--border-light, #ddd);
+	padding-bottom: 10px;
 	margin-bottom: 10px;
-	padding: 6px;
 }
 
 .modal .header .close-btn {
@@ -37,7 +52,6 @@
 }
 
 .modal .content {
-	padding: 10px;
 	max-height: 400px;
 	overflow-y: scroll;
 }
@@ -47,9 +61,7 @@
 }
 
 .modal .footer {
-	padding: 20px;
-}
-
-.modal .header .close-btn {
-	margin: 0 auto;
+	border-top: 1px solid var(--border-light, #ddd);
+	padding-top: 10px;
+	text-align: left;
 }

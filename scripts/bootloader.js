@@ -29,6 +29,10 @@ const VERSION_NO_CHANGE = 0;
 
 var toolbarsDrawn = false;
 
+const DEBUGGER_TITLE = "Vine Helper - Debugger";
+const VOTING_TITLE = "Vine Helper - voting feature";
+const VINE_INFO_TITLE = "Vine Helper update info";
+
 //Do not run the extension if ultraviner is running
 regex = /^.+?amazon\..+\/vine\/ultraviner.*?$/;
 if (!regex.test(window.location.href)) {
@@ -83,8 +87,8 @@ async function initFlushTplCache() {
 			Tpl.setVar("appVersion", appVersion);
 			let content = Tpl.render(prom);
 
-			let m = await DialogMgr.newModal();
-			m.title = "Vine Helper update info";
+			let m = DialogMgr.newModal('info');
+			m.title = VINE_INFO_TITLE;
 			m.content = content;
 			m.show();
 		}
@@ -232,8 +236,8 @@ function initFixPreviousButton() {
 	$(".ext-helper-pagination-previous").remove();
 	$("ul.a-pagination li:first-child a").append(
 		"<span class='ext-helper-pagination-previous'>" +
-			textContent +
-			"</span>"
+		textContent +
+		"</span>"
 	);
 	//$("ul.a-pagination li:first-child a").prepend(text);
 }
@@ -567,7 +571,7 @@ async function reportfees(event) {
 			fees == 1 &&
 			appSettings.unavailableTab.consensusDiscard &&
 			tile.getVoteFees() + 1 - tile.getVoteNoFees() >=
-				appSettings.unavailableTab.consensusThreshold
+			appSettings.unavailableTab.consensusThreshold
 		) {
 			await tile.moveToGrid(gridUnavailable, true);
 
@@ -575,7 +579,7 @@ async function reportfees(event) {
 		} else if (
 			fees == 0 &&
 			tile.getVoteFees() - tile.getVoteNoFees() <
-				appSettings.unavailableTab.consensusThreshold
+			appSettings.unavailableTab.consensusThreshold
 		) {
 			await tile.moveToGrid(gridRegular, true);
 		}
@@ -606,8 +610,8 @@ async function reportfees(event) {
 		prom = await Tpl.loadFile("view/popup_firstvote.html");
 		let content = Tpl.render(prom);
 
-		let m = await DialogMgr.newModal();
-		m.title = "Vine Helper - voting feature";
+		let m = DialogMgr.newModal('voting');
+		m.title = VOTING_TITLE;
 		m.content = content;
 		m.show();
 
@@ -812,11 +816,11 @@ window.addEventListener("keydown", async function (e) {
 		if (link != null) window.location.href = link.href;
 	}
 	if (e.key == appSettings.keyBindings.debug) {
-		//Display a dialog with the debugging info
-		let m = await DialogMgr.newModal();
-		m.title = "Viner Helper - Debugger";
-		m.content = getRunTimeJSON();
-		m.show();
+		
+		let m = DialogMgr.newModal('debug');
+			m.title = DEBUGGER_TITLE;
+			m.content = this.getRunTimeJSON();
+			m.show();
 	}
 	if (e.key == appSettings.keyBindings.RFYPage) {
 		window.location.href = "/vine/vine-items?queue=potluck";

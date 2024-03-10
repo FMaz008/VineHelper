@@ -1,16 +1,25 @@
 :root {
 	--myHeight: 550px;
 	--headerHeight: 60px;
+	--background-light: hsla(0, 0%, 98%, 1);
+	--text-light: hsla(0, 0%, 20%, 1);
+	--background-dark: hsla(0, 0%, 20%, 1);
+	--text-dark: hsla(0, 0%, 98%, .80);
+	--link-dark: hsla(165, 100%, 70%, 1);
+	--border-light: hsla(0, 0%, 87%, 1);
+	--border-dark: hsla(0, 0%, 46.67%, 1);
 }
+
 html {
-	height: (var);
+	height: var(--myHeight);
 	overflow: hidden;
 	scrollbar-width: none;
 }
 
 body {
 	max-height: var(--myHeight);
-
+	background-color: var(--background-light, #f9f9f9);
+	color: var(--text-light, #333);
 	width: 346px;
 	margin: 0;
 	display: flex;
@@ -27,13 +36,11 @@ body {
 
 h1 {
 	flex-grow: 1;
-
 	font-size: 1.4rem;
 	font-family: "Segoe UI", Tahoma, sans-serif;
 }
 
 div.summary {
-	background-color: #eee;
 	padding: 10px;
 }
 
@@ -58,6 +65,7 @@ h3 {
 	border-right: 0px;
 	border-radius: 0px;
 }
+
 /* Lets us scroll the tabs*/
 .all-options {
 	max-height: calc(var(--myHeight) - var(--headerHeight));
@@ -69,13 +77,11 @@ h3 {
 	padding: 0;
 	display: flex;
 	flex-direction: column;
-
 	flex-grow: 1;
-	background-color: #eee;
-	margin-top: -1px;
 
-	border: 1px solid #333;
+	margin-top: -1px;
 }
+
 .subheader {
 	margin-top: 5px;
 	padding: 5px;
@@ -93,8 +99,7 @@ label {
 	display: flex;
 	align-items: center;
 	height: 2rem;
-	border: 1px solid #ddd;
-	background-color: #f6f6f6;
+	border: 1px solid var(--border-light, #ddd);
 	flex-grow: 0;
 	text-align: left;
 	margin: 1px;
@@ -114,8 +119,7 @@ label .tips {
 }
 
 .label:active {
-	background: #ededed;
-	border: 1px solid #ccc;
+	border: 1px solid var(--border-light, #333);
 	color: black;
 }
 
@@ -123,7 +127,6 @@ label .tips {
 #discordOptions {
 	border: 0.35rem solid #ccc;
 	flex-grow: 1;
-	background-color: #eee;
 	display: flex;
 	flex-direction: column;
 }
@@ -135,10 +138,12 @@ label .tips {
 	padding: 10px;
 	line-height: 30px;
 }
+
 .padded {
 	padding-left: 20px;
 	padding-right: 20px;
 }
+
 .padded ul {
 	padding-left: 10px;
 }
@@ -159,7 +164,6 @@ label .tips {
 }
 
 #tabs-6 {
-	background-color: #eee;
 }
 
 /* Chrome 29+ */
@@ -170,6 +174,7 @@ label .tips {
 		background-repeat: no-repeat;
 	}
 }
+
 @supports (-moz-appearance: none) {
 	.ext-helper-icon-logo {
 		background-size: 50%;
@@ -199,4 +204,23 @@ label .tips {
 #keyBindingsShowAll,
 #keyBindingsDebug {
 	margin-left: auto;
+}
+
+@media (prefers-color-scheme: dark) {
+	body {
+		background-color: var(--background-dark, #333);
+		color: var(--text-dark, #f9f9f9);
+	}
+
+	a {
+		color: var(--link-dark, #f9f9f9);
+	}
+
+	#votingToolbarOptions,
+	#discordOptions,
+	.button:hover,
+	.label:active,
+	label {
+		border: 1px solid var(--border-dark, #777777);
+	}
 }
