@@ -34,8 +34,7 @@ const VOTING_TITLE = "Vine Helper - voting feature";
 const VINE_INFO_TITLE = "Vine Helper update info";
 
 //Do not run the extension if ultraviner is running
-regex = /^.+?amazon\..+\/vine\/ultraviner.*?$/;
-if (!regex.test(window.location.href)) {
+if (!ultraviner) {
 	init();
 }
 
@@ -87,7 +86,7 @@ async function initFlushTplCache() {
 			Tpl.setVar("appVersion", appVersion);
 			let content = Tpl.render(prom);
 
-			let m = DialogMgr.newModal('info');
+			let m = DialogMgr.newModal("info");
 			m.title = VINE_INFO_TITLE;
 			m.content = content;
 			m.show();
@@ -236,8 +235,8 @@ function initFixPreviousButton() {
 	$(".ext-helper-pagination-previous").remove();
 	$("ul.a-pagination li:first-child a").append(
 		"<span class='ext-helper-pagination-previous'>" +
-		textContent +
-		"</span>"
+			textContent +
+			"</span>"
 	);
 	//$("ul.a-pagination li:first-child a").prepend(text);
 }
@@ -420,6 +419,7 @@ function generateTile(obj) {
 function fetchProductsData(arrUrl) {
 	let arrJSON = {
 		api_version: 4,
+		app_version: appVersion,
 		action: "getinfo",
 		country: vineCountry,
 		uuid: appSettings.general.uuid,
@@ -571,7 +571,7 @@ async function reportfees(event) {
 			fees == 1 &&
 			appSettings.unavailableTab.consensusDiscard &&
 			tile.getVoteFees() + 1 - tile.getVoteNoFees() >=
-			appSettings.unavailableTab.consensusThreshold
+				appSettings.unavailableTab.consensusThreshold
 		) {
 			await tile.moveToGrid(gridUnavailable, true);
 
@@ -579,7 +579,7 @@ async function reportfees(event) {
 		} else if (
 			fees == 0 &&
 			tile.getVoteFees() - tile.getVoteNoFees() <
-			appSettings.unavailableTab.consensusThreshold
+				appSettings.unavailableTab.consensusThreshold
 		) {
 			await tile.moveToGrid(gridRegular, true);
 		}
@@ -610,7 +610,7 @@ async function reportfees(event) {
 		prom = await Tpl.loadFile("view/popup_firstvote.html");
 		let content = Tpl.render(prom);
 
-		let m = DialogMgr.newModal('voting');
+		let m = DialogMgr.newModal("voting");
 		m.title = VOTING_TITLE;
 		m.content = content;
 		m.show();
@@ -624,8 +624,7 @@ async function reportfees(event) {
 //if the infinite wheel fix was used.
 window.addEventListener("message", async function (event) {
 	//Do not run the extension if ultraviner is running
-	regex = /^.+?amazon\..+\/vine\/ultraviner.*?$/;
-	if (regex.test(window.location.href)) {
+	if (ultraviner) {
 		return;
 	}
 
@@ -784,8 +783,7 @@ window.addEventListener("message", async function (event) {
 //Key binding for navigation
 window.addEventListener("keydown", async function (e) {
 	//Do not run the extension if ultraviner is running
-	regex = /^.+?amazon\..+\/vine\/ultraviner.*?$/;
-	if (regex.test(window.location.href)) {
+	if (ultraviner) {
 		return;
 	}
 

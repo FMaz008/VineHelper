@@ -16,6 +16,7 @@ var vineSearch = false;
 var uuid = null;
 
 var appVersion = 0;
+var ultraviner = false; //If Ultravine is detected, Vine Helper will deactivate itself to avoid conflicts.
 
 var Tpl = new Template();
 var TplMgr = new TemplateMgr();
@@ -300,10 +301,11 @@ async function getSettings() {
 showRuntime("PRE: Begining to load settings");
 
 //Do not run the extension if ultraviner is running
-regex = /^.+?amazon\..+\/vine\/ultraviner.*?$/;
+regex = /^.+?amazon\..+\/vine\/.*ultraviner.*?$/;
 if (!regex.test(window.location.href)) {
 	getSettings(); //First call to launch the extension.
 } else {
+	ultraviner = true;
 	console.log(
 		"VineHelper detected UltraViner. Disabling VineHelper on this page."
 	);

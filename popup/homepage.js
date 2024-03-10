@@ -104,7 +104,7 @@ function init() {
 		.addEventListener("click", async function () {
 			if (
 				confirm(
-					"Reset all Vine Helper settings & local storage to default?"
+					"SAVE YOUR UUID OR YOU WILL LOOSE YOUR REMOTE STORED ITEMS !\n\nReset all Vine Helper settings & local storage to default?"
 				)
 			) {
 				await chrome.storage.local.clear();

@@ -57,13 +57,17 @@ class HiddenListMgr {
 			if (e.name === "QuotaExceededError") {
 				// The local storage space has been exceeded
 				alert(
-					"Local storage quota exceeded! Hidden items will be cleared to make space."
+					"Vine Helper local storage quota exceeded! Hidden items will be cleared to make space."
 				);
 				await chrome.storage.local.set({ hiddenItems: [] });
 				return false;
 			} else {
 				// Some other error occurred
-				alert("Error:", e);
+				alert(
+					"Vine Helper encountered an error while trying to save your hidden items. Please report the following details:",
+					e.name,
+					e.message
+				);
 				return false;
 			}
 		}
@@ -117,19 +121,47 @@ class HiddenListMgr {
 		fetch(url);
 	}
 
-	garbageCollection() {
-		if (!this.arrHidden) {
-			return;
+	async garbageCollection() {
+		if (!this.arrHidden) return;
+
+		//Delete older items if the storage space is exceeded.
+		let bytes = chrome.storage.local.getBtyesInUse();
+		if (bytes > 9 * 1048576) {
+			//9MB
+			//The local storage limit of 10MB and we are over 9MB
+			//Delete old items until we are under the limit
+			let itemDeleted = 0;
+
+			//Older items should be at the beginning of the array
+			//Delete items until we are under 8MB
+			do {
+				//Delete 1000 items at the time
+				this.arrHidden.splice(0, 1000);
+				itemDeleted += 1000;
+				await chrome.storage.local.set({ hiddenItems: this.arrHidden });
+			} while (chrome.storage.local.getBtyesInUse() < 8 * 1048576);
+
+			let note = new ScreenNotification();
+			note.title = "Local storage quota exceeded !";
+			note.lifespan = 60;
+			note.content =
+				"You've hidden so many items that your quota in the local storage has exceeded 9MB. To prevent issues, " +
+				itemDeleted +
+				" of the oldest items have been deleted. Some of these items may re-appear in your listing.";
+			await Notifications.pushNotification(note);
 		}
+
+		//Delete items older than 90 days
 		const originalLength = this.arrHidden.length;
 		let expiredDate = new Date();
 		expiredDate.setDate(expiredDate.getDate() - 90);
 
 		let idx = 0;
 		while (idx < this.arrHidden.length) {
-			if (this.arrHidden[idx].date == "") {
+			let itemDate = new Date(this.arrHidden[idx].date); // Parse current item's date
+			if (isNaN(itemDate.getTime())) {
 				this.arrHidden[idx].date = new Date().toString();
-			} else if (this.arrHidden[idx].date < expiredDate) {
+			} else if (itemDate < expiredDate) {
 				this.arrHidden.splice(idx, 1);
 			} else {
 				++idx;
