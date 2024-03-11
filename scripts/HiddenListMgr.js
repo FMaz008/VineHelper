@@ -125,7 +125,7 @@ class HiddenListMgr {
 		if (!this.arrHidden) return;
 
 		//Delete older items if the storage space is exceeded.
-		let bytes = chrome.storage.local.getBtyesInUse();
+		let bytes = chrome.storage.local.getBytesInUse();
 		if (bytes > 9 * 1048576) {
 			//9MB
 			//The local storage limit of 10MB and we are over 9MB
