@@ -64,4 +64,10 @@
 		background-color: var(--background-dark, #333);
 		color: var(--text-dark, #f9f9f9);
 	}
+
+	.modal .content ul {
+		background-color: var(--background-dark, #333);
+		color: var(--text-dark, #f9f9f9);
+	}
+
 }
