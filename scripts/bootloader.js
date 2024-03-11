@@ -816,7 +816,7 @@ window.addEventListener("keydown", async function (e) {
 	if (e.key == appSettings.keyBindings.debug) {
 		let m = DialogMgr.newModal("debug");
 		m.title = DEBUGGER_TITLE;
-		m.content = await this.getRunTimeJSON();
+		m.content = await getRunTimeJSON();
 		m.show();
 	}
 	if (e.key == appSettings.keyBindings.RFYPage) {
