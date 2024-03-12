@@ -141,10 +141,6 @@ function init() {
 		};
 	});
 	selectCurrentTab(true);
-
-	//$("#tabs").tabs();
-	//$("input[type='checkbox']").checkboxradio();
-
 	drawUnavailableTab();
 	drawDiscord();
 
@@ -163,7 +159,27 @@ function init() {
 		setTimeout(() => drawDiscord(), 1);
 	};
 
-	//Load/save settings:
+	//###################
+	//## Load/save settings:
+
+	//hiddenItemsCacheSize
+	var select = document.getElementById("hiddenItemsCacheSize");
+	for (var i = 0; i < select.options.length; i++) {
+		if (
+			select.options[i].value == appSettings.general.hiddenItemsCacheSize
+		) {
+			select.options[i].selected = true;
+		}
+	}
+	document.getElementById("hiddenItemsCacheSize").onchange =
+		async function () {
+			appSettings.general.hiddenItemsCacheSize = document.getElementById(
+				"hiddenItemsCacheSize"
+			).value;
+			await chrome.storage.local.set({ settings: appSettings });
+		};
+
+	//Concensus Threshold
 	key = CSS.escape("unavailableTab.consensusThreshold");
 	document.querySelector(`#${key}`).value =
 		appSettings.unavailableTab.consensusThreshold;
@@ -175,6 +191,7 @@ function init() {
 		}
 	};
 
+	//Unavailable Opacity
 	key = CSS.escape("unavailableTab.unavailableOpacity");
 	document.querySelector(`#${key}`).value =
 		appSettings.unavailableTab.unavailableOpacity;

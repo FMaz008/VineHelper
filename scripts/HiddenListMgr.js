@@ -50,7 +50,7 @@ class HiddenListMgr {
 		if (save) this.saveList();
 	}
 
-async saveList() {
+	async saveList() {
 		await browser.storage.local.set({ hiddenItems: this.arrHidden }, () => {
 			if (browser.runtime.lastError) {
 				const error = browser.runtime.lastError;
@@ -65,7 +65,7 @@ async saveList() {
 					);
 					return;
 				}
-			} 
+			}
 		});
 
 		if (appSettings.hiddenTab.remote) {
@@ -119,15 +119,37 @@ async saveList() {
 	}
 
 	async garbageCollection() {
-		if (!this.arrHidden) return;
+		if (!this.arrHidden) {
+			return false;
+		}
+		if (isNaN(appSettings.general.hiddenItemsCacheSize)) {
+			return false;
+		}
+		if (
+			appSettings.general.hiddenItemsCacheSize < 2 ||
+			appSettings.general.hiddenItemsCacheSize > 9
+		) {
+			return false;
+		}
 
 		//Delete older items if the storage space is exceeded.
 		let bytes = await getStorageSizeFull();
-		const storageLimit = 9 * 1048576; // 9MB
-		const deletionThreshold = 8 * 1048576; // 8MB
-
+		const storageLimit = appSettings.general.hiddenItemsCacheSize * 1048576; // 9MB
+		const deletionThreshold =
+			(appSettings.general.hiddenItemsCacheSize - 1) * 1048576; // 8MB
 		if (bytes > storageLimit) {
 			let itemDeleted = 0;
+
+			let note = new ScreenNotification();
+			note.title = "Local storage quota exceeded!";
+			note.lifespan = 60;
+			note.content = `You've hidden so many items that your quota in the local storage has exceeded ${bytesToSize(
+				storageLimit
+			)}. To prevent issues, ~1MB of the oldest items are being deleted...`;
+			await Notifications.pushNotification(note);
+
+			//Give some breathing room for the notification to be displayed.
+			await new Promise((r) => setTimeout(r, 500));
 
 			while (bytes > deletionThreshold) {
 				//Delete 1000 items at the time
@@ -139,13 +161,9 @@ async saveList() {
 				bytes = await getStorageSizeFull();
 			}
 
-			let note = new ScreenNotification();
-			note.title = "Local storage quota exceeded!";
+			note.title = "Local storage quota fixed!";
 			note.lifespan = 60;
-			note.content =
-				`You've hidden so many items that your quota in the local storage has exceeded ${bytesToSize(storageLimit)}. To prevent issues, 
-				${itemDeleted}
-				of the oldest items have been deleted. Some of these items may re-appear in your listing.`;
+			note.content = `GC done, ${itemDeleted} items have been deleted. Some of these items may re-appear in your listing.`;
 			await Notifications.pushNotification(note);
 		}
 

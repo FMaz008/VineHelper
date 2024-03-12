@@ -26,7 +26,7 @@ var Tpl = new Template();
 var TplMgr = new TemplateMgr();
 var DialogMgr = new ModalMgr();
 var Notifications = new ScreenNotifier();
-var HiddenList = new HiddenListMgr();
+var HiddenList = null;
 
 //#########################
 //### Load settings
@@ -55,6 +55,7 @@ function getDefaultSettings() {
 			versionInfoPopup: 0,
 			firstVotePopup: true,
 			newItemNotification: false,
+			hiddenItemsCacheSize: 9,
 		},
 
 		keyBindings: {
@@ -137,6 +138,12 @@ async function getSettings() {
 		appSettings.keyBindings.showAll = "s";
 		appSettings.keyBindings.debug = "d";
 		appSettings.general.keyBindings = undefined;
+		saveSettings();
+	}
+
+	//V2.2.3: Configure garbage collector for hidden items
+	if (appSettings.general.hiddenItemsCacheSize == undefined) {
+		appSettings.general.hiddenItemsCacheSize = 9;
 		saveSettings();
 	}
 
@@ -459,4 +466,18 @@ function getStorageSizeFull() {
 			}
 		});
 	});
+}
+
+function generateString(length) {
+	let result = " ";
+	const characters =
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+	const charactersLength = characters.length;
+	for (let i = 0; i < length; i++) {
+		result += characters.charAt(
+			Math.floor(Math.random() * charactersLength)
+		);
+	}
+
+	return result;
 }

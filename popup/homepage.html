@@ -34,38 +34,16 @@
 			<ul>
 				<li class="active"><a href="#tabs-1">General</a></li>
 				<li><a href="#tabs-2">Auto-Sorting</a></li>
-				<li><a href="#tabs-3">"Brenda"</a></li>
-				<li><a href="#tabs-4">Key bindings</a></li>
-				<li><a href="#tabs-5">Styles</a></li>
-				<li><a href="#tabs-6">?</a></li>
+				<li><a href="#tabs-3">System</a></li>
+				<li><a href="#tabs-4">"Brenda"</a></li>
+				<li><a href="#tabs-5">Key bindings</a></li>
+				<li><a href="#tabs-6">Styles</a></li>
+				<li><a href="#tabs-7">?</a></li>
 			</ul>
 		</div>
 		<div class="all-options">
 			<div>
 				<div id="tabs-1" class="options">
-					<label for="general.uuid"
-						>UUID:
-						<a
-							href="https://github.com/FMaz008/VineHelper/wiki/Configuration#uuid"
-							target="_blank"
-							class="tips"
-							title="Your unique user ID. If you have multiple devices, you may want to sync them up to the same value."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-question"
-							></div>
-						</a>
-						<input
-							type="password"
-							name="general.uuid"
-							id="general.uuid"
-							value=""
-							size="26"
-							maxlength="36"
-						/>
-						<input type="button" id="saveUUID" value="Save" />
-					</label>
-
 					<label for="general.topPagination"
 						>Pagination Also at the Top
 						<a
@@ -81,24 +59,6 @@
 						<input
 							type="checkbox"
 							name="general.topPagination"
-							value="1"
-						/>
-					</label>
-
-					<label for="general.versionInfoPopup"
-						>Reset Template Cache
-						<a
-							href="#"
-							class="tips"
-							title="This will reload the templates from their current file and will display the version note popup again, once, on the next page load."
-						>
-							<div
-								class="ext-helper-toolbar-icon ext-helper-icon-question"
-							></div>
-						</a>
-						<input
-							type="checkbox"
-							name="general.versionInfoPopup"
 							value="1"
 						/>
 					</label>
@@ -443,6 +403,81 @@
 					</div>
 				</div>
 				<div id="tabs-3" class="options">
+					<label for="general.uuid"
+						>UUID:
+						<a
+							href="https://github.com/FMaz008/VineHelper/wiki/Configuration#uuid"
+							target="_blank"
+							class="tips"
+							title="Your unique user ID. If you have multiple devices, you may want to sync them up to the same value."
+						>
+							<div
+								class="ext-helper-toolbar-icon ext-helper-icon-question"
+							></div>
+						</a>
+						<input
+							type="password"
+							name="general.uuid"
+							id="general.uuid"
+							value=""
+							size="26"
+							maxlength="36"
+						/>
+						<input type="button" id="saveUUID" value="Save" />
+					</label>
+					<label for="general.versionInfoPopup"
+						>Reset Template Cache
+						<a
+							href="#"
+							class="tips"
+							title="This will reload the templates from their current file and will display the version note popup again, once, on the next page load."
+						>
+							<div
+								class="ext-helper-toolbar-icon ext-helper-icon-question"
+							></div>
+						</a>
+						<input
+							type="checkbox"
+							name="general.versionInfoPopup"
+							value="1"
+						/>
+					</label>
+					<label for="general.hiddenItemsCacheSize"
+						>Hidden Items Cache Size
+						<a
+							href="#"
+							class="tips"
+							title="This will decide the maximum amount of storage space to allow hidden items to take locally. When reached, ~1MB of storage space will be cleared."
+						>
+							<div
+								class="ext-helper-toolbar-icon ext-helper-icon-question"
+							></div>
+						</a>
+						<select
+							name="general.hiddenItemsCacheSize"
+							id="hiddenItemsCacheSize"
+						>
+							<option value="2">2MB</option>
+							<option value="3">3MB</option>
+							<option value="4">4MB (chrome &lt;113)</option>
+							<option value="5">5MB</option>
+							<option value="6">6MB</option>
+							<option value="7">7MB</option>
+							<option value="8">8MB</option>
+							<option value="9">9MB (default)</option>
+						</select>
+					</label>
+					<div class="subheader">DANGER ZONE:</div>
+					<button id="hiddenItemReset">
+						DELETE ALL LOCAL HIDDEN ITEMS</button
+					><br />
+					<button id="factoryReset" style="background-color: #c33">
+						/!\ FACTORY RESET /!\
+					</button>
+					<br />
+					<br />
+				</div>
+				<div id="tabs-4" class="options">
 					<label for="discord.active"
 						>Share Items with Brenda (US/Canada/UK)
 						<a
@@ -541,7 +576,7 @@
 						</div>
 					</div>
 				</div>
-				<div id="tabs-4" class="options">
+				<div id="tabs-5" class="options">
 					<label for="keyBindings.active"
 						>Enable Keyboard Shortcuts
 						<a
@@ -652,7 +687,7 @@
 						/>
 					</label>
 				</div>
-				<div id="tabs-5" class="options">
+				<div id="tabs-6" class="options">
 					<div class="subheader">Mobile Stylesheets:</div>
 					<label for="thorvarium.mobileios"
 						>ios-with-bugfix.css (for iOS) (Tip: Enable Compact
@@ -790,7 +825,7 @@
 						/>
 					</label>
 				</div>
-				<div id="tabs-6" class="options">
+				<div id="tabs-7" class="options">
 					<div class="padded">
 						<h3>Mission</h3>
 						<p>
@@ -918,13 +953,6 @@
 								>
 							</li>
 						</ul>
-						<h3>Danger Zone</h3>
-						<button id="hiddenItemReset">
-							DELETE ALL LOCAL HIDDEN ITEMS</button
-						><br />
-						<button id="factoryReset">FACTORY RESET</button>
-						<br />
-						<br />
 					</div>
 				</div>
 			</div>
