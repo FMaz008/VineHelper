@@ -302,7 +302,7 @@ async function checkNewItems() {
 			for (let i = response.products.length - 1; i >= 0; i--) {
 				//Only display notification for product more recent than the last displayed notification
 				if (
-					response.products[i].date > latestProduct ||
+					response.products[i].date < latestProduct ||
 					latestProduct == 0
 				) {
 					//Only display notification for products with a title and image url
@@ -313,21 +313,24 @@ async function checkNewItems() {
 						let note2 = new ScreenNotification();
 						note2.title = "New item detected !";
 						note2.lifespan = 60;
+						note2.content = "";
 
 						//Play the notification sound
-						if (appSettings.general.newItemNotificationSound)
+						if (appSettings.general.newItemNotificationSound) {
 							note2.sound = "resource/sound/notification.mp3";
+						}
 
 						title = response.products[i].title.replace(
 							/^(.{40}[^\s]*).*/,
 							"$1"
 						);
 
-						note2.content +=
-							"<img src='" +
-							response.products[i].img_url +
-							"' style='float:left;' width='50' height='50' />";
-
+						if (appSettings.general.newItemNotificationImage) {
+							note2.content +=
+								"<img src='" +
+								response.products[i].img_url +
+								"' style='float:left;' width='50' height='50' />";
+						}
 						note2.content +=
 							" <a href='/vine/vine-items?search=" +
 							title +

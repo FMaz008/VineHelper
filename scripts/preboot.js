@@ -26,7 +26,7 @@ var Tpl = new Template();
 var TplMgr = new TemplateMgr();
 var DialogMgr = new ModalMgr();
 var Notifications = new ScreenNotifier();
-var HiddenList = null;
+var HiddenList = null; //Loaded in bootloader init()
 
 //#########################
 //### Load settings
@@ -55,6 +55,7 @@ function getDefaultSettings() {
 			versionInfoPopup: 0,
 			firstVotePopup: true,
 			newItemNotification: false,
+			newItemNotificationImage: true,
 			hiddenItemsCacheSize: 9,
 		},
 
@@ -144,6 +145,10 @@ async function getSettings() {
 	//V2.2.3: Configure garbage collector for hidden items
 	if (appSettings.general.hiddenItemsCacheSize == undefined) {
 		appSettings.general.hiddenItemsCacheSize = 9;
+		saveSettings();
+	}
+	if (appSettings.general.newItemNotificationImage == undefined) {
+		appSettings.general.newItemNotificationImage = true;
 		saveSettings();
 	}
 
