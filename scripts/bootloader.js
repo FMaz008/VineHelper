@@ -780,7 +780,7 @@ window.addEventListener("message", async function (event) {
 	}
 });
 
-//Key binding for navigation
+//Key bindings/keyboard shortcuts for navigation
 window.addEventListener("keydown", async function (e) {
 	//Do not run the extension if ultraviner is running
 	if (ultraviner) {
@@ -814,9 +814,16 @@ window.addEventListener("keydown", async function (e) {
 		if (link != null) window.location.href = link.href;
 	}
 	if (e.key == appSettings.keyBindings.debug) {
+		let content = await getRunTimeJSON();
+		regex =
+			/\s*{<br\/>\n\s*"time": ([0-9]+),<br\/>\n\s*"event": "(.+?)"<br\/>\n\s*}(?:,<br\/>\n)?/gm;
+		const content2 = content.replace(
+			regex,
+			`<strong>$1ms:</strong> $2<br/>\n`
+		);
 		let m = DialogMgr.newModal("debug");
 		m.title = DEBUGGER_TITLE;
-		m.content = await getRunTimeJSON();
+		m.content = content2;
 		m.show();
 	}
 	if (e.key == appSettings.keyBindings.RFYPage) {
