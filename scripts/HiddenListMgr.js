@@ -3,10 +3,11 @@
 class HiddenListMgr {
 	arrHidden = [];
 	arrChanges = [];
+	listLoaded = false;
 
 	constructor() {
+		showRuntime("HIDDENMGR: Loading list");
 		this.loadFromLocalStorage();
-		this.garbageCollection();
 	}
 
 	async loadFromLocalStorage() {
@@ -18,6 +19,8 @@ class HiddenListMgr {
 			this.arrHidden = [];
 			this.arrHidden = data.hiddenItems;
 		}
+		this.listLoaded = true;
+		showRuntime("HIDDENMGR: List loaded.");
 	}
 
 	async removeItem(asin, save = true) {

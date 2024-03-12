@@ -26,7 +26,7 @@ var Tpl = new Template();
 var TplMgr = new TemplateMgr();
 var DialogMgr = new ModalMgr();
 var Notifications = new ScreenNotifier();
-var HiddenList = null; //Loaded in bootloader init()
+var HiddenList = new HiddenListMgr();
 
 //#########################
 //### Load settings
@@ -125,8 +125,6 @@ async function getSettings() {
 	} else {
 		Object.assign(appSettings, data.settings);
 	}
-
-	HiddenList = new HiddenListMgr();
 
 	//V2.2.0: Move the keybinding settings
 	if (appSettings.general.keyBindings !== undefined) {

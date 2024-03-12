@@ -60,6 +60,7 @@ async function init() {
 	await initInsertBookmarkButton();
 	initFixPreviousButton();
 	await initDrawToolbars();
+	HiddenList.garbageCollection();
 }
 
 function initFetchProductData() {
@@ -470,6 +471,11 @@ function fetchProductsData(arrUrl) {
 async function serverProductsResponse(data) {
 	if (data["api_version"] != 4) {
 		console.log("Wrong API version");
+	}
+
+	showRuntime("FETCH: Waiting on hidden items list to be loaded...");
+	while (!HiddenList.listLoaded) {
+		await new Promise((r) => setTimeout(r, 10));
 	}
 
 	timenow = data["current_time"];
