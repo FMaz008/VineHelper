@@ -6,18 +6,18 @@ class HiddenListMgr {
 
 	constructor() {
 		this.loadFromLocalStorage();
+		this.garbageCollection();
 	}
 
 	async loadFromLocalStorage() {
-		const data = await chrome.storage.local.get("hiddenItems");
+		const data = await browser.storage.local.get("hiddenItems");
 		//Load hidden items
 		if (isEmptyObj(data)) {
-			await chrome.storage.local.set({ hiddenItems: [] });
+			await browser.storage.local.set({ hiddenItems: [] });
 		} else {
 			this.arrHidden = [];
 			this.arrHidden = data.hiddenItems;
 		}
-		this.garbageCollection();
 	}
 
 	async removeItem(asin, save = true) {
@@ -50,27 +50,24 @@ class HiddenListMgr {
 		if (save) this.saveList();
 	}
 
-	async saveList() {
-		try {
-			await chrome.storage.local.set({ hiddenItems: this.arrHidden });
-		} catch (e) {
-			if (e.name === "QuotaExceededError") {
-				// The local storage space has been exceeded
-				alert(
-					"Vine Helper local storage quota exceeded! Hidden items will be cleared to make space."
-				);
-				await chrome.storage.local.set({ hiddenItems: [] });
-				return false;
-			} else {
-				// Some other error occurred
-				alert(
-					"Vine Helper encountered an error while trying to save your hidden items. Please report the following details:",
-					e.name,
-					e.message
-				);
-				return false;
-			}
-		}
+async saveList() {
+		await browser.storage.local.set({ hiddenItems: this.arrHidden }, () => {
+			if (browser.runtime.lastError) {
+				const error = browser.runtime.lastError;
+				if (error.message === "QUOTA_BYTES quota exceeded") {
+					alert(
+						`Vine Helper local storage quota exceeded! Hidden items will be trimmed to make space.`
+					);
+					this.garbageCollection();
+				} else {
+					alert(
+						`Vine Helper encountered an error while trying to save your hidden items. Please report the following details: ${e.name}, ${e.message}`
+					);
+					return;
+				}
+			} 
+		});
+
 		if (appSettings.hiddenTab.remote) {
 			this.notifyServerOfHiddenItem();
 			this.arrChanges = [];
@@ -130,28 +127,25 @@ class HiddenListMgr {
 		const deletionThreshold = 8 * 1048576; // 8MB
 
 		if (bytes > storageLimit) {
-			//9MB
-			//The local storage limit of 10MB and we are over 9MB
-			//Delete old items until we are under the limit
 			let itemDeleted = 0;
 
-			//Older items should be at the beginning of the array
-			//Delete items until we are under 8MB
 			while (bytes > deletionThreshold) {
 				//Delete 1000 items at the time
 				this.arrHidden.splice(0, 1000);
 				itemDeleted += 1000;
-				await chrome.storage.local.set({ hiddenItems: this.arrHidden });
+				await browser.storage.local.set({
+					hiddenItems: this.arrHidden,
+				});
 				bytes = await getStorageSizeFull();
 			}
 
 			let note = new ScreenNotification();
-			note.title = "Local storage quota exceeded !";
+			note.title = "Local storage quota exceeded!";
 			note.lifespan = 60;
 			note.content =
-				"You've hidden so many items that your quota in the local storage has exceeded 9MB. To prevent issues, " +
-				itemDeleted +
-				" of the oldest items have been deleted. Some of these items may re-appear in your listing.";
+				`You've hidden so many items that your quota in the local storage has exceeded ${bytesToSize(storageLimit)}. To prevent issues, 
+				${itemDeleted}
+				of the oldest items have been deleted. Some of these items may re-appear in your listing.`;
 			await Notifications.pushNotification(note);
 		}
 

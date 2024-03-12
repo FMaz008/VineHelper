@@ -1,5 +1,9 @@
 const startTime = Date.now();
 
+if (typeof browser === "undefined") {
+	var browser = chrome;
+}
+
 //Extension settings
 var appSettings = {};
 var arrHidden = [];
@@ -23,10 +27,6 @@ var TplMgr = new TemplateMgr();
 var DialogMgr = new ModalMgr();
 var Notifications = new ScreenNotifier();
 var HiddenList = new HiddenListMgr();
-
-if (typeof browser === "undefined") {
-	var browser = chrome;
-}
 
 //#########################
 //### Load settings
