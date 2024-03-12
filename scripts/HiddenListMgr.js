@@ -127,7 +127,7 @@ class HiddenListMgr {
 		//Delete older items if the storage space is exceeded.
 		let bytes = await getStorageSizeFull();
 		const storageLimit = 9 * 1048576; // 9MB
-    	const deletionThreshold = 8 * 1048576 ; // 8MB
+		const deletionThreshold = 8 * 1048576; // 8MB
 
 		if (bytes > storageLimit) {
 			//9MB
