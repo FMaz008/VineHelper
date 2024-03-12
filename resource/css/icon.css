@@ -77,6 +77,11 @@
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/order-failed.png");
 		background-repeat: no-repeat;
 	}
+	.ext-helper-icon-search {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/search.png");
+		background-repeat: no-repeat;
+	}
 }
 
 @supports (-moz-appearance: none) {
@@ -157,6 +162,11 @@
 		background-image: url("/resource/image/order-failed.png");
 		background-repeat: no-repeat;
 	}
+	.ext-helper-icon-search {
+		background-size: 100%;
+		background-image: url("/resource/image/search.png");
+		background-repeat: no-repeat;
+	}
 }
 
 .invert {
@@ -169,10 +179,10 @@ div[role="navigation"] > ul > li {
 
 @media (prefers-color-scheme: dark) {
 	.ext-helper-icon-question {
-		filter: invert(1)
+		filter: invert(1);
 	}
 
 	.ext-helper-icon-request {
-		filter: invert(1)
+		filter: invert(1);
 	}
 }

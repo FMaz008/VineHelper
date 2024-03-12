@@ -328,16 +328,16 @@ async function checkNewItems() {
 							"' style='float:left;' width='50' height='50' />";
 
 						note2.content +=
+							" <a href='/vine/vine-items?search=" +
+							title +
+							"' target='_blank'><div class='ext-helper-toolbar-large-icon ext-helper-icon-search' style='float:right'></div></a>";
+
+						note2.content +=
 							"<a href='/dp/" +
 							response.products[i].asin +
 							"' target='_blank'>" +
 							response.products[i].title +
 							"</a>";
-
-						note2.content +=
-							" <a href='/vine/vine-items?search=" +
-							title +
-							"' target='_blank'>[Vine Search]</a>";
 
 						await Notifications.pushNotification(note2);
 
