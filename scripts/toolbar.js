@@ -368,7 +368,7 @@ async function announceItem(event) {
 		tab: vineQueue,
 		asin: event.data.asin,
 		etv: etv,
-		//'comment': prompt("(Optional) Comment:")
+		comment: "",
 	};
 
 	const response = await fetch(url, {
