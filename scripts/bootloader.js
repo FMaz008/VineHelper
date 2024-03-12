@@ -317,6 +317,11 @@ async function checkNewItems() {
 						if (appSettings.general.newItemNotificationSound)
 							note2.sound = "resource/sound/notification.mp3";
 
+						title = response.products[i].title.replace(
+							/^(.{40}[^\s]*).*/,
+							"$1"
+						);
+
 						note2.content +=
 							"<img src='" +
 							response.products[i].img_url +
@@ -328,6 +333,12 @@ async function checkNewItems() {
 							"' target='_blank'>" +
 							response.products[i].title +
 							"</a>";
+
+						note2.content +=
+							" <a href='/vine/vine-items?search=" +
+							title +
+							"' target='_blank'>[Vine Search]</a>";
+
 						await Notifications.pushNotification(note2);
 
 						if (i == 0) {
