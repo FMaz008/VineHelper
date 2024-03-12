@@ -803,7 +803,7 @@ window.addEventListener("message", async function (event) {
 //Key bindings/keyboard shortcuts for navigation
 window.addEventListener("keydown", async function (e) {
 	//Debug: secret keybind to generate dummy hidden items
-	if (e.key == "g") {
+	/*if (e.key == "g") {
 		if (
 			this.confirm(
 				"Generate 10,000 dummy items in local storage? (Will take ~1min)"
@@ -817,6 +817,7 @@ window.addEventListener("keydown", async function (e) {
 			this.alert("10000 items generated");
 		}
 	}
+	*/
 
 	//Do not run the extension if ultraviner is running
 	if (ultraviner) {
