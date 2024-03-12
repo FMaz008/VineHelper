@@ -125,8 +125,11 @@ class HiddenListMgr {
 		if (!this.arrHidden) return;
 
 		//Delete older items if the storage space is exceeded.
-		let bytes = chrome.storage.local.getBytesInUse();
-		if (bytes > 9 * 1048576) {
+		let bytes = await getStorageSizeFull();
+		const storageLimit = 9 * 1048576; // 9MB
+    	const deletionThreshold = 8 * 1048576 ; // 8MB
+
+		if (bytes > storageLimit) {
 			//9MB
 			//The local storage limit of 10MB and we are over 9MB
 			//Delete old items until we are under the limit
@@ -134,12 +137,13 @@ class HiddenListMgr {
 
 			//Older items should be at the beginning of the array
 			//Delete items until we are under 8MB
-			do {
+			while (bytes > deletionThreshold) {
 				//Delete 1000 items at the time
 				this.arrHidden.splice(0, 1000);
 				itemDeleted += 1000;
 				await chrome.storage.local.set({ hiddenItems: this.arrHidden });
-			} while (chrome.storage.local.getBtyesInUse() < 8 * 1048576);
+				bytes = await getStorageSizeFull();
+			}
 
 			let note = new ScreenNotification();
 			note.title = "Local storage quota exceeded !";
