@@ -85,6 +85,11 @@ async function createGridInterface() {
 	$("div#tab-hidden").remove();
 	$(".ext-helper-status").remove(); //remove all toolbars
 
+	if (document.getElementById("vvp-items-grid") == undefined) {
+		console.log("No listing on this page, not drawing tabs.");
+		return false; // No listing on this page
+	}
+
 	//Implement the tab system.
 	let tabs = $("<div>")
 		.attr("id", "ext-helper-tabs")
