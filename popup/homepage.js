@@ -109,8 +109,20 @@ function init() {
 			) {
 				await chrome.storage.local.clear();
 				alert(
-					"All settings were deleted. Reload Amazon Vine to restaure default settings."
+					"All settings were deleted. RELOAD AMAZON VINE to restaure default settings.\nDO NOT EDIT OPTIONS before you reloaded an amazon vine page."
 				);
+			}
+		});
+	document
+		.getElementById("hiddenItemReset")
+		.addEventListener("click", async function () {
+			if (
+				confirm(
+					"Delete all locally stored hidden items from Vine Helper?"
+				)
+			) {
+				chrome.storage.local.set({ hiddenItems: [] });
+				alert("Hidden items in local storage emptied.");
 			}
 		});
 
