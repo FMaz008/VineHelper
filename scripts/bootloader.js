@@ -802,23 +802,6 @@ window.addEventListener("message", async function (event) {
 
 //Key bindings/keyboard shortcuts for navigation
 window.addEventListener("keydown", async function (e) {
-	//Debug: secret keybind to generate dummy hidden items
-	/*if (e.key == "g") {
-		if (
-			this.confirm(
-				"Generate 10,000 dummy items in local storage? (Will take ~1min)"
-			)
-		) {
-			for (i = 0; i < 10000; i++) {
-				fakeAsin = generateString(10);
-				HiddenList.addItem(fakeAsin, false);
-			}
-			HiddenList.saveList();
-			this.alert("10000 items generated");
-		}
-	}
-	*/
-
 	//Do not run the extension if ultraviner is running
 	if (ultraviner) {
 		return;
@@ -837,6 +820,23 @@ window.addEventListener("keydown", async function (e) {
 	if (excl.indexOf(nodeName) != -1) {
 		return false;
 	}
+
+	//Debug: secret keybind to generate dummy hidden items
+	/*if (e.key == "g") {
+		if (
+			this.confirm(
+				"Generate 10,000 dummy items in local storage? (Will take ~1min)"
+			)
+		) {
+			for (i = 0; i < 10000; i++) {
+				fakeAsin = generateString(10);
+				HiddenList.addItem(fakeAsin, false);
+			}
+			HiddenList.saveList();
+			this.alert("10000 items generated");
+		}
+	}
+	*/
 
 	if (appSettings.hiddenTab.active) {
 		if (e.key == appSettings.keyBindings.hideAll) hideAllItems();
