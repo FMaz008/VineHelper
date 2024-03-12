@@ -126,6 +126,8 @@ async function getSettings() {
 		Object.assign(appSettings, data.settings);
 	}
 
+	HiddenList = new HiddenListMgr();
+
 	//V2.2.0: Move the keybinding settings
 	if (appSettings.general.keyBindings !== undefined) {
 		appSettings.keyBindings = {};
@@ -474,7 +476,7 @@ function getStorageSizeFull() {
 }
 
 function generateString(length) {
-	let result = " ";
+	let result = "";
 	const characters =
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 	const charactersLength = characters.length;
