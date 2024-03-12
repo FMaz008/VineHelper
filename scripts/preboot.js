@@ -1,5 +1,9 @@
 const startTime = Date.now();
 
+if (typeof browser === "undefined") {
+	var browser = chrome;
+}
+
 //Extension settings
 var appSettings = {};
 var arrHidden = [];
@@ -383,11 +387,11 @@ async function generateStorageUsageForDebug() {
 		for (let key in items) {
 			try {
 				let itemCount = "";
-				const bytesUsed = await chrome.storage.local.getBytesInUse(key);
-				const storageData = await getStorageData(key);
+				const keyLength = await getStorageKeyLength(key);
+				const bytesUsed = await getStorageKeySizeinBytes(key);
 
 				if (key != "settings") {
-					itemCount = `representing ${storageData.length} items`;
+					itemCount = `representing ${keyLength} items`;
 				}
 				showRuntime(
 					`Storage used by ${key}: ${bytesToSize(
@@ -408,9 +412,9 @@ async function generateStorageUsageForDebug() {
 // Helper function to get storage items as a promise
 function getStorageItems() {
 	return new Promise((resolve, reject) => {
-		chrome.storage.local.get(null, (items) => {
-			if (chrome.runtime.lastError) {
-				reject(new Error(chrome.runtime.lastError.message));
+		browser.storage.local.get(null, (items) => {
+			if (browser.runtime.lastError) {
+				reject(new Error(browser.runtime.lastError.message));
 			} else {
 				resolve(items);
 			}
@@ -418,13 +422,40 @@ function getStorageItems() {
 	});
 }
 
-function getStorageData(key) {
+function getStorageKeySizeinBytes(key) {
 	return new Promise((resolve, reject) => {
-		chrome.storage.local.get(key, (result) => {
-			if (chrome.runtime.lastError) {
-				reject(new Error(chrome.runtime.lastError.message));
+		browser.storage.local.get(key, function (items) {
+			if (browser.runtime.lastError) {
+				reject(new Error(browser.runtime.lastError.message));
 			} else {
-				resolve(result[key]);
+				const storageSize = JSON.stringify(items[key]).length;
+				resolve(storageSize);
+			}
+		});
+	});
+}
+
+function getStorageKeyLength(key) {
+	return new Promise((resolve, reject) => {
+		browser.storage.local.get(key, function (items) {
+			if (browser.runtime.lastError) {
+				reject(new Error(browser.runtime.lastError.message));
+			} else {
+				const itemSize = items[key].length;
+				resolve(itemSize);
+			}
+		});
+	});
+}
+
+function getStorageSizeFull() {
+	return new Promise((resolve, reject) => {
+		browser.storage.local.get(function (items) {
+			if (browser.runtime.lastError) {
+				reject(new Error(browser.runtime.lastError.message));
+			} else {
+				const storageSize = JSON.stringify(items).length;
+				resolve(storageSize);
 			}
 		});
 	});
