@@ -37,12 +37,16 @@ class ScreenNotifier {
 		this.init();
 	}
 
+	/**
+	 * This method can be called multiple times to ensure a container is created as early as possible.
+	 */
 	async init() {
-		//Delete preexisting containers
-		$("#ext-helper-notifications-container").remove();
-		//Load the container
-		const prom = await Tpl.loadFile("view/notification_container.html");
-		$("body").append(Tpl.render(prom));
+		//If the container does not exist, create it and append it to the body.
+		if ($("#ext-helper-notifications-container").length == 0) {
+			//Load the container
+			const prom = await Tpl.loadFile("view/notification_container.html");
+			$("body").append(Tpl.render(prom));
+		}
 	}
 
 	async pushNotification(note) {

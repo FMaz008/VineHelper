@@ -51,6 +51,7 @@ async function init() {
 	showRuntime("BOOT: Config available. Begining init() function");
 
 	//Run the boot sequence
+	Notifications.init(); //Ensure the container for notification was created, in case it was not in preboot.
 	initFetchProductData();
 	await initFlushTplCache(); //And display the version changelog popup
 	initInjectScript();
