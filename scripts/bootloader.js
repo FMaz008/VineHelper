@@ -426,6 +426,7 @@ async function checkNewItems() {
 							chrome.runtime.id,
 							{
 								type: "newItem",
+								domain: "amazon." + vineDomain,
 								date: response.products[i].date,
 								asin: response.products[i].asin,
 								title: response.products[i].title,

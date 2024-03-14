@@ -1,0 +1,29 @@
+#ext-helper-notifications-container {
+	display: flex;
+	width: 100%;
+	flex-wrap: wrap;
+}
+.ext-helper-notification-box {
+	margin: 10px;
+	padding: 5px;
+	border: 1px solid #000;
+	width: 300px;
+}
+
+.ext-helper-notification-content img {
+	margin: 5px;
+}
+
+.ext-helper-notification-footer {
+	text-align: right;
+	width: 100%;
+	clear: left;
+}
+
+div.ext-helper-toolbar-large-icon {
+	display: inline-block;
+	width: 20px;
+	height: 20px;
+	vertical-align: middle;
+	margin: 0 3px;
+}

@@ -4,8 +4,18 @@
 		<script src="../lib/jquery/jquery-3.7.1.min.js"></script>
 		<script src="../scripts/Template.js"></script>
 		<script src="notifications.js"></script>
+
+		<link rel="stylesheet" type="text/css" href="notifications.css" />
+		<link rel="stylesheet" type="text/css" href="/resource/css/icon.css" />
 	</head>
 	<body>
-		<div id="ext-helper-notifications-container">Yo</div>
+		<h1>Notifications monitoring:</h1>
+		<p class="notice">
+			If your notifications checks are enabled, every 60 seconds,
+			notifications will be added on this page, but not automatically
+			deleted. Let the tab open for them to accumulate. Refreshing the
+			page will loose the list.
+		</p>
+		<div id="ext-helper-notifications-container"></div>
 	</body>
 </html>
