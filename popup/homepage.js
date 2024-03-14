@@ -144,6 +144,8 @@ function init() {
 	drawUnavailableTab();
 	drawDiscord();
 
+	document.getElementById("notificationsMonitor").href =
+		chrome.runtime.getURL("page/notifications.html");
 	//###################
 	//#### UI interaction
 

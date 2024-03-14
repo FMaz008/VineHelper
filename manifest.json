@@ -34,6 +34,7 @@
 				"resource/image/*",
 				"view/*",
 				"resource/sound/*",
+				"page/*",
 				"lib/vine-styling/desktop/*",
 				"lib/vine-styling/mobile/*",
 				"scripts/inj.js"

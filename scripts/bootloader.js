@@ -280,6 +280,7 @@ async function checkNewItems() {
 	fetch(url)
 		.then((response) => response.json())
 		.then(async function (response) {
+			let broadcast = new BroadcastChannel("vine_helper");
 			let latestProduct = await chrome.storage.local.get("latestProduct");
 			if (isEmptyObj(latestProduct)) {
 				latestProduct = 0;
@@ -303,7 +304,7 @@ async function checkNewItems() {
 			for (let i = response.products.length - 1; i >= 0; i--) {
 				//Only display notification for product more recent than the last displayed notification
 				if (
-					response.products[i].date > latestProduct ||
+					response.products[i].date < latestProduct ||
 					latestProduct == 0
 				) {
 					//Only display notification for products with a title and image url
@@ -351,6 +352,26 @@ async function checkNewItems() {
 								latestProduct: response.products[0].date,
 							});
 						}
+
+						//Broadcast the notification
+						chrome.runtime.sendMessage(
+							chrome.runtime.id,
+							{
+								type: "newItem",
+								date: response.products[i].date,
+								asin: response.products[i].asin,
+								title: response.products[i].title,
+								img_url: response.products[i].img_url,
+							},
+							(response) => {
+								if (browser.runtime.lastError) {
+									return;
+								}
+								if (!response) {
+									return;
+								}
+							}
+						);
 					}
 				}
 			}
