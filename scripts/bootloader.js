@@ -312,41 +312,44 @@ async function checkNewItems() {
 						response.products[i].img_url != "" &&
 						response.products[i].title != ""
 					) {
-						let note2 = new ScreenNotification();
-						note2.title = "New item detected !";
-						note2.lifespan = 60;
-						note2.content = "";
+						if (vineBrowsingListing && appSettings.general.displayNewItemNofitications) {
+							//Only display notification if we are browsing a listing)
+							let note2 = new ScreenNotification();
+							note2.title = "New item detected !";
+							note2.lifespan = 60;
+							note2.content = "";
 
-						//Play the notification sound
-						if (appSettings.general.newItemNotificationSound) {
-							note2.sound = "resource/sound/notification.mp3";
-						}
+							//Play the notification sound
+							if (appSettings.general.newItemNotificationSound) {
+								note2.sound = "resource/sound/notification.mp3";
+							}
 
-						title = response.products[i].title.replace(
-							/^(.{40}[^\s]*).*/,
-							"$1"
-						);
+							title = response.products[i].title.replace(
+								/^(.{40}[^\s]*).*/,
+								"$1"
+							);
 
-						if (appSettings.general.newItemNotificationImage) {
+							if (appSettings.general.newItemNotificationImage) {
+								note2.content +=
+									"<img src='" +
+									response.products[i].img_url +
+									"' style='float:left;' width='50' height='50' />";
+							}
 							note2.content +=
-								"<img src='" +
-								response.products[i].img_url +
-								"' style='float:left;' width='50' height='50' />";
+								" <a href='/vine/vine-items?search=" +
+								title +
+								"' target='_blank'><div class='ext-helper-toolbar-large-icon ext-helper-icon-search' style='float:right'></div></a>";
+
+							note2.content +=
+								"<a href='/dp/" +
+								response.products[i].asin +
+								"' target='_blank'>" +
+								response.products[i].title +
+								"</a>";
+
+							await Notifications.pushNotification(note2);
 						}
-						note2.content +=
-							" <a href='/vine/vine-items?search=" +
-							title +
-							"' target='_blank'><div class='ext-helper-toolbar-large-icon ext-helper-icon-search' style='float:right'></div></a>";
-
-						note2.content +=
-							"<a href='/dp/" +
-							response.products[i].asin +
-							"' target='_blank'>" +
-							response.products[i].title +
-							"</a>";
-
-						await Notifications.pushNotification(note2);
-
+						
 						if (i == 0) {
 							await chrome.storage.local.set({
 								latestProduct: response.products[0].date,

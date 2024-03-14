@@ -17,6 +17,7 @@ var vineCurrency = null;
 var vineQueue = null;
 var vineQueueAbbr = null;
 var vineSearch = false;
+var vineBrowsingListing = false;
 var uuid = null;
 
 var appVersion = 0;
@@ -55,6 +56,7 @@ function getDefaultSettings() {
 			versionInfoPopup: 0,
 			firstVotePopup: true,
 			newItemNotification: false,
+			displayNewItemNofitications: false,
 			newItemNotificationImage: true,
 			hiddenItemsCacheSize: 9,
 		},
@@ -149,6 +151,13 @@ async function getSettings() {
 	}
 	if (appSettings.general.newItemNotificationImage == undefined) {
 		appSettings.general.newItemNotificationImage = true;
+		saveSettings();
+	}
+
+	//v2.2.7
+	if (appSettings.general.displayNewItemNofitications == undefined) {
+		appSettings.general.displayNewItemNofitications =
+			appSettings.general.newItemNotification;
 		saveSettings();
 	}
 
@@ -259,6 +268,7 @@ async function getSettings() {
 	arrMatches = currentUrl.match(regex);
 	vineQueue = null;
 	if (arrMatches != null) {
+		vineBrowsingListing = true;
 		if (arrMatches[1] == undefined) {
 			vineQueue = null; //Could be the default AFA or a search.
 		} else {

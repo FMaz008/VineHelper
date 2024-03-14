@@ -412,6 +412,7 @@ function init() {
 	manageCheckboxSetting("general.displayFirstSeen");
 	manageCheckboxSetting("general.bookmark");
 	manageCheckboxSetting("general.newItemNotification");
+	manageCheckboxSetting("general.displayNewItemNofitications");
 	manageCheckboxSetting("general.newItemNotificationSound");
 	manageCheckboxSetting("general.newItemNotificationImage");
 	manageCheckboxSetting("keyBindings.active");
