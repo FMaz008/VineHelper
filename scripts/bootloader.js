@@ -304,7 +304,7 @@ async function checkNewItems() {
 			for (let i = response.products.length - 1; i >= 0; i--) {
 				//Only display notification for product more recent than the last displayed notification
 				if (
-					response.products[i].date < latestProduct ||
+					response.products[i].date > latestProduct ||
 					latestProduct == 0
 				) {
 					//Only display notification for products with a title and image url
