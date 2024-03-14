@@ -4,14 +4,30 @@ class HiddenListMgr {
 	arrHidden = [];
 	arrChanges = [];
 	listLoaded = false;
+	broadcast = null;
 
 	constructor() {
+		this.broadcast = new BroadcastChannel("vine_helper");
+
 		showRuntime("HIDDENMGR: Loading list");
-		this.loadFromLocalStorage();
+		this.loadFromLocalStorage(); //Can't be awaited
+
+		//Handle the reception of broadcasts:
+		this.broadcast.onmessage = function (ev) {
+			if (ev.data.type == undefined) return;
+
+			if (ev.data.type == "hideItem") {
+				HiddenList.addItem(ev.data.asin, false, false);
+			}
+			if (ev.data.type == "showItem") {
+				HiddenList.removeItem(ev.data.asin, false, false);
+			}
+		};
 	}
 
 	async loadFromLocalStorage() {
 		const data = await browser.storage.local.get("hiddenItems");
+
 		//Load hidden items
 		if (isEmptyObj(data)) {
 			await browser.storage.local.set({ hiddenItems: [] });
@@ -23,7 +39,7 @@ class HiddenListMgr {
 		showRuntime("HIDDENMGR: List loaded.");
 	}
 
-	async removeItem(asin, save = true) {
+	async removeItem(asin, save = true, broadcast = true) {
 		if (save) await this.loadFromLocalStorage(); //Load the list in case it was altered in a different tab
 
 		let idx = 0;
@@ -39,9 +55,14 @@ class HiddenListMgr {
 		this.updateArrChange({ asin: asin, hidden: false });
 
 		if (save) this.saveList();
+
+		//Broadcast the change to other tabs
+		if (broadcast) {
+			this.broadcast.postMessage({ type: "hideItem", asin: asin });
+		}
 	}
 
-	async addItem(asin, save = true) {
+	async addItem(asin, save = true, broadcast = true) {
 		if (save) await this.loadFromLocalStorage(); //Load the list in case it was altered in a different tab
 
 		if (!this.isHidden(asin))
@@ -51,6 +72,11 @@ class HiddenListMgr {
 		this.updateArrChange({ asin: asin, hidden: true });
 
 		if (save) this.saveList();
+
+		//Broadcast the change to other tabs
+		if (broadcast) {
+			this.broadcast.postMessage({ type: "showItem", asin: asin });
+		}
 	}
 
 	async saveList() {
