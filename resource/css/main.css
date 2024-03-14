@@ -60,6 +60,15 @@ div#ext-helper-healing-text {
 	color: #0f1111;
 }
 
+.vvp-container-right-align {
+	flex-flow: row wrap;
+}
+div#bookmark {
+	margin-top: 10px;
+	flex-basis: 100%;
+	text-align: right;
+}
+
 button.bookmark {
 	margin-right: 10px;
 	display: inline-block;
@@ -71,8 +80,8 @@ button.bookmark {
 	vertical-align: top;
 	padding-left: 22px;
 	background-size: 16px;
+	background-position-x: 10px;
 	background-position-y: center;
-	background-position-x: center;
 }
 #vvp-items-grid .bookmark-highlight {
 	border: 3px solid #ffd814;

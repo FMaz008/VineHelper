@@ -185,10 +185,10 @@ async function initInsertBookmarkButton() {
 		prom = await Tpl.loadFile("view/bookmark.html");
 		Tpl.setVar("date", appSettings.general.bookmarkDate);
 		let bookmarkContent = Tpl.render(prom);
-		$("#vvp-items-button-container ~ .vvp-container-right-align").prepend(
+		$("#vvp-items-button-container ~ .vvp-container-right-align").append(
 			bookmarkContent
 		);
-		$("button.bookmark").on("click", function (event) {
+		$("button.bookmarknow").on("click", function (event) {
 			//Fetch the current date/time from the server
 			let arrJSON = {
 				api_version: 4,
@@ -217,8 +217,70 @@ async function initInsertBookmarkButton() {
 					await Notifications.pushNotification(note);
 				});
 		});
+		$("button.bookmark12").on("click", function (event) {
+			//Fetch the current date/time from the server
+			let arrJSON = {
+				api_version: 4,
+				country: vineCountry,
+				action: "date",
+			};
+			let url =
+				"https://vinehelper.ovh/vinehelper.php" +
+				"?data=" +
+				JSON.stringify(arrJSON);
+			fetch(url)
+				.then((response) => response.json())
+				.then(async function (response) {
+					appSettings.general.bookmarkDate = new Date(
+						new Date(response.date + " GMT").getTime() -
+							12 * 60 * 60 * 1000
+					).toString();
+					saveSettings();
+
+					let note = new ScreenNotification();
+					note.title = "Marker set !";
+					note.lifespan = 30;
+					note.content =
+						"Marker set for <br />" +
+						appSettings.general.bookmarkDate +
+						"<br />Newer items will be highlighted.";
+					await Notifications.pushNotification(note);
+				});
+		});
+		$("button.bookmark24").on("click", function (event) {
+			//Fetch the current date/time from the server
+			let arrJSON = {
+				api_version: 4,
+				country: vineCountry,
+				action: "date",
+			};
+			let url =
+				"https://vinehelper.ovh/vinehelper.php" +
+				"?data=" +
+				JSON.stringify(arrJSON);
+			fetch(url)
+				.then((response) => response.json())
+				.then(async function (response) {
+					appSettings.general.bookmarkDate = new Date(
+						new Date(response.date + " GMT").getTime() -
+							24 * 60 * 60 * 1000
+					).toString();
+					saveSettings();
+
+					let note = new ScreenNotification();
+					note.title = "Marker set !";
+					note.lifespan = 30;
+					note.content =
+						"Marker set for <br />" +
+						appSettings.general.bookmarkDate +
+						"<br />Newer items will be highlighted.";
+					await Notifications.pushNotification(note);
+				});
+		});
 	}
 }
+
+async function getCurrentTimeFromServer() {}
 
 function initFixPreviousButton() {
 	//Place the text-content of the Previous button before the other child elements.
@@ -312,7 +374,10 @@ async function checkNewItems() {
 						response.products[i].img_url != "" &&
 						response.products[i].title != ""
 					) {
-						if (vineBrowsingListing && appSettings.general.displayNewItemNofitications) {
+						if (
+							vineBrowsingListing &&
+							appSettings.general.displayNewItemNofitications
+						) {
 							//Only display notification if we are browsing a listing)
 							let note2 = new ScreenNotification();
 							note2.title = "New item detected !";
@@ -349,7 +414,7 @@ async function checkNewItems() {
 
 							await Notifications.pushNotification(note2);
 						}
-						
+
 						if (i == 0) {
 							await chrome.storage.local.set({
 								latestProduct: response.products[0].date,
