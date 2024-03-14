@@ -390,7 +390,7 @@ async function checkNewItems() {
 							}
 
 							title = response.products[i].title.replace(
-								/^(.{40}[^\s]*).*/,
+								/^([a-zA-Z0-9\s']{0,40})[^\s]*.*/,
 								"$1"
 							);
 
