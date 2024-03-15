@@ -1,29 +1,22 @@
 <div id="ext-helper-notification-{{$id}}" class="ext-helper-notification-box">
-	<div class="ext-helper-notification-container">
-		<div class="ext-helper-notification-toolbar"></div>
+
+		<div class="ext-helper-notification-toolbar"><a
+			href="{{$base_url}}/vine/vine-items?search={{$search}}"
+			target="_blank"
+		>
+			<div
+				class="ext-helper-toolbar-large-icon ext-helper-icon-search"
+				style="float: right"
+			></div
+		></a></div>
 		<div class="ext-helper-notification-content">
 			<img
 				src="{{$img_url}}"
-				style="float: left"
-				width="100"
-				height="100"
 			/>
-
-			<a
-				href="{{$base_url}}/vine/vine-items?search={{$search}}"
-				target="_blank"
-			>
-				<div
-					class="ext-helper-toolbar-large-icon ext-helper-icon-search"
-					style="float: right"
-				></div
-			></a>
-
 			<a href="{{$base_url}}/dp/{{$asin}}" target="_blank"
 				>{{$description}}</a
 			>
 		</div>
-	</div>
 	<div class="ext-helper-notification-footer">{{$date}}</div>
 	<div style="clear: both"></div>
 </div>
