@@ -59,8 +59,6 @@ function handleDependantChildCheckBoxes(parentChk, arrChilds) {
 	for (i = 0; i < arrChilds.length; i++) {
 		keyF = CSS.escape(arrChilds[i]);
 		document.querySelector(`[name='${keyF}']`).disabled = !checked;
-		if (!checked)
-			document.querySelector(`[name='${keyF}']`).checked = false;
 	}
 }
 
