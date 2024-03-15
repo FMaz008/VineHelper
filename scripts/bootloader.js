@@ -375,8 +375,8 @@ async function checkNewItems() {
 						response.products[i].title != ""
 					) {
 						if (
-							vineBrowsingListing &&
-							appSettings.general.displayNewItemNofitications
+							vineBrowsingListing && //Only show notification on listing pages
+							appSettings.general.displayNewItemNotifications
 						) {
 							//Only display notification if we are browsing a listing)
 							let note2 = new ScreenNotification();
