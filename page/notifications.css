@@ -20,6 +20,7 @@
 	width: 300px;
 	display: grid;
 	grid-template-rows: 0 1fr auto;
+	flex: 1 1 auto;
 }
 
 .ext-helper-notification-content {
@@ -72,6 +73,6 @@
 	.ext-helper-notification-box {
 		width: 100%;
 		/* Make the element full width on smaller screens */
-		max-width: unset;
+		/* max-width: unset; */
 	}
 }
