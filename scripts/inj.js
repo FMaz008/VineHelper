@@ -173,9 +173,13 @@ window.fetch = async (...args) => {
 				arrKeys = Object.keys(variation.dimensions);
 				for (j = 0; j < arrKeys.length; j++) {
 					before = variation.dimensions[arrKeys[j]];
+					console.log("Value of " + arrKeys[j] + " = " + before);
 					variation.dimensions[arrKeys[j]].replace(
 						/[^a-zA-Z0-9- ]/g,
 						""
+					);
+					console.log(
+						"... updated to " + variation.dimensions[arrKeys[j]]
 					);
 
 					if (before != variation.dimensions[arrKeys[j]]) {
