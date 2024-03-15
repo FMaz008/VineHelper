@@ -50,8 +50,9 @@ async function init() {
 	}
 	showRuntime("BOOT: Config available. Begining init() function");
 
-	//Run the boot sequence
+	//### Run the boot sequence
 	Notifications.init(); //Ensure the container for notification was created, in case it was not in preboot.
+	displayAccountData();
 	initFetchProductData();
 	await initFlushTplCache(); //And display the version changelog popup
 	initInjectScript();
@@ -62,6 +63,88 @@ async function init() {
 	initFixPreviousButton();
 	await initDrawToolbars();
 	HiddenList.garbageCollection();
+}
+
+function displayAccountData() {
+	regex = /^.+?amazon\..+\/vine\/account?$/;
+	arrMatches = window.location.href.match(regex);
+	if (arrMatches == null) return;
+
+	//Add a container to the status table
+	document.getElementById("vvp-current-status-box").style.height = "auto";
+	let elem = document.getElementById("vvp-current-status-box").children[0];
+	let parentContainer = document.createElement("div");
+	parentContainer.classList.add("a-row");
+	elem.append(parentContainer);
+
+	let container = document.createElement("div");
+	container.classList.add("a-column");
+	parentContainer.append(container);
+
+	let json = JSON.parse(
+		document.getElementsByClassName("vvp-body")[0].childNodes[0].innerHTML
+	);
+	/*{"marketplaceId":"A2EUQ1WTGCTBG2",
+	"absolutePathPrefix":"https://www.amazon.ca/vine",
+	"hasHeader":true,
+	"pageType":"account",
+	"isVineCurrentYearTaxReportEnabled":false,
+	"customerId":"ANIG6JE5CNVF4",
+	"voiceDetails":{
+		"completedClickToAction":[
+			"GIVING_VOICE_AND_INSIGHT",
+			"NEW_FEATURES_VINE",
+			"PARTICIPATING_IN_VINE",
+			"QUICK_TOUR_OF_VINE",
+			"WELCOME_TO_VINE"
+		],
+		"acceptanceDate":1699215259041,
+		"tierStatusAction":"TIER1_ONBOARDED_VOICES",
+		"voiceTaxIntentToStatus":{"US_WITHHOLDING":"VALIDATED_TAX_INFO"},
+		"voiceMemberShipStatus":"ACTIVE",
+		"statusEarnedDate":1699215259041,
+		"isTaxValidationRequired":true,
+		"obfuscatedMarketplaceId":"A2EUQ1WTGCTBG2",
+		"taxSurveyStatus":"VALIDATED_TAX_INFO",
+		"isTaxReportSupported":false,
+		"obfuscatedCustomerId":"ANIG6JE5CNVF4",
+		"optOutOfEmail":false,
+		"reevaluationDate":1714767259041,
+		"displayVineBadge":true,
+		"isTierEvaluationInProgress":false,
+		"tierStatus":"TIER1"
+	},"isPreviousTaxReportEnabled":true}'
+	*/
+
+	let date;
+	let div;
+
+	div = document.createElement("div");
+	div.innerHTML =
+		"<h5>Vine Helper extra stats:</h5><strong>Customer Id:</strong> " +
+		json.customerId;
+	container.appendChild(div);
+
+	date = new Date(json.voiceDetails.acceptanceDate);
+	div = document.createElement("div");
+	div.innerHTML = "<strong>Acceptance date:</strong> " + date;
+	container.appendChild(div);
+
+	date = new Date(json.voiceDetails.statusEarnedDate);
+	div = document.createElement("div");
+	div.innerHTML = "<strong>Status earned date:</strong> " + date;
+	container.appendChild(div);
+
+	date = new Date(json.voiceDetails.reevaluationDate);
+	div = document.createElement("div");
+	div.innerHTML = "<strong>Re-evaluation date:</strong> " + date;
+	container.appendChild(div);
+
+	div = document.createElement("div");
+	div.innerHTML =
+		"<strong>Re-evalation in progress:</strong> " +
+		json.voiceDetails.isTierEvaluationInProgress;
+	container.appendChild(div);
 }
 
 function initFetchProductData() {
