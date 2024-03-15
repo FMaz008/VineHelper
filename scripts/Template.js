@@ -78,7 +78,7 @@ class TemplateMgr {
 
 	async loadTempateFromLocalStorage() {
 		const data = await chrome.storage.local.get("arrTemplate");
-		if (isEmptyObj(data)) {
+		if (Object.keys(data).length === 0) {
 			showRuntime(
 				"TEMPLATE: No template in localstorage, will load them from files as needed..."
 			);

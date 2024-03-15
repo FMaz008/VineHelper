@@ -118,7 +118,7 @@ async function getSettings() {
 	showRuntime("PRE: Done reading settings");
 
 	//If no settings exist already, create the default ones
-	if (data == null || isEmptyObj(data)) {
+	if (data == null || Object.keys(data).length === 0) {
 		showRuntime("Settings not found, generating default configuration...");
 		//Will generate default settings
 		await chrome.storage.local.clear(); //Delete all local storage
@@ -339,10 +339,6 @@ if (!regex.test(window.location.href)) {
 
 //#################################################3
 //### UTILITY FUNCTIONS
-function isEmptyObj(obj) {
-	for (i in obj) return false;
-	return true;
-}
 
 async function saveSettings() {
 	try {
