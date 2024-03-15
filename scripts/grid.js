@@ -19,7 +19,7 @@ class Grid {
 	addTile(t) {
 		this.pArrTile.push(t);
 
-		if (!$.isEmptyObject(t)) {
+		if (Object.keys(t).length !== 0) {
 			$(t.getDOM())
 				.detach()
 				.appendTo("#" + this.getId());
