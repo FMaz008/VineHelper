@@ -29,7 +29,7 @@ class HiddenListMgr {
 		const data = await browser.storage.local.get("hiddenItems");
 
 		//Load hidden items
-		if (isEmptyObj(data)) {
+		if (Object.keys(data).length === 0) {
 			await browser.storage.local.set({ hiddenItems: [] });
 		} else {
 			this.arrHidden = [];
@@ -114,7 +114,7 @@ class HiddenListMgr {
 
 	isChange(asin) {
 		for (const id in this.arrChanges)
-			if (this.arrChanges[id].asin == asin) return i;
+			if (this.arrChanges[id].asin == asin) return id;
 
 		return false;
 	}
