@@ -1,9 +1,12 @@
-var notificationCount = 0;
+if (typeof browser === "undefined") {
+	var browser = chrome;
+}
+
 var Tpl = new Template();
 var TplMgr = new TemplateMgr();
 
 window.onload = function () {
-	chrome.runtime.onMessage.addListener((data, sender, sendResponse) => {
+	browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 		if (data.type == undefined) return;
 
 		if (data.type == "newItem") {
@@ -13,40 +16,27 @@ window.onload = function () {
 };
 
 async function addItem(data) {
-	/*
-	type: "newItem",
-	date: response.products[i].date,
-	asin: response.products[i].asin,
-	title: response.products[i].title,
-	img_url: response.products[i].img_url,
-	*/
+	
 	const prom = await Tpl.loadFile("/view/notification_monitor.html");
 
-	let search = data.title.replace(/^([a-zA-Z0-9\s']{0,40})[^\s]*.*/, "$1");
+	const {date, asin, title, img_url, domain} = data;
 
-	Tpl.setVar("id", notificationCount++);
-	Tpl.setVar("base_url", "https://" + data.domain);
+	let search = title.replace(/^([a-zA-Z0-9\s']{0,40})[^\s]*.*/, "$1");
+
+	Tpl.setVar("id", asin);
+	Tpl.setVar("base_url", "https://" + domain);
 	Tpl.setVar("title", "New item");
-	Tpl.setVar("date", data.date);
+	Tpl.setVar("date", date);
 	Tpl.setVar("search", search);
-	Tpl.setVar("asin", data.asin);
-	Tpl.setVar("description", data.title);
-	Tpl.setVar("img_url", data.img_url);
+	Tpl.setVar("asin", asin);
+	Tpl.setVar("description", title);
+	Tpl.setVar("img_url", img_url);
 	let content = Tpl.render(prom);
 
-	let div = document.createElement("div");
-	div.innerHTML = content;
-
-	document.getElementById("ext-helper-notifications-container").append(div);
-}
-
-//#################################################
-//### UTILITY FUNCTIONS required by the template system
-function isEmptyObj(obj) {
-	for (i in obj) return false;
-	return true;
+	const newBody = document.getElementById('ext-helper-notifications-container')
+	newBody.insertAdjacentHTML('afterbegin', content);	
 }
 
 function showRuntime() {
-	//Not needed
+//Not needed 
 }
