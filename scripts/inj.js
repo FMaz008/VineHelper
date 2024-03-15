@@ -166,6 +166,24 @@ window.fetch = async (...args) => {
 				}
 			}
 
+			//The product has variation, let's ensure they do not contain any illegal characters
+			for (i = 0; i < variations.length; ++i) {
+				let variation = variations[i];
+				let before = "";
+				arrKeys = Object.keys(variation.dimensions);
+				for (j = 0; j < arrKeys.length; j++) {
+					before = variation.dimensions[arrKeys[j]];
+					variation.dimensions[arrKeys[j]].replace(
+						/[^a-zA-Z0-9- ]/g,
+						""
+					);
+
+					if (before != variation.dimensions[arrKeys[j]]) {
+						fixed++;
+					}
+				}
+			}
+
 			if (fixed > 0) {
 				var data = {
 					type: "infiniteWheelFixed",
