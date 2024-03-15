@@ -50,8 +50,9 @@ async function init() {
 	}
 	showRuntime("BOOT: Config available. Begining init() function");
 
-	//Run the boot sequence
+	//### Run the boot sequence
 	Notifications.init(); //Ensure the container for notification was created, in case it was not in preboot.
+	displayAccountData();
 	initFetchProductData();
 	await initFlushTplCache(); //And display the version changelog popup
 	initInjectScript();
@@ -62,6 +63,57 @@ async function init() {
 	initFixPreviousButton();
 	await initDrawToolbars();
 	HiddenList.garbageCollection();
+}
+
+function displayAccountData() {
+	regex = /^.+?amazon\..+\/vine\/account?$/;
+	arrMatches = window.location.href.match(regex);
+	if (arrMatches == null) return;
+
+	//Add a container to the status table
+	document.getElementById("vvp-current-status-box").style.height = "auto";
+	let elem = document.getElementById("vvp-current-status-box").children[0];
+	let parentContainer = document.createElement("div");
+	parentContainer.classList.add("a-row");
+	elem.append(parentContainer);
+
+	let container = document.createElement("div");
+	container.classList.add("a-column");
+	parentContainer.append(container);
+
+	let json = JSON.parse(
+		document.getElementsByClassName("vvp-body")[0].childNodes[0].innerHTML
+	);
+
+	let date;
+	let div;
+
+	div = document.createElement("div");
+	div.innerHTML =
+		"<h5>Vine Helper extra stats:</h5><strong>Customer Id:</strong> " +
+		json.customerId;
+	container.appendChild(div);
+
+	date = new Date(json.voiceDetails.acceptanceDate);
+	div = document.createElement("div");
+	div.innerHTML = "<strong>Acceptance date:</strong> " + date;
+	container.appendChild(div);
+
+	date = new Date(json.voiceDetails.statusEarnedDate);
+	div = document.createElement("div");
+	div.innerHTML = "<strong>Status earned date:</strong> " + date;
+	container.appendChild(div);
+
+	date = new Date(json.voiceDetails.reevaluationDate);
+	div = document.createElement("div");
+	div.innerHTML = "<strong>Re-evaluation date:</strong> " + date;
+	container.appendChild(div);
+
+	div = document.createElement("div");
+	div.innerHTML =
+		"<strong>Re-evalation in progress:</strong> " +
+		json.voiceDetails.isTierEvaluationInProgress;
+	container.appendChild(div);
 }
 
 function initFetchProductData() {
@@ -116,9 +168,9 @@ function initSetPageTitle() {
 	regex = /^.+?amazon\..+\/vine\/.*[\?\&]search=(.*?)(?:[\&].*)?$/;
 	arrMatches = currentUrl.match(regex);
 	if (arrMatches != null)
-		$("title").text("Amazon Vine - S: " + arrMatches[1]);
+		$("title").text("Vine - S: " + arrMatches[1]);
 	else if (vineQueue != null) {
-		$("title").text("Amazon Vine - " + vineQueueAbbr);
+		$("title").text("Vine - " + vineQueueAbbr);
 	}
 
 	//Add the category, is any, that is currently being browsed to the title of the page.
@@ -375,8 +427,8 @@ async function checkNewItems() {
 						response.products[i].title != ""
 					) {
 						if (
-							vineBrowsingListing &&
-							appSettings.general.displayNewItemNofitications
+							vineBrowsingListing && //Only show notification on listing pages
+							appSettings.general.displayNewItemNotifications
 						) {
 							//Only display notification if we are browsing a listing)
 							let note2 = new ScreenNotification();

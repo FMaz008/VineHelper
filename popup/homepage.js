@@ -37,24 +37,31 @@ function handleChildrenOptions(parent_key) {
 }
 
 function handleDynamicFields(key) {
-	let keyE = CSS.escape(key);
+	handleDependantChildCheckBoxes("hiddenTab.active", ["hiddenTab.remote"]);
+
+	handleDependantChildCheckBoxes("general.displayFirstSeen", [
+		"general.bookmark",
+	]);
+
+	handleDependantChildCheckBoxes("general.newItemNotification", [
+		"general.displayNewItemNotifications",
+	]);
+
+	handleDependantChildCheckBoxes("general.displayNewItemNotifications", [
+		"general.newItemNotificationImage",
+		"general.newItemNotificationSound",
+	]);
+}
+function handleDependantChildCheckBoxes(parentChk, arrChilds) {
+	let keyE = CSS.escape(parentChk);
 	let checked = document.querySelector(`input[name='${keyE}']`).checked;
-	let keyF = null;
 
-	if (key == "hiddenTab.active") {
-		keyF = CSS.escape("hiddenTab.remote");
-		document.querySelector(`[name='${keyF}']`).disabled = !checked;
-	}
-	if (key == "general.newItemNotification") {
-		keyF = CSS.escape("general.newItemNotificationSound");
-		document.querySelector(`[name='${keyF}']`).disabled = !checked;
-	}
-
-	if (key == "general.displayFirstSeen") {
-		keyF = CSS.escape("general.bookmark");
+	for (i = 0; i < arrChilds.length; i++) {
+		keyF = CSS.escape(arrChilds[i]);
 		document.querySelector(`[name='${keyF}']`).disabled = !checked;
 	}
 }
+
 async function drawUnavailableTab() {
 	document.querySelector("#votingToolbarOptions").style.display = appSettings
 		.unavailableTab.votingToolbar
@@ -412,7 +419,7 @@ function init() {
 	manageCheckboxSetting("general.displayFirstSeen");
 	manageCheckboxSetting("general.bookmark");
 	manageCheckboxSetting("general.newItemNotification");
-	manageCheckboxSetting("general.displayNewItemNofitications");
+	manageCheckboxSetting("general.displayNewItemNotifications");
 	manageCheckboxSetting("general.newItemNotificationSound");
 	manageCheckboxSetting("general.newItemNotificationImage");
 	manageCheckboxSetting("keyBindings.active");

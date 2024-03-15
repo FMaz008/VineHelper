@@ -56,7 +56,7 @@ function getDefaultSettings() {
 			versionInfoPopup: 0,
 			firstVotePopup: true,
 			newItemNotification: false,
-			displayNewItemNofitications: false,
+			displayNewItemNotifications: false,
 			newItemNotificationImage: true,
 			hiddenItemsCacheSize: 9,
 		},
@@ -155,8 +155,8 @@ async function getSettings() {
 	}
 
 	//v2.2.7
-	if (appSettings.general.displayNewItemNofitications == undefined) {
-		appSettings.general.displayNewItemNofitications =
+	if (appSettings.general.displayNewItemNotifications == undefined) {
+		appSettings.general.displayNewItemNotifications =
 			appSettings.general.newItemNotification;
 		saveSettings();
 	}
