@@ -84,37 +84,6 @@ function displayAccountData() {
 	let json = JSON.parse(
 		document.getElementsByClassName("vvp-body")[0].childNodes[0].innerHTML
 	);
-	/*{"marketplaceId":"A2EUQ1WTGCTBG2",
-	"absolutePathPrefix":"https://www.amazon.ca/vine",
-	"hasHeader":true,
-	"pageType":"account",
-	"isVineCurrentYearTaxReportEnabled":false,
-	"customerId":"ANIG6JE5CNVF4",
-	"voiceDetails":{
-		"completedClickToAction":[
-			"GIVING_VOICE_AND_INSIGHT",
-			"NEW_FEATURES_VINE",
-			"PARTICIPATING_IN_VINE",
-			"QUICK_TOUR_OF_VINE",
-			"WELCOME_TO_VINE"
-		],
-		"acceptanceDate":1699215259041,
-		"tierStatusAction":"TIER1_ONBOARDED_VOICES",
-		"voiceTaxIntentToStatus":{"US_WITHHOLDING":"VALIDATED_TAX_INFO"},
-		"voiceMemberShipStatus":"ACTIVE",
-		"statusEarnedDate":1699215259041,
-		"isTaxValidationRequired":true,
-		"obfuscatedMarketplaceId":"A2EUQ1WTGCTBG2",
-		"taxSurveyStatus":"VALIDATED_TAX_INFO",
-		"isTaxReportSupported":false,
-		"obfuscatedCustomerId":"ANIG6JE5CNVF4",
-		"optOutOfEmail":false,
-		"reevaluationDate":1714767259041,
-		"displayVineBadge":true,
-		"isTierEvaluationInProgress":false,
-		"tierStatus":"TIER1"
-	},"isPreviousTaxReportEnabled":true}'
-	*/
 
 	let date;
 	let div;
@@ -199,9 +168,9 @@ function initSetPageTitle() {
 	regex = /^.+?amazon\..+\/vine\/.*[\?\&]search=(.*?)(?:[\&].*)?$/;
 	arrMatches = currentUrl.match(regex);
 	if (arrMatches != null)
-		$("title").text("Amazon Vine - S: " + arrMatches[1]);
+		$("title").text("Vine - S: " + arrMatches[1]);
 	else if (vineQueue != null) {
-		$("title").text("Amazon Vine - " + vineQueueAbbr);
+		$("title").text("Vine - " + vineQueueAbbr);
 	}
 
 	//Add the category, is any, that is currently being browsed to the title of the page.
