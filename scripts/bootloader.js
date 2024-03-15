@@ -45,7 +45,7 @@ if (!ultraviner) {
 async function init() {
 	//Wait for the config to be loaded before running this script
 	showRuntime("BOOT: Waiting on config to be loaded...");
-	while ($.isEmptyObject(appSettings)) {
+	while (Object.keys(appSettings).length === 0) {
 		await new Promise((r) => setTimeout(r, 10));
 	}
 	showRuntime("BOOT: Config available. Begining init() function");
@@ -343,8 +343,8 @@ async function checkNewItems() {
 		.then((response) => response.json())
 		.then(async function (response) {
 			let broadcast = new BroadcastChannel("vine_helper");
-			let latestProduct = await chrome.storage.local.get("latestProduct");
-			if (isEmptyObj(latestProduct)) {
+			let latestProduct = await browser.storage.local.get("latestProduct");
+			if (Object.keys(latestProduct).length === 0) {
 				latestProduct = 0;
 			} else {
 				latestProduct = latestProduct.latestProduct;
@@ -416,14 +416,14 @@ async function checkNewItems() {
 						}
 
 						if (i == 0) {
-							await chrome.storage.local.set({
+							await browser.storage.local.set({
 								latestProduct: response.products[0].date,
 							});
 						}
 
 						//Broadcast the notification
-						chrome.runtime.sendMessage(
-							chrome.runtime.id,
+						browser.runtime.sendMessage(
+							browser.runtime.id,
 							{
 								type: "newItem",
 								domain: "amazon." + vineDomain,
