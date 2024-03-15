@@ -33,9 +33,16 @@ async function addItem(data) {
 	Tpl.setVar("img_url", img_url);
 	let content = Tpl.render(prom);
 
-	const newBody = document.getElementById('ext-helper-notifications-container')
-	newBody.insertAdjacentHTML('afterbegin', content);	
+	insertMessageIfAsinIsUnique (content, asin);
 }
+
+function insertMessageIfAsinIsUnique(content, asin) {
+	const newBody = document.getElementById('ext-helper-notifications-container');
+	const IDAlreadyExists = document.getElementById(`ext-helper-notification-${asin}`);
+	if (!IDAlreadyExists) { // Check if ID exists
+	  newBody.insertAdjacentHTML('afterbegin', content);
+	} 
+  }
 
 function showRuntime() {
 //Not needed 
