@@ -27,6 +27,7 @@ window.onload = function () {
 
 async function addItem(data) {
 	const prom = await Tpl.loadFile("/view/notification_monitor.html");
+	let vineLocale, vineCurrency = '';
 
 	let { date, asin, title, img_url, domain, etv } = data;
 	
@@ -34,6 +35,7 @@ async function addItem(data) {
 		vineLocale = vineLocales[domain].locale;
 		vineCurrency = vineLocales[domain].currency;
 	}
+	etv = (typeof etv !== 'undefined') ? new Intl.NumberFormat(vineLocale, {style: "currency", currency: vineCurrency,}).format(etv) : '';
 
 	let search = title.replace(/^([a-zA-Z0-9\s']{0,40})[^\s]*.*/, "$1");
 
@@ -46,11 +48,7 @@ async function addItem(data) {
 	Tpl.setVar("description", title);
 	Tpl.setVar("img_url", img_url);
 
-	Tpl.setVar("etv", (typeof etv !== 'undefined') 
-	? new Intl.NumberFormat(vineLocale, {
-				style: "currency",
-				currency: vineCurrency,
-			}).format(etv) : '');
+	Tpl.setVar("etv", etv);
 	
 	let content = Tpl.render(prom);
 
@@ -66,10 +64,15 @@ function insertMessageIfAsinIsUnique(content, asin, etv) {
 	if (!document.getElementById(newID)) {
 		newBody.insertAdjacentHTML("afterbegin", content);
 	}
-
+	
 	if (etv == '0.00') {
 		const etvClass = document.getElementById(newID);
 		etvClass.classList.add("zeroETV");
+	}
+
+	if(etv == ''){
+		etvElement = document.getElementById('etv_value');
+		etvElement.style.display = 'none';
 	}
 }
 

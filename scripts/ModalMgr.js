@@ -25,12 +25,13 @@ class ModalElement {
             }
         };
 
-        document
-            .querySelectorAll(`${modalId} button.modal-ok`)
-            .forEach((value) => {
-                value.addEventListener("click", closeModal);
-            });
+        
+        const modalButtons = document.getElementsByClassName(`modal-ok`);
 
+        for (let i=0;i<modalButtons.length; i++){
+            modalButtons[i].addEventListener("click", closeModal);
+        }
+        
         window.addEventListener("keydown", closeOnKey);
 
     }
