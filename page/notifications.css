@@ -6,7 +6,7 @@
 	--link-dark: hsla(165, 100%, 70%, 1);
 	--border-light: hsla(0, 0%, 20%, 1);
 	--border-dark: hsla(0, 0%, 87%, 1);
-	--border-free: #FFD700;
+	--border-free: #ffd700;
 }
 
 #ext-helper-notifications-container {
@@ -80,11 +80,7 @@
 }
 
 @media only screen and (max-width: 600px) {
-
-	/* Adjust this max-width as needed */
 	.ext-helper-notification-box {
 		width: 100%;
-		/* Make the element full width on smaller screens */
-		/* max-width: unset; */
 	}
 }

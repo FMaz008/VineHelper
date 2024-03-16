@@ -34,9 +34,9 @@ async function addItem(data) {
 		vineLocale = vineLocales[domain].locale;
 		vineCurrency = vineLocales[domain].currency;
 	}
-console.log(vineLocale);
+
 	let search = title.replace(/^([a-zA-Z0-9\s']{0,40})[^\s]*.*/, "$1");
-etv = 9.25;
+
 	Tpl.setVar("id", asin);
 	Tpl.setVar("domain", domain);
 	Tpl.setVar("title", "New item");
@@ -67,7 +67,7 @@ function insertMessageIfAsinIsUnique(content, asin, etv) {
 		newBody.insertAdjacentHTML("afterbegin", content);
 	}
 
-	if (parseInt(etv) == 0) {
+	if (etv == '0.00') {
 		const etvClass = document.getElementById(newID);
 		etvClass.classList.add("zeroETV");
 	}
