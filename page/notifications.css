@@ -6,6 +6,7 @@
 	--link-dark: hsla(165, 100%, 70%, 1);
 	--border-light: hsla(0, 0%, 20%, 1);
 	--border-dark: hsla(0, 0%, 87%, 1);
+	--border-free: #FFD700;
 }
 
 #ext-helper-notifications-container {
@@ -35,9 +36,8 @@
 }
 
 .ext-helper-notification-footer {
-	text-align: right;
 	width: 100%;
-	clear: left;
+	overflow: hidden;
 }
 
 .ext-helper-toolbar-large-icon {
@@ -47,10 +47,22 @@
 	vertical-align: middle;
 }
 
+.zeroETV {
+	background-color: hsla(140, 100%, 30%, 25%);
+}
+
+.etv_value {
+	float: left;
+}
+
+.date_shown {
+	float: right;
+}
+
 @media (prefers-color-scheme: dark) {
 	body {
 		background-color: var(--background-dark, #333);
-		color: var(--text-dark, #f9f9f9);
+		color: var(--text-dark, hsl(51, 100%, 50%));
 	}
 
 	a {
@@ -59,7 +71,7 @@
 	}
 
 	.ext-helper-notification-box {
-		border: 1px solid var(--border-dark, #f9f9f9);
+		border-color: var(--border-dark, #f9f9f9);
 	}
 
 	.ext-helper-icon-search {

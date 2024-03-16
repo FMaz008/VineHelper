@@ -1,21 +1,24 @@
 <div id="ext-helper-notification-{{$id}}" class="ext-helper-notification-box">
-		<div class="ext-helper-notification-toolbar"><a
-			href="{{$base_url}}/vine/vine-items?search={{$search}}"
+	<div class="ext-helper-notification-toolbar">
+		<a
+			href="https://amazon.{{$domain}}/vine/vine-items?search={{$search}}"
 			target="_blank"
 		>
 			<div
 				class="ext-helper-toolbar-large-icon ext-helper-icon-search"
 				style="float: right"
 			></div
-		></a></div>
-		<div class="ext-helper-notification-content">
-			<img
-				src="{{$img_url}}"
-			/>
-			<a href="{{$base_url}}/dp/{{$asin}}" target="_blank"
-				>{{$description}}</a
-			>
-		</div>
-	<div class="ext-helper-notification-footer">{{$date}}</div>
+		></a>
+	</div>
+	<div class="ext-helper-notification-content">
+		<img src="{{$img_url}}" />
+		<a href="https://amazon.{{$domain}}/dp/{{$asin}}" target="_blank"
+			>{{$description}}</a
+		>
+	</div>
+	<div class="ext-helper-notification-footer">
+		<span class="etv_value">Last shared ETV: {{$etv}}</span
+		><span class="date_shown">{{$date}}</span>
+	</div>
 	<div style="clear: both"></div>
 </div>

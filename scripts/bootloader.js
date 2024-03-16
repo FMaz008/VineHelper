@@ -380,6 +380,7 @@ async function checkNewItems() {
 		limit: 10,
 	};
 	let jsonArrURL = JSON.stringify(arrJSON);
+	console.log(jsonArrURL)
 	showRuntime("Fetching most recent products data...");
 
 	//Display a notification that we have checked for items.
@@ -478,7 +479,7 @@ async function checkNewItems() {
 							browser.runtime.id,
 							{
 								type: "newItem",
-								domain: "amazon." + vineDomain,
+								domain: vineDomain,
 								date: response.products[i].date,
 								asin: response.products[i].asin,
 								title: response.products[i].title,
