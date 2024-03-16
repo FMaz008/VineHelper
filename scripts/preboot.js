@@ -217,6 +217,12 @@ async function getSettings() {
 	vineDomain = arrMatches[1];
 	vineCountry = vineDomain.split(".").pop();
 
+	//Send the country code to the Service Worker
+	browser.runtime.sendMessage({
+		type: "vineCountry",
+		vineCountry: vineCountry,
+	});
+
 	let manifest = chrome.runtime.getManifest();
 	appVersion = manifest.version;
 

@@ -118,12 +118,6 @@ function displayAccountData() {
 
 function initFetchProductData() {
 	fetchProductsData(getAllAsin()); //Obtain the data to fill the toolbars with it.
-
-	if (appSettings.general.newItemNotification) {
-		setTimeout(function () {
-			checkNewItems();
-		}, 10000);
-	}
 }
 
 async function initFlushTplCache() {
@@ -371,143 +365,6 @@ async function initDrawToolbars() {
 	toolbarsDrawn = true;
 }
 
-async function checkNewItems() {
-	let arrJSON = {
-		api_version: 4,
-		country: vineCountry,
-		orderby: "date",
-		limit: 10,
-	};
-	let jsonArrURL = JSON.stringify(arrJSON);
-	showRuntime("Fetching most recent products data...");
-
-	//Display a notification that we have checked for items.
-	let note = new ScreenNotification();
-	note.template = "view/notification_loading.html";
-	note.lifespan = 3;
-	await Notifications.pushNotification(note);
-
-	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-	let url =
-		"https://vinehelper.ovh/vineHelperLatest.php" + "?data=" + jsonArrURL;
-	fetch(url)
-		.then((response) => response.json())
-		.then(async function (response) {
-			let broadcast = new BroadcastChannel("vine_helper");
-			let latestProduct = await browser.storage.local.get(
-				"latestProduct"
-			);
-			if (Object.keys(latestProduct).length === 0) {
-				latestProduct = 0;
-			} else {
-				latestProduct = latestProduct.latestProduct;
-			}
-
-			//Display notification from the server
-			if (Array.isArray(latestProduct["notification"])) {
-				if (latestProduct["notification"].length > 0) {
-					latestProduct["notification"].forEach((msg) => {
-						let note = new ScreenNotification();
-						note.title = "Server message";
-						note.lifespan = 10;
-						note.content = msg;
-						Notifications.pushNotification(note);
-					});
-				}
-			}
-
-			for (let i = response.products.length - 1; i >= 0; i--) {
-				//Only display notification for product more recent than the last displayed notification
-				if (
-					response.products[i].date > latestProduct ||
-					latestProduct == 0
-				) {
-					//Only display notification for products with a title and image url
-					if (
-						response.products[i].img_url != "" &&
-						response.products[i].title != ""
-					) {
-						if (
-							vineBrowsingListing && //Only show notification on listing pages
-							appSettings.general.displayNewItemNotifications
-						) {
-							//Only display notification if we are browsing a listing)
-							let note2 = new ScreenNotification();
-							note2.title = "New item detected !";
-							note2.lifespan = 60;
-							note2.content = "";
-
-							//Play the notification sound
-							if (appSettings.general.newItemNotificationSound) {
-								note2.sound = "resource/sound/notification.mp3";
-							}
-
-							title = response.products[i].title.replace(
-								/^([a-zA-Z0-9\s']{0,40})[^\s]*.*/,
-								"$1"
-							);
-
-							if (appSettings.general.newItemNotificationImage) {
-								note2.content +=
-									"<img src='" +
-									response.products[i].img_url +
-									"' style='float:left;' width='50' height='50' />";
-							}
-							note2.content +=
-								" <a href='/vine/vine-items?search=" +
-								title +
-								"' target='_blank'><div class='ext-helper-toolbar-large-icon ext-helper-icon-search' style='float:right'></div></a>";
-
-							note2.content +=
-								"<a href='/dp/" +
-								response.products[i].asin +
-								"' target='_blank'>" +
-								response.products[i].title +
-								"</a>";
-
-							await Notifications.pushNotification(note2);
-						}
-
-						if (i == 0) {
-							await browser.storage.local.set({
-								latestProduct: response.products[0].date,
-							});
-						}
-
-						//Broadcast the notification
-						browser.runtime.sendMessage(
-							browser.runtime.id,
-							{
-								type: "newItem",
-								domain: vineDomain,
-								date: response.products[i].date,
-								asin: response.products[i].asin,
-								title: response.products[i].title,
-								img_url: response.products[i].img_url,
-								etv: response.products[i].etv,
-							},
-							(response) => {
-								if (browser.runtime.lastError) {
-									return;
-								}
-								if (!response) {
-									return;
-								}
-							}
-						);
-					}
-				}
-			}
-
-			//Repeat another check in 60 seconds.
-			setTimeout(function () {
-				checkNewItems();
-			}, 60000);
-		})
-		.catch(function () {
-			(error) => console.log(error);
-		});
-}
 function getAllAsin() {
 	let arrUrl = []; //Will be use to store the URL identifier of the listed products.
 	const arrObj = $(".vvp-item-tile");
@@ -945,6 +802,57 @@ window.addEventListener("message", async function (event) {
 	}
 });
 
+browser.runtime.onMessage.addListener(async (data, sender, sendResponse) => {
+	if (data.type == undefined) return;
+
+	if (data.type == "newItemCheck") {
+		//Display a notification that we have checked for items.
+		let note = new ScreenNotification();
+		note.template = "view/notification_loading.html";
+		note.lifespan = 3;
+		await Notifications.pushNotification(note);
+	}
+
+	if (data.type == "newItem") {
+		if (
+			vineBrowsingListing && //Only show notification on listing pages
+			appSettings.general.displayNewItemNotifications
+		) {
+			let { date, asin, title, img_url, domain, etv } = data;
+
+			//Generate the content to be displayed in the notification
+			search = response.products[i].title.replace(
+				/^([a-zA-Z0-9\s']{0,40})[^\s]*.*/,
+				"$1"
+			);
+
+			const prom = await Tpl.loadFile("/view/notification_new_item.html");
+
+			Tpl.setIf(
+				"show_image",
+				appSettings.general.newItemNotificationImage
+			);
+			Tpl.setVar("date", date);
+			Tpl.setVar("search", search);
+			Tpl.setVar("asin", asin);
+			Tpl.setVar("description", title);
+			Tpl.setVar("img_url", img_url);
+
+			//Generate the notification
+			let note2 = new ScreenNotification();
+			note2.title = "New item detected !";
+			note2.lifespan = 60;
+
+			//Play the notification sound
+			if (appSettings.general.newItemNotificationSound) {
+				note2.sound = "resource/sound/notification.mp3";
+			}
+			note2.content = Tpl.render(prom);
+			Notifications.pushNotification(note2);
+		}
+	}
+});
+
 //Key bindings/keyboard shortcuts for navigation
 window.addEventListener("keydown", async function (e) {
 	//Do not run the extension if ultraviner is running
@@ -1036,8 +944,3 @@ function compareVersion(oldVer, newVer) {
 		else return VERSION_NO_CHANGE;
 	} else return VERSION_REVISION_CHANGE;
 }
-
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-	console.log("Cross message intercepted", request, sender, sendResponse);
-	sendResponse("error：" + JSON.stringify("request"));
-});
