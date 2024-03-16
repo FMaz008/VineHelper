@@ -167,8 +167,7 @@ function initSetPageTitle() {
 	let currentUrl = window.location.href;
 	regex = /^.+?amazon\..+\/vine\/.*[\?\&]search=(.*?)(?:[\&].*)?$/;
 	arrMatches = currentUrl.match(regex);
-	if (arrMatches != null)
-		$("title").text("Vine - S: " + arrMatches[1]);
+	if (arrMatches != null) $("title").text("Vine - S: " + arrMatches[1]);
 	else if (vineQueue != null) {
 		$("title").text("Vine - " + vineQueueAbbr);
 	}
@@ -395,7 +394,9 @@ async function checkNewItems() {
 		.then((response) => response.json())
 		.then(async function (response) {
 			let broadcast = new BroadcastChannel("vine_helper");
-			let latestProduct = await browser.storage.local.get("latestProduct");
+			let latestProduct = await browser.storage.local.get(
+				"latestProduct"
+			);
 			if (Object.keys(latestProduct).length === 0) {
 				latestProduct = 0;
 			} else {
@@ -483,6 +484,7 @@ async function checkNewItems() {
 								asin: response.products[i].asin,
 								title: response.products[i].title,
 								img_url: response.products[i].img_url,
+								etv: response.products[i].etv,
 							},
 							(response) => {
 								if (browser.runtime.lastError) {
