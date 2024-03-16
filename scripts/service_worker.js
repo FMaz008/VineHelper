@@ -1,3 +1,4 @@
+const DEBUG_MODE = false;
 var appSettings = [];
 var vineCountry = null;
 
@@ -58,7 +59,7 @@ async function checkNewItems() {
 	let jsonArrURL = JSON.stringify(arrJSON);
 
 	//Broadcast a new message to tell the tabs to display a loading wheel.
-	sendMessageToAllTabs({ type: "newItemCheck" });
+	sendMessageToAllTabs({ type: "newItemCheck" }, "Loading wheel");
 
 	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
 	let url =
@@ -74,10 +75,11 @@ async function checkNewItems() {
 			} else {
 				latestProduct = latestProduct.latestProduct;
 			}
-
+			console.log(response.products);
 			for (let i = response.products.length - 1; i >= 0; i--) {
 				//Only display notification for product more recent than the last displayed notification
 				if (
+					DEBUG_MODE ||
 					response.products[i].date > latestProduct ||
 					latestProduct == 0
 				) {
@@ -93,16 +95,18 @@ async function checkNewItems() {
 						}
 
 						//Broadcast the notification
-						console.log("Sending other tabs a message");
-						sendMessageToAllTabs({
-							type: "newItem",
-							domain: vineDomain,
-							date: response.products[i].date,
-							asin: response.products[i].asin,
-							title: response.products[i].title,
-							img_url: response.products[i].img_url,
-							etv: response.products[i].etv,
-						});
+						sendMessageToAllTabs(
+							{
+								type: "newItem",
+								domain: vineCountry,
+								date: response.products[i].date,
+								asin: response.products[i].asin,
+								title: response.products[i].title,
+								img_url: response.products[i].img_url,
+								etv: response.products[i].etv,
+							},
+							"notification"
+						);
 					}
 				}
 			}
@@ -115,18 +119,21 @@ async function checkNewItems() {
 		});
 }
 
-function sendMessageToAllTabs(data) {
-	chrome.tabs.query(
+async function sendMessageToAllTabs(data, debugInfo) {
+	await chrome.tabs.query(
 		{
 			/* No criteria */
 		},
-		function (tabs) {
-			tabs.forEach((tab) => {
-				chrome.tabs.sendMessage(tab.id, data, (response) => {
+		async function (tabs) {
+			await tabs.forEach(async (tab) => {
+				//console.log("(" + debugInfo + ") Sending to tab id " + tab.id);
+				await chrome.tabs.sendMessage(tab.id, data, (response) => {
 					if (browser.runtime.lastError) {
+						//console.log(browser.runtime.lastError.message);
 						return;
 					}
 					if (!response) {
+						console.log("Failed");
 						return;
 					}
 				});
