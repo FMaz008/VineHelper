@@ -264,15 +264,18 @@ async function getSettings() {
 	}
 
 	//Determine if we are browsing a queue
-	regex = /^.+?amazon\..+\/vine\/vine-items(?:\?queue=(.+?))?(?:[#&].*)?$/;
+	regex =
+		/^.+?amazon\..+\/vine\/vine-items(?:\?(queue|search)=(.+?))?(?:[#&].*)?$/;
 	arrMatches = currentUrl.match(regex);
 	vineQueue = null;
 	if (arrMatches != null) {
 		vineBrowsingListing = true;
-		if (arrMatches[1] == undefined) {
-			vineQueue = null; //Could be the default AFA or a search.
+		if (arrMatches[1] == "queue" && arrMatches[2] != undefined) {
+			vineQueue = arrMatches[2];
+		} else if (arrMatches[1] == undefined) {
+			vineQueue = "last_chance";
 		} else {
-			vineQueue = arrMatches[1];
+			vineQueue = null; //Could be the default AFA or a search.
 		}
 	}
 
