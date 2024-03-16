@@ -88,7 +88,7 @@ function insertMessageIfAsinIsUnique(content, asin, etv) {
 		etvClass.classList.add("zeroETV");
 	}
 
-	if (etv == "") {
+	if (etv == null) {
 		etvElement = document.getElementById("etv_value");
 		etvElement.style.display = "none";
 	}
