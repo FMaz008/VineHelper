@@ -75,7 +75,7 @@ async function checkNewItems() {
 			} else {
 				latestProduct = latestProduct.latestProduct;
 			}
-			console.log(response.products);
+
 			for (let i = response.products.length - 1; i >= 0; i--) {
 				//Only display notification for product more recent than the last displayed notification
 				if (
