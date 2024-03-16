@@ -17,9 +17,11 @@ class HiddenListMgr {
 			if (ev.data.type == undefined) return;
 
 			if (ev.data.type == "hideItem") {
+				showRuntime("Broadcast received: hide item " + ev.data.asin);
 				HiddenList.addItem(ev.data.asin, false, false);
 			}
 			if (ev.data.type == "showItem") {
+				showRuntime("Broadcast received: show item " + ev.data.asin);
 				HiddenList.removeItem(ev.data.asin, false, false);
 			}
 		};
@@ -58,7 +60,7 @@ class HiddenListMgr {
 
 		//Broadcast the change to other tabs
 		if (broadcast) {
-			this.broadcast.postMessage({ type: "hideItem", asin: asin });
+			this.broadcast.postMessage({ type: "showItem", asin: asin });
 		}
 	}
 
@@ -75,7 +77,7 @@ class HiddenListMgr {
 
 		//Broadcast the change to other tabs
 		if (broadcast) {
-			this.broadcast.postMessage({ type: "showItem", asin: asin });
+			this.broadcast.postMessage({ type: "hideItem", asin: asin });
 		}
 	}
 
