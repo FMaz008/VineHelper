@@ -273,14 +273,11 @@ async function getSettings() {
 		if (arrMatches[1] == "queue" && arrMatches[2] != undefined) {
 			vineQueue = arrMatches[2];
 		} else if (arrMatches[1] == undefined) {
-			vineQueue = "last_chance";
+			vineQueue = "last_chance"; //Default AFA
 		} else {
-			vineQueue = null; //Could be the default AFA or a search.
+			vineQueue = null; //Could be a ?search, (but not a &search).
 		}
 	}
-
-	let arrQueues = { potluck: "RFY", last_chance: "AFA", encore: "AI" };
-	if (vineQueue != null) vineQueueAbbr = arrQueues[vineQueue];
 
 	//Determine if we are currently searching for an item
 	regex =
@@ -291,8 +288,12 @@ async function getSettings() {
 			vineSearch = false;
 		} else {
 			vineSearch = true;
+			vineQueue = null;
 		}
 	}
+
+	let arrQueues = { potluck: "RFY", last_chance: "AFA", encore: "AI" };
+	if (vineQueue != null) vineQueueAbbr = arrQueues[vineQueue];
 
 	//Generate a UUID for the user
 	if (
