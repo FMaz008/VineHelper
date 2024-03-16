@@ -380,7 +380,6 @@ async function checkNewItems() {
 		limit: 10,
 	};
 	let jsonArrURL = JSON.stringify(arrJSON);
-	console.log(jsonArrURL)
 	showRuntime("Fetching most recent products data...");
 
 	//Display a notification that we have checked for items.
