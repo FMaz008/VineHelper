@@ -26,6 +26,9 @@ window.onload = function () {
 		if (data.type == "newItem") {
 			addItem(data);
 		}
+		if (data.type == "vineCountry") {
+			setLocale(data.domain);
+		}
 	});
 
 	init();
@@ -52,6 +55,9 @@ function setLocale(domain) {
 	if (vineLocales.hasOwnProperty(domain)) {
 		vineLocale = vineLocales[domain].locale;
 		vineCurrency = vineLocales[domain].currency;
+
+		document.getElementById("status").innerHTML =
+			"<strong>Active</strong> Listening for notifications...";
 	}
 }
 

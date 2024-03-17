@@ -12,6 +12,12 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 	if (data.type == "vineCountry") {
 		console.log("Received country from preboot.js: " + data.vineCountry);
 		vineCountry = data.vineCountry;
+
+		//Passing the country to the Monitor tab
+		sendMessageToAllTabs(
+			{ type: "vineCountry", domain: data.vineCountry },
+			"Vine Country"
+		);
 	}
 });
 
