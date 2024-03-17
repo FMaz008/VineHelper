@@ -1,5 +1,5 @@
 var lastSoundPlayedAt = Date.now();
-
+var appSettings = [];
 if (typeof browser === "undefined") {
 	var browser = chrome;
 }
@@ -27,7 +27,23 @@ window.onload = function () {
 			addItem(data);
 		}
 	});
+
+	init();
 };
+
+async function init() {
+	const data = await chrome.storage.local.get("settings");
+
+	if (data == null || Object.keys(data).length === 0) {
+		console.log("Settings not available yet. Waiting 10 sec...");
+		setTimeout(function () {
+			init();
+		}, 10000);
+		return; //Settings have not been initialized yet.
+	} else {
+		Object.assign(appSettings, data.settings);
+	}
+}
 
 //Set the locale and currency based on the domain.
 //As this is an internal page from the extension, we can only know what

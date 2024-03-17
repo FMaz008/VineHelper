@@ -100,6 +100,9 @@ async function checkNewItems() {
 						);
 
 						//Broadcast the notification
+						console.log(
+							"Broadcasting new item " + response.products[i].asin
+						);
 						sendMessageToAllTabs(
 							{
 								type: "newItem",
