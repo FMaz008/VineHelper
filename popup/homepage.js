@@ -421,6 +421,7 @@ function init() {
 	manageCheckboxSetting("general.newItemNotification");
 	manageCheckboxSetting("general.displayNewItemNotifications");
 	manageCheckboxSetting("general.newItemNotificationSound");
+	manageCheckboxSetting("general.newItemMonitorNotificationSound");
 	manageCheckboxSetting("general.newItemNotificationImage");
 	manageCheckboxSetting("keyBindings.active");
 	manageCheckboxSetting("hiddenTab.active");

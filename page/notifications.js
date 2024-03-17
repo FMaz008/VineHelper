@@ -1,3 +1,5 @@
+var lastSoundPlayedAt = Date.now();
+
 if (typeof browser === "undefined") {
 	var browser = chrome;
 }
@@ -67,6 +69,18 @@ async function addItem(data) {
 	Tpl.setVar("etv", formattedETV);
 
 	let content = Tpl.render(prom);
+
+	//Play a sound
+	if (appSettings.general.newItemMonitorNotificationSound) {
+		if (Date.now() - lastSoundPlayedAt > 30000) {
+			// Don't play the notification sound again within 30 sec.
+			lastSoundPlayedAt = Date.now();
+			const audioElement = new Audio(
+				chrome.runtime.getURL("resource/sound/notification.mp3")
+			);
+			audioElement.play();
+		}
+	}
 
 	insertMessageIfAsinIsUnique(content, asin, etv);
 }
