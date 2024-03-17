@@ -823,11 +823,9 @@ browser.runtime.onMessage.addListener(async (data, sender, sendResponse) => {
 			appSettings.general.displayNewItemNotifications
 		) {
 			console.log("New notification!");
-			let { date, asin, title, img_url, domain, etv } = data;
+			let { date, asin, title, search, img_url, domain, etv } = data;
 
 			//Generate the content to be displayed in the notification
-			search = title.replace(/^([a-zA-Z0-9\s']{0,40})[^\s]*.*/, "$1");
-
 			const prom = await Tpl.loadFile("/view/notification_new_item.html");
 
 			Tpl.setIf(

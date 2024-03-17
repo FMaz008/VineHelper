@@ -40,7 +40,7 @@ function setLocale(domain) {
 async function addItem(data) {
 	const prom = await Tpl.loadFile("/view/notification_monitor.html");
 
-	let { date, asin, title, img_url, domain, etv } = data;
+	let { date, asin, title, search, img_url, domain, etv } = data;
 
 	//If the local is not define, set it.
 	if (vineLocale == null) setLocale(domain);
@@ -55,8 +55,6 @@ async function addItem(data) {
 			currency: vineCurrency,
 		}).format(etv);
 	}
-
-	let search = title.replace(/^([a-zA-Z0-9\s']{0,40})[^\s]*.*/, "$1");
 
 	Tpl.setVar("id", asin);
 	Tpl.setVar("domain", domain);

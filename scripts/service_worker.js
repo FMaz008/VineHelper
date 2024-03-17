@@ -94,6 +94,11 @@ async function checkNewItems() {
 							});
 						}
 
+						let search = response.products[i].title.replace(
+							/^([a-zA-Z0-9\s',]{0,40})[\s]+.*$/,
+							"$1"
+						);
+
 						//Broadcast the notification
 						sendMessageToAllTabs(
 							{
@@ -102,6 +107,7 @@ async function checkNewItems() {
 								date: response.products[i].date,
 								asin: response.products[i].asin,
 								title: response.products[i].title,
+								search: search,
 								img_url: response.products[i].img_url,
 								etv: response.products[i].etv,
 							},
