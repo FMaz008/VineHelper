@@ -1,3 +1,5 @@
+var lastSoundPlayedAt = Date.now();
+
 if (typeof browser === "undefined") {
 	var browser = chrome;
 }
@@ -40,7 +42,7 @@ function setLocale(domain) {
 async function addItem(data) {
 	const prom = await Tpl.loadFile("/view/notification_monitor.html");
 
-	let { date, asin, title, img_url, domain, etv } = data;
+	let { date, asin, title, search, img_url, domain, etv } = data;
 
 	//If the local is not define, set it.
 	if (vineLocale == null) setLocale(domain);
@@ -56,8 +58,6 @@ async function addItem(data) {
 		}).format(etv);
 	}
 
-	let search = title.replace(/^([a-zA-Z0-9\s']{0,40})[^\s]*.*/, "$1");
-
 	Tpl.setVar("id", asin);
 	Tpl.setVar("domain", domain);
 	Tpl.setVar("title", "New item");
@@ -69,6 +69,18 @@ async function addItem(data) {
 	Tpl.setVar("etv", formattedETV);
 
 	let content = Tpl.render(prom);
+
+	//Play a sound
+	if (appSettings.general.newItemMonitorNotificationSound) {
+		if (Date.now() - lastSoundPlayedAt > 30000) {
+			// Don't play the notification sound again within 30 sec.
+			lastSoundPlayedAt = Date.now();
+			const audioElement = new Audio(
+				chrome.runtime.getURL("resource/sound/notification.mp3")
+			);
+			audioElement.play();
+		}
+	}
 
 	insertMessageIfAsinIsUnique(content, asin, etv);
 }
