@@ -60,7 +60,7 @@ async function checkNewItems() {
 		api_version: 4,
 		country: vineCountry,
 		orderby: "date",
-		limit: 10,
+		limit: 50,
 	};
 	let jsonArrURL = JSON.stringify(arrJSON);
 
@@ -111,6 +111,7 @@ async function checkNewItems() {
 						);
 						sendMessageToAllTabs(
 							{
+								index: i,
 								type: "newItem",
 								domain: vineCountry,
 								date: response.products[i].date,

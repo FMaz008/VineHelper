@@ -819,6 +819,7 @@ browser.runtime.onMessage.addListener(async (data, sender, sendResponse) => {
 		sendResponse({ success: true });
 
 		if (
+			data.index < 10 && //Limit the notification to the top 10 most recents
 			vineBrowsingListing && //Only show notification on listing pages
 			appSettings.general.displayNewItemNotifications
 		) {
