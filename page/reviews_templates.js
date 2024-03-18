@@ -17,8 +17,10 @@ async function loadSettings() {
 				.getElementById("templates_list")
 				.insertAdjacentHTML(
 					"beforeend",
-					"<tr><td></td>" +
+					"<tr>" +
+						" <td>" +
 						tpl.title +
+						"</td>" +
 						"<td><button id='" +
 						tpl.id +
 						"' class='edit'>Edit</button><button id='" +

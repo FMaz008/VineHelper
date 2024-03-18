@@ -68,7 +68,6 @@ async function boot_review() {
 	container.insertAdjacentHTML("afterend", content);
 
 	//Add the template titles in the select box
-	console.log(arrTemplate);
 	let selectBox = document.getElementById("template_name");
 	for (let i = 0; i < arrTemplate.length; i++) {
 		selectBox.insertAdjacentHTML(
@@ -96,5 +95,42 @@ async function boot_review() {
 					return;
 				}
 			}
+		});
+
+	//Save review button
+	document
+		.getElementById("saveReview")
+		.addEventListener("click", async function () {
+			let found = false;
+			for (let i = 0; i < arrReview.length; i++) {
+				if (arrReview[i].asin == asin) {
+					//Update the review
+					arrReview[i].date = new Date().toString();
+					arrReview[i].title = document.getElementById(
+						"scarface-review-title-label"
+					).value;
+					arrReview[i].content = document.getElementById(
+						"scarface-review-text-card-title"
+					).value;
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				//Save a new review
+				arrReview.push({
+					asin: asin,
+					date: new Date().toString(),
+					title: document.getElementById(
+						"scarface-review-title-label"
+					).value,
+					content: document.getElementById(
+						"scarface-review-text-card-title"
+					).value,
+				});
+			}
+
+			await chrome.storage.local.set({ reviews: arrReview });
+			alert("Review saved!");
 		});
 }
