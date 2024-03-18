@@ -175,7 +175,7 @@ window.fetch = async (...args) => {
 					before = variation.dimensions[arrKeys[j]];
 					variation.dimensions[arrKeys[j]] = variation.dimensions[
 						arrKeys[j]
-					].replace(/[)(:]/g, "");
+					].replace(/[)(:\[\]&]/g, "");
 
 					if (before != variation.dimensions[arrKeys[j]]) {
 						fixed++;
