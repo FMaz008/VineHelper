@@ -1,4 +1,4 @@
-var lastSoundPlayedAt = Date.now();
+var lastSoundPlayedAt = 0; //Date.now();
 var appSettings = [];
 if (typeof browser === "undefined") {
 	var browser = chrome;
@@ -10,14 +10,25 @@ var TplMgr = new TemplateMgr();
 const vineLocales = {
 	ca: { locale: "en-CA", currency: "CAD" },
 	com: { locale: "en-US", currency: "USD" },
-	"co.uk": { locale: "en-GB", currency: "GBP" },
-	"co.jp": { locale: "ja-JP", currency: "JPY" },
+	uk: { locale: "en-GB", currency: "GBP" },
+	jp: { locale: "ja-JP", currency: "JPY" },
 	de: { locale: "de-DE", currency: "EUR" },
 	fr: { locale: "fr-FR", currency: "EUR" },
 	es: { locale: "es-ES", currency: "EUR" },
 };
+const vineDomains = {
+	ca: "ca",
+	com: "com",
+	uk: "co.uk",
+	jp: "co.jp",
+	de: "de",
+	fr: "fr",
+	es: "es",
+};
+
 var vineLocale = null;
 var vineCurrency = null;
+var vineDomain = null;
 
 window.onload = function () {
 	browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
@@ -51,10 +62,11 @@ async function init() {
 //Set the locale and currency based on the domain.
 //As this is an internal page from the extension, we can only know what
 //country/domain is being used when we first receive data.
-function setLocale(domain) {
-	if (vineLocales.hasOwnProperty(domain)) {
-		vineLocale = vineLocales[domain].locale;
-		vineCurrency = vineLocales[domain].currency;
+function setLocale(country) {
+	if (vineLocales.hasOwnProperty(country)) {
+		vineLocale = vineLocales[country].locale;
+		vineCurrency = vineLocales[country].currency;
+		vineDomain = vineDomains[country];
 
 		document.getElementById("status").innerHTML =
 			"<strong>Active</strong> Listening for notifications...";
@@ -81,7 +93,7 @@ async function addItem(data) {
 	}
 
 	Tpl.setVar("id", asin);
-	Tpl.setVar("domain", domain);
+	Tpl.setVar("domain", vineDomain);
 	Tpl.setVar("title", "New item");
 	Tpl.setVar("date", date);
 	Tpl.setVar("search", search);
