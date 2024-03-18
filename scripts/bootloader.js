@@ -32,6 +32,7 @@ var toolbarsDrawn = false;
 const DEBUGGER_TITLE = "Vine Helper - Debugger";
 const VOTING_TITLE = "Vine Helper - voting feature";
 const VINE_INFO_TITLE = "Vine Helper update info";
+const GDPR_TITLE = "Vine Helper - GDPR";
 
 //Do not run the extension if ultraviner is running
 if (!ultraviner) {
@@ -54,6 +55,7 @@ async function init() {
 	Notifications.init(); //Ensure the container for notification was created, in case it was not in preboot.
 	displayAccountData();
 	initFetchProductData();
+	showGDPRPopup();
 	await initFlushTplCache(); //And display the version changelog popup
 	initInjectScript();
 	initSetPageTitle();
@@ -120,6 +122,23 @@ function initFetchProductData() {
 	fetchProductsData(getAllAsin()); //Obtain the data to fill the toolbars with it.
 }
 
+async function showGDPRPopup() {
+	if (
+		appSettings.general.GDPRPopup == true ||
+		appSettings.general.GDPRPopup == undefined
+	) {
+		prom = await Tpl.loadFile("view/popup_gdpr.html");
+		let content = Tpl.render(prom);
+
+		let m = DialogMgr.newModal("info");
+		m.title = GDPR_TITLE;
+		m.content = content;
+		m.show();
+
+		appSettings.general.GDPRPopup = false;
+		saveSettings();
+	}
+}
 async function initFlushTplCache() {
 	//Show version info popup : new version
 	if (appVersion != appSettings.general.versionInfoPopup) {

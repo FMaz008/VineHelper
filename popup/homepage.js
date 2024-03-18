@@ -413,6 +413,7 @@ function init() {
 	//Manage checkboxes load and save
 	manageCheckboxSetting("general.topPagination");
 	manageCheckboxSetting("general.versionInfoPopup", false);
+	manageCheckboxSetting("general.GDPRPopup", false);
 	manageCheckboxSetting("general.firstVotePopup");
 	manageCheckboxSetting("general.displayETV");
 	manageCheckboxSetting("general.displayVariantIcon");

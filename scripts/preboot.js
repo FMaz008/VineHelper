@@ -54,6 +54,7 @@ function getDefaultSettings() {
 			bookmarkDate: 0,
 			displayVariantIcon: false,
 			versionInfoPopup: 0,
+			GDPRPopup: true,
 			firstVotePopup: true,
 			newItemNotification: false,
 			displayNewItemNotifications: false,
