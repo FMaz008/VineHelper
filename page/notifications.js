@@ -129,5 +129,5 @@ function insertMessageIfAsinIsUnique(content, asin, etv) {
 }
 
 function showRuntime() {
-	//Functionn must exist for the Template system, but not needed for this page
+	//Function must exist for the Template system, but not needed for this page
 }

@@ -102,6 +102,19 @@
 				"*://*.amazon.com/vine/*"
 			],
 			"run_at": "document_start"
+		},
+		{
+			"js": ["scripts/Template.js", "scripts/review.js"],
+			"matches": [
+				"*://*.amazon.ca/review/create-review*",
+				"*://*.amazon.de/review/create-review*",
+				"*://*.amazon.es/review/create-review*",
+				"*://*.amazon.fr/review/create-review*",
+				"*://*.amazon.co.uk/review/create-review*",
+				"*://*.amazon.co.jp/review/create-review*",
+				"*://*.amazon.com/review/create-review*"
+			],
+			"run_at": "document_end"
 		}
 	]
 }
