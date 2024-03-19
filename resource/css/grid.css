@@ -1,3 +1,5 @@
+
+
 /* Grid */
 div.ext-helper-grid,
 #vvp-items-grid,
@@ -45,4 +47,15 @@ div.ext-helper-grid .vvp-item-tile .vvp-item-tile-content > * {
 
 .vvp-item-tile {
 	margin-bottom: 20px;
+}
+
+#vvp-items-grid .bookmark-highlight {
+	border: 3px solid var(--border-light);
+	background-color: var(--container-light);
+}
+
+#vvp-items-grid a,
+#vvp-items-grid a:visited,
+#vvp-items-grid a:active {
+	color: var(--link-light);
 }

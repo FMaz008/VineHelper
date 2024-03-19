@@ -1,32 +1,37 @@
 <html>
 	<head>
 		<script src="reviews_templates.js"></script>
-	<link rel="stylesheet" href="review_management.css"> 
-		</head>
+		<link rel="stylesheet" href="../resource/css/color.css" />
+		<link rel="stylesheet" href="review_management.css" />
 	</head>
 	<body>
 		<h1>Manage Review Templates</h1>
 		<h3 id="editTitle">New template</h3>
 		<div id="new_template_form">
-		<form>
-		<input type="hidden" id="template_id" value="new" />
-		Title: <input type="text" id="template_title" value="" />
-		<br />
-		<br />
-		Content:
-		<textarea type="text" id="template_content"></textarea>
+			<form>
+				<input type="hidden" id="template_id" value="new" />
+				Title:
+				<input type="text" class="vh" id="template_title" value="" />
+				<br />
+				<br />
+				Content:
+				<textarea
+					type="text"
+					class="vh"
+					id="template_content"
+				></textarea>
+				<br />
+				<br />
+				<button id="save" class="vh">Save</button>
+				<button id="reset" class="vh" type="reset">Cancel</button>
+			</form>
 		</div>
-		<br />
-		<br />
-		<button id="save">Save</button>
-		<button id="reset" type="reset">Cancel</button>
-	</form>
 		<table id="templates_list">
 			<tbody>
-			<tr>
-				<td>Action</td>
-				<td>Title</td>
-			</tr>
+				<tr>
+					<td>Action</td>
+					<td>Title</td>
+				</tr>
 			</tbody>
 		</table>
 	</body>

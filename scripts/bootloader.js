@@ -67,6 +67,7 @@ async function init() {
 	HiddenList.garbageCollection();
 }
 
+//If we are on the Account page, display additional info
 function displayAccountData() {
 	regex = /^.+?amazon\..+\/vine\/account?$/;
 	arrMatches = window.location.href.match(regex);
@@ -81,6 +82,7 @@ function displayAccountData() {
 
 	let container = document.createElement("div");
 	container.classList.add("a-column");
+	container.classList.add("vh_visible_container");
 	parentContainer.append(container);
 
 	let json = JSON.parse(
@@ -92,7 +94,7 @@ function displayAccountData() {
 
 	div = document.createElement("div");
 	div.innerHTML =
-		"<h5>Vine Helper extra stats:</h5><strong>Customer Id:</strong> " +
+		"<h4>Vine Helper extra stats:</h4><strong>Customer Id:</strong> " +
 		json.customerId;
 	container.appendChild(div);
 

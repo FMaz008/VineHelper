@@ -1,16 +1,3 @@
-:root {
-	--background-light: hsla(0, 0%, 98%, 1);
-	--background-dark: hsla(0, 0%, 20%, 1);
-	--text-light: hsla(0, 0%, 20%, 1);
-	--text-dark: hsla(0, 0%, 98%, 0.8);
-	--link-light: hsla(165, 100%, 20%, 1);
-	--link-dark: hsla(165, 100%, 65%, 1);
-	--border-light: hsla(165, 100%, 20%, 1);
-	--border-dark: hsla(0, 0%, 98%, 0.8);
-	--button-dark: hsla(165, 100%, 20%, 1);
-	--border-free: #ffd700;
-}
-
 body {
 	color: var(--text-light);
 	font-family: Arial, sans-serif;
@@ -31,16 +18,16 @@ body {
 	resize: vertical;
 }
 
-input[type="text"],
-textarea {
+input[type="text"].vh,
+textarea.vh {
 	background-color: transparent;
 	color: var(--text-light, #f9f9f9);
 	border: 1px solid var(--border-light, #f9f9f9);
 	transition: border-color 0.3s ease-in-out;
 }
 
-input[type="text"]:focus,
-textarea:focus {
+input[type="text"].vh:focus,
+textarea.vh:focus {
 	outline: 2px solid var(--link-light);
 	border: 1px solid var(--link-dark);
 }
@@ -54,7 +41,7 @@ th {
 	color: var(--text-light);
 }
 
-button {
+button.vh {
 	background-color: var(--button-light, green);
 	padding: 10px 15px;
 	border: 1px solid var(--button-dark, aliceblue);
@@ -68,20 +55,20 @@ button {
 	color: var(--text-light, #eee);
 	font-weight: 600;
 }
-button:hover {
+button.vh:hover {
 	background-color: var(--button-dark, green);
 }
 
-button:active {
-    transform: translateY(2px)
+button.vh:active {
+	transform: translateY(2px);
 }
 
 #new_Template {
 	margin-bottom: 10px;
 }
 
-input[type="text"],
-textarea {
+input[type="text"].vh,
+textarea.vh {
 	width: calc(100% - 20px);
 	padding: 10px;
 	border: 1px solid var(--border-light, #333);
@@ -94,8 +81,8 @@ textarea {
 		color: var(--text-dark, #f9f9f9);
 	}
 
-	button {
-        background-color: var(--button-light, green);
+	button.vh {
+		background-color: var(--button-light, green);
 		background: linear-gradient(
 			to bottom,
 			var(--button-light, lightgreen),
@@ -103,15 +90,15 @@ textarea {
 		);
 	}
 
-	input[type="text"],
-	textarea {
+	input[type="text"].vh,
+	textarea.vh {
 		color: var(--text-dark, #f9f9f9);
 		border: 1px solid var(--border-dark, #f9f9f9);
 		transition: unset;
 	}
 
-	input[type="text"]:focus,
-	textarea:focus {
+	input[type="text"].vh:focus,
+	textarea.vh:focus {
 		outline: 2px solid var(--link-dark);
 		border: 1px solid var(--link-light);
 	}

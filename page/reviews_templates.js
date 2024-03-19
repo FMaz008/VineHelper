@@ -18,14 +18,16 @@ async function loadSettings() {
 
 	if (arrTemplate.length > 0) {
 		arrTemplate.forEach((tpl) => {
-			const tableBody = document.getElementById("templates_list").querySelector('tbody'); 
+			const tableBody = document
+				.getElementById("templates_list")
+				.querySelector("tbody");
 			const row = tableBody.insertRow();
 			const actionCell = row.insertCell();
-			const titleCell = row.insertCell(); 
+			const titleCell = row.insertCell();
 
 			actionCell.innerHTML = `
-			<button id="${tpl.id}" class='edit'>Edit</button>
-			<button id="${tpl.id}" class='delete'>Delete</button>
+			<button id="${tpl.id}" class='edit vh'>Edit</button>
+			<button id="${tpl.id}" class='delete vh'>Delete</button>
 			`;
 			titleCell.textContent = `${JSON.parse(tpl.title)}`;
 		});
@@ -34,13 +36,12 @@ async function loadSettings() {
 	var element;
 
 	//Add listener for new
-	
+
 	element = document.getElementById("reset");
 	element.addEventListener("click", function () {
 		document.getElementById("editTitle").innerHTML = "New template";
 		document.getElementById("template_id").value = "new";
 	});
-	
 
 	//Add listener for edit
 	const editElements = document.querySelectorAll("button.edit");
@@ -50,9 +51,12 @@ async function loadSettings() {
 			console.log(template);
 			document.getElementById("editTitle").innerHTML = "Edit template";
 			document.getElementById("template_id").value = element.id;
-			document.getElementById("template_title").value = JSON.parse(template.title);
-			document.getElementById("template_content").value =
-				JSON.parse(template.content);
+			document.getElementById("template_title").value = JSON.parse(
+				template.title
+			);
+			document.getElementById("template_content").value = JSON.parse(
+				template.content
+			);
 		});
 	});
 
@@ -69,16 +73,24 @@ async function loadSettings() {
 	//Add listener for save
 	element = document.getElementById("save");
 	element.addEventListener("click", function () {
-		if (document.getElementById("template_id").value == "new" && document.getElementById("template_title").value !== '' && document.getElementById("template_content").value !== '') {
+		if (
+			document.getElementById("template_id").value == "new" &&
+			document.getElementById("template_title").value !== "" &&
+			document.getElementById("template_content").value !== ""
+		) {
 			createNewTemplate(
 				JSON.stringify(document.getElementById("template_title").value),
-				JSON.stringify(document.getElementById("template_content").value)
+				JSON.stringify(
+					document.getElementById("template_content").value
+				)
 			);
 		} else {
 			editNewTemplate(
 				document.getElementById("template_id").value,
 				JSON.stringify(document.getElementById("template_title").value),
-				JSON.stringify(document.getElementById("template_content").value)
+				JSON.stringify(
+					document.getElementById("template_content").value
+				)
 			);
 		}
 	});
