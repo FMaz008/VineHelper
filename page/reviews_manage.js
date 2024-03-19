@@ -1,11 +1,15 @@
+if (typeof browser === "undefined") {
+	var browser = chrome;
+}
+
 var arrReview = [];
 
 async function loadSettings() {
 	var data;
 	//If no template exist already, create an empty array
-	data = await chrome.storage.local.get("reviews");
+	data = await browser.storage.local.get("reviews");
 	if (data == null || Object.keys(data).length === 0) {
-		await chrome.storage.local.set({ reviews: [] });
+		await browser.storage.local.set({ reviews: [] });
 	} else {
 		Object.assign(arrReview, data.reviews);
 	}
@@ -13,26 +17,23 @@ async function loadSettings() {
 	console.log(arrReview);
 	if (arrReview.length > 0) {
 		arrReview.forEach((review) => {
-			document
-				.getElementById("reviews_list")
-				.insertAdjacentHTML(
-					"beforeEnd",
-					"<tr>" +
-						"<td>" +
-						review.date +
-						"</td>" +
-						"<td>" +
-						review.asin +
-						"</td>" +
-						"<td>" +
-						review.title +
-						"</td>" +
-						"<td><button id='" +
-						review.asin +
-						"'  class='view'>View</button><button id='" +
-						review.asin +
-						"'  class='delete'>Delete</button></td></tr>"
-				);
+			let {date, asin, title} = review;
+
+			const tableBody = document.getElementById("reviews_list").querySelector('tbody'); 
+			const row = tableBody.insertRow();
+			const actionCell = row.insertCell();
+			const titleCell = row.insertCell();
+			const asinCell = row.insertCell(); 
+			const dateCell = row.insertCell();
+
+			actionCell.innerHTML = `
+			<button id="${asin}" class='view'>View</button>
+			<button id="${asin}" class='delete'>Delete</button>
+			`;
+			dateCell.textContent = `${date}`;
+			asinCell.textContent = `${asin}`;
+			titleCell.textContent = `${JSON.parse(title)}`;
+
 		});
 	}
 
@@ -41,8 +42,8 @@ async function loadSettings() {
 	deleteElements.forEach((element) => {
 		element.addEventListener("click", function () {
 			let review = getReview(element.id);
-			document.getElementById("title").innerText = review.title;
-			document.getElementById("content").innerText = review.content;
+			document.getElementById("title").innerText = JSON.parse(review.title);
+			document.getElementById("content").innerText = JSON.parse(review.content);
 		});
 	});
 	//Add listener for delete
@@ -71,7 +72,7 @@ async function deleteReview(asin) {
 	for (let i = 0; i < arrReview.length; i++) {
 		if (arrReview[i].asin == asin) {
 			arrReview.splice(i, 1);
-			await chrome.storage.local.set({ reviews: arrReview });
+			await browser.storage.local.set({ reviews: arrReview });
 			location.reload();
 			return;
 		}

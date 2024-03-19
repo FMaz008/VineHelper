@@ -1,4 +1,8 @@
-var appSettings = {}; //Top of the file
+if (typeof browser === "undefined") {
+	var browser = chrome;
+}
+
+var appSettings = {};
 var arrReview = [];
 var arrTemplate = [];
 var asin = null;
@@ -11,24 +15,24 @@ function showRuntime() {
 
 async function loadSettings() {
 	var data;
-	data = await chrome.storage.local.get("settings");
+	data = await browser.storage.local.get("settings");
 	if (data == null || Object.keys(data).length === 0) {
 		return; //Can't display this page before settings are initiated
 	}
 	Object.assign(appSettings, data.settings);
 
 	//If no reviews exist already, create an empty array
-	data = await chrome.storage.local.get("reviews");
+	data = await browser.storage.local.get("reviews");
 	if (data == null || Object.keys(data).length === 0) {
-		await chrome.storage.local.set({ reviews: [] });
+		await browser.storage.local.set({ reviews: [] });
 	} else {
 		Object.assign(arrReview, data.reviews);
 	}
 
 	//If no template exist already, create an empty array
-	data = await chrome.storage.local.get("reviews_templates");
+	data = await browser.storage.local.get("reviews_templates");
 	if (data == null || Object.keys(data).length === 0) {
-		await chrome.storage.local.set({ reviews_templates: [] });
+		await browser.storage.local.set({ reviews_templates: [] });
 	} else {
 		Object.assign(arrTemplate, data.reviews_templates);
 	}
@@ -52,11 +56,11 @@ async function boot_review() {
 	const prom = await Tpl.loadFile("/view/review_toolbar.html");
 	Tpl.setVar(
 		"tpl_manage_url",
-		chrome.runtime.getURL("page/reviews_templates.html")
+		browser.runtime.getURL("page/reviews_templates.html")
 	);
 	Tpl.setVar(
 		"review_manage_url",
-		chrome.runtime.getURL("page/reviews_manage.html")
+		browser.runtime.getURL("page/reviews_manage.html")
 	);
 	Tpl.setVar("asin", asin);
 	let content = Tpl.render(prom);
@@ -75,7 +79,7 @@ async function boot_review() {
 			"<option value='" +
 				arrTemplate[i].id +
 				"'>" +
-				arrTemplate[i].title +
+				JSON.parse(arrTemplate[i].title) +
 				"</option>"
 		);
 	}
@@ -91,7 +95,7 @@ async function boot_review() {
 					let review = document.getElementById(
 						"scarface-review-text-card-title"
 					);
-					review.value += arrTemplate[i].content;
+					review.value += JSON.parse(arrTemplate[i].content);
 					return;
 				}
 			}
@@ -102,35 +106,45 @@ async function boot_review() {
 		.getElementById("saveReview")
 		.addEventListener("click", async function () {
 			let found = false;
-			for (let i = 0; i < arrReview.length; i++) {
-				if (arrReview[i].asin == asin) {
-					//Update the review
-					arrReview[i].date = new Date().toString();
-					arrReview[i].title = document.getElementById(
-						"scarface-review-title-label"
-					).value;
-					arrReview[i].content = document.getElementById(
-						"scarface-review-text-card-title"
-					).value;
-					found = true;
-					break;
-				}
+			let reviewTitle = document.getElementById(
+				"scarface-review-title-label"
+			).value;
+
+			let reviewContent = document.getElementById(
+				"scarface-review-text-card-title"
+			).value;
+
+			if(reviewTitle === "" || reviewContent === ""){
+				return;
 			}
+
+			let index = arrReview.findIndex((review) => review.asin === asin);
+			if (index > -1) {
+				//Update the review
+				arrReview[index].date = new Date().toString();
+				arrReview[index].title = JSON.stringify(reviewTitle);
+				arrReview[index].content = JSON.stringify(reviewContent);
+				found = true;
+			} 
+			//}
 			if (!found) {
 				//Save a new review
 				arrReview.push({
 					asin: asin,
 					date: new Date().toString(),
-					title: document.getElementById(
-						"scarface-review-title-label"
-					).value,
-					content: document.getElementById(
-						"scarface-review-text-card-title"
-					).value,
+					title: JSON.stringify(
+						document.getElementById("scarface-review-title-label")
+							.value
+					),
+					content: JSON.stringify(
+						document.getElementById(
+							"scarface-review-text-card-title"
+						).value
+					),
 				});
 			}
 
-			await chrome.storage.local.set({ reviews: arrReview });
+			await browser.storage.local.set({ reviews: arrReview });
 			alert("Review saved!");
 		});
 }
