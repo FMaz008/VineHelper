@@ -1,0 +1,125 @@
+:root {
+	--background-light: hsla(0, 0%, 98%, 1);
+	--background-dark: hsla(0, 0%, 20%, 1);
+	--text-light: hsla(0, 0%, 20%, 1);
+	--text-dark: hsla(0, 0%, 98%, 0.8);
+	--link-light: hsla(165, 100%, 20%, 1);
+	--link-dark: hsla(165, 100%, 65%, 1);
+	--border-light: hsla(165, 100%, 20%, 1);
+	--border-dark: hsla(0, 0%, 98%, 0.8);
+	--button-dark: hsla(165, 100%, 20%, 1);
+	--border-free: #ffd700;
+}
+
+body {
+	color: var(--text-light);
+	font-family: Arial, sans-serif;
+	margin: 20px;
+	transition: background-color 0.5s, color 0.5s;
+}
+
+#templates_list {
+	border-collapse: collapse;
+	margin: 20px;
+}
+
+#new_template_form {
+	width: 80%;
+}
+#template_content {
+	height: 130px;
+	resize: vertical;
+}
+
+input[type="text"],
+textarea {
+	background-color: transparent;
+	color: var(--text-light, #f9f9f9);
+	border: 1px solid var(--border-light, #f9f9f9);
+	transition: border-color 0.3s ease-in-out;
+}
+
+input[type="text"]:focus,
+textarea:focus {
+	outline: 2px solid var(--link-light);
+	border: 1px solid var(--link-dark);
+}
+
+td,
+th {
+	border: 1px solid;
+	border-color: var(--border-light, #dedede);
+	padding: 5px;
+	text-align: left;
+	color: var(--text-light);
+}
+
+button {
+	background-color: var(--button-light, green);
+	padding: 10px 15px;
+	border: 1px solid var(--button-dark, aliceblue);
+	cursor: pointer;
+	border-radius: 5px;
+	background: linear-gradient(
+		to bottom,
+		var(--button-dark, green),
+		var(--button-light, lightgreen)
+	);
+	color: var(--text-light, #eee);
+	font-weight: 600;
+}
+button:hover {
+	background-color: var(--button-dark, green);
+}
+
+button:active {
+    transform: translateY(2px)
+}
+
+#new_Template {
+	margin-bottom: 10px;
+}
+
+input[type="text"],
+textarea {
+	width: calc(100% - 20px);
+	padding: 10px;
+	border: 1px solid var(--border-light, #333);
+	border-radius: 5px;
+}
+
+@media (prefers-color-scheme: dark) {
+	body {
+		background-color: var(--background-dark, #333);
+		color: var(--text-dark, #f9f9f9);
+	}
+
+	button {
+        background-color: var(--button-light, green);
+		background: linear-gradient(
+			to bottom,
+			var(--button-light, lightgreen),
+			var(--button-dark, green)
+		);
+	}
+
+	input[type="text"],
+	textarea {
+		color: var(--text-dark, #f9f9f9);
+		border: 1px solid var(--border-dark, #f9f9f9);
+		transition: unset;
+	}
+
+	input[type="text"]:focus,
+	textarea:focus {
+		outline: 2px solid var(--link-dark);
+		border: 1px solid var(--link-light);
+	}
+
+	td,
+	th {
+		border: 1px solid;
+		border-color: var(--border-dark, #f9f9f9);
+		color: var(--text-dark);
+	}
+}
