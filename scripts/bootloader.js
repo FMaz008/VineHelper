@@ -115,7 +115,7 @@ function displayAccountData() {
 
 	div = document.createElement("div");
 	div.innerHTML =
-		"<strong>Re-evalation in progress:</strong> " +
+		"<strong>Re-evaluation in progress:</strong> " +
 		json.voiceDetails.isTierEvaluationInProgress;
 	container.appendChild(div);
 }
