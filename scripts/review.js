@@ -119,7 +119,6 @@ async function boot_review() {
 			}
 
 			let index = arrReview.findIndex((review) => review.asin === asin);
-console.log(index);
 			if (index > -1) {
 				//Update the review
 				arrReview[index].date = new Date().toString();
