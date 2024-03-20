@@ -19,12 +19,9 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 			"Vine Country"
 		);
 	}
-	if (data.type == "keepAlive" && vineCountry != null) {
+	if (data.type == "keepAlive") {
 		//console.log("Received keep alive.");
-		sendMessageToAllTabs(
-			{ type: "vineCountry", domain: vineCountry },
-			"Vine Country - keep alive"
-		);
+		sendResponse({ success: true });
 	}
 });
 
@@ -62,6 +59,14 @@ async function checkNewItems() {
 		}, 10000);
 		return;
 	}
+
+	//Now that we know the country, let's broadcast it to generate traffic and keep thing alive.
+	setInterval(async () => {
+		sendMessageToAllTabs(
+			{ type: "vineCountry", domain: vineCountry },
+			"Vine Country - keep alive"
+		);
+	}, 25000);
 
 	let arrJSON = {
 		api_version: 4,

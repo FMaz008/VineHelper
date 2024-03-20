@@ -45,6 +45,12 @@ window.onload = function () {
 		}
 	});
 
+	setInterval(async () => {
+		browser.runtime.sendMessage({
+			type: "keepAlive",
+		});
+	}, 25000);
+
 	init();
 };
 
