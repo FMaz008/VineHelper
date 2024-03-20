@@ -59,6 +59,7 @@
 	"content_scripts": [
 		{
 			"css": [
+				"resource/css/color.css",
 				"resource/css/tabs.css",
 				"resource/css/grid.css",
 				"resource/css/icon.css",
@@ -106,6 +107,11 @@
 			"run_at": "document_start"
 		},
 		{
+			"css": [
+				"resource/css/color.css",
+				"resource/css/main.css",
+				"page/review_management.css"
+			],
 			"js": ["scripts/Template.js", "scripts/review.js"],
 			"matches": [
 				"*://*.amazon.ca/review/create-review*",

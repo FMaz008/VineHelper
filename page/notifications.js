@@ -32,12 +32,15 @@ var vineDomain = null;
 
 window.onload = function () {
 	browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
+		//console.log(data);
 		if (data.type == undefined) return;
 
 		if (data.type == "newItem") {
+			sendResponse({ success: true });
 			addItem(data);
 		}
 		if (data.type == "vineCountry") {
+			sendResponse({ success: true });
 			setLocale(data.domain);
 		}
 	});

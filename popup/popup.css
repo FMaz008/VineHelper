@@ -1,13 +1,6 @@
 :root {
 	--myHeight: 550px;
 	--headerHeight: 60px;
-	--background-light: hsla(0, 0%, 98%, 1);
-	--text-light: hsla(0, 0%, 20%, 1);
-	--background-dark: hsla(0, 0%, 20%, 1);
-	--text-dark: hsla(0, 0%, 98%, 0.8);
-	--link-dark: hsla(165, 100%, 70%, 1);
-	--border-light: hsla(0, 0%, 87%, 1);
-	--border-dark: hsla(0, 0%, 46.67%, 1);
 }
 
 html {
@@ -103,7 +96,7 @@ label {
 	flex-grow: 0;
 	text-align: left;
 	margin: 1px;
-	padding: 5px;
+	padding: 4px;
 	padding-left: 10px;
 	cursor: pointer;
 }

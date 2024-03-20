@@ -14,7 +14,7 @@
 #tabs > ul > li {
 	list-style: none;
 	float: left;
-	border: 1px solid #333;
+	border: 1px solid var(--button-dark, aliceblue);
 	min-width: 30px;
 	text-align: center;
 	border-top-left-radius: 5px;
@@ -22,12 +22,20 @@
 	margin-right: 3px;
 	padding: 4px 10px;
 	cursor: pointer;
-	background-color: #eee;
+	background: linear-gradient(
+		to bottom,
+		var(--button-dark, green),
+		var(--button-light, lightgreen)
+	);
 }
 
 #tabs > ul > li.active {
-	background-color: #ccc;
-	border: 1px solid #ccc;
+	border: 1px solid var(--button-light, green);
+	background: linear-gradient(
+		to bottom,
+		var(--container-light, lightgreen),
+		var(--container-light, lightgreen)
+	);
 }
 
 #tabs > ul > li > a {

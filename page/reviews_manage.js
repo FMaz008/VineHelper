@@ -22,17 +22,16 @@ async function loadSettings() {
 			const row = tableBody.insertRow();
 			const actionCell = row.insertCell();
 			const titleCell = row.insertCell();
-			const asinCell = row.insertCell(); 
+			const asinCell = row.insertCell();
 			const dateCell = row.insertCell();
 
 			actionCell.innerHTML = `
-			<button id="${asin}" class='view'>View</button>
-			<button id="${asin}" class='delete'>Delete</button>
+			<button id="${asin}" class='view vh'>View</button>
+			<button id="${asin}" class='delete vh'>Delete</button>
 			`;
 			dateCell.textContent = `${formattedDate.toLocaleDateString()}`;
 			asinCell.textContent = `${asin}`;
 			titleCell.textContent = `${JSON.parse(title)}`;
-
 		});
 	}
 
@@ -41,8 +40,12 @@ async function loadSettings() {
 	deleteElements.forEach((element) => {
 		element.addEventListener("click", function () {
 			let review = getReview(element.id);
-			document.getElementById("title").innerText = JSON.parse(review.title);
-			document.getElementById("content").innerText = JSON.parse(review.content);
+			document.getElementById("title").innerText = JSON.parse(
+				review.title
+			);
+			document.getElementById("content").innerText = JSON.parse(
+				review.content
+			);
 		});
 	});
 	//Add listener for delete
