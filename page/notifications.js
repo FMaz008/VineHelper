@@ -66,6 +66,11 @@ async function init() {
 	} else {
 		Object.assign(appSettings, data.settings);
 	}
+
+	if (!appSettings.general.newItemNotification) {
+		document.getElementById("status").innerHTML =
+			"<strong>Notifications disabled</strong> You need to enable the notifications for this window to work.";
+	}
 }
 
 //Set the locale and currency based on the domain.
@@ -77,7 +82,9 @@ function setLocale(country) {
 		vineCurrency = vineLocales[country].currency;
 		vineDomain = vineDomains[country];
 
-		document.getElementById("status").innerHTML = "<strong>Active</strong> Listening for notifications...";
+		if (appSettings != undefined && appSettings.general.newItemNotification) {
+			document.getElementById("status").innerHTML = "<strong>Active</strong> Listening for notifications...";
+		}
 	}
 }
 

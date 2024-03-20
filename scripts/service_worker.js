@@ -60,6 +60,15 @@ async function checkNewItems() {
 		sendMessageToAllTabs({ type: "vineCountry", domain: vineCountry }, "Vine Country - keep alive");
 	}, 25000);
 
+	//Check for new items again in 30 seconds.
+	setTimeout(function () {
+		checkNewItems();
+	}, 30000);
+
+	if (appSettings == undefined || !appSettings.general.newItemNotification) {
+		return; //Not setup to check for notifications. Will try again in 30 secs.
+	}
+
 	let arrJSON = {
 		api_version: 4,
 		country: vineCountry,
@@ -115,11 +124,6 @@ async function checkNewItems() {
 					}
 				}
 			}
-			setTimeout(function () {
-				if (appSettings.general.newItemNotification) {
-					checkNewItems();
-				}
-			}, 30000);
 		})
 		.catch(function () {
 			(error) => console.log(error);
