@@ -22,16 +22,8 @@ function Tile(obj, gridInstance) {
 	}
 
 	function getFees() {
-		if (
-			pVoteFees - pVoteNoFees >=
-			appSettings.unavailableTab.consensusThreshold
-		)
-			return CONSENSUS_FEES;
-		else if (
-			pVoteNoFees - pVoteFees >=
-			appSettings.unavailableTab.consensusThreshold
-		)
-			return CONSENSUS_NO_FEES;
+		if (pVoteFees - pVoteNoFees >= appSettings.unavailableTab.consensusThreshold) return CONSENSUS_FEES;
+		else if (pVoteNoFees - pVoteFees >= appSettings.unavailableTab.consensusThreshold) return CONSENSUS_NO_FEES;
 		else return NO_CONSENSUS;
 	}
 
@@ -114,15 +106,12 @@ function Tile(obj, gridInstance) {
 
 	this.getStatus = function () {
 		if (appSettings.unavailableTab.active) {
-			if (pOrderSuccess > 0 && pOrderSuccess > pOrderFailed)
-				return NOT_DISCARDED_ORDER_SUCCESS;
+			if (pOrderSuccess > 0 && pOrderSuccess > pOrderFailed) return NOT_DISCARDED_ORDER_SUCCESS;
 
-			if (pOrderFailed > 0 && pOrderFailed > pOrderSuccess)
-				return DISCARDED_ORDER_FAILED;
+			if (pOrderFailed > 0 && pOrderFailed > pOrderSuccess) return DISCARDED_ORDER_FAILED;
 		}
 		if (appSettings.unavailableTab.votingToolbar) {
-			if (pVoteOwn == 1 && appSettings.unavailableTab.selfDiscard)
-				return DISCARDED_OWN_VOTE;
+			if (pVoteOwn == 1 && appSettings.unavailableTab.selfDiscard) return DISCARDED_OWN_VOTE;
 
 			if (getFees() == CONSENSUS_FEES) return DISCARDED_WITH_FEES;
 
@@ -181,11 +170,7 @@ function Tile(obj, gridInstance) {
 				.text("First seen: " + textDate + " ago")
 				.appendTo($(pTile).find(".vh-img-container"));
 		}
-		if (
-			appSettings.general.bookmark &&
-			jsDate > bookmarkDate &&
-			appSettings.general.bookmarkDate != 0
-		) {
+		if (appSettings.general.bookmark && jsDate > bookmarkDate && appSettings.general.bookmarkDate != 0) {
 			$(pTile).addClass("bookmark-highlight");
 		}
 	};
@@ -230,10 +215,8 @@ function Tile(obj, gridInstance) {
 		//Move the tile
 		let moveToGrid = gridRegular;
 		if (
-			(appSettings.unavailableTab.consensusDiscard &&
-				this.getStatus() >= NOT_DISCARDED) ||
-			(appSettings.unavailableTab.selfDiscard &&
-				this.getStatus() == DISCARDED_OWN_VOTE)
+			(appSettings.unavailableTab.consensusDiscard && this.getStatus() >= NOT_DISCARDED) ||
+			(appSettings.unavailableTab.selfDiscard && this.getStatus() == DISCARDED_OWN_VOTE)
 		) {
 			moveToGrid = gridUnavailable;
 		}

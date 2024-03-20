@@ -14,10 +14,7 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 		vineCountry = data.vineCountry;
 
 		//Passing the country to the Monitor tab
-		sendMessageToAllTabs(
-			{ type: "vineCountry", domain: data.vineCountry },
-			"Vine Country"
-		);
+		sendMessageToAllTabs({ type: "vineCountry", domain: data.vineCountry }, "Vine Country");
 	}
 	if (data.type == "keepAlive") {
 		//console.log("Received keep alive.");
@@ -51,9 +48,7 @@ async function checkNewItems() {
 	//Repeat another check in 60 seconds.
 
 	if (vineCountry == null) {
-		console.log(
-			"Country not received from a preboot.js yet. Waiting 10 sec..."
-		);
+		console.log("Country not received from a preboot.js yet. Waiting 10 sec...");
 		setTimeout(function () {
 			checkNewItems();
 		}, 10000);
@@ -62,10 +57,7 @@ async function checkNewItems() {
 
 	//Now that we know the country, let's broadcast it to generate traffic and keep thing alive.
 	setInterval(async () => {
-		sendMessageToAllTabs(
-			{ type: "vineCountry", domain: vineCountry },
-			"Vine Country - keep alive"
-		);
+		sendMessageToAllTabs({ type: "vineCountry", domain: vineCountry }, "Vine Country - keep alive");
 	}, 25000);
 
 	let arrJSON = {
@@ -80,14 +72,11 @@ async function checkNewItems() {
 	sendMessageToAllTabs({ type: "newItemCheck" }, "Loading wheel");
 
 	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-	let url =
-		"https://vinehelper.ovh/vineHelperLatest.php" + "?data=" + jsonArrURL;
+	let url = "https://vinehelper.ovh/vineHelperLatest.php" + "?data=" + jsonArrURL;
 	fetch(url)
 		.then((response) => response.json())
 		.then(async function (response) {
-			let latestProduct = await browser.storage.local.get(
-				"latestProduct"
-			);
+			let latestProduct = await browser.storage.local.get("latestProduct");
 			if (Object.keys(latestProduct).length === 0) {
 				latestProduct = 0;
 			} else {
@@ -96,31 +85,19 @@ async function checkNewItems() {
 
 			for (let i = response.products.length - 1; i >= 0; i--) {
 				//Only display notification for product more recent than the last displayed notification
-				if (
-					DEBUG_MODE ||
-					response.products[i].date > latestProduct ||
-					latestProduct == 0
-				) {
+				if (DEBUG_MODE || response.products[i].date > latestProduct || latestProduct == 0) {
 					//Only display notification for products with a title and image url
-					if (
-						response.products[i].img_url != "" &&
-						response.products[i].title != ""
-					) {
+					if (response.products[i].img_url != "" && response.products[i].title != "") {
 						if (i == 0) {
 							await browser.storage.local.set({
 								latestProduct: response.products[0].date,
 							});
 						}
 
-						let search = response.products[i].title.replace(
-							/^([a-zA-Z0-9\s',]{0,40})[\s]+.*$/,
-							"$1"
-						);
+						let search = response.products[i].title.replace(/^([a-zA-Z0-9\s',]{0,40})[\s]+.*$/, "$1");
 
 						//Broadcast the notification
-						console.log(
-							"Broadcasting new item " + response.products[i].asin
-						);
+						console.log("Broadcasting new item " + response.products[i].asin);
 						sendMessageToAllTabs(
 							{
 								index: i,

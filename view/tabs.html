@@ -1,22 +1,16 @@
 <div id="tabs">
 	<ul id="vh-tabs">
 		<li>
-			<a href="#vvp-items-grid"
-				>{{$available}} (<span id="vh-available-count"></span>)</a
-			>
+			<a href="#vvp-items-grid">{{$available}} (<span id="vh-available-count"></span>)</a>
 		</li>
 
 		{{if unavailable}}
 		<li>
-			<a href="#tab-unavailable"
-				>{{$unavailable}} (<span id="vh-unavailable-count"></span>)</a
-			>
+			<a href="#tab-unavailable">{{$unavailable}} (<span id="vh-unavailable-count"></span>)</a>
 		</li>
 		{{endif}} {{if hidden}}
 		<li>
-			<a href="#tab-hidden"
-				>{{$hidden}} (<span id="vh-hidden-count"></span>)</a
-			>
+			<a href="#tab-hidden">{{$hidden}} (<span id="vh-hidden-count"></span>)</a>
 		</li>
 		{{endif}}
 	</ul>

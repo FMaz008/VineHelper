@@ -1,20 +1,12 @@
 <div id="vh-notification-{{$id}}" class="vh-notification-box">
 	<div class="vh-notification-toolbar">
-		<a
-			href="https://amazon.{{$domain}}/vine/vine-items?search={{$search}}"
-			target="_blank"
-		>
-			<div
-				class="vh-toolbar-large-icon vh-icon-search"
-				style="float: right"
-			></div
+		<a href="https://amazon.{{$domain}}/vine/vine-items?search={{$search}}" target="_blank">
+			<div class="vh-toolbar-large-icon vh-icon-search" style="float: right"></div
 		></a>
 	</div>
 	<div class="vh-notification-content">
 		<img src="{{$img_url}}" />
-		<a href="https://amazon.{{$domain}}/dp/{{$asin}}" target="_blank"
-			>{{$description}}</a
-		>
+		<a href="https://amazon.{{$domain}}/dp/{{$asin}}" target="_blank">{{$description}}</a>
 	</div>
 	<div class="vh-notification-footer">
 		<span id="etv_value" class="etv_value">Last shared ETV: {{$etv}}</span

@@ -57,15 +57,9 @@ class ScreenNotifier {
 		$("#vh-notifications-container").prepend(content);
 
 		//Bind the "close" link
-		$("#vh-notification-" + note.id + " .vh-notification-close a").on(
-			"click",
-			{ id: note.id },
-			function (event) {
-				Notifications.removeNote(
-					$("#vh-notification-" + event.data.id)
-				);
-			}
-		);
+		$("#vh-notification-" + note.id + " .vh-notification-close a").on("click", { id: note.id }, function (event) {
+			Notifications.removeNote($("#vh-notification-" + event.data.id));
+		});
 
 		//Activate the self dismissal
 		if (note.lifespan > 0) {
@@ -79,9 +73,7 @@ class ScreenNotifier {
 			if (Date.now() - this.lastSoundPlayedAt > 30000) {
 				// Don't play the notification sound again within 30 sec.
 				this.lastSoundPlayedAt = Date.now();
-				const audioElement = new Audio(
-					chrome.runtime.getURL(note.sound)
-				);
+				const audioElement = new Audio(chrome.runtime.getURL(note.sound));
 				audioElement.play();
 			}
 		}

@@ -66,14 +66,10 @@ function updateTileCounts() {
 	if (appSettings.unavailableTab.active || appSettings.hiddenTab.active)
 		$("#vh-available-count").text(gridRegular.getTileCount(true));
 
-	if (
-		appSettings.unavailableTab.active ||
-		appSettings.unavailableTab.votingToolbar
-	)
+	if (appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar)
 		$("#vh-unavailable-count").text(gridUnavailable.getTileCount(true));
 
-	if (appSettings.hiddenTab.active)
-		$("#vh-hidden-count").text(gridHidden.getTileCount(true));
+	if (appSettings.hiddenTab.active) $("#vh-hidden-count").text(gridHidden.getTileCount(true));
 }
 
 async function createGridInterface() {
@@ -96,10 +92,7 @@ async function createGridInterface() {
 	let tplTabs = await Tpl.loadFile("view/tabs.html");
 
 	Tpl.setIf("not_mobile", true);
-	if (
-		appSettings.thorvarium.mobileandroid ||
-		appSettings.thorvarium.mobileios
-	) {
+	if (appSettings.thorvarium.mobileandroid || appSettings.thorvarium.mobileios) {
 		Tpl.setVar("available", "A");
 		Tpl.setVar("unavailable", "U");
 		Tpl.setVar("hidden", "H");
@@ -109,11 +102,7 @@ async function createGridInterface() {
 		Tpl.setVar("hidden", "Hidden");
 	}
 	//If voting system enabled
-	Tpl.setIf(
-		"unavailable",
-		appSettings.unavailableTab.active ||
-			appSettings.unavailableTab.votingToolbar
-	);
+	Tpl.setIf("unavailable", appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar);
 
 	//If the hidden tab system is activated
 	Tpl.setIf("hidden", appSettings.hiddenTab.active);
@@ -192,9 +181,7 @@ function selectCurrentTab(firstRun = false) {
 			item.classList.remove("active");
 		});
 	} else {
-		document
-			.querySelector("#tabs > ul li:first-child")
-			.classList.add("active");
+		document.querySelector("#tabs > ul li:first-child").classList.add("active");
 	}
 
 	//Display the current tab

@@ -77,8 +77,7 @@ function setLocale(country) {
 		vineCurrency = vineLocales[country].currency;
 		vineDomain = vineDomains[country];
 
-		document.getElementById("status").innerHTML =
-			"<strong>Active</strong> Listening for notifications...";
+		document.getElementById("status").innerHTML = "<strong>Active</strong> Listening for notifications...";
 	}
 }
 
@@ -118,9 +117,7 @@ async function addItem(data) {
 		if (Date.now() - lastSoundPlayedAt > 30000) {
 			// Don't play the notification sound again within 30 sec.
 			lastSoundPlayedAt = Date.now();
-			const audioElement = new Audio(
-				chrome.runtime.getURL("resource/sound/notification.mp3")
-			);
+			const audioElement = new Audio(chrome.runtime.getURL("resource/sound/notification.mp3"));
 			audioElement.play();
 		}
 	}

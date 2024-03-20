@@ -159,26 +159,20 @@ async function getSettings() {
 
 	//v2.2.7
 	if (appSettings.general.displayNewItemNotifications == undefined) {
-		appSettings.general.displayNewItemNotifications =
-			appSettings.general.newItemNotification;
+		appSettings.general.displayNewItemNotifications = appSettings.general.newItemNotification;
 		saveSettings();
 	}
 
 	//Load Thorvarium stylesheets
-	if (appSettings.thorvarium.mobileios)
-		loadStyleSheet("lib/vine-styling/mobile/ios-with-bugfix.css");
+	if (appSettings.thorvarium.mobileios) loadStyleSheet("lib/vine-styling/mobile/ios-with-bugfix.css");
 
-	if (appSettings.thorvarium.mobileandroid)
-		loadStyleSheet("lib/vine-styling/mobile/mobile.css");
+	if (appSettings.thorvarium.mobileandroid) loadStyleSheet("lib/vine-styling/mobile/mobile.css");
 
-	if (appSettings.thorvarium.smallItems)
-		loadStyleSheet("lib/vine-styling/desktop/small-items.css");
+	if (appSettings.thorvarium.smallItems) loadStyleSheet("lib/vine-styling/desktop/small-items.css");
 
-	if (appSettings.thorvarium.removeHeader)
-		loadStyleSheet("lib/vine-styling/desktop/remove-header.css");
+	if (appSettings.thorvarium.removeHeader) loadStyleSheet("lib/vine-styling/desktop/remove-header.css");
 
-	if (appSettings.thorvarium.removeFooter)
-		loadStyleSheet("lib/vine-styling/desktop/remove-footer.css");
+	if (appSettings.thorvarium.removeFooter) loadStyleSheet("lib/vine-styling/desktop/remove-footer.css");
 
 	if (appSettings.thorvarium.removeAssociateHeader)
 		loadStyleSheet("lib/vine-styling/desktop/remove-associate-header.css");
@@ -186,29 +180,24 @@ async function getSettings() {
 	if (appSettings.thorvarium.moreDescriptionText)
 		loadStyleSheet("lib/vine-styling/desktop/more-description-text.css");
 
-	if (appSettings.thorvarium.darktheme)
-		loadStyleSheet("lib/vine-styling/desktop/dark-theme.css");
+	if (appSettings.thorvarium.darktheme) loadStyleSheet("lib/vine-styling/desktop/dark-theme.css");
 
-	if (appSettings.thorvarium.ETVModalOnTop)
-		loadStyleSheet("lib/vine-styling/desktop/etv-modal-on-top.css");
+	if (appSettings.thorvarium.ETVModalOnTop) loadStyleSheet("lib/vine-styling/desktop/etv-modal-on-top.css");
 
 	if (appSettings.thorvarium.categoriesWithEmojis)
 		loadStyleSheet("lib/vine-styling/desktop/categories-with-emojis.css");
 
-	if (appSettings.thorvarium.paginationOnTop)
-		loadStyleSheet("lib/vine-styling/desktop/pagination-on-top.css");
+	if (appSettings.thorvarium.paginationOnTop) loadStyleSheet("lib/vine-styling/desktop/pagination-on-top.css");
 
 	if (appSettings.thorvarium.collapsableCategories)
 		loadStyleSheet("lib/vine-styling/desktop/collapsable-categories.css");
 
-	if (appSettings.thorvarium.stripedCategories)
-		loadStyleSheet("lib/vine-styling/desktop/striped-categories.css");
+	if (appSettings.thorvarium.stripedCategories) loadStyleSheet("lib/vine-styling/desktop/striped-categories.css");
 
 	if (appSettings.thorvarium.limitedQuantityIcon)
 		loadStyleSheet("lib/vine-styling/desktop/limited-quantity-icon.css");
 
-	if (appSettings.thorvarium.RFYAFAAITabs)
-		loadStyleSheet("lib/vine-styling/desktop/rfy-afa-ai-tabs.css");
+	if (appSettings.thorvarium.RFYAFAAITabs) loadStyleSheet("lib/vine-styling/desktop/rfy-afa-ai-tabs.css");
 
 	showRuntime("BOOT: Thorvarium stylesheets injected");
 
@@ -278,8 +267,7 @@ async function getSettings() {
 	}
 
 	//Determine if we are browsing a queue
-	regex =
-		/^.+?amazon\..+\/vine\/vine-items(?:\?(queue|search)=(.+?))?(?:[#&].*)?$/;
+	regex = /^.+?amazon\..+\/vine\/vine-items(?:\?(queue|search)=(.+?))?(?:[#&].*)?$/;
 	arrMatches = currentUrl.match(regex);
 	vineQueue = null;
 	if (arrMatches != null) {
@@ -294,8 +282,7 @@ async function getSettings() {
 	}
 
 	//Determine if we are currently searching for an item
-	regex =
-		/^.+?amazon\..+\/vine\/vine-items(?:.*?)(?:[\?&]search=(.+?))(?:[#&].*?)?$/;
+	regex = /^.+?amazon\..+\/vine\/vine-items(?:.*?)(?:[\?&]search=(.+?))(?:[#&].*?)?$/;
 	arrMatches = currentUrl.match(regex);
 	if (arrMatches != null) {
 		if (arrMatches[1] == undefined) {
@@ -310,10 +297,7 @@ async function getSettings() {
 	if (vineQueue != null) vineQueueAbbr = arrQueues[vineQueue];
 
 	//Generate a UUID for the user
-	if (
-		appSettings.general.uuid == undefined ||
-		appSettings.general.uuid == null
-	) {
+	if (appSettings.general.uuid == undefined || appSettings.general.uuid == null) {
 		//Request a new UUID from the server
 		let arrJSON = {
 			api_version: 4,
@@ -323,8 +307,7 @@ async function getSettings() {
 		let jsonArrURL = JSON.stringify(arrJSON);
 
 		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-		let url =
-			"https://vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
+		let url = "https://vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
 		fetch(url)
 			.then((response) => response.json())
 			.then(function (serverResponse) {
@@ -350,9 +333,7 @@ if (!regex.test(window.location.href)) {
 	getSettings(); //First call to launch the extension.
 } else {
 	ultraviner = true;
-	console.log(
-		"VineHelper detected UltraViner. Disabling VineHelper on this page."
-	);
+	console.log("VineHelper detected UltraViner. Disabling VineHelper on this page.");
 }
 
 //#################################################3
@@ -364,9 +345,7 @@ async function saveSettings() {
 	} catch (e) {
 		if (e.name === "QuotaExceededError") {
 			// The local storage space has been exceeded
-			alert(
-				"Local storage quota exceeded! Hidden items will be cleared to make space."
-			);
+			alert("Local storage quota exceeded! Hidden items will be cleared to make space.");
 			await chrome.storage.local.set({ hiddenItems: [] });
 			saveSettings();
 		} else {
@@ -412,9 +391,7 @@ function bytesToSize(bytes, decimals = 2) {
 
 	const index = Math.floor(Math.log(bytes) / Math.log(kbToBytes));
 
-	return `${parseFloat((bytes / Math.pow(kbToBytes, index)).toFixed(dm))} ${
-		sizes[index]
-	}`;
+	return `${parseFloat((bytes / Math.pow(kbToBytes, index)).toFixed(dm))} ${sizes[index]}`;
 }
 
 async function generateStorageUsageForDebug() {
@@ -429,15 +406,9 @@ async function generateStorageUsageForDebug() {
 				if (key != "settings") {
 					itemCount = `representing ${keyLength} items`;
 				}
-				showRuntime(
-					`Storage used by ${key}: ${bytesToSize(
-						bytesUsed
-					)} ${itemCount}`
-				);
+				showRuntime(`Storage used by ${key}: ${bytesToSize(bytesUsed)} ${itemCount}`);
 			} catch (error) {
-				console.error(
-					`Error retrieving storage data for ${key}: ${error.message}`
-				);
+				console.error(`Error retrieving storage data for ${key}: ${error.message}`);
 			}
 		}
 	} catch (error) {
@@ -499,13 +470,10 @@ function getStorageSizeFull() {
 
 function generateString(length) {
 	let result = "";
-	const characters =
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+	const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 	const charactersLength = characters.length;
 	for (let i = 0; i < length; i++) {
-		result += characters.charAt(
-			Math.floor(Math.random() * charactersLength)
-		);
+		result += characters.charAt(Math.floor(Math.random() * charactersLength));
 	}
 
 	return result;

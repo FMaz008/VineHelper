@@ -18,9 +18,7 @@ async function loadSettings() {
 
 	if (arrTemplate.length > 0) {
 		arrTemplate.forEach((tpl) => {
-			const tableBody = document
-				.getElementById("templates_list")
-				.querySelector("tbody");
+			const tableBody = document.getElementById("templates_list").querySelector("tbody");
 			const row = tableBody.insertRow();
 			const actionCell = row.insertCell();
 			const titleCell = row.insertCell();
@@ -54,12 +52,8 @@ async function loadSettings() {
 			document.getElementById("editTitle").innerHTML = "Edit template";
 			document.getElementById("template_id").value = element.id;
 			try {
-				document.getElementById("template_title").value = JSON.parse(
-					template.title
-				);
-				document.getElementById("template_content").value = JSON.parse(
-					template.content
-				);
+				document.getElementById("template_title").value = JSON.parse(template.title);
+				document.getElementById("template_content").value = JSON.parse(template.content);
 			} catch (e) {}
 		});
 	});
@@ -84,17 +78,13 @@ async function loadSettings() {
 		) {
 			createNewTemplate(
 				JSON.stringify(document.getElementById("template_title").value),
-				JSON.stringify(
-					document.getElementById("template_content").value
-				)
+				JSON.stringify(document.getElementById("template_content").value)
 			);
 		} else {
 			editNewTemplate(
 				document.getElementById("template_id").value,
 				JSON.stringify(document.getElementById("template_title").value),
-				JSON.stringify(
-					document.getElementById("template_content").value
-				)
+				JSON.stringify(document.getElementById("template_content").value)
 			);
 		}
 	});

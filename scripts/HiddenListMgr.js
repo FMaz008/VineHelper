@@ -67,8 +67,7 @@ class HiddenListMgr {
 	async addItem(asin, save = true, broadcast = true) {
 		if (save) await this.loadFromLocalStorage(); //Load the list in case it was altered in a different tab
 
-		if (!this.isHidden(asin))
-			this.arrHidden.push({ asin: asin, date: new Date().toString() });
+		if (!this.isHidden(asin)) this.arrHidden.push({ asin: asin, date: new Date().toString() });
 
 		//The server may not be in sync with the local list, and will deal with duplicate.
 		this.updateArrChange({ asin: asin, hidden: true });
@@ -86,9 +85,7 @@ class HiddenListMgr {
 			if (browser.runtime.lastError) {
 				const error = browser.runtime.lastError;
 				if (error.message === "QUOTA_BYTES quota exceeded") {
-					alert(
-						`Vine Helper local storage quota exceeded! Hidden items will be trimmed to make space.`
-					);
+					alert(`Vine Helper local storage quota exceeded! Hidden items will be trimmed to make space.`);
 					this.garbageCollection();
 				} else {
 					alert(
@@ -108,15 +105,13 @@ class HiddenListMgr {
 	isHidden(asin) {
 		if (asin == undefined) throw new Exception("Asin not defined");
 
-		for (const id in this.arrHidden)
-			if (this.arrHidden[id].asin == asin) return true;
+		for (const id in this.arrHidden) if (this.arrHidden[id].asin == asin) return true;
 
 		return false;
 	}
 
 	isChange(asin) {
-		for (const id in this.arrChanges)
-			if (this.arrChanges[id].asin == asin) return id;
+		for (const id in this.arrChanges) if (this.arrChanges[id].asin == asin) return id;
 
 		return false;
 	}
@@ -144,8 +139,7 @@ class HiddenListMgr {
 		showRuntime("Saving hidden item(s) remotely...");
 
 		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-		let url =
-			"https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
+		let url = "https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
 		fetch(url);
 	}
 
@@ -156,18 +150,14 @@ class HiddenListMgr {
 		if (isNaN(appSettings.general.hiddenItemsCacheSize)) {
 			return false;
 		}
-		if (
-			appSettings.general.hiddenItemsCacheSize < 2 ||
-			appSettings.general.hiddenItemsCacheSize > 9
-		) {
+		if (appSettings.general.hiddenItemsCacheSize < 2 || appSettings.general.hiddenItemsCacheSize > 9) {
 			return false;
 		}
 
 		//Delete older items if the storage space is exceeded.
 		let bytes = await getStorageSizeFull();
 		const storageLimit = appSettings.general.hiddenItemsCacheSize * 1048576; // 9MB
-		const deletionThreshold =
-			(appSettings.general.hiddenItemsCacheSize - 1) * 1048576; // 8MB
+		const deletionThreshold = (appSettings.general.hiddenItemsCacheSize - 1) * 1048576; // 8MB
 		if (bytes > storageLimit) {
 			let itemDeleted = 0;
 

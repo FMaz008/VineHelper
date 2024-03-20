@@ -29,39 +29,23 @@ class Template {
 
 	render(html) {
 		if (html == null) {
-			showRuntime(
-				"No content for " +
-					this.currentURL +
-					", did you await loadFile()) ?"
-			);
+			showRuntime("No content for " + this.currentURL + ", did you await loadFile()) ?");
 			return "";
 		}
 		var output = html;
 		for (let i = 0; i < this.arrVar.length; i++) {
-			output = output.replaceAll(
-				"{{$" + this.arrVar[i]["name"] + "}}",
-				this.arrVar[i]["value"]
-			);
+			output = output.replaceAll("{{$" + this.arrVar[i]["name"] + "}}", this.arrVar[i]["value"]);
 		}
 		for (let j = 0; j < this.arrIf.length; j++) {
 			if (this.arrIf[j]["value"] == true) {
 				//Remove the if tags
 				output = output.replaceAll(
-					new RegExp(
-						"{{if " + this.arrIf[j]["name"] + "}}(.*?){{endif}}",
-						"sg"
-					),
+					new RegExp("{{if " + this.arrIf[j]["name"] + "}}(.*?){{endif}}", "sg"),
 					`$1`
 				);
 			} else {
 				//Remove the if block entirely
-				output = output.replaceAll(
-					new RegExp(
-						"{{if " + this.arrIf[j]["name"] + "}}(.*?){{endif}}",
-						"sg"
-					),
-					""
-				);
+				output = output.replaceAll(new RegExp("{{if " + this.arrIf[j]["name"] + "}}(.*?){{endif}}", "sg"), "");
 			}
 		}
 
@@ -79,9 +63,7 @@ class TemplateMgr {
 	async loadTempateFromLocalStorage() {
 		const data = await chrome.storage.local.get("arrTemplate");
 		if (Object.keys(data).length === 0) {
-			showRuntime(
-				"TEMPLATE: No template in localstorage, will load them from files as needed..."
-			);
+			showRuntime("TEMPLATE: No template in localstorage, will load them from files as needed...");
 			return;
 		}
 		this.arrTemplate = data.arrTemplate;

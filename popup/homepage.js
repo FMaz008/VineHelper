@@ -39,13 +39,9 @@ function handleChildrenOptions(parent_key) {
 function handleDynamicFields(key) {
 	handleDependantChildCheckBoxes("hiddenTab.active", ["hiddenTab.remote"]);
 
-	handleDependantChildCheckBoxes("general.displayFirstSeen", [
-		"general.bookmark",
-	]);
+	handleDependantChildCheckBoxes("general.displayFirstSeen", ["general.bookmark"]);
 
-	handleDependantChildCheckBoxes("general.newItemNotification", [
-		"general.displayNewItemNotifications",
-	]);
+	handleDependantChildCheckBoxes("general.newItemNotification", ["general.displayNewItemNotifications"]);
 
 	handleDependantChildCheckBoxes("general.displayNewItemNotifications", [
 		"general.newItemNotificationImage",
@@ -63,28 +59,20 @@ function handleDependantChildCheckBoxes(parentChk, arrChilds) {
 }
 
 async function drawUnavailableTab() {
-	document.querySelector("#votingToolbarOptions").style.display = appSettings
-		.unavailableTab.votingToolbar
+	document.querySelector("#votingToolbarOptions").style.display = appSettings.unavailableTab.votingToolbar
 		? "block"
 		: "none";
 }
 
 async function drawDiscord() {
 	//Show or hide the discord options
-	document.querySelector("#discordOptions").style.display = appSettings
-		.discord.active
-		? "block"
-		: "none";
+	document.querySelector("#discordOptions").style.display = appSettings.discord.active ? "block" : "none";
 
 	if (appSettings.discord.active) {
 		let showLink = JSONGetPathValue(appSettings, "discord.guid") === null;
 
-		document.querySelector("#discord-guid-link").style.display = showLink
-			? "block"
-			: "none";
-		document.querySelector("#discord-guid-unlink").style.display = showLink
-			? "none"
-			: "block";
+		document.querySelector("#discord-guid-link").style.display = showLink ? "block" : "none";
+		document.querySelector("#discord-guid-unlink").style.display = showLink ? "none" : "block";
 	}
 }
 
@@ -106,32 +94,24 @@ function selectCurrentTab(firstRun = false) {
 }
 function init() {
 	//Factory reset
-	document
-		.getElementById("factoryReset")
-		.addEventListener("click", async function () {
-			if (
-				confirm(
-					"SAVE YOUR UUID OR YOU WILL LOOSE YOUR REMOTE STORED ITEMS !\n\nReset all Vine Helper settings & local storage to default?"
-				)
-			) {
-				await chrome.storage.local.clear();
-				alert(
-					"All settings were deleted. RELOAD AMAZON VINE to restaure default settings.\nDO NOT EDIT OPTIONS before you reloaded an amazon vine page."
-				);
-			}
-		});
-	document
-		.getElementById("hiddenItemReset")
-		.addEventListener("click", async function () {
-			if (
-				confirm(
-					"Delete all locally stored hidden items from Vine Helper?"
-				)
-			) {
-				chrome.storage.local.set({ hiddenItems: [] });
-				alert("Hidden items in local storage emptied.");
-			}
-		});
+	document.getElementById("factoryReset").addEventListener("click", async function () {
+		if (
+			confirm(
+				"SAVE YOUR UUID OR YOU WILL LOOSE YOUR REMOTE STORED ITEMS !\n\nReset all Vine Helper settings & local storage to default?"
+			)
+		) {
+			await chrome.storage.local.clear();
+			alert(
+				"All settings were deleted. RELOAD AMAZON VINE to restaure default settings.\nDO NOT EDIT OPTIONS before you reloaded an amazon vine page."
+			);
+		}
+	});
+	document.getElementById("hiddenItemReset").addEventListener("click", async function () {
+		if (confirm("Delete all locally stored hidden items from Vine Helper?")) {
+			chrome.storage.local.set({ hiddenItems: [] });
+			alert("Hidden items in local storage emptied.");
+		}
+	});
 
 	//Bind the click event for the tabs
 	document.querySelectorAll("#tabs > ul li").forEach(function (item) {
@@ -151,8 +131,7 @@ function init() {
 	drawUnavailableTab();
 	drawDiscord();
 
-	document.getElementById("notificationsMonitor").href =
-		chrome.runtime.getURL("page/notifications.html");
+	document.getElementById("notificationsMonitor").href = chrome.runtime.getURL("page/notifications.html");
 	//###################
 	//#### UI interaction
 
@@ -174,24 +153,18 @@ function init() {
 	//hiddenItemsCacheSize
 	var select = document.getElementById("hiddenItemsCacheSize");
 	for (var i = 0; i < select.options.length; i++) {
-		if (
-			select.options[i].value == appSettings.general.hiddenItemsCacheSize
-		) {
+		if (select.options[i].value == appSettings.general.hiddenItemsCacheSize) {
 			select.options[i].selected = true;
 		}
 	}
-	document.getElementById("hiddenItemsCacheSize").onchange =
-		async function () {
-			appSettings.general.hiddenItemsCacheSize = document.getElementById(
-				"hiddenItemsCacheSize"
-			).value;
-			await chrome.storage.local.set({ settings: appSettings });
-		};
+	document.getElementById("hiddenItemsCacheSize").onchange = async function () {
+		appSettings.general.hiddenItemsCacheSize = document.getElementById("hiddenItemsCacheSize").value;
+		await chrome.storage.local.set({ settings: appSettings });
+	};
 
 	//Concensus Threshold
 	key = CSS.escape("unavailableTab.consensusThreshold");
-	document.querySelector(`#${key}`).value =
-		appSettings.unavailableTab.consensusThreshold;
+	document.querySelector(`#${key}`).value = appSettings.unavailableTab.consensusThreshold;
 	document.querySelector(`#${key}`).onchange = async function () {
 		let val = this.value;
 		if (isNumeric(val) && val > 0 && val < 10) {
@@ -202,8 +175,7 @@ function init() {
 
 	//Unavailable Opacity
 	key = CSS.escape("unavailableTab.unavailableOpacity");
-	document.querySelector(`#${key}`).value =
-		appSettings.unavailableTab.unavailableOpacity;
+	document.querySelector(`#${key}`).value = appSettings.unavailableTab.unavailableOpacity;
 	document.querySelector(`#${key}`).onchange = async function () {
 		let val = this.value;
 		if (isNumeric(val) && val > 0 && val <= 100) {
@@ -237,8 +209,7 @@ function init() {
 		};
 		let jsonArrURL = JSON.stringify(arrJSON);
 
-		let url =
-			"https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
+		let url = "https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
 		await fetch(url)
 			.then((response) => response.json())
 			.then(async function (serverResponse) {
@@ -248,8 +219,7 @@ function init() {
 				} else {
 					alert("Invalid UUID");
 					key = CSS.escape("general.uuid");
-					document.querySelector(`#${key}`).value =
-						appSettings.general.uuid;
+					document.querySelector(`#${key}`).value = appSettings.general.uuid;
 				}
 			})
 			.catch(function () {
@@ -263,18 +233,14 @@ function init() {
 		let key = CSS.escape("discord.guid");
 		//Post a fetch request to the Brenda API from the AmazonVine Discord server
 		//We want to check if the guid is valid.
-		let url =
-			"https://api.llamastories.com/brenda/user/" +
-			document.querySelector("#" + key).value;
+		let url = "https://api.llamastories.com/brenda/user/" + document.querySelector("#" + key).value;
 		const response = await fetch(url, { method: "GET" });
 		if (response.status == 200) {
 			appSettings.discord.guid = document.querySelector(`#${key}`).value;
 			await chrome.storage.local.set({ settings: appSettings });
-			document.querySelector("#guid-txt").innerText =
-				appSettings.discord.guid;
+			document.querySelector("#guid-txt").innerText = appSettings.discord.guid;
 			document.querySelector("#discord-guid-link").style.display = "none";
-			document.querySelector("#discord-guid-unlink").style.display =
-				"block";
+			document.querySelector("#discord-guid-unlink").style.display = "block";
 		} else {
 			document.querySelector(`#${key}`).value = "";
 			alert("invalid API Token.");
@@ -328,87 +294,63 @@ function init() {
 		chrome.storage.local.set({ settings: appSettings });
 	}
 
-	document.getElementById("keyBindingsNextPage").value =
-		appSettings.keyBindings.nextPage;
-	document.getElementById("keyBindingsPreviousPage").value =
-		appSettings.keyBindings.previousPage;
-	document.getElementById("keyBindingsRFYPage").value =
-		appSettings.keyBindings.RFYPage;
-	document.getElementById("keyBindingsAFAPage").value =
-		appSettings.keyBindings.AFAPage;
-	document.getElementById("keyBindingsAIPage").value =
-		appSettings.keyBindings.AIPage;
-	document.getElementById("keyBindingsHideAll").value =
-		appSettings.keyBindings.hideAll;
-	document.getElementById("keyBindingsShowAll").value =
-		appSettings.keyBindings.showAll;
-	document.getElementById("keyBindingsDebug").value =
-		appSettings.keyBindings.debug;
+	document.getElementById("keyBindingsNextPage").value = appSettings.keyBindings.nextPage;
+	document.getElementById("keyBindingsPreviousPage").value = appSettings.keyBindings.previousPage;
+	document.getElementById("keyBindingsRFYPage").value = appSettings.keyBindings.RFYPage;
+	document.getElementById("keyBindingsAFAPage").value = appSettings.keyBindings.AFAPage;
+	document.getElementById("keyBindingsAIPage").value = appSettings.keyBindings.AIPage;
+	document.getElementById("keyBindingsHideAll").value = appSettings.keyBindings.hideAll;
+	document.getElementById("keyBindingsShowAll").value = appSettings.keyBindings.showAll;
+	document.getElementById("keyBindingsDebug").value = appSettings.keyBindings.debug;
 
-	document
-		.getElementById("keyBindingsNextPage")
-		.addEventListener("change", function () {
-			if (this.value == "") return false;
+	document.getElementById("keyBindingsNextPage").addEventListener("change", function () {
+		if (this.value == "") return false;
 
-			appSettings.keyBindings.nextPage = this.value;
-			chrome.storage.local.set({ settings: appSettings });
-		});
-	document
-		.getElementById("keyBindingsPreviousPage")
-		.addEventListener("change", function () {
-			if (this.value == "") return false;
+		appSettings.keyBindings.nextPage = this.value;
+		chrome.storage.local.set({ settings: appSettings });
+	});
+	document.getElementById("keyBindingsPreviousPage").addEventListener("change", function () {
+		if (this.value == "") return false;
 
-			appSettings.keyBindings.previousPage = this.value;
-			chrome.storage.local.set({ settings: appSettings });
-		});
-	document
-		.getElementById("keyBindingsRFYPage")
-		.addEventListener("change", function () {
-			if (this.value == "") return false;
+		appSettings.keyBindings.previousPage = this.value;
+		chrome.storage.local.set({ settings: appSettings });
+	});
+	document.getElementById("keyBindingsRFYPage").addEventListener("change", function () {
+		if (this.value == "") return false;
 
-			appSettings.keyBindings.RFYPage = this.value;
-			chrome.storage.local.set({ settings: appSettings });
-		});
-	document
-		.getElementById("keyBindingsAFAPage")
-		.addEventListener("change", function () {
-			if (this.value == "") return false;
+		appSettings.keyBindings.RFYPage = this.value;
+		chrome.storage.local.set({ settings: appSettings });
+	});
+	document.getElementById("keyBindingsAFAPage").addEventListener("change", function () {
+		if (this.value == "") return false;
 
-			appSettings.keyBindings.AFAPage = this.value;
-			chrome.storage.local.set({ settings: appSettings });
-		});
-	document
-		.getElementById("keyBindingsAIPage")
-		.addEventListener("change", function () {
-			if (this.value == "") return false;
+		appSettings.keyBindings.AFAPage = this.value;
+		chrome.storage.local.set({ settings: appSettings });
+	});
+	document.getElementById("keyBindingsAIPage").addEventListener("change", function () {
+		if (this.value == "") return false;
 
-			appSettings.keyBindings.AIPage = this.value;
-			chrome.storage.local.set({ settings: appSettings });
-		});
-	document
-		.getElementById("keyBindingsHideAll")
-		.addEventListener("change", function () {
-			if (this.value == "") return false;
+		appSettings.keyBindings.AIPage = this.value;
+		chrome.storage.local.set({ settings: appSettings });
+	});
+	document.getElementById("keyBindingsHideAll").addEventListener("change", function () {
+		if (this.value == "") return false;
 
-			appSettings.keyBindings.hideAll = this.value;
-			chrome.storage.local.set({ settings: appSettings });
-		});
-	document
-		.getElementById("keyBindingsShowAll")
-		.addEventListener("change", function () {
-			if (this.value == "") return false;
+		appSettings.keyBindings.hideAll = this.value;
+		chrome.storage.local.set({ settings: appSettings });
+	});
+	document.getElementById("keyBindingsShowAll").addEventListener("change", function () {
+		if (this.value == "") return false;
 
-			appSettings.keyBindings.showAll = this.value;
-			chrome.storage.local.set({ settings: appSettings });
-		});
-	document
-		.getElementById("keyBindingsDebug")
-		.addEventListener("change", function () {
-			if (this.value == "") return false;
+		appSettings.keyBindings.showAll = this.value;
+		chrome.storage.local.set({ settings: appSettings });
+	});
+	document.getElementById("keyBindingsDebug").addEventListener("change", function () {
+		if (this.value == "") return false;
 
-			appSettings.keyBindings.debug = this.value;
-			chrome.storage.local.set({ settings: appSettings });
-		});
+		appSettings.keyBindings.debug = this.value;
+		chrome.storage.local.set({ settings: appSettings });
+	});
 
 	//Manage checkboxes load and save
 	manageCheckboxSetting("general.topPagination");
@@ -458,9 +400,7 @@ function manageCheckboxSetting(key, def = null) {
 	let keyE = CSS.escape(key);
 
 	//Clicking the label will check the checkbox
-	document.querySelector(`label[for='${keyE}']`).onclick = async function (
-		event
-	) {
+	document.querySelector(`label[for='${keyE}']`).onclick = async function (event) {
 		if (event.target.nodeName == "INPUT") return false;
 
 		//Change the value
@@ -471,14 +411,13 @@ function manageCheckboxSetting(key, def = null) {
 		const element = document.querySelector(`input[name='${keyE}']`);
 		element.dispatchEvent(e);
 	}.bind(keyE);
-	document.querySelector(`input[name='${keyE}']`).onchange =
-		async function () {
-			//Change in value
-			handleDynamicFields(key);
-			const newValue = getCB(key);
-			deepSet(appSettings, key, newValue);
-			await chrome.storage.local.set({ settings: appSettings });
-		};
+	document.querySelector(`input[name='${keyE}']`).onchange = async function () {
+		//Change in value
+		handleDynamicFields(key);
+		const newValue = getCB(key);
+		deepSet(appSettings, key, newValue);
+		await chrome.storage.local.set({ settings: appSettings });
+	};
 }
 
 //Utility functions
@@ -508,20 +447,14 @@ const deepSet = (obj, path, val) => {
 		let currentKey = keys[i];
 		let nextKey = keys[i + 1];
 		if (currentKey.includes("[")) {
-			currentKey = parseInt(
-				currentKey.substring(1, currentKey.length - 1)
-			);
+			currentKey = parseInt(currentKey.substring(1, currentKey.length - 1));
 		}
 		if (nextKey && nextKey.includes("[")) {
 			nextKey = parseInt(nextKey.substring(1, nextKey.length - 1));
 		}
 
 		if (typeof nextKey !== "undefined") {
-			obj[currentKey] = obj[currentKey]
-				? obj[currentKey]
-				: isNaN(nextKey)
-				? {}
-				: [];
+			obj[currentKey] = obj[currentKey] ? obj[currentKey] : isNaN(nextKey) ? {} : [];
 		} else {
 			obj[currentKey] = val;
 		}

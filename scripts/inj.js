@@ -27,8 +27,7 @@ window.fetch = async (...args) => {
 		lastParent = extHelper_LastParentVariant;
 		if (lastParent != null) {
 			regex = /^.+?#(.+?)#.+$/;
-			lastParent =
-				extHelper_LastParentVariant.recommendationId.match(regex)[1];
+			lastParent = extHelper_LastParentVariant.recommendationId.match(regex)[1];
 		}
 
 		let datap = extHelper_responseData;
@@ -87,8 +86,7 @@ window.fetch = async (...args) => {
 						{
 							type: "error",
 							data: {
-								error: extHelper_responseData.error
-									.exceptionType,
+								error: extHelper_responseData.error.exceptionType,
 							},
 						},
 						"*"
@@ -110,8 +108,7 @@ window.fetch = async (...args) => {
 			if (lastParent != null) {
 				//Check if this product is a child variant of the previous parent
 				for (let i = 0; i < lastParent.variations.length; ++i) {
-					if (lastParent.variations[i].asin == datap.asin)
-						isChild = true;
+					if (lastParent.variations[i].asin == datap.asin) isChild = true;
 				}
 			}
 
@@ -173,9 +170,7 @@ window.fetch = async (...args) => {
 				arrKeys = Object.keys(variation.dimensions);
 				for (j = 0; j < arrKeys.length; j++) {
 					before = variation.dimensions[arrKeys[j]];
-					variation.dimensions[arrKeys[j]] = variation.dimensions[
-						arrKeys[j]
-					].replace(/[)(:\[\]&]/g, "");
+					variation.dimensions[arrKeys[j]] = variation.dimensions[arrKeys[j]].replace(/[)(:\[\]&]/g, "");
 
 					if (before != variation.dimensions[arrKeys[j]]) {
 						fixed++;

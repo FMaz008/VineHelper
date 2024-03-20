@@ -85,17 +85,13 @@ function displayAccountData() {
 	container.classList.add("vh_visible_container");
 	parentContainer.append(container);
 
-	let json = JSON.parse(
-		document.getElementsByClassName("vvp-body")[0].childNodes[0].innerHTML
-	);
+	let json = JSON.parse(document.getElementsByClassName("vvp-body")[0].childNodes[0].innerHTML);
 
 	let date;
 	let div;
 
 	div = document.createElement("div");
-	div.innerHTML =
-		"<h4>Vine Helper extra stats:</h4><strong>Customer Id:</strong> " +
-		json.customerId;
+	div.innerHTML = "<h4>Vine Helper extra stats:</h4><strong>Customer Id:</strong> " + json.customerId;
 	container.appendChild(div);
 
 	date = new Date(json.voiceDetails.acceptanceDate);
@@ -114,9 +110,7 @@ function displayAccountData() {
 	container.appendChild(div);
 
 	div = document.createElement("div");
-	div.innerHTML =
-		"<strong>Re-evaluation in progress:</strong> " +
-		json.voiceDetails.isTierEvaluationInProgress;
+	div.innerHTML = "<strong>Re-evaluation in progress:</strong> " + json.voiceDetails.isTierEvaluationInProgress;
 	container.appendChild(div);
 }
 
@@ -125,10 +119,7 @@ function initFetchProductData() {
 }
 
 async function showGDPRPopup() {
-	if (
-		appSettings.general.GDPRPopup == true ||
-		appSettings.general.GDPRPopup == undefined
-	) {
+	if (appSettings.general.GDPRPopup == true || appSettings.general.GDPRPopup == undefined) {
 		prom = await Tpl.loadFile("view/popup_gdpr.html");
 		let content = Tpl.render(prom);
 
@@ -147,10 +138,7 @@ async function initFlushTplCache() {
 		showRuntime("BOOT: Flushing template cache");
 		await TplMgr.flushLocalStorage(); //Delete all template from cache
 
-		if (
-			compareVersion(appSettings.general.versionInfoPopup, appVersion) >
-			VERSION_REVISION_CHANGE
-		) {
+		if (compareVersion(appSettings.general.versionInfoPopup, appVersion) > VERSION_REVISION_CHANGE) {
 			prom = await Tpl.loadFile("view/popup_changelog.html");
 			Tpl.setVar("appVersion", appVersion);
 			let content = Tpl.render(prom);
@@ -188,19 +176,14 @@ function initSetPageTitle() {
 	}
 
 	//Add the category, is any, that is currently being browsed to the title of the page.
-	regex =
-		/^.+?amazon\..+\/vine\/.*[\?\&]pn=(.*?)(?:[\&]cn=(.*?))?(?:[\&].*)?$/;
+	regex = /^.+?amazon\..+\/vine\/.*[\?\&]pn=(.*?)(?:[\&]cn=(.*?))?(?:[\&].*)?$/;
 	arrMatches = currentUrl.match(regex);
 	if (arrMatches != null && arrMatches.length == 3) {
 		let categoryText = "";
 		if (arrMatches[2] == undefined) {
-			categoryText = $(
-				"#vvp-browse-nodes-container > .parent-node > a.selectedNode"
-			).text();
+			categoryText = $("#vvp-browse-nodes-container > .parent-node > a.selectedNode").text();
 		} else {
-			categoryText = $(
-				"#vvp-browse-nodes-container > .child-node > a.selectedNode"
-			).text();
+			categoryText = $("#vvp-browse-nodes-container > .child-node > a.selectedNode").text();
 		}
 
 		$("title").append(" - " + categoryText);
@@ -210,8 +193,7 @@ function initSetPageTitle() {
 async function initCreateTabs() {
 	//Create the Discard grid
 	showRuntime("BOOT: Creating tabs system");
-	var tabSystem =
-		appSettings.unavailableTab.active || appSettings.hiddenTab.active;
+	var tabSystem = appSettings.unavailableTab.active || appSettings.hiddenTab.active;
 	if (tabSystem) {
 		await createGridInterface();
 	}
@@ -222,10 +204,7 @@ async function initCreateTabs() {
 		gridHidden = new Grid($("#tab-hidden"));
 	}
 
-	if (
-		appSettings.unavailableTab.active ||
-		appSettings.unavailableTab.votingToolbar
-	) {
+	if (appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar) {
 		gridUnavailable = new Grid($("#tab-unavailable"));
 	}
 	showRuntime("BOOT: Grid system completed");
@@ -251,9 +230,7 @@ async function initInsertBookmarkButton() {
 		prom = await Tpl.loadFile("view/bookmark.html");
 		Tpl.setVar("date", appSettings.general.bookmarkDate);
 		let bookmarkContent = Tpl.render(prom);
-		$("#vvp-items-button-container ~ .vvp-container-right-align").append(
-			bookmarkContent
-		);
+		$("#vvp-items-button-container ~ .vvp-container-right-align").append(bookmarkContent);
 		$("button.bookmarknow").on("click", function (event) {
 			//Fetch the current date/time from the server
 			let arrJSON = {
@@ -261,16 +238,11 @@ async function initInsertBookmarkButton() {
 				country: vineCountry,
 				action: "date",
 			};
-			let url =
-				"https://vinehelper.ovh/vinehelper.php" +
-				"?data=" +
-				JSON.stringify(arrJSON);
+			let url = "https://vinehelper.ovh/vinehelper.php" + "?data=" + JSON.stringify(arrJSON);
 			fetch(url)
 				.then((response) => response.json())
 				.then(async function (response) {
-					appSettings.general.bookmarkDate = new Date(
-						response.date + " GMT"
-					).toString();
+					appSettings.general.bookmarkDate = new Date(response.date + " GMT").toString();
 					saveSettings();
 
 					let note = new ScreenNotification();
@@ -290,16 +262,12 @@ async function initInsertBookmarkButton() {
 				country: vineCountry,
 				action: "date",
 			};
-			let url =
-				"https://vinehelper.ovh/vinehelper.php" +
-				"?data=" +
-				JSON.stringify(arrJSON);
+			let url = "https://vinehelper.ovh/vinehelper.php" + "?data=" + JSON.stringify(arrJSON);
 			fetch(url)
 				.then((response) => response.json())
 				.then(async function (response) {
 					appSettings.general.bookmarkDate = new Date(
-						new Date(response.date + " GMT").getTime() -
-							12 * 60 * 60 * 1000
+						new Date(response.date + " GMT").getTime() - 12 * 60 * 60 * 1000
 					).toString();
 					saveSettings();
 
@@ -320,16 +288,12 @@ async function initInsertBookmarkButton() {
 				country: vineCountry,
 				action: "date",
 			};
-			let url =
-				"https://vinehelper.ovh/vinehelper.php" +
-				"?data=" +
-				JSON.stringify(arrJSON);
+			let url = "https://vinehelper.ovh/vinehelper.php" + "?data=" + JSON.stringify(arrJSON);
 			fetch(url)
 				.then((response) => response.json())
 				.then(async function (response) {
 					appSettings.general.bookmarkDate = new Date(
-						new Date(response.date + " GMT").getTime() -
-							24 * 60 * 60 * 1000
+						new Date(response.date + " GMT").getTime() - 24 * 60 * 60 * 1000
 					).toString();
 					saveSettings();
 
@@ -354,18 +318,14 @@ function initFixPreviousButton() {
 
 	//let text = $("ul.a-pagination li:first-child a").innerText;
 	let textContent = "";
-	document
-		.querySelectorAll("ul.a-pagination li:first-child a")
-		.forEach(function (item) {
-			textContent = item.childNodes[3].nodeValue;
-			item.childNodes[3].nodeValue = "";
-		});
+	document.querySelectorAll("ul.a-pagination li:first-child a").forEach(function (item) {
+		textContent = item.childNodes[3].nodeValue;
+		item.childNodes[3].nodeValue = "";
+	});
 
 	//console.log(text);
 	$(".vh-pagination-previous").remove();
-	$("ul.a-pagination li:first-child a").append(
-		"<span class='vh-pagination-previous'>" + textContent + "</span>"
-	);
+	$("ul.a-pagination li:first-child a").append("<span class='vh-pagination-previous'>" + textContent + "</span>");
 	//$("ul.a-pagination li:first-child a").prepend(text);
 }
 async function initDrawToolbars() {
@@ -418,9 +378,7 @@ function generateTile(obj) {
 
 	//Add a container for the image and place the image in it.
 	let img = $(obj).children(".vvp-item-tile-content").children("img");
-	let imgContainer = $("<div>")
-		.addClass("vh-img-container")
-		.insertBefore(img);
+	let imgContainer = $("<div>").addClass("vh-img-container").insertBefore(img);
 	$(img).detach().appendTo($(imgContainer));
 
 	//Move the hidden item to the hidden tab
@@ -430,19 +388,11 @@ function generateTile(obj) {
 
 	if (appSettings.general.displayVariantIcon) {
 		//Check if the item is a parent ASIN (as variants)
-		let variant = $(obj)
-			.find(".a-button-input")
-			.attr("data-is-parent-asin");
+		let variant = $(obj).find(".a-button-input").attr("data-is-parent-asin");
 		if (variant == "true") {
-			let div = $("<div>")
-				.addClass("vh-variant-indicator-container")
-				.appendTo($(imgContainer));
-			let alink = $(
-				"<a href='#' onclick='return false;' title='The item has variant(s).'>"
-			).appendTo(div);
-			alink.append(
-				$("<div>").addClass("vh-indicator-icon vh-icon-choice ")
-			);
+			let div = $("<div>").addClass("vh-variant-indicator-container").appendTo($(imgContainer));
+			let alink = $("<a href='#' onclick='return false;' title='The item has variant(s).'>").appendTo(div);
+			alink.append($("<div>").addClass("vh-indicator-icon vh-icon-choice "));
 		}
 	}
 
@@ -465,8 +415,7 @@ function fetchProductsData(arrUrl) {
 	showRuntime("Fetching products data...");
 
 	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-	let url =
-		"https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
+	let url = "https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
 
 	let content = getAllProductData();
 
@@ -542,15 +491,11 @@ async function serverProductsResponse(data) {
 		//If there is a remote value for the hidden item, ensure it is sync'ed up with the local list
 		if (appSettings.hiddenTab.remote == true && values.hidden != null) {
 			showRuntime("DRAW: Remote is ordering to show or hide item");
-			if (values.hidden == true && !tile.isHidden())
-				tile.hideTile(); //Will update the placement and list
+			if (values.hidden == true && !tile.isHidden()) tile.hideTile(); //Will update the placement and list
 			else if (values.hidden == false && tile.isHidden()) tile.showTile(); //Will update the placement and list
 		}
 
-		if (
-			appSettings.unavailableTab.active ||
-			appSettings.unavailableTab.votingToolbar
-		) {
+		if (appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar) {
 			// if the voting system is active.
 			showRuntime("DRAW: Setting votes");
 			tile.setVotes(values.v0, values.v1, values.s);
@@ -562,20 +507,12 @@ async function serverProductsResponse(data) {
 			if (appSettings.hiddenTab.active && tile.isHidden()) {
 				//The hidden tiles were already moved, keep the there.
 			} else if (tile.getStatus() >= DISCARDED_ORDER_FAILED) {
-				showRuntime(
-					"DRAW: moving the tile to Unavailable (failed order(s))"
-				);
+				showRuntime("DRAW: moving the tile to Unavailable (failed order(s))");
 				tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
-			} else if (
-				appSettings.unavailableTab.consensusDiscard &&
-				tile.getStatus() >= NOT_DISCARDED
-			) {
+			} else if (appSettings.unavailableTab.consensusDiscard && tile.getStatus() >= NOT_DISCARDED) {
 				showRuntime("DRAW: moving the tile to Unavailable (consensus)");
 				tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
-			} else if (
-				appSettings.unavailableTab.selfDiscard &&
-				tile.getStatus() == DISCARDED_OWN_VOTE
-			) {
+			} else if (appSettings.unavailableTab.selfDiscard && tile.getStatus() == DISCARDED_OWN_VOTE) {
 				showRuntime("DRAW: moving the tile to Unavailable (own vote)");
 				tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
 			}
@@ -609,16 +546,14 @@ async function reportfees(event) {
 		} else if (
 			fees == 1 &&
 			appSettings.unavailableTab.consensusDiscard &&
-			tile.getVoteFees() + 1 - tile.getVoteNoFees() >=
-				appSettings.unavailableTab.consensusThreshold
+			tile.getVoteFees() + 1 - tile.getVoteNoFees() >= appSettings.unavailableTab.consensusThreshold
 		) {
 			await tile.moveToGrid(gridUnavailable, true);
 
 			//Our vote is "nofees" + there's no consensus, move the item to the regular grid
 		} else if (
 			fees == 0 &&
-			tile.getVoteFees() - tile.getVoteNoFees() <
-				appSettings.unavailableTab.consensusThreshold
+			tile.getVoteFees() - tile.getVoteNoFees() < appSettings.unavailableTab.consensusThreshold
 		) {
 			await tile.moveToGrid(gridRegular, true);
 		}
@@ -635,8 +570,7 @@ async function reportfees(event) {
 	};
 	let jsonArrURL = JSON.stringify(arrJSON);
 
-	let url =
-		"https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
+	let url = "https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
 
 	await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
 
@@ -682,10 +616,7 @@ window.addEventListener("message", async function (event) {
 		let healingAnim = $("#vh-healing");
 
 		await textContainer.slideDown("slow").promise();
-		await healingAnim
-			.delay(1000)
-			.animate({ opacity: "hide" }, { duration: 500 })
-			.promise();
+		await healingAnim.delay(1000).animate({ opacity: "hide" }, { duration: 500 }).promise();
 		await textContainer.slideUp("slow").promise();
 		$("#vh-healing").remove();
 		$("#vh-healing-text").remove();
@@ -694,8 +625,7 @@ window.addEventListener("message", async function (event) {
 		let note = new ScreenNotification();
 		note.title = "Infinite spinner fixed!";
 		note.lifespan = 10;
-		note.content =
-			"Vine Helper fixed an item that was bugged with the infinite spinner problem.";
+		note.content = "Vine Helper fixed an item that was bugged with the infinite spinner problem.";
 		await Notifications.pushNotification(note);
 	}
 
@@ -721,29 +651,19 @@ window.addEventListener("message", async function (event) {
 			etv: event.data.data.etv,
 		};
 
-		let url =
-			"https://vinehelper.ovh/vinehelper.php?data=" +
-			JSON.stringify(arrJSON);
+		let url = "https://vinehelper.ovh/vinehelper.php?data=" + JSON.stringify(arrJSON);
 		await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
 
 		//Update the product tile ETV in the Toolbar
 		let tile = getTileByAsin(tileASIN);
-		tile.getToolbar().setETV(
-			event.data.data.etv,
-			event.data.data.etv,
-			true
-		);
+		tile.getToolbar().setETV(event.data.data.etv, event.data.data.etv, true);
 
 		//Show a notification
 		let note = new ScreenNotification();
 		note.title = "ETV data shared";
 		note.lifespan = 2;
 		note.content =
-			"Vine Helper shared the ETV value of " +
-			event.data.data.etv +
-			" for item " +
-			event.data.data.asin +
-			".";
+			"Vine Helper shared the ETV value of " + event.data.data.etv + " for item " + event.data.data.asin + ".";
 		await Notifications.pushNotification(note);
 	}
 
@@ -773,17 +693,12 @@ window.addEventListener("message", async function (event) {
 			};
 
 			//Form the full URL
-			let url =
-				"https://www.vinehelper.ovh/vinehelper.php" +
-				"?data=" +
-				JSON.stringify(arrJSON);
+			let url = "https://www.vinehelper.ovh/vinehelper.php" + "?data=" + JSON.stringify(arrJSON);
 			await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
 
 			//Update the product tile ETV in the Toolbar
 			let tile = getTileByAsin(tileASIN);
-			tile.getToolbar().createOrderWidget(
-				event.data.data.status == "success"
-			);
+			tile.getToolbar().createOrderWidget(event.data.data.status == "success");
 		}
 
 		if (event.data.data.status == "success") {
@@ -791,8 +706,7 @@ window.addEventListener("message", async function (event) {
 			let note = new ScreenNotification();
 			note.title = "Successful order detected!";
 			note.lifespan = 5;
-			note.content =
-				"Detected item " + event.data.data.asin + " as orderable.";
+			note.content = "Detected item " + event.data.data.asin + " as orderable.";
 			await Notifications.pushNotification(note);
 		} else {
 			//Show a notification
@@ -800,11 +714,7 @@ window.addEventListener("message", async function (event) {
 			note.title = "Failed order detected.";
 			note.lifespan = 5;
 			note.content =
-				"Detected item " +
-				event.data.data.asin +
-				" as not orderable with error " +
-				event.data.data.error +
-				".";
+				"Detected item " + event.data.data.asin + " as not orderable with error " + event.data.data.error + ".";
 			await Notifications.pushNotification(note);
 		}
 	}
@@ -846,10 +756,7 @@ browser.runtime.onMessage.addListener(async (data, sender, sendResponse) => {
 			//Generate the content to be displayed in the notification
 			const prom = await Tpl.loadFile("/view/notification_new_item.html");
 
-			Tpl.setIf(
-				"show_image",
-				appSettings.general.newItemNotificationImage
-			);
+			Tpl.setIf("show_image", appSettings.general.newItemNotificationImage);
 			Tpl.setVar("date", date);
 			Tpl.setVar("search", search);
 			Tpl.setVar("asin", asin);
@@ -926,12 +833,8 @@ window.addEventListener("keydown", async function (e) {
 	}
 	if (e.key == appSettings.keyBindings.debug) {
 		let content = await getRunTimeJSON();
-		regex =
-			/\s*{<br\/>\n\s*"time": ([0-9]+),<br\/>\n\s*"event": "(.+?)"<br\/>\n\s*}(?:,<br\/>\n)?/gm;
-		const content2 = content.replace(
-			regex,
-			`<strong>$1ms:</strong> $2<br/>\n`
-		);
+		regex = /\s*{<br\/>\n\s*"time": ([0-9]+),<br\/>\n\s*"event": "(.+?)"<br\/>\n\s*}(?:,<br\/>\n)?/gm;
+		const content2 = content.replace(regex, `<strong>$1ms:</strong> $2<br/>\n`);
 		let m = DialogMgr.newModal("debug");
 		m.title = DEBUGGER_TITLE;
 		m.content = content2;
@@ -949,8 +852,7 @@ window.addEventListener("keydown", async function (e) {
 });
 
 function compareVersion(oldVer, newVer) {
-	if (oldVer == null || oldVer == undefined || oldVer == true)
-		return VERSION_MAJOR_CHANGE;
+	if (oldVer == null || oldVer == undefined || oldVer == true) return VERSION_MAJOR_CHANGE;
 
 	if (oldVer == false || oldVer == newVer) return VERSION_NO_CHANGE;
 

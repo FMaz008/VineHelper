@@ -64,20 +64,12 @@ function init_review() {
 async function boot_review() {
 	//Load the toolbar template
 	const prom = await Tpl.loadFile("/view/review_toolbar.html");
-	Tpl.setVar(
-		"tpl_manage_url",
-		browser.runtime.getURL("page/reviews_templates.html")
-	);
-	Tpl.setVar(
-		"review_manage_url",
-		browser.runtime.getURL("page/reviews_manage.html")
-	);
+	Tpl.setVar("tpl_manage_url", browser.runtime.getURL("page/reviews_templates.html"));
+	Tpl.setVar("review_manage_url", browser.runtime.getURL("page/reviews_manage.html"));
 	Tpl.setVar("asin", asin);
 	let content = Tpl.render(prom);
 
-	arrZone = document.querySelectorAll(
-		"form.ryp__review-form__form .ryp__card-frame"
-	);
+	arrZone = document.querySelectorAll("form.ryp__review-form__form .ryp__card-frame");
 	container = arrZone[arrZone.length - 1];
 	container.insertAdjacentHTML("afterend", content);
 
@@ -88,71 +80,51 @@ async function boot_review() {
 		try {
 			title = JSON.parse(arrTemplate[i].title);
 		} catch (e) {}
-		selectBox.insertAdjacentHTML(
-			"beforeend",
-			"<option value='" + arrTemplate[i].id + "'>" + title + "</option>"
-		);
+		selectBox.insertAdjacentHTML("beforeend", "<option value='" + arrTemplate[i].id + "'>" + title + "</option>");
 	}
 
 	//If the Insert button is clicked, insert the content of the selected
 	//template into the review box.
-	document
-		.getElementById("insertTemplate")
-		.addEventListener("click", function () {
-			let id = document.getElementById("template_name").value;
-			for (let i = 0; i < arrTemplate.length; i++) {
-				if (arrTemplate[i].id == id) {
-					let review = document.getElementById(
-						"scarface-review-text-card-title"
-					);
-					try {
-						review.value += JSON.parse(arrTemplate[i].content);
-					} catch (e) {}
-					return;
-				}
+	document.getElementById("insertTemplate").addEventListener("click", function () {
+		let id = document.getElementById("template_name").value;
+		for (let i = 0; i < arrTemplate.length; i++) {
+			if (arrTemplate[i].id == id) {
+				let review = document.getElementById("scarface-review-text-card-title");
+				try {
+					review.value += JSON.parse(arrTemplate[i].content);
+				} catch (e) {}
+				return;
 			}
-		});
+		}
+	});
 
 	//Save review button
-	document
-		.getElementById("saveReview")
-		.addEventListener("click", async function () {
-			let found = false;
-			let reviewTitle = document.getElementById(
-				"scarface-review-title-label"
-			).value;
+	document.getElementById("saveReview").addEventListener("click", async function () {
+		let found = false;
+		let reviewTitle = document.getElementById("scarface-review-title-label").value;
 
-			let reviewContent = document.getElementById(
-				"scarface-review-text-card-title"
-			).value;
+		let reviewContent = document.getElementById("scarface-review-text-card-title").value;
 
-			let index = arrReview.findIndex((review) => review.asin === asin);
-			if (index > -1) {
-				//Update the review
-				arrReview[index].date = new Date().toString();
-				arrReview[index].title = JSON.stringify(reviewTitle);
-				arrReview[index].content = JSON.stringify(reviewContent);
-				found = true;
-			}
-			//}
-			if (!found) {
-				//Save a new review
-				arrReview.push({
-					asin: asin,
-					date: new Date().toString(),
-					title: JSON.stringify(
-						document.getElementById("scarface-review-title-label")
-							.value
-					),
-					content: JSON.stringify(
-						document.getElementById(
-							"scarface-review-text-card-title"
-						).value
-					),
-				});
-			}
+		let index = arrReview.findIndex((review) => review.asin === asin);
+		if (index > -1) {
+			//Update the review
+			arrReview[index].date = new Date().toString();
+			arrReview[index].title = JSON.stringify(reviewTitle);
+			arrReview[index].content = JSON.stringify(reviewContent);
+			found = true;
+		}
+		//}
+		if (!found) {
+			//Save a new review
+			arrReview.push({
+				asin: asin,
+				date: new Date().toString(),
+				title: JSON.stringify(document.getElementById("scarface-review-title-label").value),
+				content: JSON.stringify(document.getElementById("scarface-review-text-card-title").value),
+			});
+		}
 
-			await browser.storage.local.set({ reviews: arrReview });
-			alert("Review saved!");
-		});
+		await browser.storage.local.set({ reviews: arrReview });
+		alert("Review saved!");
+	});
 }

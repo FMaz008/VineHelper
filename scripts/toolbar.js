@@ -15,10 +15,7 @@ function Toolbar(tileInstance) {
 		Tpl.setVar("asin", pTile.getAsin());
 		Tpl.setIf(
 			"announce",
-			appSettings.discord.active &&
-				appSettings.discord.guid != null &&
-				vineQueue != null &&
-				vineSearch == false
+			appSettings.discord.active && appSettings.discord.guid != null && vineQueue != null && vineSearch == false
 		);
 		Tpl.setIf("toggleview", appSettings.hiddenTab.active);
 		let content = Tpl.render(prom);
@@ -28,20 +25,18 @@ function Toolbar(tileInstance) {
 		$("#" + toolbarId + " .vh-toolbar-etv").hide();
 
 		//Activate the announce button
-		container
-			.find(".etv")
-			.on("change", { asin: pTile.getAsin() }, function (event) {
-				if ($(this).text() == "") return false;
-				if (vineSearch == true) return false;
+		container.find(".etv").on("change", { asin: pTile.getAsin() }, function (event) {
+			if ($(this).text() == "") return false;
+			if (vineSearch == true) return false;
 
-				let tile = getTileByAsin(event.data.asin);
-				$(tile.getDOM())
-					.find(".vh-icon-announcement")
-					.css("opacity", "1")
-					.parent("a")
-					.off("click")
-					.on("click", { asin: pTile.getAsin() }, announceItem);
-			});
+			let tile = getTileByAsin(event.data.asin);
+			$(tile.getDOM())
+				.find(".vh-icon-announcement")
+				.css("opacity", "1")
+				.parent("a")
+				.off("click")
+				.on("click", { asin: pTile.getAsin() }, announceItem);
+		});
 
 		//It the small tiles will be shown, hide the ETV icon to gain space
 		if (
@@ -56,20 +51,14 @@ function Toolbar(tileInstance) {
 			pToolbar.addClass("compact");
 		}
 
-		if (
-			appSettings.unavailableTab.active ||
-			appSettings.unavailableTab.votingToolbar
-		) {
+		if (appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar) {
 			$("<div />")
 				.addClass("vh-icon vh-icon-loading")
 				.prependTo("#" + toolbarId + " .vh-status-container");
 		}
 
 		//If the voting system is off, only the icons have to be shown
-		if (
-			!appSettings.unavailableTab.active &&
-			!appSettings.unavailableTab.votingToolbar
-		) {
+		if (!appSettings.unavailableTab.active && !appSettings.unavailableTab.votingToolbar) {
 			pToolbar.addClass("toolbar-icon-only");
 		}
 
@@ -104,9 +93,7 @@ function Toolbar(tileInstance) {
 	this.updateVisibilityIcon = function () {
 		if (!appSettings.hiddenTab.active) return false;
 
-		let icon = $(
-			"#vh-hide-link-" + pTile.getAsin() + " div.vh-toolbar-icon"
-		);
+		let icon = $("#vh-hide-link-" + pTile.getAsin() + " div.vh-toolbar-icon");
 		let gridId = pTile.getGridId();
 
 		icon.removeClass("vh-icon-hide");
@@ -158,15 +145,12 @@ function Toolbar(tileInstance) {
 		}
 		span.trigger("change");
 
-		if (appSettings.general.displayETV)
-			context.find(".vh-toolbar-etv").show();
+		if (appSettings.general.displayETV) context.find(".vh-toolbar-etv").show();
 	};
 
 	//This method is called from bootloader.js, serverResponse() when the voting data has been received, after the tile was moved.
 	this.updateToolbar = async function () {
-		showRuntime(
-			"DRAW-UPDATE-TOOLBAR: Updating ##vh-toolbar-" + pTile.getAsin()
-		);
+		showRuntime("DRAW-UPDATE-TOOLBAR: Updating ##vh-toolbar-" + pTile.getAsin());
 		let context = $("#vh-toolbar-" + pTile.getAsin());
 
 		if (context.length == 0) {
@@ -210,11 +194,9 @@ function Toolbar(tileInstance) {
 			case DISCARDED_WITH_FEES:
 			case DISCARDED_OWN_VOTE:
 				statusColor = "vh-background-fees";
-				tileOpacity =
-					appSettings.unavailableTab.unavailableOpacity / 100;
+				tileOpacity = appSettings.unavailableTab.unavailableOpacity / 100;
 
-				if (appSettings.discord.active)
-					$("#vh-announce-link-" + pTile.getAsin()).hide();
+				if (appSettings.discord.active) $("#vh-announce-link-" + pTile.getAsin()).hide();
 				break;
 			case NOT_DISCARDED_ORDER_SUCCESS:
 			case NOT_DISCARDED_NO_FEES:
@@ -239,10 +221,7 @@ function Toolbar(tileInstance) {
 		$(pTile.getDOM()).css("opacity", tileOpacity);
 
 		//Display voting system if active.
-		if (
-			appSettings.unavailableTab.active ||
-			appSettings.unavailableTab.votingToolbar
-		) {
+		if (appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar) {
 			if (pTile.wasOrdered()) {
 				showRuntime("DRAW-UPDATE-TOOLBAR: Create order widget");
 				await this.createOrderWidget();
@@ -281,19 +260,13 @@ function Toolbar(tileInstance) {
 		}
 
 		//Bind the click events
-		context
-			.find(".vh-reportlink-bad")
-			.on("click", { asin: pTile.getAsin(), fees: 1 }, reportfees);
-		context
-			.find(".vh-reportlink-good")
-			.on("click", { asin: pTile.getAsin(), fees: 0 }, reportfees);
+		context.find(".vh-reportlink-bad").on("click", { asin: pTile.getAsin(), fees: 1 }, reportfees);
+		context.find(".vh-reportlink-good").on("click", { asin: pTile.getAsin(), fees: 0 }, reportfees);
 
 		//Make the widget transparent if the user voted "no fees"
 		//Note: If we voted "fees", the entire card will be transparent.
 		//      If we have not voted, we want the option to remain visible.
-		context
-			.find(".vh-voting-widget")
-			.css("opacity", pTile.getVoteOwn() != null ? 0.4 : 1.0);
+		context.find(".vh-voting-widget").css("opacity", pTile.getVoteOwn() != null ? 0.4 : 1.0);
 	}
 
 	//Create the order widget part of the toolbar
@@ -301,12 +274,8 @@ function Toolbar(tileInstance) {
 	this.createOrderWidget = async function (status = null) {
 		if (status != null) {
 			//Get the current order info
-			let success = status
-				? pTile.getOrderSuccess() + 1
-				: pTile.getOrderSuccess();
-			let failed = !status
-				? pTile.getOrderFailed() + 1
-				: pTile.getOrderFailed();
+			let success = status ? pTile.getOrderSuccess() + 1 : pTile.getOrderSuccess();
+			let failed = !status ? pTile.getOrderFailed() + 1 : pTile.getOrderFailed();
 			pTile.setOrders(success, failed);
 		}
 
@@ -332,8 +301,7 @@ function Toolbar(tileInstance) {
 }
 
 async function announceItem(event) {
-	if (vineQueue == null)
-		throw new Exception("Cannot announce an item in an unknown queue.");
+	if (vineQueue == null) throw new Exception("Cannot announce an item in an unknown queue.");
 
 	let tile = getTileByAsin(event.data.asin);
 	let etv = $(tile.getDOM()).find(".etv").text();
@@ -346,11 +314,7 @@ async function announceItem(event) {
 	note.title = "Announce to Brenda";
 	note.lifespan = 10;
 	note.content =
-		"Sending this product " +
-		event.data.asin +
-		" from the " +
-		vineQueueAbbr +
-		" queue to Brenda over on discord";
+		"Sending this product " + event.data.asin + " from the " + vineQueueAbbr + " queue to Brenda over on discord";
 	await Notifications.pushNotification(note);
 
 	//Post a fetch request to the Brenda API from the AmazonVine Discord server
@@ -375,11 +339,9 @@ async function announceItem(event) {
 	if (response.status == 200) {
 		message = "Announce successful! Brenda still need to process it...";
 	} else if (response.status == 401) {
-		message =
-			"API Token invalid, please go in the extension settings to correct it.";
+		message = "API Token invalid, please go in the extension settings to correct it.";
 	} else if (response.status == 422) {
-		message =
-			"Unprocessable entity. The request was malformed and rejected.";
+		message = "Unprocessable entity. The request was malformed and rejected.";
 	} else if (response.status == 429) {
 		message = "Too many announce. Please wait longer between each of them.";
 	} else {

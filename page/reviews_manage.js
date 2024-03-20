@@ -18,9 +18,7 @@ async function loadSettings() {
 		arrReview.forEach((review) => {
 			let { date, asin, title } = review;
 			let formattedDate = new Date(date);
-			const tableBody = document
-				.getElementById("reviews_list")
-				.querySelector("tbody");
+			const tableBody = document.getElementById("reviews_list").querySelector("tbody");
 			const row = tableBody.insertRow();
 			const actionCell = row.insertCell();
 			const titleCell = row.insertCell();
@@ -45,12 +43,8 @@ async function loadSettings() {
 		element.addEventListener("click", function () {
 			let review = getReview(element.id);
 			try {
-				document.getElementById("title").innerText = JSON.parse(
-					review.title
-				);
-				document.getElementById("content").innerText = JSON.parse(
-					review.content
-				);
+				document.getElementById("title").innerText = JSON.parse(review.title);
+				document.getElementById("content").innerText = JSON.parse(review.content);
 			} catch (e) {}
 		});
 	});

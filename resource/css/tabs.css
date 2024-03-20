@@ -22,20 +22,12 @@
 	margin-right: 3px;
 	padding: 4px 10px;
 	cursor: pointer;
-	background: linear-gradient(
-		to bottom,
-		var(--button-dark, green),
-		var(--button-light, lightgreen)
-	);
+	background: linear-gradient(to bottom, var(--button-dark, green), var(--button-light, lightgreen));
 }
 
 #tabs > ul > li.active {
 	border: 1px solid var(--button-light, green);
-	background: linear-gradient(
-		to bottom,
-		var(--container-light, lightgreen),
-		var(--container-light, lightgreen)
-	);
+	background: linear-gradient(to bottom, var(--container-light, lightgreen), var(--container-light, lightgreen));
 }
 
 #tabs > ul > li > a {

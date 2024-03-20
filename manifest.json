@@ -69,12 +69,7 @@
 				"resource/css/toolbar.css",
 				"resource/css/vinehelper.css"
 			],
-			"js": [
-				"scripts/grid.js",
-				"scripts/tile.js",
-				"scripts/toolbar.js",
-				"scripts/bootloader.js"
-			],
+			"js": ["scripts/grid.js", "scripts/tile.js", "scripts/toolbar.js", "scripts/bootloader.js"],
 			"matches": [
 				"*://*.amazon.ca/vine/*",
 				"*://*.amazon.de/vine/*",
@@ -107,11 +102,8 @@
 			"run_at": "document_start"
 		},
 		{
-			"css": [
-				"resource/css/color.css",
-				"resource/css/main.css"
-			],
-			
+			"css": ["resource/css/color.css", "resource/css/main.css"],
+
 			"js": ["scripts/Template.js", "scripts/review.js"],
 			"matches": [
 				"*://*.amazon.ca/review/create-review*",
