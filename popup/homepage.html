@@ -26,9 +26,10 @@
 				<li><a href="#tabs-2">Auto-Sorting</a></li>
 				<li><a href="#tabs-3">System</a></li>
 				<li><a href="#tabs-4">"Brenda"</a></li>
-				<li><a href="#tabs-5">Key bindings</a></li>
-				<li><a href="#tabs-6">Styles</a></li>
-				<li><a href="#tabs-7">?</a></li>
+				<li><a href="#tabs-5">Keywords</a></li>
+				<li><a href="#tabs-6">Key bindings</a></li>
+				<li><a href="#tabs-7">Styles</a></li>
+				<li><a href="#tabs-8">?</a></li>
 			</ul>
 		</div>
 		<div class="all-options">
@@ -370,6 +371,7 @@
 						</select>
 					</label>
 					<div class="subheader">DANGER ZONE:</div>
+					<p>The options below will lead to data loss.</p>
 					<button id="hiddenItemReset">DELETE ALL LOCAL HIDDEN ITEMS</button><br />
 					<button id="factoryReset" style="background-color: #c33">/!\ FACTORY RESET /!\</button>
 					<br />
@@ -436,6 +438,23 @@
 					</div>
 				</div>
 				<div id="tabs-5" class="options">
+					<label for="general.hideKeywords">Auto-Hide items with the following keywords:</label>
+					<textarea
+						id="generalhideKeywords"
+						name="general.hideKeywords"
+						style="width: 300px; margin: 0 auto; height: 100px"
+					></textarea>
+					<div class="subheader">Separate keywords with a coma (,)</div>
+
+					<label for="general.highlightKeywords">Highlight items with the following keywords:</label>
+					<textarea
+						id="generalhighlightKeywords"
+						name="general.highlightKeywords"
+						style="width: 300px; margin: 0 auto; height: 100px"
+					></textarea>
+					<div class="subheader">Separate keywords with a coma (,)</div>
+				</div>
+				<div id="tabs-6" class="options">
 					<label for="keyBindings.active"
 						>Enable Keyboard Shortcuts
 						<a
@@ -540,7 +559,7 @@
 						/>
 					</label>
 				</div>
-				<div id="tabs-6" class="options">
+				<div id="tabs-7" class="options">
 					<div class="subheader">Mobile Stylesheets:</div>
 					<label for="thorvarium.mobileios"
 						>ios-with-bugfix.css (for iOS) (Tip: Enable Compact Toolbar)
@@ -616,7 +635,7 @@
 						<input type="checkbox" name="thorvarium.RFYAFAAITabs" value="1" />
 					</label>
 				</div>
-				<div id="tabs-7" class="options">
+				<div id="tabs-8" class="options">
 					<div class="padded">
 						<div class="vh_visible_container">
 							<h3>Mission</h3>

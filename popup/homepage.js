@@ -352,6 +352,34 @@ function init() {
 		chrome.storage.local.set({ settings: appSettings });
 	});
 
+	//Keywords
+
+	arrHighlight =
+		appSettings.general.highlightKeywords == undefined ? "" : appSettings.general.highlightKeywords.join(", ");
+	document.getElementById("generalhighlightKeywords").value = arrHighlight;
+	arrHide = appSettings.general.hideKeywords == undefined ? "" : appSettings.general.hideKeywords.join(", ");
+	document.getElementById("generalhideKeywords").value = arrHide;
+
+	document.getElementById("generalhighlightKeywords").addEventListener("change", function () {
+		let arr = [];
+		arr = document
+			.getElementById("generalhighlightKeywords")
+			.value.split(",")
+			.map((item) => item.toLowerCase().trim());
+		if (arr.length == 1 && arr[0] == "") arr = [];
+		appSettings.general.highlightKeywords = arr;
+		chrome.storage.local.set({ settings: appSettings });
+	});
+	document.getElementById("generalhideKeywords").addEventListener("change", function () {
+		let arr = [];
+		arr = document
+			.getElementById("generalhideKeywords")
+			.value.split(",")
+			.map((item) => item.toLowerCase().trim());
+		if (arr.length == 1 && arr[0] == "") arr = [];
+		appSettings.general.hideKeywords = arr;
+		chrome.storage.local.set({ settings: appSettings });
+	});
 	//Manage checkboxes load and save
 	manageCheckboxSetting("general.topPagination");
 	manageCheckboxSetting("general.versionInfoPopup", false);

@@ -516,7 +516,9 @@ async function serverProductsResponse(data) {
 				showRuntime("DRAW: moving the tile to Unavailable (own vote)");
 				tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
 			}
+
 			showRuntime("DRAW: Updating the toolbar");
+			tile.initiateTile();
 			tile.getToolbar().updateToolbar();
 			showRuntime("DRAW: Done updating the toolbar");
 		}

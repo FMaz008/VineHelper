@@ -137,6 +137,9 @@ function Tile(obj, gridInstance) {
 	this.getGridId = function () {
 		return pGrid.getId();
 	};
+	this.getTitle = function () {
+		return getTitleFromDom(pTile);
+	};
 
 	this.setDateAdded = function (timenow, mysqlDate) {
 		if (mysqlDate == undefined) return false;
@@ -170,8 +173,38 @@ function Tile(obj, gridInstance) {
 				.text("First seen: " + textDate + " ago")
 				.appendTo($(pTile).find(".vh-img-container"));
 		}
+
+		//Highlight the tile background if the bookmark date is in the past
 		if (appSettings.general.bookmark && jsDate > bookmarkDate && appSettings.general.bookmarkDate != 0) {
+			showRuntime("TILE: The item is more recent than the time marker, highlight it.");
 			$(pTile).addClass("bookmark-highlight");
+		}
+	};
+
+	this.initiateTile = function () {
+		//Match with hide keywords
+		if (appSettings.general.hideKeywords.length > 0) {
+			match = appSettings.general.hideKeywords.find((word) => {
+				const regex = new RegExp(`\\b${word}\\b`, "i");
+				return word && regex.test(this.getTitle());
+			});
+			if (match != undefined) {
+				showRuntime("TILE: The item match the keyword '" + match + "', hide it");
+				this.hideTile(false, false); //Do not save
+				document.getElementById("vh-hide-link-" + this.getAsin()).style.display = "none";
+			}
+		}
+
+		//Highlight the tile border if the title match highlight keywords
+		if (appSettings.general.highlightKeywords.length > 0) {
+			match = appSettings.general.highlightKeywords.find((word) => {
+				const regex = new RegExp(`\\b${word}\\b`, "i");
+				return word && regex.test(this.getTitle());
+			});
+			if (match != undefined) {
+				showRuntime("TILE: The item match the keyword '" + match + "', highlight it");
+				$(pTile).addClass("keyword-highlight");
+			}
 		}
 	};
 

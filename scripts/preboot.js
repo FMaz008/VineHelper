@@ -52,6 +52,8 @@ function getDefaultSettings() {
 			displayFirstSeen: true,
 			bookmark: false,
 			bookmarkDate: 0,
+			hideKeywords: [],
+			highlightKeywords: [],
 			displayVariantIcon: false,
 			versionInfoPopup: 0,
 			GDPRPopup: true,
@@ -160,6 +162,16 @@ async function getSettings() {
 	//v2.2.7
 	if (appSettings.general.displayNewItemNotifications == undefined) {
 		appSettings.general.displayNewItemNotifications = appSettings.general.newItemNotification;
+		saveSettings();
+	}
+
+	//v2.3.3
+	if (appSettings.general.hideKeywords == undefined) {
+		appSettings.general.hideKeywords = [];
+		saveSettings();
+	}
+	if (appSettings.general.highlightKeywords == undefined) {
+		appSettings.general.highlightKeywords = [];
 		saveSettings();
 	}
 
