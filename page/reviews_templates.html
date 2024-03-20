@@ -1,38 +1,40 @@
-<html>
-	<head>
-		<script src="reviews_templates.js"></script>
-		<link rel="stylesheet" href="../resource/css/color.css" />
-		<link rel="stylesheet" href="review_management.css" />
-	</head>
-	<body>
+<html class="vinehelper">
+
+<head>
+	<script src="reviews_templates.js"></script>
+	<link rel="stylesheet" href="/resource/css/vinehelper.css">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+</head>
+
+<body id="reviews_templates">
+	<main id="template_management">
 		<h1>Manage Review Templates</h1>
-		<h3 id="editTitle">New template</h3>
-		<div id="new_template_form">
-			<form>
+		<section id="template_form">
+			<h3 id="editTitle">New template</h3>
+			<form id="template_input">
 				<input type="hidden" id="template_id" value="new" />
-				Title:
-				<input type="text" class="vh" id="template_title" value="" />
+				<label for="template_title">Title:</label>
+				<input type="text" id="template_title" value="" />
 				<br />
 				<br />
-				Content:
-				<textarea
-					type="text"
-					class="vh"
-					id="template_content"
-				></textarea>
+				<label for="template_content">Content:</label>
+				<textarea type="text" id="template_content"></textarea>
 				<br />
 				<br />
-				<button id="save" class="vh">Save</button>
-				<button id="reset" class="vh" type="reset">Cancel</button>
+				<button id="save">Save</button>
+				<button id="reset" type="reset">Cancel</button>
 			</form>
-		</div>
-		<table id="templates_list">
-			<tbody>
-				<tr>
-					<td>Action</td>
-					<td>Title</td>
-				</tr>
-			</tbody>
-		</table>
-	</body>
+		</section>
+	</main>
+	<table id="templates_list">
+		<tbody>
+			<tr>
+				<td>Action</td>
+				<td>Title</td>
+			</tr>
+		</tbody>
+	</table>
+</body>
+
 </html>

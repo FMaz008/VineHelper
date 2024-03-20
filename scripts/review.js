@@ -2,6 +2,16 @@ if (typeof browser === "undefined") {
 	var browser = chrome;
 }
 
+var cssURL = browser.runtime.getURL('resource/css/vinehelper.css')
+fetch(cssURL).then(response => response.text()).then(cssText => {
+	const styleElement = document.createElement("style");
+	styleElement.type = 'text/css';
+	styleElement.appendChild(document.createTextNode(cssText));
+	document.head.appendChild(styleElement);
+})
+.catch(error => console.log(error));
+
+
 var appSettings = {};
 var arrReview = [];
 var arrTemplate = [];
@@ -12,7 +22,6 @@ var TplMgr = new TemplateMgr();
 function showRuntime() {
 	//Function must exist for the Template system, but not needed for this page
 }
-
 async function loadSettings() {
 	var data;
 	data = await browser.storage.local.get("settings");

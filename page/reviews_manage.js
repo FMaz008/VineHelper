@@ -16,11 +16,9 @@ async function loadSettings() {
 
 	if (arrReview.length > 0) {
 		arrReview.forEach((review) => {
-			let { date, asin, title } = review;
-
-			const tableBody = document
-				.getElementById("reviews_list")
-				.querySelector("tbody");
+			let {date, asin, title} = review;
+			let formattedDate = new Date(date);
+			const tableBody = document.getElementById("reviews_list").querySelector('tbody'); 
 			const row = tableBody.insertRow();
 			const actionCell = row.insertCell();
 			const titleCell = row.insertCell();
@@ -31,7 +29,7 @@ async function loadSettings() {
 			<button id="${asin}" class='view vh'>View</button>
 			<button id="${asin}" class='delete vh'>Delete</button>
 			`;
-			dateCell.textContent = `${date}`;
+			dateCell.textContent = `${formattedDate.toLocaleDateString()}`;
 			asinCell.textContent = `${asin}`;
 			titleCell.textContent = `${JSON.parse(title)}`;
 		});
