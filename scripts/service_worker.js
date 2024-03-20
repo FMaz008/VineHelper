@@ -19,6 +19,13 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 			"Vine Country"
 		);
 	}
+	if (data.type == "keepAlive" && vineCountry != null) {
+		console.log("Received keep alive.");
+		sendMessageToAllTabs(
+			{ type: "vineCountry", domain: vineCountry },
+			"Vine Country - keep alive"
+		);
+	}
 });
 
 //Load the settings, if no settings, try again in 10 sec

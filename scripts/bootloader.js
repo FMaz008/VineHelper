@@ -873,6 +873,9 @@ browser.runtime.onMessage.addListener(async (data, sender, sendResponse) => {
 			Notifications.pushNotification(note2);
 		}
 	}
+	if (data.type == "vineCountry") {
+		sendResponse({ success: true });
+	}
 });
 
 //Key bindings/keyboard shortcuts for navigation
