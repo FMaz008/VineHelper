@@ -1,25 +1,21 @@
 <div id="tabs">
-	<ul id="ext-helper-tabs">
+	<ul id="vh-tabs">
 		<li>
 			<a href="#vvp-items-grid"
-				>{{$available}} (<span id="ext-helper-available-count"></span
-				>)</a
+				>{{$available}} (<span id="vh-available-count"></span>)</a
 			>
 		</li>
 
 		{{if unavailable}}
 		<li>
 			<a href="#tab-unavailable"
-				>{{$unavailable}} (<span
-					id="ext-helper-unavailable-count"
-				></span
-				>)</a
+				>{{$unavailable}} (<span id="vh-unavailable-count"></span>)</a
 			>
 		</li>
 		{{endif}} {{if hidden}}
 		<li>
 			<a href="#tab-hidden"
-				>{{$hidden}} (<span id="ext-helper-hidden-count"></span>)</a
+				>{{$hidden}} (<span id="vh-hidden-count"></span>)</a
 			>
 		</li>
 		{{endif}}
@@ -27,7 +23,7 @@
 </div>
 
 {{if unavailable}}
-<div id="tab-unavailable" class="ext-helper-grid tab-grid"></div>
+<div id="tab-unavailable" class="vh-grid tab-grid"></div>
 {{endif}} {{if hidden}}
-<div id="tab-hidden" class="ext-helper-grid tab-grid"></div>
+<div id="tab-hidden" class="vh-grid tab-grid"></div>
 {{endif}}

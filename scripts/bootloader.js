@@ -362,11 +362,9 @@ function initFixPreviousButton() {
 		});
 
 	//console.log(text);
-	$(".ext-helper-pagination-previous").remove();
+	$(".vh-pagination-previous").remove();
 	$("ul.a-pagination li:first-child a").append(
-		"<span class='ext-helper-pagination-previous'>" +
-			textContent +
-			"</span>"
+		"<span class='vh-pagination-previous'>" + textContent + "</span>"
 	);
 	//$("ul.a-pagination li:first-child a").prepend(text);
 }
@@ -421,7 +419,7 @@ function generateTile(obj) {
 	//Add a container for the image and place the image in it.
 	let img = $(obj).children(".vvp-item-tile-content").children("img");
 	let imgContainer = $("<div>")
-		.addClass("ext-helper-img-container")
+		.addClass("vh-img-container")
 		.insertBefore(img);
 	$(img).detach().appendTo($(imgContainer));
 
@@ -437,15 +435,13 @@ function generateTile(obj) {
 			.attr("data-is-parent-asin");
 		if (variant == "true") {
 			let div = $("<div>")
-				.addClass("ext-helper-variant-indicator-container")
+				.addClass("vh-variant-indicator-container")
 				.appendTo($(imgContainer));
 			let alink = $(
 				"<a href='#' onclick='return false;' title='The item has variant(s).'>"
 			).appendTo(div);
 			alink.append(
-				$("<div>").addClass(
-					"ext-helper-indicator-icon ext-helper-icon-choice "
-				)
+				$("<div>").addClass("vh-indicator-icon vh-icon-choice ")
 			);
 		}
 	}
@@ -682,8 +678,8 @@ window.addEventListener("message", async function (event) {
 		let content = Tpl.render(prom);
 
 		$("#a-popover-content-3").prepend(content);
-		let textContainer = $("#ext-helper-healing-text").hide(); //Begin the animation hidden
-		let healingAnim = $("#ext-helper-healing");
+		let textContainer = $("#vh-healing-text").hide(); //Begin the animation hidden
+		let healingAnim = $("#vh-healing");
 
 		await textContainer.slideDown("slow").promise();
 		await healingAnim
@@ -691,8 +687,8 @@ window.addEventListener("message", async function (event) {
 			.animate({ opacity: "hide" }, { duration: 500 })
 			.promise();
 		await textContainer.slideUp("slow").promise();
-		$("#ext-helper-healing").remove();
-		$("#ext-helper-healing-text").remove();
+		$("#vh-healing").remove();
+		$("#vh-healing-text").remove();
 
 		//Show a notification
 		let note = new ScreenNotification();

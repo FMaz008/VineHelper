@@ -1,83 +1,83 @@
 /* Chrome 29+ */
 @media screen and (-webkit-min-device-pixel-ratio: 0) and (min-resolution: 0.001dpcm) {
-	.ext-helper-icon-sad,
-	div.ext-helper-icon-no {
+	.vh-icon-sad,
+	div.vh-icon-no {
 		background-size: 200%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/rating-bad.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-happy,
-	div.ext-helper-icon-yes {
+	.vh-icon-happy,
+	div.vh-icon-yes {
 		background-size: 200%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/rating-good.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-info {
+	.vh-icon-info {
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/info.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-question {
+	.vh-icon-question {
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/question.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-bookmark {
+	.vh-icon-bookmark {
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/bookmark.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-announcement {
+	.vh-icon-announcement {
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/announcement.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-choice {
+	.vh-icon-choice {
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/choice.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-show {
+	.vh-icon-show {
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/show.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-hide {
+	.vh-icon-hide {
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/hide.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-loading {
+	.vh-icon-loading {
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/loading.gif");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-healing {
+	.vh-icon-healing {
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/healing.gif");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-etv {
+	.vh-icon-etv {
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/etv.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-request {
+	.vh-icon-request {
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/request.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-order-success {
+	.vh-icon-order-success {
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/order-success.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-order-failed {
+	.vh-icon-order-failed {
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/order-failed.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-search {
+	.vh-icon-search {
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/search.png");
 		background-repeat: no-repeat;
@@ -85,84 +85,84 @@
 }
 
 @supports (-moz-appearance: none) {
-	.ext-helper-icon-sad,
-	div.ext-helper-icon-no {
+	.vh-icon-sad,
+	div.vh-icon-no {
 		background-size: 200%;
 		background-image: url("/resource/image/rating-bad.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-happy,
-	div.ext-helper-icon-yes {
+	.vh-icon-happy,
+	div.vh-icon-yes {
 		background-size: 200%;
 		background-image: url("/resource/image/rating-good.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-info {
+	.vh-icon-info {
 		background-size: 100%;
 		background-image: url("/resource/image/info.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-question {
+	.vh-icon-question {
 		background-size: 100%;
 		background-image: url("/resource/image/question.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-bookmark {
+	.vh-icon-bookmark {
 		background-size: 100%;
 		background-image: url("/resource/image/bookmark.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-announcement {
+	.vh-icon-announcement {
 		background-size: 100%;
 		background-image: url("/resource/image/announcement.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-choice {
+	.vh-icon-choice {
 		background-size: 100%;
 		background-image: url("/resource/image/choice.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-show {
+	.vh-icon-show {
 		background-size: 100%;
 		background-image: url("/resource/image/show.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-hide {
+	.vh-icon-hide {
 		background-size: 100%;
 		background-image: url("/resource/image/hide.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-loading {
+	.vh-icon-loading {
 		background-size: 100%;
 		background-image: url("/resource/image/loading.gif");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-healing {
+	.vh-icon-healing {
 		background-size: 100%;
 		background-image: url("/resource/image/healing.gif");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-etv {
+	.vh-icon-etv {
 		background-size: 100%;
 		background-image: url("/resource/image/etv.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-request {
+	.vh-icon-request {
 		background-size: 100%;
 		background-image: url("/resource/image/request.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-order-success {
+	.vh-icon-order-success {
 		background-size: 100%;
 		background-image: url("/resource/image/order-success.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-order-failed {
+	.vh-icon-order-failed {
 		background-size: 100%;
 		background-image: url("/resource/image/order-failed.png");
 		background-repeat: no-repeat;
 	}
-	.ext-helper-icon-search {
+	.vh-icon-search {
 		background-size: 100%;
 		background-image: url("/resource/image/search.png");
 		background-repeat: no-repeat;
@@ -178,11 +178,11 @@ div[role="navigation"] > ul > li {
 }
 
 @media (prefers-color-scheme: dark) {
-	.ext-helper-icon-question {
+	.vh-icon-question {
 		filter: invert(1);
 	}
 
-	.ext-helper-icon-request {
+	.vh-icon-request {
 		filter: invert(1);
 	}
 }

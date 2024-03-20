@@ -1,5 +1,5 @@
 /* Toolbar */
-div.ext-helper-status {
+div.vh-status {
 	position: relative;
 	margin-top: 5px !important;
 	margin-bottom: 0px !important;
@@ -12,7 +12,7 @@ div.hidden-toolbar {
 	padding-right: 5px;
 }
 
-div.ext-helper-status-container {
+div.vh-status-container {
 	position: absolute;
 	z-index: 1;
 	width: 100%;
@@ -22,14 +22,14 @@ div.ext-helper-status-container {
 	color: #0f1111;
 }
 
-div.ext-helper-status-container div.ext-helper-status-container2 {
+div.vh-status-container div.vh-status-container2 {
 	display: block;
 	padding-left: 35px;
 	font-weight: bold;
 	font-size: 10px;
 }
 
-.ext-helper-toolbar-etv {
+.vh-toolbar-etv {
 	float: left;
 	vertical-align: middle;
 	overflow: hidden;
@@ -37,7 +37,7 @@ div.ext-helper-status-container div.ext-helper-status-container2 {
 	height: 16px;
 }
 
-.ext-helper-toolbar-etv .ext-helper-icon-etv {
+.vh-toolbar-etv .vh-icon-etv {
 	display: inline-block;
 	width: 18px;
 	height: 16px;
@@ -46,69 +46,69 @@ div.ext-helper-status-container div.ext-helper-status-container2 {
 	vertical-align: middle;
 }
 
-.ext-helper-toolbar-etv span.etv {
+.vh-toolbar-etv span.etv {
 	vertical-align: middle;
 	color: #0f1111;
 }
 
-div.borderless div.ext-helper-status-container {
+div.borderless div.vh-status-container {
 	border: 0;
 }
 
-div.compact div.ext-helper-status-container {
+div.compact div.vh-status-container {
 	margin-top: 5px;
 	padding: 0px;
 	position: relative;
 }
 
-div.compact div.ext-helper-status-container2 {
+div.compact div.vh-status-container2 {
 	padding-left: 0px;
 	text-align: center;
 }
-div.compact div.ext-helper-icon {
+div.compact div.vh-icon {
 	display: none;
 }
-div.compact .ext-helper-announce-link {
+div.compact .vh-announce-link {
 	float: left;
 	margin-left: 3px;
 }
 
-.ext-helper-floating-icon {
+.vh-floating-icon {
 	float: right;
 	padding-top: 2px;
 	padding-right: 4px;
 	line-height: 16px;
 }
 
-div.ext-helper-icon-announcement {
+div.vh-icon-announcement {
 	opacity: 0.3;
 }
 
-div.toolbar-icon-only div.ext-helper-status-container {
+div.toolbar-icon-only div.vh-status-container {
 	float: right;
 	border: none;
 	margin: 0;
 	line-height: 12px;
 }
 
-div.toolbar-icon-only div.ext-helper-status-container2 {
+div.toolbar-icon-only div.vh-status-container2 {
 	padding-left: 0px;
 }
 
-div.ext-helper-background-nofees div.ext-helper-status-container {
+div.vh-background-nofees div.vh-status-container {
 	background-color: #99ff99;
 }
-div.ext-helper-background-fees div.ext-helper-status-container {
+div.vh-background-fees div.vh-status-container {
 	background-color: #ff9999;
 }
 
-div.ext-helper-toolbar-icon {
+div.vh-toolbar-icon {
 	display: inline-block;
 	width: 12px;
 	height: 12px;
 }
 
-div.ext-helper-toolbar-large-icon {
+div.vh-toolbar-large-icon {
 	display: inline-block;
 	width: 20px;
 	height: 20px;
@@ -116,7 +116,7 @@ div.ext-helper-toolbar-large-icon {
 	margin: 0 3px;
 }
 
-div.ext-helper-icon {
+div.vh-icon {
 	float: left;
 	width: 30px;
 	height: 30px;
@@ -124,7 +124,7 @@ div.ext-helper-icon {
 	margin: 5px;
 }
 
-div.ext-helper-icon-mini {
+div.vh-icon-mini {
 	display: inline-block;
 	width: 16px;
 	height: 16px;
@@ -132,23 +132,23 @@ div.ext-helper-icon-mini {
 }
 
 /* Voting/order Widgets */
-div.ext-helper-voting-widget,
-div.ext-helper-order-widget {
+div.vh-voting-widget,
+div.vh-order-widget {
 	clear: right;
 	text-align: center;
 }
 
-.compact div.ext-helper-voting-widget,
-.compact div.ext-helper-order-widget {
+.compact div.vh-voting-widget,
+.compact div.vh-order-widget {
 	display: inline-block;
 	clear: none;
 	height: 20px;
 }
 
-.ext-helper-reportlink-bad {
+.vh-reportlink-bad {
 	color: #cc0000 !important;
 }
-.ext-helper-reportlink-good {
+.vh-reportlink-good {
 	color: #33cc33 !important;
 }
 

@@ -1,24 +1,24 @@
-<div id="ext-helper-notification-{{$id}}" class="ext-helper-notification-box">
-	<div class="ext-helper-notification-toolbar">
+<div id="vh-notification-{{$id}}" class="vh-notification-box">
+	<div class="vh-notification-toolbar">
 		<a
 			href="https://amazon.{{$domain}}/vine/vine-items?search={{$search}}"
 			target="_blank"
 		>
 			<div
-				class="ext-helper-toolbar-large-icon ext-helper-icon-search"
+				class="vh-toolbar-large-icon vh-icon-search"
 				style="float: right"
 			></div
 		></a>
 	</div>
-	<div class="ext-helper-notification-content">
+	<div class="vh-notification-content">
 		<img src="{{$img_url}}" />
 		<a href="https://amazon.{{$domain}}/dp/{{$asin}}" target="_blank"
 			>{{$description}}</a
 		>
 	</div>
-	<div class="ext-helper-notification-footer">
-		<span id='etv_value' class="etv_value">Last shared ETV: {{$etv}}</span
-		><span id='date_shown' class="date_shown">{{$date}}</span>
+	<div class="vh-notification-footer">
+		<span id="etv_value" class="etv_value">Last shared ETV: {{$etv}}</span
+		><span id="date_shown" class="date_shown">{{$date}}</span>
 	</div>
 	<div style="clear: both"></div>
 </div>

@@ -1,5 +1,5 @@
 /* Notifications */
-#ext-helper-notifications-container {
+#vh-notifications-container {
 	position: fixed;
 	right: 0;
 	top: 0;
@@ -14,7 +14,7 @@
 	color: #0f1111;
 }
 
-.ext-helper-notification-box {
+.vh-notification-box {
 	width: 100%;
 	background-color: #fff;
 	border: 1px solid #000;
@@ -23,21 +23,21 @@
 	position: relative;
 }
 
-.ext-helper-notification-toolbar {
+.vh-notification-toolbar {
 	border: 1px solid #444;
 	background-color: #eee;
 	padding: 3px;
 	margin: 3px;
 }
-.ext-helper-notification-content {
+.vh-notification-content {
 	padding: 5px;
 }
 
-.ext-helper-notification-close {
+.vh-notification-close {
 	float: right;
 }
 
-.ext-helper-notification-loading {
+.vh-notification-loading {
 	position: relative;
 	margin-left: auto;
 	margin-right: 0;

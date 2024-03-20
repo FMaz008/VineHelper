@@ -158,7 +158,7 @@ label .tips {
 
 /* Chrome 29+ */
 @media screen and (-webkit-min-device-pixel-ratio: 0) and (min-resolution: 0.001dpcm) {
-	.ext-helper-icon-logo {
+	.vh-icon-logo {
 		background-size: 50%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/logo.png");
 		background-repeat: no-repeat;
@@ -166,7 +166,7 @@ label .tips {
 }
 
 @supports (-moz-appearance: none) {
-	.ext-helper-icon-logo {
+	.vh-icon-logo {
 		background-size: 50%;
 		background-image: url("/resource/image/logo.png");
 		background-repeat: no-repeat;

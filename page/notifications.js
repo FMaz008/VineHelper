@@ -123,10 +123,8 @@ async function addItem(data) {
 }
 
 function insertMessageIfAsinIsUnique(content, asin, etv) {
-	var newID = `ext-helper-notification-${asin}`;
-	const newBody = document.getElementById(
-		"ext-helper-notifications-container"
-	);
+	var newID = `vh-notification-${asin}`;
+	const newBody = document.getElementById("vh-notifications-container");
 
 	if (!document.getElementById(newID)) {
 		newBody.insertAdjacentHTML("afterbegin", content);

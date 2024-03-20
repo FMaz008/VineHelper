@@ -38,7 +38,7 @@
 }
 
 /* Infinite Wheel fix animation */
-div.ext-helper-healing {
+div.vh-healing {
 	position: absolute;
 	top: 0;
 	bottom: 0;
@@ -49,11 +49,11 @@ div.ext-helper-healing {
 	z-index: 1200;
 }
 
-div.ext-helper-healing div {
+div.vh-healing div {
 	height: 400px;
 }
 
-div#ext-helper-healing-text {
+div#vh-healing-text {
 	position: absolute;
 	top: 0;
 	bottom: 0;
@@ -73,20 +73,20 @@ div#ext-helper-healing-text {
 }
 
 /* Icons overlay on top of product image */
-.ext-helper-img-container {
+.vh-img-container {
 	position: relative;
 }
-.ext-helper-variant-indicator-container {
+.vh-variant-indicator-container {
 	position: absolute;
 	margin-top: -20px;
 	right: 0;
 }
-.ext-helper-indicator-icon {
+.vh-indicator-icon {
 	width: 16px;
 	height: 16px;
 }
 
-.ext-helper-date-added {
+.vh-date-added {
 	position: absolute;
 	margin-top: -14px;
 	left: 0;
@@ -125,15 +125,15 @@ button.bookmark {
 }
 
 /* Add visual cues for the keybinding */
-a.ext-helper-hideall span,
-a.ext-helper-showall span,
-.ext-helper-pagination-previous {
+a.vh-hideall span,
+a.vh-showall span,
+.vh-pagination-previous {
 	display: inline-block;
 }
 
 ul.a-pagination li:first-child a span:last-child::first-letter,
 ul.a-pagination li:last-child a::first-letter,
-a.ext-helper-hideall span::first-letter,
-a.ext-helper-showall span::first-letter {
+a.vh-hideall span::first-letter,
+a.vh-showall span::first-letter {
 	text-decoration: underline;
 }

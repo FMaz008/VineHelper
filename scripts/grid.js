@@ -64,26 +64,24 @@ class Grid {
 function updateTileCounts() {
 	//Calculate how many tiles within each grids
 	if (appSettings.unavailableTab.active || appSettings.hiddenTab.active)
-		$("#ext-helper-available-count").text(gridRegular.getTileCount(true));
+		$("#vh-available-count").text(gridRegular.getTileCount(true));
 
 	if (
 		appSettings.unavailableTab.active ||
 		appSettings.unavailableTab.votingToolbar
 	)
-		$("#ext-helper-unavailable-count").text(
-			gridUnavailable.getTileCount(true)
-		);
+		$("#vh-unavailable-count").text(gridUnavailable.getTileCount(true));
 
 	if (appSettings.hiddenTab.active)
-		$("#ext-helper-hidden-count").text(gridHidden.getTileCount(true));
+		$("#vh-hidden-count").text(gridHidden.getTileCount(true));
 }
 
 async function createGridInterface() {
 	//Clean up interface (in case of the extension being reloaded)
-	$("ul#ext-helper-tabs").remove();
+	$("ul#vh-tabs").remove();
 	$("div#tab-unavailable").remove();
 	$("div#tab-hidden").remove();
-	$(".ext-helper-status").remove(); //remove all toolbars
+	$(".vh-status").remove(); //remove all toolbars
 
 	if (document.getElementById("vvp-items-grid") == undefined) {
 		console.log("No listing on this page, not drawing tabs.");
@@ -91,9 +89,7 @@ async function createGridInterface() {
 	}
 
 	//Implement the tab system.
-	let tabs = $("<div>")
-		.attr("id", "ext-helper-tabs")
-		.insertBefore("#vvp-items-grid");
+	let tabs = $("<div>").attr("id", "vh-tabs").insertBefore("#vvp-items-grid");
 	$("#vvp-items-grid").detach().appendTo(tabs);
 	$("#vvp-items-grid").addClass("tab-grid");
 
@@ -128,16 +124,16 @@ async function createGridInterface() {
 	if (appSettings.hiddenTab.active) {
 		//Add the toolbar for Hide All & Show All
 		//Delete the previous one if any exist:
-		$("#ext-helper-tabs .hidden-toolbar").remove();
+		$("#vh-tabs .hidden-toolbar").remove();
 		//Generate the html for the hide all and show all widget
 		let prom = await Tpl.loadFile("view/widget_hideall.html");
 		Tpl.setVar("class", appSettings.thorvarium.darktheme ? "invert" : "");
 		let content = Tpl.render(prom);
-		$(content).prependTo("#ext-helper-tabs");
-		$(content).appendTo("#ext-helper-tabs").css("margin-top", "5px");
+		$(content).prependTo("#vh-tabs");
+		$(content).appendTo("#vh-tabs").css("margin-top", "5px");
 
-		$(".ext-helper-hideall").on("click", {}, this.hideAllItems);
-		$(".ext-helper-showall").on("click", {}, this.showAllItems);
+		$(".vh-hideall").on("click", {}, this.hideAllItems);
+		$(".vh-showall").on("click", {}, this.showAllItems);
 	}
 
 	//Actiate the tab system

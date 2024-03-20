@@ -42,7 +42,7 @@ class ScreenNotifier {
 	 */
 	async init() {
 		//If the container does not exist, create it and append it to the body.
-		if ($("#ext-helper-notifications-container").length == 0) {
+		if ($("#vh-notifications-container").length == 0) {
 			//Load the container
 			const prom = await Tpl.loadFile("view/notification_container.html");
 			$("body").append(Tpl.render(prom));
@@ -54,25 +54,23 @@ class ScreenNotifier {
 
 		//Render the notification and insert it into the container
 		let content = await note.render();
-		$("#ext-helper-notifications-container").prepend(content);
+		$("#vh-notifications-container").prepend(content);
 
 		//Bind the "close" link
-		$(
-			"#ext-helper-notification-" +
-				note.id +
-				" .ext-helper-notification-close a"
-		).on("click", { id: note.id }, function (event) {
-			Notifications.removeNote(
-				$("#ext-helper-notification-" + event.data.id)
-			);
-		});
+		$("#vh-notification-" + note.id + " .vh-notification-close a").on(
+			"click",
+			{ id: note.id },
+			function (event) {
+				Notifications.removeNote(
+					$("#vh-notification-" + event.data.id)
+				);
+			}
+		);
 
 		//Activate the self dismissal
 		if (note.lifespan > 0) {
 			setTimeout(function () {
-				Notifications.removeNote(
-					$("#ext-helper-notification-" + note.id)
-				);
+				Notifications.removeNote($("#vh-notification-" + note.id));
 			}, note.lifespan * 1000);
 		}
 

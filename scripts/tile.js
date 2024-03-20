@@ -172,14 +172,14 @@ function Tile(obj, gridInstance) {
 		}
 		if (appSettings.unavailableTab.compactToolbar) {
 			$("<div>")
-				.addClass("ext-helper-date-added")
+				.addClass("vh-date-added")
 				.text(textDate + " ago")
-				.appendTo($(pTile).find(".ext-helper-img-container"));
+				.appendTo($(pTile).find(".vh-img-container"));
 		} else {
 			$("<div>")
-				.addClass("ext-helper-date-added")
+				.addClass("vh-date-added")
 				.text("First seen: " + textDate + " ago")
-				.appendTo($(pTile).find(".ext-helper-img-container"));
+				.appendTo($(pTile).find(".vh-img-container"));
 		}
 		if (
 			appSettings.general.bookmark &&
