@@ -29,7 +29,9 @@ async function loadSettings() {
 			<button id="${tpl.id}" class='edit vh'>Edit</button>
 			<button id="${tpl.id}" class='delete vh'>Delete</button>
 			`;
-			titleCell.textContent = `${JSON.parse(tpl.title)}`;
+			try {
+				titleCell.textContent = `${JSON.parse(tpl.title)}`;
+			} catch (e) {}
 		});
 	}
 
@@ -51,12 +53,14 @@ async function loadSettings() {
 			console.log(template);
 			document.getElementById("editTitle").innerHTML = "Edit template";
 			document.getElementById("template_id").value = element.id;
-			document.getElementById("template_title").value = JSON.parse(
-				template.title
-			);
-			document.getElementById("template_content").value = JSON.parse(
-				template.content
-			);
+			try {
+				document.getElementById("template_title").value = JSON.parse(
+					template.title
+				);
+				document.getElementById("template_content").value = JSON.parse(
+					template.content
+				);
+			} catch (e) {}
 		});
 	});
 
@@ -96,7 +100,9 @@ async function loadSettings() {
 	});
 }
 
-loadSettings();
+window.addEventListener("DOMContentLoaded", function () {
+	loadSettings();
+});
 
 async function getTemplate(id) {
 	for (let i = 0; i < arrTemplate.length; i++) {

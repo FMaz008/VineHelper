@@ -16,9 +16,11 @@ async function loadSettings() {
 
 	if (arrReview.length > 0) {
 		arrReview.forEach((review) => {
-			let {date, asin, title} = review;
+			let { date, asin, title } = review;
 			let formattedDate = new Date(date);
-			const tableBody = document.getElementById("reviews_list").querySelector('tbody'); 
+			const tableBody = document
+				.getElementById("reviews_list")
+				.querySelector("tbody");
 			const row = tableBody.insertRow();
 			const actionCell = row.insertCell();
 			const titleCell = row.insertCell();
@@ -31,7 +33,9 @@ async function loadSettings() {
 			`;
 			dateCell.textContent = `${formattedDate.toLocaleDateString()}`;
 			asinCell.textContent = `${asin}`;
-			titleCell.textContent = `${JSON.parse(title)}`;
+			try {
+				titleCell.textContent = `${JSON.parse(title)}`;
+			} catch (e) {}
 		});
 	}
 
@@ -40,12 +44,14 @@ async function loadSettings() {
 	deleteElements.forEach((element) => {
 		element.addEventListener("click", function () {
 			let review = getReview(element.id);
-			document.getElementById("title").innerText = JSON.parse(
-				review.title
-			);
-			document.getElementById("content").innerText = JSON.parse(
-				review.content
-			);
+			try {
+				document.getElementById("title").innerText = JSON.parse(
+					review.title
+				);
+				document.getElementById("content").innerText = JSON.parse(
+					review.content
+				);
+			} catch (e) {}
 		});
 	});
 	//Add listener for delete
@@ -59,7 +65,9 @@ async function loadSettings() {
 	});
 }
 
-loadSettings();
+window.addEventListener("DOMContentLoaded", function () {
+	loadSettings();
+});
 
 function getReview(asin) {
 	for (let i = 0; i < arrReview.length; i++) {

@@ -2,15 +2,16 @@ if (typeof browser === "undefined") {
 	var browser = chrome;
 }
 
-var cssURL = browser.runtime.getURL('resource/css/vinehelper.css')
-fetch(cssURL).then(response => response.text()).then(cssText => {
-	const styleElement = document.createElement("style");
-	styleElement.type = 'text/css';
-	styleElement.appendChild(document.createTextNode(cssText));
-	document.head.appendChild(styleElement);
-})
-.catch(error => console.log(error));
-
+var cssURL = browser.runtime.getURL("resource/css/vinehelper.css");
+fetch(cssURL)
+	.then((response) => response.text())
+	.then((cssText) => {
+		const styleElement = document.createElement("style");
+		styleElement.type = "text/css";
+		styleElement.appendChild(document.createTextNode(cssText));
+		document.head.appendChild(styleElement);
+	})
+	.catch((error) => console.log(error));
 
 var appSettings = {};
 var arrReview = [];
@@ -82,14 +83,14 @@ async function boot_review() {
 
 	//Add the template titles in the select box
 	let selectBox = document.getElementById("template_name");
+	let title = "";
 	for (let i = 0; i < arrTemplate.length; i++) {
+		try {
+			title = JSON.parse(arrTemplate[i].title);
+		} catch (e) {}
 		selectBox.insertAdjacentHTML(
 			"beforeend",
-			"<option value='" +
-				arrTemplate[i].id +
-				"'>" +
-				JSON.parse(arrTemplate[i].title) +
-				"</option>"
+			"<option value='" + arrTemplate[i].id + "'>" + title + "</option>"
 		);
 	}
 
@@ -104,7 +105,9 @@ async function boot_review() {
 					let review = document.getElementById(
 						"scarface-review-text-card-title"
 					);
-					review.value += JSON.parse(arrTemplate[i].content);
+					try {
+						review.value += JSON.parse(arrTemplate[i].content);
+					} catch (e) {}
 					return;
 				}
 			}
@@ -123,10 +126,6 @@ async function boot_review() {
 				"scarface-review-text-card-title"
 			).value;
 
-			if(reviewTitle === "" || reviewContent === ""){
-				return;
-			}
-
 			let index = arrReview.findIndex((review) => review.asin === asin);
 			if (index > -1) {
 				//Update the review
@@ -134,7 +133,7 @@ async function boot_review() {
 				arrReview[index].title = JSON.stringify(reviewTitle);
 				arrReview[index].content = JSON.stringify(reviewContent);
 				found = true;
-			} 
+			}
 			//}
 			if (!found) {
 				//Save a new review
