@@ -116,7 +116,9 @@ async function checkNewItems() {
 				}
 			}
 			setTimeout(function () {
-				checkNewItems();
+				if (appSettings.general.newItemNotification) {
+					checkNewItems();
+				}
 			}, 30000);
 		})
 		.catch(function () {
