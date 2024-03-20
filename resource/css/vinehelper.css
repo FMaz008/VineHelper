@@ -1,0 +1,204 @@
+/*
+begin, migrating css into a common file, to allow uniform display and updates
+*/
+:root {
+	--background-light: hsla(0, 0%, 98%, 1);
+	--background-dark: hsla(0, 0%, 20%, 1);
+	--text-light: hsla(0, 0%, 20%, 1);
+	--text-dark: hsla(0, 0%, 98%, 0.8);
+	--link-light: hsla(165, 100%, 20%, 1);
+	--link-dark: hsla(165, 100%, 65%, 1);
+	--border-light: hsla(165, 100%, 20%, 1);
+	--border-dark: hsla(0, 0%, 98%, 0.8);
+	--button: hsla(165, 100%, 20%, 1);
+	--background-mild: hsla(165, 100%, 35%, 1);
+	--border-free: #ffd700;
+	--shadow-dark: hsla(165, 100%, 65%, 1);
+}
+
+.vinehelper body {
+	color: var(--text-light);
+	font-family: Arial, sans-serif;
+	margin: 20px;
+	transition: background-color 0.5s, color 0.5s;
+}
+
+.vinehelper table {
+	border-collapse: collapse;
+	margin: 20px;
+}
+
+.vinehelper main {
+	display: flex;
+	flex-direction: column;
+}
+
+.vinehelper section {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.vinehelper textarea {
+	min-height: 130px;
+	resize: vertical;
+}
+
+.vinehelper label {
+	display: block;
+	margin-bottom: 5px;
+	align-self: center;
+}
+
+.vinehelper input[type='text'],
+.vinehelper textarea {
+	min-width: 300px;
+	max-width: 800px;
+	width: 100%;
+	background-color: transparent;
+	color: var(--text-light, #f9f9f9);
+	border: 1px solid var(--border-light, #f9f9f9);
+	border-radius: 5px;
+	padding: 0.5em;
+	transition: border-color 0.3s ease-in-out;
+	box-shadow: 1px 1px 3px var(--background-mild);
+}
+
+.vinehelper input[type='text']:focus,
+.vinehelper textarea:focus {
+	outline: 2px solid var(--link-light);
+	border: 1px solid var(--link-dark);
+
+}
+
+.vinehelper td,
+.vinehelper th {
+	border: 1px solid;
+	border-color: var(--border-light, #dedede);
+	padding: 5px;
+	text-align: left;
+	color: var(--text-light);
+}
+
+button.vinehelper,
+.vinehelper button {
+	text-decoration: none;
+	font-weight: 500;
+	background-color: var(--button);
+	border: none;
+	color: white;
+	padding: 10px 15px;
+	border-radius: 5px;
+	background-image: radial-gradient(circle farthest-side at 10% 20%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 80%);
+	box-shadow: 1px 1px 2px var(--link-light);
+}
+
+.vertical-divider {
+	height: 1em;
+	margin: 5px 0;
+	border: 0;
+	border-left: 1px solid var(--divider-color, lightgray);
+}
+
+label.vinehelper,
+a.vinehelper {
+	font-size: 14px;
+	margin-right: 5px;
+}
+
+.vinehelper select {
+	padding: 8px 12px;
+	font-size: 14px;
+	margin: 0 5px;
+	border: 1px solid var(--button);
+	border-radius: 4px;
+	appearance: none;
+	max-width: 300px;
+}
+
+.vinehelper#review-toolbar {
+	margin: 10px;
+	padding: 5px;
+	border: 3px solid var(--border-light);
+	border-radius: 5px;
+	background-color: var(--background-mild);
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.vinehelper button:hover {
+	background-color: var(--button, green);
+}
+
+.vinehelper #insertTemplate,
+.vinehelper #saveReview {
+	text-decoration: none;
+	font-weight: 500;
+	background-color: var(--button);
+	border: none;
+	color: white;
+	padding: 10px 15px;
+	border-radius: 5px;
+	border: 1px solid var(--background-dark);
+	background-image: radial-gradient(circle farthest-side at 10% 20%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 80%);
+	box-shadow: 1px 1px 2px var(--button);
+
+}
+
+.vinehelper#review_management h3 {
+	margin: 10px;
+	padding-top: 5px;
+}
+
+.vinehelper#review_management {
+	background-color: var(--background-dark);
+	border-radius: 5px;
+	margin: 10px;
+	color: var(--text-dark);
+}
+
+.vinehelper button:active,
+.button_link:active {
+	transform: translateY(2px);
+}
+
+#manage_link,
+#template_link {
+	color: var(--text-dark);
+}
+
+
+@media (prefers-color-scheme: dark) {
+	.vinehelper body {
+		background-color: var(--background-dark, #333);
+		color: var(--text-dark, #f9f9f9);
+	}
+
+	.vinehelper button {
+		box-shadow: 1px 1px 2px var(--shadow-dark);
+	}
+
+	.vinehelper input[type='text'],
+	.vinehelper textarea {
+		color: var(--text-dark, #f9f9f9);
+		border: 1px solid var(--border-dark, #f9f9f9);
+		transition: unset;
+		box-shadow: 1px 1px 3px var(--background-mild);
+	}
+
+	.vinehelper input[type='text']:focus,
+	.vinehelper textarea:focus {
+		outline: 2px solid var(--link-dark);
+		border: 1px solid var(--link-light);
+	}
+
+	.vinehelper td,
+	.vinehelper th {
+		border: 1px solid;
+		border-color: var(--border-dark, #f9f9f9);
+		color: var(--text-dark);
+	}
+
+}

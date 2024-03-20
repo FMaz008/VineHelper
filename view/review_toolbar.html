@@ -1,15 +1,11 @@
-<div id="review-toolbar">
-	<strong
-		>Insert template (<a href="{{$tpl_manage_url}}" target="_blank"
-			>Manage</a
-		>):</strong
-	>
-	<select name="template_name" id="template_name"></select>
-	<button id="insertTemplate">Insert</button>
-
-	<strong
-		>Reviews (<a href="{{$review_manage_url}}" target="_blank">Manage</a
-		>):</strong
-	>
-	<button id="saveReview">Save review {{$asin}}</button>
+<div id="review_management">
+	<div id="review-toolbar" class="vinehelper">
+			<label for="template_name">Templates<span>
+					(<a href="{{$tpl_manage_url}}" target="_blank" id="template_link">Manage</a>)</span></label>
+			<select name="template_name" id="template_name"></select>
+			<button id="insertTemplate">Insert</button>
+			<label for="manage_link">Reviews<span>
+					(<a href="{{$review_manage_url}}" target="_blank" id="manage_link">Manage</a>)</span></label>
+			<button id="saveReview">Save</button>
+	</div>
 </div>

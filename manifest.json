@@ -32,6 +32,7 @@
 		{
 			"resources": [
 				"resource/image/*",
+				"resource/css/vinehelper.css",
 				"view/*",
 				"resource/sound/*",
 				"page/*",
@@ -64,7 +65,8 @@
 				"resource/css/main.css",
 				"resource/css/modal.css",
 				"resource/css/notification.css",
-				"resource/css/toolbar.css"
+				"resource/css/toolbar.css",
+				"resource/css/vinehelper.css"
 			],
 			"js": [
 				"scripts/grid.js",
