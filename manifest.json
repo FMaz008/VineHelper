@@ -109,9 +109,9 @@
 		{
 			"css": [
 				"resource/css/color.css",
-				"resource/css/main.css",
-				"page/review_management.css"
+				"resource/css/main.css"
 			],
+			
 			"js": ["scripts/Template.js", "scripts/review.js"],
 			"matches": [
 				"*://*.amazon.ca/review/create-review*",
