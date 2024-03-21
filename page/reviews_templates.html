@@ -1,40 +1,37 @@
 <html class="vinehelper">
+	<head>
+		<script src="reviews_templates.js"></script>
+		<link rel="stylesheet" href="/resource/css/vinehelper.css" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	</head>
 
-<head>
-	<script src="reviews_templates.js"></script>
-	<link rel="stylesheet" href="/resource/css/vinehelper.css">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-</head>
-</head>
-
-<body id="reviews_templates">
-	<main id="template_management">
-		<h1>Manage Review Templates</h1>
-		<section id="template_form">
-			<h3 id="editTitle">New template</h3>
-			<form id="template_input">
-				<input type="hidden" id="template_id" value="new" />
-				<label for="template_title">Title:</label>
-				<input type="text" id="template_title" value="" />
-				<br />
-				<br />
-				<label for="template_content">Content:</label>
-				<textarea type="text" id="template_content"></textarea>
-				<br />
-				<br />
-				<button id="save">Save</button>
-				<button id="reset" type="reset">Cancel</button>
-			</form>
-		</section>
-	</main>
-	<table id="templates_list">
-		<tbody>
-			<tr>
-				<td>Action</td>
-				<td>Title</td>
-			</tr>
-		</tbody>
-	</table>
-</body>
-
+	<body id="reviews_templates">
+		<main id="template_management">
+			<h1>Manage Review Templates</h1>
+			<section id="template_form">
+				<h3 id="editTitle">New template</h3>
+				<form id="template_input">
+					<input type="hidden" id="template_id" value="new" />
+					<label for="template_title">Title:</label>
+					<input type="text" id="template_title" value="" />
+					<br />
+					<br />
+					<label for="template_content">Content:</label>
+					<textarea type="text" id="template_content"></textarea>
+					<br />
+					<br />
+					<button id="save">Save</button>
+					<button id="reset" type="reset">Cancel</button>
+				</form>
+			</section>
+		</main>
+		<table id="templates_list">
+			<tbody>
+				<tr>
+					<td>Action</td>
+					<td>Title</td>
+				</tr>
+			</tbody>
+		</table>
+	</body>
 </html>

@@ -1,0 +1,9 @@
+{
+	"trailingComma": "es5",
+	"tabWidth": 4,
+	"semi": true,
+	"charset": "utf-8",
+	"endOfLine" : "crlf",
+	"useTabs" : true,
+	"printWidth": 120
+}
