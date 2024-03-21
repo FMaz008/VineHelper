@@ -105,7 +105,7 @@ button.bookmark {
 	background-position-x: 5px;
 	background-position-y: center;
 	font-size: 13px;
-	background-color: var(--background-light, lightgreen);
+	background-color: var(--button-flat, lightgreen);
 }
 
 /* Add visual cues for the keybinding */

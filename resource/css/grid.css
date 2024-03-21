@@ -45,17 +45,17 @@ div.vh-grid .vvp-item-tile .vvp-item-tile-content > * {
 }
 
 #vvp-items-grid .bookmark-highlight {
-	border: 3px solid var(--border-light) !important;
-	background-color: var(--background-light);
+	border: 3px solid var(--item-highlight-border) !important;
+	background-color: var(--item-highlight-background);
 }
 
 #vvp-items-grid .keyword-highlight {
-	border: 3px solid var(--border-free) !important;
-	background-color: var(--background-light);
+	border: 3px solid var(--item-highlight-border-alert) !important;
+	background-color: var(--item-highlight-background);
 }
 
 #vvp-items-grid a,
 #vvp-items-grid a:visited,
 #vvp-items-grid a:active {
-	color: var(--link-light);
+	color: var(--item-link-light);
 }

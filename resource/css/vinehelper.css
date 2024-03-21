@@ -20,6 +20,7 @@ begin, migrating css into a common file, to allow uniform display and updates
 	--link-dark: var(--lightgreen-300);
 	--border-light: var(--darkgreen-600);
 	--border-dark: var(--lightgreen-600);
+
 	--button: var(--darkgreen-300);
 	--button-overlay: radial-gradient(
 		circle farthest-side at 10% 20%,
@@ -30,6 +31,18 @@ begin, migrating css into a common file, to allow uniform display and updates
 	--border-free: #ffd700;
 	--highlight-light: var(--darkgreen-100);
 	--highlight-dark: var(--lightgreen-100);
+
+
+	--vh-background-light: rgb(136, 213, 162);
+
+	--button-flat: var(--vh-background-light);
+	--item-highlight-background: var(--vh-background-light);
+	--item-highlight-border: var(--vh-background-light);
+	--item-highlight-border-alert: var(--border-free);
+	--tab-active-background: var(--darkgreen-600);
+	--tab-background: var(--vh-background-light);
+	--item-link-light: black;
+	--item-link-dark: white;
 }
 
 .vinehelper body {

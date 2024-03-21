@@ -22,17 +22,17 @@
 	margin-right: 3px;
 	padding: 4px 10px;
 	cursor: pointer;
-	background-color: var(--background-light, lightgreen);
-	background-image: radial-gradient(
-		circle farthest-side at 10% 20%,
-		rgba(255, 255, 255, 0.3) 0%,
-		rgba(255, 255, 255, 0) 80%
-	);
+
+	background: var(--button-overlay), var(--tab-background);
 }
 
 #tabs > ul > li.active {
-	border: 2px solid var(--background-mild, green);
-	background: linear-gradient(to bottom, var(--background-mild, lightgreen), var(--background-mild, lightgreen));
+	border: 2px solid var(--tab-active-background, green);
+	background: linear-gradient(
+		to bottom,
+		var(--tab-active-background, lightgreen),
+		var(--tab-active-background, lightgreen)
+	);
 }
 
 #tabs > ul > li > a {
