@@ -1,198 +1,144 @@
-//Intercept Fetch requests
 const origFetch = window.fetch;
 var extHelper_LastParentVariant = null;
 var extHelper_responseData = {};
 var extHelper_postData = {};
 
-//const proto = wrappedJSObject['fetch'].prototype;
 window.fetch = async (...args) => {
-	let response = await origFetch(...args);
-	let lastParent = extHelper_LastParentVariant;
-	let regex = null;
+  let response = await origFetch(...args);
+  let lastParent = extHelper_LastParentVariant;
+  let regex = null;
 
-	regex = /^api\/voiceOrders/;
-	if (regex.test(args[0])) {
-		//console.log("URL match that of an order.");
-		extHelper_postData = JSON.parse(args[1].body);
-		let asin = extHelper_postData.itemAsin;
+  const url = args[0] || "";
+  if (url.startsWith("api/voiceOrders")) {
+    extHelper_postData = JSON.parse(args[1].body);
+    const asin = extHelper_postData.itemAsin;
 
-		await response
-			.clone()
-			.json()
-			.then(function (data) {
-				extHelper_responseData = data;
-			})
-			.catch((err) => console.error(err));
+    try {
+      extHelper_responseData = await response.clone().json();
+    } catch (e) {
+      console.error(e);
+    }
 
-		lastParent = extHelper_LastParentVariant;
-		if (lastParent != null) {
-			regex = /^.+?#(.+?)#.+$/;
-			lastParent = extHelper_LastParentVariant.recommendationId.match(regex)[1];
-		}
+    if (lastParent != null) {
+      regex = /^.+?#(.+?)#.+$/;
+      lastParent = extHelper_LastParentVariant.recommendationId.match(regex)[1];
+    }
 
-		let datap = extHelper_responseData;
-		if (datap.error == null) {
-			//Order successful
-			window.postMessage(
-				{
-					type: "order",
-					data: {
-						status: "success",
-						error: null,
-						parent_asin: lastParent,
-						asin: asin,
-					},
-				},
-				"*"
-			);
-		} else {
-			//CROSS_BORDER_SHIPMENT.
-			//SCHEDULED_DELIVERY_REQUIRED
-			//ITEM_NOT_IN_ENROLLMENT
-			window.postMessage(
-				{
-					type: "order",
-					data: {
-						status: "failed",
-						error: datap.error,
-						parent_asin: lastParent,
-						asin: asin,
-					},
-				},
-				"*"
-			);
-		}
-		//Wait 500ms following an order to allow for the order report query to go through before the redirect happens.
-		await new Promise((r) => setTimeout(r, 500));
-	}
+    let data = {
+      status: "success",
+      error: null,
+      parent_asin: lastParent,
+      asin: asin,
+    };
+    if (extHelper_responseData.error !== null) {
+      data = {
+        status: "failed",
+        error: extHelper_responseData.error, //CROSS_BORDER_SHIPMENT, SCHEDULED_DELIVERY_REQUIRED, ITEM_NOT_IN_ENROLLMENT
+        parent_asin: lastParent,
+        asin: asin,
+      };
+    }
 
-	regex = /^api\/recommendations\/.*$/;
-	if (regex.test(args[0])) {
-		//console.log("URL match that of a product:", args[0]);
+    window.postMessage(
+      {
+        type: "order",
+        data,
+      },
+      "*"
+    );
 
-		await response
-			.clone()
-			.json()
-			.then(function (data) {
-				extHelper_responseData = data;
-			})
-			.catch((err) => console.error(err));
+    //Wait 500ms following an order to allow for the order report query to go through before the redirect happens.
+    await new Promise((r) => setTimeout(r, 500));
+    return response;
+  }
 
-		//Intercept errors
-		if (extHelper_responseData.result == null) {
-			if (extHelper_responseData.error != null) {
-				if (extHelper_responseData.error.exceptionType != undefined) {
-					window.postMessage(
-						{
-							type: "error",
-							data: {
-								error: extHelper_responseData.error.exceptionType,
-							},
-						},
-						"*"
-					);
-				}
-			}
-		}
+  regex = /^api\/recommendations\/.*$/;
+  if (url.startsWith("api/recommendations")) {
+    try {
+      extHelper_responseData = await response.clone().json();
+    } catch (e) {
+      console.error(e);
+    }
 
-		let datap = extHelper_responseData.result;
+    let { result, error } = extHelper_responseData;
 
-		//Find if the item is a parent
-		if (datap.variations !== undefined) {
-			//The item has variation and so is a parent, store it for later interceptions
-			extHelper_LastParentVariant = datap;
-		} else if (datap.taxValue !== undefined) {
-			//The item has an ETV.
-			//Is is either a child or a regular item
-			let isChild = false;
-			if (lastParent != null) {
-				//Check if this product is a child variant of the previous parent
-				for (let i = 0; i < lastParent.variations.length; ++i) {
-					if (lastParent.variations[i].asin == datap.asin) isChild = true;
-				}
-			}
+    if (result === null) {
+      if (error?.exceptionType) {
+        window.postMessage(
+          {
+            type: "error",
+            data: {
+              error: error.exceptionType,
+            },
+          },
+          "*"
+        );
+      }
+      return response;
+    }
 
-			if (isChild) {
-				regex = /^.+?#(.+?)#.+$/;
-				let arrMatchesP = lastParent.recommendationId.match(regex);
+    // Find if the item is a parent
+    if (result.variations !== undefined) {
+      //The item has variations and so is a parent, store it for later interceptions
+      extHelper_LastParentVariant = result;
+    } else if (result.taxValue !== undefined) {
+      // The item has an ETV value, let's find out if it's a child or a parent
+      const isChild = !!lastParent?.variations?.some((v) => v.asin == result.asin);
+      let data = {
+        parent_asin: null,
+        asin: result.asin,
+        etv: result.taxValue,
+      }
+      if (isChild) {
+        regex = /^.+?#(.+?)#.+$/;
+        let arrMatchesP = lastParent.recommendationId.match(regex);
+        data.parent_asin = arrMatchesP[1];
+      } else {
+        extHelper_LastParentVariant = null;
+      }
+      window.postMessage(
+        {
+          type: "etv",
+          data,
+        },
+        "*"
+      );
+    }
 
-				window.postMessage(
-					{
-						type: "etv",
-						data: {
-							parent_asin: arrMatchesP[1],
-							asin: datap.asin,
-							etv: datap.taxValue,
-						},
-					},
-					"*"
-				);
-			} else {
-				extHelper_LastParentVariant = null;
-				window.postMessage(
-					{
-						type: "etv",
-						data: {
-							parent_asin: null,
-							asin: datap.asin,
-							etv: datap.taxValue,
-						},
-					},
-					"*"
-				);
-			}
-		}
+    let fixed = 0;
+    result.variations = result.variations?.map((variation) => {
+      if (Object.keys(variation.dimensions || {}).length === 0) {
+        variation.dimensions = {
+          asin_no: variation.asin,
+        };
+        fixed++;
+        return variation;
+      }
 
-		//console.log(extHelper_responseData .result);
-		//Fix the infinite spinning wheel
-		//Check if the response has variants
-		if (extHelper_responseData.result.variations !== undefined) {
-			let variations = extHelper_responseData.result.variations;
-			//console.log(variations.length, " variations found.");
+      for (const key in variation.dimensions) {
+        // The core of the issue is when a special character is at the end of a variation, the jQuery UI which amazon uses will attempt to evaluate it and fail since it attempts to utilize it as part of an html attribute.
+        // In order to resolve this, we make the string safe for an html attribute by escaping the special characters.
+        if (!variation.dimensions[key].match(/[a-z0-9]$/i)) {
+          variation.dimensions[key] =
+            variation.dimensions[key] + ` VH${fixed}`;
+          fixed++;
+        }
+      }
+      return variation;
+    });
 
-			//Check each variation
-			let fixed = 0;
-			for (let i = 0; i < variations.length; ++i) {
-				let value = variations[i];
-				if (_.isEmpty(value.dimensions)) {
-					//console.log("Dimensions of variance", value.asin, " is empty, attempting to set defaut values.");
-					extHelper_responseData.result.variations[i].dimensions = {
-						asin_no: value.asin,
-					};
-					fixed++;
-				}
-			}
+    if (fixed > 0) {
+      window.postMessage(
+        {
+          type: "infiniteWheelFixed",
+          text: fixed + " variation(s) fixed.",
+        },
+        "*"
+      );
+    }
 
-			//The product has variation, let's ensure they do not contain any illegal characters
-			for (i = 0; i < variations.length; ++i) {
-				let variation = variations[i];
-				let before = "";
-				arrKeys = Object.keys(variation.dimensions);
-				for (j = 0; j < arrKeys.length; j++) {
-					before = variation.dimensions[arrKeys[j]];
-					variation.dimensions[arrKeys[j]] = variation.dimensions[arrKeys[j]].replace(/[)(:\[\]&]/g, "");
+    return new Response(JSON.stringify(extHelper_responseData));
+  }
 
-					if (before != variation.dimensions[arrKeys[j]]) {
-						fixed++;
-					}
-				}
-			}
-
-			if (fixed > 0) {
-				var data = {
-					type: "infiniteWheelFixed",
-					text: fixed + " variation(s) fixed.",
-				};
-				window.postMessage(data, "*");
-			}
-		} else {
-			//console.log("This product has no variation.");
-		}
-
-		//Return mocked response
-		return new Response(JSON.stringify(extHelper_responseData));
-	} else {
-		//console.log("Request is not a product: ", args[0]);
-		return response;
-	}
+  return response;
 };
