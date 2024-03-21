@@ -9,7 +9,7 @@
 	--border-free: #ffd700;
 }
 
-#vh-notifications-container {
+#vh-items-container {
 	display: flex;
 	width: 100%;
 	flex-wrap: wrap;

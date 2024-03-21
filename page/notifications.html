@@ -1,10 +1,13 @@
 <html class="vinehelper">
 	<head>
 		<title>Vine Helper - Notifications Monitor</title>
+		<script src="../lib/jquery/jquery-3.7.1.min.js"></script>
 		<script src="../scripts/Template.js"></script>
+		<script src="../scripts/ScreenNotifier.js"></script>
 		<script src="notifications.js"></script>
 
 		<link rel="stylesheet" type="text/css" href="notifications.css" />
+		<link rel="stylesheet" type="text/css" href="../resource/css/notification.css" />
 		<link rel="stylesheet" type="text/css" href="/resource/css/icon.css" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	</head>
@@ -15,6 +18,6 @@
 			New notifications will automatically pop up here every minute. No need to refresh the page unless you want
 			to clear the list.
 		</p>
-		<div id="vh-notifications-container"></div>
+		<div id="vh-items-container"></div>
 	</body>
 </html>

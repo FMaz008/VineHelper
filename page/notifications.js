@@ -29,6 +29,7 @@ const vineDomains = {
 var vineLocale = null;
 var vineCurrency = null;
 var vineDomain = null;
+var Notifications = new ScreenNotifier();
 
 window.onload = function () {
 	browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
@@ -38,6 +39,15 @@ window.onload = function () {
 		if (data.type == "newItem") {
 			sendResponse({ success: true });
 			addItem(data);
+		}
+		if (data.type == "newItemCheck") {
+			sendResponse({ success: true });
+
+			//Display a notification that we have checked for items.
+			let note = new ScreenNotification();
+			note.template = "view/notification_loading.html";
+			note.lifespan = 3;
+			Notifications.pushNotification(note);
 		}
 		if (data.type == "vineCountry") {
 			sendResponse({ success: true });
@@ -134,7 +144,7 @@ async function addItem(data) {
 
 function insertMessageIfAsinIsUnique(content, asin, etv) {
 	var newID = `vh-notification-${asin}`;
-	const newBody = document.getElementById("vh-notifications-container");
+	const newBody = document.getElementById("vh-items-container");
 
 	if (!document.getElementById(newID)) {
 		newBody.insertAdjacentHTML("afterbegin", content);
