@@ -1,6 +1,3 @@
-
-
-
 .vh_flex_column {
 	display: grid;
 	flex: 1 1 auto;
@@ -108,7 +105,7 @@ button.bookmark {
 	background-position-x: 5px;
 	background-position-y: center;
 	font-size: 13px;
-	background-color: var(--button-light, lightgreen);
+	background-color: var(--background-light, lightgreen);
 }
 
 /* Add visual cues for the keybinding */
