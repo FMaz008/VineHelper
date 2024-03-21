@@ -2,19 +2,34 @@
 begin, migrating css into a common file, to allow uniform display and updates
 */
 :root {
-	--background-light: hsla(0, 0%, 98%, 1);
-	--background-dark: hsla(0, 0%, 20%, 1);
-	--text-light: hsla(0, 0%, 20%, 1);
-	--text-dark: hsla(0, 0%, 98%, 0.8);
-	--link-light: hsla(165, 100%, 20%, 1);
-	--link-dark: hsla(165, 100%, 65%, 1);
-	--border-light: hsla(165, 100%, 20%, 1);
-	--border-dark: hsla(0, 0%, 98%, 0.8);
-	--button: hsla(165, 100%, 20%, 1);
-	--background-mild: hsla(165, 100%, 35%, 1);
-	--background-light: rgb(136, 213, 162);
+	--white-100: hsla(0, 0%, 100%, 1);
+	--white-200: hsla(0, 0%, 95%, 1);
+	--black-800: hsla(0, 0%, 18%, 1);
+	--black-900: hsla(0, 0%, 0%, 1);
+	--lightgreen-100: hsla(165, 100%, 65%, 1);
+	--lightgreen-300: hsla(165, 68%, 54%, 1);
+	--lightgreen-600: hsla(165, 64%, 43%, 1);
+	--darkgreen-100: hsla(165, 68%, 37%, 1);
+	--darkgreen-300: hsla(165, 75%, 32%, 1);
+	--darkgreen-600: hsla(165, 100%, 20%, 1);
+	--background-light: var(--white-200);
+	--background-dark: var(--black-800);
+	--text-light: var(--black-800);
+	--text-dark: var(--white-200);
+	--link-light: var(--darkgreen-300);
+	--link-dark: var(--lightgreen-300);
+	--border-light: var(--darkgreen-600);
+	--border-dark: var(--lightgreen-600);
+	--button: var(--darkgreen-300);
+	--button-overlay: radial-gradient(
+		circle farthest-side at 10% 20%,
+		rgba(255, 255, 255, 0.3) 0%,
+		rgba(255, 255, 255, 0) 80%
+	);
+	--button-text: var(--text-dark);
 	--border-free: #ffd700;
-	--shadow-dark: hsla(165, 100%, 65%, 1);
+	--highlight-light: var(--darkgreen-100);
+	--highlight-dark: var(--lightgreen-100);
 }
 
 .vinehelper body {
@@ -22,6 +37,10 @@ begin, migrating css into a common file, to allow uniform display and updates
 	font-family: Arial, sans-serif;
 	margin: 20px;
 	transition: background-color 0.5s, color 0.5s;
+	background-image: url("/resource/image/logo.png");
+	background-position: top right;
+	background-repeat: no-repeat;
+	background-size: 150px 150px;
 }
 
 .vinehelper table {
@@ -62,13 +81,13 @@ begin, migrating css into a common file, to allow uniform display and updates
 	border-radius: 5px;
 	padding: 0.5em;
 	transition: border-color 0.3s ease-in-out;
-	box-shadow: 1px 1px 3px var(--background-mild);
+	box-shadow: 1px 1px 3px var(--highlight-light);
 }
 
 .vinehelper input[type="text"]:focus,
 .vinehelper textarea:focus {
-	outline: 2px solid var(--link-light);
-	border: 1px solid var(--link-dark);
+	outline: 2px solid var(--highlight-light);
+	border: 1px solid var(--highlight-light);
 }
 
 .vinehelper td,
@@ -86,15 +105,11 @@ button.vinehelper,
 	font-weight: 500;
 	background-color: var(--button);
 	border: none;
-	color: white;
+	color: var(--button-text);
 	padding: 10px 15px;
 	border-radius: 5px;
-	background-image: radial-gradient(
-		circle farthest-side at 10% 20%,
-		rgba(255, 255, 255, 0.3) 0%,
-		rgba(255, 255, 255, 0) 80%
-	);
-	box-shadow: 1px 1px 2px var(--link-light);
+	background-image: var(--button-overlay);
+	box-shadow: 1px 1px 3px var(--link-light);
 }
 
 .vertical-divider {
@@ -110,7 +125,7 @@ a.vinehelper {
 	margin-right: 5px;
 }
 
-.vinehelper select {
+select.vinehelper {
 	padding: 8px 12px;
 	font-size: 14px;
 	margin: 0 5px;
@@ -143,22 +158,17 @@ a.vinehelper {
 	background-color: var(--button, green);
 }
 
-.vinehelper #insertTemplate,
-.vinehelper #saveReview {
+.vinehelper#insertTemplate,
+.vinehelper#saveReview {
 	text-decoration: none;
 	font-weight: 500;
 	background-color: var(--button);
 	border: none;
-	color: white;
+	color: var(--button-text);
 	padding: 10px 15px;
 	border-radius: 5px;
-	border: 1px solid var(--background-dark);
-	background-image: radial-gradient(
-		circle farthest-side at 10% 20%,
-		rgba(255, 255, 255, 0.3) 0%,
-		rgba(255, 255, 255, 0) 80%
-	);
-	box-shadow: 1px 1px 2px var(--button);
+	background-image: var(--button-overlay);
+	box-shadow: 1px 1px 3px var(--link-light);
 }
 
 .vinehelper#review_management h3 {
@@ -190,7 +200,7 @@ a.vinehelper {
 	}
 
 	.vinehelper button {
-		box-shadow: 1px 1px 2px var(--shadow-dark);
+		box-shadow: 1px 1px 2px var(--highlight-dark);
 	}
 
 	.vinehelper input[type="text"],
@@ -198,13 +208,13 @@ a.vinehelper {
 		color: var(--text-dark, #f9f9f9);
 		border: 1px solid var(--border-dark, #f9f9f9);
 		transition: unset;
-		box-shadow: 1px 1px 3px var(--background-mild);
+		box-shadow: 1px 1px 3px var(--highlight-dark);
 	}
 
 	.vinehelper input[type="text"]:focus,
 	.vinehelper textarea:focus {
-		outline: 2px solid var(--link-dark);
-		border: 1px solid var(--link-light);
+		outline: 2px solid var(--highlight-dark);
+		border: 1px solid var(--highlight-dark);
 	}
 
 	.vinehelper td,
