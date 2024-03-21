@@ -4,7 +4,7 @@
 	"description": "Improve the Amazon Vine experience.",
 	"version": "2.4.2",
 
-	"permissions": ["storage", "serviceWorker"],
+	"permissions": ["storage"],
 	"browser_specific_settings": {
 		"gecko": {
 			"id": "{5951bf9a-25ae-4043-9fa2-54dc0ac1ce70}",
