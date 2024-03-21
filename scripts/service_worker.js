@@ -82,6 +82,7 @@ async function checkNewItems() {
 
 	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
 	let url = "https://vinehelper.ovh/vineHelperLatest.php" + "?data=" + jsonArrURL;
+	console.log("Checking for new items...");
 	fetch(url)
 		.then((response) => response.json())
 		.then(async function (response) {

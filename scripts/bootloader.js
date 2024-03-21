@@ -707,7 +707,7 @@ window.addEventListener("message", async function (event) {
 			//Show a notification
 			let note = new ScreenNotification();
 			note.title = "Successful order detected!";
-			note.lifespan = 5;
+			note.lifespan = 10;
 			note.content = "Detected item " + event.data.data.asin + " as orderable.";
 			await Notifications.pushNotification(note);
 		} else {

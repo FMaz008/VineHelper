@@ -87,7 +87,7 @@ class ScreenNotifier {
 					opacity: 0,
 					left: "+=50",
 				},
-				1000,
+				250,
 				function () {
 					// Animation complete.
 				}
