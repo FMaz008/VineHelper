@@ -12,6 +12,7 @@ begin, migrating css into a common file, to allow uniform display and updates
 	--border-dark: hsla(0, 0%, 98%, 0.8);
 	--button: hsla(165, 100%, 20%, 1);
 	--background-mild: hsla(165, 100%, 35%, 1);
+	--background-light: rgb(136, 213, 162);
 	--border-free: #ffd700;
 	--shadow-dark: hsla(165, 100%, 65%, 1);
 }
@@ -50,7 +51,7 @@ begin, migrating css into a common file, to allow uniform display and updates
 	align-self: center;
 }
 
-.vinehelper input[type='text'],
+.vinehelper input[type="text"],
 .vinehelper textarea {
 	min-width: 300px;
 	max-width: 800px;
@@ -64,11 +65,10 @@ begin, migrating css into a common file, to allow uniform display and updates
 	box-shadow: 1px 1px 3px var(--background-mild);
 }
 
-.vinehelper input[type='text']:focus,
+.vinehelper input[type="text"]:focus,
 .vinehelper textarea:focus {
 	outline: 2px solid var(--link-light);
 	border: 1px solid var(--link-dark);
-
 }
 
 .vinehelper td,
@@ -89,7 +89,11 @@ button.vinehelper,
 	color: white;
 	padding: 10px 15px;
 	border-radius: 5px;
-	background-image: radial-gradient(circle farthest-side at 10% 20%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 80%);
+	background-image: radial-gradient(
+		circle farthest-side at 10% 20%,
+		rgba(255, 255, 255, 0.3) 0%,
+		rgba(255, 255, 255, 0) 80%
+	);
 	box-shadow: 1px 1px 2px var(--link-light);
 }
 
@@ -112,20 +116,27 @@ a.vinehelper {
 	margin: 0 5px;
 	border: 1px solid var(--button);
 	border-radius: 4px;
-	appearance: none;
 	max-width: 300px;
 }
 
-.vinehelper#review-toolbar {
+.vh-visible-container {
 	margin: 10px;
 	padding: 5px;
 	border: 3px solid var(--border-light);
 	border-radius: 5px;
-	background-color: var(--background-mild);
+	background-color: var(--background-light);
+	color: var(--text-light);
+	-webkit-box-shadow: -2px -2px 5px 2px rgba(119, 119, 119, 1);
+	-moz-box-shadow: -2px -2px 5px 2px rgba(119, 119, 119, 1);
+}
+#review-toolbar {
 	display: flex;
 	flex-wrap: nowrap;
 	align-items: center;
 	justify-content: space-between;
+}
+.vh-visible-container a {
+	color: var(--link-light);
 }
 
 .vinehelper button:hover {
@@ -142,9 +153,12 @@ a.vinehelper {
 	padding: 10px 15px;
 	border-radius: 5px;
 	border: 1px solid var(--background-dark);
-	background-image: radial-gradient(circle farthest-side at 10% 20%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 80%);
+	background-image: radial-gradient(
+		circle farthest-side at 10% 20%,
+		rgba(255, 255, 255, 0.3) 0%,
+		rgba(255, 255, 255, 0) 80%
+	);
 	box-shadow: 1px 1px 2px var(--button);
-
 }
 
 .vinehelper#review_management h3 {
@@ -169,7 +183,6 @@ a.vinehelper {
 	color: var(--text-dark);
 }
 
-
 @media (prefers-color-scheme: dark) {
 	.vinehelper body {
 		background-color: var(--background-dark, #333);
@@ -180,7 +193,7 @@ a.vinehelper {
 		box-shadow: 1px 1px 2px var(--shadow-dark);
 	}
 
-	.vinehelper input[type='text'],
+	.vinehelper input[type="text"],
 	.vinehelper textarea {
 		color: var(--text-dark, #f9f9f9);
 		border: 1px solid var(--border-dark, #f9f9f9);
@@ -188,7 +201,7 @@ a.vinehelper {
 		box-shadow: 1px 1px 3px var(--background-mild);
 	}
 
-	.vinehelper input[type='text']:focus,
+	.vinehelper input[type="text"]:focus,
 	.vinehelper textarea:focus {
 		outline: 2px solid var(--link-dark);
 		border: 1px solid var(--link-light);
@@ -200,5 +213,4 @@ a.vinehelper {
 		border-color: var(--border-dark, #f9f9f9);
 		color: var(--text-dark);
 	}
-
 }

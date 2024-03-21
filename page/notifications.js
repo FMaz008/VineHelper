@@ -120,7 +120,7 @@ async function addItem(data) {
 	Tpl.setVar("id", asin);
 	Tpl.setVar("domain", vineDomain);
 	Tpl.setVar("title", "New item");
-	Tpl.setVar("date", date);
+	Tpl.setVar("date", new Date(date));
 	Tpl.setVar("search", search);
 	Tpl.setVar("asin", asin);
 	Tpl.setVar("description", title);

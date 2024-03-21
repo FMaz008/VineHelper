@@ -1,13 +1,5 @@
-.vh_visible_container {
-	margin: 5px;
-	background-color: var(--container-light);
-	border: 2px solid var(--border-light);
-	border-radius: 10px;
-	color: var(--text-light);
-	padding: 10px;
-	-webkit-box-shadow: -2px -2px 5px 2px rgba(119, 119, 119, 1);
-	-moz-box-shadow: -2px -2px 5px 2px rgba(119, 119, 119, 1);
-}
+
+
 
 .vh_flex_column {
 	display: grid;
@@ -15,11 +7,6 @@
 }
 .vh_flex_column div {
 	text-align: center;
-}
-.vh_vertical_separator {
-	width: 10px;
-	border-left: 1px solid gray;
-	margin-left: 10px;
 }
 
 #review-toolbar {

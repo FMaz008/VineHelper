@@ -11,7 +11,7 @@ html {
 
 body {
 	max-height: var(--myHeight);
-	background-color: var(--background-light, #f9f9f9);
+	background-color: #f9f9f9;
 	color: var(--text-light, #333);
 	width: 346px;
 	margin: 0;

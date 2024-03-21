@@ -46,12 +46,12 @@ div.vh-grid .vvp-item-tile .vvp-item-tile-content > * {
 
 #vvp-items-grid .bookmark-highlight {
 	border: 3px solid var(--border-light) !important;
-	background-color: var(--container-light);
+	background-color: var(--background-light);
 }
 
 #vvp-items-grid .keyword-highlight {
 	border: 3px solid var(--border-free) !important;
-	background-color: var(--container-light);
+	background-color: var(--background-light);
 }
 
 #vvp-items-grid a,

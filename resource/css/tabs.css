@@ -27,7 +27,7 @@
 
 #tabs > ul > li.active {
 	border: 1px solid var(--button-light, green);
-	background: linear-gradient(to bottom, var(--container-light, lightgreen), var(--container-light, lightgreen));
+	background: linear-gradient(to bottom, var(--background-light, lightgreen), var(--background-light, lightgreen));
 }
 
 #tabs > ul > li > a {
