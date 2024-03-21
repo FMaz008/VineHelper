@@ -94,20 +94,18 @@ function displayAccountData() {
 	div.innerHTML = "<h4>Vine Helper extra stats:</h4><strong>Customer Id:</strong> " + json.customerId;
 	container.appendChild(div);
 
-	date = new Date(json.voiceDetails.acceptanceDate);
-	div = document.createElement("div");
-	div.innerHTML = "<strong>Acceptance date:</strong> " + date;
-	container.appendChild(div);
+	const additionalStats = {
+		acceptanceDate: "Acceptance date",
+		statusEarnedDate: "Status earned date",
+		reevaluationDate: "Re-evaluation date",
+	};
 
-	date = new Date(json.voiceDetails.statusEarnedDate);
-	div = document.createElement("div");
-	div.innerHTML = "<strong>Status earned date:</strong> " + date;
-	container.appendChild(div);
-
-	date = new Date(json.voiceDetails.reevaluationDate);
-	div = document.createElement("div");
-	div.innerHTML = "<strong>Re-evaluation date:</strong> " + date;
-	container.appendChild(div);
+	for (const [key, value] of Object.entries(additionalStats)) {
+		date = new Date(json.voiceDetails[key]);
+		div = document.createElement("div");
+		div.innerHTML = `<strong>${value}:</strong> ${date}`;
+		container.appendChild(div);
+	}
 
 	div = document.createElement("div");
 	div.innerHTML = "<strong>Re-evaluation in progress:</strong> " + json.voiceDetails.isTierEvaluationInProgress;
@@ -170,41 +168,36 @@ function initSetPageTitle() {
 	let currentUrl = window.location.href;
 	regex = /^.+?amazon\..+\/vine\/.*[\?\&]search=(.*?)(?:[\&].*)?$/;
 	arrMatches = currentUrl.match(regex);
-	if (arrMatches != null) $("title").text("Vine - S: " + arrMatches[1]);
-	else if (vineQueue != null) {
+	if (arrMatches?.length) {
+		$("title").text("Vine - S: " + arrMatches[1]);
+	} else if (vineQueue != null) {
 		$("title").text("Vine - " + vineQueueAbbr);
 	}
 
 	//Add the category, is any, that is currently being browsed to the title of the page.
 	regex = /^.+?amazon\..+\/vine\/.*[\?\&]pn=(.*?)(?:[\&]cn=(.*?))?(?:[\&].*)?$/;
 	arrMatches = currentUrl.match(regex);
-	if (arrMatches != null && arrMatches.length == 3) {
-		let categoryText = "";
-		if (arrMatches[2] == undefined) {
-			categoryText = $("#vvp-browse-nodes-container > .parent-node > a.selectedNode").text();
-		} else {
-			categoryText = $("#vvp-browse-nodes-container > .child-node > a.selectedNode").text();
-		}
-
-		$("title").append(" - " + categoryText);
+	if (arrMatches?.length === 3) {
+		const selector = arrMatches[2] == undefined ? ".parent-node" : ".child-node";
+		$("title").append(" - " + $(`#vvp-browse-nodes-container > ${selector} > a.selectedNode`).text());
 	}
 }
 
 async function initCreateTabs() {
 	//Create the Discard grid
 	showRuntime("BOOT: Creating tabs system");
-	var tabSystem = appSettings.unavailableTab.active || appSettings.hiddenTab.active;
+	var tabSystem = appSettings.unavailableTab?.active || appSettings.hiddenTab?.active;
 	if (tabSystem) {
 		await createGridInterface();
 	}
 
 	gridRegular = new Grid($("#vvp-items-grid"));
 
-	if (appSettings.hiddenTab.active) {
+	if (appSettings.hiddenTab?.active) {
 		gridHidden = new Grid($("#tab-hidden"));
 	}
 
-	if (appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar) {
+	if (appSettings.unavailableTab?.active || appSettings.unavailableTab?.votingToolbar) {
 		gridUnavailable = new Grid($("#tab-unavailable"));
 	}
 	showRuntime("BOOT: Grid system completed");
@@ -634,15 +627,12 @@ window.addEventListener("message", async function (event) {
 	//If we got back a message after we found an ETV.
 	if (event.data.type && event.data.type == "etv") {
 		//Send the ETV info to the server
-
-		let tileASIN;
-		if (event.data.data.parent_asin === null) {
+		let tileASIN = event.data.data.parent_asin;
+		if (tileASIN === null) {
 			tileASIN = event.data.data.asin;
-		} else {
-			tileASIN = event.data.data.parent_asin;
 		}
 
-		let arrJSON = {
+		const arrJSON = {
 			api_version: 4,
 			action: "report_etv",
 			country: vineCountry,
@@ -653,15 +643,15 @@ window.addEventListener("message", async function (event) {
 			etv: event.data.data.etv,
 		};
 
-		let url = "https://vinehelper.ovh/vinehelper.php?data=" + JSON.stringify(arrJSON);
+		const url = "https://vinehelper.ovh/vinehelper.php?data=" + JSON.stringify(arrJSON);
 		await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
 
 		//Update the product tile ETV in the Toolbar
-		let tile = getTileByAsin(tileASIN);
+		const tile = getTileByAsin(tileASIN);
 		tile.getToolbar().setETV(event.data.data.etv, event.data.data.etv, true);
 
 		//Show a notification
-		let note = new ScreenNotification();
+		const note = new ScreenNotification();
 		note.title = "ETV data shared";
 		note.lifespan = 2;
 		note.content =
@@ -684,7 +674,7 @@ window.addEventListener("message", async function (event) {
 			event.data.data.error == "ITEM_NOT_IN_ENROLLMENT"
 		) {
 			//Report the order status to the server
-			let arrJSON = {
+			const arrJSON = {
 				api_version: 4,
 				action: "report_order",
 				country: vineCountry,
@@ -695,7 +685,7 @@ window.addEventListener("message", async function (event) {
 			};
 
 			//Form the full URL
-			let url = "https://www.vinehelper.ovh/vinehelper.php" + "?data=" + JSON.stringify(arrJSON);
+			const url = "https://www.vinehelper.ovh/vinehelper.php" + "?data=" + JSON.stringify(arrJSON);
 			await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
 
 			//Update the product tile ETV in the Toolbar
@@ -703,22 +693,21 @@ window.addEventListener("message", async function (event) {
 			tile.getToolbar().createOrderWidget(event.data.data.status == "success");
 		}
 
+		const note = new ScreenNotification();
 		if (event.data.data.status == "success") {
 			//Show a notification
-			let note = new ScreenNotification();
 			note.title = "Successful order detected!";
 			note.lifespan = 10;
 			note.content = "Detected item " + event.data.data.asin + " as orderable.";
-			await Notifications.pushNotification(note);
 		} else {
 			//Show a notification
-			let note = new ScreenNotification();
+
 			note.title = "Failed order detected.";
 			note.lifespan = 5;
 			note.content =
 				"Detected item " + event.data.data.asin + " as not orderable with error " + event.data.data.error + ".";
-			await Notifications.pushNotification(note);
 		}
+		await Notifications.pushNotification(note);
 	}
 
 	if (event.data.type && event.data.type == "error") {
@@ -790,11 +779,7 @@ window.addEventListener("keydown", async function (e) {
 		return;
 	}
 
-	if (!appSettings.keyBindings.active) {
-		return false;
-	}
-
-	if (e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) {
+	if (!appSettings.keyBindings?.active || e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) {
 		return false;
 	}
 
@@ -821,35 +806,31 @@ window.addEventListener("keydown", async function (e) {
 	}
 	*/
 
-	if (appSettings.hiddenTab.active) {
-		if (e.key == appSettings.keyBindings.hideAll) hideAllItems();
-		if (e.key == appSettings.keyBindings.showAll) showAllItems();
-	}
-	if (e.key == appSettings.keyBindings.nextPage) {
-		let link = document.querySelector("ul.a-pagination li:last-child a");
-		if (link != null) window.location.href = link.href;
-	}
-	if (e.key == appSettings.keyBindings.previousPage) {
-		let link = document.querySelector("ul.a-pagination li:first-child a");
-		if (link != null) window.location.href = link.href;
-	}
-	if (e.key == appSettings.keyBindings.debug) {
-		let content = await getRunTimeJSON();
-		regex = /\s*{<br\/>\n\s*"time": ([0-9]+),<br\/>\n\s*"event": "(.+?)"<br\/>\n\s*}(?:,<br\/>\n)?/gm;
-		const content2 = content.replace(regex, `<strong>$1ms:</strong> $2<br/>\n`);
-		let m = DialogMgr.newModal("debug");
-		m.title = DEBUGGER_TITLE;
-		m.content = content2;
-		m.show();
-	}
-	if (e.key == appSettings.keyBindings.RFYPage) {
-		window.location.href = "/vine/vine-items?queue=potluck";
-	}
-	if (e.key == appSettings.keyBindings.AFAPage) {
-		window.location.href = "/vine/vine-items?queue=last_chance";
-	}
-	if (e.key == appSettings.keyBindings.AIPage) {
-		window.location.href = "/vine/vine-items?queue=encore";
+	const keybindingMap = {
+		[appSettings.keyBindings?.hideAll]: hideAllItems,
+		[appSettings.keyBindings?.showAll]: showAllItems,
+		[appSettings.keyBindings?.nextPage]: () => document.querySelector("ul.a-pagination li:last-child a")?.click(),
+		[appSettings.keyBindings?.previousPage]: () =>
+			document.querySelector("ul.a-pagination li:first-child a")?.click(),
+		[appSettings.keyBindings?.debug]: async () => {
+			let content = await getRunTimeJSON();
+			regex = /\s*{<br\/>\n\s*"time": ([0-9]+),<br\/>\n\s*"event": "(.+?)"<br\/>\n\s*}(?:,<br\/>\n)?/gm;
+			const content2 = content.replace(regex, `<strong>$1ms:</strong> $2<br/>\n`);
+			let m = DialogMgr.newModal("debug");
+			m.title = DEBUGGER_TITLE;
+			m.content = content2;
+			m.show();
+		},
+		[appSettings.keyBindings?.RFYPage]: () => (window.location.href = "/vine/vine-items?queue=potluck"),
+		[appSettings.keyBindings?.AFAPage]: () => (window.location.href = "/vine/vine-items?queue=last_chance"),
+		[appSettings.keyBindings?.AIPage]: () => (window.location.href = "/vine/vine-items?queue=encore"),
+	};
+
+	if (appSettings.hiddenTab?.active) {
+		const cb = keybindingMap[e.key];
+		if (typeof cb === "function") {
+			cb();
+		}
 	}
 });
 
