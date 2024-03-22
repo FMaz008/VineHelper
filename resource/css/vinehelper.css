@@ -32,7 +32,6 @@ begin, migrating css into a common file, to allow uniform display and updates
 	--highlight-light: var(--darkgreen-100);
 	--highlight-dark: var(--lightgreen-100);
 
-
 	--vh-background-light: rgb(136, 213, 162);
 
 	--button-flat: var(--vh-background-light);
@@ -41,8 +40,8 @@ begin, migrating css into a common file, to allow uniform display and updates
 	--item-highlight-border-alert: var(--border-free);
 	--tab-active-background: var(--darkgreen-600);
 	--tab-background: var(--vh-background-light);
-	--item-link-light: black;
-	--item-link-dark: white;
+	--item-link-light: var(--black-800);
+	--item-link-dark: var(--white-200);
 }
 
 .vinehelper body {

@@ -51,6 +51,10 @@ async function init() {
 	}
 	showRuntime("BOOT: Config available. Begining init() function");
 
+	if (appSettings.thorvarium.darktheme) {
+		document.getElementsByTagName("body")[0].classList.add("darktheme");
+	}
+
 	//### Run the boot sequence
 	Notifications.init(); //Ensure the container for notification was created, in case it was not in preboot.
 	displayAccountData();
@@ -91,7 +95,7 @@ function displayAccountData() {
 	let div;
 
 	div = document.createElement("div");
-	div.innerHTML = "<h4>Vine Helper extra stats:</h4><strong>Customer Id:</strong> " + json.customerId;
+	div.innerHTML = "<h4>Vine Helper extra stats:</h4><strong>Customer Id:</strong> " + escapeHTML(json.customerId);
 	container.appendChild(div);
 
 	const additionalStats = {
@@ -103,12 +107,14 @@ function displayAccountData() {
 	for (const [key, value] of Object.entries(additionalStats)) {
 		date = new Date(json.voiceDetails[key]);
 		div = document.createElement("div");
+		value = escapeHTML(value);
 		div.innerHTML = `<strong>${value}:</strong> ${date}`;
 		container.appendChild(div);
 	}
 
 	div = document.createElement("div");
-	div.innerHTML = "<strong>Re-evaluation in progress:</strong> " + json.voiceDetails.isTierEvaluationInProgress;
+	div.innerHTML =
+		"<strong>Re-evaluation in progress:</strong> " + escapeHTML(json.voiceDetails.isTierEvaluationInProgress);
 	container.appendChild(div);
 }
 
@@ -849,4 +855,19 @@ function compareVersion(oldVer, newVer) {
 		if (arrOldVer[3] != arrNewVer[3]) return VERSION_REVISION_CHANGE;
 		else return VERSION_NO_CHANGE;
 	} else return VERSION_REVISION_CHANGE;
+}
+
+function escapeHTML(value) {
+	return value.replace(/[&<>"'`=/]/g, function (match) {
+		return {
+			"&": "&amp;",
+			"<": "&lt;",
+			">": "&gt;",
+			'"': "&quot;",
+			"'": "&#39;",
+			"/": "&#x2F;",
+			"`": "&#x60;",
+			"=": "&#x3D;",
+		}[match];
+	});
 }

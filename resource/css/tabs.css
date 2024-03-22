@@ -14,7 +14,7 @@
 #tabs > ul > li {
 	list-style: none;
 	float: left;
-	border: 2px solid var(--button-dark, aliceblue);
+	border: 2px solid var(--button-dark, white);
 	min-width: 30px;
 	text-align: center;
 	border-top-left-radius: 5px;
@@ -24,6 +24,10 @@
 	cursor: pointer;
 
 	background: var(--button-overlay), var(--tab-background);
+}
+
+body.darktheme #tabs > ul > li {
+	border: 2px solid var(--button-light, black);
 }
 
 #tabs > ul > li.active {

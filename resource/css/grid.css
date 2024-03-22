@@ -59,3 +59,18 @@ div.vh-grid .vvp-item-tile .vvp-item-tile-content > * {
 #vvp-items-grid a:active {
 	color: var(--item-link-light);
 }
+
+body.darktheme #vvp-items-grid a,
+body.darktheme #vvp-items-grid a:visited,
+body.darktheme #vvp-items-grid a:active {
+	color: var(--item-link-dark);
+}
+
+body.darktheme #vvp-items-grid div.bookmark-highlight a,
+body.darktheme #vvp-items-grid div.bookmark-highlight a:visited,
+body.darktheme #vvp-items-grid div.bookmark-highlight a:active,
+body.darktheme #vvp-items-grid div.keyword-highlight a,
+body.darktheme #vvp-items-grid div.keyword-highlight a:visited,
+body.darktheme #vvp-items-grid div.keyword-highlight a:active {
+	color: var(--item-link-light);
+}
