@@ -857,7 +857,8 @@ function compareVersion(oldVer, newVer) {
 }
 
 function escapeHTML(value) {
-	return value.replace(/[&<>"'`=/]/g, function (match) {
+	let val = String(value);
+	val = val.replace(/[&<>"'`=/]/g, function (match) {
 		return {
 			"&": "&amp;",
 			"<": "&lt;",
@@ -869,4 +870,5 @@ function escapeHTML(value) {
 			"=": "&#x3D;",
 		}[match];
 	});
+	return val;
 }
