@@ -516,10 +516,10 @@ async function serverProductsResponse(data) {
 			}
 
 			showRuntime("DRAW: Updating the toolbar");
-			tile.initiateTile();
 			tile.getToolbar().updateToolbar();
 			showRuntime("DRAW: Done updating the toolbar");
 		}
+		tile.initiateTile();
 	});
 	updateTileCounts();
 	showRuntime("Done updating products");
