@@ -5,12 +5,7 @@
 	"version": "2.4.3",
 
 	"permissions": ["storage"],
-	"browser_specific_settings": {
-		"gecko": {
-			"id": "{5951bf9a-25ae-4043-9fa2-54dc0ac1ce70}",
-			"strict_min_version": "109.0"
-		}
-	},
+	
 
 	"icons": {
 		"32": "resource/image/icon-32.png",
@@ -49,8 +44,7 @@
 		}
 	],
 	"background": {
-		"service_worker": "scripts/service_worker.js",
-		"scripts": ["scripts/service_worker.js"]
+		"service_worker": "scripts/service_worker.js"
 	},
 
 	"content_scripts": [

@@ -49,7 +49,6 @@
 		}
 	],
 	"background": {
-		"service_worker": "scripts/service_worker.js",
 		"scripts": ["scripts/service_worker.js"]
 	},
 
