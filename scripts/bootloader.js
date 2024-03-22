@@ -107,7 +107,6 @@ function displayAccountData() {
 	for (const [key, value] of Object.entries(additionalStats)) {
 		date = new Date(json.voiceDetails[key]);
 		div = document.createElement("div");
-		value = escapeHTML(value);
 		div.innerHTML = `<strong>${value}:</strong> ${date}`;
 		container.appendChild(div);
 	}
