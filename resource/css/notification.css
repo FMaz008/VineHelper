@@ -14,7 +14,7 @@
 	color: #0f1111;
 }
 
-.vh-notification-box {
+#vh-notifications-container .vh-notification-box {
 	width: 100%;
 	background-color: #fff;
 	border: 1px solid #000;
@@ -23,17 +23,17 @@
 	position: relative;
 }
 
-.vh-notification-toolbar {
+#vh-notifications-container .vh-notification-toolbar {
 	border: 1px solid #444;
 	background-color: #eee;
 	padding: 3px;
 	margin: 3px;
 }
-.vh-notification-content {
+#vh-notifications-container .vh-notification-content {
 	padding: 5px;
 }
 
-.vh-notification-close {
+#vh-notifications-container .vh-notification-close {
 	float: right;
 }
 
