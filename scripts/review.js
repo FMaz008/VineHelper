@@ -2,17 +2,6 @@ if (typeof browser === "undefined") {
 	var browser = chrome;
 }
 
-var cssURL = browser.runtime.getURL("resource/css/vinehelper.css");
-fetch(cssURL)
-	.then((response) => response.text())
-	.then((cssText) => {
-		const styleElement = document.createElement("style");
-		styleElement.type = "text/css";
-		styleElement.appendChild(document.createTextNode(cssText));
-		document.head.appendChild(styleElement);
-	})
-	.catch((error) => console.log(error));
-
 var appSettings = {};
 var arrReview = [];
 var arrTemplate = [];
@@ -49,7 +38,11 @@ async function loadSettings() {
 
 	init_review(); //We want to wait for the settings to be loaded before continuing
 }
-loadSettings();
+
+//Wait for the DOM+remote content to be loaded to begin the script
+window.addEventListener("load", function () {
+	loadSettings();
+});
 
 function init_review() {
 	let currentUrl = window.location.href;
@@ -69,9 +62,26 @@ async function boot_review() {
 	Tpl.setVar("asin", asin);
 	let content = Tpl.render(prom);
 
-	arrZone = document.querySelectorAll("form.ryp__review-form__form .ryp__card-frame");
-	container = arrZone[arrZone.length - 1];
-	container.insertAdjacentHTML("afterend", content);
+	//Firefox seems to execute this script before the content (presumably loaded from a fetch request)
+	//is available. Waiting 500ms seems to give time to the elements to exist.
+
+	let attempts = 0;
+	while (attempts >= 0) {
+		arrZone = document.querySelectorAll("form.ryp__review-form__form .ryp__card-frame");
+		container = arrZone[arrZone.length - 1];
+
+		if (container !== undefined) {
+			attempts = -1;
+			container.insertAdjacentHTML("afterend", content);
+			break;
+		} else if (attempts > 20) {
+			break; //Something is wrong, don't loop infinitely.
+		} else {
+			//Wait 100ms and try again
+			await new Promise((r) => setTimeout(r, 100));
+			attempts++;
+		}
+	}
 
 	//Add the template titles in the select box
 	let selectBox = document.getElementById("template_name");
