@@ -54,15 +54,15 @@ div.vh-grid .vvp-item-tile .vvp-item-tile-content > * {
 	background-color: var(--item-highlight-background);
 }
 
-#vvp-items-grid-container a,
-#vvp-items-grid-container a:visited,
-#vvp-items-grid-container a:active {
+#vvp-items-grid-container .vvp-item-tile a,
+#vvp-items-grid-container .vvp-item-tile a:visited,
+#vvp-items-grid-container .vvp-item-tile a:active {
 	color: var(--item-link-light);
 }
 
-body.darktheme #vvp-items-grid-container a,
-body.darktheme #vvp-items-grid-container a:visited,
-body.darktheme #vvp-items-grid-container a:active {
+body.darktheme #vvp-items-grid-container .vvp-item-tile a,
+body.darktheme #vvp-items-grid-container .vvp-item-tile a:visited,
+body.darktheme #vvp-items-grid-container .vvp-item-tile a:active {
 	color: var(--item-link-dark);
 }
 
