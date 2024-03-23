@@ -156,9 +156,9 @@ async function hideAllItems() {
 	}
 	HiddenList.saveList();
 
-	// Scoll to the RFY/AFA/AI header 
-	var scrollTarget = document.getElementById('vvp-items-button-container');
-	scrollTarget.scrollIntoView({ behavior: 'smooth' });
+	// Scoll to the RFY/AFA/AI header
+	var scrollTarget = document.getElementById("vvp-items-button-container");
+	scrollTarget.scrollIntoView({ behavior: "smooth" });
 }
 
 async function showAllItems() {
