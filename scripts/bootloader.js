@@ -731,11 +731,13 @@ browser.runtime.onMessage.addListener(async (data, sender, sendResponse) => {
 	if (data.type == "newItemCheck") {
 		sendResponse({ success: true });
 
-		//Display a notification that we have checked for items.
-		let note = new ScreenNotification();
-		note.template = "view/notification_loading.html";
-		note.lifespan = 3;
-		await Notifications.pushNotification(note);
+		if (appSettings.general.displayNewItemNotifications) {
+			//Display a notification that we have checked for items.
+			let note = new ScreenNotification();
+			note.template = "view/notification_loading.html";
+			note.lifespan = 3;
+			await Notifications.pushNotification(note);
+		}
 	}
 
 	if (data.type == "newItem") {
