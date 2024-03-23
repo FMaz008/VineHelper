@@ -1,6 +1,6 @@
 # VineHelper
 
-Browser Extension to help identify import fees on items from Vine Canada.
+Browser Extension to improve the experience of Amazon Vine members.
 
 ## Official Releases:
 
@@ -40,4 +40,4 @@ yarn
 3. then click "Load Unpacked".
 4. select the folder with the unzipped files in it
 
-**Note:** There will be an error about some lines in the _manifest.json_ file, you can safely ignore them as they are required for Mozilla. Or you can delete them. Up to you, won't change anything.
+**Note:** If testing locally with the default manifest.json file, your browser will likely give you errors, as the test manifest.json file is a mix of the settings for Chrome and Firefox. The extension should work fine despite these errors. Released versions use the proper manifest file for each browser.
