@@ -155,6 +155,10 @@ async function hideAllItems() {
 		await tile.hideTile(false, false); //Do not update local storage
 	}
 	HiddenList.saveList();
+
+	// Scoll to the RFY/AFA/AI header 
+	var scrollTarget = document.getElementById('vvp-items-button-container');
+	scrollTarget.scrollIntoView({ behavior: 'smooth' });
 }
 
 async function showAllItems() {
