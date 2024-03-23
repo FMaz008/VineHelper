@@ -182,8 +182,22 @@ function Tile(obj, gridInstance) {
 	};
 
 	this.initiateTile = function () {
-		//Match with hide keywords
-		if (appSettings.general.hideKeywords.length > 0) {
+		//Highlight the tile border if the title match highlight keywords
+		let highligthed = false;
+		if (appSettings.general.highlightKeywords.length > 0) {
+			match = appSettings.general.highlightKeywords.find((word) => {
+				const regex = new RegExp(`\\b${word}\\b`, "i");
+				return word && regex.test(this.getTitle());
+			});
+			if (match != undefined) {
+				highligthed = true;
+				showRuntime("TILE: The item match the keyword '" + match + "', highlight it");
+				$(pTile).addClass("keyword-highlight");
+			}
+		}
+
+		//Match with hide keywords. Only hide if not highlighed.
+		if (!highligthed && appSettings.general.hideKeywords.length > 0) {
 			match = appSettings.general.hideKeywords.find((word) => {
 				const regex = new RegExp(`\\b${word}\\b`, "i");
 				return word && regex.test(this.getTitle());
@@ -192,18 +206,6 @@ function Tile(obj, gridInstance) {
 				showRuntime("TILE: The item match the keyword '" + match + "', hide it");
 				this.hideTile(false, false); //Do not save
 				document.getElementById("vh-hide-link-" + this.getAsin()).style.display = "none";
-			}
-		}
-
-		//Highlight the tile border if the title match highlight keywords
-		if (appSettings.general.highlightKeywords.length > 0) {
-			match = appSettings.general.highlightKeywords.find((word) => {
-				const regex = new RegExp(`\\b${word}\\b`, "i");
-				return word && regex.test(this.getTitle());
-			});
-			if (match != undefined) {
-				showRuntime("TILE: The item match the keyword '" + match + "', highlight it");
-				$(pTile).addClass("keyword-highlight");
 			}
 		}
 	};

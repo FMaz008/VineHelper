@@ -124,6 +124,11 @@ label .tips {
 	flex-direction: column;
 }
 
+.vh-scroll-adjacent-container {
+	margin-right: 20px;
+	text-align: center;
+}
+
 .expand {
 	flex-grow: 1;
 	margin-top: 0.5rem;
