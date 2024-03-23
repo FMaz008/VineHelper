@@ -57,6 +57,36 @@ async function loadSettings() {
 			}
 		});
 	});
+
+	//Calculate the storage size
+	document.getElementById("storage-used").innerText =
+		"Currently using: " + bytesToSize(await getStorageKeySizeinBytes("reviews"));
+}
+
+function bytesToSize(bytes, decimals = 2) {
+	if (!Number(bytes)) {
+		return "0 Bytes";
+	}
+
+	const kbToBytes = 1024;
+	const dm = decimals < 0 ? 0 : decimals;
+	const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+
+	const index = Math.floor(Math.log(bytes) / Math.log(kbToBytes));
+
+	return `${parseFloat((bytes / Math.pow(kbToBytes, index)).toFixed(dm))} ${sizes[index]}`;
+}
+function getStorageKeySizeinBytes(key) {
+	return new Promise((resolve, reject) => {
+		browser.storage.local.get(key, function (items) {
+			if (browser.runtime.lastError) {
+				reject(new Error(browser.runtime.lastError.message));
+			} else {
+				const storageSize = JSON.stringify(items[key]).length;
+				resolve(storageSize);
+			}
+		});
+	});
 }
 
 window.addEventListener("DOMContentLoaded", function () {

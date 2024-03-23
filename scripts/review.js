@@ -132,6 +132,11 @@ async function boot_review() {
 				title: JSON.stringify(document.getElementById("scarface-review-title-label").value),
 				content: JSON.stringify(document.getElementById("scarface-review-text-card-title").value),
 			});
+
+			//Limit the saved array to 100. Delete older ones.
+			if (arrReview.length > 100) {
+				arrReview.splice(0, arrReview.length - 100);
+			}
 		}
 
 		await browser.storage.local.set({ reviews: arrReview });
