@@ -1,0 +1,17 @@
+{
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2021": true
+  },
+	"extends": ["eslint:recommended", "prettier"],
+  "parserOptions": {
+    "ecmaVersion": 2021
+  },
+  "rules": {
+    "no-console": "warn",
+    "no-undef": "warn",
+    "no-unsafe-finally": "warn",
+    "no-unused-vars": "warn"
+  }
+}
