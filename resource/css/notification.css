@@ -31,6 +31,8 @@
 }
 #vh-notifications-container .vh-notification-content {
 	padding: 5px;
+	height: 90px;
+	overflow-y: scroll;
 }
 
 #vh-notifications-container .vh-notification-close {
