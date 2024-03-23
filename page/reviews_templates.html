@@ -1,43 +1,42 @@
-<html class="vinehelper">
+<html class="theme-default">
 	<head>
 		<script src="reviews_templates.js"></script>
+
 		<link rel="stylesheet" href="/resource/css/vinehelper.css" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	</head>
 
-	<body id="reviews_templates">
-		<main id="template_management">
+	<body id="reviews_templates" class="vh-body">
+		<main id="template_management" class="vh-main">
 			<h1>Manage Review Templates</h1>
-
 
 			<div class="vh-visible-container" style="width: 300px">
 				Your review templates are locally stored. Make sure you are deleting old ones as to keep their size to a minimum.
 				<span id="storage-used" style="font-weight: bold"></span>
 			</div>
-
-
-			<section id="template_form">
-				<h3 id="editTitle">New template</h3>
+			
+			<section id="template_form" class="vh-section">
+				<h3 id="form_action">New template</h3>
 				<form id="template_input">
 					<input type="hidden" id="template_id" value="new" />
-					<label for="template_title">Title:</label>
-					<input type="text" id="template_title" value="" />
+					<label for="template_title" class="vh-label">Title:</label>
+					<input type="text" id="template_title" class="vh-inputtext" value="" />
 					<br />
 					<br />
-					<label for="template_content">Content:</label>
-					<textarea type="text" id="template_content"></textarea>
+					<label for="template_content" class="vh-label">Content:</label>
+					<textarea type="text" class="vh-textarea" id="template_content"></textarea>
 					<br />
 					<br />
-					<button id="save">Save</button>
-					<button id="reset" type="reset">Cancel</button>
+					<button class="vh-button" id="save">Save</button>
+					<button class="vh-button" id="reset" type="reset">Reset</button>
 				</form>
 			</section>
 		</main>
-		<table id="templates_list">
-			<tbody>
-				<tr>
-					<td>Action</td>
-					<td>Title</td>
+		<table class="vh-table" id="templates_list">
+			<tbody class="vh-tbody">
+				<tr class="vh-tr">
+					<td class="vh-td">Action</td>
+					<td class="vh-td">Title</td>
 				</tr>
 			</tbody>
 		</table>

@@ -86,7 +86,7 @@ function displayAccountData() {
 
 	let container = document.createElement("div");
 	container.classList.add("a-column");
-	container.classList.add("vh-visible-container");
+	container.classList.add("vh-container");
 	parentContainer.append(container);
 
 	let json = JSON.parse(document.getElementsByClassName("vvp-body")[0].childNodes[0].innerHTML);

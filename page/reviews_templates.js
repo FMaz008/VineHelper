@@ -1,97 +1,172 @@
 if (typeof browser === "undefined") {
 	var browser = chrome;
 }
+var scriptName = "reviews_templates.js";
 
-var arrTemplate = [];
+function logError(errorArray) {
+	const [functionName, scriptName, error] = errorArray;
+	console.error(`${scriptName}-${functionName} generated the following error: ${error.message}`);
+} // testing common console error, this could just be a debug message, but if debug or the script files the console won't
+
+var reviewTemplates = [];
 
 async function loadSettings() {
-	var data;
-	//If no template exist already, create an empty array
-	data = await browser.storage.local.get("reviews_templates");
-	if (data == null || Object.keys(data).length === 0) {
-		await browser.storage.local.set({ reviews_templates: [] });
-	} else {
-		Object.assign(arrTemplate, data.reviews_templates);
-	}
-
-	console.log(arrTemplate);
-
-	if (arrTemplate.length > 0) {
-		arrTemplate.forEach((tpl) => {
-			const tableBody = document.getElementById("templates_list").querySelector("tbody");
-			const row = tableBody.insertRow();
-			const actionCell = row.insertCell();
-			const titleCell = row.insertCell();
-
-			actionCell.innerHTML = `
-			<button id="${tpl.id}" class='edit vh'>Edit</button>
-			<button id="${tpl.id}" class='delete vh'>Delete</button>
-			`;
-			try {
-				titleCell.textContent = `${JSON.parse(tpl.title)}`;
-			} catch (e) {}
-		});
-	}
-
-	var element;
-
-	//Add listener for new
-
-	element = document.getElementById("reset");
-	element.addEventListener("click", function () {
-		document.getElementById("editTitle").innerHTML = "New template";
-		document.getElementById("template_id").value = "new";
-	});
-
-	//Add listener for edit
-	const editElements = document.querySelectorAll("button.edit");
-	editElements.forEach((element) => {
-		element.addEventListener("click", async function () {
-			let template = await getTemplate(element.id);
-			console.log(template);
-			document.getElementById("editTitle").innerHTML = "Edit template";
-			document.getElementById("template_id").value = element.id;
-			try {
-				document.getElementById("template_title").value = JSON.parse(template.title);
-				document.getElementById("template_content").value = JSON.parse(template.content);
-			} catch (e) {}
-		});
-	});
-
-	//Add listener for delete
-	const deleteElements = document.querySelectorAll("button.delete");
-	deleteElements.forEach((element) => {
-		element.addEventListener("click", function () {
-			if (confirm("Delete this template?")) {
-				deleteTemplate(element.id);
-			}
-		});
-	});
-
-	//Add listener for save
-	element = document.getElementById("save");
-	element.addEventListener("click", function () {
-		if (
-			document.getElementById("template_id").value == "new" &&
-			document.getElementById("template_title").value !== "" &&
-			document.getElementById("template_content").value !== ""
-		) {
-			createNewTemplate(
-				JSON.stringify(document.getElementById("template_title").value),
-				JSON.stringify(document.getElementById("template_content").value)
-			);
-		} else {
-			editNewTemplate(
-				document.getElementById("template_id").value,
-				JSON.stringify(document.getElementById("template_title").value),
-				JSON.stringify(document.getElementById("template_content").value)
-			);
+	try {
+		let templateSet = await browser.storage.local.get("reviews_templates");
+		let reviews_templates = templateSet?.reviews_templates ?? []; //Nullish coalescing & Optional chaining prevents undefined without extra code
+		if (Object.keys(reviews_templates).length === 0) {
+			await browser.storage.local.set({ reviews_templates: [] });
 		}
-	});
-
+		reviewTemplates = reviews_templates;
+		console.log(reviewTemplates);
+		if (reviewTemplates.length) {
+			loadTemplates();
+		}
+	} catch (e) {
+		logError([scriptName, "loadSettings", e.message]);
+	}
 	//Calculate the storage size
 	document.getElementById("storage-used").innerText =
 		"Currently using: " + bytesToSize(await getStorageKeySizeinBytes("reviews_templates"));
+		
+}
+
+function loadTemplates() {
+	try {
+		const tableBody = document.getElementById("templates_list").querySelector("tbody");
+
+		if (reviewTemplates.length > 0) {
+			reviewTemplates.forEach((template) => {
+				let { id, title } = template;
+
+				const row = tableBody.insertRow();
+				const actionCell = row.insertCell();
+				const titleCell = row.insertCell();
+				row.id = id;
+
+				actionCell.innerHTML = `
+			<button id="edit" data-id="${id}" class='vh-button'>Edit</button>
+			<button id="delete" data-id="${id}" class='vh-button'>Delete</button>
+			`;
+				titleCell.textContent = `${JSON.parse(title)}`;
+			});
+		}
+	} catch (e) {
+		logError(["loadSettings", scriptName, e]);
+	}
+}
+
+function getTemplate(id) {
+	try {
+		return reviewTemplates.find((template) => template.id === id);
+	} catch (e) {
+		logError(["getTemplate", scriptName, e.message]);
+	}
+}
+
+async function handleSaveClick() {
+	try {
+		const title = document.getElementById("template_title").value.trim();
+		const content = document.getElementById("template_content").value.trim();
+		const templateId = document.getElementById("template_id").value;
+		if (!title || !content) return;
+
+		if (templateId !== "new") {
+			updateTemplate(templateId, title, content);
+		} else {
+			newTemplate(title, content);
+		}
+	} catch (e) {
+		logError(["handleSaveClick", scriptName, e.message]);
+	}
+}
+
+async function handleResetClick() {
+	try {
+		document.getElementById("form_action").innerHTML = "New template";
+		document.getElementById("template_id").value = "new";
+	} catch (e) {
+		logError(["handleResetClick", scriptName, e.message]);
+	}
+}
+
+async function handleEditClick(id) {
+	try {
+		const template = getTemplate(id);
+		if (template) {
+			let { content, title, id } = template;
+			document.getElementById("form_action").innerHTML = "Edit template";
+			document.getElementById("template_id").value = id;
+			document.getElementById("template_title").value = JSON.parse(title);
+			document.getElementById("template_content").value = JSON.parse(content);
+		}
+	} catch (e) {
+		logError(["handleEditClick", scriptName, e.message]);
+	}
+}
+
+async function handleDeleteClick(id) {
+	try {
+		if (confirm("Delete this template?")) {
+			await deleteTemplate(id);
+		}
+	} catch (e) {
+		logError(["handleDeleteClick", scriptName, e.message]);
+	}
+}
+
+const events = {
+	edit: handleEditClick,
+	delete: handleDeleteClick,
+	save: handleSaveClick,
+	reset: handleResetClick,
+};
+
+document.addEventListener("click", (event) => {
+	const { target } = event;
+	if (target.tagName !== "BUTTON") return;
+	const eventHandler = events[target.id];
+	if (eventHandler) {
+		eventHandler(target.dataset.id);
+	}
+});
+
+async function deleteTemplate(id) {
+	console.log(id);
+
+	try {
+		const index = reviewTemplates.findIndex((template) => template.id === id);
+		const filteredTemplates = reviewTemplates.filter((template, i) => i !== index);
+		await browser.storage.local.set({ reviews_templates: filteredTemplates });
+		location.reload();
+	} catch (e) {
+		logError(["deleteTemplate", scriptName, e.message]);
+	}
+}
+
+async function newTemplate(title, content) {
+	try {
+		reviewTemplates.push({
+			id: crypto.randomUUID(),
+			title: JSON.stringify(title),
+			content: JSON.stringify(content),
+		});
+		await browser.storage.local.set({ reviews_templates: reviewTemplates });
+		location.reload();
+	} catch (e) {
+		logError(["createNewTemplate", scriptName, e.message]);
+	}
+}
+
+async function updateTemplate(id, title, content) {
+	try {
+		const index = reviewTemplates.findIndex((template) => template.id === id);
+		reviewTemplates[index] = { id: id, title: JSON.stringify(title), content: JSON.stringify(content) };
+		await browser.storage.local.set({ reviews_templates: reviewTemplates });
+		location.reload();
+	} catch (e) {
+		logError(["editNewTemplate", scriptName, e.message]);
+	}
 }
 
 function bytesToSize(bytes, decimals = 2) {
@@ -120,45 +195,7 @@ function getStorageKeySizeinBytes(key) {
 	});
 }
 
+
 window.addEventListener("DOMContentLoaded", function () {
 	loadSettings();
 });
-
-async function getTemplate(id) {
-	for (let i = 0; i < arrTemplate.length; i++) {
-		if (arrTemplate[i].id == id) {
-			return arrTemplate[i];
-		}
-	}
-	return null;
-}
-
-async function deleteTemplate(id) {
-	for (let i = 0; i < arrTemplate.length; i++) {
-		if (arrTemplate[i].id == id) {
-			arrTemplate.splice(i, 1);
-			await browser.storage.local.set({ reviews_templates: arrTemplate });
-			location.reload();
-			return;
-		}
-	}
-}
-
-async function createNewTemplate(title, content) {
-	let id = crypto.randomUUID();
-	arrTemplate.push({ id: id, title: title, content: content });
-	await browser.storage.local.set({ reviews_templates: arrTemplate });
-
-	location.reload();
-}
-
-async function editNewTemplate(id, title, content) {
-	for (let i = 0; i < arrTemplate.length; i++) {
-		if (arrTemplate[i].id == id) {
-			arrTemplate[i] = { id: id, title: title, content: content };
-			await browser.storage.local.set({ reviews_templates: arrTemplate });
-			location.reload();
-			return;
-		}
-	}
-}

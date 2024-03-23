@@ -55,7 +55,6 @@
 	"content_scripts": [
 		{
 			"css": [
-				"resource/css/tabs.css",
 				"resource/css/grid.css",
 				"resource/css/icon.css",
 				"resource/css/main.css",

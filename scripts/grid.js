@@ -86,6 +86,7 @@ async function createGridInterface() {
 
 	//Implement the tab system.
 	let tabs = $("<div>").attr("id", "vh-tabs").insertBefore("#vvp-items-grid");
+	tabs.addClass('theme-default');
 	$("#vvp-items-grid").detach().appendTo(tabs);
 	$("#vvp-items-grid").addClass("tab-grid");
 
