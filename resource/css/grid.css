@@ -54,23 +54,23 @@ div.vh-grid .vvp-item-tile .vvp-item-tile-content > * {
 	background-color: var(--item-highlight-background);
 }
 
-#vvp-items-grid a,
-#vvp-items-grid a:visited,
-#vvp-items-grid a:active {
+#vvp-items-grid-container a,
+#vvp-items-grid-container a:visited,
+#vvp-items-grid-container a:active {
 	color: var(--item-link-light);
 }
 
-body.darktheme #vvp-items-grid a,
-body.darktheme #vvp-items-grid a:visited,
-body.darktheme #vvp-items-grid a:active {
+body.darktheme #vvp-items-grid-container a,
+body.darktheme #vvp-items-grid-container a:visited,
+body.darktheme #vvp-items-grid-container a:active {
 	color: var(--item-link-dark);
 }
 
-body.darktheme #vvp-items-grid div.bookmark-highlight a,
-body.darktheme #vvp-items-grid div.bookmark-highlight a:visited,
-body.darktheme #vvp-items-grid div.bookmark-highlight a:active,
-body.darktheme #vvp-items-grid div.keyword-highlight a,
-body.darktheme #vvp-items-grid div.keyword-highlight a:visited,
-body.darktheme #vvp-items-grid div.keyword-highlight a:active {
+body.darktheme #vvp-items-grid-container div.bookmark-highlight a,
+body.darktheme #vvp-items-grid-container div.bookmark-highlight a:visited,
+body.darktheme #vvp-items-grid-container div.bookmark-highlight a:active,
+body.darktheme #vvp-items-grid-container div.keyword-highlight a,
+body.darktheme #vvp-items-grid-container div.keyword-highlight a:visited,
+body.darktheme #vvp-items-grid-container div.keyword-highlight a:active {
 	color: var(--item-link-light);
 }
