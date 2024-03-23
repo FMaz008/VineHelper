@@ -6,45 +6,84 @@ begin, migrating css into a common file, to allow uniform display and updates
 	--white-200: hsla(0, 0%, 95%, 1);
 	--black-800: hsla(0, 0%, 18%, 1);
 	--black-900: hsla(0, 0%, 0%, 1);
-	--lightgreen-100: hsla(165, 100%, 65%, 1);
-	--lightgreen-300: hsla(165, 68%, 54%, 1);
-	--lightgreen-600: hsla(165, 64%, 43%, 1);
-	--darkgreen-100: hsla(165, 68%, 37%, 1);
-	--darkgreen-300: hsla(165, 75%, 32%, 1);
-	--darkgreen-600: hsla(165, 100%, 20%, 1);
+	--lightgreen-100: #90EE90;
+	--lightgreen-300: #5FBD63;
+	--lightgreen-600: #2C8E38;
+	--darkgreen-100: #167822;
+	--darkgreen-300: #00610C;
+	--darkgreen-600: #003600;
+	--lightred-100: hsla(10, 100%, 65%, 1);
+	--lightred-300: hsla(10, 68%, 54%, 1);
+	--lightred-600: hsla(10, 64%, 43%, 1);
+	--darkred-100: hsla(10, 68%, 37%, 1);
+	--darkred-300: hsla(10, 75%, 32%, 1);
+	--darkred-600: hsla(10, 100%, 20%, 1);
+	--alert: #ffd700;
+
+}
+
+.theme-default {
+	--highlight-light: var(--darkgreen-100);
+	--highlight-dark: var(--lightgreen-100);
 	--background-light: var(--white-200);
 	--background-dark: var(--black-800);
 	--text-light: var(--black-800);
 	--text-dark: var(--white-200);
+	--text-black: #000;
 	--link-light: var(--darkgreen-300);
 	--link-dark: var(--lightgreen-300);
 	--border-light: var(--darkgreen-600);
 	--border-dark: var(--lightgreen-600);
-
 	--button: var(--darkgreen-300);
-	--button-overlay: radial-gradient(
-		circle farthest-side at 10% 20%,
-		rgba(255, 255, 255, 0.3) 0%,
-		rgba(255, 255, 255, 0) 80%
-	);
-	--button-text: var(--text-dark);
-	--border-free: #ffd700;
-	--highlight-light: var(--darkgreen-100);
-	--highlight-dark: var(--lightgreen-100);
+	--button-overlay: radial-gradient(circle farthest-side at 10% 20%,
+			rgba(255, 255, 255, 0.3) 0%,
+			rgba(255, 255, 255, 0) 80%);
+	--button-text: var(--text-black);
+	--bookmark: var(--lightgreen-100);
+	--item-highlight-background: var(--lightgreen-100);
+	--item-highlight-border: var(--lightgreen-300);
+	--item-highlight-alert: var(--alert);
+	--tab-background-active: var(--darkgreen-600);
+	--tab-background: var(--lightgreen-100);
+	--item-link-light: black;
+	--item-link-dark: white;
+	--tab-border: var(--lightgreen-300);
+	--tab-border-active: var(--darkgreen-300);
+	--checkbox-accent: var(--lightgreen-600);
 
-	--vh-background-light: rgb(136, 213, 162);
-
-	--button-flat: var(--vh-background-light);
-	--item-highlight-background: var(--vh-background-light);
-	--item-highlight-border: var(--vh-background-light);
-	--item-highlight-border-alert: var(--border-free);
-	--tab-active-background: var(--darkgreen-600);
-	--tab-background: var(--vh-background-light);
-	--item-link-light: var(--black-800);
-	--item-link-dark: var(--white-200);
 }
 
-.vinehelper body {
+.theme-red {
+	/*experimental, not implemented yet*/
+	--highlight-light: var(--darkred-100);
+	--highlight-dark: var(--lightred-100);
+	--background-light: var(--white-200);
+	--background-dark: var(--black-800);
+	--text-light: var(--black-800);
+	--text-dark: var(--white-200);
+	--link-light: var(--darkred-300);
+	--link-dark: var(--lightred-300);
+	--border-light: var(--darkred-600);
+	--border-dark: var(--lightred-600);
+	--button: var(--darkgred-300);
+	--button-overlay: radial-gradient(circle farthest-side at 10% 20%,
+			rgba(255, 255, 255, 0.3) 0%,
+			rgba(255, 255, 255, 0) 80%);
+	--button-text: var(--text-black);
+	--bookmark: var(--lightred-100);
+	--item-highlight-background: var(--lightred-100);
+	--item-highlight-border: var(--lightred-300);
+	--item-highlight-alert: var(--alert);
+	--tab-background-active: var(--darkred-600);
+	--tab-background: var(--lightred-100);
+	--item-link-light: black;
+	--item-link-dark: white;
+	--tab-border: var(--lightred-300);
+	--tab-border-active: var(--darkred-300);
+	--checkbox-accent: var(--lightred-600);
+}
+
+.vh-body {
 	color: var(--text-light);
 	font-family: Arial, sans-serif;
 	margin: 20px;
@@ -55,35 +94,40 @@ begin, migrating css into a common file, to allow uniform display and updates
 	background-size: 150px 150px;
 }
 
-.vinehelper table {
+.vh-table {
 	border-collapse: collapse;
 	margin: 20px;
 }
 
-.vinehelper main {
+.vh-main {
 	display: flex;
 	flex-direction: column;
 }
 
-.vinehelper section {
+.vh-section {
 	display: flex;
 	flex-direction: column;
 	gap: 10px;
 }
 
-.vinehelper textarea {
+.vh-textarea {
 	min-height: 130px;
 	resize: vertical;
 }
 
-.vinehelper label {
+.vh-label {
 	display: block;
 	margin-bottom: 5px;
 	align-self: center;
 }
 
-.vinehelper input[type="text"],
-.vinehelper textarea {
+.vh-a {
+	font-size: 14px;
+	margin-right: 5px;
+}
+
+.vh-inputtext,
+.vh-textarea {
 	min-width: 300px;
 	max-width: 800px;
 	width: 100%;
@@ -96,14 +140,18 @@ begin, migrating css into a common file, to allow uniform display and updates
 	box-shadow: 1px 1px 3px var(--highlight-light);
 }
 
-.vinehelper input[type="text"]:focus,
-.vinehelper textarea:focus {
+.vh-inputtext:focus,
+.vh-textarea:focus {
 	outline: 2px solid var(--highlight-light);
 	border: 1px solid var(--highlight-light);
 }
 
-.vinehelper td,
-.vinehelper th {
+
+
+.vh-tbody th,
+.vh-tbody td,
+.vh-td,
+.vh-th {
 	border: 1px solid;
 	border-color: var(--border-light, #dedede);
 	padding: 5px;
@@ -111,33 +159,38 @@ begin, migrating css into a common file, to allow uniform display and updates
 	color: var(--text-light);
 }
 
-button.vinehelper,
-.vinehelper button {
+
+
+.vh-button {
 	text-decoration: none;
 	font-weight: 500;
 	background-color: var(--button);
 	border: none;
-	color: var(--button-text);
+	color: var(--text-dark);
 	padding: 10px 15px;
 	border-radius: 5px;
 	background-image: var(--button-overlay);
 	box-shadow: 1px 1px 3px var(--link-light);
 }
 
-.vertical-divider {
+.vh-button:hover {
+	background-color: var(--highlight-light);
+}
+
+.vh-button:active {
+	transform: translateY(2px);
+}
+
+.vh-divider {
 	height: 1em;
 	margin: 5px 0;
 	border: 0;
 	border-left: 1px solid var(--divider-color, lightgray);
 }
 
-label.vinehelper,
-a.vinehelper {
-	font-size: 14px;
-	margin-right: 5px;
-}
 
-select.vinehelper {
+
+.vh-select {
 	padding: 8px 12px;
 	font-size: 14px;
 	margin: 0 5px;
@@ -146,41 +199,44 @@ select.vinehelper {
 	max-width: 300px;
 }
 
-.vh-visible-container {
+.vh-container {
 	margin: 10px;
 	padding: 5px;
 	border: 3px solid var(--border-light);
 	border-radius: 5px;
-	background-color: var(--background-light);
+	background-color: var(--darkgreen-300);
 	color: var(--text-light);
 	-webkit-box-shadow: -2px -2px 5px 2px rgba(119, 119, 119, 1);
 	-moz-box-shadow: -2px -2px 5px 2px rgba(119, 119, 119, 1);
+	box-shadow: -2px -2px 5px 2px rgba(119, 119, 119, 1);
 }
+
+button.bookmark {
+	margin-left: 5px;
+	display: inline-block;
+	border-radius: 8px;
+	color: var(--text-black);
+	border: 1px solid var(--border-light);
+	line-height: 16px;
+	padding: 5px 8px 5px 16px;
+	vertical-align: top;
+	background-size: 16px;
+	background-position-x: 5px;
+	background-position-y: center;
+	font-size: 13px;
+	background-color: var(--bookmark);
+}
+
+
 #review-toolbar {
 	display: flex;
 	flex-wrap: nowrap;
 	align-items: center;
 	justify-content: space-between;
 }
+
 .vh-visible-container a {
 	color: var(--link-light);
-}
-
-.vinehelper button:hover {
-	background-color: var(--button, green);
-}
-
-.vinehelper#insertTemplate,
-.vinehelper#saveReview {
-	text-decoration: none;
-	font-weight: 500;
-	background-color: var(--button);
-	border: none;
-	color: var(--button-text);
-	padding: 10px 15px;
-	border-radius: 5px;
-	background-image: var(--button-overlay);
-	box-shadow: 1px 1px 3px var(--link-light);
 }
 
 .vinehelper#review_management h3 {
@@ -195,44 +251,106 @@ select.vinehelper {
 	color: var(--text-dark);
 }
 
-.vinehelper button:active,
-.button_link:active {
-	transform: translateY(2px);
-}
-
 #manage_link,
 #template_link {
 	color: var(--text-dark);
 }
 
+/* tabs  */
+
+.vh-tabs {
+	display: flex;
+	height: 50px;
+	flex-direction: column-reverse;
+	border: 0px;
+}
+
+.vh-tabs ul {
+	padding-left: 0px;
+	margin: 0px;
+	z-index: 1;
+}
+
+.vh-tabs li {
+	list-style: none;
+	float: left;
+	border: 2px solid white;
+	min-width: 30px;
+	text-align: center;
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+	padding: 4px 10px;
+	cursor: pointer;
+	background: var(--button-overlay), var(--tab-border);
+}
+
+.vh-tabs li.active {
+	border: 2px solid var(--tab-border-active);
+	background: var(--button-overlay), var(--tab-border-active);
+	justify-content: end;
+}
+
+.vh-tabs li>a {
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--text-black);
+	text-decoration: none;
+}
+
+.vh-tabs li>a:hover {
+	text-decoration: none;
+}
+
+
+.vh-tabs li.active>a {
+	color: var(--text-dark);
+}
+
+input[type="checkbox"] {
+	accent-color: var(--checkbox-accent);
+}
+
+
+
 @media (prefers-color-scheme: dark) {
-	.vinehelper body {
+	.vh-body {
 		background-color: var(--background-dark, #333);
 		color: var(--text-dark, #f9f9f9);
 	}
 
-	.vinehelper button {
+	.vh-button {
 		box-shadow: 1px 1px 2px var(--highlight-dark);
 	}
 
-	.vinehelper input[type="text"],
-	.vinehelper textarea {
+	.vh-inputtext,
+	.vh-textarea {
 		color: var(--text-dark, #f9f9f9);
 		border: 1px solid var(--border-dark, #f9f9f9);
 		transition: unset;
 		box-shadow: 1px 1px 3px var(--highlight-dark);
 	}
 
-	.vinehelper input[type="text"]:focus,
-	.vinehelper textarea:focus {
+	.vh-inputtext:focus,
+	.vh-textarea:focus {
 		outline: 2px solid var(--highlight-dark);
 		border: 1px solid var(--highlight-dark);
 	}
 
-	.vinehelper td,
-	.vinehelper th {
+	.vh-tbody th,
+	.vh-tbody td,
+	.vh-td,
+	.vh-th {
 		border: 1px solid;
 		border-color: var(--border-dark, #f9f9f9);
 		color: var(--text-dark);
+	}
+
+	input[type="checkbox"] {
+		accent-color: var(--checkbox-accent);
+	}
+
+	.vh-tabs li {
+		border: 2px solid var(--background-dark);
+
 	}
 }

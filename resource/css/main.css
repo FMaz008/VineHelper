@@ -92,21 +92,7 @@ div#bookmark {
 	text-align: right;
 }
 
-button.bookmark {
-	margin-left: 5px;
-	display: inline-block;
-	border-radius: 8px;
-	color: #0f1111;
-	border: 1px solid #6c6e73;
-	line-height: 16px;
-	padding: 5px 8px 5px 16px;
-	vertical-align: top;
-	background-size: 16px;
-	background-position-x: 5px;
-	background-position-y: center;
-	font-size: 13px;
-	background-color: var(--button-flat, lightgreen);
-}
+
 
 /* Add visual cues for the keybinding */
 a.vh-hideall span,

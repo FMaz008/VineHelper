@@ -1,14 +1,19 @@
-<html class="vinehelper">
+<html class="theme-default">
 	<head>
 		<script src="reviews_manage.js"></script>
 		<link rel="stylesheet" href="/resource/css/vinehelper.css" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	</head>
 
-	<body id="reviews_manage">
+	<body id="reviews_manage" class="vh-body">
 		<h1>Saved reviews</h1>
-		<table id="reviews_list">
-			<tbody>
+		<input type="text" id="title" class="vh-inputtext" readonly />
+		<br />
+		<br />
+
+		<textarea type="text" class="vh-textarea" id="content" readonly></textarea>
+		<table id="reviews_list" class="vh-table">
+			<tbody class="vh-tbody">
 				<tr>
 					<td>Action</td>
 					<td>Title</td>
@@ -17,8 +22,8 @@
 				</tr>
 			</tbody>
 		</table>
+		<div id="reviewed-item">
 
-		<h3 id="title"></h3>
-		<p id="content"></p>
+		</div>
 	</body>
 </html>
