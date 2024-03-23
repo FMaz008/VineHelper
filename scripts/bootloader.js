@@ -778,7 +778,7 @@ browser.runtime.onMessage.addListener(async (data, sender, sendResponse) => {
 });
 
 //Key bindings/keyboard shortcuts for navigation
-window.addEventListener("keydown", async function (e) {
+window.addEventListener("keyup", async function (e) {
 	//Do not run the extension if ultraviner is running
 	if (ultraviner) {
 		return;
