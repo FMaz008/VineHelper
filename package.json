@@ -1,91 +1,76 @@
 {
-  "name": "vinehelper",
-  "version": "2.4.6",
-  "description": "Improve the Amazon Vine experience.",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint .",
-    "build": "node build.js",
-    "prepare": "husky"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/FMaz008/VineHelper.git"
-  },
-  "keywords": [
-    "amazon",
-    "vine",
-    "helper"
-  ],
-  "author": "VineHelper <https://vinehelper.ovh/>",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/FMaz008/VineHelper/issues"
-  },
-  "homepage": "https://github.com/FMaz008/VineHelper#readme",
-  "dependencies": {
-    "jquery": "^3.7.1",
-    "vine-styling": "github:Thorvarium/vine-styling.git#main"
-  },
-  "devDependencies": {
-    "@commitlint/cli": "^19.2.1",
-    "@commitlint/config-conventional": "^19.1.0",
-    "@release-it/bumper": "^6.0.1",
-    "@release-it/conventional-changelog": "^8.0.1",
-    "archiver": "^7.0.1",
-    "eslint": "^8.57.0",
-    "eslint-config-prettier": "^9.1.0",
-    "husky": "^9.0.11",
-    "lint-staged": "^15.2.2",
-    "prettier": "^3.2.5",
-    "release-it": "^17.1.1"
-  },
-  "lint-staged": {
-    "*.{js}": [
-      "prettier --write",
-      "eslint --fix"
-    ],
-    "*.{md, html, css}": "prettier --write"
-  },
-  "release-it": {
-    "git": {
-      "commitMessage": "chore: release v${version}",
-      "pushRepo": "origin",
-      "requireBranch": "main",
-      "requireCommits": true
-    },
-    "github": {
-      "release": true,
-      "assets": [
-        "VH-*.zip"
-      ],
-      "comments": {
-        "submit": true
-      }
-    },
-    "hooks": {
-      "before:init": "yarn lint",
-      "after:bump": [
-        "yarn build",
-        "compile_release.bat"
-      ]
-    },
-    "npm": {
-      "publish": false
-    },
-    "plugins": {
-      "@release-it/bumper": {
-        "out": "manifest*.json"
-      },
-      "@release-it/conventional-changelog": {
-        "preset": "angular",
-        "infile": "CHANGELOG.md"
-      }
-    }
-  },
-  "commitlint": {
-    "extends": [
-      "@commitlint/config-conventional"
-    ]
-  }
+	"name": "vinehelper",
+	"version": "2.4.6",
+	"description": "Improve the Amazon Vine experience.",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"lint": "eslint .",
+		"build": "node build.js",
+		"prepare": "husky"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+ssh://git@github.com/FMaz008/VineHelper.git"
+	},
+	"keywords": [
+		"amazon",
+		"vine",
+		"helper"
+	],
+	"author": "VineHelper <https://vinehelper.ovh/>",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/FMaz008/VineHelper/issues"
+	},
+	"homepage": "https://github.com/FMaz008/VineHelper#readme",
+	"dependencies": {
+		"jquery": "^3.7.1",
+		"vine-styling": "github:Thorvarium/vine-styling.git#main"
+	},
+	"devDependencies": {
+		"@commitlint/cli": "^19.2.1",
+		"@commitlint/config-conventional": "^19.1.0",
+		"@release-it/bumper": "^6.0.1",
+		"@release-it/conventional-changelog": "^8.0.1",
+		"archiver": "^7.0.1",
+		"eslint": "^8.57.0",
+		"eslint-config-prettier": "^9.1.0",
+		"husky": "^9.0.11",
+		"lint-staged": "^15.2.2",
+		"prettier": "^3.2.5",
+		"release-it": "^17.1.1"
+	},
+	"lint-staged": {
+		"*.{js}": [
+			"prettier --write",
+			"eslint --fix"
+		],
+		"*.{md, html, css}": "prettier --write"
+	},
+	"release-it": {
+		"git": {},
+		"github": {},
+		"hooks": {
+			"after:bump": [
+				"yarn build"
+			]
+		},
+		"npm": {
+			"publish": false
+		},
+		"plugins": {
+			"@release-it/bumper": {
+				"out": "manifest*.json"
+			},
+			"@release-it/conventional-changelog": {
+				"preset": "angular",
+				"infile": "CHANGELOG.md"
+			}
+		}
+	},
+	"commitlint": {
+		"extends": [
+			"@commitlint/config-conventional"
+		]
+	}
 }
