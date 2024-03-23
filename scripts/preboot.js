@@ -100,7 +100,6 @@ function getDefaultSettings() {
 			categoriesWithEmojis: false,
 			paginationOnTop: false,
 			collapsableCategories: false,
-			collapsableCategories: false,
 			stripedCategories: false,
 			limitedQuantityIcon: false,
 			RFYAFAAITabs: false,
@@ -176,40 +175,42 @@ async function getSettings() {
 	}
 
 	//Load Thorvarium stylesheets
-	if (appSettings.thorvarium.mobileios) loadStyleSheet("lib/vine-styling/mobile/ios-with-bugfix.css");
+	if (appSettings.thorvarium.mobileios) loadStyleSheet("node_modules/vine-styling/mobile/ios-with-bugfix.css");
 
-	if (appSettings.thorvarium.mobileandroid) loadStyleSheet("lib/vine-styling/mobile/mobile.css");
+	if (appSettings.thorvarium.mobileandroid) loadStyleSheet("node_modules/vine-styling/mobile/mobile.css");
 
-	if (appSettings.thorvarium.smallItems) loadStyleSheet("lib/vine-styling/desktop/small-items.css");
+	if (appSettings.thorvarium.smallItems) loadStyleSheet("node_modules/vine-styling/desktop/small-items.css");
 
-	if (appSettings.thorvarium.removeHeader) loadStyleSheet("lib/vine-styling/desktop/remove-header.css");
+	if (appSettings.thorvarium.removeHeader) loadStyleSheet("node_modules/vine-styling/desktop/remove-header.css");
 
-	if (appSettings.thorvarium.removeFooter) loadStyleSheet("lib/vine-styling/desktop/remove-footer.css");
+	if (appSettings.thorvarium.removeFooter) loadStyleSheet("node_modules/vine-styling/desktop/remove-footer.css");
 
 	if (appSettings.thorvarium.removeAssociateHeader)
-		loadStyleSheet("lib/vine-styling/desktop/remove-associate-header.css");
+		loadStyleSheet("node_modules/vine-styling/desktop/remove-associate-header.css");
 
 	if (appSettings.thorvarium.moreDescriptionText)
-		loadStyleSheet("lib/vine-styling/desktop/more-description-text.css");
+		loadStyleSheet("node_modules/vine-styling/desktop/more-description-text.css");
 
-	if (appSettings.thorvarium.darktheme) loadStyleSheet("lib/vine-styling/desktop/dark-theme.css");
+	if (appSettings.thorvarium.darktheme) loadStyleSheet("node_modules/vine-styling/desktop/dark-theme.css");
 
-	if (appSettings.thorvarium.ETVModalOnTop) loadStyleSheet("lib/vine-styling/desktop/etv-modal-on-top.css");
+	if (appSettings.thorvarium.ETVModalOnTop) loadStyleSheet("node_modules/vine-styling/desktop/etv-modal-on-top.css");
 
 	if (appSettings.thorvarium.categoriesWithEmojis)
-		loadStyleSheet("lib/vine-styling/desktop/categories-with-emojis.css");
+		loadStyleSheet("node_modules/vine-styling/desktop/categories-with-emojis.css");
 
-	if (appSettings.thorvarium.paginationOnTop) loadStyleSheet("lib/vine-styling/desktop/pagination-on-top.css");
+	if (appSettings.thorvarium.paginationOnTop)
+		loadStyleSheet("node_modules/vine-styling/desktop/pagination-on-top.css");
 
 	if (appSettings.thorvarium.collapsableCategories)
-		loadStyleSheet("lib/vine-styling/desktop/collapsable-categories.css");
+		loadStyleSheet("node_modules/vine-styling/desktop/collapsable-categories.css");
 
-	if (appSettings.thorvarium.stripedCategories) loadStyleSheet("lib/vine-styling/desktop/striped-categories.css");
+	if (appSettings.thorvarium.stripedCategories)
+		loadStyleSheet("node_modules/vine-styling/desktop/striped-categories.css");
 
 	if (appSettings.thorvarium.limitedQuantityIcon)
-		loadStyleSheet("lib/vine-styling/desktop/limited-quantity-icon.css");
+		loadStyleSheet("node_modules/vine-styling/desktop/limited-quantity-icon.css");
 
-	if (appSettings.thorvarium.RFYAFAAITabs) loadStyleSheet("lib/vine-styling/desktop/rfy-afa-ai-tabs.css");
+	if (appSettings.thorvarium.RFYAFAAITabs) loadStyleSheet("node_modules/vine-styling/desktop/rfy-afa-ai-tabs.css");
 
 	showRuntime("BOOT: Thorvarium stylesheets injected");
 
@@ -294,7 +295,7 @@ async function getSettings() {
 	}
 
 	//Determine if we are currently searching for an item
-	regex = /^.+?amazon\..+\/vine\/vine-items(?:.*?)(?:[\?&]search=(.+?))(?:[#&].*?)?$/;
+	regex = /^.+?amazon\..+\/vine\/vine-items(?:.*?)(?:[?&]search=(.+?))(?:[#&].*?)?$/;
 	arrMatches = currentUrl.match(regex);
 	if (arrMatches != null) {
 		if (arrMatches[1] == undefined) {
