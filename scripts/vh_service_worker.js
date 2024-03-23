@@ -63,7 +63,7 @@ async function checkNewItems() {
 	//Check for new items again in 30 seconds.
 	setTimeout(function () {
 		checkNewItems();
-	}, 30000);
+	}, 60000);
 
 	if (appSettings == undefined || !appSettings.general.newItemNotification) {
 		return; //Not setup to check for notifications. Will try again in 30 secs.
