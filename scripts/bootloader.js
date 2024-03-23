@@ -832,7 +832,7 @@ window.addEventListener("keydown", async function (e) {
 	};
 
 	if (appSettings.hiddenTab?.active) {
-		const cb = keybindingMap[e.key];
+		const cb = keybindingMap[e.key.toLowerCase()];
 		if (typeof cb === "function") {
 			cb();
 		}
