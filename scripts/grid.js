@@ -155,6 +155,9 @@ async function hideAllItems() {
 		await tile.hideTile(false, false); //Do not update local storage
 	}
 	HiddenList.saveList();
+
+	// Snap to top of page
+	document.documentElement.scrollTop = 0;
 }
 
 async function showAllItems() {
