@@ -68,6 +68,7 @@
 			"matches": [
 				"*://*.amazon.ca/vine/*",
 				"*://*.amazon.de/vine/*",
+				"*://*.amazon.de/*/vine/*",
 				"*://*.amazon.es/vine/*",
 				"*://*.amazon.fr/vine/*",
 				"*://*.amazon.co.uk/vine/*",
@@ -88,6 +89,7 @@
 			"matches": [
 				"*://*.amazon.ca/vine/*",
 				"*://*.amazon.de/vine/*",
+				"*://*.amazon.de/*/vine/*",
 				"*://*.amazon.es/vine/*",
 				"*://*.amazon.fr/vine/*",
 				"*://*.amazon.co.uk/vine/*",
@@ -103,6 +105,7 @@
 			"matches": [
 				"*://*.amazon.ca/review/create-review*",
 				"*://*.amazon.de/review/create-review*",
+				"*://*.amazon.de/*/review/create-review*",
 				"*://*.amazon.es/review/create-review*",
 				"*://*.amazon.fr/review/create-review*",
 				"*://*.amazon.co.uk/review/create-review*",
