@@ -57,6 +57,7 @@ function updateReviewTable() {
 
 document.addEventListener("click", (event) => {
 	const { target } = event;
+	if (target.tagName !== "BUTTON") return;
 
 	if (target.matches("#view")) {
 		handleViewClick(target.dataset.asin);
