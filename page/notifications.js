@@ -116,11 +116,12 @@ async function addItem(data) {
 			currency: vineCurrency,
 		}).format(etv);
 	}
+	let formattedDate = new Date(date).toLocaleString(vineLocale);
 
 	Tpl.setVar("id", asin);
 	Tpl.setVar("domain", vineDomain);
 	Tpl.setVar("title", "New item");
-	Tpl.setVar("date", new Date(date));
+	Tpl.setVar("date", formattedDate);
 	Tpl.setVar("search", search);
 	Tpl.setVar("asin", asin);
 	Tpl.setVar("description", title);
