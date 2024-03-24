@@ -1,5 +1,6 @@
 var lastSoundPlayedAt = 0; //Date.now();
 var appSettings = [];
+var arrDebug = [];
 if (typeof browser === "undefined") {
 	var browser = chrome;
 }
@@ -116,7 +117,7 @@ async function addItem(data) {
 			currency: vineCurrency,
 		}).format(etv);
 	}
-	let formattedDate = new Date(date).toLocaleString(vineLocale);
+let formattedDate = new Date(date).toLocaleString(vineLocale);
 
 	Tpl.setVar("id", asin);
 	Tpl.setVar("domain", vineDomain);
@@ -140,10 +141,10 @@ async function addItem(data) {
 		}
 	}
 
-	insertMessageIfAsinIsUnique(content, asin, etv);
+	insertMessageIfAsinIsUnique(content, asin, etv, title);
 }
 
-function insertMessageIfAsinIsUnique(content, asin, etv) {
+function insertMessageIfAsinIsUnique(content, asin, etv,title) {
 	var newID = `vh-notification-${asin}`;
 	const newBody = document.getElementById("vh-items-container");
 
@@ -151,17 +152,38 @@ function insertMessageIfAsinIsUnique(content, asin, etv) {
 		newBody.insertAdjacentHTML("afterbegin", content);
 	}
 
+	//Highlight for ETV
+	
 	if (etv == "0.00") {
 		const etvClass = document.getElementById(newID);
 		etvClass.classList.add("zeroETV");
 	}
 
+	//Remove ETV Value if it does not exist
 	if (etv == null) {
 		etvElement = document.getElementById("etv_value");
 		etvElement.style.display = "none";
 	}
+
+	//Highlight if matches a keyword
+	let highligthed = false;
+	const newTile = document.getElementById(newID);
+	
+	if (appSettings.general.highlightKeywords.length > 0) {
+		match = appSettings.general.highlightKeywords.find((word) => {
+			const regex = new RegExp(`\\b${word}\\b`, "i");
+			return word && regex.test(title);
+		});
+		if (match != undefined) {
+			highligthed = true;
+			showRuntime("TILE: The item match the keyword '" + match + "', highlight it");
+			newTile.classList.add("keyword-highlight");
+		}
+	}
+
+
 }
 
-function showRuntime() {
-	//Function must exist for the Template system, but not needed for this page
+function showRuntime(eventName) {
+	// arrDebug.push({ time: Date.now() - startTime, event: eventName });
 }

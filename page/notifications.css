@@ -51,6 +51,10 @@
 	background-color: hsla(140, 100%, 30%, 25%);
 }
 
+.keyword-highlight {
+	background-color: rgba(255, 232, 21, 0.50);
+}
+
 .etv_value {
 	float: left;
 }
