@@ -6,11 +6,11 @@ begin, migrating css into a common file, to allow uniform display and updates
 	--white-200: hsla(0, 0%, 95%, 1);
 	--black-800: hsla(0, 0%, 18%, 1);
 	--black-900: hsla(0, 0%, 0%, 1);
-	--lightgreen-100: #90EE90;
-	--lightgreen-300: #5FBD63;
-	--lightgreen-600: #2C8E38;
+	--lightgreen-100: #90ee90;
+	--lightgreen-300: #5fbd63;
+	--lightgreen-600: #2c8e38;
 	--darkgreen-100: #167822;
-	--darkgreen-300: #00610C;
+	--darkgreen-300: #00610c;
 	--darkgreen-600: #003600;
 	--lightred-100: hsla(10, 100%, 65%, 1);
 	--lightred-300: hsla(10, 68%, 54%, 1);
@@ -19,7 +19,6 @@ begin, migrating css into a common file, to allow uniform display and updates
 	--darkred-300: hsla(10, 75%, 32%, 1);
 	--darkred-600: hsla(10, 100%, 20%, 1);
 	--alert: #ffd700;
-
 }
 
 .theme-default {
@@ -35,9 +34,11 @@ begin, migrating css into a common file, to allow uniform display and updates
 	--border-light: var(--darkgreen-600);
 	--border-dark: var(--lightgreen-600);
 	--button: var(--darkgreen-300);
-	--button-overlay: radial-gradient(circle farthest-side at 10% 20%,
-			rgba(255, 255, 255, 0.3) 0%,
-			rgba(255, 255, 255, 0) 80%);
+	--button-overlay: radial-gradient(
+		circle farthest-side at 10% 20%,
+		rgba(255, 255, 255, 0.3) 0%,
+		rgba(255, 255, 255, 0) 80%
+	);
 	--button-text: var(--text-black);
 	--bookmark: var(--lightgreen-100);
 	--item-highlight-background: var(--lightgreen-100);
@@ -67,9 +68,11 @@ begin, migrating css into a common file, to allow uniform display and updates
 	--border-light: var(--darkred-600);
 	--border-dark: var(--lightred-600);
 	--button: var(--darkgred-300);
-	--button-overlay: radial-gradient(circle farthest-side at 10% 20%,
-			rgba(255, 255, 255, 0.3) 0%,
-			rgba(255, 255, 255, 0) 80%);
+	--button-overlay: radial-gradient(
+		circle farthest-side at 10% 20%,
+		rgba(255, 255, 255, 0.3) 0%,
+		rgba(255, 255, 255, 0) 80%
+	);
 	--button-text: var(--text-black);
 	--bookmark: var(--lightred-100);
 	--item-highlight-background: var(--lightred-100);
@@ -106,7 +109,7 @@ begin, migrating css into a common file, to allow uniform display and updates
 }
 
 .vh-table#templates_list td {
-overflow-wrap: break-word;
+	overflow-wrap: break-word;
 }
 
 .vh-table#templates_list td:first-child {
@@ -115,7 +118,7 @@ overflow-wrap: break-word;
 
 .vh-flex-column {
 	display: grid;
-	flex:auto;
+	flex: auto;
 }
 
 .vh-flex-column div {
@@ -131,17 +134,13 @@ overflow-wrap: break-word;
 
 .vh-flex-row#right {
 	flex-direction: column;
-    align-items: center;
+	align-items: center;
 }
 
 #template_store {
 	display: flex;
 	gap: 5px;
 	align-items: flex-start;
-}
-
-.vh-visible-container {
-	padding: 5px;
 }
 
 .vh-main {
@@ -229,8 +228,6 @@ overflow-wrap: break-word;
 	border-left: 1px solid var(--divider-color, lightgray);
 }
 
-
-
 .vh-select {
 	padding: 8px 12px;
 	font-size: 14px;
@@ -250,7 +247,6 @@ overflow-wrap: break-word;
 	padding: 5px;
 	border: 3px solid var(--div-container-border);
 	border-radius: 5px;
-	color: var(--text-light);
 	-webkit-box-shadow: -2px -2px 5px 2px var(--highlight-light);
 	-moz-box-shadow: -2px -2px 5px 2px var(--highlight-light);
 	box-shadow: -2px -2px 5px 2px var(--highlight-light);
@@ -271,7 +267,6 @@ button.bookmark {
 	font-size: 13px;
 	background-color: var(--bookmark);
 }
-
 
 #review-toolbar {
 	color: var(--text-light);
@@ -336,27 +331,24 @@ button.bookmark {
 	justify-content: end;
 }
 
-.vh-tabs li>a {
+.vh-tabs li > a {
 	font-size: 12px;
 	font-weight: 500;
 	color: var(--text-black);
 	text-decoration: none;
 }
 
-.vh-tabs li>a:hover {
+.vh-tabs li > a:hover {
 	text-decoration: none;
 }
 
-
-.vh-tabs li.active>a {
+.vh-tabs li.active > a {
 	color: var(--text-dark);
 }
 
 input[type="checkbox"] {
 	accent-color: var(--checkbox-accent);
 }
-
-
 
 @media (prefers-color-scheme: dark) {
 	.vh-body {
@@ -397,11 +389,9 @@ input[type="checkbox"] {
 
 	.vh-tabs li {
 		border: 2px solid var(--background-dark);
-
 	}
 
 	.vh-container {
-		color: var(
-			--text-dark);
+		color: var(--text-dark);
 	}
 }

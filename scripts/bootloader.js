@@ -86,6 +86,7 @@ function displayAccountData() {
 
 	let container = document.createElement("div");
 	container.classList.add("a-column");
+	container.classList.add("theme-default");
 	container.classList.add("vh-container");
 	parentContainer.append(container);
 
