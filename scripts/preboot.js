@@ -371,6 +371,7 @@ async function saveSettings() {
 	note.title = "Settings saved.";
 	note.lifespan = 3;
 	note.content = "";
+	note.title_only = true;
 	Notifications.pushNotification(note);
 }
 

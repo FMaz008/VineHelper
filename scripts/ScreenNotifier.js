@@ -8,6 +8,7 @@ class ScreenNotification {
 	lifespan = 0; //Will not autodelete
 	sound = null; //relative URL of the sound file to play.
 	template = null; //relative URL of the template file to use
+	title_only = false;
 
 	/** Constructor
 	 * @var tplUrl URL of the template to use, null=default.
@@ -24,6 +25,7 @@ class ScreenNotification {
 		Tpl.setVar("id", this.id);
 		Tpl.setVar("title", this.title);
 		Tpl.setVar("content", this.content);
+		Tpl.setIf("titleonly", this.title_only);
 		return Tpl.render(prom);
 	}
 }

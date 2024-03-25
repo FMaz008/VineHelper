@@ -104,6 +104,7 @@ class TemplateMgr {
 		note.title = "Template cache flushed.";
 		note.lifespan = 3;
 		note.content = "";
+		note.title_only = true;
 		Notifications.pushNotification(note);
 	}
 }

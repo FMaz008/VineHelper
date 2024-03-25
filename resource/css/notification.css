@@ -35,6 +35,12 @@
 	overflow-y: scroll;
 }
 
+#vh-notifications-container .vh-notification-title-only .vh-notification-content {
+	padding: 0;
+	overflow-y: none;
+	height: 0px;
+}
+
 #vh-notifications-container .vh-notification-close {
 	float: right;
 }
