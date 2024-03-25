@@ -181,7 +181,7 @@ function Tile(obj, gridInstance) {
 		}
 	};
 
-	this.initiateTile = function () {
+	this.initiateTile = async function () {
 		//Highlight the tile border if the title match highlight keywords
 		let highligthed = false;
 		if (appSettings.general.highlightKeywords.length > 0) {
@@ -208,6 +208,41 @@ function Tile(obj, gridInstance) {
 				document.getElementById("vh-hide-link-" + this.getAsin()).style.display = "none";
 			}
 		}
+
+		//Unescape the titles
+		let entityMap = {
+			"&amp;": "&",
+			"&#34;": '"',
+			"&#39;": "'",
+		};
+
+		//The content of .a-truncate-cut is loaded dynamically and often this script run before
+		//the content is populated. This method will wait for a little bit, if needed.
+		let encodedString;
+		let count = 0;
+		while (count >= 0) {
+			encodedString = this.getDOM().querySelector(".a-truncate-cut").innerText;
+			if (encodedString == "") {
+				await new Promise((r) => setTimeout(r, 50));
+				count++;
+				if (count > 20) {
+					break;
+				}
+			} else {
+				count = -1;
+				break;
+			}
+		}
+
+		// Create a regular expression pattern using the keys of entityMap
+		var pattern = new RegExp(Object.keys(entityMap).join("|"), "g");
+
+		// Replace HTML entities using the mapping object
+		var decodedString = encodedString.replace(pattern, function (matchedEntity) {
+			return entityMap[matchedEntity];
+		});
+
+		this.getDOM().querySelector(".a-truncate-cut").innerText = decodedString;
 	};
 
 	this.moveToGrid = async function (g, animate = false) {
