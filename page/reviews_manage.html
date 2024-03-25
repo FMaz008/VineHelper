@@ -7,16 +7,15 @@
 
 	<body id="reviews_manage" class="vh-body">
 		<h1>Saved reviews</h1>
+		<input type="text" id="title" class="vh-inputtext" readonly />
+		<br />
+		<br />
+		<textarea type="text" class="vh-textarea" id="content" readonly></textarea>
 		<div class="vh-visible-container" style="width: 300px">
 			Your reviews are locally stored. Make sure you are deleting old ones as to keep their size to a minimum. A
 			maximum of 100 saved reviews are allowed.
 			<span id="storage-used" style="font-weight: bold"></span>
 		</div>
-		<input type="text" id="title" class="vh-inputtext" readonly />
-		<br />
-		<br />
-
-		<textarea type="text" class="vh-textarea" id="content" readonly></textarea>
 		<table id="reviews_list" class="vh-table">
 			<tbody class="vh-tbody">
 				<tr>
@@ -27,8 +26,6 @@
 				</tr>
 			</tbody>
 		</table>
-		<div id="reviewed-item">
-
-		</div>
+		<div id="reviewed-item"></div>
 	</body>
 </html>

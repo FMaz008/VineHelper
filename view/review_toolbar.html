@@ -1,21 +1,20 @@
-<div id="review-toolbar" class="vh-container vinehelper">
-	<div class="vh_flex_column">
-		<div>
-			<div style="float: left">
+<div id="review-toolbar" class="vh-container theme-default">
+	<div class="vh-flex-column">
+		<div class="vh-flex-row" id="left">
+			<div>
 				<strong>Insert template (<a href="{{$tpl_manage_url}}" target="_blank">Manage</a>):</strong>
 				<br />
-				<select name="template_name" id="template_name"></select>
+				<select name="template_name" id="template_name" class="vh-select"></select>
 			</div>
 			<div>
-				<button id="insertTemplate" class="vh">Insert</button>
+				<button id="insertTemplate" class="vh-button">Insert</button>
 			</div>
 		</div>
 	</div>
-	<div class="vertical-divider"></div>
-	<div class="vh_flex_column">
-		<div>
+	<div class="vh-flex-column">
+		<div class="vh-flex-row" id="right">
 			<strong>Reviews (<a href="{{$review_manage_url}}" target="_blank">Manage</a>):</strong>
-			<button id="saveReview" class="vh">Save review</button>
+			<button id="saveReview" class="vh-button">Save review</button>
 		</div>
 	</div>
 </div>

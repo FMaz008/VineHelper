@@ -50,7 +50,8 @@ begin, migrating css into a common file, to allow uniform display and updates
 	--tab-border: var(--lightgreen-300);
 	--tab-border-active: var(--darkgreen-300);
 	--checkbox-accent: var(--lightgreen-600);
-
+	--div-container-border: var(--lightgreen-100);
+	--select-border: var(--lightgreen-100);
 }
 
 .theme-red {
@@ -97,6 +98,50 @@ begin, migrating css into a common file, to allow uniform display and updates
 .vh-table {
 	border-collapse: collapse;
 	margin: 20px;
+}
+
+.vh-table#templates_list {
+	width: 650px;
+	table-layout: fixed;
+}
+
+.vh-table#templates_list td {
+overflow-wrap: break-word;
+}
+
+.vh-table#templates_list td:first-child {
+	width: 130px;
+}
+
+.vh-flex-column {
+	display: grid;
+	flex:auto;
+}
+
+.vh-flex-column div {
+	text-align: center;
+}
+
+.vh-flex-row {
+	display: flex;
+}
+.vh-flex-row#left {
+	align-items: flex-end;
+}
+
+.vh-flex-row#right {
+	flex-direction: column;
+    align-items: center;
+}
+
+#template_store {
+	display: flex;
+	gap: 5px;
+	align-items: flex-start;
+}
+
+.vh-visible-container {
+	padding: 5px;
 }
 
 .vh-main {
@@ -146,20 +191,16 @@ begin, migrating css into a common file, to allow uniform display and updates
 	border: 1px solid var(--highlight-light);
 }
 
-
-
-.vh-tbody th,
+.vh-tbody tr,
 .vh-tbody td,
 .vh-td,
-.vh-th {
+.vh-tr {
 	border: 1px solid;
 	border-color: var(--border-light, #dedede);
 	padding: 5px;
 	text-align: left;
 	color: var(--text-light);
 }
-
-
 
 .vh-button {
 	text-decoration: none;
@@ -196,19 +237,23 @@ begin, migrating css into a common file, to allow uniform display and updates
 	margin: 0 5px;
 	border: 1px solid var(--button);
 	border-radius: 4px;
-	max-width: 300px;
+	width: 300px;
+	background: var(--button-overlay), var(--highlight-dark);
+}
+
+.vh-select > option {
+	background: var(--button-overlay), var(--highlight-dark);
 }
 
 .vh-container {
 	margin: 10px;
 	padding: 5px;
-	border: 3px solid var(--border-light);
+	border: 3px solid var(--div-container-border);
 	border-radius: 5px;
-	background-color: var(--darkgreen-300);
 	color: var(--text-light);
-	-webkit-box-shadow: -2px -2px 5px 2px rgba(119, 119, 119, 1);
-	-moz-box-shadow: -2px -2px 5px 2px rgba(119, 119, 119, 1);
-	box-shadow: -2px -2px 5px 2px rgba(119, 119, 119, 1);
+	-webkit-box-shadow: -2px -2px 5px 2px var(--highlight-light);
+	-moz-box-shadow: -2px -2px 5px 2px var(--highlight-light);
+	box-shadow: -2px -2px 5px 2px var(--highlight-light);
 }
 
 button.bookmark {
@@ -229,6 +274,7 @@ button.bookmark {
 
 
 #review-toolbar {
+	color: var(--text-light);
 	display: flex;
 	flex-wrap: nowrap;
 	align-items: center;
@@ -352,5 +398,10 @@ input[type="checkbox"] {
 	.vh-tabs li {
 		border: 2px solid var(--background-dark);
 
+	}
+
+	.vh-container {
+		color: var(
+			--text-dark);
 	}
 }

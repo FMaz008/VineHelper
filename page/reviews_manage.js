@@ -18,17 +18,19 @@ async function loadSettings() {
 			await browser.storage.local.set({ reviews: [] });
 		}
 		arrReview = reviews;
-		console.log(arrReview);
 		if (arrReview.length) {
 			updateReviewTable();
+			displayReviewsSize();
+		} else {
+			const templateTable = document.getElementById("reviews_list");
+			templateTable.style.display = "none";
 		}
 	} catch (e) {
 		logError([scriptName, "loadSettings", e.message]);
 	}
-
-	//Calculate the storage size
-	document.getElementById("storage-used").innerText =
-		"Currently using: " + bytesToSize(await getStorageKeySizeinBytes("reviews"));
+}
+async function displayReviewsSize() {
+	document.getElementById("storage-used").innerText = `Currently using: ${await getStorageKeySizeinBytes("reviews")}`;
 }
 
 function updateReviewTable() {
@@ -128,7 +130,7 @@ function getStorageKeySizeinBytes(key) {
 				reject(new Error(browser.runtime.lastError.message));
 			} else {
 				const storageSize = JSON.stringify(items[key]).length;
-				resolve(storageSize);
+				resolve(bytesToSize(storageSize));
 			}
 		});
 	});
