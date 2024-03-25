@@ -44,12 +44,12 @@ div.vh-grid .vvp-item-tile .vvp-item-tile-content > * {
 	margin-bottom: 20px;
 }
 
-#vvp-items-grid .bookmark-highlight {
+#vh-tabs .bookmark-highlight {
 	border: 3px solid var(--item-highlight-border) !important;
 	background-color: var(--item-highlight-background);
 }
 
-#vvp-items-grid .keyword-highlight {
+#vh-tabs .keyword-highlight {
 	border: 3px solid var(--item-highlight-border-alert) !important;
 	background-color: var(--item-highlight-background);
 }
