@@ -86,11 +86,18 @@ async function boot_review() {
 	//Add the template titles in the select box
 	let selectBox = document.getElementById("template_name");
 	let title = "";
-	for (let i = 0; i < arrTemplate.length; i++) {
-		try {
-			title = JSON.parse(arrTemplate[i].title);
-		} catch (e) {}
-		selectBox.insertAdjacentHTML("beforeend", "<option value='" + arrTemplate[i].id + "'>" + title + "</option>");
+	if (arrTemplate.length > 0) {
+		for (let i = 0; i < arrTemplate.length; i++) {
+			try {
+				title = JSON.parse(arrTemplate[i].title);
+				selectBox.insertAdjacentHTML(
+					"beforeend",
+					"<option value='" + arrTemplate[i].id + "'>" + title + "</option>"
+				);
+			} catch (e) {}
+		}
+	} else {
+		selectBox.insertAdjacentHTML("beforeend", "<option value='no_saved_templates'>No Saved Templates</option>");
 	}
 
 	//If the Insert button is clicked, insert the content of the selected

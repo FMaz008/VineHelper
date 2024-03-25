@@ -6,51 +6,53 @@ var scriptName = "reviews_templates.js";
 function logError(errorArray) {
 	const [functionName, scriptName, error] = errorArray;
 	console.error(`${scriptName}-${functionName} generated the following error: ${error.message}`);
-} // testing common console error, this could just be a debug message, but if debug or the script files the console won't
+}
 
 var reviewTemplates = [];
 
 async function loadSettings() {
 	try {
 		let templateSet = await browser.storage.local.get("reviews_templates");
-		let reviews_templates = templateSet?.reviews_templates ?? []; //Nullish coalescing & Optional chaining prevents undefined without extra code
+		let reviews_templates = templateSet?.reviews_templates ?? [];
 		if (Object.keys(reviews_templates).length === 0) {
 			await browser.storage.local.set({ reviews_templates: [] });
 		}
 		reviewTemplates = reviews_templates;
-		console.log(reviewTemplates);
 		if (reviewTemplates.length) {
 			loadTemplates();
+			displayTemplateSize();
+		} else {
+			const templateTable = document.getElementById("templates_list");
+			templateTable.style.display = "none";
 		}
 	} catch (e) {
 		logError([scriptName, "loadSettings", e.message]);
 	}
-	//Calculate the storage size
+}
+
+async function displayTemplateSize() {
 	document.getElementById("storage-used").innerText =
-		"Currently using: " + bytesToSize(await getStorageKeySizeinBytes("reviews_templates"));
-		
+		`Currently using: ${await getStorageKeySizeinBytes("reviews_templates")}`;
 }
 
 function loadTemplates() {
 	try {
 		const tableBody = document.getElementById("templates_list").querySelector("tbody");
 
-		if (reviewTemplates.length > 0) {
-			reviewTemplates.forEach((template) => {
-				let { id, title } = template;
+		reviewTemplates.forEach((template) => {
+			let { id, title } = template;
 
-				const row = tableBody.insertRow();
-				const actionCell = row.insertCell();
-				const titleCell = row.insertCell();
-				row.id = id;
+			const row = tableBody.insertRow();
+			const actionCell = row.insertCell();
+			const titleCell = row.insertCell();
+			row.id = id;
 
-				actionCell.innerHTML = `
+			actionCell.innerHTML = `
 			<button id="edit" data-id="${id}" class='vh-button'>Edit</button>
 			<button id="delete" data-id="${id}" class='vh-button'>Delete</button>
 			`;
-				titleCell.textContent = `${JSON.parse(title)}`;
-			});
-		}
+			titleCell.textContent = `${JSON.parse(title)}`;
+		});
 	} catch (e) {
 		logError(["loadSettings", scriptName, e]);
 	}
@@ -189,12 +191,11 @@ function getStorageKeySizeinBytes(key) {
 				reject(new Error(browser.runtime.lastError.message));
 			} else {
 				const storageSize = JSON.stringify(items[key]).length;
-				resolve(storageSize);
+				resolve(bytesToSize(storageSize));
 			}
 		});
 	});
 }
-
 
 window.addEventListener("DOMContentLoaded", function () {
 	loadSettings();
