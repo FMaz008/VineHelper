@@ -33,8 +33,8 @@
 				"view/*",
 				"resource/sound/*",
 				"page/*",
-				"lib/vine-styling/desktop/*",
-				"lib/vine-styling/mobile/*",
+				"node_modules/vine-styling/desktop/*",
+				"node_modules/vine-styling/mobile/*",
 				"scripts/inj.js"
 			],
 			"matches": [
@@ -78,7 +78,7 @@
 		},
 		{
 			"js": [
-				"lib/jquery/jquery-3.7.1.min.js",
+				"node_modules/jquery/dist/jquery.min.js",
 				"scripts/Template.js",
 				"scripts/ScreenNotifier.js",
 				"scripts/HiddenListMgr.js",

@@ -1,32 +1,43 @@
 # VineHelper
-Browser Extension to help identify import fees on items from Vine Canada.
 
-# Get official releases from:
+Browser Extension to improve the experience of Amazon Vine members.
 
-Chrome webstore:
+## Official Releases:
 
-https://chromewebstore.google.com/detail/jlglbhebbkfjcofdplbkanckkipkgfle
+**Chrome webstore**: https://chromewebstore.google.com/detail/jlglbhebbkfjcofdplbkanckkipkgfle
+**Mozilla Add-ons**: https://addons.mozilla.org/en-CA/firefox/addon/amazon-vine-helper/
 
-Mozilla Add-ons:
+## Contributing
 
-https://addons.mozilla.org/en-CA/firefox/addon/amazon-vine-helper/
+### Requirements
 
+You must have [node.js](https://nodejs.org/en/download) installed. This project uses the [yarn classic](https://classic.yarnpkg.com/) package manager.
 
+```
+npm install -g yarn
+```
 
-# To install manually:
+### Getting Started
 
-__To install in Firefox:__
+```
+git clone git@github.com:FMaz008/VineHelper.git
+cd VineHelper
+yarn
+```
+
+### Testing / Installing Manually
+
+#### Firefox
 
 1. In Firefox, go to `about:debugging#/runtime/this-firefox`
 2. click "Load Temporary Add-on..."
-3. open the folder with the unzipped files in it and select the *manifest.json* file.
+3. open the folder with the unzipped files in it and select the _manifest.json_ file.
 
-__To install in Chrome:__
+#### Chrome
 
 1. In Chrome, go to `chrome://extensions/`
 2. enable Developer mode on the right of the page,
 3. then click "Load Unpacked".
 4. select the folder with the unzipped files in it
 
-__Note:__ There will be an error about some lines in the *manifest.json* file, you can safely ignore them as they are required for Mozilla. Or you can delete them. Up to you, won't change anything.
-
+**Note:** If testing locally with the default manifest.json file, your browser will likely give you errors, as the test manifest.json file is a mix of the settings for Chrome and Firefox. The extension should work fine despite these errors. Released versions use the proper manifest file for each browser.
