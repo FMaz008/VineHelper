@@ -91,7 +91,9 @@ begin, migrating css into a common file, to allow uniform display and updates
 	color: var(--text-light);
 	font-family: Arial, sans-serif;
 	margin: 20px;
-	transition: background-color 0.5s, color 0.5s;
+	transition:
+		background-color 0.5s,
+		color 0.5s;
 	background-image: url("/resource/image/logo.png");
 	background-position: top right;
 	background-repeat: no-repeat;
@@ -128,6 +130,7 @@ begin, migrating css into a common file, to allow uniform display and updates
 .vh-flex-row {
 	display: flex;
 }
+
 .vh-flex-row#left {
 	align-items: flex-end;
 }
@@ -268,12 +271,21 @@ button.bookmark {
 	background-color: var(--bookmark);
 }
 
+div#account-extra-stats {
+	width: max-content;
+	color: var(--text-light);
+}
+
 #review-toolbar {
 	color: var(--text-light);
 	display: flex;
 	flex-wrap: nowrap;
 	align-items: center;
 	justify-content: space-between;
+}
+
+.vh-visible-container {
+	padding: 5px;
 }
 
 .vh-visible-container a {
