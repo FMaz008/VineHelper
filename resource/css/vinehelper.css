@@ -34,9 +34,11 @@ begin, migrating css into a common file, to allow uniform display and updates
 	--border-light: var(--darkgreen-600);
 	--border-dark: var(--lightgreen-600);
 	--button: var(--darkgreen-300);
-	--button-overlay: radial-gradient(circle farthest-side at 10% 20%,
-			rgba(255, 255, 255, 0.3) 0%,
-			rgba(255, 255, 255, 0) 80%);
+	--button-overlay: radial-gradient(
+		circle farthest-side at 10% 20%,
+		rgba(255, 255, 255, 0.3) 0%,
+		rgba(255, 255, 255, 0) 80%
+	);
 	--button-text: var(--text-black);
 	--bookmark: var(--lightgreen-100);
 	--item-highlight-background: var(--lightgreen-100);
@@ -66,9 +68,11 @@ begin, migrating css into a common file, to allow uniform display and updates
 	--border-light: var(--darkred-600);
 	--border-dark: var(--lightred-600);
 	--button: var(--darkgred-300);
-	--button-overlay: radial-gradient(circle farthest-side at 10% 20%,
-			rgba(255, 255, 255, 0.3) 0%,
-			rgba(255, 255, 255, 0) 80%);
+	--button-overlay: radial-gradient(
+		circle farthest-side at 10% 20%,
+		rgba(255, 255, 255, 0.3) 0%,
+		rgba(255, 255, 255, 0) 80%
+	);
 	--button-text: var(--text-black);
 	--bookmark: var(--lightred-100);
 	--item-highlight-background: var(--lightred-100);
@@ -87,7 +91,9 @@ begin, migrating css into a common file, to allow uniform display and updates
 	color: var(--text-light);
 	font-family: Arial, sans-serif;
 	margin: 20px;
-	transition: background-color 0.5s, color 0.5s;
+	transition:
+		background-color 0.5s,
+		color 0.5s;
 	background-image: url("/resource/image/logo.png");
 	background-position: top right;
 	background-repeat: no-repeat;
@@ -235,7 +241,7 @@ begin, migrating css into a common file, to allow uniform display and updates
 	background: var(--button-overlay), var(--highlight-dark);
 }
 
-.vh-select>option {
+.vh-select > option {
 	background: var(--button-overlay), var(--highlight-dark);
 }
 
@@ -264,7 +270,6 @@ button.bookmark {
 	font-size: 13px;
 	background-color: var(--bookmark);
 }
-
 
 div#account-extra-stats {
 	width: max-content;
@@ -338,18 +343,18 @@ div#account-extra-stats {
 	justify-content: end;
 }
 
-.vh-tabs li>a {
+.vh-tabs li > a {
 	font-size: 12px;
 	font-weight: 500;
 	color: var(--text-black);
 	text-decoration: none;
 }
 
-.vh-tabs li>a:hover {
+.vh-tabs li > a:hover {
 	text-decoration: none;
 }
 
-.vh-tabs li.active>a {
+.vh-tabs li.active > a {
 	color: var(--text-dark);
 }
 
