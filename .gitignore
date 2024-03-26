@@ -2,5 +2,6 @@
 /.idea/
 /old-healing.gif
 /.vscode
+/dist
 *.zip
 node_modules
