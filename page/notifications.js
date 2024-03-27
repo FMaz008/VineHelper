@@ -88,7 +88,7 @@ async function init() {
 //As this is an internal page from the extension, we can only know what
 //country/domain is being used when we first receive data.
 function setLocale(country) {
-	if (vineLocales.hasOwnProperty(country)) {
+	if (Object.prototype.hasOwnProperty.call(vineLocales, country)) {
 		vineLocale = vineLocales[country].locale;
 		vineCurrency = vineLocales[country].currency;
 		vineDomain = vineDomains[country];
@@ -117,7 +117,7 @@ async function addItem(data) {
 			currency: vineCurrency,
 		}).format(etv);
 	}
-let formattedDate = new Date(date).toLocaleString(vineLocale);
+	let formattedDate = new Date(date + " GMT").toLocaleString(vineLocale);
 
 	Tpl.setVar("id", asin);
 	Tpl.setVar("domain", vineDomain);
@@ -144,7 +144,7 @@ let formattedDate = new Date(date).toLocaleString(vineLocale);
 	insertMessageIfAsinIsUnique(content, asin, etv, title);
 }
 
-function insertMessageIfAsinIsUnique(content, asin, etv,title) {
+function insertMessageIfAsinIsUnique(content, asin, etv, title) {
 	var newID = `vh-notification-${asin}`;
 	const newBody = document.getElementById("vh-items-container");
 
@@ -153,7 +153,7 @@ function insertMessageIfAsinIsUnique(content, asin, etv,title) {
 	}
 
 	//Highlight for ETV
-	
+
 	if (etv == "0.00") {
 		const etvClass = document.getElementById(newID);
 		etvClass.classList.add("zeroETV");
@@ -168,7 +168,7 @@ function insertMessageIfAsinIsUnique(content, asin, etv,title) {
 	//Highlight if matches a keyword
 	let highligthed = false;
 	const newTile = document.getElementById(newID);
-	
+
 	if (appSettings.general.highlightKeywords.length > 0) {
 		match = appSettings.general.highlightKeywords.find((word) => {
 			const regex = new RegExp(`\\b${word}\\b`, "i");
@@ -180,8 +180,6 @@ function insertMessageIfAsinIsUnique(content, asin, etv,title) {
 			newTile.classList.add("keyword-highlight");
 		}
 	}
-
-
 }
 
 function showRuntime(eventName) {
