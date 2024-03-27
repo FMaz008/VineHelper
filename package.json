@@ -50,7 +50,12 @@
 		"git": {
 			"requireCleanWorkingDir": false
 		},
-		"github": {},
+		"github": {
+			"release": true,
+			"assets": [
+				"VH-*.zip"
+			]
+		},
 		"hooks": {
 			"after:bump": [
 				"yarn build"
