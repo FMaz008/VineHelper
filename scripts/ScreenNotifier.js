@@ -3,11 +3,17 @@
  * */
 class ScreenNotification {
 	/** Constructor
-	 * @var tplUrl URL of the template to use, null=default.
+	 * @var params {
+	 *    id: int, //Unique ID of the notification
+	 *    title: string, //Title of the notification
+	 *    content: string, //Content of the notification
+	 *    lifespan: int, //Time in seconds before the notification is removed. 0 = never
+	 *    sound: string, //relative URL of the sound file to play.
+	 *    template: string, //relative URL of the template file to use
+	 *    title_only: bool, //If true, only the title will be displayed. Default: false
+	 * }
 	 */
-	constructor(tplUrl = null) {
-		if (tplUrl === null) tplUrl = "view/notification_default.html";
-
+	constructor(params) {
 		this.id = 0;
 		this.title = "";
 		this.content = "";
@@ -15,8 +21,13 @@ class ScreenNotification {
 		this.sound = null; //relative URL of the sound file to play.
 		this.template = null; //relative URL of the template file to use
 		this.title_only = false;
+		this.template = "view/notification_default.html";
 
-		this.template = tplUrl;
+		if (typeof params === "object") {
+			for (const key in params) {
+				this[key] = params[key];
+			}
+		}
 	}
 
 	//Render the notification HTML.

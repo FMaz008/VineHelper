@@ -1,6 +1,91 @@
+class BrendaAnnounceQueue {
+	constructor() {
+		this.queue = [];
+		this.url = "https://api.llamastories.com/brenda/product";
+		this.responseStatusTemplates = {
+			200: "{asin} has been successfully announced to Brenda.",
+			401: "API Token invalid, please go in the extension settings to correct it.",
+			422: "Unprocessable entity. The request was malformed and rejected.",
+			429: "Hit rate limit, backing off, will retry.",
+			default: "The announce has failed for an unknown reason.",
+		};
+		this.defaultRateLimitSecs = this.rateLimitSecs = 10;
+		this.lastProcessTime = 0;
+		this.queueTimer = null;
+	}
+
+	announce(asin, etv, queue) {
+		this.queue.push({ asin, etv, queue });
+
+		// We won't always have a timer running, so we need to check if we need to start one or if we can process immediately
+		if (this.lastProcessTime + this.rateLimitSecs * 1000 > Date.now()) {
+			this.queueTimer = setTimeout(
+				this.process.bind(this),
+				Date.now() - this.lastProcessTime + this.rateLimitSecs * 1000
+			);
+		} else if (!this.queueTimer) {
+			this.process();
+		}
+	}
+
+	async process() {
+		if (this.queue.length == 0) {
+			return;
+		}
+
+		const item = this.queue.shift();
+		let message = this.responseStatusTemplates.default;
+		try {
+			const { status } = await fetch(this.url, {
+				method: "PUT",
+				headers: { "Content-Type": "application/x-www-form-urlencoded" },
+				body: new URLSearchParams({
+					version: 1,
+					token: appSettings.discord.guid,
+					domain: "amazon." + vineDomain,
+					tab: item.queue,
+					asin: item.asin,
+					etv: item.etv,
+				}),
+			});
+
+			if (status === 429) {
+				this.queue.unshift(item);
+				this.rateLimitCount++;
+			} else {
+				this.rateLimitCount = this.rateLimitCount > 0 ? this.rateLimitCount - 1 : 0;
+			}
+			this.rateLimitSecs = (this.rateLimitCount + 1) * this.defaultRateLimitSecs;
+			message = this.responseStatusTemplates[status] || this.responseStatusTemplates.default;
+		} catch (error) {
+			console.error(error);
+			this.queue.unshift(item);
+		}
+		this.lastProcessTime = Date.now();
+
+		// Replace placeholders in the message
+		message = message.replace("{asin}", item.asin);
+
+		await Notifications.pushNotification(
+			new ScreenNotification({
+				title: "Announce to Brenda",
+				lifespan: 10,
+				content: message,
+			})
+		);
+
+		this.queueTimer = setTimeout(this.process.bind(this), this.rateLimitSecs * 1000);
+	}
+}
+
+if (typeof window.BrendaAnnounceQueue === "undefined") {
+	window.BrendaAnnounceQueue = new BrendaAnnounceQueue();
+}
+
 function Toolbar(tileInstance) {
 	var pToolbar = null;
 	var pTile = tileInstance;
+
 	pTile.setToolbar(this);
 
 	//Create the bare bone structure of the toolbar
@@ -308,50 +393,15 @@ async function announceItem(event) {
 
 	//In case of price range, only send the highest value.
 	etv = etv.split("-").pop();
-	etv = Number(etv.replace(/[^0-9\.-]+/g, ""));
+	etv = Number(etv.replace(/[^0-9-.]+/g, ""));
+
+	window.BrendaAnnounceQueue.announce(event.data.asin, etv, vineQueue);
 
 	let note = new ScreenNotification();
 	note.title = "Announce to Brenda";
 	note.lifespan = 10;
 	note.content =
 		"Sending this product " + event.data.asin + " from the " + vineQueueAbbr + " queue to Brenda over on discord";
-	await Notifications.pushNotification(note);
-
-	//Post a fetch request to the Brenda API from the AmazonVine Discord server
-	//We want to check if the guid is valid.
-	let url = "https://api.llamastories.com/brenda/product";
-	var details = {
-		version: 1,
-		token: appSettings.discord.guid,
-		domain: "amazon." + vineDomain,
-		tab: vineQueue,
-		asin: event.data.asin,
-		etv: etv,
-	};
-
-	const response = await fetch(url, {
-		method: "PUT",
-		headers: { "Content-Type": "application/x-www-form-urlencoded" },
-		body: new URLSearchParams(details),
-	});
-	let message = "";
-	if (response.status == 200) {
-		message = "Announce successful! Brenda still need to process it...";
-	} else if (response.status == 401) {
-		message = "API Token invalid, please go in the extension settings to correct it.";
-	} else if (response.status == 422) {
-		message = "Unprocessable entity. The request was malformed and rejected.";
-	} else if (response.status == 429) {
-		message = "Too many announce. Please wait longer between each of them.";
-	} else {
-		message = "The announce has failed for an unknown reason.";
-	}
-
-	//Show a notification
-	note = new ScreenNotification();
-	note.title = "Announce to Brenda";
-	note.lifespan = 10;
-	note.content = message;
 	await Notifications.pushNotification(note);
 
 	//Visually deactivate this item, will be reset on the next page load, but it's just to help navigation and avoid double-clicking
