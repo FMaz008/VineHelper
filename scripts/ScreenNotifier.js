@@ -2,19 +2,19 @@
  *  will be fed to ScreenNotifier
  * */
 class ScreenNotification {
-	id = 0;
-	title = "";
-	content = "";
-	lifespan = 0; //Will not autodelete
-	sound = null; //relative URL of the sound file to play.
-	template = null; //relative URL of the template file to use
-	title_only = false;
-
 	/** Constructor
 	 * @var tplUrl URL of the template to use, null=default.
 	 */
 	constructor(tplUrl = null) {
 		if (tplUrl === null) tplUrl = "view/notification_default.html";
+
+		this.id = 0;
+		this.title = "";
+		this.content = "";
+		this.lifespan = 0; //Will not autodelete
+		this.sound = null; //relative URL of the sound file to play.
+		this.template = null; //relative URL of the template file to use
+		this.title_only = false;
 
 		this.template = tplUrl;
 	}
@@ -32,10 +32,9 @@ class ScreenNotification {
 
 /** Handle the display of notification */
 class ScreenNotifier {
-	noteCounter = 0;
-	lastSoundPlayedAt = Date.now();
-
 	constructor() {
+		this.noteCounter = 0;
+		this.lastSoundPlayedAt = Date.now();
 		this.init();
 	}
 
@@ -76,6 +75,11 @@ class ScreenNotifier {
 				// Don't play the notification sound again within 30 sec.
 				this.lastSoundPlayedAt = Date.now();
 				const audioElement = new Audio(chrome.runtime.getURL(note.sound));
+				audioElement.addEventListener("ended", function () {
+					// Remove the audio element from the DOM
+					audioElement.removeEventListener("ended", arguments.callee); // Remove the event listener
+					audioElement.remove();
+				});
 				audioElement.play();
 			}
 		}

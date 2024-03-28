@@ -1,6 +1,5 @@
 var lastSoundPlayedAt = 0; //Date.now();
 var appSettings = [];
-var arrDebug = [];
 if (typeof browser === "undefined") {
 	var browser = chrome;
 }
@@ -34,7 +33,6 @@ var Notifications = new ScreenNotifier();
 
 window.onload = function () {
 	browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
-		//console.log(data);
 		if (data.type == undefined) return;
 
 		if (data.type == "newItem") {
@@ -52,7 +50,9 @@ window.onload = function () {
 		}
 		if (data.type == "vineCountry") {
 			sendResponse({ success: true });
-			setLocale(data.domain);
+			if (vineDomain === null) {
+				setLocale(data.domain);
+			}
 		}
 	});
 
@@ -66,10 +66,10 @@ window.onload = function () {
 };
 
 async function init() {
-	const data = await chrome.storage.local.get("settings");
+	const data = await browser.storage.local.get("settings");
 
 	if (data == null || Object.keys(data).length === 0) {
-		console.log("Settings not available yet. Waiting 10 sec...");
+		showRuntime("Settings not available yet. Waiting 10 sec...");
 		setTimeout(function () {
 			init();
 		}, 10000);
@@ -136,7 +136,12 @@ async function addItem(data) {
 		if (Date.now() - lastSoundPlayedAt > 30000) {
 			// Don't play the notification sound again within 30 sec.
 			lastSoundPlayedAt = Date.now();
-			const audioElement = new Audio(chrome.runtime.getURL("resource/sound/notification.mp3"));
+			const audioElement = new Audio(browser.runtime.getURL("resource/sound/notification.mp3"));
+			audioElement.addEventListener("ended", function () {
+				// Remove the audio element from the DOM
+				audioElement.removeEventListener("ended", arguments.callee); // Remove the event listener
+				audioElement.remove();
+			});
 			audioElement.play();
 		}
 	}
@@ -161,27 +166,28 @@ function insertMessageIfAsinIsUnique(content, asin, etv, title) {
 
 	//Remove ETV Value if it does not exist
 	if (etv == null) {
-		etvElement = document.getElementById("etv_value");
+		let etvElement = document.getElementById("etv_value");
 		etvElement.style.display = "none";
 	}
 
 	//Highlight if matches a keyword
-	let highligthed = false;
 	const newTile = document.getElementById(newID);
 
 	if (appSettings.general.highlightKeywords.length > 0) {
-		match = appSettings.general.highlightKeywords.find((word) => {
+		let match = appSettings.general.highlightKeywords.find((word) => {
 			const regex = new RegExp(`\\b${word}\\b`, "i");
 			return word && regex.test(title);
 		});
 		if (match != undefined) {
-			highligthed = true;
 			showRuntime("TILE: The item match the keyword '" + match + "', highlight it");
 			newTile.classList.add("keyword-highlight");
 		}
 	}
 }
 
+//Required for the Template engine but not of any use in this script.
+var arrDebug = [];
+var starTime = Date.now();
 function showRuntime(eventName) {
-	// arrDebug.push({ time: Date.now() - startTime, event: eventName });
+	arrDebug.push({ time: Date.now() - startTime, event: eventName });
 }
