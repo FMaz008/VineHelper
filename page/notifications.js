@@ -187,7 +187,7 @@ function insertMessageIfAsinIsUnique(content, asin, etv, title) {
 
 //Required for the Template engine but not of any use in this script.
 var arrDebug = [];
-var starTime = Date.now();
+var startTime = Date.now();
 function showRuntime(eventName) {
 	arrDebug.push({ time: Date.now() - startTime, event: eventName });
 }
