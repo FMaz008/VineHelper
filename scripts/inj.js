@@ -124,7 +124,7 @@ window.fetch = async (...args) => {
 				}
 
 				// Any variation with a : without a space after will crash, ensure : always has a space after.
-				newValue = variation.dimensions[key].replace(/:[^\s]/g, ": ");
+				newValue = variation.dimensions[key].replace(/:([^\s])/g, ": $1");
 				if (newValue !== variation.dimensions[key]) {
 					variation.dimensions[key] = newValue;
 					fixed++;
