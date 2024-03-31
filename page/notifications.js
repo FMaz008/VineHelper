@@ -4,6 +4,13 @@ if (typeof browser === "undefined") {
 	var browser = chrome;
 }
 
+//Required for the Template engine but not of any use in this script.
+var arrDebug = [];
+var startTime = Date.now();
+function showRuntime(eventName) {
+	arrDebug.push({ time: Date.now() - startTime, event: eventName });
+}
+
 var Tpl = new Template();
 var TplMgr = new TemplateMgr();
 
@@ -183,11 +190,4 @@ function insertMessageIfAsinIsUnique(content, asin, etv, title) {
 			newTile.classList.add("keyword-highlight");
 		}
 	}
-}
-
-//Required for the Template engine but not of any use in this script.
-var arrDebug = [];
-var startTime = Date.now();
-function showRuntime(eventName) {
-	arrDebug.push({ time: Date.now() - startTime, event: eventName });
 }
