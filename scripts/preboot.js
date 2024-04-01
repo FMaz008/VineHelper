@@ -195,9 +195,6 @@ async function getSettings() {
 
 	if (appSettings.thorvarium.ETVModalOnTop) loadStyleSheet("node_modules/vine-styling/desktop/etv-modal-on-top.css");
 
-	if (appSettings.thorvarium.categoriesWithEmojis)
-		loadStyleSheet("node_modules/vine-styling/desktop/categories-with-emojis.css");
-
 	if (appSettings.thorvarium.paginationOnTop)
 		loadStyleSheet("node_modules/vine-styling/desktop/pagination-on-top.css");
 
@@ -221,6 +218,18 @@ async function getSettings() {
 	arrMatches = currentUrl.match(regex);
 	vineDomain = arrMatches[1];
 	vineCountry = vineDomain.split(".").pop();
+
+	// Load the country specific stylesheet
+	if (appSettings.thorvarium.categoriesWithEmojis)
+		// The default stylesheet is for the US
+		var emojiList = "categories-with-emojis";
+		// For all other countries, append the country code to the stylesheet
+		if (vineCountry != "com")
+			emojiList += "-" + vineCountry.toUpperCase();
+
+		loadStyleSheet("node_modules/vine-styling/desktop/" + emojiList + ".css");
+
+	showRuntime("BOOT: Thorvarium country-specific stylesheets injected");
 
 	//Send the country code to the Service Worker
 	browser.runtime.sendMessage({
