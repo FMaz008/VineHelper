@@ -230,7 +230,7 @@ async function initInsertBookmarkButton() {
 		prom = await Tpl.loadFile("view/bookmark.html");
 		Tpl.setVar("date", appSettings.general.bookmarkDate);
 		let bookmarkContent = Tpl.render(prom);
-		$("#vvp-items-button-container ~ .vvp-container-right-align").append(bookmarkContent);
+		$("#vvp-items-button-container").append(bookmarkContent);
 		$("button.bookmarknow").on("click", function (event) {
 			//Fetch the current date/time from the server
 			let arrJSON = {
