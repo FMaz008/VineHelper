@@ -1,11 +1,11 @@
 //No JQuery
 class Template {
-	arrCache = [];
-	arrVar = [];
-	arrIf = [];
-	currentURL = null;
-
-	constructor() {}
+	constructor() {
+		this.arrCache = [];
+		this.arrVar = [];
+		this.arrIf = [];
+		this.currentURL = null;
+	}
 
 	async loadFile(url) {
 		this.currentURL = url;
@@ -54,9 +54,8 @@ class Template {
 }
 
 class TemplateMgr {
-	arrTemplate = [];
-
 	constructor() {
+		this.arrTemplate = [];
 		this.loadTempateFromLocalStorage();
 	}
 
@@ -88,10 +87,19 @@ class TemplateMgr {
 
 	async loadTemplateFromFile(url) {
 		showRuntime("TEMPLATE: Loading template " + url + " from file.");
-		const promise = fetch(chrome.runtime.getURL(url)).then((response) => {
-			if (!response.ok) throw new Error(response.statusText);
-			return response.text();
-		});
+
+		const promise = fetch(chrome.runtime.getURL(url))
+			.then((response) => {
+				if (!response.ok) {
+					throw new Error(response.statusText + " " + url);
+				}
+				return response.text();
+			})
+			.catch((error) => {
+				// Handle the error here
+				return "";
+			});
+
 		return promise;
 	}
 
