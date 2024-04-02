@@ -131,24 +131,22 @@ async function checkNewItems() {
 }
 
 async function sendMessageToAllTabs(data, debugInfo) {
-	await chrome.tabs.query(
-		{
-			/* No criteria */
-		},
-		async function (tabs) {
-			await tabs.forEach(async (tab) => {
-				//console.log("(" + debugInfo + ") Sending to tab id " + tab.id);
-				await chrome.tabs.sendMessage(tab.id, data, (response) => {
-					if (browser.runtime.lastError) {
-						//console.log(browser.runtime.lastError.message);
-						return;
-					}
-					if (!response) {
-						console.log("Failed");
-						return;
-					}
-				});
+	const tabs = await chrome.tabs.query({});
+	const sendMessagePromises = tabs.map((tab) => {
+		return new Promise((resolve) => {
+			chrome.tabs.sendMessage(tab.id, data, (response) => {
+				if (chrome.runtime.lastError) {
+					//console.error(debugInfo + ":" + chrome.runtime.lastError.message);
+					resolve();
+				} else if (!response) {
+					console.log("Failed");
+					resolve();
+				} else {
+					// Handle response if needed
+					resolve();
+				}
 			});
-		}
-	);
+		});
+	});
+	await Promise.all(sendMessagePromises);
 }
