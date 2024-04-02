@@ -29,6 +29,10 @@ var DialogMgr = new ModalMgr();
 var Notifications = new ScreenNotifier();
 var HiddenList = new HiddenListMgr();
 
+function showRuntime(eventName) {
+	arrDebug.push({ time: Date.now() - startTime, event: eventName });
+}
+
 //#########################
 //### Load settings
 
@@ -214,7 +218,7 @@ async function getSettings() {
 	//Figure out what domain the extension is working on
 	//De-activate the unavailableTab (and the voting system) for all non-.ca domains.
 	let currentUrl = window.location.href;
-	regex = /^.+?amazon\.([a-z\.]+).*\/vine\/.*$/;
+	regex = /^.+?amazon\.([a-z.]+).*\/vine\/.*$/;
 	arrMatches = currentUrl.match(regex);
 	vineDomain = arrMatches[1];
 	vineCountry = vineDomain.split(".").pop();
@@ -223,11 +227,10 @@ async function getSettings() {
 	if (appSettings.thorvarium.categoriesWithEmojis)
 		// The default stylesheet is for the US
 		var emojiList = "categories-with-emojis";
-		// For all other countries, append the country code to the stylesheet
-		if (vineCountry != "com")
-			emojiList += "-" + vineCountry.toUpperCase();
+	// For all other countries, append the country code to the stylesheet
+	if (vineCountry != "com") emojiList += "-" + vineCountry.toUpperCase();
 
-		loadStyleSheet("node_modules/vine-styling/desktop/" + emojiList + ".css");
+	loadStyleSheet("node_modules/vine-styling/desktop/" + emojiList + ".css");
 
 	showRuntime("BOOT: Thorvarium country-specific stylesheets injected");
 
@@ -397,10 +400,6 @@ async function getRunTimeJSON() {
 	} finally {
 		return JSON.stringify(arrDebug, null, 2).replaceAll("\n", "<br/>\n");
 	}
-}
-
-function showRuntime(eventName) {
-	arrDebug.push({ time: Date.now() - startTime, event: eventName });
 }
 
 function bytesToSize(bytes, decimals = 2) {
