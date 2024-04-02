@@ -173,7 +173,7 @@ function initInjectScript() {
 function initSetPageTitle() {
 	//Update the page title
 	let currentUrl = window.location.href;
-	regex = /^.+?amazon\..+\/vine\/.*[\?\&]search=(.*?)(?:[\&].*)?$/;
+	regex = /^.+?amazon\..+\/vine\/.*[?&]search=(.*?)(?:[&].*)?$/;
 	arrMatches = currentUrl.match(regex);
 	if (arrMatches?.length) {
 		$("title").text("Vine - S: " + arrMatches[1]);
@@ -182,7 +182,7 @@ function initSetPageTitle() {
 	}
 
 	//Add the category, is any, that is currently being browsed to the title of the page.
-	regex = /^.+?amazon\..+\/vine\/.*[\?\&]pn=(.*?)(?:[\&]cn=(.*?))?(?:[\&].*)?$/;
+	regex = /^.+?amazon\..+\/vine\/.*[?&]pn=(.*?)(?:[&]cn=(.*?))?(?:[&].*)?$/;
 	arrMatches = currentUrl.match(regex);
 	if (arrMatches?.length === 3) {
 		const selector = arrMatches[2] == undefined ? ".parent-node" : ".child-node";
@@ -230,7 +230,7 @@ async function initInsertBookmarkButton() {
 		prom = await Tpl.loadFile("view/bookmark.html");
 		Tpl.setVar("date", appSettings.general.bookmarkDate);
 		let bookmarkContent = Tpl.render(prom);
-		$("#vvp-items-button-container").append(bookmarkContent);
+		document.querySelector("#vvp-items-button-container").insertAdjacentHTML("afterend", bookmarkContent);
 		$("button.bookmarknow").on("click", function (event) {
 			//Fetch the current date/time from the server
 			let arrJSON = {
@@ -491,7 +491,8 @@ async function serverProductsResponse(data) {
 		//If there is a remote value for the hidden item, ensure it is sync'ed up with the local list
 		if (appSettings.hiddenTab.remote == true && values.hidden != null) {
 			showRuntime("DRAW: Remote is ordering to show or hide item");
-			if (values.hidden == true && !tile.isHidden()) tile.hideTile(); //Will update the placement and list
+			if (values.hidden == true && !tile.isHidden())
+				tile.hideTile(); //Will update the placement and list
 			else if (values.hidden == false && tile.isHidden()) tile.showTile(); //Will update the placement and list
 		}
 

@@ -89,10 +89,8 @@ div#vh-healing-text {
 div#bookmark {
 	margin-top: 10px;
 	flex-basis: 100%;
-	text-align: right;
+	text-align: left;
 }
-
-
 
 /* Add visual cues for the keybinding */
 a.vh-hideall span,
