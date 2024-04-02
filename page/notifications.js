@@ -6,6 +6,8 @@ if (typeof browser === "undefined") {
 
 //Required for the Template engine but not of any use in this script.
 var arrDebug = [];
+var arrItems = [];
+
 var startTime = Date.now();
 function showRuntime(eventName) {
 	arrDebug.push({ time: Date.now() - startTime, event: eventName });
@@ -158,36 +160,46 @@ async function addItem(data) {
 
 function insertMessageIfAsinIsUnique(content, asin, etv, title) {
 	var newID = `vh-notification-${asin}`;
-	const newBody = document.getElementById("vh-items-container");
 
-	if (!document.getElementById(newID)) {
+	if (!arrItems.includes(asin)) {
+		//New items to be added
+		arrItems[asin] = etv;
+		const newBody = document.getElementById("vh-items-container");
 		newBody.insertAdjacentHTML("afterbegin", content);
+		setETV(asin, etv);
+
+		//Highlight if matches a keyword
+		const newTile = document.getElementById(newID);
+
+		if (appSettings.general.highlightKeywords.length > 0) {
+			let match = appSettings.general.highlightKeywords.find((word) => {
+				const regex = new RegExp(`\\b${word}\\b`, "i");
+				return word && regex.test(title);
+			});
+			if (match != undefined) {
+				showRuntime("TILE: The item match the keyword '" + match + "', highlight it");
+				newTile.classList.add("keyword-highlight");
+			}
+		}
+	} else {
+		//Item already exist, update ETV
+		if (etv != arrItems[asin]) {
+			setETV(asin, etv);
+		}
 	}
+}
+
+function setETV(asin, etv) {
+	var itemID = `vh-notification-${asin}`;
+	const etvClass = document.getElementById(itemID);
 
 	//Highlight for ETV
-
 	if (etv == "0.00") {
-		const etvClass = document.getElementById(newID);
 		etvClass.classList.add("zeroETV");
 	}
-
 	//Remove ETV Value if it does not exist
 	if (etv == null) {
-		let etvElement = document.getElementById("etv_value");
+		let etvElement = document.querySelector("#" + itemID + " #etv_value");
 		etvElement.style.display = "none";
-	}
-
-	//Highlight if matches a keyword
-	const newTile = document.getElementById(newID);
-
-	if (appSettings.general.highlightKeywords.length > 0) {
-		let match = appSettings.general.highlightKeywords.find((word) => {
-			const regex = new RegExp(`\\b${word}\\b`, "i");
-			return word && regex.test(title);
-		});
-		if (match != undefined) {
-			showRuntime("TILE: The item match the keyword '" + match + "', highlight it");
-			newTile.classList.add("keyword-highlight");
-		}
 	}
 }
