@@ -89,6 +89,18 @@ async function init() {
 		document.getElementById("status").innerHTML =
 			"<strong>Notifications disabled</strong> You need to enable the notifications for this window to work.";
 	}
+
+	//Ask the service worker if the country is known.
+	browser.runtime.sendMessage(
+		{
+			type: "queryVineCountry",
+		},
+		function (response) {
+			if (response.domain !== undefined) {
+				setLocale(response.domain);
+			}
+		}
+	);
 }
 
 //Set the locale and currency based on the domain.

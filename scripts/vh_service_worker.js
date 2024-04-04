@@ -21,6 +21,13 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 		//console.log("Received keep alive.");
 		sendResponse({ success: true });
 	}
+	if (data.type == "queryVineCountry") {
+		//If we know the country, reply it
+		if (vineCountry != null) {
+			sendResponse({ success: true, domain: vineCountry });
+			//sendMessageToAllTabs({ type: "vineCountry", domain: vineCountry }, "Vine Country - keep alive");
+		}
+	}
 });
 
 //Load the settings, if no settings, try again in 10 sec
@@ -55,11 +62,6 @@ async function checkNewItems() {
 		}, 10000);
 		return;
 	}
-
-	//Now that we know the country, let's broadcast it to generate traffic and keep thing alive.
-	setInterval(async () => {
-		sendMessageToAllTabs({ type: "vineCountry", domain: vineCountry }, "Vine Country - keep alive");
-	}, 25000);
 
 	//Check for new items again in 30 seconds.
 	setTimeout(function () {
