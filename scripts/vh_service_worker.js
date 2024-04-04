@@ -1,6 +1,7 @@
 const DEBUG_MODE = false;
 var appSettings = [];
 var vineCountry = null;
+const broadcastChannel = new BroadcastChannel("VineHelperChannel");
 
 if (typeof browser === "undefined") {
 	var browser = chrome;
@@ -131,22 +132,5 @@ async function checkNewItems() {
 }
 
 async function sendMessageToAllTabs(data, debugInfo) {
-	const tabs = await chrome.tabs.query({});
-	const sendMessagePromises = tabs.map((tab) => {
-		return new Promise((resolve) => {
-			chrome.tabs.sendMessage(tab.id, data, (response) => {
-				if (chrome.runtime.lastError) {
-					//console.error(debugInfo + ":" + chrome.runtime.lastError.message);
-					resolve();
-				} else if (!response) {
-					console.log("Failed");
-					resolve();
-				} else {
-					// Handle response if needed
-					resolve();
-				}
-			});
-		});
-	});
-	await Promise.all(sendMessagePromises);
+	broadcastChannel.postMessage(data);
 }

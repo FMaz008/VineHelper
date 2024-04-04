@@ -39,18 +39,17 @@ var vineLocale = null;
 var vineCurrency = null;
 var vineDomain = null;
 var Notifications = new ScreenNotifier();
+const broadcastChannel = new BroadcastChannel("VineHelperChannel");
 
 window.onload = function () {
-	browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
+	broadcastChannel.onmessage = async function (event) {
+		let data = event.data;
 		if (data.type == undefined) return;
 
 		if (data.type == "newItem") {
-			sendResponse({ success: true });
 			addItem(data);
 		}
 		if (data.type == "newItemCheck") {
-			sendResponse({ success: true });
-
 			//Display a notification that we have checked for items.
 			let note = new ScreenNotification();
 			note.template = "view/notification_loading.html";
@@ -58,12 +57,11 @@ window.onload = function () {
 			Notifications.pushNotification(note);
 		}
 		if (data.type == "vineCountry") {
-			sendResponse({ success: true });
 			if (vineDomain === null) {
 				setLocale(data.domain);
 			}
 		}
-	});
+	};
 
 	setInterval(async () => {
 		browser.runtime.sendMessage({

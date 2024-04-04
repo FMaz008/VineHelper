@@ -728,12 +728,11 @@ window.addEventListener("message", async function (event) {
 	}
 });
 
-browser.runtime.onMessage.addListener(async (data, sender, sendResponse) => {
+broadcastChannel.onmessage = async function (event) {
+	let data = event.data;
 	if (data.type == undefined) return;
 
 	if (data.type == "newItemCheck") {
-		sendResponse({ success: true });
-
 		if (appSettings.general.displayNewItemNotifications) {
 			//Display a notification that we have checked for items.
 			let note = new ScreenNotification();
@@ -744,8 +743,6 @@ browser.runtime.onMessage.addListener(async (data, sender, sendResponse) => {
 	}
 
 	if (data.type == "newItem") {
-		sendResponse({ success: true });
-
 		if (
 			data.index < 10 && //Limit the notification to the top 10 most recents
 			vineBrowsingListing && //Only show notification on listing pages
@@ -777,10 +774,7 @@ browser.runtime.onMessage.addListener(async (data, sender, sendResponse) => {
 			Notifications.pushNotification(note2);
 		}
 	}
-	if (data.type == "vineCountry") {
-		sendResponse({ success: true });
-	}
-});
+};
 
 //Key bindings/keyboard shortcuts for navigation
 window.addEventListener("keyup", async function (e) {

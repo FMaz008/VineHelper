@@ -1,4 +1,5 @@
 const startTime = Date.now();
+const broadcastChannel = new BroadcastChannel("VineHelperChannel");
 
 if (typeof browser === "undefined") {
 	var browser = chrome;
