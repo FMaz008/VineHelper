@@ -66,7 +66,7 @@ async function checkNewItems() {
 	//Check for new items again in 30 seconds.
 	setTimeout(function () {
 		checkNewItems();
-	}, 60000);
+	}, 45000);
 
 	if (appSettings == undefined || !appSettings.general.newItemNotification) {
 		return; //Not setup to check for notifications. Will try again in 30 secs.
@@ -134,5 +134,16 @@ async function checkNewItems() {
 }
 
 async function sendMessageToAllTabs(data, debugInfo) {
+	//Send to the notification window
 	broadcastChannel.postMessage(data);
+
+	//Send to other tabs
+	if (appSettings.general.displayNewItemNotifications) {
+		browser.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+			const activeTab = tabs[0];
+			if (activeTab) {
+				browser.tabs.sendMessage(activeTab.id, data);
+			}
+		});
+	}
 }

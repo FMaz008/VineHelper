@@ -728,8 +728,8 @@ window.addEventListener("message", async function (event) {
 	}
 });
 
-broadcastChannel.onmessage = async function (event) {
-	let data = event.data;
+browser.runtime.onMessage.addListener(async function (message, sender, sendResponse) {
+	let data = message;
 	if (data.type == undefined) return;
 
 	if (data.type == "newItemCheck") {
@@ -748,7 +748,6 @@ broadcastChannel.onmessage = async function (event) {
 			vineBrowsingListing && //Only show notification on listing pages
 			appSettings.general.displayNewItemNotifications
 		) {
-			console.log("New notification!");
 			let { date, asin, title, search, img_url, domain, etv } = data;
 
 			//Generate the content to be displayed in the notification
@@ -774,7 +773,7 @@ broadcastChannel.onmessage = async function (event) {
 			Notifications.pushNotification(note2);
 		}
 	}
-};
+});
 
 //Key bindings/keyboard shortcuts for navigation
 window.addEventListener("keyup", async function (e) {
