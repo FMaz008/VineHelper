@@ -50,8 +50,7 @@ div.vh-grid .vvp-item-tile .vvp-item-tile-content > * {
 }
 
 #vh-tabs .keyword-highlight {
-	border: 3px solid var(--item-highlight-alert) !important;
-	background-color: var(--item-highlight-background);
+	border: 3px solid var(--alert) !important;
 }
 
 #vvp-items-grid-container .vvp-item-tile a,
