@@ -290,6 +290,10 @@ async function getSettings() {
 			vineLocale = "es-ES";
 			vineCurrency = "EUR";
 			break;
+		case "it":
+			vineLocale = "it-IT";
+			vineCurrency = "EUR";
+			break;
 	}
 
 	//Determine if we are browsing a queue
