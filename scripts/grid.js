@@ -150,7 +150,10 @@ async function hideAllItems() {
 
 	//Find out what the current active tab is
 	let currentTab = "#vvp-items-grid";
-	if (document.querySelector("#tab-unavailable").style.display !== "none") {
+	if (
+		document.querySelector("#tab-unavailable") &&
+		document.querySelector("#tab-unavailable").style.display !== "none"
+	) {
 		currentTab = "#tab-unavailable";
 	}
 
