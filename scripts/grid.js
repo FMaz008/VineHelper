@@ -1,10 +1,9 @@
 var currentTab = "vvp-items-grid";
 
 class Grid {
-	pGrid = null;
-	pArrTile = [];
-
 	constructor(obj) {
+		this.pGrid = null;
+		this.pArrTile = [];
 		this.pGrid = obj;
 	}
 
@@ -86,7 +85,7 @@ async function createGridInterface() {
 
 	//Implement the tab system.
 	let tabs = $("<div>").attr("id", "vh-tabs").insertBefore("#vvp-items-grid");
-	tabs.addClass('theme-default');
+	tabs.addClass("theme-default");
 	$("#vvp-items-grid").detach().appendTo(tabs);
 	$("#vvp-items-grid").addClass("tab-grid");
 
@@ -148,8 +147,15 @@ async function hideAllItems() {
 	let arrTile = [];
 	let counter = 0;
 	HiddenList.loadFromLocalStorage(); //Refresh the list in case it was altered in a different tab
-	while ($("#vvp-items-grid .vvp-item-tile").children().length > 0) {
-		tDom = $("#vvp-items-grid .vvp-item-tile").children()[0];
+
+	//Find out what the current active tab is
+	let currentTab = "#vvp-items-grid";
+	if (document.querySelector("#tab-unavailable").style.display !== "none") {
+		currentTab = "#tab-unavailable";
+	}
+
+	while ($(currentTab + " .vvp-item-tile").children().length > 0) {
+		tDom = $(currentTab + " .vvp-item-tile").children()[0];
 		asin = getAsinFromDom(tDom);
 		arrTile.push({ asin, hidden: true });
 		tile = getTileByAsin(asin); //Obtain the real tile
