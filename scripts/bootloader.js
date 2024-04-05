@@ -883,12 +883,12 @@ function unescapeHTML(encodedString) {
 		"&#34;": '"',
 		"&#39;": "'",
 	};
-	// Create a regular expression pattern using the keys of entityMap
-	var pattern = new RegExp(Object.keys(entityMap).join("|"), "g");
 
-	// Replace HTML entities using the mapping object
-	const decodedString = encodedString.replace(pattern, function (matchedEntity) {
-		return entityMap[matchedEntity];
-	});
-	return decodedString;
+	// Use a for...in loop for better performance
+	for (const key in entityMap) {
+		const value = entityMap[key];
+		encodedString = encodedString.split(key).join(value);
+	}
+
+	return encodedString;
 }

@@ -209,28 +209,9 @@ function Tile(obj, gridInstance) {
 			}
 		}
 
-		//The content of .a-truncate-cut is loaded dynamically and often this script run before
-		//the content is populated. This method will wait for a little bit, if needed.
-		let encodedString;
-		let count = 0;
-		while (count >= 0) {
-			encodedString = this.getDOM().querySelector(".a-truncate-cut").innerText;
-			if (encodedString == "") {
-				await new Promise((r) => setTimeout(r, 50));
-				count++;
-				if (count > 20) {
-					break;
-				}
-			} else {
-				count = -1;
-				break;
-			}
-		}
-
-		//Some entries are double escaped, so run it twice
-		const decodedString = unescapeHTML(unescapeHTML(encodedString));
-
-		this.getDOM().querySelector(".a-truncate-cut").innerText = decodedString;
+		//Unescape titles
+		const fullText = this.getDOM().querySelector(".a-truncate-full").innerText;
+		this.getDOM().querySelector(".a-truncate-full").innerText = unescapeHTML(fullText);
 	};
 
 	this.moveToGrid = async function (g, animate = false) {
