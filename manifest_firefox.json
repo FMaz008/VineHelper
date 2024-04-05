@@ -3,9 +3,7 @@
 	"name": "Amazon Vine Helper",
 	"description": "Improve the Amazon Vine experience.",
 	"version": "2.4.13",
-	"permissions": [
-		"storage"
-	],
+	"permissions": ["storage"],
 	"browser_specific_settings": {
 		"gecko": {
 			"id": "{5951bf9a-25ae-4043-9fa2-54dc0ac1ce70}",
@@ -39,6 +37,7 @@
 			],
 			"matches": [
 				"*://*.amazon.ca/*",
+				"*://*.amazon.it/*",
 				"*://*.amazon.es/*",
 				"*://*.amazon.de/*",
 				"*://*.amazon.fr/*",
@@ -49,9 +48,7 @@
 		}
 	],
 	"background": {
-		"scripts": [
-			"scripts/vh_service_worker.js"
-		]
+		"scripts": ["scripts/vh_service_worker.js"]
 	},
 	"content_scripts": [
 		{
@@ -64,14 +61,10 @@
 				"resource/css/toolbar.css",
 				"resource/css/vinehelper.css"
 			],
-			"js": [
-				"scripts/grid.js",
-				"scripts/tile.js",
-				"scripts/toolbar.js",
-				"scripts/bootloader.js"
-			],
+			"js": ["scripts/grid.js", "scripts/tile.js", "scripts/toolbar.js", "scripts/bootloader.js"],
 			"matches": [
 				"*://*.amazon.ca/vine/*",
+				"*://*.amazon.it/vine/*",
 				"*://*.amazon.de/vine/*",
 				"*://*.amazon.de/*/vine/*",
 				"*://*.amazon.es/vine/*",
@@ -93,6 +86,7 @@
 			],
 			"matches": [
 				"*://*.amazon.ca/vine/*",
+				"*://*.amazon.it/vine/*",
 				"*://*.amazon.de/vine/*",
 				"*://*.amazon.de/*/vine/*",
 				"*://*.amazon.es/vine/*",
@@ -104,16 +98,11 @@
 			"run_at": "document_start"
 		},
 		{
-			"css": [
-				"resource/css/vinehelper.css",
-				"resource/css/main.css"
-			],
-			"js": [
-				"scripts/Template.js",
-				"scripts/review.js"
-			],
+			"css": ["resource/css/vinehelper.css", "resource/css/main.css"],
+			"js": ["scripts/Template.js", "scripts/review.js"],
 			"matches": [
 				"*://*.amazon.ca/review/create-review*",
+				"*://*.amazon.it/review/create-review*",
 				"*://*.amazon.de/review/create-review*",
 				"*://*.amazon.de/*/review/create-review*",
 				"*://*.amazon.es/review/create-review*",
@@ -126,3 +115,4 @@
 		}
 	]
 }
+
