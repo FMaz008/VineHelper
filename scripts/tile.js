@@ -150,7 +150,7 @@ function Tile(obj, gridInstance) {
 		let jsDate = new Date(mysqlDate + " GMT");
 		let bookmarkDate = new Date(appSettings.general.bookmarkDate);
 		let textDate = timeSince(currentTime, jsDate);
-		if (textDate == NaN) {
+		if (isNaN(textDate)) {
 			showRuntime(
 				"! Time firstseen wrong: currenttime:" +
 					currentTime +
@@ -209,13 +209,6 @@ function Tile(obj, gridInstance) {
 			}
 		}
 
-		//Unescape the titles
-		let entityMap = {
-			"&amp;": "&",
-			"&#34;": '"',
-			"&#39;": "'",
-		};
-
 		//The content of .a-truncate-cut is loaded dynamically and often this script run before
 		//the content is populated. This method will wait for a little bit, if needed.
 		let encodedString;
@@ -234,13 +227,8 @@ function Tile(obj, gridInstance) {
 			}
 		}
 
-		// Create a regular expression pattern using the keys of entityMap
-		var pattern = new RegExp(Object.keys(entityMap).join("|"), "g");
-
-		// Replace HTML entities using the mapping object
-		var decodedString = encodedString.replace(pattern, function (matchedEntity) {
-			return entityMap[matchedEntity];
-		});
+		//Some entries are double escaped, so run it twice
+		const decodedString = unescapeHTML(unescapeHTML(encodedString));
 
 		this.getDOM().querySelector(".a-truncate-cut").innerText = decodedString;
 	};

@@ -871,3 +871,24 @@ function escapeHTML(value) {
 	});
 	return val;
 }
+
+/**
+ * Only unescape characters which are frequent in vine title and pause no risk of code injection
+ * Used by tile.js
+ * @param {string} value
+ */
+function unescapeHTML(encodedString) {
+	const entityMap = {
+		"&amp;": "&",
+		"&#34;": '"',
+		"&#39;": "'",
+	};
+	// Create a regular expression pattern using the keys of entityMap
+	var pattern = new RegExp(Object.keys(entityMap).join("|"), "g");
+
+	// Replace HTML entities using the mapping object
+	const decodedString = encodedString.replace(pattern, function (matchedEntity) {
+		return entityMap[matchedEntity];
+	});
+	return decodedString;
+}
