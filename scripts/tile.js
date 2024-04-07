@@ -271,22 +271,62 @@ function Tile(obj, gridInstance) {
 function timeSince(timenow, date) {
 	var seconds = Math.floor((timenow - date) / 1000);
 	var interval = seconds / 31536000;
+	var numberof = 0
 
-	if (interval > 1) return Math.floor(interval) + " years";
+	if (interval > 1) {
+		numberof = Math.floor(interval);
+		if (numberof == 1) {
+			return numberof + " year";
+		} else {
+			return numberof + " years";
+		}
+	}
 
 	interval = seconds / 2592000;
-	if (interval > 1) return Math.floor(interval) + " months";
+	if (interval > 1) {
+		numberof = Math.floor(interval);
+		if (numberof == 1) {
+			return numberof + " month";
+		} else {
+			return numberof + " months";
+		}
+	}
 
 	interval = seconds / 86400;
-	if (interval > 1) return Math.floor(interval) + " days";
+	if (interval > 1) {
+		numberof = Math.floor(interval);
+		if (numberof == 1) {
+			return numberof + " day";
+		} else {
+			return numberof + " days";
+		}
+	}
 
 	interval = seconds / 3600;
-	if (interval > 1) return Math.floor(interval) + " hrs";
+	if (interval > 1) {
+		numberof = Math.floor(interval);
+		if (numberof == 1) {
+			return numberof + " hour";
+		} else {
+			return numberof + " hrs";
+		}
+	}
 
 	interval = seconds / 60;
-	if (interval > 1) return Math.floor(interval) + " mins";
+	if (interval > 1) {
+		numberof = Math.floor(interval);
+		if (numberof == 1) {
+			return numberof + " min";
+		} else {
+			return numberof + " mins";
+		}
+	}
 
-	return Math.floor(seconds) + " secs";
+	if (Math.floor(seconds) == 1) {
+		return Math.floor(seconds) + " sec";
+	} else {
+		return Math.floor(seconds) + " secs";
+	}
 }
 
 function getTileByAsin(asin) {
