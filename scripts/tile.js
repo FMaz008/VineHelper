@@ -269,25 +269,18 @@ function Tile(obj, gridInstance) {
 }
 
 function timeSince(timenow, date) {
-	var seconds = Math.floor((timenow - date) / 1000);
-	var interval = seconds / 31536000;
+    var seconds = Math.floor((timenow - date) / 1000);
+    var interval = seconds / 31536000;
+    var numberof = 0;
 
-	if (interval > 1) return Math.floor(interval) + " years";
-
-	interval = seconds / 2592000;
-	if (interval > 1) return Math.floor(interval) + " months";
-
-	interval = seconds / 86400;
-	if (interval > 1) return Math.floor(interval) + " days";
-
-	interval = seconds / 3600;
-	if (interval > 1) return Math.floor(interval) + " hrs";
-
-	interval = seconds / 60;
-	if (interval > 1) return Math.floor(interval) + " mins";
-
-	return Math.floor(seconds) + " secs";
+    return (interval > 1) ? ((numberof = Math.floor(interval)) + (numberof === 1 ? " year" : " years")) :
+        (interval = seconds / 2592000) > 1 ? ((numberof = Math.floor(interval)) + (numberof === 1 ? " month" : " months")) :
+        (interval = seconds / 86400) > 1 ? ((numberof = Math.floor(interval)) + (numberof === 1 ? " day" : " days")) :
+        (interval = seconds / 3600) > 1 ? ((numberof = Math.floor(interval)) + (numberof === 1 ? " hour" : " hrs")) :
+        (interval = seconds / 60) > 1 ? ((numberof = Math.floor(interval)) + (numberof === 1 ? " min" : " mins")) :
+        (Math.floor(seconds) === 1 ? (Math.floor(seconds) + " sec") : (Math.floor(seconds) + " secs"));
 }
+
 
 function getTileByAsin(asin) {
 	let tile = null;
