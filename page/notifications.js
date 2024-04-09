@@ -69,6 +69,7 @@ window.onload = function () {
 		});
 	}, 25000);
 
+	document.getElementById("date_loaded").innerText = new Date();
 	init();
 };
 
