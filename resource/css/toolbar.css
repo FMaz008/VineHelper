@@ -78,6 +78,11 @@ div.compact .vh-announce-link {
 	padding-top: 2px;
 	padding-right: 4px;
 	line-height: 16px;
+	padding-left: 10px;
+}
+
+div.compact .vh-floating-icon {
+	padding-left: 0;
 }
 
 div.vh-icon-announcement {
@@ -104,8 +109,8 @@ div.vh-background-fees div.vh-status-container {
 
 div.vh-toolbar-icon {
 	display: inline-block;
-	width: 12px;
-	height: 12px;
+	width: 14px;
+	height: 14px;
 }
 
 div.vh-toolbar-large-icon {
