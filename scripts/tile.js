@@ -142,40 +142,34 @@ function Tile(obj, gridInstance) {
 	};
 
 	this.setDateAdded = function (timenow, mysqlDate) {
-		if (mysqlDate == undefined) return false;
+		if (mysqlDate == undefined || !appSettings.general.displayFirstSeen) return false;
 
-		if (!appSettings.general.displayFirstSeen) return false;
-
-		let currentTime = new Date(timenow + " GMT");
-		let jsDate = new Date(mysqlDate + " GMT");
+		let serverCurrentDate = new Date(timenow + " GMT");
+		let itemDateAdded = new Date(mysqlDate + " GMT");
 		let bookmarkDate = new Date(appSettings.general.bookmarkDate);
-		let textDate = timeSince(currentTime, jsDate);
-		if (isNaN(textDate)) {
+		if (isNaN(serverCurrentDate.getTime()) || isNaN(itemDateAdded.getTime())) {
 			showRuntime(
-				"! Time firstseen wrong: currenttime:" +
-					currentTime +
-					" jstime:" +
-					jsDate +
+				"! Time firstseen wrong: serverCurrentDate:" +
+					serverCurrentDate +
+					" itemDateAdded:" +
+					itemDateAdded +
 					"preformated current time: " +
 					timenow +
 					"preformatted item time" +
 					mysqlDate
 			);
+			return;
 		}
-		if (appSettings.unavailableTab.compactToolbar) {
-			$("<div>")
-				.addClass("vh-date-added")
-				.text(textDate + " ago")
-				.appendTo($(pTile).find(".vh-img-container"));
-		} else {
-			$("<div>")
-				.addClass("vh-date-added")
-				.text("First seen: " + textDate + " ago")
-				.appendTo($(pTile).find(".vh-img-container"));
-		}
+		let textDate = timeSince(serverCurrentDate, itemDateAdded);
+		dateAddedMessage = appSettings.unavailableTab.compactToolbar
+			? `${textDate} ago`
+			: `First seen: ${textDate} ago`;
+
+		let dateAddedDiv = $("<div>").addClass("vh-date-added");
+		dateAddedDiv.text(dateAddedMessage).appendTo($(pTile).find(".vh-img-container"));
 
 		//Highlight the tile background if the bookmark date is in the past
-		if (appSettings.general.bookmark && jsDate > bookmarkDate && appSettings.general.bookmarkDate != 0) {
+		if (appSettings.general.bookmark && itemDateAdded > bookmarkDate && appSettings.general.bookmarkDate != 0) {
 			showRuntime("TILE: The item is more recent than the time marker, highlight it.");
 			$(pTile).addClass("bookmark-highlight");
 		}
@@ -269,18 +263,24 @@ function Tile(obj, gridInstance) {
 }
 
 function timeSince(timenow, date) {
-    var seconds = Math.floor((timenow - date) / 1000);
-    var interval = seconds / 31536000;
-    var numberof = 0;
+	var seconds = Math.floor((timenow - date) / 1000);
+	var interval = seconds / 31536000;
+	var numberof = 0;
 
-    return (interval > 1) ? ((numberof = Math.floor(interval)) + (numberof === 1 ? " year" : " years")) :
-        (interval = seconds / 2592000) > 1 ? ((numberof = Math.floor(interval)) + (numberof === 1 ? " month" : " months")) :
-        (interval = seconds / 86400) > 1 ? ((numberof = Math.floor(interval)) + (numberof === 1 ? " day" : " days")) :
-        (interval = seconds / 3600) > 1 ? ((numberof = Math.floor(interval)) + (numberof === 1 ? " hour" : " hrs")) :
-        (interval = seconds / 60) > 1 ? ((numberof = Math.floor(interval)) + (numberof === 1 ? " min" : " mins")) :
-        (Math.floor(seconds) === 1 ? (Math.floor(seconds) + " sec") : (Math.floor(seconds) + " secs"));
+	return interval > 1
+		? (numberof = Math.floor(interval)) + (numberof === 1 ? " year" : " years")
+		: (interval = seconds / 2592000) > 1
+			? (numberof = Math.floor(interval)) + (numberof === 1 ? " month" : " months")
+			: (interval = seconds / 86400) > 1
+				? (numberof = Math.floor(interval)) + (numberof === 1 ? " day" : " days")
+				: (interval = seconds / 3600) > 1
+					? (numberof = Math.floor(interval)) + (numberof === 1 ? " hour" : " hrs")
+					: (interval = seconds / 60) > 1
+						? (numberof = Math.floor(interval)) + (numberof === 1 ? " min" : " mins")
+						: Math.floor(seconds) === 1
+							? Math.floor(seconds) + " sec"
+							: Math.floor(seconds) + " secs";
 }
-
 
 function getTileByAsin(asin) {
 	let tile = null;
