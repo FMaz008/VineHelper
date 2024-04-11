@@ -263,41 +263,24 @@ function Tile(obj, gridInstance) {
 }
 
 function timeSince(timenow, date) {
-	let seconds = Math.floor((timenow - date) / 1000);
-	let interval = 0;
-	let numberof = 0;
+	const units = [
+		{ value: 31536000, unit: "year" },
+		{ value: 2592000, unit: "month" },
+		{ value: 86400, unit: "day" },
+		{ value: 3600, unit: "hr" },
+		{ value: 60, unit: "min" },
+		{ value: 1, unit: "sec" },
+	];
 
-	interval = seconds / 31536000;
-	if (interval > 1) {
-		numberof = Math.floor(interval);
-		return numberof + (numberof == 1 ? " year" : " years");
+	var seconds = Math.floor((timenow - date) / 1000);
+	for (const { value, unit } of units) {
+		const interval = seconds / value;
+		if (interval >= 1) {
+			const plural = Math.floor(interval) > 1 ? "s" : "";
+			return Math.floor(interval) + ` ${unit}${plural}`;
+		}
 	}
-
-	interval = seconds / 2592000;
-	if (interval > 1) {
-		numberof = Math.floor(interval);
-		return numberof + (numberof == 1 ? " month" : " months");
-	}
-
-	interval = seconds / 86400;
-	if (interval > 1) {
-		numberof = Math.floor(interval);
-		return numberof + (numberof == 1 ? " day" : " days");
-	}
-
-	interval = seconds / 3600;
-	if (interval > 1) {
-		numberof = Math.floor(interval);
-		return numberof + (numberof == 1 ? " hour" : " hrs");
-	}
-
-	interval = seconds / 60;
-	if (interval > 1) {
-		numberof = Math.floor(interval);
-		return numberof + (numberof == 1 ? " min" : " mins");
-	}
-
-	return Math.floor(seconds) + (Math.floor(seconds) == 1 ? " sec" : " secs");
+	return `${Math.floor(seconds)} secs`;
 }
 
 function getTileByAsin(asin) {

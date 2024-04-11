@@ -374,6 +374,22 @@ div#account-extra-stats {
 	flex-wrap: nowrap;
 	justify-content: space-between;
 }
+#save-message {
+	background: var(--highlight-dark);
+	border-radius: 5px;
+	color: var(--text-black);
+	display: none;
+	float: left;
+	left: -75px;
+	margin-top: -40px;
+	padding: 10px;
+	position: relative;
+	top: 60px;
+	width: 110px;
+
+	/* Initially hidden */
+	/* Position it out of the normal flow */
+}
 .vh-visible-container {
 	padding: 5px;
 }

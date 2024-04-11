@@ -12,29 +12,16 @@ var TplMgr = new TemplateMgr();
 function showRuntime() {
 	//Function must exist for the Template system, but not needed for this page
 }
+
 async function loadSettings() {
-	var data;
-	data = await browser.storage.local.get("settings");
-	if (data == null || Object.keys(data).length === 0) {
+	const localStorageSettings = await browser.storage.local.get("settings");
+
+	if (Object.keys(localStorageSettings).length === 0) {
 		return; //Can't display this page before settings are initiated
 	}
-	Object.assign(appSettings, data.settings);
-
-	//If no reviews exist already, create an empty array
-	data = await browser.storage.local.get("reviews");
-	if (data == null || Object.keys(data).length === 0) {
-		await browser.storage.local.set({ reviews: [] });
-	} else {
-		Object.assign(arrReview, data.reviews);
-	}
-
-	//If no template exist already, create an empty array
-	data = await browser.storage.local.get("reviews_templates");
-	if (data == null || Object.keys(data).length === 0) {
-		await browser.storage.local.set({ reviews_templates: [] });
-	} else {
-		Object.assign(arrTemplate, data.reviews_templates);
-	}
+	await initializeLocalStorageKeys("settings", appSettings, [], true);
+	await initializeLocalStorageKeys("reviews", arrReview, []);
+	await initializeLocalStorageKeys("reviews_templates", arrTemplate, []);
 
 	init_review(); //We want to wait for the settings to be loaded before continuing
 }
@@ -43,6 +30,19 @@ async function loadSettings() {
 window.addEventListener("load", function () {
 	loadSettings();
 });
+
+async function initializeLocalStorageKeys(key, object, value, loadOnly) {
+	try {
+		const data = await browser.storage.local.get(key);
+		if (loadOnly || Object.keys(data).length > 0) {
+			Object.assign(object, data[key]);
+		} else {
+			await browser.storage.local.set({ [key]: value });
+		}
+	} catch (e) {
+		showRuntime("Error in initializeLocalStorageKeys" + e.message);
+	}
+}
 
 function init_review() {
 	let currentUrl = window.location.href;
@@ -85,8 +85,10 @@ async function boot_review() {
 
 	//Add the template titles in the select box
 	let selectBox = document.getElementById("template_name");
+	console.log(arrTemplate);
 	let title = "";
 	if (arrTemplate.length > 0) {
+		console.log(arrTemplate.length);
 		for (let i = 0; i < arrTemplate.length; i++) {
 			try {
 				title = JSON.parse(arrTemplate[i].title);
@@ -94,7 +96,9 @@ async function boot_review() {
 					"beforeend",
 					"<option value='" + arrTemplate[i].id + "'>" + title + "</option>"
 				);
-			} catch (e) {}
+			} catch (e) {
+				console.log("some error in adding template error: " + e.message);
+			}
 		}
 	} else {
 		selectBox.insertAdjacentHTML("beforeend", "<option value='no_saved_templates'>No Saved Templates</option>");
@@ -109,7 +113,10 @@ async function boot_review() {
 				let review = document.getElementById("scarface-review-text-card-title");
 				try {
 					review.value += JSON.parse(arrTemplate[i].content);
-				} catch (e) {}
+				} catch (e) {
+					showRuntime("Error with insertTemplate listener: " + e.message);
+				}
+
 				return;
 			}
 		}
@@ -122,17 +129,18 @@ async function boot_review() {
 
 		let reviewContent = document.getElementById("scarface-review-text-card-title").value;
 
+		if (!reviewTitle || !reviewContent) {
+			return;
+		}
+
 		let index = arrReview.findIndex((review) => review.asin === asin);
 		if (index > -1) {
-			//Update the review
 			arrReview[index].date = new Date().toString();
 			arrReview[index].title = JSON.stringify(reviewTitle);
 			arrReview[index].content = JSON.stringify(reviewContent);
 			found = true;
 		}
-		//}
 		if (!found) {
-			//Save a new review
 			arrReview.push({
 				asin: asin,
 				date: new Date().toString(),
@@ -145,8 +153,15 @@ async function boot_review() {
 				arrReview.splice(0, arrReview.length - 100);
 			}
 		}
-
-		await browser.storage.local.set({ reviews: arrReview });
-		alert("Review saved!");
+		try {
+			await browser.storage.local.set({ reviews: arrReview });
+			const messageDiv = document.getElementById("save-message");
+			messageDiv.style.display = "block";
+			setTimeout(() => {
+				messageDiv.style.display = "none";
+			}, 3000);
+		} catch (e) {
+			showRuntime("Error saving review: " + e.message);
+		}
 	});
 }
