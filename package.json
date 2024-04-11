@@ -40,7 +40,7 @@
 		"release-it": "^17.1.1"
 	},
 	"lint-staged": {
-		"*.{js}": [
+		"*.js": [
 			"prettier --write",
 			"eslint --fix"
 		],
