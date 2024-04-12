@@ -198,14 +198,14 @@ async function initCreateTabs() {
 		await createGridInterface();
 	}
 
-	gridRegular = new Grid($("#vvp-items-grid"));
+	gridRegular = new Grid(document.getElementById("vvp-items-grid"));
 
 	if (appSettings.hiddenTab?.active) {
-		gridHidden = new Grid($("#tab-hidden"));
+		gridHidden = new Grid(document.getElementById("tab-hidden"));
 	}
 
 	if (appSettings.unavailableTab?.active || appSettings.unavailableTab?.votingToolbar) {
-		gridUnavailable = new Grid($("#tab-unavailable"));
+		gridUnavailable = new Grid(document.getElementById("tab-unavailable"));
 	}
 	showRuntime("BOOT: Grid system completed");
 }

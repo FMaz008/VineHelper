@@ -27,7 +27,7 @@ class Template {
 		else variable.value = value;
 	}
 
-	render(html) {
+	render(html, convertToDOMObject = false) {
 		if (html == null) {
 			showRuntime("No content for " + this.currentURL + ", did you await loadFile()) ?");
 			return "";
@@ -49,7 +49,15 @@ class Template {
 			}
 		}
 
-		return output;
+		if (!convertToDOMObject) {
+			return output;
+		}
+
+		//Otherwise, convert the HTML string to a DOM element.
+		let parser = new DOMParser();
+		let doc = parser.parseFromString(output, "text/html");
+		let element = doc.body.firstChild; // Use firstChild to get the top-level element
+		return element;
 	}
 }
 

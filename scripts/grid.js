@@ -73,10 +73,16 @@ function updateTileCounts() {
 
 async function createGridInterface() {
 	//Clean up interface (in case of the extension being reloaded)
-	$("ul#vh-tabs").remove();
-	$("div#tab-unavailable").remove();
-	$("div#tab-hidden").remove();
-	$(".vh-status").remove(); //remove all toolbars
+	let tab0 = document.querySelector("ul#vh-tabs");
+	if (tab0) tab0.remove();
+	let tab2 = document.querySelector("div#tab-unavailable");
+	if (tab2) tab2.remove();
+	let tab3 = document.querySelector("div#tab-hidden");
+	if (tab3) tab3.remove();
+	let tbs = document.querySelectorAll(".vh-status");
+	tbs.forEach(function (toolbar) {
+		toolbar.remove();
+	});
 
 	if (document.getElementById("vvp-items-grid") == undefined) {
 		console.log("No listing on this page, not drawing tabs.");
@@ -84,10 +90,15 @@ async function createGridInterface() {
 	}
 
 	//Implement the tab system.
-	let tabs = $("<div>").attr("id", "vh-tabs").insertBefore("#vvp-items-grid");
-	tabs.addClass("theme-default");
-	$("#vvp-items-grid").detach().appendTo(tabs);
-	$("#vvp-items-grid").addClass("tab-grid");
+	let tabs = document.createElement("div");
+	tabs.setAttribute("id", "vh-tabs");
+	tabs.classList.add("theme-default");
+
+	let itemsGrid = document.querySelector("#vvp-items-grid");
+	itemsGrid.parentNode.insertBefore(tabs, itemsGrid);
+	itemsGrid.parentNode.removeChild(itemsGrid);
+	itemsGrid.classList.add("tab-grid");
+	tabs.appendChild(itemsGrid);
 
 	let tplTabs = await Tpl.loadFile("view/tabs.html");
 
@@ -107,22 +118,35 @@ async function createGridInterface() {
 	//If the hidden tab system is activated
 	Tpl.setIf("hidden", appSettings.hiddenTab.active);
 
-	let tabsHtml = Tpl.render(tplTabs);
-	$(tabs).prepend(tabsHtml);
+	let tabsHtml = Tpl.render(tplTabs, false);
+	tabs.insertAdjacentHTML("afterbegin", tabsHtml);
 
 	if (appSettings.hiddenTab.active) {
 		//Add the toolbar for Hide All & Show All
 		//Delete the previous one if any exist:
-		$("#vh-tabs .hidden-toolbar").remove();
+		let htb = document.querySelector("#vh-tabs .hidden-toolbar");
+		if (htb) htb.remove();
+
 		//Generate the html for the hide all and show all widget
 		let prom = await Tpl.loadFile("view/widget_hideall.html");
 		Tpl.setVar("class", appSettings.thorvarium.darktheme ? "invert" : "");
-		let content = Tpl.render(prom);
-		$(content).prependTo("#vh-tabs");
-		$(content).appendTo("#vh-tabs").css("margin-top", "5px");
+		let content = Tpl.render(prom, true);
+		let clonedContent = content.cloneNode(true);
 
-		$(".vh-hideall").on("click", {}, this.hideAllItems);
-		$(".vh-showall").on("click", {}, this.showAllItems);
+		// Prepend content to #vh-tabs
+		let vtabs = document.querySelector("#vh-tabs");
+		vtabs.insertBefore(content, vtabs.firstChild);
+		vtabs.appendChild(clonedContent);
+		clonedContent.style.marginTop = "5px";
+
+		// Add event listeners to .vh-hideall and .vh-showall elements
+		document.querySelectorAll(".vh-hideall").forEach((element) => {
+			element.addEventListener("click", () => this.hideAllItems());
+		});
+
+		document.querySelectorAll(".vh-showall").forEach((element) => {
+			element.addEventListener("click", () => this.showAllItems());
+		});
 	}
 
 	//Actiate the tab system
@@ -145,7 +169,6 @@ async function createGridInterface() {
 
 async function hideAllItems() {
 	let arrTile = [];
-	let counter = 0;
 	HiddenList.loadFromLocalStorage(); //Refresh the list in case it was altered in a different tab
 
 	//Find out what the current active tab is
@@ -157,12 +180,17 @@ async function hideAllItems() {
 		currentTab = "#tab-unavailable";
 	}
 
-	while ($(currentTab + " .vvp-item-tile").children().length > 0) {
-		tDom = $(currentTab + " .vvp-item-tile").children()[0];
-		asin = getAsinFromDom(tDom);
-		arrTile.push({ asin, hidden: true });
-		tile = getTileByAsin(asin); //Obtain the real tile
-		await tile.hideTile(false, false); //Do not update local storage
+	let vvpItemTile = document.querySelector(currentTab + " .vvp-item-tile");
+	if (vvpItemTile) {
+		while (vvpItemTile && vvpItemTile.children.length > 0) {
+			let tDom = vvpItemTile.children[0];
+			let asin = getAsinFromDom(tDom);
+			arrTile.push({ asin: asin, hidden: true });
+			let tile = getTileByAsin(asin); // Obtain the real tile
+			await tile.hideTile(false, false); // Do not update local storage
+
+			vvpItemTile = document.querySelector(currentTab + " .vvp-item-tile");
+		}
 	}
 	HiddenList.saveList();
 
@@ -174,12 +202,18 @@ async function hideAllItems() {
 async function showAllItems() {
 	let arrTile = [];
 	HiddenList.loadFromLocalStorage(); //Refresh the list in case it was altered in a different tab
-	while ($("#tab-hidden .vvp-item-tile").children().length > 0) {
-		tDom = $("#tab-hidden .vvp-item-tile").children()[0];
-		asin = getAsinFromDom(tDom);
-		arrTile.push({ asin, hidden: false });
-		tile = getTileByAsin(asin); //Obtain the real tile
-		await tile.showTile(false, false); //Do not update local storage
+
+	let vvpItemTile = document.querySelector("#tab-hidden .vvp-item-tile");
+	if (vvpItemTile) {
+		while (vvpItemTile && vvpItemTile.children.length > 0) {
+			let tDom = vvpItemTile.children[0];
+			let asin = getAsinFromDom(tDom);
+			arrTile.push({ asin: asin, hidden: false });
+			let tile = getTileByAsin(asin); //Obtain the real tile
+			await tile.showTile(false, false); //Do not update local storage
+
+			vvpItemTile = document.querySelector("#tab-hidden .vvp-item-tile");
+		}
 	}
 	HiddenList.saveList();
 }
