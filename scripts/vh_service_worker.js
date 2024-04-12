@@ -109,21 +109,41 @@ async function checkNewItems() {
 						let search = response.products[i].title.replace(/^([a-zA-Z0-9\s',]{0,40})[\s]+.*$/, "$1");
 
 						//Broadcast the notification
-						console.log("Broadcasting new item " + response.products[i].asin);
-						sendMessageToAllTabs(
-							{
-								index: i,
-								type: "newItem",
-								domain: vineCountry,
-								date: response.products[i].date,
-								asin: response.products[i].asin,
-								title: response.products[i].title,
-								search: search,
-								img_url: response.products[i].img_url,
-								etv: response.products[i].etv,
-							},
-							"notification"
-						);
+						let shouldHighlight = false;
+						let shouldSkip = false;
+
+						if (appSettings.general.highlightKeywords.length > 0) {
+							shouldHighlight = keywordMatch(
+								appSettings.general.highlightKeywords,
+								response.products[i].title
+							);
+						}
+
+						let couldBeSkipped =
+							!shouldHighlight &&
+							appSettings.general.newItemMonitorNotificationHiding &&
+							appSettings.general.hideKeywords.length > 0;
+
+						if (couldBeSkipped) {
+							shouldSkip = keywordMatch(appSettings.general.hideKeywords, response.products[i].title);
+						}
+
+						if (!shouldSkip) {
+							sendMessageToAllTabs(
+								{
+									index: i,
+									type: "newItem",
+									domain: vineCountry,
+									date: response.products[i].date,
+									asin: response.products[i].asin,
+									title: response.products[i].title,
+									search: search,
+									img_url: response.products[i].img_url,
+									etv: response.products[i].etv,
+								},
+								"notification"
+							);
+						}
 					}
 				}
 			}
@@ -146,4 +166,11 @@ async function sendMessageToAllTabs(data, debugInfo) {
 			}
 		});
 	}
+}
+
+function keywordMatch(keywords, title) {
+	return keywords.some((word) => {
+		const regex = new RegExp(`\\b${word}\\b`, "i");
+		return word && regex.test(title);
+	});
 }

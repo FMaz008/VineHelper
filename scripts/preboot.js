@@ -68,6 +68,7 @@ function getDefaultSettings() {
 			hiddenItemsCacheSize: 9,
 			newItemNotificationSound: false,
 			newItemMonitorNotificationSound: false,
+			newItemMonitorNotificationHiding: false,
 		},
 
 		keyBindings: {
