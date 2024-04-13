@@ -151,28 +151,44 @@ async function addItem(data) {
 
 	let content = Tpl.render(prom);
 
-	//Play a sound
-	if (appSettings.general.newItemMonitorNotificationSound) {
-		if (Date.now() - lastSoundPlayedAt > 30000) {
-			// Don't play the notification sound again within 30 sec.
-			lastSoundPlayedAt = Date.now();
-			const audioElement = new Audio(browser.runtime.getURL("resource/sound/notification.mp3"));
-			audioElement.addEventListener("ended", function () {
-				// Remove the audio element from the DOM
-				audioElement.removeEventListener("ended", arguments.callee); // Remove the event listener
-				audioElement.remove();
-			});
-			audioElement.play();
-		}
-	}
-
 	insertMessageIfAsinIsUnique(content, asin, etv, title);
 }
 
 function insertMessageIfAsinIsUnique(content, asin, etv, title) {
 	var newID = `vh-notification-${asin}`;
 
-	if (!arrItems.includes(asin)) {
+	let shouldHighlight = false;
+	let shouldSkip = false;
+
+	if (appSettings.general.highlightKeywords.length > 0) {
+		shouldHighlight = keywordMatch(appSettings.general.highlightKeywords, title);
+	}
+
+	let couldBeSkipped =
+		!shouldHighlight &&
+		appSettings.general.newItemMonitorNotificationHiding &&
+		appSettings.general.hideKeywords.length > 0;
+
+	if (couldBeSkipped) {
+		shouldSkip = keywordMatch(appSettings.general.hideKeywords, title);
+	}
+
+	if (!arrItems.includes(asin) && !shouldSkip) {
+		//Play a sound
+		if (appSettings.general.newItemMonitorNotificationSound) {
+			if (Date.now() - lastSoundPlayedAt > 30000) {
+				// Don't play the notification sound again within 30 sec.
+				lastSoundPlayedAt = Date.now();
+				const audioElement = new Audio(browser.runtime.getURL("resource/sound/notification.mp3"));
+				audioElement.addEventListener("ended", function () {
+					// Remove the audio element from the DOM
+					audioElement.removeEventListener("ended", arguments.callee); // Remove the event listener
+					audioElement.remove();
+				});
+				audioElement.play();
+			}
+		}
+
 		//New items to be added
 		arrItems[asin] = etv;
 		const newBody = document.getElementById("vh-items-container");
@@ -182,15 +198,8 @@ function insertMessageIfAsinIsUnique(content, asin, etv, title) {
 		//Highlight if matches a keyword
 		const newTile = document.getElementById(newID);
 
-		if (appSettings.general.highlightKeywords.length > 0) {
-			let match = appSettings.general.highlightKeywords.find((word) => {
-				const regex = new RegExp(`\\b${word}\\b`, "i");
-				return word && regex.test(title);
-			});
-			if (match != undefined) {
-				showRuntime("TILE: The item match the keyword '" + match + "', highlight it");
-				newTile.classList.add("keyword-highlight");
-			}
+		if (shouldHighlight) {
+			newTile.classList.add("keyword-highlight");
 		}
 	} else {
 		//Item already exist, update ETV
@@ -213,4 +222,11 @@ function setETV(asin, etv) {
 		let etvElement = document.querySelector("#" + itemID + " #etv_value");
 		etvElement.style.display = "none";
 	}
+}
+
+function keywordMatch(keywords, title) {
+	return keywords.some((word) => {
+		const regex = new RegExp(`\\b${word}\\b`, "i");
+		return word && regex.test(title);
+	});
 }
