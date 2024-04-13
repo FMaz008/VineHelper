@@ -2,13 +2,14 @@
 * text=auto
 
 # Definitively text files 
-*.txt text
-*.js text
-*.css text
-*.html text
-*.json text
-*.xml text
-*.md text
+*.txt text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+*.xml text eol=lf
+*.md text eol=lf
+
 
 # Ensure those won't be messed up with
 *.jpg binary
