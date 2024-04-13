@@ -3,7 +3,7 @@
 	"tabWidth": 4,
 	"semi": true,
 	"charset": "utf-8",
-	"endOfLine" : "crlf",
+	"endOfLine" : "lf",
 	"useTabs" : true,
 	"printWidth": 120
 }
