@@ -218,9 +218,11 @@ function setETV(asin, etv) {
 		etvClass.classList.add("zeroETV");
 	}
 	//Remove ETV Value if it does not exist
+	let etvElement = document.querySelector("#" + itemID + " .etv_value");
 	if (etv == null) {
-		let etvElement = document.querySelector("#" + itemID + " #etv_value");
 		etvElement.style.display = "none";
+	} else {
+		etvElement.innerText = etv;
 	}
 }
 
