@@ -6,7 +6,8 @@ if (typeof browser === "undefined") {
 
 //Required for the Template engine but not of any use in this script.
 var arrDebug = [];
-var items = new Map();
+const items = new Map();
+const imageUrls = new Set();
 
 var startTime = Date.now();
 function showRuntime(eventName) {
@@ -15,6 +16,7 @@ function showRuntime(eventName) {
 
 var Tpl = new Template();
 var TplMgr = new TemplateMgr();
+var loadedTpl = null;
 
 const vineLocales = {
 	ca: { locale: "en-CA", currency: "CAD" },
@@ -76,6 +78,8 @@ window.onload = function () {
 async function init() {
 	const data = await browser.storage.local.get("settings");
 
+	loadedTpl = await Tpl.loadFile("/view/notification_monitor.html");
+
 	if (data == null || Object.keys(data).length === 0) {
 		showRuntime("Settings not available yet. Waiting 10 sec...");
 		setTimeout(function () {
@@ -119,83 +123,77 @@ function setLocale(country) {
 	}
 }
 
-async function addItem(data) {
-	const prom = await Tpl.loadFile("/view/notification_monitor.html");
-
+function addItem(data) {
 	let { date, asin, title, search, img_url, domain, etv } = data;
+	let { hideKeywords, highlightKeywords, newItemMonitorNotificationHiding, newItemMonitorDuplicateImageHiding } =
+		appSettings.general;
 
-	//If the local is not define, set it.
+	//If the locale is not define, set it.
 	if (vineLocale == null) setLocale(domain);
 
-	//Prepare the ETV to be displayed
-	let formattedETV;
-	if (etv == null) {
-		formattedETV = "";
+	if (newItemMonitorDuplicateImageHiding && imageUrls.has(img_url)) {
+		return;
+	}
+
+	let shouldHighlight = keywordMatch(highlightKeywords, title);
+
+	if (!shouldHighlight && newItemMonitorNotificationHiding && keywordMatch(hideKeywords, title)) {
+		return;
+	}
+
+	if (items.has(asin)) {
+		//Item already exist, update ETV
+		("checking etv");
+		if (etv != items.get(asin)) {
+			setETV(asin, etv);
+		}
 	} else {
+		//New item to be added
+		items.set(asin, etv);
+		imageUrls.add(img_url);
+		playSoundIfEnabled();
+
+		Tpl.setVar("id", asin);
+		Tpl.setVar("domain", vineDomain);
+		Tpl.setVar("title", "New item");
+		Tpl.setVar("date", formatDate(date));
+		Tpl.setVar("search", search);
+		Tpl.setVar("asin", asin);
+		Tpl.setVar("description", title);
+		Tpl.setVar("img_url", img_url);
+		Tpl.setVar("etv", formatETV(etv));
+		Tpl.setIf("shouldHighlight", shouldHighlight);
+		let content = Tpl.render(loadedTpl);
+		console.log(content);
+
+		let newID = itemID(asin);
+		const newBody = document.getElementById("vh-items-container");
+		newBody.insertAdjacentHTML("afterbegin", content);
+		setETV(asin, etv);
+
+		// if (shouldHighlight) {
+		// 	// Highlight if matches a keyword
+		// 	//TODO I tried to add keyword-highlight in the template but was unable to make it work
+		// 	const newTile = document.getElementById(newID);
+		// 	newTile.classList.add("keyword-highlight");
+		// }
+	}
+}
+
+//Prepare the ETV to be displayed
+function formatETV(etv) {
+	let formattedETV = "";
+	if (etv != null) {
 		formattedETV = new Intl.NumberFormat(vineLocale, {
 			style: "currency",
 			currency: vineCurrency,
 		}).format(etv);
 	}
-	let formattedDate = new Date(date + " GMT").toLocaleString(vineLocale);
-
-	Tpl.setVar("id", asin);
-	Tpl.setVar("domain", vineDomain);
-	Tpl.setVar("title", "New item");
-	Tpl.setVar("date", formattedDate);
-	Tpl.setVar("search", search);
-	Tpl.setVar("asin", asin);
-	Tpl.setVar("description", title);
-	Tpl.setVar("img_url", img_url);
-	Tpl.setVar("etv", formattedETV);
-
-	let content = Tpl.render(prom);
-
-	insertMessageIfAsinIsUnique(content, asin, etv, title);
+	return formattedETV;
 }
 
-function insertMessageIfAsinIsUnique(content, asin, etv, title) {
-	var newID = `vh-notification-${asin}`;
-
-	let shouldHighlight = false;
-	let shouldSkip = false;
-
-	if (appSettings.general.highlightKeywords.length > 0) {
-		shouldHighlight = keywordMatch(appSettings.general.highlightKeywords, title);
-	}
-
-	let couldBeSkipped =
-		!shouldHighlight &&
-		appSettings.general.newItemMonitorNotificationHiding &&
-		appSettings.general.hideKeywords.length > 0;
-
-	if (couldBeSkipped) {
-		shouldSkip = keywordMatch(appSettings.general.hideKeywords, title);
-	}
-
-	if (!shouldSkip) {
-		if (items.has(asin)) {
-			//Item already exist, update ETV
-			("checking etv");
-			if (etv != items.get(asin)) {
-				setETV(asin, etv);
-			}
-		} else {
-			playSoundIfEnabled();
-
-			//New items to be added
-			items.set(asin, etv);
-			const newBody = document.getElementById("vh-items-container");
-			newBody.insertAdjacentHTML("afterbegin", content);
-			setETV(asin, etv);
-
-			if (shouldHighlight) {
-				//Highlight if matches a keyword
-				const newTile = document.getElementById(newID);
-				newTile.classList.add("keyword-highlight");
-			}
-		}
-	}
+function formatDate(date) {
+	return new Date(date + " GMT").toLocaleString(vineLocale);
 }
 
 function playSoundIfEnabled() {
@@ -214,16 +212,23 @@ function playSoundIfEnabled() {
 	}
 }
 
+function itemID(asin) {
+	return `vh-notification-${asin}`;
+}
+
+function elementByAsin(asin) {
+	return document.getElementById(itemID(asin));
+}
+
 function setETV(asin, etv) {
-	var itemID = `vh-notification-${asin}`;
-	const etvClass = document.getElementById(itemID);
+	const etvClass = elementByAsin(asin);
 
 	//Highlight for ETV
 	if (etv == "0.00") {
 		etvClass.classList.add("zeroETV");
 	}
 	//Remove ETV Value if it does not exist
-	let etvElement = document.querySelector("#" + itemID + " .etv_value");
+	let etvElement = document.querySelector("#" + itemID(asin) + " .etv_value");
 	if (etv == null) {
 		etvElement.style.display = "none";
 	} else {
