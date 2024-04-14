@@ -176,7 +176,7 @@ function insertMessageIfAsinIsUnique(content, asin, etv, title) {
 	if (!shouldSkip) {
 		if (items.has(asin)) {
 			//Item already exist, update ETV
-			console.log("checking etv");
+			("checking etv");
 			if (etv != items.get(asin)) {
 				setETV(asin, etv);
 			}
