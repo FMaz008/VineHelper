@@ -164,9 +164,7 @@ function addItem(data) {
 		Tpl.setVar("etv", formatETV(etv));
 		Tpl.setIf("shouldHighlight", shouldHighlight);
 		let content = Tpl.render(loadedTpl);
-		console.log(content);
 
-		let newID = itemID(asin);
 		const newBody = document.getElementById("vh-items-container");
 		newBody.insertAdjacentHTML("afterbegin", content);
 		setETV(asin, etv);
