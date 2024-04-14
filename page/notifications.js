@@ -6,7 +6,7 @@ if (typeof browser === "undefined") {
 
 //Required for the Template engine but not of any use in this script.
 var arrDebug = [];
-var arrItems = [];
+var items = new Map();
 
 var startTime = Date.now();
 function showRuntime(eventName) {
@@ -173,38 +173,43 @@ function insertMessageIfAsinIsUnique(content, asin, etv, title) {
 		shouldSkip = keywordMatch(appSettings.general.hideKeywords, title);
 	}
 
-	if (!arrItems.includes(asin) && !shouldSkip) {
-		//Play a sound
-		if (appSettings.general.newItemMonitorNotificationSound) {
-			if (Date.now() - lastSoundPlayedAt > 30000) {
-				// Don't play the notification sound again within 30 sec.
-				lastSoundPlayedAt = Date.now();
-				const audioElement = new Audio(browser.runtime.getURL("resource/sound/notification.mp3"));
-				audioElement.addEventListener("ended", function () {
-					// Remove the audio element from the DOM
-					audioElement.removeEventListener("ended", arguments.callee); // Remove the event listener
-					audioElement.remove();
-				});
-				audioElement.play();
+	if (!shouldSkip) {
+		if (items.has(asin)) {
+			//Item already exist, update ETV
+			("checking etv");
+			if (etv != items.get(asin)) {
+				setETV(asin, etv);
+			}
+		} else {
+			playSoundIfEnabled();
+
+			//New items to be added
+			items.set(asin, etv);
+			const newBody = document.getElementById("vh-items-container");
+			newBody.insertAdjacentHTML("afterbegin", content);
+			setETV(asin, etv);
+
+			if (shouldHighlight) {
+				//Highlight if matches a keyword
+				const newTile = document.getElementById(newID);
+				newTile.classList.add("keyword-highlight");
 			}
 		}
+	}
+}
 
-		//New items to be added
-		arrItems[asin] = etv;
-		const newBody = document.getElementById("vh-items-container");
-		newBody.insertAdjacentHTML("afterbegin", content);
-		setETV(asin, etv);
-
-		//Highlight if matches a keyword
-		const newTile = document.getElementById(newID);
-
-		if (shouldHighlight) {
-			newTile.classList.add("keyword-highlight");
-		}
-	} else {
-		//Item already exist, update ETV
-		if (etv != arrItems[asin]) {
-			setETV(asin, etv);
+function playSoundIfEnabled() {
+	if (appSettings.general.newItemMonitorNotificationSound) {
+		if (Date.now() - lastSoundPlayedAt > 30000) {
+			// Don't play the notification sound again within 30 sec.
+			lastSoundPlayedAt = Date.now();
+			const audioElement = new Audio(browser.runtime.getURL("resource/sound/notification.mp3"));
+			audioElement.addEventListener("ended", function () {
+				// Remove the audio element from the DOM
+				audioElement.removeEventListener("ended", arguments.callee); // Remove the event listener
+				audioElement.remove();
+			});
+			audioElement.play();
 		}
 	}
 }
