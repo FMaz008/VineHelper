@@ -170,13 +170,6 @@ function addItem(data) {
 		const newBody = document.getElementById("vh-items-container");
 		newBody.insertAdjacentHTML("afterbegin", content);
 		setETV(asin, etv);
-
-		// if (shouldHighlight) {
-		// 	// Highlight if matches a keyword
-		// 	//TODO I tried to add keyword-highlight in the template but was unable to make it work
-		// 	const newTile = document.getElementById(newID);
-		// 	newTile.classList.add("keyword-highlight");
-		// }
 	}
 }
 
