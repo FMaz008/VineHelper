@@ -69,6 +69,7 @@ function getDefaultSettings() {
 			newItemNotificationSound: false,
 			newItemMonitorNotificationSound: false,
 			newItemMonitorNotificationHiding: false,
+			newItemMonitorDuplicateImageHiding: false,
 		},
 
 		keyBindings: {
