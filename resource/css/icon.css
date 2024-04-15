@@ -32,6 +32,11 @@
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/announcement.png");
 		background-repeat: no-repeat;
 	}
+	.vh-icon-report {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/report.png");
+		background-repeat: no-repeat;
+	}
 	.vh-icon-choice {
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/choice.png");
@@ -115,6 +120,11 @@
 	.vh-icon-announcement {
 		background-size: 100%;
 		background-image: url("/resource/image/announcement.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-report {
+		background-size: 100%;
+		background-image: url("/resource/image/report.png");
 		background-repeat: no-repeat;
 	}
 	.vh-icon-choice {
