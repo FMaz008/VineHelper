@@ -163,10 +163,18 @@ function addItem(data) {
 		Tpl.setVar("img_url", img_url);
 		Tpl.setVar("etv", formatETV(etv));
 		Tpl.setIf("shouldHighlight", shouldHighlight);
-		let content = Tpl.render(loadedTpl);
+		let content = Tpl.render(loadedTpl, true); //true to return a DOM object instead of an HTML string
 
 		const newBody = document.getElementById("vh-items-container");
-		newBody.insertAdjacentHTML("afterbegin", content);
+		newBody.prepend(content);
+
+		const handleClick = (e) => {
+			e.preventDefault(); // Prevent the default click behavior
+			report(asin);
+		};
+
+		// Add new click listener for the report button
+		document.querySelector("#vh-notification-" + asin + " .report-link").addEventListener("click", handleClick);
 		setETV(asin, etv);
 	}
 }
@@ -232,4 +240,50 @@ function keywordMatch(keywords, title) {
 		const regex = new RegExp(`\\b${word}\\b`, "i");
 		return word && regex.test(title);
 	});
+}
+
+function report(asin) {
+	let val = prompt(
+		"Are you sure you want to REPORT this notification for ASIN#" +
+			asin +
+			"?\n" +
+			"Only report notifications which are not Amazon products\n" +
+			"Note: False reporting may get you banned.\n\n" +
+			"type REPORT in the field below to send a report:"
+	);
+	if (val !== null && val.toLowerCase() == "report") {
+		send_report(asin);
+	}
+	return false;
+}
+
+function send_report(asin) {
+	let manifest = chrome.runtime.getManifest();
+	let arrJSON = {
+		api_version: 4,
+		app_version: manifest.version,
+		asin: asin,
+		action: "report_asin",
+		country: vineDomain,
+		uuid: appSettings.general.uuid,
+	};
+	let jsonArrURL = JSON.stringify(arrJSON);
+
+	showRuntime("Sending report...");
+
+	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
+	let url = "https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
+
+	fetch(url, {
+		method: "POST",
+		headers: { "Content-Type": "application/x-www-form-urlencoded" },
+	})
+		.then(report_sent)
+		.catch(function () {
+			showRuntime(error);
+		});
+}
+
+function report_sent() {
+	alert("Report sent. Thank you.");
 }
