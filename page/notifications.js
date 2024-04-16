@@ -43,6 +43,11 @@ var vineDomain = null;
 var Notifications = new ScreenNotifier();
 const broadcastChannel = new BroadcastChannel("VineHelperChannel");
 
+const handleReportClick = (e) => {
+	e.preventDefault(); // Prevent the default click behavior
+	report(e.target.dataset.asin);
+};
+
 window.onload = function () {
 	broadcastChannel.onmessage = async function (event) {
 		let data = event.data;
@@ -168,13 +173,10 @@ function addItem(data) {
 		const newBody = document.getElementById("vh-items-container");
 		newBody.prepend(content);
 
-		const handleClick = (e) => {
-			e.preventDefault(); // Prevent the default click behavior
-			report(asin);
-		};
-
 		// Add new click listener for the report button
-		document.querySelector("#vh-notification-" + asin + " .report-link").addEventListener("click", handleClick);
+		document
+			.querySelector("#vh-notification-" + asin + " .report-link")
+			.addEventListener("click", handleReportClick);
 		setETV(asin, etv);
 	}
 }
