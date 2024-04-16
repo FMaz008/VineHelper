@@ -239,7 +239,13 @@ function setETV(asin, etv) {
 
 function keywordMatch(keywords, title) {
 	return keywords.some((word) => {
-		const regex = new RegExp(`\\b${word}\\b`, "i");
+		try {
+			const regex = new RegExp(`\\b${word}\\b`, "i");
+		} catch (error) {
+			if (error instanceof SyntaxError) {
+				showRuntime("NOTIFICATION: The keyword '" + word + "' is not a valid regular expression, skipping it.");
+			}
+		}
 		return word && regex.test(title);
 	});
 }
