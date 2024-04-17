@@ -180,8 +180,9 @@ function Tile(obj, gridInstance) {
 		let highligthed = false;
 		if (appSettings.general.highlightKeywords.length > 0) {
 			match = appSettings.general.highlightKeywords.find((word) => {
+				let regex;
 				try {
-					const regex = new RegExp(`\\b${word}\\b`, "i");
+					regex = new RegExp(`\\b${word}\\b`, "i");
 				} catch (error) {
 					if (error instanceof SyntaxError) {
 						showRuntime(
@@ -201,8 +202,9 @@ function Tile(obj, gridInstance) {
 		//Match with hide keywords. Only hide if not highlighed.
 		if (!highligthed && appSettings.general.hideKeywords.length > 0) {
 			match = appSettings.general.hideKeywords.find((word) => {
+				let regex;
 				try {
-					const regex = new RegExp(`\\b${word}\\b`, "i");
+					regex = new RegExp(`\\b${word}\\b`, "i");
 				} catch (error) {
 					if (error instanceof SyntaxError) {
 						showRuntime(
@@ -212,6 +214,7 @@ function Tile(obj, gridInstance) {
 				}
 				return word && regex.test(this.getTitle());
 			});
+
 			if (match != undefined) {
 				showRuntime("TILE: The item match the keyword '" + match + "', hide it");
 				this.hideTile(false, false); //Do not save
