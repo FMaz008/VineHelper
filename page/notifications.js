@@ -252,7 +252,7 @@ function keywordMatch(keywords, title) {
 
 function report(asin) {
 	let val = prompt(
-		"Are you sure you want to REPORT this notification for ASIN#" +
+		"Are you sure you want to REPORT the user who posted ASIN#" +
 			asin +
 			"?\n" +
 			"Only report notifications which are not Amazon products\n" +
