@@ -13,6 +13,9 @@ var startTime = Date.now();
 function showRuntime(eventName) {
 	arrDebug.push({ time: Date.now() - startTime, event: eventName });
 }
+function showDebug() {
+	console.log(JSON.stringify(arrDebug));
+}
 
 var Tpl = new Template();
 var TplMgr = new TemplateMgr();
@@ -70,11 +73,20 @@ window.onload = function () {
 		}
 	};
 
+	//Send keep alive message every 25 secs to keep the service worker alive.
 	setInterval(async () => {
 		browser.runtime.sendMessage({
 			type: "keepAlive",
 		});
 	}, 25000);
+
+	//Clear the debug log every 30 minutes to save memory usage.
+	setInterval(
+		async () => {
+			arrDebug = [];
+		},
+		30 * 60 * 1000
+	);
 
 	document.getElementById("date_loaded").innerText = new Date();
 	init();
@@ -106,7 +118,7 @@ async function init() {
 			type: "queryVineCountry",
 		},
 		function (response) {
-			if (response.domain !== undefined) {
+			if (response?.domain !== undefined) {
 				setLocale(response.domain);
 			}
 		}
@@ -137,12 +149,16 @@ function addItem(data) {
 	if (vineLocale == null) setLocale(domain);
 
 	if (newItemMonitorDuplicateImageHiding && imageUrls.has(img_url)) {
+		showRuntime("NOTIFICATION: item " + asin + " has a duplicate image and won't be shown.");
 		return;
 	}
 
 	let shouldHighlight = keywordMatch(highlightKeywords, title);
+	if (shouldHighlight)
+		showRuntime("NOTIFICATION: item " + asin + " match the highlight list and will be highlighed.");
 
 	if (!shouldHighlight && newItemMonitorNotificationHiding && keywordMatch(hideKeywords, title)) {
+		showRuntime("NOTIFICATION: item " + asin + " match the hidden list and won't be shown.");
 		return;
 	}
 
@@ -247,7 +263,13 @@ function keywordMatch(keywords, title) {
 				showRuntime("NOTIFICATION: The keyword '" + word + "' is not a valid regular expression, skipping it.");
 			}
 		}
-		return word && regex.test(title);
+
+		if (regex.test(title)) {
+			showRuntime("Matched keyword: " + word + " for title " + title);
+			return true;
+		}
+
+		return false;
 	});
 }
 
