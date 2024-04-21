@@ -366,6 +366,8 @@ button.bookmark {
 div#account-extra-stats {
 	color: var(--text-light);
 	width: max-content;
+	background: var(--background-light);
+
 }
 #review-toolbar {
 	align-items: center;
@@ -490,5 +492,9 @@ input[type="checkbox"] {
 	}
 	.vh-container {
 		color: var(--text-dark);
+	}
+	div#account-extra-stats {
+		color: var(--text-dark);
+		background: var(--background-dark);
 	}
 }
