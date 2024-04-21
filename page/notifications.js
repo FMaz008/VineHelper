@@ -43,6 +43,11 @@ var vineDomain = null;
 var Notifications = new ScreenNotifier();
 const broadcastChannel = new BroadcastChannel("VineHelperChannel");
 
+const handleReportClick = (e) => {
+	e.preventDefault(); // Prevent the default click behavior
+	report(e.target.dataset.asin);
+};
+
 window.onload = function () {
 	broadcastChannel.onmessage = async function (event) {
 		let data = event.data;
@@ -163,10 +168,15 @@ function addItem(data) {
 		Tpl.setVar("img_url", img_url);
 		Tpl.setVar("etv", formatETV(etv));
 		Tpl.setIf("shouldHighlight", shouldHighlight);
-		let content = Tpl.render(loadedTpl);
+		let content = Tpl.render(loadedTpl, true); //true to return a DOM object instead of an HTML string
 
 		const newBody = document.getElementById("vh-items-container");
-		newBody.insertAdjacentHTML("afterbegin", content);
+		newBody.prepend(content);
+
+		// Add new click listener for the report button
+		document
+			.querySelector("#vh-notification-" + asin + " .report-link")
+			.addEventListener("click", handleReportClick);
 		setETV(asin, etv);
 	}
 }
@@ -229,7 +239,60 @@ function setETV(asin, etv) {
 
 function keywordMatch(keywords, title) {
 	return keywords.some((word) => {
-		const regex = new RegExp(`\\b${word}\\b`, "i");
+		let regex;
+		try {
+			regex = new RegExp(`\\b${word}\\b`, "i");
+		} catch (error) {
+			if (error instanceof SyntaxError) {
+				showRuntime("NOTIFICATION: The keyword '" + word + "' is not a valid regular expression, skipping it.");
+			}
+		}
 		return word && regex.test(title);
 	});
+}
+
+function report(asin) {
+	let val = prompt(
+		"Are you sure you want to REPORT the user who posted ASIN#" +
+			asin +
+			"?\n" +
+			"Only report notifications which are not Amazon products\n" +
+			"Note: False reporting may get you banned.\n\n" +
+			"type REPORT in the field below to send a report:"
+	);
+	if (val !== null && val.toLowerCase() == "report") {
+		send_report(asin);
+	}
+	return false;
+}
+
+function send_report(asin) {
+	let manifest = chrome.runtime.getManifest();
+	let arrJSON = {
+		api_version: 4,
+		app_version: manifest.version,
+		asin: asin,
+		action: "report_asin",
+		country: vineDomain,
+		uuid: appSettings.general.uuid,
+	};
+	let jsonArrURL = JSON.stringify(arrJSON);
+
+	showRuntime("Sending report...");
+
+	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
+	let url = "https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
+
+	fetch(url, {
+		method: "POST",
+		headers: { "Content-Type": "application/x-www-form-urlencoded" },
+	})
+		.then(report_sent)
+		.catch(function () {
+			showRuntime(error);
+		});
+}
+
+function report_sent() {
+	alert("Report sent. Thank you.");
 }
