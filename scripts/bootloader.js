@@ -590,9 +590,6 @@ async function reportfees(event) {
 		m.title = VOTING_TITLE;
 		m.content = content;
 		m.show();
-
-		appSettings.general.firstVotePopup = false;
-		saveSettings();
 	}
 }
 
