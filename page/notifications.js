@@ -261,6 +261,7 @@ function keywordMatch(keywords, title) {
 		} catch (error) {
 			if (error instanceof SyntaxError) {
 				showRuntime("NOTIFICATION: The keyword '" + word + "' is not a valid regular expression, skipping it.");
+				return false;
 			}
 		}
 
