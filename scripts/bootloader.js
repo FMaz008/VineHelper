@@ -97,7 +97,10 @@ function displayAccountData() {
 	let div;
 
 	div = document.createElement("div");
-	div.innerHTML = "<h4>Vine Helper extra stats:</h4><strong>Customer Id:</strong> " + escapeHTML(json.customerId);
+	div.innerHTML =
+		"<h4>Vine Helper extra stats:</h4><strong>Customer Id:</strong><span class='masked-text'>" +
+		escapeHTML(json.customerId) +
+		"</span>";
 	container.appendChild(div);
 
 	const additionalStats = {

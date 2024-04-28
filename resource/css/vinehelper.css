@@ -47,12 +47,11 @@ begin, migrating css into a common file, to allow uniform display and updates
 	--lapisdark-100: #7a6800;
 	--lapisdark-300: #0070e0;
 	--lapisdark-600: #002366;
-	--button-overlay: radial-gradient(
-		circle farthest-side at 10% 20%,
-		rgba(255, 255, 255, 0.3) 0%,
-		rgba(255, 255, 255, 0) 80%
-	);
+	--button-overlay: radial-gradient(circle farthest-side at 10% 20%,
+			rgba(255, 255, 255, 0.3) 0%,
+			rgba(255, 255, 255, 0) 80%);
 }
+
 .theme-default {
 	--background-dark: var(--black-800);
 	--background-light: var(--white-200);
@@ -78,6 +77,7 @@ begin, migrating css into a common file, to allow uniform display and updates
 	--tab-border: var(--defaultlight-300);
 	--tab-border-active: var(--defaultdark-300);
 }
+
 .theme-chili {
 	--background-dark: var(--black-800);
 	--background-light: var(--white-200);
@@ -105,6 +105,7 @@ begin, migrating css into a common file, to allow uniform display and updates
 
 	/*experimental, not implemented yet*/
 }
+
 .theme-tigerseye {
 	--background-dark: var(--black-800);
 	--background-light: var(--white-200);
@@ -130,6 +131,7 @@ begin, migrating css into a common file, to allow uniform display and updates
 	--tab-border: var(--tigerseyecool-300);
 	--tab-border-active: var(--tigerseyedark-300);
 }
+
 .theme-jewel {
 	--background-dark: var(--black-800);
 	--background-light: var(--white-200);
@@ -155,6 +157,7 @@ begin, migrating css into a common file, to allow uniform display and updates
 	--tab-border: var(--jewelcool-300);
 	--tab-border-active: var(--jeweldark-300);
 }
+
 .theme-plum {
 	--background-dark: var(--black-800);
 	--background-light: var(--white-200);
@@ -180,6 +183,7 @@ begin, migrating css into a common file, to allow uniform display and updates
 	--tab-border: var(--plumcool-300);
 	--tab-border-active: var(--plumdark-300);
 }
+
 .theme-lapis {
 	--background-dark: var(--black-800);
 	--background-light: var(--white-200);
@@ -205,6 +209,7 @@ begin, migrating css into a common file, to allow uniform display and updates
 	--tab-border: var(--lapiscool-300);
 	--tab-border-active: var(--lapisdark-300);
 }
+
 .vh-body {
 	background-image: url("/resource/image/logo.png");
 	background-position: top right;
@@ -218,64 +223,80 @@ begin, migrating css into a common file, to allow uniform display and updates
 		background-color 0.5s,
 		color 0.5s;
 }
+
 .vh-table {
 	border-collapse: collapse;
 	margin: 20px;
 }
+
 .vh-table#templates_list {
 	table-layout: fixed;
 	width: 650px;
 }
+
 .vh-table#templates_list td {
 	overflow-wrap: break-word;
 }
+
 .vh-table#templates_list td:first-child {
 	width: 130px;
 }
+
 .vh-flex-column {
 	display: grid;
 	flex: auto;
 }
+
 .vh-flex-column div {
 	text-align: center;
 }
+
 .vh-flex-row {
 	display: flex;
 }
+
 .vh-flex-row#left {
 	align-items: flex-end;
 }
+
 .vh-flex-row#right {
 	align-items: center;
 	flex-direction: column;
 }
+
 #template_store {
 	align-items: flex-start;
 	display: flex;
 	gap: 5px;
 }
+
 .vh-main {
 	display: flex;
 	flex-direction: column;
 }
+
 .vh-section {
 	display: flex;
 	flex-direction: column;
 	gap: 10px;
 }
+
 .vh-textarea {
 	min-height: 130px;
 	resize: vertical;
 }
+
 .vh-label {
 	align-self: center;
 	display: block;
 	margin-bottom: 5px;
 }
+
 .vh-a {
 	font-size: 14px;
 	margin-right: 5px;
 }
+
 .vh-inputtext,
 .vh-textarea {
 	background-color: transparent;
@@ -289,11 +310,13 @@ begin, migrating css into a common file, to allow uniform display and updates
 	transition: border-color 0.3s ease-in-out;
 	width: 100%;
 }
+
 .vh-inputtext:focus,
 .vh-textarea:focus {
 	border: 1px solid var(--highlight-light);
 	outline: 2px solid var(--highlight-light);
 }
+
 .vh-tbody tr,
 .vh-tbody td,
 .vh-td,
@@ -304,6 +327,7 @@ begin, migrating css into a common file, to allow uniform display and updates
 	padding: 5px;
 	text-align: left;
 }
+
 .vh-button {
 	background-color: var(--button);
 	background-image: var(--button-overlay);
@@ -315,18 +339,22 @@ begin, migrating css into a common file, to allow uniform display and updates
 	padding: 10px 15px;
 	text-decoration: none;
 }
+
 .vh-button:hover {
 	background-color: var(--highlight-light);
 }
+
 .vh-button:active {
 	transform: translateY(2px);
 }
+
 .vh-divider {
 	border: 0;
 	border-left: 1px solid var(--divider-color, lightgray);
 	height: 1em;
 	margin: 5px 0;
 }
+
 .vh-select {
 	background: var(--button-overlay), var(--highlight-dark);
 	border: 1px solid var(--button);
@@ -336,9 +364,11 @@ begin, migrating css into a common file, to allow uniform display and updates
 	padding: 8px 12px;
 	width: 300px;
 }
-.vh-select > option {
+
+.vh-select>option {
 	background: var(--button-overlay), var(--highlight-dark);
 }
+
 .vh-container {
 	-moz-box-shadow: -2px -2px 5px 2px var(--highlight-light);
 	-webkit-box-shadow: -2px -2px 5px 2px var(--highlight-light);
@@ -348,6 +378,7 @@ begin, migrating css into a common file, to allow uniform display and updates
 	margin: 10px;
 	padding: 5px;
 }
+
 button.bookmark {
 	background-color: var(--bookmark);
 	background-position-x: 5px;
@@ -363,12 +394,14 @@ button.bookmark {
 	padding: 5px 8px 5px 16px;
 	vertical-align: top;
 }
+
 div#account-extra-stats {
 	color: var(--text-light);
 	width: max-content;
 	background: var(--background-light);
 
 }
+
 #review-toolbar {
 	align-items: center;
 	color: var(--text-light);
@@ -376,6 +409,7 @@ div#account-extra-stats {
 	flex-wrap: nowrap;
 	justify-content: space-between;
 }
+
 #save-message {
 	background: var(--highlight-dark);
 	border-radius: 5px;
@@ -388,30 +422,33 @@ div#account-extra-stats {
 	position: relative;
 	top: 60px;
 	width: 110px;
-
-	/* Initially hidden */
-	/* Position it out of the normal flow */
 }
+
 .vh-visible-container {
 	padding: 5px;
 }
+
 .vh-visible-container a {
 	color: var(--link-light);
 }
+
 .vinehelper#review_management h3 {
 	margin: 10px;
 	padding-top: 5px;
 }
+
 .vinehelper#review_management {
 	background-color: var(--background-dark);
 	border-radius: 5px;
 	color: var(--text-dark);
 	margin: 10px;
 }
+
 #manage_link,
 #template_link {
 	color: var(--text-dark);
 }
+
 /* tabs  */
 .vh-tabs {
 	border: 0px;
@@ -419,11 +456,13 @@ div#account-extra-stats {
 	flex-direction: column-reverse;
 	height: 50px;
 }
+
 .vh-tabs ul {
 	margin: 0px;
 	padding-left: 0px;
 	z-index: 1;
 }
+
 .vh-tabs li {
 	background: var(--button-overlay), var(--tab-border);
 	border: 2px solid white;
@@ -436,34 +475,53 @@ div#account-extra-stats {
 	padding: 4px 10px;
 	text-align: center;
 }
+
 .vh-tabs li.active {
 	background: var(--button-overlay), var(--tab-border-active);
 	border: 2px solid var(--tab-border-active);
 	justify-content: end;
 }
-.vh-tabs li > a {
+
+.vh-tabs li>a {
 	color: var(--text-black);
 	font-size: 12px;
 	font-weight: 500;
 	text-decoration: none;
 }
-.vh-tabs li > a:hover {
+
+.vh-tabs li>a:hover {
 	text-decoration: none;
 }
-.vh-tabs li.active > a {
+
+.vh-tabs li.active>a {
 	color: var(--text-dark);
 }
+
+.masked-text {
+	font-family: monospace;
+	color: transparent;
+	text-shadow: 0 0 10px black;
+}
+
+.masked-text:hover {
+	color: var(--text-light);
+	text-shadow: none;
+}
+
 input[type="checkbox"] {
 	accent-color: var(--checkbox-accent);
 }
+
 @media (prefers-color-scheme: dark) {
 	.vh-body {
 		background-color: var(--background-dark, #333);
 		color: var(--text-dark, #f9f9f9);
 	}
+
 	.vh-button {
 		box-shadow: 1px 1px 2px var(--highlight-dark);
 	}
+
 	.vh-inputtext,
 	.vh-textarea {
 		border: 1px solid var(--border-dark, #f9f9f9);
@@ -471,11 +529,13 @@ input[type="checkbox"] {
 		color: var(--text-dark, #f9f9f9);
 		transition: unset;
 	}
+
 	.vh-inputtext:focus,
 	.vh-textarea:focus {
 		border: 1px solid var(--highlight-dark);
 		outline: 2px solid var(--highlight-dark);
 	}
+
 	.vh-tbody th,
 	.vh-tbody td,
 	.vh-td,
@@ -484,17 +544,26 @@ input[type="checkbox"] {
 		border-color: var(--border-dark, #f9f9f9);
 		color: var(--text-dark);
 	}
+
 	input[type="checkbox"] {
 		accent-color: var(--checkbox-accent);
 	}
+
 	.vh-tabs li {
 		border: 2px solid var(--background-dark);
 	}
+
 	.vh-container {
 		color: var(--text-dark);
 	}
+
 	div#account-extra-stats {
 		color: var(--text-dark);
 		background: var(--background-dark);
+	}
+
+	.masked-text:hover {
+		color: var(--text-dark);
+		text-shadow: none;
 	}
 }
