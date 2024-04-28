@@ -138,7 +138,7 @@ async function sendMessageToAllTabs(data, debugInfo) {
 	broadcastChannel.postMessage(data);
 
 	//Send to other tabs
-	if (appSettings.general.displayNewItemNotifications) {
+	if (appSettings?.general.displayNewItemNotifications) {
 		browser.tabs.query({ active: true, currentWindow: true }, function (tabs) {
 			const activeTab = tabs[0];
 			if (activeTab) {
