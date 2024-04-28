@@ -98,9 +98,9 @@ function displayAccountData() {
 
 	div = document.createElement("div");
 	div.innerHTML =
-		"<h4>Vine Helper extra stats:</h4><strong>Customer Id:</strong><span class='masked-text'>" +
+		"<h4>Vine Helper extra stats:</h4><strong>Customer Id: </strong><span class='masked-text'>" +
 		escapeHTML(json.customerId) +
-		"</span>";
+		"</span><br /><br />";
 	container.appendChild(div);
 
 	const additionalStats = {
@@ -112,7 +112,7 @@ function displayAccountData() {
 	for (const [key, value] of Object.entries(additionalStats)) {
 		date = new Date(json.voiceDetails[key]);
 		div = document.createElement("div");
-		div.innerHTML = `<strong>${value}:</strong> ${date}`;
+		div.innerHTML = `<strong>${value}:</strong><br /> ${date}<br/><br />`;
 		container.appendChild(div);
 	}
 
