@@ -365,7 +365,8 @@ function init() {
 		arr = document
 			.getElementById("generalhighlightKeywords")
 			.value.split(",")
-			.map((item) => item.trim());
+			.map((item) => item.trim())
+			.filter((item) => item !== "");
 		if (arr.length == 1 && arr[0] == "") arr = [];
 		appSettings.general.highlightKeywords = arr;
 		chrome.storage.local.set({ settings: appSettings });
@@ -375,7 +376,8 @@ function init() {
 		arr = document
 			.getElementById("generalhideKeywords")
 			.value.split(",")
-			.map((item) => item.trim());
+			.map((item) => item.trim())
+			.filter((item) => item !== "");
 		if (arr.length == 1 && arr[0] == "") arr = [];
 		appSettings.general.hideKeywords = arr;
 		chrome.storage.local.set({ settings: appSettings });
