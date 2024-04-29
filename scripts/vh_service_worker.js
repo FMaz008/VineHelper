@@ -76,7 +76,7 @@ async function checkNewItems() {
 		api_version: 4,
 		country: vineCountry,
 		orderby: "date",
-		limit: 50,
+		limit: 100,
 	};
 	let jsonArrURL = JSON.stringify(arrJSON);
 
