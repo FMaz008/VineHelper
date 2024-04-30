@@ -217,12 +217,28 @@ function initInsertTopPagination() {
 	//Top pagination
 	if (appSettings.general.topPagination) {
 		$("#vvp-items-grid-container .topPagination").remove();
-		$(".a-pagination")
-			.parent()
-			.css("margin-top", "10px")
-			.clone()
-			.insertAfter("#vvp-items-grid-container p")
-			.addClass("topPagination");
+
+		if (appSettings.general.verbosePagination && vineQueueAbbr == "AI") {
+			//Fetch total items from the page
+			const TOTAL_ITEMS = parseInt(
+				document.querySelector("#vvp-items-grid-container p strong:last-child").innerText.replace(/,/g, "")
+			);
+			const ITEM_PER_PAGE = 36;
+			const CURRENT_PAGE = parseInt(
+				document.querySelector("ul.a-pagination li.a-selected").innerText.replace(/,/g, "")
+			);
+			const URL = "/vine/vine-items?queue=encore&pn=&cn=&page=1"; //Sample URL to be modified
+			let pagination = generatePagination(URL, TOTAL_ITEMS, ITEM_PER_PAGE, CURRENT_PAGE);
+
+			document.querySelector("#vvp-items-grid-container p").appendChild(pagination);
+		} else {
+			$(".a-pagination")
+				.parent()
+				.css("margin-top", "10px")
+				.clone()
+				.insertAfter("#vvp-items-grid-container p")
+				.addClass("topPagination");
+		}
 	}
 }
 
@@ -316,6 +332,8 @@ async function initInsertBookmarkButton() {
 async function getCurrentTimeFromServer() {}
 
 function initFixPreviousButton() {
+	if (appSettings.general.verbosePagination) return false;
+
 	//Place the text-content of the Previous button before the other child elements.
 	//This is to enable the first letter of the previous button to be styled for the keybinding.
 

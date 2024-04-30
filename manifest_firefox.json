@@ -69,6 +69,7 @@
 				"scripts/grid.js",
 				"scripts/tile.js",
 				"scripts/toolbar.js",
+				"scripts/pagination.js",
 				"scripts/bootloader.js"
 			],
 			"matches": [
