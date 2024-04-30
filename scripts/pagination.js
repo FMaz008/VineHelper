@@ -1,8 +1,8 @@
 function generatePagination(url, totalItems, itemsPerPage, currentPage) {
 	const LAST_PAGE = Math.ceil(totalItems / itemsPerPage);
 	const START_PAGE_PADDING = 10;
-	const CURRENT_PAGE_PADDING = 5;
-	const END_PAGE_PADDING = 3;
+	const CURRENT_PAGE_PADDING = 3;
+	const END_PAGE_PADDING = 0;
 
 	//Generate the pagination container
 	var pagination = generatePaginationContainer();
@@ -12,17 +12,24 @@ function generatePagination(url, totalItems, itemsPerPage, currentPage) {
 		pagination.querySelector("ul").appendChild(generatePageItem(url, i, currentPage));
 	}
 
-	pagination.querySelector("ul").appendChild(generatePageSeparator());
-
 	//Generate the current page padding links
-	start = Math.max(11, currentPage - CURRENT_PAGE_PADDING);
-	end = Math.min(LAST_PAGE, currentPage + CURRENT_PAGE_PADDING);
-	//Generate up to 5 pages before the current page
+	start = Math.max(START_PAGE_PADDING + 1, currentPage - CURRENT_PAGE_PADDING);
+	end = Math.min(LAST_PAGE - END_PAGE_PADDING - 1, currentPage + CURRENT_PAGE_PADDING);
+
+	//Add a ... separator if there is a gap between the beginning of the current range and
+	//the end of the start page padding.
+	if (start > START_PAGE_PADDING + 1) {
+		pagination.querySelector("ul").appendChild(generatePageSeparator());
+	}
+
+	//Generate the padding pages before and after the current page.
 	for (let i = start; i <= end; i++) {
 		pagination.querySelector("ul").appendChild(generatePageItem(url, i, currentPage));
 	}
 
-	if (start < end) {
+	//Add ... separator if there is a gap between the end of the current range and
+	//the beginning of the end page padding.
+	if (end < LAST_PAGE - END_PAGE_PADDING - 1) {
 		pagination.querySelector("ul").appendChild(generatePageSeparator());
 	}
 
