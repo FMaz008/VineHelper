@@ -304,50 +304,34 @@ function init() {
 	document.getElementById("keyBindingsDebug").value = appSettings.keyBindings.debug;
 
 	document.getElementById("keyBindingsNextPage").addEventListener("change", function () {
-		if (this.value == "") return false;
-
 		appSettings.keyBindings.nextPage = this.value;
 		chrome.storage.local.set({ settings: appSettings });
 	});
 	document.getElementById("keyBindingsPreviousPage").addEventListener("change", function () {
-		if (this.value == "") return false;
-
 		appSettings.keyBindings.previousPage = this.value;
 		chrome.storage.local.set({ settings: appSettings });
 	});
 	document.getElementById("keyBindingsRFYPage").addEventListener("change", function () {
-		if (this.value == "") return false;
-
 		appSettings.keyBindings.RFYPage = this.value;
 		chrome.storage.local.set({ settings: appSettings });
 	});
 	document.getElementById("keyBindingsAFAPage").addEventListener("change", function () {
-		if (this.value == "") return false;
-
 		appSettings.keyBindings.AFAPage = this.value;
 		chrome.storage.local.set({ settings: appSettings });
 	});
 	document.getElementById("keyBindingsAIPage").addEventListener("change", function () {
-		if (this.value == "") return false;
-
 		appSettings.keyBindings.AIPage = this.value;
 		chrome.storage.local.set({ settings: appSettings });
 	});
 	document.getElementById("keyBindingsHideAll").addEventListener("change", function () {
-		if (this.value == "") return false;
-
 		appSettings.keyBindings.hideAll = this.value;
 		chrome.storage.local.set({ settings: appSettings });
 	});
 	document.getElementById("keyBindingsShowAll").addEventListener("change", function () {
-		if (this.value == "") return false;
-
 		appSettings.keyBindings.showAll = this.value;
 		chrome.storage.local.set({ settings: appSettings });
 	});
 	document.getElementById("keyBindingsDebug").addEventListener("change", function () {
-		if (this.value == "") return false;
-
 		appSettings.keyBindings.debug = this.value;
 		chrome.storage.local.set({ settings: appSettings });
 	});
