@@ -830,9 +830,10 @@ window.addEventListener("keyup", async function (e) {
 	const keybindingMap = {
 		[appSettings.keyBindings?.hideAll]: hideAllItems,
 		[appSettings.keyBindings?.showAll]: showAllItems,
-		[appSettings.keyBindings?.nextPage]: () => document.querySelector("ul.a-pagination li:last-child a")?.click(),
+		[appSettings.keyBindings?.nextPage]: () =>
+			document.querySelector("#vvp-items-grid-container>div>ul.a-pagination li:last-child a")?.click(),
 		[appSettings.keyBindings?.previousPage]: () =>
-			document.querySelector("ul.a-pagination li:first-child a")?.click(),
+			document.querySelector("#vvp-items-grid-container>div>ul.a-pagination li:first-child a")?.click(),
 		[appSettings.keyBindings?.debug]: async () => {
 			let content = await getRunTimeJSON();
 			regex = /\s*{<br\/>\n\s*"time": ([0-9]+),<br\/>\n\s*"event": "(.+?)"<br\/>\n\s*}(?:,<br\/>\n)?/gm;
