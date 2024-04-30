@@ -299,15 +299,24 @@ function init() {
 	document.getElementById("keyBindingsRFYPage").value = appSettings.keyBindings.RFYPage;
 	document.getElementById("keyBindingsAFAPage").value = appSettings.keyBindings.AFAPage;
 	document.getElementById("keyBindingsAIPage").value = appSettings.keyBindings.AIPage;
-	document.getElementById("keyBindingsAIPage2").value = appSettings.keyBindings.AIPage2;
-	document.getElementById("keyBindingsAIPage3").value = appSettings.keyBindings.AIPage3;
-	document.getElementById("keyBindingsAIPage4").value = appSettings.keyBindings.AIPage4;
-	document.getElementById("keyBindingsAIPage5").value = appSettings.keyBindings.AIPage5;
-	document.getElementById("keyBindingsAIPage6").value = appSettings.keyBindings.AIPage6;
-	document.getElementById("keyBindingsAIPage7").value = appSettings.keyBindings.AIPage7;
-	document.getElementById("keyBindingsAIPage8").value = appSettings.keyBindings.AIPage8;
-	document.getElementById("keyBindingsAIPage9").value = appSettings.keyBindings.AIPage9;
-	document.getElementById("keyBindingsAIPage10").value = appSettings.keyBindings.AIPage10;
+	document.getElementById("keyBindingsAIPage2").value =
+		appSettings.keyBindings.AIPage2 == undefined ? "" : appSettings.keyBindings.AIPage2;
+	document.getElementById("keyBindingsAIPage3").value =
+		appSettings.keyBindings.AIPage3 == undefined ? "" : appSettings.keyBindings.AIPage3;
+	document.getElementById("keyBindingsAIPage4").value =
+		appSettings.keyBindings.AIPage4 == undefined ? "" : appSettings.keyBindings.AIPage4;
+	document.getElementById("keyBindingsAIPage5").value =
+		appSettings.keyBindings.AIPage5 == undefined ? "" : appSettings.keyBindings.AIPage5;
+	document.getElementById("keyBindingsAIPage6").value =
+		appSettings.keyBindings.AIPage6 == undefined ? "" : appSettings.keyBindings.AIPage6;
+	document.getElementById("keyBindingsAIPage7").value =
+		appSettings.keyBindings.AIPage7 == undefined ? "" : appSettings.keyBindings.AIPage7;
+	document.getElementById("keyBindingsAIPage8").value =
+		appSettings.keyBindings.AIPage8 == undefined ? "" : appSettings.keyBindings.AIPage8;
+	document.getElementById("keyBindingsAIPage9").value =
+		appSettings.keyBindings.AIPage9 == undefined ? "" : appSettings.keyBindings.AIPage9;
+	document.getElementById("keyBindingsAIPage10").value =
+		appSettings.keyBindings.AIPage10 == undefined ? "" : appSettings.keyBindings.AIPage10;
 	document.getElementById("keyBindingsHideAll").value = appSettings.keyBindings.hideAll;
 	document.getElementById("keyBindingsShowAll").value = appSettings.keyBindings.showAll;
 	document.getElementById("keyBindingsDebug").value = appSettings.keyBindings.debug;
