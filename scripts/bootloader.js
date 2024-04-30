@@ -332,16 +332,16 @@ async function initInsertBookmarkButton() {
 async function getCurrentTimeFromServer() {}
 
 function initFixPreviousButton() {
-	if (appSettings.general.verbosePagination) return false;
-
 	//Place the text-content of the Previous button before the other child elements.
 	//This is to enable the first letter of the previous button to be styled for the keybinding.
 
 	//let text = $("ul.a-pagination li:first-child a").innerText;
 	let textContent = "";
 	document.querySelectorAll("ul.a-pagination li:first-child a").forEach(function (item) {
-		textContent = item.childNodes[3].nodeValue;
-		item.childNodes[3].nodeValue = "";
+		if (item.childNodes[3] != undefined) {
+			textContent = item.childNodes[3].nodeValue;
+			item.childNodes[3].nodeValue = "";
+		}
 	});
 
 	//console.log(text);
@@ -846,6 +846,24 @@ window.addEventListener("keyup", async function (e) {
 		[appSettings.keyBindings?.RFYPage]: () => (window.location.href = "/vine/vine-items?queue=potluck"),
 		[appSettings.keyBindings?.AFAPage]: () => (window.location.href = "/vine/vine-items?queue=last_chance"),
 		[appSettings.keyBindings?.AIPage]: () => (window.location.href = "/vine/vine-items?queue=encore"),
+		[appSettings.keyBindings?.AIPage2]: () =>
+			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=2"),
+		[appSettings.keyBindings?.AIPage3]: () =>
+			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=3"),
+		[appSettings.keyBindings?.AIPage4]: () =>
+			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=4"),
+		[appSettings.keyBindings?.AIPage5]: () =>
+			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=5"),
+		[appSettings.keyBindings?.AIPage6]: () =>
+			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=6"),
+		[appSettings.keyBindings?.AIPage7]: () =>
+			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=7"),
+		[appSettings.keyBindings?.AIPage8]: () =>
+			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=8"),
+		[appSettings.keyBindings?.AIPage9]: () =>
+			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=9"),
+		[appSettings.keyBindings?.AIPage10]: () =>
+			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=10"),
 	};
 
 	if (appSettings.hiddenTab?.active) {

@@ -195,10 +195,20 @@ label .tips {
 #keyBindingsRFYPage,
 #keyBindingsAFAPage,
 #keyBindingsAIPage,
+#keyBindingsAIPage2,
+#keyBindingsAIPage3,
+#keyBindingsAIPage4,
+#keyBindingsAIPage5,
+#keyBindingsAIPage6,
+#keyBindingsAIPage7,
+#keyBindingsAIPage8,
+#keyBindingsAIPage9,
+#keyBindingsAIPage10,
 #keyBindingsHideAll,
 #keyBindingsShowAll,
 #keyBindingsDebug {
 	margin-left: auto;
+	margin-right: 20px;
 }
 
 @media (prefers-color-scheme: dark) {

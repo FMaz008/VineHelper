@@ -299,6 +299,15 @@ function init() {
 	document.getElementById("keyBindingsRFYPage").value = appSettings.keyBindings.RFYPage;
 	document.getElementById("keyBindingsAFAPage").value = appSettings.keyBindings.AFAPage;
 	document.getElementById("keyBindingsAIPage").value = appSettings.keyBindings.AIPage;
+	document.getElementById("keyBindingsAIPage2").value = appSettings.keyBindings.AIPage2;
+	document.getElementById("keyBindingsAIPage3").value = appSettings.keyBindings.AIPage3;
+	document.getElementById("keyBindingsAIPage4").value = appSettings.keyBindings.AIPage4;
+	document.getElementById("keyBindingsAIPage5").value = appSettings.keyBindings.AIPage5;
+	document.getElementById("keyBindingsAIPage6").value = appSettings.keyBindings.AIPage6;
+	document.getElementById("keyBindingsAIPage7").value = appSettings.keyBindings.AIPage7;
+	document.getElementById("keyBindingsAIPage8").value = appSettings.keyBindings.AIPage8;
+	document.getElementById("keyBindingsAIPage9").value = appSettings.keyBindings.AIPage9;
+	document.getElementById("keyBindingsAIPage10").value = appSettings.keyBindings.AIPage10;
 	document.getElementById("keyBindingsHideAll").value = appSettings.keyBindings.hideAll;
 	document.getElementById("keyBindingsShowAll").value = appSettings.keyBindings.showAll;
 	document.getElementById("keyBindingsDebug").value = appSettings.keyBindings.debug;
@@ -321,6 +330,42 @@ function init() {
 	});
 	document.getElementById("keyBindingsAIPage").addEventListener("change", function () {
 		appSettings.keyBindings.AIPage = this.value;
+		chrome.storage.local.set({ settings: appSettings });
+	});
+	document.getElementById("keyBindingsAIPage2").addEventListener("change", function () {
+		appSettings.keyBindings.AIPage2 = this.value;
+		chrome.storage.local.set({ settings: appSettings });
+	});
+	document.getElementById("keyBindingsAIPage3").addEventListener("change", function () {
+		appSettings.keyBindings.AIPage3 = this.value;
+		chrome.storage.local.set({ settings: appSettings });
+	});
+	document.getElementById("keyBindingsAIPage4").addEventListener("change", function () {
+		appSettings.keyBindings.AIPage4 = this.value;
+		chrome.storage.local.set({ settings: appSettings });
+	});
+	document.getElementById("keyBindingsAIPage5").addEventListener("change", function () {
+		appSettings.keyBindings.AIPage5 = this.value;
+		chrome.storage.local.set({ settings: appSettings });
+	});
+	document.getElementById("keyBindingsAIPage6").addEventListener("change", function () {
+		appSettings.keyBindings.AIPage6 = this.value;
+		chrome.storage.local.set({ settings: appSettings });
+	});
+	document.getElementById("keyBindingsAIPage7").addEventListener("change", function () {
+		appSettings.keyBindings.AIPage7 = this.value;
+		chrome.storage.local.set({ settings: appSettings });
+	});
+	document.getElementById("keyBindingsAIPage8").addEventListener("change", function () {
+		appSettings.keyBindings.AIPage8 = this.value;
+		chrome.storage.local.set({ settings: appSettings });
+	});
+	document.getElementById("keyBindingsAIPage9").addEventListener("change", function () {
+		appSettings.keyBindings.AIPage9 = this.value;
+		chrome.storage.local.set({ settings: appSettings });
+	});
+	document.getElementById("keyBindingsAIPage10").addEventListener("change", function () {
+		appSettings.keyBindings.AIPage10 = this.value;
 		chrome.storage.local.set({ settings: appSettings });
 	});
 	document.getElementById("keyBindingsHideAll").addEventListener("change", function () {
