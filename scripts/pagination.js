@@ -71,7 +71,7 @@ function generatePageSeparator() {
 function generatePaginationContainer() {
 	let div = document.createElement("div");
 	div.classList.add("a-text-center");
-	div.classList.add("topPagination");
+	div.classList.add("topPaginationVerbose");
 	div.role = "navigation";
 	div.style.marginTop = "10px;";
 

@@ -217,6 +217,7 @@ function initInsertTopPagination() {
 	//Top pagination
 	if (appSettings.general.topPagination) {
 		$("#vvp-items-grid-container .topPagination").remove();
+		$("#vvp-items-grid-container .topPaginationVerbose").remove();
 
 		if (appSettings.general.verbosePagination && vineQueueAbbr == "AI") {
 			//Fetch total items from the page
@@ -346,7 +347,9 @@ function initFixPreviousButton() {
 
 	//console.log(text);
 	$(".vh-pagination-previous").remove();
-	$("ul.a-pagination li:first-child a").append("<span class='vh-pagination-previous'>" + textContent + "</span>");
+	$("div:not([class*='topPaginationVerbose']) > ul.a-pagination li:first-child a").append(
+		"<span class='vh-pagination-previous'>" + textContent + "</span>"
+	);
 	//$("ul.a-pagination li:first-child a").prepend(text);
 }
 async function initDrawToolbars() {
