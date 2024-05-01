@@ -233,12 +233,15 @@ function initInsertTopPagination() {
 
 			document.querySelector("#vvp-items-grid-container p").appendChild(pagination);
 		} else {
-			$(".a-pagination")
-				.parent()
-				.css("margin-top", "10px")
-				.clone()
-				.insertAfter("#vvp-items-grid-container p")
-				.addClass("topPagination");
+			// Clone the bottom pagination to the top of the listing
+			let paginationElement = document.querySelector(".a-pagination");
+			let parentElement = paginationElement.parentNode;
+			parentElement.style.marginTop = "10px";
+
+			// Clone the parent element
+			let clonedElement = parentElement.cloneNode(true);
+			clonedElement.classList.add("topPagination");
+			document.querySelector("#vvp-items-grid-container p").appendChild(clonedElement);
 		}
 	}
 }
