@@ -124,8 +124,7 @@ async function createGridInterface() {
 	if (appSettings.hiddenTab.active) {
 		//Add the toolbar for Hide All & Show All
 		//Delete the previous one if any exist:
-		let htb = document.querySelector("#vh-tabs .hidden-toolbar");
-		if (htb) htb.remove();
+		removeElements("#vh-tabs .hidden-toolbar"); //bootloader.js
 
 		//Generate the html for the hide all and show all widget
 		let prom = await Tpl.loadFile("view/widget_hideall.html");

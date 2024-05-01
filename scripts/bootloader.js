@@ -216,8 +216,8 @@ async function initCreateTabs() {
 function initInsertTopPagination() {
 	//Top pagination
 	if (appSettings.general.topPagination) {
-		$("#vvp-items-grid-container .topPagination").remove();
-		$("#vvp-items-grid-container .topPaginationVerbose").remove();
+		removeElements("#vvp-items-grid-container .topPagination");
+		removeElements("#vvp-items-grid-container .topPaginationVerbose");
 
 		if (appSettings.general.verbosePagination && vineQueueAbbr == "AI") {
 			//Fetch total items from the page
@@ -249,7 +249,7 @@ function initInsertTopPagination() {
 async function initInsertBookmarkButton() {
 	//Insert bookmark button
 	if (appSettings.general.displayFirstSeen && appSettings.general.bookmark) {
-		$("button.bookmark").remove();
+		removeElements("button.bookmark");
 		prom = await Tpl.loadFile("view/bookmark.html");
 		Tpl.setVar("date", appSettings.general.bookmarkDate);
 		let bookmarkContent = Tpl.render(prom);
@@ -349,7 +349,7 @@ function initFixPreviousButton() {
 	});
 
 	//console.log(text);
-	$(".vh-pagination-previous").remove();
+	removeElements(".vh-pagination-previous");
 	$("div:not([class*='topPaginationVerbose']) > ul.a-pagination li:first-child a").append(
 		"<span class='vh-pagination-previous'>" + textContent + "</span>"
 	);
@@ -645,8 +645,8 @@ window.addEventListener("message", async function (event) {
 		await textContainer.slideDown("slow").promise();
 		await healingAnim.delay(1000).animate({ opacity: "hide" }, { duration: 500 }).promise();
 		await textContainer.slideUp("slow").promise();
-		$("#vh-healing").remove();
-		$("#vh-healing-text").remove();
+		removeElements("#vh-healing");
+		removeElements("#vh-healing-text");
 
 		//Show a notification
 		let note = new ScreenNotification();
@@ -933,4 +933,15 @@ function unescapeHTML(encodedString) {
 	}
 
 	return encodedString;
+}
+
+/** Remove an element from the DOM, ignore if it does not exist
+ * @param selector CSS style selector of the element to remove
+ */
+function removeElements(selector) {
+	let elementsToRemove = document.querySelectorAll(selector);
+
+	elementsToRemove.forEach(function (element) {
+		element.remove();
+	});
 }
