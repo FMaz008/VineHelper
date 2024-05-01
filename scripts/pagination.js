@@ -1,13 +1,16 @@
 function generatePagination(url, totalItems, itemsPerPage, currentPage) {
 	const LAST_PAGE = Math.ceil(totalItems / itemsPerPage);
-	const START_PAGE_PADDING = 10;
+	const START_PAGE_PADDING =
+		appSettings.general.verbosePaginationStartPadding == undefined
+			? 1
+			: parseInt(appSettings.general.verbosePaginationStartPadding);
 	const CURRENT_PAGE_PADDING = 3;
 	const END_PAGE_PADDING = 0;
 
 	//Generate the pagination container
 	var pagination = generatePaginationContainer();
 
-	//First 10 pages links
+	//First "10" pages links
 	for (let i = 1; i <= START_PAGE_PADDING; i++) {
 		pagination.querySelector("ul").appendChild(generatePageItem(url, i, currentPage));
 	}

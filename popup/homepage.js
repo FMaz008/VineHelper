@@ -162,6 +162,20 @@ function init() {
 		await chrome.storage.local.set({ settings: appSettings });
 	};
 
+	//general.verbosePaginationStartPadding
+	select = document.getElementById("verbosePaginationStartPadding");
+	for (i = 0; i < select.options.length; i++) {
+		if (select.options[i].value == appSettings.general.verbosePaginationStartPadding) {
+			select.options[i].selected = true;
+		}
+	}
+	document.getElementById("verbosePaginationStartPadding").onchange = async function () {
+		appSettings.general.verbosePaginationStartPadding = document.getElementById(
+			"verbosePaginationStartPadding"
+		).value;
+		await chrome.storage.local.set({ settings: appSettings });
+	};
+
 	//Concensus Threshold
 	key = CSS.escape("unavailableTab.consensusThreshold");
 	document.querySelector(`#${key}`).value = appSettings.unavailableTab.consensusThreshold;
