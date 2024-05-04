@@ -280,6 +280,32 @@ async function initInsertBookmarkButton() {
 					await Notifications.pushNotification(note);
 				});
 		});
+		$("button.bookmark3").on("click", function (event) {
+			//Fetch the current date/time from the server
+			let arrJSON = {
+				api_version: 4,
+				country: vineCountry,
+				action: "date",
+			};
+			let url = "https://vinehelper.ovh/vinehelper.php" + "?data=" + JSON.stringify(arrJSON);
+			fetch(url)
+				.then((response) => response.json())
+				.then(async function (response) {
+					appSettings.general.bookmarkDate = new Date(
+						new Date(response.date + " GMT").getTime() - 3 * 60 * 60 * 1000
+					).toString();
+					saveSettings();
+
+					let note = new ScreenNotification();
+					note.title = "Marker set !";
+					note.lifespan = 30;
+					note.content =
+						"Marker set for <br />" +
+						appSettings.general.bookmarkDate +
+						"<br />Newer items will be highlighted.";
+					await Notifications.pushNotification(note);
+				});
+		});
 		$("button.bookmark12").on("click", function (event) {
 			//Fetch the current date/time from the server
 			let arrJSON = {
