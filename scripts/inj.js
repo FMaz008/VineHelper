@@ -129,7 +129,15 @@ window.fetch = async (...args) => {
 					variation.dimensions[key] = newValue;
 					fixed++;
 				}
+
+				// Any variation with a / with a space before it will crash, remove the space before.
+				newValue = variation.dimensions[key].replace(/(\s[/])/g, "/");
+				if (newValue !== variation.dimensions[key]) {
+					variation.dimensions[key] = newValue;
+					fixed++;
+				}
 			}
+
 			return variation;
 		});
 
