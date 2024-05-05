@@ -99,36 +99,37 @@ if (typeof window.BrendaAnnounceQueue === "undefined") {
 	window.BrendaAnnounceQueue = new BrendaAnnounceQueue();
 }
 
-function Toolbar(tileInstance) {
-	var pToolbar = null;
-	var pTile = tileInstance;
-
-	pTile.setToolbar(this);
+class Toolbar {
+	constructor(tileInstance) {
+		this.pTile = tileInstance;
+		this.pTile.setToolbar(this);
+	}
 
 	//Create the bare bone structure of the toolbar
-	this.createProductToolbar = async function () {
-		let toolbarId = "vh-toolbar-" + pTile.getAsin();
-		let anchorTo = $(pTile.getDOM()).children(".vvp-item-tile-content");
+	async createProductToolbar() {
+		let toolbarId = "vh-toolbar-" + this.pTile.getAsin();
+		let anchorTo = this.pTile.getDOM().children[0]; //.vvp-item-tile-content should be the first child
 
 		//Load the toolbar template
 		showRuntime("DRAW: Creating #" + toolbarId);
 		const prom = await Tpl.loadFile("view/toolbar.html");
 		Tpl.setVar("toolbarId", toolbarId);
-		Tpl.setVar("asin", pTile.getAsin());
+		Tpl.setVar("asin", this.pTile.getAsin());
 		Tpl.setIf(
 			"announce",
 			appSettings.discord.active && appSettings.discord.guid != null && vineQueue != null && vineSearch == false
 		);
 		Tpl.setIf("toggleview", appSettings.hiddenTab.active);
-		let content = Tpl.render(prom);
+		let pToolbar = Tpl.render(prom, true);
 
 		//Attach the toolbar to the tile's .vvp-item-tile-content container.
-		pToolbar = $(content).prependTo(anchorTo);
+		anchorTo.insertAdjacentElement("afterbegin", pToolbar);
+
 		let container = $("#" + toolbarId + " .vh-status-container2");
 		$("#" + toolbarId + " .vh-toolbar-etv").hide();
 
 		//Activate the announce button
-		container.find(".etv").on("change", { asin: pTile.getAsin() }, function (event) {
+		container.find(".etv").on("change", { asin: this.pTile.getAsin() }, (event) => {
 			if ($(this).text() == "") return false;
 			if (vineSearch == true) return false;
 
@@ -138,7 +139,7 @@ function Toolbar(tileInstance) {
 				.css("opacity", "1")
 				.parent("a")
 				.off("click")
-				.on("click", { asin: pTile.getAsin() }, announceItem);
+				.on("click", { asin: this.pTile.getAsin() }, announceItem);
 		});
 
 		//It the small tiles will be shown, hide the ETV icon to gain space
@@ -151,7 +152,7 @@ function Toolbar(tileInstance) {
 		}
 
 		if (appSettings.unavailableTab.compactToolbar) {
-			pToolbar.addClass("compact");
+			pToolbar.classList.add("compact");
 		}
 
 		if (appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar) {
@@ -162,13 +163,13 @@ function Toolbar(tileInstance) {
 
 		//If the voting system is off, only the icons have to be shown
 		if (!appSettings.unavailableTab.active && !appSettings.unavailableTab.votingToolbar) {
-			pToolbar.addClass("toolbar-icon-only");
+			pToolbar.classList.add("toolbar-icon-only");
 		}
 
 		//Display the hide link
 		if (appSettings.hiddenTab.active) {
-			h = $("#vh-hide-link-" + pTile.getAsin());
-			h.on("click", { asin: pTile.getAsin() }, async function (event) {
+			let h = $("#vh-hide-link-" + this.pTile.getAsin());
+			h.on("click", { asin: this.pTile.getAsin() }, async function (event) {
 				//A hide/display item button was pressed
 				let asin = event.data.asin;
 				let tile = getTileByAsin(asin);
@@ -191,13 +192,13 @@ function Toolbar(tileInstance) {
 
 			this.updateVisibilityIcon();
 		}
-	};
+	}
 
-	this.updateVisibilityIcon = function () {
+	updateVisibilityIcon() {
 		if (!appSettings.hiddenTab.active) return false;
 
-		let icon = $("#vh-hide-link-" + pTile.getAsin() + " div.vh-toolbar-icon");
-		let gridId = pTile.getGridId();
+		let icon = $("#vh-hide-link-" + this.pTile.getAsin() + " div.vh-toolbar-icon");
+		let gridId = this.pTile.getGridId();
 
 		icon.removeClass("vh-icon-hide");
 		icon.removeClass("vh-icon-show");
@@ -210,10 +211,10 @@ function Toolbar(tileInstance) {
 				icon.addClass("vh-icon-show");
 				break;
 		}
-	};
+	}
 
-	this.setStatusIcon = function (iconClass) {
-		let context = $("#vh-toolbar-" + pTile.getAsin());
+	setStatusIcon(iconClass) {
+		let context = $("#vh-toolbar-" + this.pTile.getAsin());
 		let icon = $(context).find(".vh-icon");
 
 		//Remove all images for the icon
@@ -225,10 +226,10 @@ function Toolbar(tileInstance) {
 		icon.removeClass("vh-icon-order-failed");
 
 		icon.addClass(iconClass);
-	};
+	}
 
-	this.setETV = function (etv1, etv2, onlyIfEmpty = false) {
-		let context = $("#vh-toolbar-" + pTile.getAsin());
+	setETV(etv1, etv2, onlyIfEmpty = false) {
+		let context = $("#vh-toolbar-" + this.pTile.getAsin());
 		let span = $(context).find(".vh-toolbar-etv .etv");
 
 		if (onlyIfEmpty && span.text() != "") return false;
@@ -249,16 +250,15 @@ function Toolbar(tileInstance) {
 		span.trigger("change");
 
 		if (appSettings.general.displayETV) context.find(".vh-toolbar-etv").show();
-	};
+	}
 
 	//This method is called from bootloader.js, serverResponse() when the voting data has been received, after the tile was moved.
-	this.updateToolbar = async function () {
-		showRuntime("DRAW-UPDATE-TOOLBAR: Updating #vh-toolbar-" + pTile.getAsin());
-		let context = $("#vh-toolbar-" + pTile.getAsin());
+	async updateToolbar() {
+		showRuntime("DRAW-UPDATE-TOOLBAR: Updating #vh-toolbar-" + this.pTile.getAsin());
+		let context = $("#vh-toolbar-" + this.pTile.getAsin());
 
 		if (context.length == 0) {
-			showRuntime("! Could not find #vh-toolbar-" + pTile.getAsin());
-			console.log(pTile);
+			showRuntime("! Could not find #vh-toolbar-" + this.pTile.getAsin());
 			return;
 		}
 		let tileOpacity;
@@ -269,7 +269,7 @@ function Toolbar(tileInstance) {
 
 		//Set the icons
 		showRuntime("DRAW-UPDATE-TOOLBAR: Setting icon status");
-		switch (pTile.getStatus()) {
+		switch (this.pTile.getStatus()) {
 			case DISCARDED_ORDER_FAILED:
 				this.setStatusIcon("vh-icon-order-failed");
 				break;
@@ -292,14 +292,14 @@ function Toolbar(tileInstance) {
 
 		//Set other properties
 		showRuntime("DRAW-UPDATE-TOOLBAR: Setting status related properties");
-		switch (pTile.getStatus()) {
+		switch (this.pTile.getStatus()) {
 			case DISCARDED_ORDER_FAILED:
 			case DISCARDED_WITH_FEES:
 			case DISCARDED_OWN_VOTE:
 				statusColor = "vh-background-fees";
 				tileOpacity = appSettings.unavailableTab.unavailableOpacity / 100;
 
-				if (appSettings.discord.active) $("#vh-announce-link-" + pTile.getAsin()).hide();
+				if (appSettings.discord.active) $("#vh-announce-link-" + this.pTile.getAsin()).hide();
 				break;
 			case NOT_DISCARDED_ORDER_SUCCESS:
 			case NOT_DISCARDED_NO_FEES:
@@ -321,26 +321,26 @@ function Toolbar(tileInstance) {
 			context.addClass(statusColor);
 		}
 
-		$(pTile.getDOM()).css("opacity", tileOpacity);
+		$(this.pTile.getDOM()).css("opacity", tileOpacity);
 
 		//Display voting system if active.
 		if (appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar) {
-			if (pTile.wasOrdered()) {
+			if (this.pTile.wasOrdered()) {
 				showRuntime("DRAW-UPDATE-TOOLBAR: Create order widget");
 				await this.createOrderWidget();
 			} else if (appSettings.unavailableTab.votingToolbar) {
 				showRuntime("DRAW-UPDATE-TOOLBAR: Create voting widget");
-				await createVotingWidget();
+				await this.createVotingWidget();
 			} else {
 				showRuntime("DRAW-UPDATE-TOOLBAR: Create order widget (#2)");
 				await this.createOrderWidget();
 			}
 		}
-	};
+	}
 
 	//Create the voting widget part of the toolbar
-	async function createVotingWidget() {
-		let context = $("#vh-toolbar-" + pTile.getAsin());
+	async createVotingWidget() {
+		let context = $("#vh-toolbar-" + this.pTile.getAsin());
 		let container = $(context).find("div.vh-status-container2");
 
 		//Remove any previous voting widget, we will create a new one.
@@ -349,11 +349,11 @@ function Toolbar(tileInstance) {
 
 		//Generate the html for the voting widget
 		let prom = await Tpl.loadFile("view/widget_voting.html");
-		Tpl.setVar("asin", pTile.getAsin());
-		Tpl.setVar("vote_no_fees", pTile.getVoteNoFees());
-		Tpl.setVar("vote_with_fees", pTile.getVoteFees());
-		Tpl.setIf("selected_yes", pTile.getVoteOwn() == 0);
-		Tpl.setIf("selected_no", pTile.getVoteOwn() == 1);
+		Tpl.setVar("asin", this.pTile.getAsin());
+		Tpl.setVar("vote_no_fees", this.pTile.getVoteNoFees());
+		Tpl.setVar("vote_with_fees", this.pTile.getVoteFees());
+		Tpl.setIf("selected_yes", this.pTile.getVoteOwn() == 0);
+		Tpl.setIf("selected_no", this.pTile.getVoteOwn() == 1);
 		Tpl.setIf("not_compact", !appSettings.unavailableTab.compactToolbar);
 		let content = Tpl.render(prom);
 		$(content).appendTo(container);
@@ -363,26 +363,26 @@ function Toolbar(tileInstance) {
 		}
 
 		//Bind the click events
-		context.find(".vh-reportlink-bad").on("click", { asin: pTile.getAsin(), fees: 1 }, reportfees);
-		context.find(".vh-reportlink-good").on("click", { asin: pTile.getAsin(), fees: 0 }, reportfees);
+		context.find(".vh-reportlink-bad").on("click", { asin: this.pTile.getAsin(), fees: 1 }, reportfees);
+		context.find(".vh-reportlink-good").on("click", { asin: this.pTile.getAsin(), fees: 0 }, reportfees);
 
 		//Make the widget transparent if the user voted "no fees"
 		//Note: If we voted "fees", the entire card will be transparent.
 		//      If we have not voted, we want the option to remain visible.
-		context.find(".vh-voting-widget").css("opacity", pTile.getVoteOwn() != null ? 0.4 : 1.0);
+		context.find(".vh-voting-widget").css("opacity", this.pTile.getVoteOwn() != null ? 0.4 : 1.0);
 	}
 
 	//Create the order widget part of the toolbar
 	//Can ben called by bootloader when receiving order messages
-	this.createOrderWidget = async function (status = null) {
+	async createOrderWidget(status = null) {
 		if (status != null) {
 			//Get the current order info
-			let success = status ? pTile.getOrderSuccess() + 1 : pTile.getOrderSuccess();
-			let failed = !status ? pTile.getOrderFailed() + 1 : pTile.getOrderFailed();
+			let success = status ? this.pTile.getOrderSuccess() + 1 : this.pTile.getOrderSuccess();
+			let failed = !status ? this.pTile.getOrderFailed() + 1 : this.pTile.getOrderFailed();
 			pTile.setOrders(success, failed);
 		}
 
-		let context = $("#vh-toolbar-" + pTile.getAsin());
+		let context = $("#vh-toolbar-" + this.pTile.getAsin());
 		let container = $(context).find("div.vh-status-container2");
 
 		//Remove any previous order widget, we will create a new one.
@@ -391,8 +391,8 @@ function Toolbar(tileInstance) {
 
 		//Generate the HTML for the widget
 		prom = await Tpl.loadFile("view/widget_order.html");
-		Tpl.setVar("order_success", pTile.getOrderSuccess());
-		Tpl.setVar("order_failed", pTile.getOrderFailed());
+		Tpl.setVar("order_success", this.pTile.getOrderSuccess());
+		Tpl.setVar("order_failed", this.pTile.getOrderFailed());
 		Tpl.setIf("not-compact", !appSettings.unavailableTab.compactToolbar);
 		let content = Tpl.render(prom);
 		$(content).appendTo(container);
@@ -400,7 +400,7 @@ function Toolbar(tileInstance) {
 		if (appSettings.thorvarium.smallItems) {
 			$(".compact div.vh-order-widget").css("clear", "both");
 		}
-	};
+	}
 }
 
 async function announceItem(event) {
