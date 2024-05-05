@@ -88,7 +88,6 @@ window.onload = function () {
 		30 * 60 * 1000
 	);
 
-	document.getElementById("date_loaded").innerText = new Date();
 	init();
 };
 
@@ -146,6 +145,7 @@ async function setLocale(country) {
 			latestProduct = latestProduct.latestProduct;
 		}
 		document.getElementById("date_most_recent_item").innerText = formatDate(latestProduct);
+		document.getElementById("date_loaded").innerText = new Date().toLocaleString(vineLocale);
 	}
 }
 

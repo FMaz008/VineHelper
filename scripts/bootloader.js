@@ -110,7 +110,7 @@ function displayAccountData() {
 	};
 
 	for (const [key, value] of Object.entries(additionalStats)) {
-		date = new Date(json.voiceDetails[key]);
+		date = new Date(json.voiceDetails[key]).toLocaleString(vineLocale);
 		div = document.createElement("div");
 		div.innerHTML = `<strong>${value}:</strong><br /> ${date}<br/><br />`;
 		container.appendChild(div);
