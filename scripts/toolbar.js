@@ -122,6 +122,7 @@ function Toolbar(tileInstance) {
 		Tpl.setIf("toggleview", appSettings.hiddenTab.active);
 		let content = Tpl.render(prom);
 
+		//Attach the toolbar to the tile's .vvp-item-tile-content container.
 		pToolbar = $(content).prependTo(anchorTo);
 		let container = $("#" + toolbarId + " .vh-status-container2");
 		$("#" + toolbarId + " .vh-toolbar-etv").hide();
@@ -252,11 +253,11 @@ function Toolbar(tileInstance) {
 
 	//This method is called from bootloader.js, serverResponse() when the voting data has been received, after the tile was moved.
 	this.updateToolbar = async function () {
-		showRuntime("DRAW-UPDATE-TOOLBAR: Updating ##vh-toolbar-" + pTile.getAsin());
+		showRuntime("DRAW-UPDATE-TOOLBAR: Updating #vh-toolbar-" + pTile.getAsin());
 		let context = $("#vh-toolbar-" + pTile.getAsin());
 
 		if (context.length == 0) {
-			showRuntime("! Count not find #vh-toolbar-" + pTile.getAsin());
+			showRuntime("! Could not find #vh-toolbar-" + pTile.getAsin());
 			console.log(pTile);
 			return;
 		}
