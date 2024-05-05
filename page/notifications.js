@@ -128,7 +128,7 @@ async function init() {
 //Set the locale and currency based on the domain.
 //As this is an internal page from the extension, we can only know what
 //country/domain is being used when we first receive data.
-function setLocale(country) {
+async function setLocale(country) {
 	if (Object.prototype.hasOwnProperty.call(vineLocales, country)) {
 		vineLocale = vineLocales[country].locale;
 		vineCurrency = vineLocales[country].currency;
@@ -137,6 +137,15 @@ function setLocale(country) {
 		if (appSettings != undefined && appSettings.general.newItemNotification) {
 			document.getElementById("status").innerHTML = "<strong>Active</strong> Listening for notifications...";
 		}
+
+		//Now that we have the locale, display the date of the most recent item
+		let latestProduct = await browser.storage.local.get("latestProduct");
+		if (Object.keys(latestProduct).length === 0) {
+			latestProduct = 0;
+		} else {
+			latestProduct = latestProduct.latestProduct;
+		}
+		document.getElementById("date_most_recent_item").innerText = formatDate(latestProduct);
 	}
 }
 
@@ -194,6 +203,9 @@ function addItem(data) {
 			.querySelector("#vh-notification-" + asin + " .report-link")
 			.addEventListener("click", handleReportClick);
 		setETV(asin, etv);
+
+		//Update the most recent date
+		document.getElementById("date_most_recent_item").innerText = formatDate(date);
 	}
 }
 

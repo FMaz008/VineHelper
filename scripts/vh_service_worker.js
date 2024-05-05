@@ -95,6 +95,8 @@ async function checkNewItems() {
 				latestProduct = latestProduct.latestProduct;
 			}
 
+			//TODO: Client side sort the response.products array in order of response.products[i].date DESC. (most recent at the top)
+
 			for (let i = response.products.length - 1; i >= 0; i--) {
 				//Only display notification for product more recent than the last displayed notification
 				if (DEBUG_MODE || response.products[i].date > latestProduct || latestProduct == 0) {

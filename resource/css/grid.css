@@ -71,7 +71,9 @@ body.darktheme #vvp-items-grid-container div.bookmark-highlight a:active {
 	color: var(--item-link-light);
 }
 
+/*
 body.darktheme #vvp-items-grid-container div.keyword-highlight a,
 body.darktheme #vvp-items-grid-container div.keyword-highlight a:visited,
 body.darktheme #vvp-items-grid-container div.keyword-highlight a:active {
 }
+*/
