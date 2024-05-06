@@ -130,22 +130,26 @@ async function createGridInterface() {
 		let prom = await Tpl.loadFile("view/widget_hideall.html");
 		Tpl.setVar("class", appSettings.thorvarium.darktheme ? "invert" : "");
 		let content = Tpl.render(prom, true);
-		let clonedContent = content.cloneNode(true);
+		if (content == null) {
+			showRuntime("!!ERROR: Unable to fetch view/widget_hideall.html. Skipping.");
+		} else {
+			let clonedContent = content.cloneNode(true);
 
-		// Prepend content to #vh-tabs
-		let vtabs = document.querySelector("#vh-tabs");
-		vtabs.insertBefore(content, vtabs.firstChild);
-		vtabs.appendChild(clonedContent);
-		clonedContent.style.marginTop = "5px";
+			// Prepend content to #vh-tabs
+			let vtabs = document.querySelector("#vh-tabs");
+			vtabs.insertBefore(content, vtabs.firstChild);
+			vtabs.appendChild(clonedContent);
+			clonedContent.style.marginTop = "5px";
 
-		// Add event listeners to .vh-hideall and .vh-showall elements
-		document.querySelectorAll(".vh-hideall").forEach((element) => {
-			element.addEventListener("click", () => this.hideAllItems());
-		});
+			// Add event listeners to .vh-hideall and .vh-showall elements
+			document.querySelectorAll(".vh-hideall").forEach((element) => {
+				element.addEventListener("click", () => this.hideAllItems());
+			});
 
-		document.querySelectorAll(".vh-showall").forEach((element) => {
-			element.addEventListener("click", () => this.showAllItems());
-		});
+			document.querySelectorAll(".vh-showall").forEach((element) => {
+				element.addEventListener("click", () => this.showAllItems());
+			});
+		}
 	}
 
 	//Actiate the tab system
