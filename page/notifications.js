@@ -134,7 +134,8 @@ async function setLocale(country) {
 		vineDomain = vineDomains[country];
 
 		if (appSettings != undefined && appSettings.general.newItemNotification) {
-			document.getElementById("status").innerHTML = "<strong>Active</strong> Listening for notifications...";
+			document.getElementById("status").innerHTML =
+				"<strong>Status: </strong><div class='vh-switch-32 vh-icon-switch-on'></div> Listening for notifications...";
 		}
 
 		//Now that we have the locale, display the date of the most recent item

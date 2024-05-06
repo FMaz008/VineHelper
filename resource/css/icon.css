@@ -87,6 +87,16 @@
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/search.png");
 		background-repeat: no-repeat;
 	}
+	.vh-icon-switch-on {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/switch-on.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-switch-off {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/switch-off.png");
+		background-repeat: no-repeat;
+	}
 }
 
 @supports (-moz-appearance: none) {
@@ -177,6 +187,16 @@
 		background-image: url("/resource/image/search.png");
 		background-repeat: no-repeat;
 	}
+	.vh-icon-switch-on {
+		background-size: 100%;
+		background-image: url("/resource/image/switch-on.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-switch-off {
+		background-size: 100%;
+		background-image: url("/resource/image/switch-off.png");
+		background-repeat: no-repeat;
+	}
 }
 
 .invert {
@@ -195,4 +215,21 @@ div[role="navigation"] > ul > li {
 	.vh-icon-request {
 		filter: invert(1);
 	}
+}
+
+.vh-icon-16 {
+	display: inline-block;
+	width: 16px;
+	height: 16px;
+}
+.vh-icon-32 {
+	display: inline-block;
+	width: 32px;
+	height: 32px;
+}
+.vh-switch-32 {
+	display: inline-block;
+	width: 32px;
+	height: 18px;
+	background-position-y: -7px;
 }

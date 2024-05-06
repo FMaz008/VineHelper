@@ -128,7 +128,7 @@ class Toolbar {
 		let container = $("#" + toolbarId + " .vh-status-container2");
 		$("#" + toolbarId + " .vh-toolbar-etv").hide();
 
-		//Activate the announce button
+		//Activate the announce button when the ETV is set (changed)
 		container.find(".etv").on("change", { asin: this.pTile.getAsin() }, (event) => {
 			if (event.currentTarget.innerText == "") return false;
 			if (vineSearch == true) return false;
