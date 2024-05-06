@@ -219,15 +219,14 @@ function initInsertTopPagination() {
 		removeElements("#vvp-items-grid-container .topPagination");
 		removeElements("#vvp-items-grid-container .topPaginationVerbose");
 
-		if (appSettings.general.verbosePagination && vineQueueAbbr == "AI") {
+		let currentPageDOM = document.querySelector("ul.a-pagination li.a-selected"); //If Null there is no pagination on the page
+		if (appSettings.general.verbosePagination && vineQueueAbbr == "AI" && currentPageDOM != undefined) {
 			//Fetch total items from the page
 			const TOTAL_ITEMS = parseInt(
 				document.querySelector("#vvp-items-grid-container p strong:last-child").innerText.replace(/,/g, "")
 			);
 			const ITEM_PER_PAGE = 36;
-			const CURRENT_PAGE = parseInt(
-				document.querySelector("ul.a-pagination li.a-selected").innerText.replace(/,/g, "")
-			);
+			const CURRENT_PAGE = parseInt(currentPageDOM.innerText.replace(/,/g, ""));
 			const URL = "/vine/vine-items?queue=encore&pn=&cn=&page=1"; //Sample URL to be modified
 			let pagination = generatePagination(URL, TOTAL_ITEMS, ITEM_PER_PAGE, CURRENT_PAGE);
 
