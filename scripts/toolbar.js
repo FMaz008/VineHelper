@@ -130,7 +130,7 @@ class Toolbar {
 
 		//Activate the announce button
 		container.find(".etv").on("change", { asin: this.pTile.getAsin() }, (event) => {
-			if ($(this).text() == "") return false;
+			if (event.currentTarget.innerText == "") return false;
 			if (vineSearch == true) return false;
 
 			let tile = getTileByAsin(event.data.asin);
