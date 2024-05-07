@@ -1,6 +1,7 @@
 const DEBUG_MODE = false;
 var appSettings = [];
 var vineCountry = null;
+var newItemCheckInterval = 45;
 const broadcastChannel = new BroadcastChannel("VineHelperChannel");
 
 if (typeof browser === "undefined") {
@@ -66,7 +67,7 @@ async function checkNewItems() {
 	//Check for new items again in 30 seconds.
 	setTimeout(function () {
 		checkNewItems();
-	}, 45000);
+	}, newItemCheckInterval * 1000);
 
 	if (appSettings == undefined || !appSettings.general.newItemNotification) {
 		return; //Not setup to check for notifications. Will try again in 30 secs.
@@ -146,11 +147,20 @@ async function sendMessageToAllTabs(data, debugInfo) {
 
 	//Send to other tabs
 	if (appSettings?.general.displayNewItemNotifications) {
-		browser.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-			const activeTab = tabs[0];
-			if (activeTab) {
-				browser.tabs.sendMessage(activeTab.id, data);
-			}
+		browser.tabs.query({}, function (tabs) {
+			tabs.forEach(function (tab) {
+				if (tab) {
+					//Check to make sure this is a VineHelper tab:
+					const regex = /^.+?amazon\.([a-z.]+).*\/vine\/.*$/;
+					const isMatch = regex.test(tab.url);
+					if (tab.url != undefined && isMatch) {
+						if (DEBUG_MODE) {
+							console.log(tab.url);
+						}
+						browser.tabs.sendMessage(tab.id, data);
+					}
+				}
+			});
 		});
 	}
 }
