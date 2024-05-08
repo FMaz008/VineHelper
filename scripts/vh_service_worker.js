@@ -1,7 +1,7 @@
 const DEBUG_MODE = false;
 var appSettings = [];
 var vineCountry = null;
-var newItemCheckInterval = 45;
+var newItemCheckInterval = 30;
 const broadcastChannel = new BroadcastChannel("VineHelperChannel");
 
 if (typeof browser === "undefined") {

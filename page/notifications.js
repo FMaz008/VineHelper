@@ -1,4 +1,4 @@
-var lastSoundPlayedAt = 0; //Date.now();
+var muteSound = false;
 var appSettings = [];
 if (typeof browser === "undefined") {
 	var browser = chrome;
@@ -60,6 +60,7 @@ window.onload = function () {
 			addItem(data);
 		}
 		if (data.type == "newItemCheck") {
+			muteSound = false;
 			//Display a notification that we have checked for items.
 			let note = new ScreenNotification();
 			note.template = "view/notification_loading.html";
@@ -228,9 +229,9 @@ function formatDate(date) {
 
 function playSoundIfEnabled() {
 	if (appSettings.general.newItemMonitorNotificationSound) {
-		if (Date.now() - lastSoundPlayedAt > 30000) {
+		if (!muteSound) {
 			// Don't play the notification sound again within 30 sec.
-			lastSoundPlayedAt = Date.now();
+			muteSound = true;
 			const audioElement = new Audio(browser.runtime.getURL("resource/sound/notification.mp3"));
 			audioElement.addEventListener("ended", function () {
 				// Remove the audio element from the DOM
