@@ -441,6 +441,7 @@ function init() {
 	manageCheckboxSetting("general.GDPRPopup", false);
 	manageCheckboxSetting("general.firstVotePopup");
 	manageCheckboxSetting("general.displayETV");
+	manageCheckboxSetting("general.displayModalETV");
 	manageCheckboxSetting("general.displayVariantIcon");
 	manageCheckboxSetting("general.displayFirstSeen");
 	manageCheckboxSetting("general.bookmark");

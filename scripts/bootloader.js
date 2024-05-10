@@ -716,6 +716,15 @@ window.addEventListener("message", async function (event) {
 		note.content =
 			"Vine Helper shared the ETV value of " + event.data.data.etv + " for item " + event.data.data.asin + ".";
 		await Notifications.pushNotification(note);
+
+		if (
+			appSettings.general.displayModalETV &&
+			document.getElementById("vvp-product-details-modal--tax-value").style?.display == "none"
+		) {
+			document.getElementById("vvp-product-details-modal--tax-value").style.display = "block";
+			document.getElementById("vvp-product-details-modal--tax-spinner").style.display = "none";
+			document.getElementById("vvp-product-details-modal--tax-value-string").innerText = event.data.data.etv;
+		}
 	}
 
 	//If we got back a message after an order was attempted or placed.
