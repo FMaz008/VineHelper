@@ -1,12 +1,11 @@
 //No JQuery
 
 class HiddenListMgr {
-	arrHidden = [];
-	arrChanges = [];
-	listLoaded = false;
-	broadcast = null;
-
 	constructor() {
+		this.arrHidden = [];
+		this.arrChanges = [];
+		this.listLoaded = false;
+
 		this.broadcast = new BroadcastChannel("vine_helper");
 
 		showRuntime("HIDDENMGR: Loading list");
@@ -189,22 +188,32 @@ class HiddenListMgr {
 		}
 
 		//Delete items older than 90 days
-		const originalLength = this.arrHidden.length;
-		let expiredDate = new Date();
-		expiredDate.setDate(expiredDate.getDate() - 90);
-
-		let idx = 0;
-		while (idx < this.arrHidden.length) {
-			let itemDate = new Date(this.arrHidden[idx].date); // Parse current item's date
-			if (isNaN(itemDate.getTime())) {
-				this.arrHidden[idx].date = new Date().toString();
-			} else if (itemDate < expiredDate) {
-				this.arrHidden.splice(idx, 1);
-			} else {
-				++idx;
-			}
+		let timestampNow = Math.floor(Date.now() / 1000);
+		if (appSettings.hiddenTab.lastGC == undefined) {
+			appSettings.hiddenTab.lastGC = timestampNow;
+			saveSettings(); //preboot.js
 		}
 
+		if (appSettings.hiddenTab.lastGC < timestampNow - 24 * 60 * 60) {
+			const originalLength = this.arrHidden.length;
+			let expiredDate = new Date();
+			expiredDate.setDate(expiredDate.getDate() - 90);
+
+			let idx = 0;
+			while (idx < this.arrHidden.length) {
+				let itemDate = new Date(this.arrHidden[idx].date); // Parse current item's date
+				if (isNaN(itemDate.getTime())) {
+					this.arrHidden[idx].date = new Date().toString();
+				} else if (itemDate < expiredDate) {
+					this.arrHidden.splice(idx, 1);
+				} else {
+					++idx;
+				}
+			}
+
+			appSettings.hiddenTab.lastGC = timestampNow;
+			saveSettings(); //preboot.js
+		}
 		if (this.arrHidden.length != originalLength) {
 			this.saveList();
 		}
