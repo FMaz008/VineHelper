@@ -5,7 +5,6 @@ class HiddenListMgr {
 		this.arrHidden = [];
 		this.arrChanges = [];
 		this.listLoaded = false;
-
 		this.broadcast = new BroadcastChannel("vine_helper");
 
 		showRuntime("HIDDENMGR: Loading list");
@@ -34,7 +33,11 @@ class HiddenListMgr {
 			await browser.storage.local.set({ hiddenItems: [] });
 		} else {
 			this.arrHidden = [];
-			this.arrHidden = data.hiddenItems;
+			if (Array.isArray(data.hiddenItems)) {
+				this.arrHidden = data.hiddenItems;
+			} else {
+				this.saveList(); //Variable in local storage is corrupted, save empty array.
+			}
 		}
 		this.listLoaded = true;
 		showRuntime("HIDDENMGR: List loaded.");
@@ -194,8 +197,8 @@ class HiddenListMgr {
 			saveSettings(); //preboot.js
 		}
 
+		const originalLength = this.arrHidden.length;
 		if (appSettings.hiddenTab.lastGC < timestampNow - 24 * 60 * 60) {
-			const originalLength = this.arrHidden.length;
 			let expiredDate = new Date();
 			expiredDate.setDate(expiredDate.getDate() - 90);
 
