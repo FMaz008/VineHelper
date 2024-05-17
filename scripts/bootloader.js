@@ -57,8 +57,13 @@ async function init() {
 
 	//### Run the boot sequence
 	Notifications.init(); //Ensure the container for notification was created, in case it was not in preboot.
+
+	//The following method is called early as it does a XHR request to the server, which takes a while
+	//Upon receiving the results, it will loop&wait for initTilesAndDrawToolbars() to have completed.
+	//This allow the page to be rendered while we wait for the server's response.
+	fetchProductsData(getAllAsin()); //Obtain the data to fill the toolbars with it.
+
 	displayAccountData();
-	initFetchProductData();
 	showGDPRPopup();
 	await initFlushTplCache(); //And display the version changelog popup
 	initInjectScript();
@@ -67,7 +72,8 @@ async function init() {
 	initInsertTopPagination();
 	await initInsertBookmarkButton();
 	initFixPreviousButton();
-	await initDrawToolbars();
+	await initTilesAndDrawToolbars(); //Create the tiles, and move the locally hidden tiles to the hidden tab
+
 	HiddenList.garbageCollection();
 }
 
@@ -120,10 +126,6 @@ function displayAccountData() {
 	div.innerHTML =
 		"<strong>Re-evaluation in progress:</strong> " + escapeHTML(json.voiceDetails.isTierEvaluationInProgress);
 	container.appendChild(div);
-}
-
-function initFetchProductData() {
-	fetchProductsData(getAllAsin()); //Obtain the data to fill the toolbars with it.
 }
 
 async function showGDPRPopup() {
@@ -382,7 +384,7 @@ function initFixPreviousButton() {
 	);
 	//$("ul.a-pagination li:first-child a").prepend(text);
 }
-async function initDrawToolbars() {
+async function initTilesAndDrawToolbars() {
 	//Browse each items from the Regular grid
 	//- Create an array of all the products listed on the page
 	//- Create an empty toolbar for the item tile
@@ -437,6 +439,7 @@ function generateTile(obj) {
 
 	//Move the hidden item to the hidden tab
 	if (appSettings.hiddenTab.active && tile.isHidden()) {
+		showRuntime("BOOT: The item is locally hidden, move it to the hidden grid.");
 		tile.moveToGrid(gridHidden, false); //This is the main sort, do not animate it
 	}
 
@@ -458,7 +461,7 @@ function fetchProductsData(arrUrl) {
 	let arrJSON = {
 		api_version: 4,
 		app_version: appVersion,
-		action: "getinfoTEST",
+		action: "getinfo",
 		country: vineCountry,
 		uuid: appSettings.general.uuid,
 		queue: vineQueue,

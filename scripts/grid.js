@@ -163,7 +163,6 @@ async function createGridInterface() {
 	if (appSettings.favouriteTab?.active) {
 		let mapFav = new Map();
 		mapFav = FavouriteList.getList();
-		console.log(mapFav);
 		mapFav.forEach(async (value, key) => {
 			addFavouriteTile(key, value.title, value.thumbnail);
 		});
