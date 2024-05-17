@@ -21,6 +21,16 @@
 			>
 				<div class="vh-toolbar-icon vh-icon-announcement"></div>
 			</a>
+			{{endif}} {{if favourite}}
+			<a
+				href="#{{$asin}}"
+				id="vh-favourite-link-{{$asin}}"
+				class="vh-floating-icon vh-announce-link"
+				title="Favourite"
+				onclick="return false;"
+			>
+				<div class="vh-toolbar-icon vh-icon-favourite"></div>
+			</a>
 			{{endif}}
 			<span class="vh-toolbar-etv">
 				<a href="#" class="tooltip" onclick="return false;" title="Estimated Tax Value">

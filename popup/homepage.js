@@ -455,6 +455,7 @@ function init() {
 	manageCheckboxSetting("keyBindings.active");
 	manageCheckboxSetting("hiddenTab.active");
 	manageCheckboxSetting("hiddenTab.remote");
+	manageCheckboxSetting("favouriteTab.active");
 	manageCheckboxSetting("discord.active"); //Handled manually
 	manageCheckboxSetting("unavailableTab.active");
 	manageCheckboxSetting("unavailableTab.votingToolbar");

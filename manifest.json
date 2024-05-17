@@ -92,6 +92,7 @@
 				"scripts/Template.js",
 				"scripts/ScreenNotifier.js",
 				"scripts/HiddenListMgr.js",
+				"scripts/FavouriteListMgr.js",
 				"scripts/ModalMgr.js",
 				"scripts/preboot.js"
 			],

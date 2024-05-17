@@ -97,6 +97,16 @@
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/switch-off.png");
 		background-repeat: no-repeat;
 	}
+	.vh-icon-favourite {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/favourite.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-unfavourite {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/unfavourite.png");
+		background-repeat: no-repeat;
+	}
 }
 
 @supports (-moz-appearance: none) {
@@ -195,6 +205,16 @@
 	.vh-icon-switch-off {
 		background-size: 100%;
 		background-image: url("/resource/image/switch-off.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-favourite {
+		background-size: 100%;
+		background-image: url("/resource/image/favourite.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-unfavourite {
+		background-size: 100%;
+		background-image: url("/resource/image/unfavourite.png");
 		background-repeat: no-repeat;
 	}
 }

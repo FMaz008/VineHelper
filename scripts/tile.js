@@ -141,6 +141,10 @@ function Tile(obj, gridInstance) {
 		return getTitleFromDom(pTile);
 	};
 
+	this.getThumbnail = function () {
+		return getThumbnailURLFromDom(pTile);
+	};
+
 	this.setDateAdded = function (timenow, mysqlDate) {
 		if (mysqlDate == undefined || !appSettings.general.displayFirstSeen) return false;
 
@@ -328,7 +332,13 @@ function getTitleFromDom(tileDom) {
 }
 
 function getThumbnailURLFromDom(tileDom) {
+	//Preload.
 	let url = $(tileDom).find(".vvp-item-tile-content > img").attr("src");
-	if (url == undefined) return null;
-	else return url;
+
+	if (url == undefined) {
+		//Post load of VH added an image container.
+		url = $(tileDom).find(".vvp-item-tile-content > .vh-img-container > img").attr("src");
+	}
+
+	return url == undefined ? null : url;
 }

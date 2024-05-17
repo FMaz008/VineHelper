@@ -458,7 +458,7 @@ function fetchProductsData(arrUrl) {
 	let arrJSON = {
 		api_version: 4,
 		app_version: appVersion,
-		action: "getinfo",
+		action: "getinfoTEST",
 		country: vineCountry,
 		uuid: appSettings.general.uuid,
 		queue: vineQueue,

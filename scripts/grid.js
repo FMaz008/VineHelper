@@ -79,6 +79,8 @@ async function createGridInterface() {
 	if (tab2) tab2.remove();
 	let tab3 = document.querySelector("div#tab-hidden");
 	if (tab3) tab3.remove();
+	let tab4 = document.querySelector("div#tab-favourite");
+	if (tab4) tab4.remove();
 	let tbs = document.querySelectorAll(".vh-status");
 	tbs.forEach(function (toolbar) {
 		toolbar.remove();
@@ -107,16 +109,21 @@ async function createGridInterface() {
 		Tpl.setVar("available", "A");
 		Tpl.setVar("unavailable", "U");
 		Tpl.setVar("hidden", "H");
+		Tpl.setVar("favourite", "F");
 	} else {
 		Tpl.setVar("available", "Available");
 		Tpl.setVar("unavailable", "Unavailable");
 		Tpl.setVar("hidden", "Hidden");
+		Tpl.setVar("favourite", "Favourite");
 	}
 	//If voting system enabled
 	Tpl.setIf("unavailable", appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar);
 
 	//If the hidden tab system is activated
 	Tpl.setIf("hidden", appSettings.hiddenTab.active);
+
+	//If the hidden tab system is activated
+	Tpl.setIf("favourite", appSettings.favouriteTab?.active);
 
 	let tabsHtml = Tpl.render(tplTabs, false);
 	tabs.insertAdjacentHTML("afterbegin", tabsHtml);
@@ -152,6 +159,16 @@ async function createGridInterface() {
 		}
 	}
 
+	//Populate the Favourite tab
+	if (appSettings.favouriteTab?.active) {
+		let mapFav = new Map();
+		mapFav = FavouriteList.getList();
+		console.log(mapFav);
+		mapFav.forEach(async (value, key) => {
+			addFavouriteTile(key, value.title, value.thumbnail);
+		});
+	}
+
 	//Actiate the tab system
 	//Bind the click event for the tabs
 	document.querySelectorAll("#tabs > ul li").forEach(function (item) {
@@ -170,6 +187,27 @@ async function createGridInterface() {
 	selectCurrentTab(true);
 }
 
+async function addFavouriteTile(asin, title, thumbnail) {
+	//Check if the favourite already exist:
+	if (document.getElementById("vh-favourite-" + asin) != undefined) return false;
+
+	let prom2 = await Tpl.loadFile("view/favourite_tile.html");
+	let search = title.replace(/^([a-zA-Z0-9\s',]{0,40})[\s]+.*$/, "$1");
+	Tpl.setVar("id", asin);
+	Tpl.setVar("domain", vineDomain); //preboot.js
+	Tpl.setVar("search", search);
+	Tpl.setVar("img_url", thumbnail);
+	Tpl.setVar("asin", asin);
+	Tpl.setVar("description", title);
+	let content = Tpl.render(prom2, true);
+	document.getElementById("tab-favourite").appendChild(content);
+
+	//Bind the click event for the unfavourite button
+	document.querySelector("#vh-favourite-" + asin + " .unfavourite-link").onclick = () => {
+		FavouriteList.removeItem(asin);
+		document.getElementById("vh-favourite-" + asin).remove();
+	};
+}
 async function hideAllItems() {
 	let arrTile = [];
 	HiddenList.loadFromLocalStorage(); //Refresh the list in case it was altered in a different tab

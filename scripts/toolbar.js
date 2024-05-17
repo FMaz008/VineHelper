@@ -119,6 +119,7 @@ class Toolbar {
 			"announce",
 			appSettings.discord.active && appSettings.discord.guid != null && vineQueue != null && vineSearch == false
 		);
+		Tpl.setIf("favourite", appSettings.favouriteTab?.active);
 		Tpl.setIf("toggleview", appSettings.hiddenTab.active);
 		let pToolbar = Tpl.render(prom, true);
 
@@ -191,6 +192,23 @@ class Toolbar {
 			});
 
 			this.updateVisibilityIcon();
+		}
+
+		//Favourite event handler
+		if (appSettings.favouriteTab?.active) {
+			let h = $("#vh-favourite-link-" + this.pTile.getAsin());
+			h.on("click", { asin: this.pTile.getAsin() }, async function (event) {
+				//A hide/display item button was pressed
+				let asin = event.data.asin;
+				let tile = getTileByAsin(asin);
+
+				//Get the item title, thumbnail
+				let title = tile.getTitle();
+				let thumbnail = tile.getThumbnail();
+
+				FavouriteList.addItem(asin, title, thumbnail);
+				addFavouriteTile(asin, title, thumbnail); //grid.js
+			});
 		}
 	}
 

@@ -28,6 +28,7 @@ var TplMgr = new TemplateMgr();
 var DialogMgr = new ModalMgr();
 var Notifications = new ScreenNotifier();
 var HiddenList = new HiddenListMgr();
+var FavouriteList = new FavouriteListMgr();
 
 function showRuntime(eventName) {
 	arrDebug.push({ time: Date.now() - startTime, event: eventName });
@@ -87,6 +88,10 @@ function getDefaultSettings() {
 		hiddenTab: {
 			active: true,
 			remote: false,
+		},
+
+		favouriteTab: {
+			active: true,
 		},
 
 		discord: {

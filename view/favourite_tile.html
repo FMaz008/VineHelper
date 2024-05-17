@@ -1,0 +1,14 @@
+<div id="vh-favourite-{{$id}}" class="vh-notification-box" style="clear: both; margin: 2px">
+	<div class="vh-notification-toolbar" style="background-color: var(--bookmark); height: 36px">
+		<a href="https://amazon.{{$domain}}/vine/vine-items?search={{$search}}" target="_blank">
+			<div class="vh-toolbar-large-icon vh-icon-search" style="float: left"></div>
+		</a>
+		<a href="#" class="unfavourite-link" onclick="return false;">
+			<div class="vh-toolbar-large-icon vh-icon-unfavourite" data-asin="{{$asin}}" style="float: right"></div>
+		</a>
+	</div>
+	<div class="vh-notification-content">
+		<img src="{{$img_url}}" />
+		<a href="https://amazon.{{$domain}}/dp/{{$asin}}" target="_blank">{{$description}}</a>
+	</div>
+</div>
