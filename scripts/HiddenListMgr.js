@@ -177,7 +177,7 @@ class HiddenListMgr {
 					//missing date, set it
 					this.mapHidden.set(asin, new Date());
 					needsSave = true;
-				} else if (itemDate < ninetyDaysAgo) {
+				} else if (itemDate < expiredDate) {
 					//expired, delete entry
 					this.mapHidden.delete(asin);
 					needsSave = true;
