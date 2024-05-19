@@ -2,7 +2,7 @@
 
 class HiddenListMgr {
 	constructor() {
-		this.arrHidden = [];
+		this.mapHidden = new Map();
 		this.arrChanges = [];
 		this.listLoaded = false;
 		this.broadcast = new BroadcastChannel("vine_helper");
@@ -28,16 +28,27 @@ class HiddenListMgr {
 	async loadFromLocalStorage() {
 		const data = await browser.storage.local.get("hiddenItems");
 
-		//Load hidden items
-		if (Object.keys(data).length === 0) {
-			await browser.storage.local.set({ hiddenItems: [] });
-		} else {
-			this.arrHidden = [];
-			if (Array.isArray(data.hiddenItems)) {
-				this.arrHidden = data.hiddenItems;
-			} else {
-				this.saveList(); //Variable in local storage is corrupted, save empty array.
+		if (data.hiddenItems) {
+			try {
+				// Try parsing the stored string as JSON
+				this.mapHidden = this.deserialize(data.hiddenItems);
+			} catch (error) {
+				// If JSON parsing fails assume legacy format and convert to new format
+				// Once the migration period is over delete this section of code
+				showRuntime("Failed to parse hiddenItems as JSON, treating as array:");
+				if (Array.isArray(data.hiddenItems)) {
+					this.mapHidden = data.hiddenItems.reduce((map, product) => {
+						map.set(product.asin, new Date(product.date));
+						return map;
+					}, new Map());
+				} else {
+					showRuntime("Invalid data format for hidden items.  Creating new map.");
+					this.mapHidden = new Map(); // Initialize with an empty map if data is malformed
+				}
 			}
+		} else {
+			// No data found or empty hiddenItems, initialize an empty Map
+			this.mapHidden = new Map();
 		}
 		this.listLoaded = true;
 		showRuntime("HIDDENMGR: List loaded.");
@@ -46,14 +57,7 @@ class HiddenListMgr {
 	async removeItem(asin, save = true, broadcast = true) {
 		if (save) await this.loadFromLocalStorage(); //Load the list in case it was altered in a different tab
 
-		let idx = 0;
-		while (idx < this.arrHidden.length) {
-			if (this.arrHidden[idx].asin == asin) {
-				this.arrHidden.splice(idx, 1);
-			} else {
-				++idx;
-			}
-		}
+		this.mapHidden.delete(asin);
 
 		//The server may not be in sync with the local list, and will deal with duplicate.
 		this.updateArrChange({ asin: asin, hidden: false });
@@ -69,7 +73,7 @@ class HiddenListMgr {
 	async addItem(asin, save = true, broadcast = true) {
 		if (save) await this.loadFromLocalStorage(); //Load the list in case it was altered in a different tab
 
-		if (!this.isHidden(asin)) this.arrHidden.push({ asin: asin, date: new Date().toString() });
+		if (!this.isHidden(asin)) this.mapHidden.set(asin, new Date());
 
 		//The server may not be in sync with the local list, and will deal with duplicate.
 		this.updateArrChange({ asin: asin, hidden: true });
@@ -83,7 +87,8 @@ class HiddenListMgr {
 	}
 
 	async saveList() {
-		await browser.storage.local.set({ hiddenItems: this.arrHidden }, () => {
+		let storableVal = this.serialize(this.mapHidden);
+		await browser.storage.local.set({ hiddenItems: storableVal }, () => {
 			if (browser.runtime.lastError) {
 				const error = browser.runtime.lastError;
 				if (error.message === "QUOTA_BYTES quota exceeded") {
@@ -107,9 +112,7 @@ class HiddenListMgr {
 	isHidden(asin) {
 		if (asin == undefined) throw new Exception("Asin not defined");
 
-		for (const id in this.arrHidden) if (this.arrHidden[id].asin == asin) return true;
-
-		return false;
+		return this.mapHidden.has(asin);
 	}
 
 	isChange(asin) {
@@ -146,7 +149,7 @@ class HiddenListMgr {
 	}
 
 	async garbageCollection() {
-		if (!this.arrHidden) {
+		if (!this.mapHidden) {
 			return false;
 		}
 		if (isNaN(appSettings.general.hiddenItemsCacheSize)) {
@@ -156,13 +159,44 @@ class HiddenListMgr {
 			return false;
 		}
 
+		//Delete items older than 90 days
+		let needsSave = false;
+		let timestampNow = Math.floor(Date.now() / 1000);
+		if (appSettings.hiddenTab.lastGC == undefined) {
+			appSettings.hiddenTab.lastGC = timestampNow;
+			saveSettings(); //preboot.js
+		}
+
+		if (appSettings.hiddenTab.lastGC < timestampNow - 24 * 60 * 60) {
+			let expiredDate = new Date();
+			expiredDate.setDate(expiredDate.getDate() - 90);
+
+			for (const [asin, date] of this.mapHidden.entries()) {
+				let itemDate = new Date(date);
+				if (isNaN(itemDate.getTime())) {
+					//missing date, set it
+					this.mapHidden.set(asin, new Date());
+					needsSave = true;
+				} else if (itemDate < expiredDate) {
+					//expired, delete entry
+					this.mapHidden.delete(asin);
+					needsSave = true;
+				}
+			}
+
+			appSettings.hiddenTab.lastGC = timestampNow;
+			saveSettings(); //preboot.js
+		}
+		if (needsSave) {
+			this.saveList();
+		}
+
 		//Delete older items if the storage space is exceeded.
 		let bytes = await getStorageSizeFull();
 		const storageLimit = appSettings.general.hiddenItemsCacheSize * 1048576; // 9MB
 		const deletionThreshold = (appSettings.general.hiddenItemsCacheSize - 1) * 1048576; // 8MB
 		if (bytes > storageLimit) {
 			let itemDeleted = 0;
-
 			let note = new ScreenNotification();
 			note.title = "Local storage quota exceeded!";
 			note.lifespan = 60;
@@ -174,12 +208,29 @@ class HiddenListMgr {
 			//Give some breathing room for the notification to be displayed.
 			await new Promise((r) => setTimeout(r, 500));
 
+			// Convert the map into an array of [key, value] pairs
+			let arrHidden = Array.from(this.mapHidden.entries());
+
+			// Sort the array based on the date values (oldest first)
+			arrHidden.sort((a, b) => a[1] - b[1]);
+
 			while (bytes > deletionThreshold) {
+				let itemCount = arrHidden.length;
 				//Delete 1000 items at the time
-				this.arrHidden.splice(0, 1000);
-				itemDeleted += 1000;
+				let batchSize = 1000;
+				let maxIndexThisBatch = batchSize + itemDeleted;
+				//never go beyond the array size
+				let stopAt = Math.min(maxIndexThisBatch, itemCount);
+
+				for (let i = itemDeleted; i < stopAt; i++) {
+					//find the asin from the sorted list and delete it from the map
+					this.mapHidden.delete(arrHidden[i][0]);
+					itemDeleted++;
+				}
+
+				let storableVal = this.serialize(this.mapHidden);
 				await browser.storage.local.set({
-					hiddenItems: this.arrHidden,
+					hiddenItems: storableVal,
 				});
 				bytes = await getStorageSizeFull();
 			}
@@ -189,36 +240,19 @@ class HiddenListMgr {
 			note.content = `GC done, ${itemDeleted} items have been deleted. Some of these items may re-appear in your listing.`;
 			await Notifications.pushNotification(note);
 		}
+	}
 
-		//Delete items older than 90 days
-		let timestampNow = Math.floor(Date.now() / 1000);
-		if (appSettings.hiddenTab.lastGC == undefined) {
-			appSettings.hiddenTab.lastGC = timestampNow;
-			saveSettings(); //preboot.js
-		}
+	serialize(map) {
+		//truncate ms to store as unix timestamp
+		const objToStore = Object.fromEntries(
+			Array.from(map.entries()).map(([key, value]) => [key, Math.floor(value.getTime() / 1000)])
+		);
+		return JSON.stringify(objToStore);
+	}
 
-		const originalLength = this.arrHidden.length;
-		if (appSettings.hiddenTab.lastGC < timestampNow - 24 * 60 * 60) {
-			let expiredDate = new Date();
-			expiredDate.setDate(expiredDate.getDate() - 90);
-
-			let idx = 0;
-			while (idx < this.arrHidden.length) {
-				let itemDate = new Date(this.arrHidden[idx].date); // Parse current item's date
-				if (isNaN(itemDate.getTime())) {
-					this.arrHidden[idx].date = new Date().toString();
-				} else if (itemDate < expiredDate) {
-					this.arrHidden.splice(idx, 1);
-				} else {
-					++idx;
-				}
-			}
-
-			appSettings.hiddenTab.lastGC = timestampNow;
-			saveSettings(); //preboot.js
-		}
-		if (this.arrHidden.length != originalLength) {
-			this.saveList();
-		}
+	deserialize(jsonString) {
+		//multiply by 1000 to convert from unix timestamp to js Date
+		const retrievedObj = JSON.parse(jsonString);
+		return new Map(Object.entries(retrievedObj).map(([key, value]) => [key, new Date(value * 1000)]));
 	}
 }
