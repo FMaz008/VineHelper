@@ -85,7 +85,6 @@ async function boot_review() {
 
 	//Add the template titles in the select box
 	let selectBox = document.getElementById("template_name");
-	console.log(arrTemplate);
 	let title = "";
 	if (arrTemplate.length > 0) {
 		console.log(arrTemplate.length);

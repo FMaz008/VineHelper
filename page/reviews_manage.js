@@ -82,7 +82,7 @@ async function handleViewClick(asin) {
 		if (review) {
 			let { title, content } = review;
 			document.getElementById("title").value = JSON.parse(title);
-			document.getElementById("content").innerText = JSON.parse(content);
+			document.getElementById("content").textContent = JSON.parse(content);
 		}
 	} catch (e) {
 		logError([scriptName, "handleViewClick", e.message]);
