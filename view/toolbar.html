@@ -21,15 +21,15 @@
 			>
 				<div class="vh-toolbar-icon vh-icon-announcement"></div>
 			</a>
-			{{endif}} {{if favourite}}
+			{{endif}} {{if pinned}}
 			<a
 				href="#{{$asin}}"
-				id="vh-favourite-link-{{$asin}}"
+				id="vh-pin-link-{{$asin}}"
 				class="vh-floating-icon vh-announce-link"
-				title="Favourite"
+				title="Pin item"
 				onclick="return false;"
 			>
-				<div class="vh-toolbar-icon vh-icon-favourite"></div>
+				<div class="vh-toolbar-icon vh-icon-pin"></div>
 			</a>
 			{{endif}}
 			<span class="vh-toolbar-etv">

@@ -12,9 +12,9 @@
 		<li>
 			<a href="#tab-hidden">{{$hidden}} (<span id="vh-hidden-count"></span>)</a>
 		</li>
-		{{endif}} {{if favourite}}
+		{{endif}} {{if pinned}}
 		<li>
-			<a href="#tab-favourite">{{$favourite}}</a>
+			<a href="#tab-pinned">{{$pinned}}</a>
 		</li>
 		{{endif}}
 	</ul>
@@ -24,6 +24,6 @@
 <div id="tab-unavailable" class="vh-grid tab-grid"></div>
 {{endif}} {{if hidden}}
 <div id="tab-hidden" class="vh-grid tab-grid"></div>
-{{endif}} {{if favourite}}
-<div id="tab-favourite" class="vh-grid tab-grid"></div>
+{{endif}} {{if pinned}}
+<div id="tab-pinned" class="vh-grid tab-grid"></div>
 {{endif}}

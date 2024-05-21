@@ -28,7 +28,7 @@ var TplMgr = new TemplateMgr();
 var DialogMgr = new ModalMgr();
 var Notifications = new ScreenNotifier();
 var HiddenList = new HiddenListMgr();
-var FavouriteList = new FavouriteListMgr();
+var PinnedList = new PinnedListMgr();
 
 function showRuntime(eventName) {
 	arrDebug.push({ time: Date.now() - startTime, event: eventName });
@@ -90,7 +90,7 @@ function getDefaultSettings() {
 			remote: false,
 		},
 
-		favouriteTab: {
+		PinnedTab: {
 			active: true,
 		},
 

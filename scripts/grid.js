@@ -79,7 +79,7 @@ async function createGridInterface() {
 	if (tab2) tab2.remove();
 	let tab3 = document.querySelector("div#tab-hidden");
 	if (tab3) tab3.remove();
-	let tab4 = document.querySelector("div#tab-favourite");
+	let tab4 = document.querySelector("div#tab-pinned");
 	if (tab4) tab4.remove();
 	let tbs = document.querySelectorAll(".vh-status");
 	tbs.forEach(function (toolbar) {
@@ -109,12 +109,12 @@ async function createGridInterface() {
 		Tpl.setVar("available", "A");
 		Tpl.setVar("unavailable", "U");
 		Tpl.setVar("hidden", "H");
-		Tpl.setVar("favourite", "F");
+		Tpl.setVar("pinned", "P");
 	} else {
 		Tpl.setVar("available", "Available");
 		Tpl.setVar("unavailable", "Unavailable");
 		Tpl.setVar("hidden", "Hidden");
-		Tpl.setVar("favourite", "Favourite");
+		Tpl.setVar("pinned", "Pinned");
 	}
 	//If voting system enabled
 	Tpl.setIf("unavailable", appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar);
@@ -123,7 +123,7 @@ async function createGridInterface() {
 	Tpl.setIf("hidden", appSettings.hiddenTab.active);
 
 	//If the hidden tab system is activated
-	Tpl.setIf("favourite", appSettings.favouriteTab?.active);
+	Tpl.setIf("pinned", appSettings.pinnedTab?.active);
 
 	let tabsHtml = Tpl.render(tplTabs, false);
 	tabs.insertAdjacentHTML("afterbegin", tabsHtml);
@@ -159,12 +159,12 @@ async function createGridInterface() {
 		}
 	}
 
-	//Populate the Favourite tab
-	if (appSettings.favouriteTab?.active) {
-		let mapFav = new Map();
-		mapFav = FavouriteList.getList();
-		mapFav.forEach(async (value, key) => {
-			addFavouriteTile(key, value.title, value.thumbnail);
+	//Populate the Pinned tab
+	if (appSettings.pinnedTab?.active) {
+		let mapPin = new Map();
+		mapPin = PinnedList.getList();
+		mapPin.forEach(async (value, key) => {
+			addPinnedTile(key, value.title, value.thumbnail);
 		});
 	}
 
@@ -186,11 +186,11 @@ async function createGridInterface() {
 	selectCurrentTab(true);
 }
 
-async function addFavouriteTile(asin, title, thumbnail) {
-	//Check if the favourite already exist:
-	if (document.getElementById("vh-favourite-" + asin) != undefined) return false;
+async function addPinnedTile(asin, title, thumbnail) {
+	//Check if the pin already exist:
+	if (document.getElementById("vh-pin-" + asin) != undefined) return false;
 
-	let prom2 = await Tpl.loadFile("view/favourite_tile.html");
+	let prom2 = await Tpl.loadFile("view/pinned_tile.html");
 	let search = title.replace(/^([a-zA-Z0-9\s',]{0,40})[\s]+.*$/, "$1");
 	Tpl.setVar("id", asin);
 	Tpl.setVar("domain", vineDomain); //preboot.js
@@ -199,12 +199,12 @@ async function addFavouriteTile(asin, title, thumbnail) {
 	Tpl.setVar("asin", asin);
 	Tpl.setVar("description", title);
 	let content = Tpl.render(prom2, true);
-	document.getElementById("tab-favourite").appendChild(content);
+	document.getElementById("tab-pinned").appendChild(content);
 
-	//Bind the click event for the unfavourite button
-	document.querySelector("#vh-favourite-" + asin + " .unfavourite-link").onclick = () => {
-		FavouriteList.removeItem(asin);
-		document.getElementById("vh-favourite-" + asin).remove();
+	//Bind the click event for the unpin button
+	document.querySelector("#vh-pin-" + asin + " .unpin-link").onclick = () => {
+		PinnedList.removeItem(asin);
+		document.getElementById("vh-pin-" + asin).remove();
 	};
 }
 async function hideAllItems() {

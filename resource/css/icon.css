@@ -107,6 +107,16 @@
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/unfavourite.png");
 		background-repeat: no-repeat;
 	}
+	.vh-icon-pin {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/pin.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-unpin {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/unpin.png");
+		background-repeat: no-repeat;
+	}
 }
 
 @supports (-moz-appearance: none) {
@@ -215,6 +225,16 @@
 	.vh-icon-unfavourite {
 		background-size: 100%;
 		background-image: url("/resource/image/unfavourite.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-pin {
+		background-size: 100%;
+		background-image: url("/resource/image/pin.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-unpin {
+		background-size: 100%;
+		background-image: url("/resource/image/unpin.png");
 		background-repeat: no-repeat;
 	}
 }
