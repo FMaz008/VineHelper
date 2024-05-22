@@ -2,8 +2,10 @@
 	"manifest_version": 3,
 	"name": "Amazon Vine Helper",
 	"description": "Improve the Amazon Vine experience.",
-	"version": "2.5.2",
-	"permissions": ["storage"],
+	"version": "2.6.0",
+	"permissions": [
+		"storage"
+	],
 	"icons": {
 		"32": "resource/image/icon-32.png",
 		"48": "resource/image/icon-48.png",
@@ -99,8 +101,14 @@
 			"run_at": "document_start"
 		},
 		{
-			"css": ["resource/css/vinehelper.css", "resource/css/main.css"],
-			"js": ["scripts/Template.js", "scripts/review.js"],
+			"css": [
+				"resource/css/vinehelper.css",
+				"resource/css/main.css"
+			],
+			"js": [
+				"scripts/Template.js",
+				"scripts/review.js"
+			],
 			"matches": [
 				"*://*.amazon.ca/review/create-review*",
 				"*://*.amazon.it/review/create-review*",
