@@ -4,6 +4,7 @@ showRuntime("BOOT: Booterloader starting");
 var gridRegular = null;
 var gridUnavailable = null; //Will be populated after the grid will be created.
 var gridHidden = null; //Will be populated after the grid will be created.
+var gridPinned = null; //Will be populated after the grid will be created.
 
 //Inject the script to fix the infinite loading wheel into the main environment.
 var scriptTag = document.createElement("script");
@@ -212,6 +213,11 @@ async function initCreateTabs() {
 	if (appSettings.unavailableTab?.active || appSettings.unavailableTab?.votingToolbar) {
 		gridUnavailable = new Grid(document.getElementById("tab-unavailable"));
 	}
+
+	if (appSettings.pinnedTab?.active) {
+		gridPinned = new Grid(document.getElementById("tab-pinned"));
+	}
+
 	showRuntime("BOOT: Grid system completed");
 }
 

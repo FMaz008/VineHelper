@@ -481,7 +481,15 @@ function getStorageKeyLength(key) {
 			if (browser.runtime.lastError) {
 				reject(new Error(browser.runtime.lastError.message));
 			} else {
-				const itemSize = items[key].length;
+				let itemSize;
+				if (key == "hiddenItems" || key == "pinnedItems") {
+					itemSize = HiddenList.deserialize(items[key]).size;
+				} else if (Array.isArray(items[key])) {
+					itemSize = items[key].length;
+				} else {
+					itemSize = "n/a";
+				}
+
 				resolve(itemSize);
 			}
 		});

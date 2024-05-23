@@ -69,6 +69,8 @@ function updateTileCounts() {
 		$("#vh-unavailable-count").text(gridUnavailable.getTileCount(true));
 
 	if (appSettings.hiddenTab.active) $("#vh-hidden-count").text(gridHidden.getTileCount(true));
+
+	if (appSettings.pinnedTab.active) $("#vh-pinned-count").text(gridPinned.getTileCount(true));
 }
 
 async function createGridInterface() {
@@ -205,6 +207,8 @@ async function addPinnedTile(asin, title, thumbnail) {
 	document.querySelector("#vh-pin-" + asin + " .unpin-link").onclick = () => {
 		PinnedList.removeItem(asin);
 		document.getElementById("vh-pin-" + asin).remove();
+
+		updateTileCounts();
 	};
 }
 async function hideAllItems() {

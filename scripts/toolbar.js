@@ -198,6 +198,8 @@ class Toolbar {
 		if (appSettings.pinnedTab?.active) {
 			let h = $("#vh-pin-link-" + this.pTile.getAsin());
 			h.on("click", { asin: this.pTile.getAsin() }, async function (event) {
+				this.style.opacity = 0.3;
+
 				//A hide/display item button was pressed
 				let asin = event.data.asin;
 				let tile = getTileByAsin(asin);
@@ -207,7 +209,9 @@ class Toolbar {
 				let thumbnail = tile.getThumbnail();
 
 				PinnedList.addItem(asin, title, thumbnail);
-				addPinnedTile(asin, title, thumbnail); //grid.js
+				await addPinnedTile(asin, title, thumbnail); //grid.js
+
+				updateTileCounts();
 			});
 		}
 	}
