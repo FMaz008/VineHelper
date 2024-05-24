@@ -235,7 +235,8 @@ function initInsertTopPagination() {
 			);
 			const ITEM_PER_PAGE = 36;
 			const CURRENT_PAGE = parseInt(currentPageDOM.innerText.replace(/,/g, ""));
-			const URL = "/vine/vine-items?queue=encore&pn=&cn=&page=1"; //Sample URL to be modified
+
+			const URL = window.location.pathname + window.location.search; //Sample URL to be modified
 			let pagination = generatePagination(URL, TOTAL_ITEMS, ITEM_PER_PAGE, CURRENT_PAGE);
 
 			document.querySelector("#vvp-items-grid-container p").appendChild(pagination);

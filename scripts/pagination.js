@@ -45,9 +45,14 @@ function generatePagination(url, totalItems, itemsPerPage, currentPage) {
 }
 
 function generatePageLink(url, pageNo) {
-	const regex = /^(.+)(&page=[0-9]+)(.*?)$/gm;
-	const result = url.replace(regex, "$1&page=" + pageNo + "$3");
-	return result;
+	if (url.includes("&page=")) {
+		const regex = /^(.+)(&page=[0-9]+)(.*?)$/gm;
+		const result = url.replace(regex, "$1&page=" + pageNo + "$3");
+		return result;
+	} else {
+		//No replacement took place because &page was not part of the url
+		return url + "&page=" + pageNo;
+	}
 }
 
 function generatePageItem(url, pageNo, currentPage) {
