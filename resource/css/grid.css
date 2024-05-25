@@ -49,7 +49,10 @@ div.vh-grid .vvp-item-tile .vvp-item-tile-content > * {
 	background-color: var(--item-highlight-background);
 }
 
-#vh-tabs .keyword-highlight {
+#vh-tabs #vvp-items-grid .keyword-highlight,
+#vh-tabs #tab-unavailable .keyword-highlight,
+#vh-tabs #tab-hidden .keyword-highlight,
+#vh-tabs #tab-pinned .keyword-highlight {
 	border: 3px solid var(--alert) !important;
 }
 
