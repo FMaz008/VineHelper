@@ -231,13 +231,14 @@ async function getSettings() {
 	vineCountry = vineDomain.split(".").pop();
 
 	// Load the country specific stylesheet
-	if (appSettings.thorvarium.categoriesWithEmojis)
+	if (appSettings.thorvarium.categoriesWithEmojis) {
 		// The default stylesheet is for the US
 		var emojiList = "categories-with-emojis";
-	// For all other countries, append the country code to the stylesheet
-	if (vineCountry != "com") emojiList += "-" + vineCountry.toUpperCase();
+		// For all other countries, append the country code to the stylesheet
+		if (vineCountry != "com") emojiList += "-" + vineCountry.toUpperCase();
 
-	loadStyleSheet("node_modules/vine-styling/desktop/" + emojiList + ".css");
+		loadStyleSheet("node_modules/vine-styling/desktop/" + emojiList + ".css");
+	}
 
 	showRuntime("BOOT: Thorvarium country-specific stylesheets injected");
 
