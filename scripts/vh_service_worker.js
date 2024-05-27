@@ -1,4 +1,4 @@
-const DEBUG_MODE = false;
+const DEBUG_MODE = false; // Will always display notification even if they are not new
 var appSettings = [];
 var vineCountry = null;
 var newItemCheckInterval = 30;
@@ -147,7 +147,7 @@ async function sendMessageToAllTabs(data, debugInfo) {
 
 	//Send to other tabs
 	if (appSettings?.general.displayNewItemNotifications) {
-		browser.tabs.query({}, function (tabs) {
+		browser.tabs.query({ currentWindow: true }, function (tabs) {
 			tabs.forEach(function (tab) {
 				if (tab) {
 					//Check to make sure this is a VineHelper tab:
@@ -155,6 +155,7 @@ async function sendMessageToAllTabs(data, debugInfo) {
 					const isMatch = regex.test(tab.url);
 					if (tab.url != undefined && isMatch) {
 						if (DEBUG_MODE) {
+							console.log("Sending message to tab " + tab.id);
 							console.log(tab.url);
 						}
 						browser.tabs.sendMessage(tab.id, data);

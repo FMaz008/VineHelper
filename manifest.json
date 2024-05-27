@@ -3,9 +3,7 @@
 	"name": "Amazon Vine Helper",
 	"description": "Improve the Amazon Vine experience.",
 	"version": "2.6.0",
-	"permissions": [
-		"storage"
-	],
+	"permissions": ["storage", "tabs"],
 	"browser_specific_settings": {
 		"gecko": {
 			"id": "{5951bf9a-25ae-4043-9fa2-54dc0ac1ce70}",
@@ -51,9 +49,7 @@
 	],
 	"background": {
 		"service_worker": "scripts/vh_service_worker.js",
-		"scripts": [
-			"scripts/vh_service_worker.js"
-		]
+		"scripts": ["scripts/vh_service_worker.js"]
 	},
 	"content_scripts": [
 		{
@@ -110,14 +106,8 @@
 			"run_at": "document_start"
 		},
 		{
-			"css": [
-				"resource/css/vinehelper.css",
-				"resource/css/main.css"
-			],
-			"js": [
-				"scripts/Template.js",
-				"scripts/review.js"
-			],
+			"css": ["resource/css/vinehelper.css", "resource/css/main.css"],
+			"js": ["scripts/Template.js", "scripts/review.js"],
 			"matches": [
 				"*://*.amazon.ca/review/create-review*",
 				"*://*.amazon.it/review/create-review*",
