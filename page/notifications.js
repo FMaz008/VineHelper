@@ -29,6 +29,7 @@ const vineLocales = {
 	de: { locale: "de-DE", currency: "EUR" },
 	fr: { locale: "fr-FR", currency: "EUR" },
 	es: { locale: "es-ES", currency: "EUR" },
+	it: { locale: "it-IT", currency: "EUR" },
 };
 const vineDomains = {
 	ca: "ca",
@@ -38,6 +39,7 @@ const vineDomains = {
 	de: "de",
 	fr: "fr",
 	es: "es",
+	it: "it",
 };
 
 var vineLocale = null;
