@@ -62,15 +62,15 @@ class Grid {
 
 function updateTileCounts() {
 	//Calculate how many tiles within each grids
-	if (appSettings.unavailableTab.active || appSettings.hiddenTab.active)
+	if (appSettings.unavailableTab?.active || appSettings.hiddenTab.active)
 		$("#vh-available-count").text(gridRegular.getTileCount(true));
 
-	if (appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar)
+	if (appSettings.unavailableTab?.active || appSettings.unavailableTab?.votingToolbar)
 		$("#vh-unavailable-count").text(gridUnavailable.getTileCount(true));
 
-	if (appSettings.hiddenTab.active) $("#vh-hidden-count").text(gridHidden.getTileCount(true));
+	if (appSettings.hiddenTab?.active) $("#vh-hidden-count").text(gridHidden.getTileCount(true));
 
-	if (appSettings.pinnedTab.active) $("#vh-pinned-count").text(gridPinned.getTileCount(true));
+	if (appSettings.pinnedTab?.active) $("#vh-pinned-count").text(gridPinned.getTileCount(true));
 }
 
 async function createGridInterface() {
