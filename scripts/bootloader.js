@@ -918,11 +918,18 @@ window.addEventListener("keyup", async function (e) {
 			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=10"),
 	};
 
-	if (appSettings.hiddenTab?.active) {
-		const cb = keybindingMap[e.key.toLowerCase()];
-		if (typeof cb === "function") {
-			cb();
-		}
+	//Only allow the hideAll and showAll keybinding if the hiddenTab is activated.
+	if (
+		(e.key.toLowerCase() == appSettings.keyBindings?.hideAll ||
+			e.key.toLowerCase() == appSettings.keyBindings?.showAll) &&
+		!appSettings.hiddenTab?.active
+	) {
+		return false;
+	}
+
+	const cb = keybindingMap[e.key.toLowerCase()];
+	if (typeof cb === "function") {
+		cb();
 	}
 });
 
