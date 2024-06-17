@@ -3,5 +3,6 @@
 /old-healing.gif
 /.vscode
 /dist
+/plugins
 *.zip
 node_modules
