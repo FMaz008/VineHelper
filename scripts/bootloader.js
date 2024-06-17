@@ -75,6 +75,8 @@ async function init() {
 	initFixPreviousButton();
 	await initTilesAndDrawToolbars(); //Create the tiles, and move the locally hidden tiles to the hidden tab
 
+	hookExecute("EndOfBootloader");
+
 	HiddenList.garbageCollection();
 }
 
@@ -368,8 +370,6 @@ async function initInsertBookmarkButton() {
 		});
 	}
 }
-
-async function getCurrentTimeFromServer() {}
 
 function initFixPreviousButton() {
 	//Place the text-content of the Previous button before the other child elements.
@@ -667,6 +667,15 @@ window.addEventListener("message", async function (event) {
 
 	// We only accept messages from ourselves
 	if (event.source != window) return;
+
+	//Sometime, mostly for debugging purpose, the Service worker can try to display notifications.
+	if (event.data.type && event.data.type == "rawNotification") {
+		let note = new ScreenNotification();
+		note.title = "System";
+		note.lifespan = 10;
+		note.content = event.data.content;
+		await Notifications.pushNotification(note);
+	}
 
 	//If we got back a message after we fixed an infinite wheel spin.
 	if (event.data.type && event.data.type == "infiniteWheelFixed") {
@@ -997,4 +1006,8 @@ function removeElements(selector) {
 	elementsToRemove.forEach(function (element) {
 		element.remove();
 	});
+}
+
+function getRandomNumber(min, max) {
+	return Math.floor(Math.random() * (max - min + 1)) + min;
 }

@@ -8,6 +8,8 @@ if (typeof browser === "undefined") {
 var appSettings = {};
 var arrHidden = [];
 var arrDebug = [];
+var mapHook = new Map();
+
 let debugMessage = "";
 
 var vineDomain = null;
@@ -375,6 +377,21 @@ if (!regex.test(window.location.href)) {
 
 //#################################################3
 //### UTILITY FUNCTIONS
+
+function hookBind(hookname, func) {
+	let arrBinding = mapHook.get(hookname);
+	if (arrBinding == undefined) arrBinding = [];
+	arrBinding.push(func);
+	mapHook.set(hookname, arrBinding);
+}
+function hookExecute(hookname) {
+	let arrBinding = mapHook.get(hookname);
+	if (arrBinding == undefined) return false;
+	arrBinding.forEach(function (func) {
+		console.log("Calling function for hook " + hookname);
+		func(); // Call each function for the hook
+	});
+}
 
 async function saveSettings() {
 	try {
