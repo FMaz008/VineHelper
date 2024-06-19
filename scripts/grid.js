@@ -58,6 +58,10 @@ class Grid {
 		});
 		return r;
 	}
+
+	getArrTile() {
+		return this.pArrTile;
+	}
 }
 
 function updateTileCounts() {

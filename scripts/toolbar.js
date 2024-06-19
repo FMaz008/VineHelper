@@ -254,6 +254,8 @@ class Toolbar {
 		let context = $("#vh-toolbar-" + this.pTile.getAsin());
 		let span = $(context).find(".vh-toolbar-etv .etv");
 
+		this.pTile.setETV(etv2);
+
 		if (onlyIfEmpty && span.text() != "") return false;
 
 		etv1 = new Intl.NumberFormat(vineLocale, {
@@ -412,7 +414,7 @@ class Toolbar {
 		$(container).children(".vh-voting-widget").remove();
 
 		//Generate the HTML for the widget
-		prom = await Tpl.loadFile("view/widget_order.html");
+		let prom = await Tpl.loadFile("view/widget_order.html");
 		Tpl.setVar("order_success", this.pTile.getOrderSuccess());
 		Tpl.setVar("order_failed", this.pTile.getOrderFailed());
 		Tpl.setIf("not-compact", !appSettings.unavailableTab.compactToolbar);

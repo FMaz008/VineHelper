@@ -8,6 +8,8 @@ function Tile(obj, gridInstance) {
 	pGrid.addTile(this);
 	var pToolbar = null;
 
+	var pETV = null;
+
 	var pVoteFees = 0;
 	var pVoteNoFees = 0;
 	var pVoteOwn = null;
@@ -67,6 +69,14 @@ function Tile(obj, gridInstance) {
 	};
 	this.getToolbar = function () {
 		return pToolbar;
+	};
+
+	this.setETV = function (etv) {
+		pETV = etv;
+	};
+
+	this.getETV = function () {
+		return pETV;
 	};
 
 	this.setVotes = function (no, yes, own) {
