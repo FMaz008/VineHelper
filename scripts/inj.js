@@ -122,9 +122,13 @@ window.fetch = async (...args) => {
 					variation.dimensions[key] = variation.dimensions[key] + ` VH${fixed}`;
 					fixed++;
 				}
+				if (!variation.dimensions[key].match(/\s[0-9]+$/i)) {
+					variation.dimensions[key] = variation.dimensions[key] + ` VH${fixed}`;
+					fixed++;
+				}
 
-				// Any variation with a : or ) without a space after will crash, ensure : always has a space after.
-				newValue = variation.dimensions[key].replace(/([:)])([^\s])/g, "$1 $2");
+				// Any variation with a :, | or ) without a space after will crash, ensure : always has a space after.
+				newValue = variation.dimensions[key].replace(/([:)|])([^\s])/g, "$1 $2");
 				if (newValue !== variation.dimensions[key]) {
 					variation.dimensions[key] = newValue;
 					fixed++;
