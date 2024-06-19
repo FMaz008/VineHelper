@@ -122,10 +122,6 @@ window.fetch = async (...args) => {
 					variation.dimensions[key] = variation.dimensions[key] + ` VH${fixed}`;
 					fixed++;
 				}
-				if (!variation.dimensions[key].match(/\s[0-9]+$/i)) {
-					variation.dimensions[key] = variation.dimensions[key] + ` VH${fixed}`;
-					fixed++;
-				}
 
 				// Any variation with a :, | or ) without a space after will crash, ensure : always has a space after.
 				newValue = variation.dimensions[key].replace(/([:)|])([^\s])/g, "$1 $2");
@@ -140,10 +136,18 @@ window.fetch = async (...args) => {
 					variation.dimensions[key] = newValue;
 					fixed++;
 				}
+				//variation.dimensions[key] = fixed++ + "test | test| test |test#";
 			}
 
 			return variation;
 		});
+
+		//All variation have supposedly been fixed to the best we could. Now send them all to Vine Helper
+		//For a final test if they pass as JQuery selectors.
+		if (result.variations !== undefined) {
+			//result.variations[0] = { asin: "abc", dimensions: { size: "n|n |n" } };
+			result.variations = await testVariants(result.variations);
+		}
 
 		if (fixed > 0) {
 			window.postMessage(
@@ -160,3 +164,23 @@ window.fetch = async (...args) => {
 
 	return response;
 };
+
+//This function submit a request to Vine Helper's side to have it process the variants
+//To test if they are valid JQuery selectors
+async function testVariants(content) {
+	return new Promise((resolve, reject) => {
+		//Event listener to capture the incoming response
+		window.addEventListener("message", function handleResponse(event) {
+			if (event.data.type == "variantValidationResponse") {
+				window.removeEventListener("message", handleResponse);
+				resolve(event.data.result);
+			}
+		});
+
+		//Send the message to Vine Helper for processing as JQuery is not available in this context
+		window.postMessage({
+			type: "variantValidationRequest",
+			variant: content,
+		});
+	});
+}

@@ -668,6 +668,40 @@ window.addEventListener("message", async function (event) {
 	// We only accept messages from ourselves
 	if (event.source != window) return;
 
+	//If we received a request for validation of a variant
+	if (event.data.type && event.data.type == "variantValidationRequest") {
+		let lastResortFixUsed = false;
+		for (const idx in event.data.variant) {
+			for (const dimension in event.data.variant[idx]["dimensions"]) {
+				try {
+					$(document).children(
+						'option[id="vvp-size-' + event.data.variant[idx]["dimensions"][dimension] + '-option"]'
+					); //This does nothing, just test the selector
+					//Don't change anything, it passed the test.
+				} catch (error) {
+					//If the validation failed, use the ASIN as a value for the variant's dimension which failed.
+					showRuntime("Found unfixable variant: " + event.data.variant[idx]["dimensions"][dimension]);
+					event.data.variant[idx]["dimensions"][dimension] =
+						event.data.variant[idx]["asin"] +
+						"-" +
+						event.data.variant[idx]["dimensions"][dimension].replace(/[^a-zA-Z0-9]/g, "");
+					lastResortFixUsed = true;
+				}
+			}
+		}
+		window.postMessage({ type: "variantValidationResponse", result: event.data.variant }, "*");
+
+		if (lastResortFixUsed) {
+			window.postMessage(
+				{
+					type: "infiniteWheelFixed",
+					text: "Last resort method used.",
+				},
+				"*"
+			);
+		}
+	}
+
 	//Sometime, mostly for debugging purpose, the Service worker can try to display notifications.
 	if (event.data.type && event.data.type == "rawNotification") {
 		let note = new ScreenNotification();
@@ -681,7 +715,7 @@ window.addEventListener("message", async function (event) {
 	if (event.data.type && event.data.type == "infiniteWheelFixed") {
 		//console.log("Content script received message: " + event.data.text);
 
-		prom = await Tpl.loadFile("view/infinite_wheel_fix.html");
+		let prom = await Tpl.loadFile("view/infinite_wheel_fix.html");
 		let content = Tpl.render(prom);
 
 		$("#a-popover-content-3").prepend(content);
@@ -698,7 +732,7 @@ window.addEventListener("message", async function (event) {
 		let note = new ScreenNotification();
 		note.title = "Infinite spinner fixed!";
 		note.lifespan = 10;
-		note.content = "Vine Helper fixed an item that was bugged with the infinite spinner problem.";
+		note.content = "Vine Helper fixed an item bugged an infinite spinner: " + event.data.text;
 		await Notifications.pushNotification(note);
 	}
 
