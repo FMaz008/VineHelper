@@ -130,6 +130,13 @@ window.fetch = async (...args) => {
 					fixed++;
 				}
 
+				// Any variation with a ( with a space after will crash, ensure never has a space after.
+				newValue = variation.dimensions[key].replace(/([(])\s/g, "$1");
+				if (newValue !== variation.dimensions[key]) {
+					variation.dimensions[key] = newValue;
+					fixed++;
+				}
+
 				// Any variation with a / with a space before it will crash, remove the space before.
 				newValue = variation.dimensions[key].replace(/(\s[/])/g, "/");
 				if (newValue !== variation.dimensions[key]) {
@@ -138,7 +145,7 @@ window.fetch = async (...args) => {
 				}
 
 				// Any variation with a | by ;.
-				newValue = variation.dimensions[key].replace(/([|])/g, ";");
+				newValue = variation.dimensions[key].replace(/([|])/g, "-");
 				if (newValue !== variation.dimensions[key]) {
 					variation.dimensions[key] = newValue;
 					fixed++;
