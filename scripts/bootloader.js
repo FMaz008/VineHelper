@@ -75,7 +75,7 @@ async function init() {
 	initFixPreviousButton();
 	await initTilesAndDrawToolbars(); //Create the tiles, and move the locally hidden tiles to the hidden tab
 
-	hookExecute("EndOfBootloader");
+	hookExecute("EndOfBootloader", null);
 
 	HiddenList.garbageCollection();
 }
@@ -273,7 +273,7 @@ async function initInsertBookmarkButton() {
 				country: vineCountry,
 				action: "date",
 			};
-			let url = "https://vinehelper.ovh/vinehelper.php" + "?data=" + JSON.stringify(arrJSON);
+			let url = VINE_HELPER_API_URL + JSON.stringify(arrJSON);
 			fetch(url)
 				.then((response) => response.json())
 				.then(async function (response) {
@@ -297,7 +297,7 @@ async function initInsertBookmarkButton() {
 				country: vineCountry,
 				action: "date",
 			};
-			let url = "https://vinehelper.ovh/vinehelper.php" + "?data=" + JSON.stringify(arrJSON);
+			let url = VINE_HELPER_API_URL + JSON.stringify(arrJSON);
 			fetch(url)
 				.then((response) => response.json())
 				.then(async function (response) {
@@ -323,7 +323,7 @@ async function initInsertBookmarkButton() {
 				country: vineCountry,
 				action: "date",
 			};
-			let url = "https://vinehelper.ovh/vinehelper.php" + "?data=" + JSON.stringify(arrJSON);
+			let url = VINE_HELPER_API_URL + JSON.stringify(arrJSON);
 			fetch(url)
 				.then((response) => response.json())
 				.then(async function (response) {
@@ -349,7 +349,7 @@ async function initInsertBookmarkButton() {
 				country: vineCountry,
 				action: "date",
 			};
-			let url = "https://vinehelper.ovh/vinehelper.php" + "?data=" + JSON.stringify(arrJSON);
+			let url = VINE_HELPER_API_URL + JSON.stringify(arrJSON);
 			fetch(url)
 				.then((response) => response.json())
 				.then(async function (response) {
@@ -479,7 +479,7 @@ function fetchProductsData(arrUrl) {
 	showRuntime("Fetching products data...");
 
 	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-	let url = "https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
+	let url = VINE_HELPER_API_URL + jsonArrURL;
 
 	let content = getAllProductData();
 
@@ -503,6 +503,16 @@ function fetchProductsData(arrUrl) {
 async function serverProductsResponse(data) {
 	if (data["api_version"] != 4) {
 		console.log("Wrong API version");
+	}
+
+	if (data["invalid_uuid"] == true) {
+		await obtainNewUUID();
+
+		//Reattempt to obtain product data
+		fetchProductsData(getAllAsin());
+
+		//Do no complete this execution
+		return false;
 	}
 
 	showRuntime("FETCH: Waiting on hidden items list to be loaded...");
@@ -637,7 +647,7 @@ async function reportfees(event) {
 	};
 	let jsonArrURL = JSON.stringify(arrJSON);
 
-	let url = "https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
+	let url = VINE_HELPER_API_URL + jsonArrURL;
 
 	await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
 
@@ -755,7 +765,7 @@ window.addEventListener("message", async function (event) {
 			etv: event.data.data.etv,
 		};
 
-		const url = "https://vinehelper.ovh/vinehelper.php?data=" + JSON.stringify(arrJSON);
+		const url = VINE_HELPER_API_URL + JSON.stringify(arrJSON);
 		await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
 
 		//Update the product tile ETV in the Toolbar
@@ -806,7 +816,7 @@ window.addEventListener("message", async function (event) {
 			};
 
 			//Form the full URL
-			const url = "https://www.vinehelper.ovh/vinehelper.php" + "?data=" + JSON.stringify(arrJSON);
+			const url = VINE_HELPER_API_URL + JSON.stringify(arrJSON);
 			await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
 
 			//Update the product tile ETV in the Toolbar
@@ -844,6 +854,12 @@ window.addEventListener("message", async function (event) {
 browser.runtime.onMessage.addListener(async function (message, sender, sendResponse) {
 	let data = message;
 	if (data.type == undefined) return;
+
+	//If we received a request for a hook execution
+	if (data.type && data.type == "hookExecute") {
+		console.log("Hook Execute request");
+		hookExecute(data.hookname, data.data);
+	}
 
 	if (data.type == "newItemCheck") {
 		if (appSettings.general.displayNewItemNotifications) {

@@ -1,4 +1,5 @@
 const startTime = Date.now();
+const VINE_HELPER_API_URL = "https://vinehelper.ovh/vinehelper.php?data=";
 
 if (typeof browser === "undefined") {
 	var browser = chrome;
@@ -337,34 +338,56 @@ async function getSettings() {
 
 	//Generate a UUID for the user
 	if (appSettings.general.uuid == undefined || appSettings.general.uuid == null) {
-		//Request a new UUID from the server
-		let arrJSON = {
-			api_version: 4,
-			action: "get_uuid",
-			country: vineCountry,
-		};
-		let jsonArrURL = JSON.stringify(arrJSON);
-
-		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-		let url = "https://vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
-		fetch(url)
-			.then((response) => response.json())
-			.then(function (serverResponse) {
-				if (serverResponse["ok"] == "ok") {
-					appSettings.general.uuid = serverResponse["uuid"];
-					uuid = appSettings.general.uuid;
-					saveSettings();
-				}
-			})
-			.catch(function () {
-				(error) => console.log(error);
-			});
+		uuid = await obtainNewUUID();
+	} else {
+		uuid = appSettings.general.uuid;
 	}
-	uuid = appSettings.general.uuid;
-
 	showRuntime("PRE: Settings loaded");
 }
 showRuntime("PRE: Begining to load settings");
+
+/** Obtain (and store) a new UUID
+ */
+async function obtainNewUUID() {
+	let uuid = await requestNewUUID();
+	appSettings.general.uuid = uuid;
+	saveSettings();
+	return uuid;
+}
+
+/** Request a new UUID from the server.
+ * @return string UUID
+ */
+async function requestNewUUID() {
+	showRuntime("PRE: Generating new UUID.");
+
+	//Request a new UUID from the server
+	let arrJSON = {
+		api_version: 4,
+		action: "get_uuid",
+		country: vineCountry,
+	};
+
+	//Build the URL request
+	let jsonArrURL = JSON.stringify(arrJSON);
+	let url = VINE_HELPER_API_URL + jsonArrURL;
+
+	let response = await fetch(url);
+
+	if (!response.ok) {
+		throw new Error("Network response was not ok PRE:obtainNewUUID");
+	}
+
+	// Parse the JSON response
+	let serverResponse = await response.json();
+
+	if (serverResponse["ok"] !== "ok") {
+		throw new Error("Content response was not ok PRE:obtainNewUUID");
+	}
+
+	// Return the obtained UUID
+	return serverResponse["uuid"];
+}
 
 //Do not run the extension if ultraviner is running
 regex = /^.+?amazon\..+\/vine\/.*ultraviner.*?$/;
@@ -379,17 +402,18 @@ if (!regex.test(window.location.href)) {
 //### UTILITY FUNCTIONS
 
 function hookBind(hookname, func) {
+	console.log("Binding hook " + hookname);
 	let arrBinding = mapHook.get(hookname);
 	if (arrBinding == undefined) arrBinding = [];
 	arrBinding.push(func);
 	mapHook.set(hookname, arrBinding);
 }
-function hookExecute(hookname) {
+function hookExecute(hookname, variables) {
 	let arrBinding = mapHook.get(hookname);
 	if (arrBinding == undefined) return false;
 	arrBinding.forEach(function (func) {
 		console.log("Calling function for hook " + hookname);
-		func(); // Call each function for the hook
+		func(variables); // Call each function for the hook
 	});
 }
 
