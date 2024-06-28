@@ -541,7 +541,7 @@ async function serverProductsResponse(data) {
 	}
 	showRuntime("FETCH: Interface loaded, processing fetch data...");
 
-	//Load the ETV value
+	//For each product provided by the server, modify the local listings
 	$.each(data["products"], function (key, values) {
 		showRuntime("DRAW: Processing ASIN #" + key);
 		//console.log(values);
@@ -553,6 +553,7 @@ async function serverProductsResponse(data) {
 			return; //Continue the loop with the next item
 		}
 
+		//Load the ETV value
 		if (values.etv_min != null) {
 			showRuntime("DRAW: Setting ETV");
 			tile.getToolbar().setETV(values.etv_min, values.etv_max);
@@ -564,10 +565,13 @@ async function serverProductsResponse(data) {
 		}
 		//If there is a remote value for the hidden item, ensure it is sync'ed up with the local list
 		if (appSettings.hiddenTab.remote == true && values.hidden != null) {
-			showRuntime("DRAW: Remote is ordering to show or hide item");
-			if (values.hidden == true && !tile.isHidden())
+			if (values.hidden == true && !tile.isHidden()) {
+				showRuntime("DRAW: Remote is ordering to hide item");
 				tile.hideTile(); //Will update the placement and list
-			else if (values.hidden == false && tile.isHidden()) tile.showTile(); //Will update the placement and list
+			} else if (values.hidden == false && tile.isHidden()) {
+				showRuntime("DRAW: Remote is ordering to show item");
+				tile.showTile(); //Will update the placement and list
+			}
 		}
 
 		if (appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar) {
