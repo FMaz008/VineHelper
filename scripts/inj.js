@@ -44,7 +44,7 @@ window.fetch = async (...args) => {
 				type: "order",
 				data,
 			},
-			"*"
+			"/" //message should be sent to the same origin as the current document.
 		);
 
 		//Wait 500ms following an order to allow for the order report query to go through before the redirect happens.
@@ -71,7 +71,7 @@ window.fetch = async (...args) => {
 							error: error.exceptionType,
 						},
 					},
-					"*"
+					"/" //message should be sent to the same origin as the current document.
 				);
 			}
 			return response;
@@ -101,7 +101,7 @@ window.fetch = async (...args) => {
 					type: "etv",
 					data,
 				},
-				"*"
+				"/" //message should be sent to the same origin as the current document.
 			);
 		}
 
@@ -170,7 +170,7 @@ window.fetch = async (...args) => {
 					type: "infiniteWheelFixed",
 					text: fixed + " variation(s) fixed.",
 				},
-				"*"
+				"/" //message should be sent to the same origin as the current document.
 			);
 		}
 
@@ -193,9 +193,12 @@ async function testVariants(content) {
 		});
 
 		//Send the message to Vine Helper for processing as JQuery is not available in this context
-		window.postMessage({
-			type: "variantValidationRequest",
-			variant: content,
-		});
+		window.postMessage(
+			{
+				type: "variantValidationRequest",
+				variant: content,
+			},
+			"/" //message should be sent to the same origin as the current document.
+		);
 	});
 }

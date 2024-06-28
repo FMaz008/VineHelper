@@ -667,8 +667,9 @@ async function reportfees(event) {
 	}
 }
 
-//Function to receive a message from the website-end and launch an animation
-//if the infinite wheel fix was used.
+//Messaging from accross tabs and context
+//Messages sent via window.postMessage({}, "*");
+//Most requests comes from the inj.js file, which is in a different scope/context.
 window.addEventListener("message", async function (event) {
 	//Do not run the extension if ultraviner is running
 	if (ultraviner) {
@@ -699,7 +700,13 @@ window.addEventListener("message", async function (event) {
 				}
 			}
 		}
-		window.postMessage({ type: "variantValidationResponse", result: event.data.variant }, "*");
+		window.postMessage(
+			{
+				type: "variantValidationResponse",
+				result: event.data.variant,
+			},
+			"/" //message should be sent to the same origin as the current document.
+		);
 
 		if (lastResortFixUsed) {
 			window.postMessage(
@@ -707,7 +714,7 @@ window.addEventListener("message", async function (event) {
 					type: "infiniteWheelFixed",
 					text: "Last resort method used.",
 				},
-				"*"
+				"/" //message should be sent to the same origin as the current document.
 			);
 		}
 	}
@@ -851,6 +858,9 @@ window.addEventListener("message", async function (event) {
 	}
 });
 
+//Message from within the context of the extension
+//Messages sent via: browser.tabs.sendMessage(tab.id, data);
+//In this case, all messages are coming from the service_worker file.
 browser.runtime.onMessage.addListener(async function (message, sender, sendResponse) {
 	let data = message;
 	if (data.type == undefined) return;
