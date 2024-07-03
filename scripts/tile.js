@@ -231,7 +231,7 @@ function Tile(obj, gridInstance) {
 
 			if (match != undefined) {
 				showRuntime("TILE: The item match the keyword '" + match + "', hide it");
-				this.hideTile(false, false); //Do not save
+				this.hideTile(false, false, true); //Do not save, skip the hidden manager: just move the tile.
 				document.getElementById("vh-hide-link-" + this.getAsin()).style.display = "none";
 			}
 		}
@@ -260,10 +260,12 @@ function Tile(obj, gridInstance) {
 		return HiddenList.isHidden(pAsin);
 	};
 
-	this.hideTile = async function (animate = true, updateLocalStorage = true) {
+	this.hideTile = async function (animate = true, updateLocalStorage = true, skipHiddenListMgr = false) {
 		//Add the item to the list of hidden items
 
-		HiddenList.addItem(pAsin, updateLocalStorage);
+		if (!skipHiddenListMgr) {
+			HiddenList.addItem(pAsin, updateLocalStorage);
+		}
 
 		//Move the tile
 		await this.moveToGrid(gridHidden, animate);
@@ -318,15 +320,15 @@ function timeSince(timenow, date) {
 
 function getTileByAsin(asin) {
 	let tile = null;
-	tile = gridRegular.getTileId(asin);
+	tile = gridRegular.getTileByASIN(asin);
 	if (tile != null) return tile;
 
 	if (gridUnavailable != null) {
-		tile = gridUnavailable.getTileId(asin);
+		tile = gridUnavailable.getTileByASIN(asin);
 		if (tile != null) return tile;
 	}
 
-	tile = gridHidden.getTileId(asin);
+	tile = gridHidden.getTileByASIN(asin);
 	return tile;
 }
 

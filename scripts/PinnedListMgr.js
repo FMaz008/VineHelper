@@ -4,7 +4,7 @@ class PinnedListMgr {
 	constructor() {
 		this.mapPin = new Map();
 		this.listLoaded = false;
-
+		this.arrChanges = [];
 		this.broadcast = new BroadcastChannel("vine_helper");
 
 		showRuntime("PINNEDMGR: Loading list");
@@ -16,11 +16,11 @@ class PinnedListMgr {
 
 			if (ev.data.type == "pinnedItem") {
 				showRuntime("Broadcast received: pinned item " + ev.data.asin);
-				PinnedList.addItem(ev.data.asin, ev.data.title, ev.data.thumbnail, false, false);
+				this.addItem(ev.data.asin, ev.data.title, ev.data.thumbnail, false, false);
 			}
 			if (ev.data.type == "unpinnedItem") {
 				showRuntime("Broadcast received: unpinned item " + ev.data.asin);
-				PinnedList.removeItem(ev.data.asin, false, false);
+				this.removeItem(ev.data.asin, false, false);
 			}
 		};
 	}
@@ -28,13 +28,29 @@ class PinnedListMgr {
 	async loadFromLocalStorage() {
 		const data = await browser.storage.local.get("pinnedItems");
 
-		//Load pinned items
-		if (Object.keys(data).length === 0) {
-			let storableVal = JSON.stringify(Array.from(this.mapPin.entries()));
-			await browser.storage.local.set({ pinnedItems: storableVal });
+		if (data.pinnedItems) {
+			try {
+				// Try parsing the stored string as JSON
+				this.mapPin = new Map(JSON.parse(data.pinnedItems));
+			} catch (error) {
+				// If JSON parsing fails assume legacy format and convert to new format
+				// Once the migration period is over delete this section of code
+				showRuntime("Failed to parse pinnedItems as JSON, treating as array:");
+				if (Array.isArray(data.pinnedItems)) {
+					this.mapPin = data.pinnedItems.reduce((map, product) => {
+						map.set(product.asin, { title: product.title, thumbnail: product.thumbnail });
+						return map;
+					}, new Map());
+				} else {
+					showRuntime("Invalid data format for pinned items.  Creating new map.");
+					this.mapPin = new Map(); // Initialize with an empty map if data is malformed
+				}
+			}
 		} else {
-			this.mapPin = new Map(JSON.parse(data.pinnedItems));
+			// No data found or empty pinnedItems, initialize an empty Map
+			this.mapPin = new Map();
 		}
+
 		this.listLoaded = true;
 		showRuntime("PINNEDMGR: List loaded.");
 	}
@@ -43,6 +59,9 @@ class PinnedListMgr {
 		if (save) await this.loadFromLocalStorage(); //Load the list in case it was altered in a different tab
 
 		this.mapPin.delete(asin);
+
+		//The server may not be in sync with the local list, and will deal with duplicate.
+		this.updateArrChange({ asin: asin, pinned: false });
 
 		if (save) this.saveList();
 
@@ -56,6 +75,9 @@ class PinnedListMgr {
 		if (save) await this.loadFromLocalStorage(); //Load the list in case it was altered in a different tab
 
 		this.mapPin.set(asin, { title: title, thumbnail: thumbnail });
+
+		//The server may not be in sync with the local list, and will deal with duplicate.
+		this.updateArrChange({ asin: asin, pinned: true, title: title, thumbnail: thumbnail });
 
 		if (save) this.saveList();
 
@@ -81,6 +103,34 @@ class PinnedListMgr {
 				}
 			}
 		});
+
+		if (appSettings.hiddenTab.remote) {
+			this.notifyServerOfChangedItem();
+			this.arrChanges = [];
+		}
+	}
+
+	/**
+	 * Send new items on the server to be added or removed from the changed list.
+	 */
+	notifyServerOfChangedItem() {
+		let arrJSON = {
+			api_version: 4,
+			country: vineCountry,
+			action: "save_pinned_list",
+			uuid: appSettings.general.uuid,
+		};
+		let jsonArrURL = JSON.stringify(arrJSON);
+
+		showRuntime("Saving pinned item(s) remotely...");
+
+		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
+		let url = "https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
+		fetch(url, {
+			method: "POST",
+			headers: { "Content-Type": "application/x-www-form-urlencoded" },
+			body: JSON.stringify(this.arrChanges),
+		});
 	}
 
 	isPinned(asin) {
@@ -89,7 +139,36 @@ class PinnedListMgr {
 		return this.mapPin.has(asin);
 	}
 
+	isChange(asin) {
+		for (const id in this.arrChanges) {
+			if (this.arrChanges[id].asin == asin) {
+				return id;
+			}
+		}
+		return false;
+	}
+
+	updateArrChange(obj) {
+		let itemId = this.isChange(obj.asin);
+		if (itemId == false) this.arrChanges.push(obj);
+		else this.arrChanges[itemId] = obj;
+	}
+
 	getList() {
 		return this.mapPin;
+	}
+
+	serialize(map) {
+		//truncate ms to store as unix timestamp
+		const objToStore = Object.fromEntries(
+			Array.from(map.entries()).map(([key, value]) => [key, Math.floor(value.getTime() / 1000)])
+		);
+		return JSON.stringify(objToStore);
+	}
+
+	deserialize(jsonString) {
+		//multiply by 1000 to convert from unix timestamp to js Date
+		const retrievedObj = JSON.parse(jsonString);
+		return new Map(Object.entries(retrievedObj).map(([key, value]) => [key, value]));
 	}
 }

@@ -48,15 +48,13 @@ class Grid {
 		else return this.pArrTile.length;
 	}
 
-	getTileId(asin) {
-		var r = null;
-		$.each(this.pArrTile, function (key, value) {
-			if (value != undefined && value.getAsin() == asin) {
-				r = value;
-				return false; //Stop the loop
+	getTileByASIN(asin) {
+		for (let i = 0; i < this.pArrTile.length; i++) {
+			if (this.pArrTile[i].getAsin() == asin) {
+				return this.pArrTile[i];
 			}
-		});
-		return r;
+		}
+		return null;
 	}
 
 	getArrTile() {

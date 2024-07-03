@@ -515,9 +515,11 @@ async function serverProductsResponse(data) {
 		return false;
 	}
 
-	showRuntime("FETCH: Waiting on hidden items list to be loaded...");
-	while (!HiddenList.listLoaded) {
-		await new Promise((r) => setTimeout(r, 10));
+	if (appSettings.hiddenTab.active) {
+		showRuntime("FETCH: Waiting on hidden items list to be loaded...");
+		while (!HiddenList.listLoaded) {
+			await new Promise((r) => setTimeout(r, 10));
+		}
 	}
 
 	timenow = data["current_time"];
@@ -602,6 +604,25 @@ async function serverProductsResponse(data) {
 		}
 		tile.initiateTile();
 	});
+
+	if (appSettings.pinnedTab.active) {
+		if (data["pinned_products"] != undefined) {
+			showRuntime("DRAW: Loading remote pinned products");
+			for (let i = 0; i < data["pinned_products"].length; i++) {
+				PinnedList.addItem(
+					data["pinned_products"][i]["asin"],
+					data["pinned_products"][i]["title"],
+					data["pinned_products"][i]["thumbnail"]
+				);
+				await addPinnedTile(
+					data["pinned_products"][i]["asin"],
+					data["pinned_products"][i]["title"],
+					data["pinned_products"][i]["thumbnail"]
+				); //grid.js
+			}
+		}
+	}
+
 	updateTileCounts();
 	showRuntime("Done updating products");
 }

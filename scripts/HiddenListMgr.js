@@ -16,11 +16,11 @@ class HiddenListMgr {
 
 			if (ev.data.type == "hideItem") {
 				showRuntime("Broadcast received: hide item " + ev.data.asin);
-				HiddenList.addItem(ev.data.asin, false, false);
+				this.addItem(ev.data.asin, false, false);
 			}
 			if (ev.data.type == "showItem") {
 				showRuntime("Broadcast received: show item " + ev.data.asin);
-				HiddenList.removeItem(ev.data.asin, false, false);
+				this.removeItem(ev.data.asin, false, false);
 			}
 		};
 	}
@@ -116,8 +116,11 @@ class HiddenListMgr {
 	}
 
 	isChange(asin) {
-		for (const id in this.arrChanges) if (this.arrChanges[id].asin == asin) return id;
-
+		for (const id in this.arrChanges) {
+			if (this.arrChanges[id].asin == asin) {
+				return id;
+			}
+		}
 		return false;
 	}
 
@@ -129,7 +132,6 @@ class HiddenListMgr {
 
 	/**
 	 * Send new items on the server to be added or removed from the hidden list.
-	 * @param [{"asin": "abc", "hidden": true}, ...] arr
 	 */
 	notifyServerOfHiddenItem() {
 		let arrJSON = {
@@ -137,7 +139,6 @@ class HiddenListMgr {
 			country: vineCountry,
 			action: "save_hidden_list",
 			uuid: appSettings.general.uuid,
-			arr: this.arrChanges,
 		};
 		let jsonArrURL = JSON.stringify(arrJSON);
 
@@ -145,7 +146,11 @@ class HiddenListMgr {
 
 		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
 		let url = "https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
-		fetch(url);
+		fetch(url, {
+			method: "POST",
+			headers: { "Content-Type": "application/x-www-form-urlencoded" },
+			body: JSON.stringify(this.arrChanges),
+		});
 	}
 
 	async garbageCollection() {
