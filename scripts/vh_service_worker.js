@@ -8,6 +8,13 @@ if (typeof browser === "undefined") {
 	var browser = chrome;
 }
 
+//Import plugin service workers' scripts
+importScripts("../plugins/_serviceworker.js");
+for (let i = 0; i < ARR_PLUGIN_SERVICE_WORKERS.length; i++) {
+	console.log("Importing service worker " + ARR_PLUGIN_SERVICE_WORKERS[i]);
+	importScripts("../plugins/" + ARR_PLUGIN_SERVICE_WORKERS[i]);
+}
+
 //First, we need for the preboot.js file to send us the country of Vine the extension is running onto.
 //Until we have that data, the service worker will standown and retry on the next pass.
 browser.runtime.onMessage.addListener((data, sender, sendResponse) => {

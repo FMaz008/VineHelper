@@ -3,6 +3,7 @@
 /old-healing.gif
 /.vscode
 /dist
-/plugins
+/plugins/*
+!/plugins/_serviceworker.js
 *.zip
 node_modules
