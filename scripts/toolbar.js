@@ -403,7 +403,7 @@ class Toolbar {
 			//Get the current order info
 			let success = status ? this.pTile.getOrderSuccess() + 1 : this.pTile.getOrderSuccess();
 			let failed = !status ? this.pTile.getOrderFailed() + 1 : this.pTile.getOrderFailed();
-			pTile.setOrders(success, failed);
+			this.pTile.setOrders(success, failed);
 		}
 
 		let context = $("#vh-toolbar-" + this.pTile.getAsin());
