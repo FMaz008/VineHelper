@@ -342,6 +342,9 @@ async function getSettings() {
 	} else {
 		uuid = appSettings.general.uuid;
 	}
+	// Request the background script to inject the additional script
+	browser.runtime.sendMessage({ action: "injectPluginsContentScripts" });
+
 	showRuntime("PRE: Settings loaded");
 }
 showRuntime("PRE: Begining to load settings");
@@ -402,11 +405,11 @@ if (!regex.test(window.location.href)) {
 //### UTILITY FUNCTIONS
 
 function hookBind(hookname, func) {
-	console.log("Binding hook " + hookname);
 	let arrBinding = mapHook.get(hookname);
 	if (arrBinding == undefined) arrBinding = [];
 	arrBinding.push(func);
 	mapHook.set(hookname, arrBinding);
+	console.log(mapHook);
 }
 function hookExecute(hookname, variables) {
 	let arrBinding = mapHook.get(hookname);

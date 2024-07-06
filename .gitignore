@@ -4,6 +4,6 @@
 /.vscode
 /dist
 /plugins/*
-!/plugins/_serviceworker.js
+!/plugins/_pluginsInit.js
 *.zip
 node_modules

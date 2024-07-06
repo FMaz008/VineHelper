@@ -2,3 +2,7 @@
 const ARR_PLUGIN_SERVICE_WORKERS = [
 	//"myPlugin/serviceworker.js",
 ];
+
+const ARR_PLUGIN_CONTENT_SCRIPTS = [
+	//"myPlugin/contentscript.js",
+];

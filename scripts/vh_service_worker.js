@@ -8,12 +8,41 @@ if (typeof browser === "undefined") {
 	var browser = chrome;
 }
 
-//Import plugin service workers' scripts
-importScripts("../plugins/_serviceworker.js");
-for (let i = 0; i < ARR_PLUGIN_SERVICE_WORKERS.length; i++) {
-	console.log("Importing service worker " + ARR_PLUGIN_SERVICE_WORKERS[i]);
-	importScripts("../plugins/" + ARR_PLUGIN_SERVICE_WORKERS[i]);
-}
+//The plugin can't be run using the official release as they are bundled and can't be changed.
+//Check if the manifest.json pas the scripting permission, which is the case for the github code.
+//If so, activate the plugin system.
+chrome.permissions.contains({ permissions: ["scripting"] }, (result) => {
+	if (result) {
+		//Import plugin service workers' scripts
+		importScripts("../plugins/_pluginsInit.js");
+		for (let i = 0; i < ARR_PLUGIN_SERVICE_WORKERS.length; i++) {
+			console.log("Importing service worker " + ARR_PLUGIN_SERVICE_WORKERS[i]);
+			importScripts("../plugins/" + ARR_PLUGIN_SERVICE_WORKERS[i]);
+		}
+
+		//Import plugin content_scripts
+		browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+			if (message.action === "injectPluginsContentScripts") {
+				for (let i = 0; i < ARR_PLUGIN_CONTENT_SCRIPTS.length; i++) {
+					// Inject the specified script into the content script context
+					browser.scripting.executeScript(
+						{
+							target: { tabId: sender.tab.id, frameIds: [sender.frameId] },
+							files: ["plugins/" + ARR_PLUGIN_CONTENT_SCRIPTS[i]],
+						},
+						() => {
+							if (browser.runtime.lastError) {
+								console.error(browser.runtime.lastError);
+							} else {
+								console.log(`Imported content_script ${ARR_PLUGIN_CONTENT_SCRIPTS[i]}.`);
+							}
+						}
+					);
+				}
+			}
+		});
+	}
+});
 
 //First, we need for the preboot.js file to send us the country of Vine the extension is running onto.
 //Until we have that data, the service worker will standown and retry on the next pass.

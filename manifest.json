@@ -3,10 +3,7 @@
 	"name": "Amazon Vine Helper",
 	"description": "Improve the Amazon Vine experience.",
 	"version": "2.7.3",
-	"permissions": [
-		"storage",
-		"tabs"
-	],
+	"permissions": ["storage", "tabs", "scripting", "debugger"],
 	"browser_specific_settings": {
 		"gecko": {
 			"id": "{5951bf9a-25ae-4043-9fa2-54dc0ac1ce70}",
@@ -26,6 +23,16 @@
 	"options_ui": {
 		"page": "popup/homepage.html"
 	},
+	"host_permissions": [
+		"*://*.amazon.ca/*",
+		"*://*.amazon.it/*",
+		"*://*.amazon.es/*",
+		"*://*.amazon.de/*",
+		"*://*.amazon.fr/*",
+		"*://*.amazon.co.uk/*",
+		"*://*.amazon.co.jp/*",
+		"*://*.amazon.com/*"
+	],
 	"web_accessible_resources": [
 		{
 			"resources": [
@@ -36,7 +43,8 @@
 				"page/*",
 				"node_modules/vine-styling/desktop/*",
 				"node_modules/vine-styling/mobile/*",
-				"scripts/inj.js"
+				"scripts/inj.js",
+				"plugins/*"
 			],
 			"matches": [
 				"*://*.amazon.ca/*",
