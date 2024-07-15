@@ -470,6 +470,7 @@ function init() {
 	manageCheckboxSetting("hiddenTab.active");
 	manageCheckboxSetting("hiddenTab.remote");
 	manageCheckboxSetting("pinnedTab.active");
+	manageCheckboxSetting("general.reduceNotifications");
 	manageCheckboxSetting("discord.active"); //Handled manually
 	manageCheckboxSetting("unavailableTab.active");
 	manageCheckboxSetting("unavailableTab.votingToolbar");

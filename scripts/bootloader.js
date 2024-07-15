@@ -800,12 +800,18 @@ window.addEventListener("message", async function (event) {
 		tile.getToolbar().setETV(event.data.data.etv, event.data.data.etv, true);
 
 		//Show a notification
-		const note = new ScreenNotification();
-		note.title = "ETV data shared";
-		note.lifespan = 2;
-		note.content =
-			"Vine Helper shared the ETV value of " + event.data.data.etv + " for item " + event.data.data.asin + ".";
-		await Notifications.pushNotification(note);
+		if (!appSettings.general.reduceNotifications) {
+			const note = new ScreenNotification();
+			note.title = "ETV data shared";
+			note.lifespan = 2;
+			note.content =
+				"Vine Helper shared the ETV value of " +
+				event.data.data.etv +
+				" for item " +
+				event.data.data.asin +
+				".";
+			await Notifications.pushNotification(note);
+		}
 
 		if (
 			appSettings.general.displayModalETV &&

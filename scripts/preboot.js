@@ -436,12 +436,14 @@ async function saveSettings() {
 		}
 	}
 
-	let note = new ScreenNotification();
-	note.title = "Settings saved.";
-	note.lifespan = 3;
-	note.content = "";
-	note.title_only = true;
-	Notifications.pushNotification(note);
+	if (!appSettings.general.reduceNotifications) {
+		let note = new ScreenNotification();
+		note.title = "Settings saved.";
+		note.lifespan = 3;
+		note.content = "";
+		note.title_only = true;
+		Notifications.pushNotification(note);
+	}
 }
 
 function getRunTime() {
