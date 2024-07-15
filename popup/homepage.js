@@ -176,6 +176,20 @@ function init() {
 		await chrome.storage.local.set({ settings: appSettings });
 	};
 
+	//general.newItemMonitorNotificationSound
+	select = document.getElementById("newItemMonitorNotificationSound");
+	for (i = 0; i < select.options.length; i++) {
+		if (select.options[i].value == appSettings.general.newItemMonitorNotificationSound) {
+			select.options[i].selected = true;
+		}
+	}
+	document.getElementById("newItemMonitorNotificationSound").onchange = async function () {
+		appSettings.general.newItemMonitorNotificationSound = document.getElementById(
+			"newItemMonitorNotificationSound"
+		).value;
+		await chrome.storage.local.set({ settings: appSettings });
+	};
+
 	//Concensus Threshold
 	key = CSS.escape("unavailableTab.consensusThreshold");
 	document.querySelector(`#${key}`).value = appSettings.unavailableTab.consensusThreshold;
@@ -448,7 +462,7 @@ function init() {
 	manageCheckboxSetting("general.newItemNotification");
 	manageCheckboxSetting("general.displayNewItemNotifications");
 	manageCheckboxSetting("general.newItemNotificationSound");
-	manageCheckboxSetting("general.newItemMonitorNotificationSound");
+	//manageCheckboxSetting("general.newItemMonitorNotificationSound");
 	manageCheckboxSetting("general.newItemMonitorNotificationHiding");
 	manageCheckboxSetting("general.newItemMonitorDuplicateImageHiding");
 	manageCheckboxSetting("general.newItemNotificationImage");

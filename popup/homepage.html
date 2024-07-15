@@ -187,16 +187,17 @@
 							<div class="vh-toolbar-icon vh-icon-question"></div> </a
 					></label>
 					<label for="general.newItemMonitorNotificationSound" style="margin-left: 20px"
-						>Monitor Notifications with Sound
-						<a
-							href="#"
-							class="tips"
-							title="This plays a notification sound when new items are reported in the monitor tab."
-						>
+						>Notification monitor sound:
+						<a href="#" class="tips" title="Defines when to play an audio notification.">
 							<div class="vh-toolbar-icon vh-icon-question"></div>
 						</a>
-						<input type="checkbox" name="general.newItemMonitorNotificationSound" value="1" />
+						<select name="general.newItemMonitorNotificationSound" id="newItemMonitorNotificationSound">
+							<option value="0">Silent</option>
+							<option value="2">Highlight KW match only</option>
+							<option value="1">Always</option>
+						</select>
 					</label>
+
 					<label for="general.newItemMonitorNotificationHiding" style="margin-left: 20px"
 						>Hide Notifications with auto-hide Keywords
 						<a

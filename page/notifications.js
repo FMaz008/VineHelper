@@ -1,4 +1,7 @@
 var muteSound = false;
+const SOUND_SETTING_SILENT = 0;
+const SOUND_SETTING_ALWAYS = 1;
+const SOUND_SETTING_KEYWORD = 2;
 var appSettings = [];
 if (typeof browser === "undefined") {
 	var browser = chrome;
@@ -185,7 +188,7 @@ function addItem(data) {
 		//New item to be added
 		items.set(asin, etv);
 		imageUrls.add(img_url);
-		playSoundIfEnabled();
+		playSoundIfEnabled(shouldHighlight);
 
 		Tpl.setVar("id", asin);
 		Tpl.setVar("domain", vineDomain);
@@ -229,8 +232,9 @@ function formatDate(date) {
 	return new Date(date + " GMT").toLocaleString(vineLocale);
 }
 
-function playSoundIfEnabled() {
-	if (appSettings.general.newItemMonitorNotificationSound) {
+function playSoundIfEnabled(highlightMatch = false) {
+	const soundSetting = appSettings.general.newItemMonitorNotificationSound;
+	if (soundSetting == SOUND_SETTING_ALWAYS || (soundSetting == SOUND_SETTING_KEYWORD && highlightMatch)) {
 		if (!muteSound) {
 			// Don't play the notification sound again within 30 sec.
 			muteSound = true;
