@@ -2,8 +2,13 @@
 	"manifest_version": 3,
 	"name": "Amazon Vine Helper",
 	"description": "Improve the Amazon Vine experience.",
-	"version": "2.7.3",
-	"permissions": ["storage", "tabs", "scripting", "debugger"],
+	"version": "2.7.4",
+	"permissions": [
+		"storage",
+		"tabs",
+		"scripting",
+		"debugger"
+	],
 	"browser_specific_settings": {
 		"gecko": {
 			"id": "{5951bf9a-25ae-4043-9fa2-54dc0ac1ce70}",
