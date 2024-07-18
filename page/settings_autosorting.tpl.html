@@ -1,0 +1,101 @@
+<label for="unavailableTab.active"
+	>Order Confirmation System:
+	<a href="#" class="tips" title="This feature exchanges data with Vine Helper's server.">
+		<div class="vh-toolbar-icon vh-icon-request"></div>
+	</a>
+	<a
+		href="#"
+		target="_blank"
+		class="tips"
+		title="This displays if an item was ordered by others. If order(s) were unsuccessful, it moves the item to the unavailable tab."
+	>
+		<div class="vh-toolbar-icon vh-icon-question"></div>
+	</a>
+	<input type="checkbox" name="unavailableTab.active" value="1" />
+</label>
+<label for="unavailableTab.compactToolbar"
+	>Compact Toolbar
+	<a
+		href="#"
+		target="_blank"
+		class="tips"
+		title="This makes the toolbar smaller and compatible with Thorvarium SmallItems styling & the mobile stylesheet."
+	>
+		<div class="vh-toolbar-icon vh-icon-question"></div>
+	</a>
+	<input type="checkbox" name="unavailableTab.compactToolbar" value="1" />
+</label>
+<div class="subheader">Voting Toolbar (Canada/Mainland UK):</div>
+<label for="unavailableTab.votingToolbar"
+	>Enable Voting Toolbar Before Orders
+	<a
+		href="#"
+		target="_blank"
+		class="tips"
+		title="This feature exchange data with Vine Helper's server: ASIN of the item ordered, if the order was a success or gave an error, an md5 hash of your IP will be stored on the server."
+	>
+		<div class="vh-toolbar-icon vh-icon-request"></div>
+	</a>
+	<a
+		href="#"
+		target="_blank"
+		class="tips"
+		title="This displays votes and allows you to cast votes on items whether an item has import fees or not."
+	>
+		<div class="vh-toolbar-icon vh-icon-question"></div>
+	</a>
+	<input type="checkbox" name="unavailableTab.votingToolbar" value="1" />
+</label>
+<div id="votingToolbarOptions">
+	<label for="unavailableTab.selfDiscard"
+		>Discard the Items I Voted "With Fees"
+		<a
+			href="#"
+			class="tips"
+			title="This immediately discard the items I vote as unavailable, regardless of the votes concensus."
+		>
+			<div class="vh-toolbar-icon vh-icon-question"></div>
+		</a>
+		<input type="checkbox" name="unavailableTab.selfDiscard" value="1" />
+	</label>
+
+	<label for="unavailableTab.consensusDiscard"
+		>Discard the Items with a "No" Concensus
+		<a href="#" class="tips" title="This discard the items which have a voting consensus of being unavailable.">
+			<div class="vh-toolbar-icon vh-icon-question"></div>
+		</a>
+		<input type="checkbox" name="unavailableTab.consensusDiscard" value="1" />
+	</label>
+
+	<label for="general.firstVotePopup"
+		>Show First Vote Popup
+		<a
+			href="#"
+			class="tips"
+			title="This displays the popup following the first vote and again, once, on the next vote."
+		>
+			<div class="vh-toolbar-icon vh-icon-question"></div>
+		</a>
+		<input type="checkbox" name="general.firstVotePopup" value="1" />
+	</label>
+
+	<div class="expand">
+		Consensus Threshold:
+		<input type="text" id="unavailableTab.consensusThreshold" value="" size="1" maxlength="1" />
+		votes majority.
+		<a
+			href="#"
+			class="tips"
+			title="This determines how much of a vote majority is required for a consensus to be reached regarding item availability."
+		>
+			<div class="vh-toolbar-icon vh-icon-question"></div>
+		</a>
+		<br />
+		Unavailable Items Opacity:
+		<input type="text" id="unavailableTab.unavailableOpacity" value="" size="3" maxlength="3" />
+		%.
+		<a href="#" class="tips" title="This reduces the opacity of items marked as unavailable.">
+			<div class="vh-toolbar-icon vh-icon-question"></div>
+		</a>
+	</div>
+</div>

@@ -149,7 +149,7 @@ async function initFlushTplCache() {
 	//Show version info popup : new version
 	if (appVersion != appSettings.general.versionInfoPopup) {
 		showRuntime("BOOT: Flushing template cache");
-		await TplMgr.flushLocalStorage(); //Delete all template from cache
+		await TplMgr.flushLocalStorage(new ScreenNotification()); //Delete all template from cache
 
 		if (compareVersion(appSettings.general.versionInfoPopup, appVersion) > VERSION_REVISION_CHANGE) {
 			prom = await Tpl.loadFile("view/popup_changelog.html");
