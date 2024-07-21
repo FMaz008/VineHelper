@@ -48,8 +48,8 @@ async function initializeLocalStorageKeys(key, object, value, loadOnly) {
 function init_review() {
 	const currentUrl = window.location.href;
 	const arrRegex = [
-		/^(?:.+?).amazon\.(?:.+?)\/review\/create-review.*&asin=([^&]+).*?$/,
-		/^(?:.+?).amazon\.(?:.+?)\/reviews\/edit-review\/edit.*asin=([^&]+).*$/,
+		/^(?:.+?).amazon\.(?:.+?)\/review\/create-review.*[?&]asin=([^&]+).*?$/,
+		/^(?:.+?).amazon\.(?:.+?)\/reviews\/edit-review\/edit.*[?&]asin=([^&]+).*$/,
 	];
 	for (let i = 0; i < arrRegex.length; i++) {
 		arrMatches = currentUrl.match(arrRegex[i]);
