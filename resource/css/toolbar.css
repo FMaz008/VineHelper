@@ -136,14 +136,14 @@ div.vh-icon-mini {
 	background-position: -16px 0px;
 }
 
-/* Voting/order Widgets */
-div.vh-voting-widget,
+/* order Widgets */
+
 div.vh-order-widget {
 	clear: right;
 	text-align: center;
 }
 
-.compact div.vh-voting-widget,
+
 .compact div.vh-order-widget {
 	display: inline-block;
 	clear: none;

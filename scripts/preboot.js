@@ -46,11 +46,6 @@ function getDefaultSettings() {
 	settings = {
 		unavailableTab: {
 			active: true,
-			votingToolbar: true,
-			consensusThreshold: 2,
-			unavailableOpacity: 100,
-			selfDiscard: true,
-			consensusDiscard: true,
 			compactToolbar: false,
 		},
 
@@ -65,7 +60,6 @@ function getDefaultSettings() {
 			displayVariantIcon: false,
 			versionInfoPopup: 0,
 			GDPRPopup: true,
-			firstVotePopup: true,
 			newItemNotification: false,
 			displayNewItemNotifications: false,
 			newItemNotificationImage: true,
@@ -226,7 +220,6 @@ async function getSettings() {
 	showRuntime("BOOT: Thorvarium stylesheets injected");
 
 	//Figure out what domain the extension is working on
-	//De-activate the unavailableTab (and the voting system) for all non-.ca domains.
 	let currentUrl = window.location.href;
 	regex = /^.+?amazon\.([a-z.]+).*\/vine\/.*$/;
 	arrMatches = currentUrl.match(regex);
@@ -258,13 +251,6 @@ async function getSettings() {
 
 	let manifest = chrome.runtime.getManifest();
 	appVersion = manifest.version;
-
-	//If the domain is not Canada, UK or France, de-activate the voting system/unavailable tab
-	if (["ca", "co.uk", "fr"].indexOf(vineDomain) == -1) {
-		appSettings.unavailableTab.votingToolbar = false;
-		appSettings.unavailableTab.consensusDiscard = false;
-		appSettings.unavailableTab.selfDiscard = false;
-	}
 
 	//If the domain if not from outside the countries supported by the discord API, disable discord
 	if (["ca", "com", "co.uk"].indexOf(vineDomain) == -1) {
@@ -337,7 +323,7 @@ async function getSettings() {
 	if (vineQueue != null) vineQueueAbbr = arrQueues[vineQueue];
 
 	//Generate a UUID for the user
-	if (appSettings.general.uuid == undefined || appSettings.general.uuid == null) {
+	if (appSettings.general?.uuid == undefined || appSettings.general?.uuid == null) {
 		uuid = await obtainNewUUID();
 	} else {
 		uuid = appSettings.general.uuid;
@@ -436,7 +422,7 @@ async function saveSettings() {
 		}
 	}
 
-	if (!appSettings.general.reduceNotifications) {
+	if (!appSettings.general?.reduceNotifications) {
 		let note = new ScreenNotification();
 		note.title = "Settings saved.";
 		note.lifespan = 3;

@@ -116,7 +116,6 @@ label .tips {
 	color: black;
 }
 
-#votingToolbarOptions,
 #discordOptions {
 	border: 0.35rem solid #ccc;
 	flex-grow: 1;
@@ -221,7 +220,6 @@ label .tips {
 		color: var(--link-dark, #f9f9f9);
 	}
 
-	#votingToolbarOptions,
 	#discordOptions,
 	.button:hover,
 	.label:active,

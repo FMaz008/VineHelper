@@ -67,8 +67,7 @@ function updateTileCounts() {
 	if (appSettings.unavailableTab?.active || appSettings.hiddenTab.active)
 		$("#vh-available-count").text(gridRegular.getTileCount(true));
 
-	if (appSettings.unavailableTab?.active || appSettings.unavailableTab?.votingToolbar)
-		$("#vh-unavailable-count").text(gridUnavailable.getTileCount(true));
+	if (appSettings.unavailableTab?.active) $("#vh-unavailable-count").text(gridUnavailable.getTileCount(true));
 
 	if (appSettings.hiddenTab?.active) $("#vh-hidden-count").text(gridHidden.getTileCount(true));
 
@@ -120,8 +119,8 @@ async function createGridInterface() {
 		Tpl.setVar("hidden", "Hidden");
 		Tpl.setVar("pinned", "Pinned");
 	}
-	//If voting system enabled
-	Tpl.setIf("unavailable", appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar);
+	//If ordering system enabled
+	Tpl.setIf("unavailable", appSettings.unavailableTab.active);
 
 	//If the hidden tab system is activated
 	Tpl.setIf("hidden", appSettings.hiddenTab.active);

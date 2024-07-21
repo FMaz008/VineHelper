@@ -10,10 +10,6 @@ function Tile(obj, gridInstance) {
 
 	var pETV = null;
 
-	var pVoteFees = 0;
-	var pVoteNoFees = 0;
-	var pVoteOwn = null;
-
 	var pOrderSuccess = 0;
 	var pOrderFailed = 0;
 
@@ -21,12 +17,6 @@ function Tile(obj, gridInstance) {
 	//## Private method
 	function findasin() {
 		return getAsinFromDom(pTile);
-	}
-
-	function getFees() {
-		if (pVoteFees - pVoteNoFees >= appSettings.unavailableTab.consensusThreshold) return CONSENSUS_FEES;
-		else if (pVoteNoFees - pVoteFees >= appSettings.unavailableTab.consensusThreshold) return CONSENSUS_NO_FEES;
-		else return NO_CONSENSUS;
 	}
 
 	this.animateVanish = async function () {
@@ -79,26 +69,11 @@ function Tile(obj, gridInstance) {
 		return pETV;
 	};
 
-	this.setVotes = function (no, yes, own) {
-		pVoteFees = yes;
-		pVoteNoFees = no;
-		pVoteOwn = own;
-	};
-
 	this.setOrders = function (success, failed) {
 		pOrderSuccess = success;
 		pOrderFailed = failed;
 	};
 
-	this.getVoteFees = function () {
-		return pVoteFees;
-	};
-	this.getVoteNoFees = function () {
-		return pVoteNoFees;
-	};
-	this.getVoteOwn = function () {
-		return pVoteOwn;
-	};
 	this.getOrderSuccess = function () {
 		return pOrderSuccess;
 	};
@@ -106,30 +81,17 @@ function Tile(obj, gridInstance) {
 		return pOrderFailed;
 	};
 
-	this.getFees = function () {
-		return getFees();
-	};
-
 	this.wasOrdered = function () {
 		return pOrderSuccess > 0 || pOrderFailed > 0;
 	};
 
 	this.getStatus = function () {
-		if (appSettings.unavailableTab.active) {
+		if (appSettings.unavailableTab?.active) {
 			if (pOrderSuccess > 0 && pOrderSuccess > pOrderFailed) return NOT_DISCARDED_ORDER_SUCCESS;
 
 			if (pOrderFailed > 0 && pOrderFailed > pOrderSuccess) return DISCARDED_ORDER_FAILED;
 		}
-		if (appSettings.unavailableTab.votingToolbar) {
-			if (pVoteOwn == 1 && appSettings.unavailableTab.selfDiscard) return DISCARDED_OWN_VOTE;
-
-			if (getFees() == CONSENSUS_FEES) return DISCARDED_WITH_FEES;
-
-			if (pVoteOwn == 0) return NOT_DISCARDED_OWN_VOTE;
-
-			if (getFees() == CONSENSUS_NO_FEES) return NOT_DISCARDED_NO_FEES;
-		}
-		return NOT_DISCARDED_NO_STATUS;
+		return NOT_DISCARDED;
 	};
 
 	this.getAsin = function () {
@@ -255,7 +217,7 @@ function Tile(obj, gridInstance) {
 	};
 
 	this.isHidden = function () {
-		if (!appSettings.hiddenTab.active) return false;
+		if (!appSettings.hiddenTab?.active) return false;
 
 		return HiddenList.isHidden(pAsin);
 	};
@@ -281,14 +243,7 @@ function Tile(obj, gridInstance) {
 		HiddenList.removeItem(pAsin, updateLocalStorage);
 
 		//Move the tile
-		let moveToGrid = gridRegular;
-		if (
-			(appSettings.unavailableTab.consensusDiscard && this.getStatus() >= NOT_DISCARDED) ||
-			(appSettings.unavailableTab.selfDiscard && this.getStatus() == DISCARDED_OWN_VOTE)
-		) {
-			moveToGrid = gridUnavailable;
-		}
-		await this.moveToGrid(moveToGrid, animate);
+		await this.moveToGrid(gridRegular, animate);
 
 		pToolbar.updateVisibilityIcon();
 

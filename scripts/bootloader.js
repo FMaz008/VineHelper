@@ -10,17 +10,8 @@ var gridPinned = null; //Will be populated after the grid will be created.
 var scriptTag = document.createElement("script");
 
 //Constants
-const CONSENSUS_NO_FEES = 0;
-const CONSENSUS_FEES = 1;
-const NO_CONSENSUS = null;
-
 const NOT_DISCARDED_ORDER_SUCCESS = -4;
-const NOT_DISCARDED_NO_STATUS = -3;
-const NOT_DISCARDED_OWN_VOTE = -2;
-const NOT_DISCARDED_NO_FEES = -1;
 const NOT_DISCARDED = 0;
-const DISCARDED_WITH_FEES = 1;
-const DISCARDED_OWN_VOTE = 2;
 const DISCARDED_ORDER_FAILED = 4;
 
 const VERSION_MAJOR_CHANGE = 3;
@@ -31,7 +22,6 @@ const VERSION_NO_CHANGE = 0;
 var toolbarsDrawn = false;
 
 const DEBUGGER_TITLE = "Vine Helper - Debugger";
-const VOTING_TITLE = "Vine Helper - voting feature";
 const VINE_INFO_TITLE = "Vine Helper update info";
 const GDPR_TITLE = "Vine Helper - GDPR";
 
@@ -212,7 +202,7 @@ async function initCreateTabs() {
 		gridHidden = new Grid(document.getElementById("tab-hidden"));
 	}
 
-	if (appSettings.unavailableTab?.active || appSettings.unavailableTab?.votingToolbar) {
+	if (appSettings.unavailableTab?.active) {
 		gridUnavailable = new Grid(document.getElementById("tab-unavailable"));
 	}
 
@@ -576,25 +566,16 @@ async function serverProductsResponse(data) {
 			}
 		}
 
-		if (appSettings.unavailableTab.active || appSettings.unavailableTab.votingToolbar) {
-			// if the voting system is active.
-			showRuntime("DRAW: Setting votes");
-			tile.setVotes(values.v0, values.v1, values.s);
-
+		if (appSettings.unavailableTab.active) {
 			showRuntime("DRAW: Setting orders");
 			tile.setOrders(values.order_success, values.order_failed);
-
+			showRuntime("DRAW: A");
 			//Assign the tiles to the proper grid
-			if (appSettings.hiddenTab.active && tile.isHidden()) {
+			if (appSettings.hiddenTab?.active && tile.isHidden()) {
 				//The hidden tiles were already moved, keep the there.
+				showRuntime("DRAW: B");
 			} else if (tile.getStatus() >= DISCARDED_ORDER_FAILED) {
 				showRuntime("DRAW: moving the tile to Unavailable (failed order(s))");
-				tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
-			} else if (appSettings.unavailableTab.consensusDiscard && tile.getStatus() >= NOT_DISCARDED) {
-				showRuntime("DRAW: moving the tile to Unavailable (consensus)");
-				tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
-			} else if (appSettings.unavailableTab.selfDiscard && tile.getStatus() == DISCARDED_OWN_VOTE) {
-				showRuntime("DRAW: moving the tile to Unavailable (own vote)");
 				tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
 			}
 
@@ -605,7 +586,7 @@ async function serverProductsResponse(data) {
 		tile.initiateTile();
 	});
 
-	if (appSettings.pinnedTab?.active && appSettings.hiddenTab.remote) {
+	if (appSettings.pinnedTab?.active && appSettings.hiddenTab?.remote) {
 		if (data["pinned_products"] != undefined) {
 			showRuntime("DRAW: Loading remote pinned products");
 			for (let i = 0; i < data["pinned_products"].length; i++) {
@@ -624,68 +605,6 @@ async function serverProductsResponse(data) {
 
 //#########################
 //## Triggered functions (from clicks or whatever)
-
-//A vote button was pressed, send the vote to the server
-//If a vote changed the discard status, move the tile accordingly
-async function reportfees(event) {
-	let asin = event.data.asin;
-	let fees = event.data.fees; // The vote
-	let tile = getTileByAsin(asin);
-
-	//If the tile is already in the hidden category, a vote won't move it from there.
-	if (!tile.isHidden()) {
-		//Note: If the tile is already in the grid, the method will exit with false.
-		//Our vote is "Fees" + the self discard option is active: move the item to the Discard grid
-		if (fees == 1 && appSettings.unavailableTab.selfDiscard) {
-			await tile.moveToGrid(gridUnavailable, true);
-
-			//Our vote is "Fees" + the added vote will meet the consensus: move the item to the Discard grid
-		} else if (
-			fees == 1 &&
-			appSettings.unavailableTab.consensusDiscard &&
-			tile.getVoteFees() + 1 - tile.getVoteNoFees() >= appSettings.unavailableTab.consensusThreshold
-		) {
-			await tile.moveToGrid(gridUnavailable, true);
-
-			//Our vote is "nofees" + there's no consensus, move the item to the regular grid
-		} else if (
-			fees == 0 &&
-			tile.getVoteFees() - tile.getVoteNoFees() < appSettings.unavailableTab.consensusThreshold
-		) {
-			await tile.moveToGrid(gridRegular, true);
-		}
-	}
-
-	//Send the vote to the server
-	let arrJSON = {
-		api_version: 4,
-		action: "report_fee",
-		country: vineCountry,
-		uuid: uuid,
-		asin: asin,
-		fees: fees,
-	};
-	let jsonArrURL = JSON.stringify(arrJSON);
-
-	let url = VINE_HELPER_API_URL + jsonArrURL;
-
-	await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
-
-	//Refresh the data for the toolbar of that specific product only
-	let arrUrl = [asin];
-	fetchProductsData(arrUrl);
-
-	//Show first vote popup
-	if (appSettings.general.firstVotePopup) {
-		prom = await Tpl.loadFile("view/popup_firstvote.html");
-		let content = Tpl.render(prom);
-
-		let m = DialogMgr.newModal("voting");
-		m.title = VOTING_TITLE;
-		m.content = content;
-		m.show();
-	}
-}
 
 //Messaging from accross tabs and context
 //Messages sent via window.postMessage({}, "*");
@@ -793,7 +712,7 @@ window.addEventListener("message", async function (event) {
 		};
 
 		const url = VINE_HELPER_API_URL + JSON.stringify(arrJSON);
-		await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
+		await fetch(url); //Await to wait until the query to have been processed before refreshing the display
 
 		//Update the product tile ETV in the Toolbar
 		const tile = getTileByAsin(tileASIN);
@@ -850,7 +769,7 @@ window.addEventListener("message", async function (event) {
 
 			//Form the full URL
 			const url = VINE_HELPER_API_URL + JSON.stringify(arrJSON);
-			await fetch(url); //Await to wait until the vote to have been processed before refreshing the display
+			await fetch(url); //Await to wait until the query to have been processed before refreshing the display
 
 			//Update the product tile ETV in the Toolbar
 			let tile = getTileByAsin(tileASIN);

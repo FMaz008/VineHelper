@@ -17,8 +17,12 @@ function setCB(key, value) {
 	let keyE = CSS.escape(key);
 
 	let cb = document.querySelector(`input[name='${keyE}']`);
-	cb.checked = value;
-
+	try {
+		cb.checked = value;
+	} catch (E) {
+		console.log(E);
+		console.log(key);
+	}
 	handleDynamicFields(key);
 }
 
@@ -56,12 +60,6 @@ function handleDependantChildCheckBoxes(parentChk, arrChilds) {
 		keyF = CSS.escape(arrChilds[i]);
 		document.querySelector(`[name='${keyF}']`).disabled = !checked;
 	}
-}
-
-async function drawUnavailableTab() {
-	document.querySelector("#votingToolbarOptions").style.display = appSettings.unavailableTab.votingToolbar
-		? "block"
-		: "none";
 }
 
 async function drawDiscord() {
@@ -128,19 +126,11 @@ function init() {
 		};
 	});
 	selectCurrentTab(true);
-	drawUnavailableTab();
 	drawDiscord();
 
 	document.getElementById("notificationsMonitor").href = chrome.runtime.getURL("page/notifications.html");
 	//###################
 	//#### UI interaction
-
-	//unavailableTab / Voting system interaction
-	let key;
-	key = CSS.escape("unavailableTab.votingToolbar");
-	document.querySelector(`label[for='${key}'] input`).onclick = function () {
-		setTimeout(() => drawUnavailableTab(), 1);
-	};
 
 	key = CSS.escape("discord.active");
 	document.querySelector(`label[for='${key}'] input`).onclick = function () {
@@ -188,28 +178,6 @@ function init() {
 			"newItemMonitorNotificationSound"
 		).value;
 		await chrome.storage.local.set({ settings: appSettings });
-	};
-
-	//Concensus Threshold
-	key = CSS.escape("unavailableTab.consensusThreshold");
-	document.querySelector(`#${key}`).value = appSettings.unavailableTab.consensusThreshold;
-	document.querySelector(`#${key}`).onchange = async function () {
-		let val = this.value;
-		if (isNumeric(val) && val > 0 && val < 10) {
-			appSettings.unavailableTab.consensusThreshold = val;
-			await chrome.storage.local.set({ settings: appSettings });
-		}
-	};
-
-	//Unavailable Opacity
-	key = CSS.escape("unavailableTab.unavailableOpacity");
-	document.querySelector(`#${key}`).value = appSettings.unavailableTab.unavailableOpacity;
-	document.querySelector(`#${key}`).onchange = async function () {
-		let val = this.value;
-		if (isNumeric(val) && val > 0 && val <= 100) {
-			appSettings.unavailableTab.unavailableOpacity = val;
-			await chrome.storage.local.set({ settings: appSettings });
-		}
 	};
 
 	//UUID:
@@ -453,7 +421,6 @@ function init() {
 	manageCheckboxSetting("general.verbosePagination");
 	manageCheckboxSetting("general.versionInfoPopup", false);
 	manageCheckboxSetting("general.GDPRPopup", false);
-	manageCheckboxSetting("general.firstVotePopup");
 	manageCheckboxSetting("general.displayETV");
 	manageCheckboxSetting("general.displayModalETV");
 	manageCheckboxSetting("general.displayVariantIcon");
@@ -473,11 +440,7 @@ function init() {
 	manageCheckboxSetting("general.reduceNotifications");
 	manageCheckboxSetting("discord.active"); //Handled manually
 	manageCheckboxSetting("unavailableTab.active");
-	manageCheckboxSetting("unavailableTab.votingToolbar");
-	manageCheckboxSetting("unavailableTab.selfDiscard");
 	manageCheckboxSetting("unavailableTab.compactToolbar");
-	manageCheckboxSetting("unavailableTab.consensusDiscard");
-
 	manageCheckboxSetting("thorvarium.mobileios");
 	manageCheckboxSetting("thorvarium.mobileandroid");
 	manageCheckboxSetting("thorvarium.smallItems");
