@@ -28,6 +28,7 @@ async function loadSettings() {
 
 //Wait for the DOM+remote content to be loaded to begin the script
 window.addEventListener("load", function () {
+	console.log("Loading review system...");
 	loadSettings();
 });
 
@@ -45,12 +46,19 @@ async function initializeLocalStorageKeys(key, object, value, loadOnly) {
 }
 
 function init_review() {
-	let currentUrl = window.location.href;
-	let regex = /^(?:.+?).amazon\.(?:.+?)\/review\/create-review.*&asin=(.+)$/;
-	arrMatches = currentUrl.match(regex);
-	if (arrMatches != null) {
-		asin = arrMatches[1];
-		boot_review();
+	const currentUrl = window.location.href;
+	const arrRegex = [
+		/^(?:.+?).amazon\.(?:.+?)\/review\/create-review.*&asin=([^&]+).*?$/,
+		/^(?:.+?).amazon\.(?:.+?)\/reviews\/edit-review\/edit.*asin=([^&]+).*$/,
+	];
+	for (let i = 0; i < arrRegex.length; i++) {
+		arrMatches = currentUrl.match(arrRegex[i]);
+		if (arrMatches != null) {
+			asin = arrMatches[1];
+			console.log("URL Match confirmed for ASIN " + asin + ". Booting review toolbar...");
+			boot_review();
+			break;
+		}
 	}
 }
 

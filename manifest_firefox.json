@@ -127,7 +127,16 @@
 				"*://*.amazon.fr/review/create-review*",
 				"*://*.amazon.co.uk/review/create-review*",
 				"*://*.amazon.co.jp/review/create-review*",
-				"*://*.amazon.com/review/create-review*"
+				"*://*.amazon.com/review/create-review*",
+				"*://*.amazon.ca/reviews/edit-review/edit*",
+				"*://*.amazon.it/reviews/edit-review/edit*",
+				"*://*.amazon.de/reviews/edit-review/edit*",
+				"*://*.amazon.de/*/reviews/edit-review/edit*",
+				"*://*.amazon.es/reviews/edit-review/edit*",
+				"*://*.amazon.fr/reviews/edit-review/edit*",
+				"*://*.amazon.co.uk/reviews/edit-review/edit*",
+				"*://*.amazon.co.jp/reviews/edit-review/edit*",
+				"*://*.amazon.com/reviews/edit-review/edit*"
 			],
 			"run_at": "document_end"
 		}
