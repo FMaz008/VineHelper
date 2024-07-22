@@ -1,3 +1,7 @@
+/* #################################### */
+/* HEADER */
+/* #################################### */
+
 /* Chrome 29+ */
 @media screen and (-webkit-min-device-pixel-ratio: 0) and (min-resolution: 0.001dpcm) {
 	.vh-icon-logo {
@@ -31,13 +35,25 @@
 	text-align: center;
 }
 
+/* #################################### */
+/* TABS */
+/* #################################### */
+
 #tabs-content .tab {
 	padding: 0;
 	display: flex;
 	flex-direction: column;
 	flex-grow: 1;
-
+	width: 600px;
 	margin-top: -1px;
+}
+
+/* #################################### */
+/* TAB CONTENT */
+/* #################################### */
+
+.setting-container {
+	margin-top: 10px;
 }
 
 label {
@@ -58,6 +74,18 @@ label {
 	padding-left: 5px;
 }
 
+.setting-section {
+	font-weight: bold;
+	font-size: 16pt;
+	margin-top: 20px;
+}
+
+label.right-align input,
+label.right-align select {
+	margin-right: 0px;
+	margin-left: auto;
+}
+
 .setting-summary {
 	font-style: italic;
 	margin-left: 30px;
@@ -70,4 +98,15 @@ label {
 
 .vh-toolbar-icon {
 	margin-left: -20px;
+}
+
+#generalhideKeywords,
+#generalhighlightKeywords {
+	margin-left: 20px;
+	width: 500px;
+	height: 200px;
+}
+
+#generaluuid {
+	width: 300px;
 }

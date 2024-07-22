@@ -1,21 +1,27 @@
-<div class="vh-scroll-adjacent-container">
-	<label for="general.highlightKeywords">Highlight items with the following keywords:</label>
-	<textarea
-		id="generalhighlightKeywords"
-		name="general.highlightKeywords"
-		style="width: 300px; margin: 0 auto; height: 100px"
-	></textarea>
-	<div class="subheader">Separate keywords with a comma (,). Regex supported.</div>
-
-	<div class="vh-container">
-		If the item title does not match one of the highlighed keywords, then check the auto-hide
-		keywords.
+<div class="setting-container">
+	<label for="general.highlightKeywords">
+		Highlight items with the following keywords:<br />
+		
+	</label>
+	<textarea id="generalhighlightKeywords" name="general.highlightKeywords"></textarea>
+	<div class="setting-summary">
+		<div class="vh-toolbar-icon vh-icon-question"></div>
+		Separate keywords with a comma (,). Regex supported.
 	</div>
-	<label for="general.hideKeywords">Auto-Hide items with the following keywords:</label>
-	<textarea
-		id="generalhideKeywords"
-		name="general.hideKeywords"
-		style="width: 300px; margin: 0 auto; height: 100px"
-	></textarea>
-	<div class="subheader">Separate keywords with a comma (,). Regex supported.</div>
+</div>
+
+<div class="vh-container">
+	If the item title does not match one of the highlighed keywords, then check the auto-hide keywords.
+</div>
+
+<div class="setting-container">
+	<label for="general.hideKeywords">
+		Auto-Hide items with the following keywords:<br />
+		
+	</label>
+	<textarea id="generalhideKeywords" name="general.hideKeywords"></textarea>
+	<div class="setting-summary">
+		<div class="vh-toolbar-icon vh-icon-question"></div>
+		Separate keywords with a comma (,). Regex supported.
+	</div>
 </div>

@@ -1,55 +1,62 @@
-<label for="general.uuid"
-	>UUID:
-	<a
-		href="#"
-		target="_blank"
-		class="tips"
-		title="Your unique user ID. If you have multiple devices, you may want to sync them up to the same value."
-	>
+<div class="setting-container">
+	<label for="general.uuid">
+		UUID:
+		<input type="password" name="general.uuid" id="generaluuid" value="" maxlength="36" />
+		<input type="button" id="saveUUID" value="Save" />
+	</label>
+	<div class="setting-summary">
 		<div class="vh-toolbar-icon vh-icon-question"></div>
-	</a>
-	<input type="password" name="general.uuid" id="general.uuid" value="" size="26" maxlength="36" />
-	<input type="button" id="saveUUID" value="Save" />
-</label>
-<label for="general.versionInfoPopup"
-	>Reset Template Cache
-	<a
-		href="#"
-		class="tips"
-		title="This will reload the templates from their current file and will display the version note popup again, once, on the next page load."
-	>
+		Your unique user ID. If you have multiple devices, you may want to sync them up to the same value.
+	</div>
+</div>
+
+<div class="setting-container">
+	<label for="general.versionInfoPopup">
+		<input type="checkbox" name="general.versionInfoPopup" value="1" />
+		Reset Template Cache
+	</label>
+	<div class="setting-summary">
 		<div class="vh-toolbar-icon vh-icon-question"></div>
-	</a>
-	<input type="checkbox" name="general.versionInfoPopup" value="1" />
-</label>
-<label for="general.GDPRPopup"
-	>Show GDPR popup
-	<a href="#" class="tips" title="This will display the GDPR popup again upon reloading a Vine page.">
+		Reload the templates from their current file and will display the version note popup again, once, on the next
+		page load.
+	</div>
+</div>
+
+<div class="setting-container">
+	<label for="general.GDPRPopup">
+		<input type="checkbox" name="general.GDPRPopup" value="1" />
+		Show GDPR popup
+	</label>
+	<div class="setting-summary">
 		<div class="vh-toolbar-icon vh-icon-question"></div>
-	</a>
-	<input type="checkbox" name="general.GDPRPopup" value="1" />
-</label>
-<label for="general.hiddenItemsCacheSize"
-	>Hidden Items Max Size
-	<a
-		href="#"
-		class="tips"
-		title="This will decide the maximum amount of storage space to allow hidden items to take locally. When reached, ~1MB of storage space will be cleared."
-	>
+		Display the GDPR popup again upon reloading a Vine page.
+	</div>
+</div>
+
+<div class="setting-container">
+	<label for="general.hiddenItemsCacheSize" class="right-align">
+		Hidden Items Max Size
+
+		<select name="general.hiddenItemsCacheSize" id="hiddenItemsCacheSize">
+			<option value="2">2MB</option>
+			<option value="3">3MB</option>
+			<option value="4">4MB (chrome &lt;113)</option>
+			<option value="5">5MB</option>
+			<option value="6">6MB</option>
+			<option value="7">7MB</option>
+			<option value="8">8MB</option>
+			<option value="9">9MB (default)</option>
+		</select>
+	</label>
+	<div class="setting-summary">
 		<div class="vh-toolbar-icon vh-icon-question"></div>
-	</a>
-	<select name="general.hiddenItemsCacheSize" id="hiddenItemsCacheSize">
-		<option value="2">2MB</option>
-		<option value="3">3MB</option>
-		<option value="4">4MB (chrome &lt;113)</option>
-		<option value="5">5MB</option>
-		<option value="6">6MB</option>
-		<option value="7">7MB</option>
-		<option value="8">8MB</option>
-		<option value="9">9MB (default)</option>
-	</select>
-</label>
-<div class="subheader">DANGER ZONE:</div>
+		This will decide the maximum amount of storage space to allow hidden items to take locally. When reached, ~1MB
+		of storage space will be cleared.
+	</div>
+</div>
+
+<div class="setting-section">DANGER ZONE:</div>
+
 <p>The options below will lead to data loss.</p>
 <button id="hiddenItemReset">DELETE ALL LOCAL HIDDEN ITEMS</button><br />
 <button id="factoryReset" style="background-color: #c33">/!\ FACTORY RESET /!\</button>

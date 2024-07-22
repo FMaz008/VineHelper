@@ -7,7 +7,7 @@ var TplMgr = new TemplateMgr();
 
 	const promMainTpl = await Tpl.loadFile("/page/settings_main.tpl.html");
 	const promTab1 = await Tpl.loadFile("/page/settings_general.tpl.html");
-	const promTab2 = await Tpl.loadFile("/page/settings_autosorting.tpl.html");
+	const promTab2 = await Tpl.loadFile("/page/settings_notifications.tpl.html");
 	const promTab3 = await Tpl.loadFile("/page/settings_system.tpl.html");
 	const promTab4 = await Tpl.loadFile("/page/settings_brenda.tpl.html");
 	const promTab5 = await Tpl.loadFile("/page/settings_keywords.tpl.html");
@@ -47,6 +47,7 @@ function initTabs() {
 			const currentTab = this.querySelector("a").href.split("#").pop();
 			selectTab(currentTab);
 			this.classList.add("active");
+			return false;
 		};
 	});
 	//Set the first tab as active
