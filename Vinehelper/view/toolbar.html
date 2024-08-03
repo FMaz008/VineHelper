@@ -1,0 +1,43 @@
+<div id="{{$toolbarId}}" class="vh-status">
+	<div class="vh-status-container">
+		<div class="vh-status-container2">
+			{{if toggleview}}
+			<a
+				href="#{{$asin}}"
+				id="vh-hide-link-{{$asin}}"
+				class="vh-floating-icon"
+				title="Move a product to, or out of, the hidden tab."
+				onclick="return false;"
+			>
+				<div class="vh-toolbar-icon"></div>
+			</a>
+			{{endif}} {{if announce}}
+			<a
+				href="#{{$asin}}"
+				id="vh-announce-link-{{$asin}}"
+				class="vh-floating-icon vh-announce-link"
+				title="Announce the product on discord! (The ETV must be known)"
+				onclick="return false;"
+			>
+				<div class="vh-toolbar-icon vh-icon-announcement"></div>
+			</a>
+			{{endif}} {{if pinned}}
+			<a
+				href="#{{$asin}}"
+				id="vh-pin-link-{{$asin}}"
+				class="vh-floating-icon vh-announce-link"
+				title="Pin item"
+				onclick="return false;"
+			>
+				<div class="vh-toolbar-icon vh-icon-pin"></div>
+			</a>
+			{{endif}}
+			<span class="vh-toolbar-etv">
+				<a href="#" class="tooltip" onclick="return false;" title="Estimated Tax Value">
+					<div class="vh-icon-etv"></div>
+				</a>
+				<span class="etv"></span>
+			</span>
+		</div>
+	</div>
+</div>

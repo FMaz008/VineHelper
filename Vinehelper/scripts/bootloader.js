@@ -186,6 +186,9 @@ function initSetPageTitle() {
 		const selector = arrMatches[2] == undefined ? ".parent-node" : ".child-node";
 		$("title").append(" - " + $(`#vvp-browse-nodes-container > ${selector} > a.selectedNode`).text());
 	}
+
+	// Get category path and store it in a variable
+	const categoryPath = getCategoryPath();
 }
 
 async function initCreateTabs() {
@@ -1016,3 +1019,21 @@ function removeElements(selector) {
 function getRandomNumber(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
+// Function to retrieve category, subcategory, and page number from the URL
+function getCategoryPath() {
+	const urlParams = new URLSearchParams(window.location.search);
+	const category = urlParams.get('pn') || '';
+	const subcategory = urlParams.get('cn') || '';
+	const pageNumber = urlParams.get('page') || '1';
+
+	let categoryPath = category;
+	if (subcategory) {
+		categoryPath += `>${subcategory}`;
+	}
+	categoryPath += `>page${pageNumber}`;
+
+	return categoryPath;
+}
+
+export { getCategoryPath };

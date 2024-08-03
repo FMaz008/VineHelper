@@ -1,0 +1,18 @@
+<div class="vh-voting-widget">
+	{{if not_compact}}Available?{{endif}}
+	<a
+		href="#{{$asin}}"
+		id="vh-reportlink-{{$asin}}-no"
+		class="vh-reportlink-good {{if selected_yes}}selectedVote{{endif}}"
+		onclick="return false;"
+		>Yes ({{$vote_no_fees}})</a
+	>
+	/
+	<a
+		href="#{{$asin}}"
+		id="vh-reportlink-{{$asin}}-yes"
+		class="vh-reportlink-bad {{if selected_no}}selectedVote{{endif}}"
+		onclick="return false;"
+		>No ({{$vote_with_fees}})</a
+	>
+</div>

@@ -1,0 +1,22 @@
+<div class="vh-order-widget">
+	<span>
+		<a href="#" class="tooltip" onclick="return false;" title="How many people ordered this item succesfully">
+			<div class="vh-toolbar-large-icon vh-icon-order-success"></div>
+		</a>
+		{{$order_success}}
+	</span>
+	{{if not-compact}}
+	<span>&nbsp;&nbsp;&nbsp;</span>
+	{{endif}}
+	<span>
+		<a
+			href="#"
+			class="tooltip"
+			onclick="return false;"
+			title="How many people received an error trying to order this item."
+		>
+			<div class="vh-toolbar-large-icon vh-icon-order-failed"></div>
+		</a>
+		{{$order_failed}}
+	</span>
+</div>

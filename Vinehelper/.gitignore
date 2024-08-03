@@ -1,0 +1,9 @@
+/ext.zip
+/.idea/
+/old-healing.gif
+/.vscode
+/dist
+/plugins/*
+!/plugins/_pluginsInit.js
+*.zip
+node_modules

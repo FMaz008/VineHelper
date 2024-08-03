@@ -1,0 +1,29 @@
+<div id="tabs" class="vh-tabs">
+	<ul id="vh-tabs">
+		<li>
+			<a href="#vvp-items-grid">{{$available}} (<span id="vh-available-count"></span>)</a>
+		</li>
+
+		{{if unavailable}}
+		<li>
+			<a href="#tab-unavailable">{{$unavailable}} (<span id="vh-unavailable-count"></span>)</a>
+		</li>
+		{{endif}} {{if hidden}}
+		<li>
+			<a href="#tab-hidden">{{$hidden}} (<span id="vh-hidden-count"></span>)</a>
+		</li>
+		{{endif}} {{if pinned}}
+		<li>
+			<a href="#tab-pinned">{{$pinned}} (<span id="vh-pinned-count"></span>)</a>
+		</li>
+		{{endif}}
+	</ul>
+</div>
+
+{{if unavailable}}
+<div id="tab-unavailable" class="vh-grid tab-grid"></div>
+{{endif}} {{if hidden}}
+<div id="tab-hidden" class="vh-grid tab-grid"></div>
+{{endif}} {{if pinned}}
+<div id="tab-pinned" class="vh-grid tab-grid"></div>
+{{endif}}
