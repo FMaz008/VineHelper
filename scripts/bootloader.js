@@ -403,7 +403,7 @@ async function initTilesAndDrawToolbars() {
 			a = arrObj[i].querySelector(".a-link-normal");
 			a.setAttribute("data-tooltip", tile.getTitle());
 			a.addEventListener("mouseenter", (event) => {
-				tooltip.textContent = a.getAttribute("data-tooltip");
+				tooltip.textContent = event.currentTarget.getAttribute("data-tooltip");
 				tooltip.style.display = "block";
 				positionTooltip(event);
 			});
