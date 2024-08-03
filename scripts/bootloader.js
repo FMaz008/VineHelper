@@ -1016,3 +1016,34 @@ function removeElements(selector) {
 function getRandomNumber(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
+// Function to retrieve category, subcategory, and page number from the URL
+function getCategoryPath() {
+	const currentUrl = window.location.href;
+
+	// Regex to extract category and subcategory codes from the URL
+	const regex = /^.+?amazon\..+\/vine\/.*[?&]pn=(.*?)(?:[&]cn=(.*?))?(?:[&].*)?$/;
+	const arrMatches = currentUrl.match(regex);
+
+	let category = "";
+	let subcategory = "";
+	let page = new URLSearchParams(window.location.search).get("page") || 1;
+
+	if (arrMatches && arrMatches.length === 3) {
+		// Determine whether to select the parent or child node based on presence of subcategory
+		const selector = arrMatches[2] == undefined ? ".parent-node" : ".child-node";
+
+		// Fetch the category/subcategory name from the DOM using jQuery
+		const nodeText = $(`#vvp-browse-nodes-container > ${selector} > a.selectedNode`).text();
+		if (selector === ".child-node") {
+			subcategory = nodeText;
+			// Assume parent category is also displayed and find it
+			category = $(`#vvp-browse-nodes-container > .parent-node > a.selectedNode`).text();
+		} else {
+			category = nodeText;
+		}
+	}
+
+	// Format the path as 'Category > Subcategory > Page X'
+	return `${category}${subcategory ? " > " + subcategory : ""} > Page ${page}`;
+}
