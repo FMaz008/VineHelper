@@ -21,6 +21,19 @@
 	padding-bottom: 4px;
 }
 
+/* tooltip */
+.hover-tooltip {
+	position: absolute;
+	background-color: #333;
+	color: #fff;
+	padding: 5px;
+	border-radius: 3px;
+	display: none;
+	font-size: 14px;
+	z-index: 1000;
+	width: 200px;
+}
+
 /* Infinite Wheel fix animation */
 div.vh-healing {
 	position: absolute;

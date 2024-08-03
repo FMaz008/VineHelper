@@ -8,6 +8,7 @@ var gridPinned = null; //Will be populated after the grid will be created.
 
 //Inject the script to fix the infinite loading wheel into the main environment.
 var scriptTag = document.createElement("script");
+const tooltip = document.createElement("div");
 
 //Constants
 const NOT_DISCARDED_ORDER_SUCCESS = -4;
@@ -385,16 +386,67 @@ async function initTilesAndDrawToolbars() {
 	//Browse each items from the Regular grid
 	//- Create an array of all the products listed on the page
 	//- Create an empty toolbar for the item tile
-	const arrObj = $(".vvp-item-tile");
+	//- Create the tooltip to display full titles when hovering item names
+
+	tooltip.className = "hover-tooltip";
+	document.body.appendChild(tooltip);
+
+	const arrObj = document.querySelectorAll(".vvp-item-tile");
 	let tile = null;
+	let a = null;
 	for (let i = 0; i < arrObj.length; i++) {
 		tile = generateTile(arrObj[i]);
 		t = new Toolbar(tile);
+
+		//Add tool tip to the truncated item title link
+		if (appSettings.general.displayFullTitleTooltip === true) {
+			a = arrObj[i].querySelector(".a-link-normal");
+			a.setAttribute("data-tooltip", tile.getTitle());
+			a.addEventListener("mouseenter", (event) => {
+				tooltip.textContent = a.getAttribute("data-tooltip");
+				tooltip.style.display = "block";
+				positionTooltip(event);
+			});
+
+			a.addEventListener("mouseleave", () => {
+				tooltip.style.display = "none";
+			});
+
+			a.addEventListener("mousemove", (event) => {
+				positionTooltip(event);
+			});
+		}
+
+		//Generate the toolbar
 		await t.createProductToolbar();
 	}
+
 	showRuntime("done creating toolbars.");
 
 	toolbarsDrawn = true;
+}
+
+// Function to position the tooltip
+function positionTooltip(event) {
+	const tooltipRect = tooltip.getBoundingClientRect();
+	const offsetX = 10; // horizontal offset from the link element
+	const offsetY = 10; // vertical offset from the link element
+
+	// Use pageX and pageY to account for the scrolled distance
+	let tooltipX = event.pageX + offsetX;
+	let tooltipY = event.pageY + offsetY;
+
+	// Ensure the tooltip doesn't go off-screen
+	if (tooltipX + tooltipRect.width > window.pageXOffset + document.documentElement.clientWidth) {
+		tooltipX = event.pageX - tooltipRect.width - offsetX;
+	}
+
+	if (tooltipY + tooltipRect.height > window.pageYOffset + document.documentElement.clientHeight) {
+		tooltipY = event.pageY - tooltipRect.height - offsetY;
+	}
+
+	tooltip.style.left = `${tooltipX}px`;
+	tooltip.style.top = `${tooltipY}px`;
 }
 
 function getAllAsin() {
