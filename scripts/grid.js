@@ -201,6 +201,7 @@ async function addPinnedTile(asin, title, thumbnail) {
 	Tpl.setVar("img_url", thumbnail);
 	Tpl.setVar("asin", asin);
 	Tpl.setVar("description", title);
+	Tpl.setVar("category_path", getCategoryPath());
 	let content = Tpl.render(prom2, true);
 	document.getElementById("tab-pinned").appendChild(content);
 
