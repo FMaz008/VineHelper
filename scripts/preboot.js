@@ -182,6 +182,24 @@ async function getSettings() {
 		saveSettings();
 	}
 
+	//v2.7.6
+	if (appSettings.general.newItemMonitorNotificationVolume == undefined) {
+		appSettings.general.newItemMonitorNotificationVolume =
+			appSettings.general.newItemMonitorNotificationSound == 0 ? 0 : 1;
+
+		appSettings.general.newItemMonitorNotificationSoundCondition =
+			appSettings.general.newItemMonitorNotificationSound == 2 ? 1 : 0;
+
+		appSettings.general.newItemMonitorNotificationSound = null; //No longer used.
+		saveSettings();
+	}
+
+	if (appSettings.general.newItemNotificationVolume == undefined) {
+		appSettings.general.newItemNotificationVolume = Number(appSettings.general.newItemNotificationSound);
+		appSettings.general.newItemNotificationSound = null; //No longer used.
+		saveSettings();
+	}
+
 	//Load Thorvarium stylesheets
 	if (appSettings.thorvarium.mobileios) loadStyleSheet("node_modules/vine-styling/mobile/ios-with-bugfix.css");
 

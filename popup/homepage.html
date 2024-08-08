@@ -172,12 +172,19 @@
 						</a>
 						<input type="checkbox" name="general.newItemNotificationImage" value="1" />
 					</label>
-					<label for="general.newItemNotificationSound" style="margin-left: 20px"
-						>Screen Notifications with Sound
+					<label for="general.newItemNotificationVolume" style="margin-left: 20px"
+						>Screen Notifications Sound Volume
 						<a href="#" class="tips" title="This plays a notification sound when new items are reported.">
 							<div class="vh-toolbar-icon vh-icon-question"></div>
 						</a>
-						<input type="checkbox" name="general.newItemNotificationSound" value="1" />
+						<input
+							type="range"
+							id="generalnewItemNotificationVolume"
+							name="general.newItemNotificationVolume"
+							min="0"
+							max="1"
+							step="0.01"
+						/>
 					</label>
 
 					<label for="" style="margin-left: 10px"
@@ -189,16 +196,29 @@
 						>
 							<div class="vh-toolbar-icon vh-icon-question"></div> </a
 					></label>
-					<label for="general.newItemMonitorNotificationSound" style="margin-left: 20px"
+					<label for="general.newItemMonitorNotificationSoundCondition" style="margin-left: 20px"
 						>Notification monitor sound:
 						<a href="#" class="tips" title="Defines when to play an audio notification.">
 							<div class="vh-toolbar-icon vh-icon-question"></div>
 						</a>
-						<select name="general.newItemMonitorNotificationSound" id="newItemMonitorNotificationSound">
-							<option value="0">Silent</option>
+						<select
+							name="general.newItemMonitorNotificationSoundCondition"
+							id="newItemMonitorNotificationSoundCondition"
+						>
+							<option value="1">Always play sound</option>
 							<option value="2">Highlight KW match only</option>
-							<option value="1">Always</option>
 						</select>
+					</label>
+					<label for="general.newItemMonitorNotificationVolume" style="margin-left: 20px"
+						>Notification monitor sound volume:
+						<input
+							type="range"
+							id="generalnewItemMonitorNotificationVolume"
+							name="general.newItemMonitorNotificationVolume"
+							min="0"
+							max="1"
+							step="0.01"
+						/>
 					</label>
 
 					<label for="general.newItemMonitorNotificationHiding" style="margin-left: 20px"

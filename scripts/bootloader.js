@@ -902,8 +902,9 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 			note2.lifespan = 60;
 
 			//Play the notification sound
-			if (appSettings.general.newItemNotificationSound) {
+			if (appSettings.general.newItemNotificationVolume > 0) {
 				note2.sound = "resource/sound/notification.mp3";
+				note2.volume = appSettings.general.newItemNotificationVolume;
 			}
 			note2.content = Tpl.render(prom);
 			Notifications.pushNotification(note2);

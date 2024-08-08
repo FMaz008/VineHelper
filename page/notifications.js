@@ -1,7 +1,6 @@
 var muteSound = false;
-const SOUND_SETTING_SILENT = 0;
-const SOUND_SETTING_ALWAYS = 1;
-const SOUND_SETTING_KEYWORD = 2;
+const SOUND_SETTING_ALWAYS = 0;
+const SOUND_SETTING_KEYWORD = 1;
 var appSettings = [];
 if (typeof browser === "undefined") {
 	var browser = chrome;
@@ -233,7 +232,7 @@ function formatDate(date) {
 }
 
 function playSoundIfEnabled(highlightMatch = false) {
-	const soundSetting = appSettings.general.newItemMonitorNotificationSound;
+	const soundSetting = appSettings.general.newItemMonitorNotificationSoundCondition;
 	if (soundSetting == SOUND_SETTING_ALWAYS || (soundSetting == SOUND_SETTING_KEYWORD && highlightMatch)) {
 		if (!muteSound) {
 			// Don't play the notification sound again within 30 sec.
@@ -244,6 +243,7 @@ function playSoundIfEnabled(highlightMatch = false) {
 				audioElement.removeEventListener("ended", arguments.callee); // Remove the event listener
 				audioElement.remove();
 			});
+			audioElement.volume = Number(appSettings.general.newItemMonitorNotificationVolume);
 			audioElement.play();
 		}
 	}

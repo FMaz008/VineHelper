@@ -19,6 +19,7 @@ class ScreenNotification {
 		this.content = "";
 		this.lifespan = 0; //Will not autodelete
 		this.sound = null; //relative URL of the sound file to play.
+		this.volume = 1;
 		this.template = null; //relative URL of the template file to use
 		this.title_only = false;
 		this.template = "view/notification_default.html";
@@ -91,6 +92,7 @@ class ScreenNotifier {
 					audioElement.removeEventListener("ended", arguments.callee); // Remove the event listener
 					audioElement.remove();
 				});
+				audioElement.volume = Number(note.volume);
 				audioElement.play();
 			}
 		}

@@ -49,7 +49,7 @@ function handleDynamicFields(key) {
 
 	handleDependantChildCheckBoxes("general.displayNewItemNotifications", [
 		"general.newItemNotificationImage",
-		"general.newItemNotificationSound",
+		"general.newItemNotificationVolume",
 	]);
 }
 function handleDependantChildCheckBoxes(parentChk, arrChilds) {
@@ -167,16 +167,14 @@ function init() {
 	};
 
 	//general.newItemMonitorNotificationSound
-	select = document.getElementById("newItemMonitorNotificationSound");
-	for (i = 0; i < select.options.length; i++) {
-		if (select.options[i].value == appSettings.general.newItemMonitorNotificationSound) {
-			select.options[i].selected = true;
+	const soundCondition = document.getElementById("newItemMonitorNotificationSoundCondition");
+	for (i = 0; i < soundCondition.options.length; i++) {
+		if (soundCondition.options[i].value == appSettings.general.newItemMonitorNotificationSoundCondition) {
+			soundCondition.options[i].selected = true;
 		}
 	}
-	document.getElementById("newItemMonitorNotificationSound").onchange = async function () {
-		appSettings.general.newItemMonitorNotificationSound = document.getElementById(
-			"newItemMonitorNotificationSound"
-		).value;
+	soundCondition.onchange = async function () {
+		appSettings.general.newItemMonitorNotificationSoundCondition = soundCondition.value;
 		await chrome.storage.local.set({ settings: appSettings });
 	};
 
@@ -416,6 +414,22 @@ function init() {
 		appSettings.general.hideKeywords = arr;
 		chrome.storage.local.set({ settings: appSettings });
 	});
+
+	//Sliders
+	const volume1 = document.getElementById("generalnewItemNotificationVolume");
+	volume1.value = Number(appSettings.general.newItemNotificationVolume);
+	volume1.addEventListener("change", function () {
+		appSettings.general.newItemNotificationVolume = volume1.value;
+		chrome.storage.local.set({ settings: appSettings });
+	});
+
+	const volume2 = document.getElementById("generalnewItemMonitorNotificationVolume");
+	volume2.value = Number(appSettings.general.newItemMonitorNotificationVolume);
+	volume2.addEventListener("change", function () {
+		appSettings.general.newItemMonitorNotificationVolume = volume2.value;
+		chrome.storage.local.set({ settings: appSettings });
+	});
+
 	//Manage checkboxes load and save
 	manageCheckboxSetting("general.topPagination");
 	manageCheckboxSetting("general.verbosePagination");
@@ -429,7 +443,7 @@ function init() {
 	manageCheckboxSetting("general.bookmark");
 	manageCheckboxSetting("general.newItemNotification");
 	manageCheckboxSetting("general.displayNewItemNotifications");
-	manageCheckboxSetting("general.newItemNotificationSound");
+	//manageCheckboxSetting("general.newItemNotificationSound");
 	//manageCheckboxSetting("general.newItemMonitorNotificationSound");
 	manageCheckboxSetting("general.newItemMonitorNotificationHiding");
 	manageCheckboxSetting("general.newItemMonitorDuplicateImageHiding");
