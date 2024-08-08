@@ -87,11 +87,11 @@ class ScreenNotifier {
 				// Don't play the notification sound again within 30 sec.
 				this.lastSoundPlayedAt = Date.now();
 				const audioElement = new Audio(chrome.runtime.getURL(note.sound));
-				audioElement.addEventListener("ended", function () {
-					// Remove the audio element from the DOM
-					audioElement.removeEventListener("ended", arguments.callee); // Remove the event listener
-					audioElement.remove();
-				});
+				const handleEnded = () => {
+					audioElement.removeEventListener("ended", handleEnded); // Remove the event listener
+					audioElement.remove(); // Remove the audio element from the DOM
+				};
+				audioElement.addEventListener("ended", handleEnded);
 				audioElement.volume = Number(note.volume);
 				audioElement.play();
 			}

@@ -238,11 +238,11 @@ function playSoundIfEnabled(highlightMatch = false) {
 			// Don't play the notification sound again within 30 sec.
 			muteSound = true;
 			const audioElement = new Audio(browser.runtime.getURL("resource/sound/notification.mp3"));
-			audioElement.addEventListener("ended", function () {
-				// Remove the audio element from the DOM
-				audioElement.removeEventListener("ended", arguments.callee); // Remove the event listener
-				audioElement.remove();
-			});
+			const handleEnded = () => {
+				audioElement.removeEventListener("ended", handleEnded); // Remove the event listener
+				audioElement.remove(); // Remove the audio element from the DOM
+			};
+			audioElement.addEventListener("ended", handleEnded);
 			audioElement.volume = Number(appSettings.general.newItemMonitorNotificationVolume);
 			audioElement.play();
 		}
