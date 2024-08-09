@@ -33,9 +33,16 @@
 			</div>
 		</div>
 		<div class="setting-container">
-			<label for="general.newItemNotificationSound">
-				<input type="checkbox" name="general.newItemNotificationSound" value="1" />
-				Screen Notifications with Sound
+			<label for="general.newItemNotificationVolume" style="margin-left: 20px"
+				>Volume
+				<input
+					type="range"
+					id="generalnewItemNotificationVolume"
+					name="general.newItemNotificationVolume"
+					min="0"
+					max="1"
+					step="0.05"
+				/>
 			</label>
 			<div class="setting-summary">
 				<div class="vh-toolbar-icon vh-icon-question"></div>
@@ -55,18 +62,33 @@
 	</div>
 	<div class="tabulation">
 		<div class="setting-container">
-			<label for="general.newItemMonitorNotificationSound"
-				>Notification monitor sound:
-				<select name="general.newItemMonitorNotificationSound" id="newItemMonitorNotificationSound">
-					<option value="0">Silent</option>
+			<label for="general.newItemMonitorNotificationSoundCondition"
+				>Play sound when:
+				<select
+					name="general.newItemMonitorNotificationSoundCondition"
+					id="newItemMonitorNotificationSoundCondition"
+				>
+					<option value="1">Always play sound</option>
 					<option value="2">Highlight KW match only</option>
-					<option value="1">Always</option>
 				</select>
 			</label>
 			<div class="setting-summary">
 				<div class="vh-toolbar-icon vh-icon-question"></div>
 				Defines when to play an audio notification.
 			</div>
+		</div>
+		<div class="setting-container">
+			<label for="general.newItemMonitorNotificationVolume" style="margin-left: 20px"
+				>Volume:
+				<input
+					type="range"
+					id="generalnewItemMonitorNotificationVolume"
+					name="general.newItemMonitorNotificationVolume"
+					min="0"
+					max="1"
+					step="0.05"
+				/>
+			</label>
 		</div>
 		<div class="setting-container">
 			<label for="general.newItemMonitorNotificationHiding">

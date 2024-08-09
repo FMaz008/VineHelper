@@ -28,6 +28,8 @@ var TplMgr = new TemplateMgr();
 	document.body.innerHTML = Tpl.render(promMainTpl);
 
 	initTabs();
+
+	init(); //popup/homepage.js, initialize the loading and saving code for the page
 })();
 
 function getAppVersion() {

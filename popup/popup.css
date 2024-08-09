@@ -1,229 +1,25 @@
-:root {
-	--myHeight: 550px;
-	--headerHeight: 60px;
+.setting-summary {
+	display: none;
+	width: 0px;
 }
 
-html {
-	height: var(--myHeight);
-	overflow: hidden;
-	scrollbar-width: none;
-}
-
-body {
-	max-height: var(--myHeight);
-	background-color: #f9f9f9;
-	color: var(--text-light, #333);
-	width: 346px;
+.setting-container {
 	margin: 0;
-	display: flex;
-	flex-direction: column;
-	overflow: hidden;
-	scrollbar-width: none;
-}
-
-.header {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-h1 {
-	flex-grow: 1;
-	font-size: 1.4rem;
-	font-family: "Segoe UI", Tahoma, sans-serif;
-}
-
-div.summary {
-	padding: 10px;
-}
-
-span.number {
-	font-weight: bold;
-}
-
-div.all-options {
-	font-size: 12px;
-	display: flex;
-	flex-grow: 1;
-}
-
-h3 {
-	padding-bottom: 0px;
-	margin-bottom: 5px;
-}
-
-.ui-tabs-nav {
-	padding: 0px !important;
-	border-top: 0px;
-	border-right: 0px;
-	border-radius: 0px;
-}
-
-/* Lets us scroll the tabs*/
-.all-options {
-	max-height: calc(var(--myHeight) - var(--headerHeight));
-	overflow-x: hidden;
-}
-
-.options {
-	width: 346px;
-	padding: 0;
-	display: flex;
-	flex-direction: column;
-	flex-grow: 1;
-
-	margin-top: -1px;
-}
-
-.subheader {
-	margin-top: 5px;
-	padding: 5px;
-	font-weight: bold;
-}
-
-.button:hover {
-	background: #c1c1c1;
-	border: #ddd solid 1px;
-	display: flex;
-	align-items: center;
 }
 
 label {
-	display: flex;
-	align-items: center;
-	height: 2rem;
-	border: 1px solid var(--border-light, #ddd);
-	flex-grow: 0;
-	text-align: left;
-	margin: 1px;
-	padding: 4px;
-	padding-left: 10px;
-	cursor: pointer;
+	padding: 0;
 }
 
-label input[type="checkbox"] {
-	margin-right: 20px;
-	margin-left: auto;
+#tabs-content .tab {
+	width: 300px;
 }
 
-label .tips {
-	margin-left: 5px;
-	margin-right: 5px;
+#generalhideKeywords,
+#generalhighlightKeywords {
+	width: 250px;
 }
 
-.label:active {
-	border: 1px solid var(--border-light, #333);
-	color: black;
-}
-
-#discordOptions {
-	border: 0.35rem solid #ccc;
-	flex-grow: 1;
-	display: flex;
-	flex-direction: column;
-}
-
-.vh-scroll-adjacent-container {
-	margin-right: 20px;
-	text-align: center;
-}
-
-.expand {
-	flex-grow: 1;
-	margin-top: 0.5rem;
-	font-weight: bold;
-	padding: 10px;
-	line-height: 30px;
-}
-
-.padded {
-	padding-left: 20px;
-	padding-right: 20px;
-}
-
-.padded ul {
-	padding-left: 10px;
-}
-
-#tabs-1 label {
-	height: calc(100% / 13);
-}
-#tabs-2 label,
-#tabs-4 label {
-	height: 20px;
-}
-
-#tabs-6 label {
-	height: calc(100% / 9);
-}
-#tabs-7 label {
-	height: calc(100% / 15);
-}
-
-/* Chrome 29+ */
-@media screen and (-webkit-min-device-pixel-ratio: 0) and (min-resolution: 0.001dpcm) {
-	.vh-icon-logo {
-		background-size: 50%;
-		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/logo.png");
-		background-repeat: no-repeat;
-	}
-}
-
-@supports (-moz-appearance: none) {
-	.vh-icon-logo {
-		background-size: 50%;
-		background-image: url("/resource/image/logo.png");
-		background-repeat: no-repeat;
-	}
-}
-
-.header-logo {
-	background-position-x: -30px;
-	background-position-y: -30px;
-	width: 100%;
-	padding-left: 120px;
-}
-
-.header-text {
-	text-align: center;
-	width: 100%;
-}
-
-#keyBindingsNextPage,
-#keyBindingsPreviousPage,
-#keyBindingsRFYPage,
-#keyBindingsAFAPage,
-#keyBindingsAIPage,
-#keyBindingsAIPage2,
-#keyBindingsAIPage3,
-#keyBindingsAIPage4,
-#keyBindingsAIPage5,
-#keyBindingsAIPage6,
-#keyBindingsAIPage7,
-#keyBindingsAIPage8,
-#keyBindingsAIPage9,
-#keyBindingsAIPage10,
-#keyBindingsHideAll,
-#keyBindingsShowAll,
-#keyBindingsDebug {
-	margin-left: auto;
-	margin-right: 20px;
-}
-
-@media (prefers-color-scheme: dark) {
-	body {
-		background-color: var(--background-dark, #333);
-		color: var(--text-dark, #f9f9f9);
-	}
-
-	a {
-		color: var(--link-dark, #f9f9f9);
-	}
-
-	#discordOptions,
-	.button:hover,
-	.label:active,
-	label {
-		border: 1px solid var(--border-dark, #777777);
-	}
+body {
+	width: 350px;
 }

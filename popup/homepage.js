@@ -2,14 +2,10 @@
 //          The console used is the browser console, not the inspector console.
 
 var appSettings = {};
-let manifest = chrome.runtime.getManifest();
-appVersion = manifest.version;
-document.querySelectorAll("#version")[0].innerText = appVersion;
 
 async function loadSettings() {
 	const data = await chrome.storage.local.get("settings");
 	Object.assign(appSettings, data.settings);
-	init();
 }
 loadSettings();
 
@@ -129,13 +125,18 @@ function init() {
 	drawDiscord();
 
 	document.getElementById("notificationsMonitor").href = chrome.runtime.getURL("page/notifications.html");
+	document.getElementById("notificationsMonitorLink").href = chrome.runtime.getURL("page/notifications.html");
+	document.getElementById("settingsLink").href = chrome.runtime.getURL("page/settings.html");
+
 	//###################
 	//#### UI interaction
 
-	key = CSS.escape("discord.active");
-	document.querySelector(`label[for='${key}'] input`).onclick = function () {
-		setTimeout(() => drawDiscord(), 1);
-	};
+	const chkDiscord = document.querySelector(`#discordactive`);
+	if (chkDiscord) {
+		chkDiscord.addEventListener("change", function () {
+			setTimeout(() => drawDiscord(), 1);
+		});
+	}
 
 	//###################
 	//## Load/save settings:
@@ -179,13 +180,13 @@ function init() {
 	};
 
 	//UUID:
-	key = CSS.escape("general.uuid");
+	key = CSS.escape("generaluuid");
 	document.querySelector(`#${key}`).onmouseenter = function () {
-		let key = CSS.escape("general.uuid");
+		let key = CSS.escape("generaluuid");
 		document.querySelector(`#${key}`).type = "text";
 	};
 	document.querySelector(`#${key}`).onmouseleave = function () {
-		let key = CSS.escape("general.uuid");
+		let key = CSS.escape("generaluuid");
 		document.querySelector(`#${key}`).type = "password";
 	};
 
@@ -193,7 +194,7 @@ function init() {
 
 	document.querySelector("#saveUUID").onclick = async function () {
 		document.querySelector("#saveUUID").disabled = true;
-		let key = CSS.escape("general.uuid");
+		let key = CSS.escape("generaluuid");
 		//Post a fetch request to confirm if the UUID is valid
 		let arrJSON = {
 			api_version: 4,
