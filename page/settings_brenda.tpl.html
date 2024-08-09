@@ -1,0 +1,54 @@
+<div class="setting-container">
+	<label for="discord.active">
+		<input type="checkbox" name="discord.active" value="1" />
+		Share Items with Brenda (US/Canada/UK)
+	</label>
+	<div class="setting-summary">
+		<div class="vh-toolbar-icon vh-icon-question"></div>
+		Vine Helper seamlessly integrates with the (unofficial) Amazon Vine Discord server's Brenda bot. Upon joining
+		the server and linking your account, you gain the ability to share products with the bot to recommend to users
+		in your country.
+	</div>
+	<div class="setting-summary">
+		<div class="vh-toolbar-icon vh-icon-request"></div>
+		This feature exchanges data (API token, country, queue, asin, etv, etc.) with the Brenda API server for Discord.
+	</div>
+</div>
+
+<div id="discordOptions">
+	<div id="discord-guid-link">
+		<label>Step 1. Join the Discord Server:</label>
+		<div class="padded">
+			<br /><a href="https://discord.gg/amazonvine" target="_blank">https://discord.gg/amazonvine</a>
+			<br />
+			<br />
+		</div>
+		<label>Step 2. Obtain Your API-Token</label>
+		<div class="padded">
+			<ul>
+				<li>
+					Go to any channel on the server and type the command:
+					<br /><span style="font-weight: bold">/api-token</span>
+				</li>
+				<li>A bot named Karen will reply with an API token.</li>
+				<li>Copy &amp; Paste the API Token into Step 3.</li>
+			</ul>
+			<br />
+		</div>
+		<label>Step 3. Link Your API-Token:</label>
+		<div class="padded">
+			<br />API Token:
+			<input type="text" id="discord.guid" value="" size="30" maxlength="50" />
+			<input type="button" id="saveGUID" value="Link" />
+		</div>
+	</div>
+	<div id="discord-guid-unlink">
+		<div class="padded">
+			<label>You already linked your Discord account!</label>
+			<br />API Token:
+			<span id="guid-txt" style="word-wrap: break-word"></span>
+			<input type="button" id="unlinkGUID" value="Unlink" /><br />
+			<br />
+		</div>
+	</div>
+</div>

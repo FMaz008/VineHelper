@@ -1,0 +1,112 @@
+/* #################################### */
+/* HEADER */
+/* #################################### */
+
+/* Chrome 29+ */
+@media screen and (-webkit-min-device-pixel-ratio: 0) and (min-resolution: 0.001dpcm) {
+	.vh-icon-logo {
+		background-size: 40%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/logo.png");
+		background-repeat: no-repeat;
+	}
+}
+
+@supports (-moz-appearance: none) {
+	.vh-icon-logo {
+		background-size: 40%;
+		background-image: url("/resource/image/logo.png");
+		background-repeat: no-repeat;
+	}
+}
+
+.header-logo {
+	background-position-x: -30px;
+	background-position-y: -40px;
+	width: 350px;
+	padding-left: 200px;
+	height: 100px;
+	margin-left: -10px;
+	margin-top: -15px;
+	margin-bottom: 10px;
+}
+
+.header-text {
+	display: inline-block;
+	text-align: center;
+}
+
+/* #################################### */
+/* TABS */
+/* #################################### */
+
+#tabs-content .tab {
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	flex-grow: 1;
+	width: 600px;
+	margin-top: -1px;
+}
+
+/* #################################### */
+/* TAB CONTENT */
+/* #################################### */
+
+.setting-container {
+	margin-top: 10px;
+}
+
+label {
+	display: flex;
+	align-items: center;
+	border: 0px solid var(--border-light, #ddd);
+	flex-grow: 0;
+	text-align: left;
+	margin: 1px;
+	padding: 4px;
+	cursor: pointer;
+	font-size: 16px;
+}
+
+.tabulation {
+	border-left: 3px solid #000;
+	margin-left: 14px;
+	padding-left: 5px;
+}
+
+.setting-section {
+	font-weight: bold;
+	font-size: 16pt;
+	margin-top: 20px;
+}
+
+label.right-align input,
+label.right-align select {
+	margin-right: 0px;
+	margin-left: auto;
+}
+
+.setting-summary {
+	font-style: italic;
+	margin-left: 30px;
+	width: 500px;
+	background-color: #f6f6f6;
+	border: 1px solid #eee;
+	padding: 5px;
+	padding-left: 25px;
+}
+
+.vh-toolbar-icon {
+	margin-left: -20px;
+}
+
+#generalhideKeywords,
+#generalhighlightKeywords {
+	margin-left: 20px;
+	width: 500px;
+	height: 200px;
+}
+
+#generaluuid {
+	width: 300px;
+}

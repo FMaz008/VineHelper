@@ -111,16 +111,17 @@ class TemplateMgr {
 		return promise;
 	}
 
-	async flushLocalStorage() {
+	async flushLocalStorage(notification = null) {
 		await chrome.storage.local.set({ arrTemplate: [] });
 		this.arrTemplate = [];
 		showRuntime("TEMPLATE: Flushed template cache.");
 
-		let note = new ScreenNotification();
-		note.title = "Template cache flushed.";
-		note.lifespan = 3;
-		note.content = "";
-		note.title_only = true;
-		Notifications.pushNotification(note);
+		if (notification !== null && notification instanceof ScreenNotification) {
+			notification.title = "Template cache flushed.";
+			notification.lifespan = 3;
+			notification.content = "";
+			notification.title_only = true;
+			Notifications.pushNotification(notification);
+		}
 	}
 }

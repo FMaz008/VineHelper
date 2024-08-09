@@ -1,0 +1,164 @@
+<div class="setting-section">Tabs:</div>
+<div class="setting-container">
+	<label for="unavailableTab.active">
+		<input type="checkbox" name="unavailableTab.active" value="1" />
+		Order Confirmation System:
+	</label>
+	<div class="setting-summary">
+		<div class="vh-toolbar-icon vh-icon-question"></div>
+		This displays if an item was ordered by others. If order(s) were unsuccessful, it moves the item to the
+		unavailable tab.
+	</div>
+</div>
+
+<div class="setting-container">
+	<label for="pinnedTab.active">
+		<input type="checkbox" name="pinnedTab.active" value="1" />
+		Enable Pinned Tab
+	</label>
+	<div class="setting-summary">
+		<div class="vh-toolbar-icon vh-icon-question"></div>
+		Add a tab containing your items marked as pinned
+	</div>
+</div>
+
+<div class="setting-container">
+	<label for="hiddenTab.active">
+		<input type="checkbox" name="hiddenTab.active" value="1" />
+		Hidden Tab
+	</label>
+	<div class="setting-summary">
+		<div class="vh-toolbar-icon vh-icon-question"></div>
+		This activates the hidden tab feature, allowing you to move items you are not interested in to a separate tab.
+	</div>
+</div>
+<div class="tabulation">
+	<div class="setting-container">
+		<label for="hiddenTab.remote">
+			<input type="checkbox" name="hiddenTab.remote" value="1" />
+			Store Hidden/Pinned Items Remotely.
+		</label>
+		<div class="setting-summary">
+			<div class="vh-toolbar-icon vh-icon-question"></div>
+			This feature exchange data to Vine Helper's server, and stores the UUID and the ASIN of the hidden items.
+			Hidden items will also be stored on the home server under your UUID. If you have multiple devices, use the
+			same UUID accross all devices.
+		</div>
+	</div>
+</div>
+
+<div class="setting-section">Page:</div>
+<div class="setting-container">
+	<label for="general.topPagination">
+		<input type="checkbox" name="general.topPagination" value="1" />
+		Pagination Also at the Top
+	</label>
+	<div class="setting-summary">
+		<div class="vh-toolbar-icon vh-icon-question"></div>
+		This will add a second pagination bar at the top of the listings.
+	</div>
+</div>
+
+<div class="tabulation">
+	<div class="setting-container">
+		<label for="general.verbosePagination">
+			<input type="checkbox" name="general.verbosePagination" value="1" />
+			Expanded top pagination (AI tab only)
+		</label>
+		<div class="setting-summary">
+			<div class="vh-toolbar-icon vh-icon-question"></div>
+			The top pagination will display more pages.
+		</div>
+	</div>
+	<div class="tabulation">
+		<div class="setting-container">
+			<label for="general.verbosePaginationStartPadding"
+				>Always display the first X pages:
+				<select name="general.verbosePaginationStartPadding" id="verbosePaginationStartPadding">
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5">5</option>
+					<option value="6">6</option>
+					<option value="7">7</option>
+					<option value="8">8</option>
+					<option value="9">9</option>
+					<option value="10">10</option>
+				</select>
+			</label>
+			<div class="setting-summary">
+				<div class="vh-toolbar-icon vh-icon-question"></div>
+				Define how many pages to display at the start of the pagination.
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="setting-section">Item tile:</div>
+
+<div class="setting-container">
+	<label for="unavailableTab.compactToolbar">
+		<input type="checkbox" name="unavailableTab.compactToolbar" value="1" />
+		Compact Toolbar
+	</label>
+	<div class="setting-summary">
+		<div class="vh-toolbar-icon vh-icon-question"></div>
+		This makes the toolbar smaller and compatible with Thorvarium SmallItems styling & the mobile stylesheet.
+	</div>
+</div>
+
+<div class="setting-container">
+	<label for="general.displayETV">
+		<input type="checkbox" name="general.displayETV" value="1" />
+		Display ETV estimates in Toolbar
+	</label>
+	<div class="setting-summary">
+		<div class="vh-toolbar-icon vh-icon-question"></div>
+		This displays previously reported ETV values in the toolbar.
+	</div>
+</div>
+<div class="setting-container">
+	<label for="general.displayModalETV">
+		<input type="checkbox" name="general.displayModalETV" value="1" />
+		Display ETV in the Modal window (Canada)
+	</label>
+	<div class="setting-summary">
+		<div class="vh-toolbar-icon vh-icon-question"></div>
+		Display your ETV in the See Details window.
+	</div>
+</div>
+
+<div class="setting-container">
+	<label for="general.displayFirstSeen">
+		<input type="checkbox" name="general.displayFirstSeen" value="1" />
+		Display "First Seen" Time Over the Image
+	</label>
+	<div class="setting-summary">
+		<div class="vh-toolbar-icon vh-icon-question"></div>
+		This displays the time since a product was first seen by a user.
+	</div>
+</div>
+<div class="tabulation">
+	<div class="setting-container">
+		<label for="general.bookmark">
+			<input type="checkbox" name="general.bookmark" value="1" />
+			Highlight Recently Added Items
+		</label>
+		<div class="setting-summary">
+			<div class="vh-toolbar-icon vh-icon-question"></div>
+			Highlight items which are newer than when the marker was set. The marker button will be placed next to the
+			search bar.
+		</div>
+	</div>
+</div>
+<div class="setting-container">
+	<label for="general.displayVariantIcon">
+		<input type="checkbox" name="general.displayVariantIcon" value="1" />
+		Display Variant Icon Over the Image
+	</label>
+	<div class="setting-summary">
+		<div class="vh-toolbar-icon vh-icon-question"></div>
+		If a product has variants, display a small icon in the bottom right of the product Image
+	</div>
+</div>
