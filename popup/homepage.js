@@ -138,8 +138,47 @@ function init() {
 		});
 	}
 
+	const volume1 = document.getElementById("generalnewItemNotificationVolume");
+	const volume2 = document.getElementById("generalnewItemMonitorNotificationVolume");
+	const btnPlayScreenNotification = document.getElementById("playScreenNotification");
+	btnPlayScreenNotification.addEventListener("click", function () {
+		const audioElement = new Audio(chrome.runtime.getURL("resource/sound/notification.mp3"));
+		const handleEnded = () => {
+			audioElement.removeEventListener("ended", handleEnded); // Remove the event listener
+			audioElement.remove(); // Remove the audio element from the DOM
+		};
+		audioElement.addEventListener("ended", handleEnded);
+		audioElement.volume = Number(volume1.value);
+		audioElement.play();
+	});
+	const btnPlayMonitorNotification = document.getElementById("playMonitorNotification");
+	btnPlayMonitorNotification.addEventListener("click", function () {
+		const audioElement = new Audio(chrome.runtime.getURL("resource/sound/notification.mp3"));
+		const handleEnded = () => {
+			audioElement.removeEventListener("ended", handleEnded); // Remove the event listener
+			audioElement.remove(); // Remove the audio element from the DOM
+		};
+		audioElement.addEventListener("ended", handleEnded);
+		audioElement.volume = Number(volume2.value);
+		audioElement.play();
+	});
+
 	//###################
 	//## Load/save settings:
+
+	//Sliders
+
+	volume1.value = Number(appSettings.general.newItemNotificationVolume);
+	volume1.addEventListener("change", function () {
+		appSettings.general.newItemNotificationVolume = volume1.value;
+		chrome.storage.local.set({ settings: appSettings });
+	});
+
+	volume2.value = Number(appSettings.general.newItemMonitorNotificationVolume);
+	volume2.addEventListener("change", function () {
+		appSettings.general.newItemMonitorNotificationVolume = volume2.value;
+		chrome.storage.local.set({ settings: appSettings });
+	});
 
 	//hiddenItemsCacheSize
 	var select = document.getElementById("hiddenItemsCacheSize");
@@ -413,21 +452,6 @@ function init() {
 			.filter((item) => item !== "");
 		if (arr.length == 1 && arr[0] == "") arr = [];
 		appSettings.general.hideKeywords = arr;
-		chrome.storage.local.set({ settings: appSettings });
-	});
-
-	//Sliders
-	const volume1 = document.getElementById("generalnewItemNotificationVolume");
-	volume1.value = Number(appSettings.general.newItemNotificationVolume);
-	volume1.addEventListener("change", function () {
-		appSettings.general.newItemNotificationVolume = volume1.value;
-		chrome.storage.local.set({ settings: appSettings });
-	});
-
-	const volume2 = document.getElementById("generalnewItemMonitorNotificationVolume");
-	volume2.value = Number(appSettings.general.newItemMonitorNotificationVolume);
-	volume2.addEventListener("change", function () {
-		appSettings.general.newItemMonitorNotificationVolume = volume2.value;
 		chrome.storage.local.set({ settings: appSettings });
 	});
 
