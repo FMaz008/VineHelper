@@ -50,6 +50,7 @@ function getDefaultSettings() {
 		},
 
 		general: {
+			country: null,
 			uuid: null,
 			topPagination: true,
 			displayFirstSeen: true,
@@ -64,8 +65,9 @@ function getDefaultSettings() {
 			displayNewItemNotifications: false,
 			newItemNotificationImage: true,
 			hiddenItemsCacheSize: 9,
-			newItemNotificationSound: false,
-			newItemMonitorNotificationSound: false,
+			newItemNotificationVolume: 0,
+			newItemMonitorNotificationVolume: 0,
+			newItemMonitorNotificationSoundCondition: 0,
 			newItemMonitorNotificationHiding: false,
 			newItemMonitorDuplicateImageHiding: false,
 		},
@@ -183,7 +185,10 @@ async function getSettings() {
 	}
 
 	//v2.7.6
-	if (appSettings.general.newItemMonitorNotificationVolume == undefined) {
+	if (
+		appSettings.general.newItemMonitorNotificationVolume == undefined ||
+		appSettings.general.newItemNotificationVolume == undefined
+	) {
 		appSettings.general.newItemMonitorNotificationVolume =
 			appSettings.general.newItemMonitorNotificationSound == 0 ? 0 : 1;
 
@@ -191,10 +196,7 @@ async function getSettings() {
 			appSettings.general.newItemMonitorNotificationSound == 2 ? 1 : 0;
 
 		appSettings.general.newItemMonitorNotificationSound = null; //No longer used.
-		saveSettings();
-	}
 
-	if (appSettings.general.newItemNotificationVolume == undefined) {
 		appSettings.general.newItemNotificationVolume = Number(appSettings.general.newItemNotificationSound);
 		appSettings.general.newItemNotificationSound = null; //No longer used.
 		saveSettings();
@@ -257,6 +259,11 @@ async function getSettings() {
 	showRuntime("BOOT: Thorvarium country-specific stylesheets injected");
 
 	//Send the country code to the Service Worker
+	if (appSettings.general.country == null || appSettings.general.country != vineCountry) {
+		//or undefined
+		appSettings.general.country = vineCountry;
+		saveSettings();
+	}
 	browser.runtime.sendMessage({
 		type: "vineCountry",
 		vineCountry: vineCountry,

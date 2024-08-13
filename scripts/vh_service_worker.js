@@ -81,6 +81,8 @@ async function init() {
 		Object.assign(appSettings, data.settings);
 	}
 
+	vineCountry = appSettings.general.country;
+
 	if (appSettings.general.newItemNotification) {
 		console.log("checking for new items...");
 		checkNewItems();
