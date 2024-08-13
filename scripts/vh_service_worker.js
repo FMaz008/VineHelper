@@ -1,12 +1,16 @@
 const DEBUG_MODE = false; // Will always display notification even if they are not new
 var appSettings = [];
 var vineCountry = null;
-var newItemCheckInterval = 30;
+var newItemCheckInterval = 0.5;
 const broadcastChannel = new BroadcastChannel("VineHelperChannel");
 
 if (typeof browser === "undefined") {
 	var browser = chrome;
 }
+
+//#####################################################
+//## PLUGIN SYSTEM
+//#####################################################
 
 //The plugin can't be run using the official release as they are bundled and can't be changed.
 //Check if the manifest.json pas the scripting permission, which is the case for the github code.
@@ -44,8 +48,9 @@ chrome.permissions.contains({ permissions: ["scripting"] }, (result) => {
 	}
 });
 
-//First, we need for the preboot.js file to send us the country of Vine the extension is running onto.
-//Until we have that data, the service worker will standown and retry on the next pass.
+//#####################################################
+//## LISTENERS
+//#####################################################
 browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 	if (data.type == "vineCountry") {
 		console.log("Received country from preboot.js: " + data.vineCountry);
@@ -54,10 +59,7 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 		//Passing the country to the Monitor tab
 		sendMessageToAllTabs({ type: "vineCountry", domain: data.vineCountry }, "Vine Country");
 	}
-	if (data.type == "keepAlive") {
-		//console.log("Received keep alive.");
-		sendResponse({ success: true });
-	}
+
 	if (data.type == "queryVineCountry") {
 		//If we know the country, reply it
 		if (vineCountry != null) {
@@ -67,8 +69,25 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 	}
 });
 
+chrome.alarms.onAlarm.addListener((alarm) => {
+	if (alarm.name === "checkNewItems") {
+		if (appSettings == undefined || !appSettings.general.newItemNotification) {
+			return; //Not setup to check for notifications. Will try again in 30 secs.
+		}
+		checkNewItems();
+	}
+});
+
+//#####################################################
+//## BUSINESS LOGIC
+//#####################################################
+
 //Load the settings, if no settings, try again in 10 sec
 async function init() {
+	//Create an alarm task to keep the service worker alive
+	//browser.alarms.create("keepAlive", { periodInMinutes: 1 }); // Adjust the interval as needed
+
+	//Obtain appSettings
 	const data = await chrome.storage.local.get("settings");
 
 	if (data == null || Object.keys(data).length === 0) {
@@ -81,26 +100,16 @@ async function init() {
 		Object.assign(appSettings, data.settings);
 	}
 
+	//Set the country
 	vineCountry = appSettings.general.country;
 
-	if (appSettings.general.newItemNotification) {
-		console.log("checking for new items...");
-		checkNewItems();
-	}
+	//Check for new items (if the option is disabled the method will return)
+	browser.alarms.create("checkNewItems", { periodInMinutes: newItemCheckInterval });
 }
 
 init();
 
 async function checkNewItems() {
-	//Check for new items again in 30 seconds.
-	setTimeout(function () {
-		checkNewItems();
-	}, newItemCheckInterval * 1000);
-
-	if (appSettings == undefined || !appSettings.general.newItemNotification) {
-		return; //Not setup to check for notifications. Will try again in 30 secs.
-	}
-
 	let arrJSON = {
 		api_version: 4,
 		country: vineCountry,
@@ -174,18 +183,21 @@ async function sendMessageToAllTabs(data, debugInfo) {
 	try {
 		broadcastChannel.postMessage(data);
 	} catch (e) {
-		//Do nothing
+		if (DEBUG_MODE) {
+			console.error("Error posting message to broadcastChannel:", e);
+		}
 	}
 
 	//Send to other tabs
 	if (appSettings?.general.displayNewItemNotifications) {
-		browser.tabs.query({ currentWindow: true }, function (tabs) {
-			tabs.forEach(function (tab) {
+		try {
+			const tabs = await browser.tabs.query({ currentWindow: true });
+			const regex = /^.+?amazon\.([a-z.]+).*\/vine\/.*$/;
+			tabs.forEach((tab) => {
 				if (tab) {
 					//Check to make sure this is a VineHelper tab:
-					const regex = /^.+?amazon\.([a-z.]+).*\/vine\/.*$/;
-					const isMatch = regex.test(tab.url);
-					if (tab.url != undefined && isMatch) {
+					const match = regex.exec(tab.url);
+					if (tab.url != undefined && match) {
 						if (DEBUG_MODE) {
 							console.log("Sending message to tab " + tab.id);
 							console.log(tab.url);
@@ -194,11 +206,17 @@ async function sendMessageToAllTabs(data, debugInfo) {
 						try {
 							browser.tabs.sendMessage(tab.id, data);
 						} catch (e) {
-							//Do nothing
+							if (DEBUG_MODE) {
+								console.error("Error sending message to tab:", e);
+							}
 						}
 					}
 				}
 			});
-		});
+		} catch (error) {
+			if (DEBUG_MODE) {
+				console.error("Error querying tabs:", error);
+			}
+		}
 	}
 }

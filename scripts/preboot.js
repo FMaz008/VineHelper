@@ -268,11 +268,6 @@ async function getSettings() {
 		type: "vineCountry",
 		vineCountry: vineCountry,
 	});
-	setInterval(async () => {
-		browser.runtime.sendMessage({
-			type: "keepAlive",
-		});
-	}, 25000);
 
 	let manifest = chrome.runtime.getManifest();
 	appVersion = manifest.version;

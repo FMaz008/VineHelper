@@ -3,10 +3,7 @@
 	"name": "Amazon Vine Helper",
 	"description": "Improve the Amazon Vine experience.",
 	"version": "2.7.5",
-	"permissions": [
-		"storage",
-		"tabs"
-	],
+	"permissions": ["alarms", "storage", "tabs"],
 	"icons": {
 		"32": "resource/image/icon-32.png",
 		"48": "resource/image/icon-48.png",

@@ -4,6 +4,7 @@
 	"description": "Improve the Amazon Vine experience.",
 	"version": "2.7.5",
 	"permissions": [
+		"alarms",
 		"storage",
 		"tabs",
 		"scripting",
