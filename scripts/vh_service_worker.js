@@ -92,16 +92,6 @@ async function init() {
 init();
 
 async function checkNewItems() {
-	//Repeat another check in 60 seconds.
-
-	if (vineCountry == null) {
-		console.log("Country not received from a preboot.js yet. Waiting 10 sec...");
-		setTimeout(function () {
-			checkNewItems();
-		}, 10000);
-		return;
-	}
-
 	//Check for new items again in 30 seconds.
 	setTimeout(function () {
 		checkNewItems();
@@ -181,7 +171,11 @@ async function checkNewItems() {
 
 async function sendMessageToAllTabs(data, debugInfo) {
 	//Send to the notification window
-	broadcastChannel.postMessage(data);
+	try {
+		broadcastChannel.postMessage(data);
+	} catch (e) {
+		//Do nothing
+	}
 
 	//Send to other tabs
 	if (appSettings?.general.displayNewItemNotifications) {
@@ -196,7 +190,12 @@ async function sendMessageToAllTabs(data, debugInfo) {
 							console.log("Sending message to tab " + tab.id);
 							console.log(tab.url);
 						}
-						browser.tabs.sendMessage(tab.id, data);
+
+						try {
+							browser.tabs.sendMessage(tab.id, data);
+						} catch (e) {
+							//Do nothing
+						}
 					}
 				}
 			});
