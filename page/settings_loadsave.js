@@ -1,6 +1,7 @@
 //Reminder: This script is executed from the extension popup.
 //          The console used is the browser console, not the inspector console.
 
+const arrSounds = ["notification", "upgrade", "vintage-horn"];
 var appSettings = {};
 
 async function loadSettings() {
@@ -8,6 +9,8 @@ async function loadSettings() {
 	Object.assign(appSettings, data.settings);
 }
 loadSettings();
+
+console.log(appSettings);
 
 function setCB(key, value) {
 	let keyE = CSS.escape(key);
@@ -29,23 +32,25 @@ function getCB(key) {
 	return cb.checked == true;
 }
 
-function handleChildrenOptions(parent_key) {
-	let key = CSS.escape(parent_key);
-	let parentObj = document.querySelector(key);
-
-	//$(parentObj).next("div").children("label").toggle();
-}
-
 function handleDynamicFields(key) {
 	handleDependantChildCheckBoxes("hiddenTab.active", ["hiddenTab.remote"]);
 
 	handleDependantChildCheckBoxes("general.displayFirstSeen", ["general.bookmark"]);
 
-	handleDependantChildCheckBoxes("general.newItemNotification", ["general.displayNewItemNotifications"]);
+	handleDependantChildCheckBoxes("notification.active", [
+		"notification.screen.active",
+		"notification.monitor.highlight.sound",
+		"notification.monitor.highlight.volume",
+		"notification.monitor.regular.sound",
+		"notification.monitor.regular.volume",
+		"notification.monitor.hideList",
+		"notification.monitor.hideDuplicateThumbnail",
+	]);
 
-	handleDependantChildCheckBoxes("general.displayNewItemNotifications", [
-		"general.newItemNotificationImage",
-		"general.newItemNotificationVolume",
+	handleDependantChildCheckBoxes("notification.screen.active", [
+		"notification.screen.thumbnail",
+		"notification.screen.regular.sound",
+		"notification.screen.regular.volume",
 	]);
 }
 function handleDependantChildCheckBoxes(parentChk, arrChilds) {
@@ -53,8 +58,12 @@ function handleDependantChildCheckBoxes(parentChk, arrChilds) {
 	let checked = document.querySelector(`input[name='${keyE}']`).checked;
 
 	for (i = 0; i < arrChilds.length; i++) {
-		keyF = CSS.escape(arrChilds[i]);
-		document.querySelector(`[name='${keyF}']`).disabled = !checked;
+		const keyF = CSS.escape(arrChilds[i]);
+		const obj = document.querySelector(`[name='${keyF}']`);
+		if (obj == null) {
+			throw new Error("Element name='" + keyF + "' does not exist.");
+		}
+		obj.disabled = !checked;
 	}
 }
 
@@ -138,85 +147,37 @@ function init() {
 		});
 	}
 
-	const volume1 = document.getElementById("generalnewItemNotificationVolume");
-	const volume2 = document.getElementById("generalnewItemMonitorNotificationVolume");
-	const btnPlayScreenNotification = document.getElementById("playScreenNotification");
-	btnPlayScreenNotification.addEventListener("click", function () {
-		const audioElement = new Audio(chrome.runtime.getURL("resource/sound/notification.mp3"));
-		const handleEnded = () => {
-			audioElement.removeEventListener("ended", handleEnded); // Remove the event listener
-			audioElement.remove(); // Remove the audio element from the DOM
-		};
-		audioElement.addEventListener("ended", handleEnded);
-		audioElement.volume = Number(volume1.value);
-		audioElement.play();
-	});
-	const btnPlayMonitorNotification = document.getElementById("playMonitorNotification");
-	btnPlayMonitorNotification.addEventListener("click", function () {
-		const audioElement = new Audio(chrome.runtime.getURL("resource/sound/notification.mp3"));
-		const handleEnded = () => {
-			audioElement.removeEventListener("ended", handleEnded); // Remove the event listener
-			audioElement.remove(); // Remove the audio element from the DOM
-		};
-		audioElement.addEventListener("ended", handleEnded);
-		audioElement.volume = Number(volume2.value);
-		audioElement.play();
-	});
-
 	//###################
 	//## Load/save settings:
 
 	//Sliders
+	manageSlider("notification.screen.regular.volume");
+	manageSlider("notification.monitor.highlight.volume");
+	manageSlider("notification.monitor.regular.volume");
 
-	volume1.value = Number(appSettings.general.newItemNotificationVolume);
-	volume1.addEventListener("change", function () {
-		appSettings.general.newItemNotificationVolume = volume1.value;
-		chrome.storage.local.set({ settings: appSettings });
-	});
+	//Select boxes
+	manageSelectBox("general.hiddenItemsCacheSize");
+	manageSelectBox("general.verbosePaginationStartPadding");
+	manageSelectBox("notification.monitor.regular.sound");
+	manageSelectBox("notification.monitor.highlight.sound");
+	manageSelectBox("notification.screen.regular.sound");
 
-	volume2.value = Number(appSettings.general.newItemMonitorNotificationVolume);
-	volume2.addEventListener("change", function () {
-		appSettings.general.newItemMonitorNotificationVolume = volume2.value;
-		chrome.storage.local.set({ settings: appSettings });
-	});
-
-	//hiddenItemsCacheSize
-	var select = document.getElementById("hiddenItemsCacheSize");
-	for (var i = 0; i < select.options.length; i++) {
-		if (select.options[i].value == appSettings.general.hiddenItemsCacheSize) {
-			select.options[i].selected = true;
-		}
-	}
-	document.getElementById("hiddenItemsCacheSize").onchange = async function () {
-		appSettings.general.hiddenItemsCacheSize = document.getElementById("hiddenItemsCacheSize").value;
-		await chrome.storage.local.set({ settings: appSettings });
-	};
-
-	//general.verbosePaginationStartPadding
-	select = document.getElementById("verbosePaginationStartPadding");
-	for (i = 0; i < select.options.length; i++) {
-		if (select.options[i].value == appSettings.general.verbosePaginationStartPadding) {
-			select.options[i].selected = true;
-		}
-	}
-	document.getElementById("verbosePaginationStartPadding").onchange = async function () {
-		appSettings.general.verbosePaginationStartPadding = document.getElementById(
-			"verbosePaginationStartPadding"
-		).value;
-		await chrome.storage.local.set({ settings: appSettings });
-	};
-
-	//general.newItemMonitorNotificationSound
-	const soundCondition = document.getElementById("newItemMonitorNotificationSoundCondition");
-	for (i = 0; i < soundCondition.options.length; i++) {
-		if (soundCondition.options[i].value == appSettings.general.newItemMonitorNotificationSoundCondition) {
-			soundCondition.options[i].selected = true;
-		}
-	}
-	soundCondition.onchange = async function () {
-		appSettings.general.newItemMonitorNotificationSoundCondition = soundCondition.value;
-		await chrome.storage.local.set({ settings: appSettings });
-	};
+	//Play buttons
+	managePlayButton(
+		"playScreenNotification",
+		"notification.screen.regular.sound",
+		"notification.screen.regular.volume"
+	);
+	managePlayButton(
+		"playMonitorHighlightNotification",
+		"notification.monitor.highlight.sound",
+		"notification.monitor.highlight.volume"
+	);
+	managePlayButton(
+		"playMonitorRegularNotification",
+		"notification.monitor.regular.sound",
+		"notification.monitor.regular.volume"
+	);
 
 	//UUID:
 	key = CSS.escape("generaluuid");
@@ -328,101 +289,23 @@ function init() {
 		chrome.storage.local.set({ settings: appSettings });
 	}
 
-	document.getElementById("keyBindingsNextPage").value = appSettings.keyBindings.nextPage;
-	document.getElementById("keyBindingsPreviousPage").value = appSettings.keyBindings.previousPage;
-	document.getElementById("keyBindingsRFYPage").value = appSettings.keyBindings.RFYPage;
-	document.getElementById("keyBindingsAFAPage").value = appSettings.keyBindings.AFAPage;
-	document.getElementById("keyBindingsAIPage").value = appSettings.keyBindings.AIPage;
-	document.getElementById("keyBindingsAIPage2").value =
-		appSettings.keyBindings.AIPage2 == undefined ? "" : appSettings.keyBindings.AIPage2;
-	document.getElementById("keyBindingsAIPage3").value =
-		appSettings.keyBindings.AIPage3 == undefined ? "" : appSettings.keyBindings.AIPage3;
-	document.getElementById("keyBindingsAIPage4").value =
-		appSettings.keyBindings.AIPage4 == undefined ? "" : appSettings.keyBindings.AIPage4;
-	document.getElementById("keyBindingsAIPage5").value =
-		appSettings.keyBindings.AIPage5 == undefined ? "" : appSettings.keyBindings.AIPage5;
-	document.getElementById("keyBindingsAIPage6").value =
-		appSettings.keyBindings.AIPage6 == undefined ? "" : appSettings.keyBindings.AIPage6;
-	document.getElementById("keyBindingsAIPage7").value =
-		appSettings.keyBindings.AIPage7 == undefined ? "" : appSettings.keyBindings.AIPage7;
-	document.getElementById("keyBindingsAIPage8").value =
-		appSettings.keyBindings.AIPage8 == undefined ? "" : appSettings.keyBindings.AIPage8;
-	document.getElementById("keyBindingsAIPage9").value =
-		appSettings.keyBindings.AIPage9 == undefined ? "" : appSettings.keyBindings.AIPage9;
-	document.getElementById("keyBindingsAIPage10").value =
-		appSettings.keyBindings.AIPage10 == undefined ? "" : appSettings.keyBindings.AIPage10;
-	document.getElementById("keyBindingsHideAll").value = appSettings.keyBindings.hideAll;
-	document.getElementById("keyBindingsShowAll").value = appSettings.keyBindings.showAll;
-	document.getElementById("keyBindingsDebug").value = appSettings.keyBindings.debug;
-
-	document.getElementById("keyBindingsNextPage").addEventListener("change", function () {
-		appSettings.keyBindings.nextPage = this.value;
-		chrome.storage.local.set({ settings: appSettings });
-	});
-	document.getElementById("keyBindingsPreviousPage").addEventListener("change", function () {
-		appSettings.keyBindings.previousPage = this.value;
-		chrome.storage.local.set({ settings: appSettings });
-	});
-	document.getElementById("keyBindingsRFYPage").addEventListener("change", function () {
-		appSettings.keyBindings.RFYPage = this.value;
-		chrome.storage.local.set({ settings: appSettings });
-	});
-	document.getElementById("keyBindingsAFAPage").addEventListener("change", function () {
-		appSettings.keyBindings.AFAPage = this.value;
-		chrome.storage.local.set({ settings: appSettings });
-	});
-	document.getElementById("keyBindingsAIPage").addEventListener("change", function () {
-		appSettings.keyBindings.AIPage = this.value;
-		chrome.storage.local.set({ settings: appSettings });
-	});
-	document.getElementById("keyBindingsAIPage2").addEventListener("change", function () {
-		appSettings.keyBindings.AIPage2 = this.value;
-		chrome.storage.local.set({ settings: appSettings });
-	});
-	document.getElementById("keyBindingsAIPage3").addEventListener("change", function () {
-		appSettings.keyBindings.AIPage3 = this.value;
-		chrome.storage.local.set({ settings: appSettings });
-	});
-	document.getElementById("keyBindingsAIPage4").addEventListener("change", function () {
-		appSettings.keyBindings.AIPage4 = this.value;
-		chrome.storage.local.set({ settings: appSettings });
-	});
-	document.getElementById("keyBindingsAIPage5").addEventListener("change", function () {
-		appSettings.keyBindings.AIPage5 = this.value;
-		chrome.storage.local.set({ settings: appSettings });
-	});
-	document.getElementById("keyBindingsAIPage6").addEventListener("change", function () {
-		appSettings.keyBindings.AIPage6 = this.value;
-		chrome.storage.local.set({ settings: appSettings });
-	});
-	document.getElementById("keyBindingsAIPage7").addEventListener("change", function () {
-		appSettings.keyBindings.AIPage7 = this.value;
-		chrome.storage.local.set({ settings: appSettings });
-	});
-	document.getElementById("keyBindingsAIPage8").addEventListener("change", function () {
-		appSettings.keyBindings.AIPage8 = this.value;
-		chrome.storage.local.set({ settings: appSettings });
-	});
-	document.getElementById("keyBindingsAIPage9").addEventListener("change", function () {
-		appSettings.keyBindings.AIPage9 = this.value;
-		chrome.storage.local.set({ settings: appSettings });
-	});
-	document.getElementById("keyBindingsAIPage10").addEventListener("change", function () {
-		appSettings.keyBindings.AIPage10 = this.value;
-		chrome.storage.local.set({ settings: appSettings });
-	});
-	document.getElementById("keyBindingsHideAll").addEventListener("change", function () {
-		appSettings.keyBindings.hideAll = this.value;
-		chrome.storage.local.set({ settings: appSettings });
-	});
-	document.getElementById("keyBindingsShowAll").addEventListener("change", function () {
-		appSettings.keyBindings.showAll = this.value;
-		chrome.storage.local.set({ settings: appSettings });
-	});
-	document.getElementById("keyBindingsDebug").addEventListener("change", function () {
-		appSettings.keyBindings.debug = this.value;
-		chrome.storage.local.set({ settings: appSettings });
-	});
+	manageKeybindings("keyBindings.nextPage");
+	manageKeybindings("keyBindings.previousPage");
+	manageKeybindings("keyBindings.RFYPage");
+	manageKeybindings("keyBindings.AFAPage");
+	manageKeybindings("keyBindings.AIPage");
+	manageKeybindings("keyBindings.AIPage2");
+	manageKeybindings("keyBindings.AIPage3");
+	manageKeybindings("keyBindings.AIPage4");
+	manageKeybindings("keyBindings.AIPage5");
+	manageKeybindings("keyBindings.AIPage6");
+	manageKeybindings("keyBindings.AIPage7");
+	manageKeybindings("keyBindings.AIPage8");
+	manageKeybindings("keyBindings.AIPage9");
+	manageKeybindings("keyBindings.AIPage10");
+	manageKeybindings("keyBindings.hideAll");
+	manageKeybindings("keyBindings.showAll");
+	manageKeybindings("keyBindings.debug");
 
 	//Keywords
 
@@ -466,18 +349,16 @@ function init() {
 	manageCheckboxSetting("general.displayVariantIcon");
 	manageCheckboxSetting("general.displayFirstSeen");
 	manageCheckboxSetting("general.bookmark");
-	manageCheckboxSetting("general.newItemNotification");
-	manageCheckboxSetting("general.displayNewItemNotifications");
-	//manageCheckboxSetting("general.newItemNotificationSound");
-	//manageCheckboxSetting("general.newItemMonitorNotificationSound");
-	manageCheckboxSetting("general.newItemMonitorNotificationHiding");
-	manageCheckboxSetting("general.newItemMonitorDuplicateImageHiding");
-	manageCheckboxSetting("general.newItemNotificationImage");
+	manageCheckboxSetting("notification.active");
+	manageCheckboxSetting("notification.screen.active");
+	manageCheckboxSetting("notification.screen.thumbnail");
+	manageCheckboxSetting("notification.monitor.hideList");
+	manageCheckboxSetting("notification.monitor.hideDuplicateThumbnail");
+	manageCheckboxSetting("notification.reduce");
 	manageCheckboxSetting("keyBindings.active");
 	manageCheckboxSetting("hiddenTab.active");
 	manageCheckboxSetting("hiddenTab.remote");
 	manageCheckboxSetting("pinnedTab.active");
-	manageCheckboxSetting("general.reduceNotifications");
 	manageCheckboxSetting("discord.active"); //Handled manually
 	manageCheckboxSetting("unavailableTab.active");
 	manageCheckboxSetting("unavailableTab.compactToolbar");
@@ -496,6 +377,70 @@ function init() {
 	manageCheckboxSetting("thorvarium.stripedCategories");
 	manageCheckboxSetting("thorvarium.limitedQuantityIcon");
 	manageCheckboxSetting("thorvarium.RFYAFAAITabs");
+}
+
+function manageKeybindings(key) {
+	const val = JSONGetPathValue(appSettings, key);
+	const obj = document.querySelector(`label[for='${key}'] input`);
+	if (obj == null) {
+		throw new Error("Keybinding input name='" + key + "' does not exist");
+	}
+	obj.value = val == null ? "" : val;
+
+	obj.addEventListener("change", async function () {
+		deepSet(appSettings, key, obj.value);
+		await chrome.storage.local.set({ settings: appSettings });
+	});
+}
+
+function manageSlider(key) {
+	const val = JSONGetPathValue(appSettings, key);
+	const volumeObj = document.querySelector(`label[for='${key}'] input`);
+	if (volumeObj == null) {
+		throw new Error("Slider input name='" + key + "' does not exist");
+	}
+	volumeObj.value = Number(val == null ? 0 : val);
+	volumeObj.addEventListener("change", async function () {
+		deepSet(appSettings, key, volumeObj.value);
+		await chrome.storage.local.set({ settings: appSettings });
+	});
+}
+function managePlayButton(btnId, selectName, volumeName) {
+	const btn = document.getElementById(btnId);
+	btn.addEventListener("click", function () {
+		const volumeObj = document.querySelector(`label[for='${volumeName}'] input`);
+		const selectObj = document.querySelector(`label[for='${selectName}'] select`);
+		if (selectObj.value == "0") {
+			return false;
+		}
+
+		const audioFilePath = "resource/sound/" + selectObj.value + ".mp3";
+		const audioElement = new Audio(chrome.runtime.getURL(audioFilePath));
+		const handleEnded = () => {
+			audioElement.removeEventListener("ended", handleEnded); // Remove the event listener
+			audioElement.remove(); // Remove the audio element from the DOM
+		};
+		audioElement.addEventListener("ended", handleEnded);
+		audioElement.volume = Number(volumeObj.value);
+		audioElement.play();
+	});
+}
+
+function manageSelectBox(key) {
+	const val = JSONGetPathValue(appSettings, key);
+	const keyE = CSS.escape(key);
+	const selectObj = document.querySelector(`label[for='${keyE}'] select`);
+
+	for (i = 0; i < selectObj.options.length; i++) {
+		if (selectObj.options[i].value == val) {
+			selectObj.options[i].selected = true;
+		}
+	}
+
+	selectObj.addEventListener("change", async function () {
+		deepSet(appSettings, key, selectObj.value);
+		await chrome.storage.local.set({ settings: appSettings });
+	});
 }
 
 function manageCheckboxSetting(key, def = null) {

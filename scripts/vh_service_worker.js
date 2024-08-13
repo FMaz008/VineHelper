@@ -71,7 +71,7 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 
 chrome.alarms.onAlarm.addListener((alarm) => {
 	if (alarm.name === "checkNewItems") {
-		if (appSettings == undefined || !appSettings.general.newItemNotification) {
+		if (appSettings == undefined || !appSettings.notification.active) {
 			return; //Not setup to check for notifications. Will try again in 30 secs.
 		}
 		checkNewItems();
@@ -179,7 +179,7 @@ async function checkNewItems() {
 }
 
 async function sendMessageToAllTabs(data, debugInfo) {
-	//Send to the notification window
+	//Send to the notification monitor tab
 	try {
 		broadcastChannel.postMessage(data);
 	} catch (e) {
@@ -188,8 +188,8 @@ async function sendMessageToAllTabs(data, debugInfo) {
 		}
 	}
 
-	//Send to other tabs
-	if (appSettings?.general.displayNewItemNotifications) {
+	//Send to other tabs for the on screen notification
+	if (appSettings?.notification.screen.active) {
 		try {
 			const tabs = await browser.tabs.query({ currentWindow: true });
 			const regex = /^.+?amazon\.([a-z.]+).*\/vine\/.*$/;

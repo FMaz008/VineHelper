@@ -61,15 +61,32 @@ function getDefaultSettings() {
 			displayVariantIcon: false,
 			versionInfoPopup: 0,
 			GDPRPopup: true,
-			newItemNotification: false,
-			displayNewItemNotifications: false,
-			newItemNotificationImage: true,
 			hiddenItemsCacheSize: 9,
-			newItemNotificationVolume: 0,
-			newItemMonitorNotificationVolume: 0,
-			newItemMonitorNotificationSoundCondition: 0,
-			newItemMonitorNotificationHiding: false,
-			newItemMonitorDuplicateImageHiding: false,
+		},
+
+		notification: {
+			active: false,
+			reduce: false,
+			screen: {
+				active: false,
+				thumbnail: true,
+				regular: {
+					sound: 0,
+					volume: 100,
+				},
+			},
+			monitor: {
+				hideList: false,
+				hideDuplicateThumbnail: false,
+				regular: {
+					sound: 0,
+					volume: 100,
+				},
+				highlight: {
+					sound: 0,
+					volume: 100,
+				},
+			},
 		},
 
 		keyBindings: {
@@ -185,22 +202,55 @@ async function getSettings() {
 	}
 
 	//v2.7.6
-	if (
-		appSettings.general.newItemMonitorNotificationVolume == undefined ||
-		appSettings.general.newItemNotificationVolume == undefined
-	) {
-		appSettings.general.newItemMonitorNotificationVolume =
-			appSettings.general.newItemMonitorNotificationSound == 0 ? 0 : 1;
+	if (appSettings.notification == undefined) {
+		console.log("Updating settings...");
+		//Convert the old settings to the new format
+		appSettings.notification = {
+			active: appSettings.general.newItemNotification,
+			reduce: appSettings.general.reduceNotifications,
+			screen: {
+				active: appSettings.general.displayNewItemNotifications,
+				thumbnail: appSettings.general.newItemNotificationImage,
+				regular: {
+					sound: "notification",
+					volume: 100,
+				},
+			},
+			monitor: {
+				hideList: appSettings.general.newItemMonitorNotificationHiding,
+				hideDuplicateThumbnail: appSettings.general.newItemMonitorDuplicateImageHiding,
+				regular: {
+					sound: "notification",
+					volume: appSettings.general.newItemMonitorNotificationSound == 2 ? 0 : 100,
+				},
+				highlight: {
+					sound: "notification",
+					volume: 100,
+				},
+			},
+		};
+		delete appSettings.general.newItemNotification;
+		delete appSettings.general.displayNewItemNotifications;
+		delete appSettings.general.newItemNotificationImage;
+		delete appSettings.general.newItemMonitorNotificationHiding;
+		delete appSettings.general.newItemMonitorDuplicateImageHiding;
+		delete appSettings.general.newItemMonitorNotificationSound;
+		delete appSettings.general.reduceNotifications;
+		delete appSettings.general.newItemNotificationVolume;
+		delete appSettings.general.newItemNotificationSound;
+		delete appSettings.general.newItemMonitorNotificationVolume;
+		delete appSettings.general.newItemMonitorNotificationSoundCondition;
 
-		appSettings.general.newItemMonitorNotificationSoundCondition =
-			appSettings.general.newItemMonitorNotificationSound == 2 ? 1 : 0;
+		delete appSettings.general.firstVotePopup;
+		delete appSettings.unavailableTab.consensusDiscard;
+		delete appSettings.unavailableTab.selfDiscard;
+		delete appSettings.unavailableTab.unavailableOpacity;
+		delete appSettings.unavailableTab.votingToolbar;
+		delete appSettings.unavailableTab.consensusThreshold;
 
-		appSettings.general.newItemMonitorNotificationSound = null; //No longer used.
-
-		appSettings.general.newItemNotificationVolume = Number(appSettings.general.newItemNotificationSound);
-		appSettings.general.newItemNotificationSound = null; //No longer used.
 		saveSettings();
 	}
+	console.log(appSettings);
 
 	//Load Thorvarium stylesheets
 	if (appSettings.thorvarium.mobileios) loadStyleSheet("node_modules/vine-styling/mobile/ios-with-bugfix.css");
@@ -442,7 +492,7 @@ async function saveSettings() {
 		}
 	}
 
-	if (!appSettings.general?.reduceNotifications) {
+	if (!appSettings.notification.reduce) {
 		let note = new ScreenNotification();
 		note.title = "Settings saved.";
 		note.lifespan = 3;

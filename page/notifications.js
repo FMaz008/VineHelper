@@ -111,7 +111,7 @@ async function init() {
 		Object.assign(appSettings, data.settings);
 	}
 
-	if (!appSettings.general.newItemNotification) {
+	if (!appSettings.notification.active) {
 		document.getElementById("status").innerHTML =
 			"<strong>Notifications disabled</strong> You need to enable the notifications for this window to work.";
 	}
@@ -138,7 +138,7 @@ async function setLocale(country) {
 		vineCurrency = vineLocales[country].currency;
 		vineDomain = vineDomains[country];
 
-		if (appSettings != undefined && appSettings.general.newItemNotification) {
+		if (appSettings != undefined && appSettings.notification.active) {
 			document.getElementById("status").innerHTML =
 				"<strong>Status: </strong><div class='vh-switch-32 vh-icon-switch-on'></div> Listening for notifications...";
 		}
@@ -157,13 +157,12 @@ async function setLocale(country) {
 
 function addItem(data) {
 	let { date, asin, title, search, img_url, domain, etv } = data;
-	let { hideKeywords, highlightKeywords, newItemMonitorNotificationHiding, newItemMonitorDuplicateImageHiding } =
-		appSettings.general;
+	let { hideKeywords, highlightKeywords } = appSettings.general;
 
 	//If the locale is not define, set it.
 	if (vineLocale == null) setLocale(domain);
 
-	if (newItemMonitorDuplicateImageHiding && imageUrls.has(img_url)) {
+	if (appSettings.notification.monitor.hideDuplicateThumbnail && imageUrls.has(img_url)) {
 		showRuntime("NOTIFICATION: item " + asin + " has a duplicate image and won't be shown.");
 		return;
 	}
@@ -172,7 +171,7 @@ function addItem(data) {
 	if (shouldHighlight)
 		showRuntime("NOTIFICATION: item " + asin + " match the highlight list and will be highlighed.");
 
-	if (!shouldHighlight && newItemMonitorNotificationHiding && keywordMatch(hideKeywords, title)) {
+	if (!shouldHighlight && appSettings.notification.monitor.hideList && keywordMatch(hideKeywords, title)) {
 		showRuntime("NOTIFICATION: item " + asin + " match the hidden list and won't be shown.");
 		return;
 	}
@@ -232,21 +231,33 @@ function formatDate(date) {
 }
 
 function playSoundIfEnabled(highlightMatch = false) {
-	const soundSetting = appSettings.general.newItemMonitorNotificationSoundCondition;
-	if (soundSetting == SOUND_SETTING_ALWAYS || (soundSetting == SOUND_SETTING_KEYWORD && highlightMatch)) {
-		if (!muteSound) {
-			// Don't play the notification sound again within 30 sec.
-			muteSound = true;
-			const audioElement = new Audio(browser.runtime.getURL("resource/sound/notification.mp3"));
-			const handleEnded = () => {
-				audioElement.removeEventListener("ended", handleEnded); // Remove the event listener
-				audioElement.remove(); // Remove the audio element from the DOM
-			};
-			audioElement.addEventListener("ended", handleEnded);
-			audioElement.volume = Number(appSettings.general.newItemMonitorNotificationVolume);
-			audioElement.play();
-		}
+	if (muteSound) {
+		return false;
 	}
+
+	let volume, fileName;
+	if (highlightMatch) {
+		volume = appSettings.notification.monitor.highlight.volume;
+		fileName = appSettings.notification.monitor.highlight.sound;
+	} else {
+		//Regular notification
+		volume = appSettings.notification.monitor.regular.volume;
+		fileName = appSettings.notification.monitor.regular.sound;
+	}
+
+	if (fileName == "0" || volume == 0) {
+		return false;
+	}
+
+	muteSound = true; // Don't play the notification sound again within 30 sec.
+	const audioElement = new Audio(browser.runtime.getURL("resource/sound/" + fileName + ".mp3"));
+	const handleEnded = () => {
+		audioElement.removeEventListener("ended", handleEnded); // Remove the event listener
+		audioElement.remove(); // Remove the audio element from the DOM
+	};
+	audioElement.addEventListener("ended", handleEnded);
+	audioElement.volume = Number(volume);
+	audioElement.play();
 }
 
 function itemID(asin) {

@@ -771,7 +771,7 @@ window.addEventListener("message", async function (event) {
 		tile.getToolbar().setETV(event.data.data.etv, event.data.data.etv, true);
 
 		//Show a notification
-		if (!appSettings.general.reduceNotifications) {
+		if (!appSettings.notification.reduce) {
 			const note = new ScreenNotification();
 			note.title = "ETV data shared";
 			note.lifespan = 2;
@@ -869,7 +869,7 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 	}
 
 	if (data.type == "newItemCheck") {
-		if (appSettings.general.displayNewItemNotifications) {
+		if (appSettings.notification.screen.active) {
 			//Display a notification that we have checked for items.
 			let note = new ScreenNotification();
 			note.template = "view/notification_loading.html";
@@ -882,14 +882,14 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 		if (
 			data.index < 10 && //Limit the notification to the top 10 most recents
 			vineBrowsingListing && //Only show notification on listing pages
-			appSettings.general.displayNewItemNotifications
+			appSettings.notification.screen.active
 		) {
 			let { date, asin, title, search, img_url, domain, etv } = data;
 
 			//Generate the content to be displayed in the notification
 			const prom = await Tpl.loadFile("/view/notification_new_item.html");
 
-			Tpl.setIf("show_image", appSettings.general.newItemNotificationImage);
+			Tpl.setIf("show_image", appSettings.notification.screen.thumbnail);
 			Tpl.setVar("date", date);
 			Tpl.setVar("search", search);
 			Tpl.setVar("asin", asin);
@@ -902,9 +902,12 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 			note2.lifespan = 60;
 
 			//Play the notification sound
-			if (appSettings.general.newItemNotificationVolume > 0) {
-				note2.sound = "resource/sound/notification.mp3";
-				note2.volume = appSettings.general.newItemNotificationVolume;
+			if (
+				appSettings.notification.screen.regular.volume > 0 &&
+				appSettings.notification.screen.regular.sound != "0"
+			) {
+				note2.sound = "resource/sound/" + appSettings.notification.screen.regular.sound + ".mp3";
+				note2.volume = appSettings.notification.screen.regular.volume;
 			}
 			note2.content = Tpl.render(prom);
 			Notifications.pushNotification(note2);
