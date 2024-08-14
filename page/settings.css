@@ -65,15 +65,17 @@ label {
 	margin: 1px;
 	padding: 4px;
 	cursor: pointer;
-	font-size: 16px;
 }
 
 .tabulation {
 	border-left: 3px solid #000;
-	margin-left: 14px;
+	margin-left: 10px;
 	padding-left: 5px;
 }
 
+legend {
+	font-weight: bold;
+}
 .setting-section {
 	font-weight: bold;
 	font-size: 16pt;

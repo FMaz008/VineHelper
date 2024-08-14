@@ -10,63 +10,6 @@ async function loadSettings() {
 }
 loadSettings();
 
-console.log(appSettings);
-
-function setCB(key, value) {
-	let keyE = CSS.escape(key);
-
-	let cb = document.querySelector(`input[name='${keyE}']`);
-	try {
-		cb.checked = value;
-	} catch (E) {
-		console.log(E);
-		console.log(key);
-	}
-	handleDynamicFields(key);
-}
-
-function getCB(key) {
-	key = CSS.escape(key);
-	let cb = document.querySelector(`input[name='${key}']`);
-
-	return cb.checked == true;
-}
-
-function handleDynamicFields(key) {
-	handleDependantChildCheckBoxes("hiddenTab.active", ["hiddenTab.remote"]);
-
-	handleDependantChildCheckBoxes("general.displayFirstSeen", ["general.bookmark"]);
-
-	handleDependantChildCheckBoxes("notification.active", [
-		"notification.screen.active",
-		"notification.monitor.highlight.sound",
-		"notification.monitor.highlight.volume",
-		"notification.monitor.regular.sound",
-		"notification.monitor.regular.volume",
-		"notification.monitor.hideList",
-		"notification.monitor.hideDuplicateThumbnail",
-	]);
-
-	handleDependantChildCheckBoxes("notification.screen.active", [
-		"notification.screen.thumbnail",
-		"notification.screen.regular.sound",
-		"notification.screen.regular.volume",
-	]);
-}
-function handleDependantChildCheckBoxes(parentChk, arrChilds) {
-	let keyE = CSS.escape(parentChk);
-	let checked = document.querySelector(`input[name='${keyE}']`).checked;
-
-	for (i = 0; i < arrChilds.length; i++) {
-		const keyF = CSS.escape(arrChilds[i]);
-		const obj = document.querySelector(`[name='${keyF}']`);
-		if (obj == null) {
-			throw new Error("Element name='" + keyF + "' does not exist.");
-		}
-		obj.disabled = !checked;
-	}
-}
-
 async function drawDiscord() {
 	//Show or hide the discord options
 	document.querySelector("#discordOptions").style.display = appSettings.discord.active ? "block" : "none";
@@ -116,6 +59,8 @@ function init() {
 		}
 	});
 
+	//##########################
+	// TABS
 	//Bind the click event for the tabs
 	document.querySelectorAll("#tabs > ul li").forEach(function (item) {
 		item.onclick = function (event) {
@@ -124,12 +69,7 @@ function init() {
 			this.classList.add("active");
 		};
 	});
-	//Prevent links from being clickable
-	document.querySelectorAll("#tabs > ul li a").forEach(function (item) {
-		item.onclick = function (event) {
-			if (event.target.href == "#") event.preventDefault();
-		};
-	});
+
 	selectCurrentTab(true);
 	drawDiscord();
 
@@ -146,6 +86,33 @@ function init() {
 			setTimeout(() => drawDiscord(), 1);
 		});
 	}
+
+	//When a checkbox in the legend of a fieldset if changed,
+	//enable or disable all the field contained in that fieldset.
+	document.querySelectorAll("fieldset").forEach((fieldset) => {
+		const checkbox = fieldset.querySelector('legend input[type="checkbox"]');
+
+		if (checkbox) {
+			// Function to enable/disable the fieldset contents
+			const toggleFieldsetContent = () => {
+				const isChecked = checkbox.checked;
+				const elements = fieldset.querySelectorAll("input, select, button");
+
+				elements.forEach((element) => {
+					// Skip the checkbox itself in the legend
+					if (element !== checkbox) {
+						element.disabled = !isChecked;
+					}
+				});
+			};
+
+			// Add the event listener to the checkbox
+			checkbox.addEventListener("change", toggleFieldsetContent);
+
+			// Initial state check
+			toggleFieldsetContent();
+		}
+	});
 
 	//###################
 	//## Load/save settings:
@@ -444,30 +411,32 @@ function manageSelectBox(key) {
 }
 
 function manageCheckboxSetting(key, def = null) {
-	let val = def === null ? JSONGetPathValue(appSettings, key) : def;
-	setCB(key, val); //Initial setup
+	const val = def === null ? JSONGetPathValue(appSettings, key) : def;
+	const keyE = CSS.escape(key);
+	const checkObj = document.querySelector(`input[name='${keyE}']`);
+	checkObj.checked = val;
 
-	let keyE = CSS.escape(key);
+	//Trigger the change event so the fieldset will update accordingly.
+	const event = new Event("change");
+	checkObj.dispatchEvent(event);
+
+	//Saving the change
+	checkObj.addEventListener("change", async function () {
+		//Change in value
+		deepSet(appSettings, key, checkObj.checked);
+		await chrome.storage.local.set({ settings: appSettings });
+	});
 
 	//Clicking the label will check the checkbox
 	document.querySelector(`label[for='${keyE}']`).onclick = async function (event) {
-		if (event.target.nodeName == "INPUT") return false;
+		if (event.target.nodeName == "INPUT") {
+			return false;
+		}
 
 		//Change the value
-		const newValue = getCB(key);
-		setCB(key, !newValue);
-
-		const e = new Event("change");
 		const element = document.querySelector(`input[name='${keyE}']`);
-		element.dispatchEvent(e);
+		element.click();
 	}.bind(keyE);
-	document.querySelector(`input[name='${keyE}']`).onchange = async function () {
-		//Change in value
-		handleDynamicFields(key);
-		const newValue = getCB(key);
-		deepSet(appSettings, key, newValue);
-		await chrome.storage.local.set({ settings: appSettings });
-	};
 }
 
 //Utility functions
@@ -475,19 +444,6 @@ function manageCheckboxSetting(key, def = null) {
 function isNumeric(n) {
 	return !isNaN(parseFloat(n)) && isFinite(n);
 }
-
-/*
-function JSONPathToObject(path, value) {
-    const arrPathLvl = path.split(".");
-    var jsonObj = "";
-    var jsonEnd = "";
-    for (let i = 0; i < arrPathLvl.length; i++) {
-        jsonObj = jsonObj + '{"' + arrPathLvl[i] + '":';
-        jsonEnd = "}" + jsonEnd;
-    }
-    return JSON.parse(jsonObj + value + jsonEnd);
-}
-*/
 
 const deepSet = (obj, path, val) => {
 	path = path.replaceAll("[", ".[");
@@ -522,11 +478,3 @@ function JSONGetPathValue(obj, path) {
 		return null;
 	}
 }
-
-/*
-Does't work in popup window for some reason
-$("a.tips").each(function () {
-	if($(this).attr("title") != "tooltip")
-		$(this).tooltip({ tooltipClass: "ui-tooltip" });
-});
-*/

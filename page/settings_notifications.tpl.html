@@ -1,27 +1,34 @@
-<div class="setting-container">
-	<label for="notification.active">
-		<input type="checkbox" name="notification.active" value="1" />
-		Check for New Items Every 30 sec
-	</label>
-	<div class="setting-summary">
-		<div class="vh-toolbar-icon vh-icon-question"></div>
-		This feature anonymously exchange data with Vine Helper's server. When a new item is reported to the Vine Helper
-		server, the app will query the server to check for new items. Note: False positives will occur when RFY or gold
-		status items are reported.
-	</div>
-</div>
-<div class="tabulation">
-	<div class="setting-container">
-		<label for="notification.screen.active">
-			<input type="checkbox" name="notification.screen.active" value="1" />
-			Display on Screen Notifications
+<fieldset>
+	<legend>
+		<label for="notification.active">
+			<input type="checkbox" name="notification.active" value="1" />
+			Check for New Items Every 30 sec
 		</label>
+	</legend>
+
+	<div class="setting-container">
 		<div class="setting-summary">
 			<div class="vh-toolbar-icon vh-icon-question"></div>
-			Will display on screen notification if you are on a listing page.
+			This feature anonymously exchange data with Vine Helper's server. When a new item is reported to the Vine
+			Helper server, the app will query the server to check for new items. Note: False positives will occur when
+			RFY or gold status items are reported.
 		</div>
 	</div>
-	<div class="tabulation">
+
+	<fieldset>
+		<legend>
+			<label for="notification.screen.active">
+				<input type="checkbox" name="notification.screen.active" value="1" />
+				Display on Screen Notifications
+			</label>
+		</legend>
+		<div class="setting-container">
+			<div class="setting-summary">
+				<div class="vh-toolbar-icon vh-icon-question"></div>
+				Will display on screen notification if you are on a listing page.
+			</div>
+		</div>
+
 		<div class="setting-container">
 			<label for="notification.screen.thumbnail">
 				<input type="checkbox" name="notification.screen.thumbnail" value="1" />
@@ -58,18 +65,18 @@
 				This plays a notification sound when new items are reported.
 			</div>
 		</div>
-	</div>
+	</fieldset>
 
-	<div class="setting-container">
-		<label for="">
+	<fieldset>
+		<legend>
 			<a id="notificationsMonitor" href="" target="_blank">Notifications Monitor </a>
-		</label>
-		<div class="setting-summary">
-			<div class="vh-toolbar-icon vh-icon-question"></div>
-			This will open a dedicated tab were notifications will appear and not vanish after 60 seconds.
+		</legend>
+		<div class="setting-container">
+			<div class="setting-summary">
+				<div class="vh-toolbar-icon vh-icon-question"></div>
+				This will open a dedicated tab were notifications will appear and not vanish after 60 seconds.
+			</div>
 		</div>
-	</div>
-	<div class="tabulation">
 		Match Highlight KW
 		<div class="tabulation">
 			<div class="setting-container">
@@ -144,8 +151,8 @@
 				present in the notification tab.
 			</div>
 		</div>
-	</div>
-</div>
+	</fieldset>
+</fieldset>
 
 <div class="setting-container">
 	<label for="notification.reduce">
