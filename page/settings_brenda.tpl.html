@@ -22,14 +22,15 @@
 
 	<div id="discordOptions">
 		<div id="discord-guid-link">
-			<label>Step 1. Join the Discord Server:</label>
-			<div class="padded">
-				<br /><a href="https://discord.gg/amazonvine" target="_blank">https://discord.gg/amazonvine</a>
-				<br />
-				<br />
-			</div>
-			<label>Step 2. Obtain Your API-Token</label>
-			<div class="padded">
+			<fieldset>
+				<legend>Step 1. Join the Discord Server</legend>
+
+				Join the Discord server: <a href="https://discord.gg/amazonvine" target="_blank">https://discord.gg/amazonvine</a>
+			</fieldset>
+
+			<fieldset>
+				<legend>Step 2. Obtain Your API-Token</legend>
+
 				<ul>
 					<li>
 						Go to any channel on the server and type the command:
@@ -38,23 +39,24 @@
 					<li>A bot named Karen will reply with an API token.</li>
 					<li>Copy &amp; Paste the API Token into Step 3.</li>
 				</ul>
-				<br />
-			</div>
-			<label>Step 3. Link Your API-Token:</label>
-			<div class="padded">
-				<br />API Token:
+			</fieldset>
+
+			<fieldset>
+				<legend>Step 3. Link Your API-Token</legend>
+
+				API Token:
 				<input type="text" id="discord.guid" value="" size="30" maxlength="50" />
 				<input type="button" id="saveGUID" value="Link" />
-			</div>
+			</fieldset>
 		</div>
 		<div id="discord-guid-unlink">
-			<div class="padded">
-				<label>You already linked your Discord account!</label>
-				<br />API Token:
+			<fieldset>
+				<legend>Discord account linked!</legend>
+
+				API Token:
 				<span id="guid-txt" style="word-wrap: break-word"></span>
-				<input type="button" id="unlinkGUID" value="Unlink" /><br />
-				<br />
-			</div>
+				<input type="button" id="unlinkGUID" value="Unlink" />
+			</fieldset>
 		</div>
 	</div>
 </fieldset>
