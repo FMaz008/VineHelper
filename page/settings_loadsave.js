@@ -39,26 +39,6 @@ function selectCurrentTab(firstRun = false) {
 	document.querySelector("#" + currentTab).style.display = "flex";
 }
 function init() {
-	//Factory reset
-	document.getElementById("factoryReset").addEventListener("click", async function () {
-		if (
-			confirm(
-				"SAVE YOUR UUID OR YOU WILL LOOSE YOUR REMOTE STORED ITEMS !\n\nReset all Vine Helper settings & local storage to default?"
-			)
-		) {
-			await chrome.storage.local.clear();
-			alert(
-				"All settings were deleted. RELOAD AMAZON VINE to restaure default settings.\nDO NOT EDIT OPTIONS before you reloaded an amazon vine page."
-			);
-		}
-	});
-	document.getElementById("hiddenItemReset").addEventListener("click", async function () {
-		if (confirm("Delete all locally stored hidden items from Vine Helper?")) {
-			chrome.storage.local.set({ hiddenItems: [] });
-			alert("Hidden items in local storage emptied.");
-		}
-	});
-
 	//##########################
 	// TABS
 	//Bind the click event for the tabs
@@ -79,13 +59,6 @@ function init() {
 
 	//###################
 	//#### UI interaction
-
-	const chkDiscord = document.querySelector(`#discordactive`);
-	if (chkDiscord) {
-		chkDiscord.addEventListener("change", function () {
-			setTimeout(() => drawDiscord(), 1);
-		});
-	}
 
 	//When a checkbox in the legend of a fieldset if changed,
 	//enable or disable all the field contained in that fieldset.
@@ -117,6 +90,31 @@ function init() {
 	//###################
 	//## Load/save settings:
 
+	//## TAB - GENERAL
+
+	manageCheckboxSetting("general.topPagination");
+	manageCheckboxSetting("general.verbosePagination");
+	manageCheckboxSetting("general.displayETV");
+	manageCheckboxSetting("general.displayModalETV");
+	manageCheckboxSetting("general.displayFullTitleTooltip");
+	manageCheckboxSetting("general.displayVariantIcon");
+	manageCheckboxSetting("general.displayFirstSeen");
+	manageCheckboxSetting("general.bookmark");
+	manageCheckboxSetting("hiddenTab.active");
+	manageCheckboxSetting("hiddenTab.remote");
+	manageCheckboxSetting("pinnedTab.active");
+	manageCheckboxSetting("unavailableTab.active");
+	manageCheckboxSetting("unavailableTab.compactToolbar");
+
+	//##TAB - NOTIFICATIONS
+
+	manageCheckboxSetting("notification.active");
+	manageCheckboxSetting("notification.screen.active");
+	manageCheckboxSetting("notification.screen.thumbnail");
+	manageCheckboxSetting("notification.monitor.hideList");
+	manageCheckboxSetting("notification.monitor.hideDuplicateThumbnail");
+	manageCheckboxSetting("notification.reduce");
+
 	//Sliders
 	manageSlider("notification.screen.regular.volume");
 	manageSlider("notification.monitor.highlight.volume");
@@ -145,6 +143,31 @@ function init() {
 		"notification.monitor.regular.sound",
 		"notification.monitor.regular.volume"
 	);
+
+	//##TAB - SYSTEM
+
+	manageCheckboxSetting("general.versionInfoPopup", false);
+	manageCheckboxSetting("general.GDPRPopup", false);
+
+	//Factory reset
+	document.getElementById("factoryReset").addEventListener("click", async function () {
+		if (
+			confirm(
+				"SAVE YOUR UUID OR YOU WILL LOOSE YOUR REMOTE STORED ITEMS !\n\nReset all Vine Helper settings & local storage to default?"
+			)
+		) {
+			await chrome.storage.local.clear();
+			alert(
+				"All settings were deleted. RELOAD AMAZON VINE to restaure default settings.\nDO NOT EDIT OPTIONS before you reloaded an amazon vine page."
+			);
+		}
+	});
+	document.getElementById("hiddenItemReset").addEventListener("click", async function () {
+		if (confirm("Delete all locally stored hidden items from Vine Helper?")) {
+			chrome.storage.local.set({ hiddenItems: [] });
+			alert("Hidden items in local storage emptied.");
+		}
+	});
 
 	//UUID:
 	key = CSS.escape("generaluuid");
@@ -190,6 +213,17 @@ function init() {
 		document.querySelector("#saveUUID").disabled = false;
 	};
 
+	//##TAB - BRENDA:
+
+	manageCheckboxSetting("discord.active"); //Handled manually
+
+	const chkDiscord = document.querySelector(`#discordactive`);
+	if (chkDiscord) {
+		chkDiscord.addEventListener("change", function () {
+			setTimeout(() => drawDiscord(), 1);
+		});
+	}
+
 	document.querySelector("#saveGUID").onclick = async function () {
 		document.querySelector("#saveGUID").disabled = true;
 		let key = CSS.escape("discord.guid");
@@ -217,64 +251,7 @@ function init() {
 		document.querySelector("#discord-guid-unlink").style.display = "none";
 	};
 
-	//Copy buttons
-	document.getElementById("copyBTC").addEventListener("click", function () {
-		navigator.clipboard
-			.writeText("bc1q0f82vk79u7hzxcrqe6q2levzvhdrqe72fm5w8z")
-			.then(() => {
-				// Alert the user that the text has been copied
-				alert("BTC address copied to clipboard: ");
-			})
-			.catch((err) => {
-				console.error("Failed to copy: ", err);
-			});
-	});
-	document.getElementById("copyETH").addEventListener("click", function () {
-		navigator.clipboard
-			.writeText("0xF5b68799b43C358E0A54482f0D8445DFBEA9BDF1")
-			.then(() => {
-				// Alert the user that the text has been copied
-				alert("ETH address copied to clipboard");
-			})
-			.catch((err) => {
-				console.error("Failed to copy: ", err);
-			});
-	});
-
-	//Keybindings
-
-	if (appSettings.keyBindings == undefined) {
-		appSettings.keyBindings = {};
-		appSettings.keyBindings.nextPage = "n";
-		appSettings.keyBindings.previousPage = "p";
-		appSettings.keyBindings.RFYPage = "r";
-		appSettings.keyBindings.AFAPage = "a";
-		appSettings.keyBindings.AIPage = "i";
-		appSettings.keyBindings.hideAll = "h";
-		appSettings.keyBindings.showAll = "s";
-		appSettings.keyBindings.debug = "d";
-		chrome.storage.local.set({ settings: appSettings });
-	}
-
-	manageKeybindings("keyBindings.nextPage");
-	manageKeybindings("keyBindings.previousPage");
-	manageKeybindings("keyBindings.RFYPage");
-	manageKeybindings("keyBindings.AFAPage");
-	manageKeybindings("keyBindings.AIPage");
-	manageKeybindings("keyBindings.AIPage2");
-	manageKeybindings("keyBindings.AIPage3");
-	manageKeybindings("keyBindings.AIPage4");
-	manageKeybindings("keyBindings.AIPage5");
-	manageKeybindings("keyBindings.AIPage6");
-	manageKeybindings("keyBindings.AIPage7");
-	manageKeybindings("keyBindings.AIPage8");
-	manageKeybindings("keyBindings.AIPage9");
-	manageKeybindings("keyBindings.AIPage10");
-	manageKeybindings("keyBindings.hideAll");
-	manageKeybindings("keyBindings.showAll");
-	manageKeybindings("keyBindings.debug");
-
-	//Keywords
+	//##TAB - KEYWORDS
 
 	arrHighlight =
 		appSettings.general.highlightKeywords == undefined ? "" : appSettings.general.highlightKeywords.join(", ");
@@ -305,30 +282,30 @@ function init() {
 		chrome.storage.local.set({ settings: appSettings });
 	});
 
-	//Manage checkboxes load and save
-	manageCheckboxSetting("general.topPagination");
-	manageCheckboxSetting("general.verbosePagination");
-	manageCheckboxSetting("general.versionInfoPopup", false);
-	manageCheckboxSetting("general.GDPRPopup", false);
-	manageCheckboxSetting("general.displayETV");
-	manageCheckboxSetting("general.displayModalETV");
-	manageCheckboxSetting("general.displayFullTitleTooltip");
-	manageCheckboxSetting("general.displayVariantIcon");
-	manageCheckboxSetting("general.displayFirstSeen");
-	manageCheckboxSetting("general.bookmark");
-	manageCheckboxSetting("notification.active");
-	manageCheckboxSetting("notification.screen.active");
-	manageCheckboxSetting("notification.screen.thumbnail");
-	manageCheckboxSetting("notification.monitor.hideList");
-	manageCheckboxSetting("notification.monitor.hideDuplicateThumbnail");
-	manageCheckboxSetting("notification.reduce");
+	//##TAB - KEYBINDINGS
+
 	manageCheckboxSetting("keyBindings.active");
-	manageCheckboxSetting("hiddenTab.active");
-	manageCheckboxSetting("hiddenTab.remote");
-	manageCheckboxSetting("pinnedTab.active");
-	manageCheckboxSetting("discord.active"); //Handled manually
-	manageCheckboxSetting("unavailableTab.active");
-	manageCheckboxSetting("unavailableTab.compactToolbar");
+
+	manageKeybindings("keyBindings.nextPage");
+	manageKeybindings("keyBindings.previousPage");
+	manageKeybindings("keyBindings.RFYPage");
+	manageKeybindings("keyBindings.AFAPage");
+	manageKeybindings("keyBindings.AIPage");
+	manageKeybindings("keyBindings.AIPage2");
+	manageKeybindings("keyBindings.AIPage3");
+	manageKeybindings("keyBindings.AIPage4");
+	manageKeybindings("keyBindings.AIPage5");
+	manageKeybindings("keyBindings.AIPage6");
+	manageKeybindings("keyBindings.AIPage7");
+	manageKeybindings("keyBindings.AIPage8");
+	manageKeybindings("keyBindings.AIPage9");
+	manageKeybindings("keyBindings.AIPage10");
+	manageKeybindings("keyBindings.hideAll");
+	manageKeybindings("keyBindings.showAll");
+	manageKeybindings("keyBindings.debug");
+
+	//##TAB - STYLES
+
 	manageCheckboxSetting("thorvarium.mobileios");
 	manageCheckboxSetting("thorvarium.mobileandroid");
 	manageCheckboxSetting("thorvarium.smallItems");
@@ -344,6 +321,32 @@ function init() {
 	manageCheckboxSetting("thorvarium.stripedCategories");
 	manageCheckboxSetting("thorvarium.limitedQuantityIcon");
 	manageCheckboxSetting("thorvarium.RFYAFAAITabs");
+
+	//##TAB - ?
+
+	//Copy buttons
+	document.getElementById("copyBTC").addEventListener("click", function () {
+		navigator.clipboard
+			.writeText("bc1q0f82vk79u7hzxcrqe6q2levzvhdrqe72fm5w8z")
+			.then(() => {
+				// Alert the user that the text has been copied
+				alert("BTC address copied to clipboard: ");
+			})
+			.catch((err) => {
+				console.error("Failed to copy: ", err);
+			});
+	});
+	document.getElementById("copyETH").addEventListener("click", function () {
+		navigator.clipboard
+			.writeText("0xF5b68799b43C358E0A54482f0D8445DFBEA9BDF1")
+			.then(() => {
+				// Alert the user that the text has been copied
+				alert("ETH address copied to clipboard");
+			})
+			.catch((err) => {
+				console.error("Failed to copy: ", err);
+			});
+	});
 }
 
 function manageKeybindings(key) {
