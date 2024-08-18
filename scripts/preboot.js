@@ -250,7 +250,6 @@ async function getSettings() {
 
 		saveSettings();
 	}
-	console.log(appSettings);
 
 	//Load Thorvarium stylesheets
 	if (appSettings.thorvarium.mobileios) loadStyleSheet("node_modules/vine-styling/mobile/ios-with-bugfix.css");
