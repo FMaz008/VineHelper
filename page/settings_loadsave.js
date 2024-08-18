@@ -105,6 +105,7 @@ function init() {
 	manageCheckboxSetting("pinnedTab.active");
 	manageCheckboxSetting("unavailableTab.active");
 	manageCheckboxSetting("unavailableTab.compactToolbar");
+	manageCheckboxSetting("general.modalNavigation");
 
 	//##TAB - NOTIFICATIONS
 
@@ -253,34 +254,8 @@ function init() {
 
 	//##TAB - KEYWORDS
 
-	arrHighlight =
-		appSettings.general.highlightKeywords == undefined ? "" : appSettings.general.highlightKeywords.join(", ");
-	document.getElementById("generalhighlightKeywords").value = arrHighlight;
-	arrHide = appSettings.general.hideKeywords == undefined ? "" : appSettings.general.hideKeywords.join(", ");
-	document.getElementById("generalhideKeywords").value = arrHide;
-
-	document.getElementById("generalhighlightKeywords").addEventListener("change", function () {
-		let arr = [];
-		arr = document
-			.getElementById("generalhighlightKeywords")
-			.value.split(",")
-			.map((item) => item.trim())
-			.filter((item) => item !== "");
-		if (arr.length == 1 && arr[0] == "") arr = [];
-		appSettings.general.highlightKeywords = arr;
-		chrome.storage.local.set({ settings: appSettings });
-	});
-	document.getElementById("generalhideKeywords").addEventListener("change", function () {
-		let arr = [];
-		arr = document
-			.getElementById("generalhideKeywords")
-			.value.split(",")
-			.map((item) => item.trim())
-			.filter((item) => item !== "");
-		if (arr.length == 1 && arr[0] == "") arr = [];
-		appSettings.general.hideKeywords = arr;
-		chrome.storage.local.set({ settings: appSettings });
-	});
+	manageTextareaCSK("general.highlightKeywords");
+	manageTextareaCSK("general.hideKeywords");
 
 	//##TAB - KEYBINDINGS
 
@@ -321,6 +296,7 @@ function init() {
 	manageCheckboxSetting("thorvarium.stripedCategories");
 	manageCheckboxSetting("thorvarium.limitedQuantityIcon");
 	manageCheckboxSetting("thorvarium.RFYAFAAITabs");
+	manageTextarea("general.customCSS");
 
 	//##TAB - ?
 
@@ -346,6 +322,41 @@ function init() {
 			.catch((err) => {
 				console.error("Failed to copy: ", err);
 			});
+	});
+}
+
+//CSK: Comma Separated Keywords
+function manageTextareaCSK(key) {
+	const val = JSONGetPathValue(appSettings, key);
+	const obj = document.querySelector(`textarea[name='${key}']`);
+	if (obj == null) {
+		throw new Error("Textarea name='" + key + "' does not exist");
+	}
+	obj.value = val.join(", ");
+	obj.addEventListener("change", async function () {
+		let arr = [];
+		arr = obj.value
+			.split(",")
+			.map((item) => item.trim())
+			.filter((item) => item !== "");
+		if (arr.length == 1 && arr[0] == "") {
+			arr = [];
+		}
+		deepSet(appSettings, key, arr);
+		await chrome.storage.local.set({ settings: appSettings });
+	});
+}
+
+function manageTextarea(key) {
+	const val = JSONGetPathValue(appSettings, key);
+	const obj = document.querySelector(`textarea[name='${key}']`);
+	if (obj == null) {
+		throw new Error("Textarea name='" + key + "' does not exist");
+	}
+	obj.value = val;
+	obj.addEventListener("change", async function () {
+		deepSet(appSettings, key, obj.value);
+		await chrome.storage.local.set({ settings: appSettings });
 	});
 }
 

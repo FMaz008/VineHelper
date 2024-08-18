@@ -102,8 +102,7 @@ label.right-align select {
 	margin-left: -20px;
 }
 
-#generalhideKeywords,
-#generalhighlightKeywords {
+textarea {
 	margin-left: 20px;
 	width: 500px;
 	height: 200px;

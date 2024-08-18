@@ -62,6 +62,7 @@ function getDefaultSettings() {
 			versionInfoPopup: 0,
 			GDPRPopup: true,
 			hiddenItemsCacheSize: 9,
+			customCSS: "",
 		},
 
 		notification: {
@@ -139,7 +140,13 @@ function getDefaultSettings() {
 async function loadStyleSheet(path) {
 	prom = await Tpl.loadFile(path);
 	let content = Tpl.render(prom);
-	$("head").append("<style type='text/css'>" + content + "</style>");
+	loadStyleSheetContent(content);
+}
+
+async function loadStyleSheetContent(content) {
+	if (content != "") {
+		$("head").append("<style type='text/css'>" + content + "</style>");
+	}
 }
 
 //Loading the settings from the local storage
@@ -229,6 +236,7 @@ async function getSettings() {
 				},
 			},
 		};
+		appSettings.customCSS = "";
 		delete appSettings.general.newItemNotification;
 		delete appSettings.general.displayNewItemNotifications;
 		delete appSettings.general.newItemNotificationImage;
@@ -287,6 +295,10 @@ async function getSettings() {
 	if (appSettings.thorvarium.RFYAFAAITabs) loadStyleSheet("node_modules/vine-styling/desktop/rfy-afa-ai-tabs.css");
 
 	showRuntime("BOOT: Thorvarium stylesheets injected");
+
+	if (appSettings.general.customCSS != undefined) {
+		loadStyleSheetContent(appSettings.general.customCSS);
+	}
 
 	//Figure out what domain the extension is working on
 	let currentUrl = window.location.href;

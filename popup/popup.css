@@ -15,8 +15,7 @@ label {
 	width: 350px;
 }
 
-#generalhideKeywords,
-#generalhighlightKeywords {
+textarea {
 	width: 250px;
 }
 
