@@ -486,6 +486,22 @@ function generateTile(obj) {
 	let imgContainer = $("<div>").addClass("vh-img-container").insertBefore(img);
 	$(img).detach().appendTo($(imgContainer));
 
+	//If the listing are set to listview, move the image container before its parent item.
+	if (appSettings.general.listView) {
+		$(imgContainer).detach().prependTo($(obj));
+
+		//Display the full titles
+		/*
+		//Don't work because a-offscreen class are still in the process of being applied when this code run.
+		const full = obj.querySelector(".a-truncate-full");
+		console.log(full);
+		console.log(full.classList);
+		full.classList.remove("a-offscreen");
+		console.log(full.classList);
+		obj.querySelector(".a-truncate-cut").classList.add("a-offscreen");
+		*/
+	}
+
 	//Move the hidden item to the hidden tab
 	if (appSettings.hiddenTab.active && tile.isHidden()) {
 		showRuntime("BOOT: The item is locally hidden, move it to the hidden grid.");

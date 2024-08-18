@@ -1,0 +1,28 @@
+#vvp-items-grid.tab-grid,
+#tab-unavailable.tab-grid,
+#tab-hidden.tab-grid,
+#tab-pinned.tab-grid {
+	grid-template-columns: auto;
+}
+
+#vh-tabs > .tab-grid > .vvp-item-tile {
+	display: flex;
+	flex-direction: row;
+	margin: 10px;
+}
+
+#vh-tabs > .tab-grid > .vvp-item-tile .vvp-item-tile-content {
+	display: flex;
+	flex-direction: column;
+	margin-left: 10px;
+	width: 80%;
+}
+
+#vh-tabs > .tab-grid > .vvp-item-tile .vvp-details-btn {
+	width: 150px;
+	margin: 0 auto;
+}
+
+div.vh-status-container {
+	position: relative;
+}

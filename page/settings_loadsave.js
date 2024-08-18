@@ -106,6 +106,7 @@ function init() {
 	manageCheckboxSetting("unavailableTab.active");
 	manageCheckboxSetting("unavailableTab.compactToolbar");
 	manageCheckboxSetting("general.modalNavigation");
+	manageCheckboxSetting("general.listView");
 
 	//##TAB - NOTIFICATIONS
 

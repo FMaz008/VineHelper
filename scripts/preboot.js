@@ -63,6 +63,8 @@ function getDefaultSettings() {
 			GDPRPopup: true,
 			hiddenItemsCacheSize: 9,
 			customCSS: "",
+			modalNavigation: false,
+			listView: false,
 		},
 
 		notification: {
@@ -140,12 +142,13 @@ function getDefaultSettings() {
 async function loadStyleSheet(path) {
 	prom = await Tpl.loadFile(path);
 	let content = Tpl.render(prom);
-	loadStyleSheetContent(content);
+
+	loadStyleSheetContent(content, path);
 }
 
-async function loadStyleSheetContent(content) {
+async function loadStyleSheetContent(content, path = "injected") {
 	if (content != "") {
-		$("head").append("<style type='text/css'>" + content + "</style>");
+		$("head").append("<style type='text/css'>\n/*" + path + "*/\n" + content + "</style>");
 	}
 }
 
@@ -295,6 +298,8 @@ async function getSettings() {
 	if (appSettings.thorvarium.RFYAFAAITabs) loadStyleSheet("node_modules/vine-styling/desktop/rfy-afa-ai-tabs.css");
 
 	showRuntime("BOOT: Thorvarium stylesheets injected");
+
+	if (appSettings.general.listView) loadStyleSheet("resource/css/listView.css");
 
 	if (appSettings.general.customCSS != undefined) {
 		loadStyleSheetContent(appSettings.general.customCSS);

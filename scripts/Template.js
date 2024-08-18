@@ -105,7 +105,7 @@ class TemplateMgr {
 			})
 			.catch((error) => {
 				// Handle the error here
-				return "";
+				return error + " " + chrome.runtime.getURL(url);
 			});
 
 		return promise;

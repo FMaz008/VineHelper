@@ -108,7 +108,7 @@ class Toolbar {
 	//Create the bare bone structure of the toolbar
 	async createProductToolbar() {
 		let toolbarId = "vh-toolbar-" + this.pTile.getAsin();
-		let anchorTo = this.pTile.getDOM().children[0]; //.vvp-item-tile-content should be the first child
+		let anchorTo = this.pTile.getDOM().querySelector(".vvp-item-tile-content"); //.vvp-item-tile-content should be the first child
 
 		//Load the toolbar template
 		showRuntime("DRAW: Creating #" + toolbarId);

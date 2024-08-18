@@ -31,7 +31,7 @@
 		{
 			"resources": [
 				"resource/image/*",
-				"resource/css/vinehelper.css",
+				"resource/css/*",
 				"view/*",
 				"resource/sound/*",
 				"page/*",
