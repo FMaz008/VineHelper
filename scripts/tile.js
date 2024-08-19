@@ -290,6 +290,9 @@ function getTileByAsin(asin) {
 function getAsinFromDom(tileDom) {
 	let regex = /^(?:.*\/dp\/)(.+?)(?:\?.*)?$/; //Isolate the product ID in the URL.
 	let url = $(tileDom).find(".a-link-normal").attr("href");
+	if (url == null) {
+		throw new Error("The provided DOM content does not contain an .a-link-normal element.");
+	}
 	let arrasin = url.match(regex);
 	return arrasin[1];
 }
