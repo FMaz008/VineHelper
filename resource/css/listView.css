@@ -2,7 +2,7 @@
 #tab-unavailable.tab-grid,
 #tab-hidden.tab-grid,
 #tab-pinned.tab-grid {
-	grid-template-columns: auto;
+	grid-template-columns: auto !important;
 }
 
 #vh-tabs > .tab-grid > .vvp-item-tile {
@@ -15,14 +15,18 @@
 	display: flex;
 	flex-direction: column;
 	margin-left: 10px;
-	width: 80%;
+	width: 100% !important;
 }
 
 #vh-tabs > .tab-grid > .vvp-item-tile .vvp-details-btn {
 	width: 150px;
-	margin: 0 auto;
+	margin: 0 auto !important;
 }
 
 div.vh-status-container {
 	position: relative;
+}
+
+#vh-tabs.smallitems .vh-img-container {
+	width: 130px;
 }

@@ -500,6 +500,15 @@ function generateTile(obj) {
 		console.log(full.classList);
 		obj.querySelector(".a-truncate-cut").classList.add("a-offscreen");
 		*/
+
+		//If small items stylesheet are used, add a class to resize-down the thumnails.
+		if (
+			appSettings.thorvarium.mobileios ||
+			appSettings.thorvarium.mobileandroid ||
+			appSettings.thorvarium.smallItems
+		) {
+			document.querySelector("#vh-tabs").classList.add("smallitems");
+		}
 	}
 
 	//Move the hidden item to the hidden tab
