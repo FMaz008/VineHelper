@@ -88,6 +88,12 @@ function getDefaultSettings() {
 				highlight: {
 					sound: 0,
 					volume: 100,
+					color: "#FFE815",
+				},
+				zeroETV: {
+					sound: 0,
+					volume: 100,
+					color: "#009933",
 				},
 			},
 		},
@@ -236,6 +242,12 @@ async function getSettings() {
 				highlight: {
 					sound: "notification",
 					volume: 100,
+					color: "#FFE815",
+				},
+				zeroETV: {
+					sound: 0,
+					volume: 100,
+					color: "#009933",
 				},
 			},
 		};

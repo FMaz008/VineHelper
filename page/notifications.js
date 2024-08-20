@@ -186,7 +186,7 @@ function addItem(data) {
 		//New item to be added
 		items.set(asin, etv);
 		imageUrls.add(img_url);
-		playSoundIfEnabled(shouldHighlight);
+		playSoundIfEnabled(shouldHighlight, etv == "0.00");
 
 		Tpl.setVar("id", asin);
 		Tpl.setVar("domain", vineDomain);
@@ -197,17 +197,24 @@ function addItem(data) {
 		Tpl.setVar("description", title);
 		Tpl.setVar("img_url", img_url);
 		Tpl.setVar("etv", formatETV(etv));
-		Tpl.setIf("shouldHighlight", shouldHighlight);
 		let content = Tpl.render(loadedTpl, true); //true to return a DOM object instead of an HTML string
 
 		const newBody = document.getElementById("vh-items-container");
 		newBody.prepend(content);
 
+		//Set ETV
+		setETV(asin, etv);
+
+		//Highlight background color
+		if (shouldHighlight) {
+			const obj = elementByAsin(asin);
+			obj.style.backgroundColor = appSettings.notification.monitor.highlight.color;
+		}
+
 		// Add new click listener for the report button
 		document
 			.querySelector("#vh-notification-" + asin + " .report-link")
 			.addEventListener("click", handleReportClick);
-		setETV(asin, etv);
 
 		//Update the most recent date
 		document.getElementById("date_most_recent_item").innerText = formatDate(date);
@@ -230,16 +237,25 @@ function formatDate(date) {
 	return new Date(date + " GMT").toLocaleString(vineLocale);
 }
 
-function playSoundIfEnabled(highlightMatch = false) {
+function playSoundIfEnabled(highlightMatch = false, zeroETV = false) {
 	if (muteSound) {
 		return false;
 	}
 
-	let volume, fileName;
+	let volume = null;
+	let fileName = null;
 	if (highlightMatch) {
+		//Highlight notification
 		volume = appSettings.notification.monitor.highlight.volume;
 		fileName = appSettings.notification.monitor.highlight.sound;
-	} else {
+	} else if (zeroETV) {
+		//Zero ETV notification
+		volume = appSettings.notification.monitor.zeroETV.volume;
+		fileName = appSettings.notification.monitor.zeroETV.sound;
+	}
+
+	//If regular notification or special notification are soundless
+	if (fileName == NULL || fileName == "0" || volume == 0) {
 		//Regular notification
 		volume = appSettings.notification.monitor.regular.volume;
 		fileName = appSettings.notification.monitor.regular.sound;
@@ -269,11 +285,11 @@ function elementByAsin(asin) {
 }
 
 function setETV(asin, etv) {
-	const etvClass = elementByAsin(asin);
+	const obj = elementByAsin(asin);
 
 	//Highlight for ETV
 	if (etv == "0.00") {
-		etvClass.classList.add("zeroETV");
+		obj.style.backgroundColor = appSettings.notification.monitor.zeroETV.color;
 	}
 	//Remove ETV Value if it does not exist
 	let etvElement = document.querySelector("#" + itemID(asin) + " .etv_value");

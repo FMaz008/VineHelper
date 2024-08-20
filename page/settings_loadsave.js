@@ -121,6 +121,7 @@ function init() {
 	manageSlider("notification.screen.regular.volume");
 	manageSlider("notification.monitor.highlight.volume");
 	manageSlider("notification.monitor.regular.volume");
+	manageSlider("notification.monitor.zeroETV.volume");
 
 	//Select boxes
 	manageSelectBox("general.hiddenItemsCacheSize");
@@ -128,6 +129,7 @@ function init() {
 	manageSelectBox("notification.monitor.regular.sound");
 	manageSelectBox("notification.monitor.highlight.sound");
 	manageSelectBox("notification.screen.regular.sound");
+	manageSelectBox("notification.monitor.zeroETV.sound");
 
 	//Play buttons
 	managePlayButton(
@@ -141,10 +143,18 @@ function init() {
 		"notification.monitor.highlight.volume"
 	);
 	managePlayButton(
+		"playMonitorZeroETVNotification",
+		"notification.monitor.zeroETV.sound",
+		"notification.monitor.zeroETV.volume"
+	);
+	managePlayButton(
 		"playMonitorRegularNotification",
 		"notification.monitor.regular.sound",
 		"notification.monitor.regular.volume"
 	);
+
+	manageInputText("notification.monitor.highlight.color");
+	manageInputText("notification.monitor.zeroETV.color");
 
 	//##TAB - SYSTEM
 
@@ -262,23 +272,23 @@ function init() {
 
 	manageCheckboxSetting("keyBindings.active");
 
-	manageKeybindings("keyBindings.nextPage");
-	manageKeybindings("keyBindings.previousPage");
-	manageKeybindings("keyBindings.RFYPage");
-	manageKeybindings("keyBindings.AFAPage");
-	manageKeybindings("keyBindings.AIPage");
-	manageKeybindings("keyBindings.AIPage2");
-	manageKeybindings("keyBindings.AIPage3");
-	manageKeybindings("keyBindings.AIPage4");
-	manageKeybindings("keyBindings.AIPage5");
-	manageKeybindings("keyBindings.AIPage6");
-	manageKeybindings("keyBindings.AIPage7");
-	manageKeybindings("keyBindings.AIPage8");
-	manageKeybindings("keyBindings.AIPage9");
-	manageKeybindings("keyBindings.AIPage10");
-	manageKeybindings("keyBindings.hideAll");
-	manageKeybindings("keyBindings.showAll");
-	manageKeybindings("keyBindings.debug");
+	manageInputText("keyBindings.nextPage");
+	manageInputText("keyBindings.previousPage");
+	manageInputText("keyBindings.RFYPage");
+	manageInputText("keyBindings.AFAPage");
+	manageInputText("keyBindings.AIPage");
+	manageInputText("keyBindings.AIPage2");
+	manageInputText("keyBindings.AIPage3");
+	manageInputText("keyBindings.AIPage4");
+	manageInputText("keyBindings.AIPage5");
+	manageInputText("keyBindings.AIPage6");
+	manageInputText("keyBindings.AIPage7");
+	manageInputText("keyBindings.AIPage8");
+	manageInputText("keyBindings.AIPage9");
+	manageInputText("keyBindings.AIPage10");
+	manageInputText("keyBindings.hideAll");
+	manageInputText("keyBindings.showAll");
+	manageInputText("keyBindings.debug");
 
 	//##TAB - STYLES
 
@@ -361,7 +371,7 @@ function manageTextarea(key) {
 	});
 }
 
-function manageKeybindings(key) {
+function manageInputText(key) {
 	const val = JSONGetPathValue(appSettings, key);
 	const obj = document.querySelector(`label[for='${key}'] input`);
 	if (obj == null) {
