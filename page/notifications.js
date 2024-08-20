@@ -1,6 +1,9 @@
 var muteSound = false;
-const SOUND_SETTING_ALWAYS = 0;
-const SOUND_SETTING_KEYWORD = 1;
+
+const TYPE_REGULAR = 0;
+const TYPE_ZEROETV = 1;
+const TYPE_HIGHLIGHT = 2;
+
 var appSettings = [];
 if (typeof browser === "undefined") {
 	var browser = chrome;
@@ -127,6 +130,33 @@ async function init() {
 			}
 		}
 	);
+
+	//Bind the event when changing the filter
+	const filter = document.querySelector("select[name='filter-type']");
+	filter.addEventListener("change", function () {
+		if (filter.value == "-1") {
+			//Display all notifications
+			document.querySelectorAll(".vh-notification-box").forEach(function (node, key, parent) {
+				node.style.display = "grid";
+			});
+		} else {
+			//Display a specific type of notifications only
+			document.querySelectorAll(".vh-notification-box").forEach(function (node, key, parent) {
+				node.style.display = node.getAttribute("data-notification-type") == filter.value ? "grid" : "none";
+			});
+		}
+	});
+
+	//Bind fetch-last-100 button
+	const btnLast100 = document.querySelector("button[name='fetch-last-100']");
+	btnLast100.addEventListener("click", function () {
+		browser.runtime.sendMessage(
+			{
+				type: "fetchLast100Items",
+			},
+			function (response) {}
+		);
+	});
 }
 
 //Set the locale and currency based on the domain.
@@ -159,8 +189,14 @@ function addItem(data) {
 	let { date, asin, title, search, img_url, domain, etv } = data;
 	let { hideKeywords, highlightKeywords } = appSettings.general;
 
+	let type = TYPE_REGULAR;
+
 	//If the locale is not define, set it.
 	if (vineLocale == null) setLocale(domain);
+
+	if (etv == "0.00") {
+		type = TYPE_ZEROETV;
+	}
 
 	if (appSettings.notification.monitor.hideDuplicateThumbnail && imageUrls.has(img_url)) {
 		showRuntime("NOTIFICATION: item " + asin + " has a duplicate image and won't be shown.");
@@ -168,8 +204,10 @@ function addItem(data) {
 	}
 
 	let shouldHighlight = keywordMatch(highlightKeywords, title);
-	if (shouldHighlight)
+	if (shouldHighlight) {
 		showRuntime("NOTIFICATION: item " + asin + " match the highlight list and will be highlighed.");
+		type = TYPE_HIGHLIGHT;
+	}
 
 	if (!shouldHighlight && appSettings.notification.monitor.hideList && keywordMatch(hideKeywords, title)) {
 		showRuntime("NOTIFICATION: item " + asin + " match the hidden list and won't be shown.");
@@ -188,14 +226,14 @@ function addItem(data) {
 		imageUrls.add(img_url);
 		playSoundIfEnabled(shouldHighlight, etv == "0.00");
 
-		Tpl.setVar("id", asin);
+		Tpl.setVar("asin", asin);
 		Tpl.setVar("domain", vineDomain);
 		Tpl.setVar("title", "New item");
 		Tpl.setVar("date", formatDate(date));
 		Tpl.setVar("search", search);
-		Tpl.setVar("asin", asin);
 		Tpl.setVar("description", title);
 		Tpl.setVar("img_url", img_url);
+		Tpl.setVar("type", type);
 		Tpl.setVar("etv", formatETV(etv));
 		let content = Tpl.render(loadedTpl, true); //true to return a DOM object instead of an HTML string
 
@@ -219,6 +257,10 @@ function addItem(data) {
 		//Update the most recent date
 		document.getElementById("date_most_recent_item").innerText = formatDate(date);
 	}
+
+	//Apply the filter.
+	const filter = document.querySelector("select[name='filter-type']");
+	filter.dispatchEvent(new Event("change"));
 }
 
 //Prepare the ETV to be displayed
@@ -263,7 +305,7 @@ function playSoundIfEnabled(highlightMatch = false, zeroETV = false) {
 	//Regular notification
 	volume = appSettings.notification.monitor.regular.volume;
 	filename = appSettings.notification.monitor.regular.sound;
-	if (filename == NULL || filename == "0" || volume == 0) {
+	if (filename == "0" || volume == 0) {
 		playSound(filename, volume);
 		return true;
 	}
@@ -297,6 +339,9 @@ function setETV(asin, etv) {
 	//Highlight for ETV
 	if (etv == "0.00") {
 		obj.style.backgroundColor = appSettings.notification.monitor.zeroETV.color;
+		if (obj.getAttribute("data-notification-type") != TYPE_HIGHLIGHT) {
+			obj.setAttribute("data-notification-type", TYPE_ZEROETV);
+		}
 	}
 	//Remove ETV Value if it does not exist
 	let etvElement = document.querySelector("#" + itemID(asin) + " .etv_value");

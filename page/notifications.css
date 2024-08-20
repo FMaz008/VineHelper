@@ -47,6 +47,15 @@
 	vertical-align: middle;
 }
 
+.monitor-toolbar {
+	width: 100%;
+	display: flex;
+	justify-content: flex-end;
+}
+
+.monitor-toolbar label {
+	margin-right: 20px;
+}
 
 .etv_value {
 	float: left;

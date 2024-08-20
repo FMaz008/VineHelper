@@ -38,7 +38,7 @@ function selectCurrentTab(firstRun = false) {
 	//Display the current tab
 	document.querySelector("#" + currentTab).style.display = "flex";
 }
-function init() {
+function initiateSettings() {
 	//##########################
 	// TABS
 	//Bind the click event for the tabs

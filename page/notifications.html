@@ -17,7 +17,7 @@
 
 		<div class="vh-container">
 			<strong>Loaded on: </strong><span id="date_loaded"></span><br />
-			<strong>Most recent item:</strong><span id="date_most_recent_item">(tba)</span><br />
+			<strong>Most recent item: </strong><span id="date_most_recent_item">(tba)</span><br />
 			<div class="notice" id="status">
 				Status:
 				<div class="vh-switch-32 vh-icon-switch-off"></div>
@@ -31,7 +31,20 @@
 				AI.
 			</i>
 		</div>
-
+		<div class="monitor-toolbar">
+			<label for="fetch-last-100">
+				<button name="fetch-last-100">Fetch last 100</button>
+			</label>
+			<label for="filter-type">
+				Filter by:
+				<select name="filter-type">
+					<option value="-1">Show all notifications</option>
+					<option value="0">Regular only</option>
+					<option value="1">Zero ETV only</option>
+					<option value="2">KW match only</option>
+				</select>
+			</label>
+		</div>
 		<div id="vh-items-container"></div>
 	</body>
 </html>
