@@ -242,31 +242,38 @@ function playSoundIfEnabled(highlightMatch = false, zeroETV = false) {
 		return false;
 	}
 
-	let volume = null;
-	let fileName = null;
-	if (highlightMatch) {
-		//Highlight notification
-		volume = appSettings.notification.monitor.highlight.volume;
-		fileName = appSettings.notification.monitor.highlight.sound;
-	} else if (zeroETV) {
-		//Zero ETV notification
-		volume = appSettings.notification.monitor.zeroETV.volume;
-		fileName = appSettings.notification.monitor.zeroETV.sound;
+	let volume, filename;
+
+	//Highlight notification
+	volume = appSettings.notification.monitor.highlight.volume;
+	filename = appSettings.notification.monitor.highlight.sound;
+	if (highlightMatch && filename != "0" && volume > 0) {
+		playSound(filename, volume);
+		return true;
 	}
 
-	//If regular notification or special notification are soundless
-	if (fileName == NULL || fileName == "0" || volume == 0) {
-		//Regular notification
-		volume = appSettings.notification.monitor.regular.volume;
-		fileName = appSettings.notification.monitor.regular.sound;
+	//Zero ETV notification
+	volume = appSettings.notification.monitor.zeroETV.volume;
+	filename = appSettings.notification.monitor.zeroETV.sound;
+	if (zeroETV && filename != "0" && volume > 0) {
+		playSound(filename, volume);
+		return true;
 	}
 
-	if (fileName == "0" || volume == 0) {
-		return false;
+	//Regular notification
+	volume = appSettings.notification.monitor.regular.volume;
+	filename = appSettings.notification.monitor.regular.sound;
+	if (filename == NULL || filename == "0" || volume == 0) {
+		playSound(filename, volume);
+		return true;
 	}
 
+	return false;
+}
+
+function playSound(filename, volume) {
 	muteSound = true; // Don't play the notification sound again within 30 sec.
-	const audioElement = new Audio(browser.runtime.getURL("resource/sound/" + fileName + ".mp3"));
+	const audioElement = new Audio(browser.runtime.getURL("resource/sound/" + filename + ".mp3"));
 	const handleEnded = () => {
 		audioElement.removeEventListener("ended", handleEnded); // Remove the event listener
 		audioElement.remove(); // Remove the audio element from the DOM
