@@ -305,7 +305,7 @@ function playSoundIfEnabled(highlightMatch = false, zeroETV = false) {
 	//Regular notification
 	volume = appSettings.notification.monitor.regular.volume;
 	filename = appSettings.notification.monitor.regular.sound;
-	if (filename == "0" || volume == 0) {
+	if (filename != "0" || volume > 0) {
 		playSound(filename, volume);
 		return true;
 	}
