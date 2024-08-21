@@ -142,7 +142,15 @@ async function init() {
 		} else {
 			//Display a specific type of notifications only
 			document.querySelectorAll(".vh-notification-box").forEach(function (node, key, parent) {
-				node.style.display = node.getAttribute("data-notification-type") == filter.value ? "grid" : "none";
+				if (filter.value == 9) {
+					node.style.display =
+						node.getAttribute("data-notification-type") == TYPE_HIGHLIGHT ||
+						node.getAttribute("data-notification-type") == TYPE_ZEROETV
+							? "grid"
+							: "none";
+				} else {
+					node.style.display = node.getAttribute("data-notification-type") == filter.value ? "grid" : "none";
+				}
 			});
 		}
 	});
