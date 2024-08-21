@@ -1,8 +1,15 @@
-var muteSound = false;
+//Notification arrive one at the time
+//These variable allow to remember the type of notifications received
+//so that when the batch end, if notification(s) were received
+//the proper sound effect can be played.
+var notification_added_item = false;
+var notification_highlight = false;
+var notification_zeroETV = false;
 
 const TYPE_REGULAR = 0;
 const TYPE_ZEROETV = 1;
 const TYPE_HIGHLIGHT = 2;
+//const TYPE_HIGHLIGHT_OR_ZEROETV = 9;
 
 var appSettings = [];
 if (typeof browser === "undefined") {
@@ -73,6 +80,14 @@ window.onload = function () {
 			note.template = "view/notification_loading.html";
 			note.lifespan = 3;
 			Notifications.pushNotification(note);
+		}
+		if (data.type == "newItemCheckEnd") {
+			if (notification_added_item) {
+				playSoundAccordingToNotificationType(notification_highlight, notification_zeroETV);
+			}
+			notification_added_item = false;
+			notification_highlight = false;
+			notification_zeroETV = false;
 		}
 		if (data.type == "vineCountry") {
 			if (vineDomain === null) {
@@ -204,6 +219,7 @@ function addItem(data) {
 
 	if (etv == "0.00") {
 		type = TYPE_ZEROETV;
+		notification_zeroETV = true;
 	}
 
 	if (appSettings.notification.monitor.hideDuplicateThumbnail && imageUrls.has(img_url)) {
@@ -215,6 +231,7 @@ function addItem(data) {
 	if (shouldHighlight) {
 		showRuntime("NOTIFICATION: item " + asin + " match the highlight list and will be highlighed.");
 		type = TYPE_HIGHLIGHT;
+		notification_highlight = true;
 	}
 
 	if (!shouldHighlight && appSettings.notification.monitor.hideList && keywordMatch(hideKeywords, title)) {
@@ -229,10 +246,11 @@ function addItem(data) {
 			setETV(asin, etv);
 		}
 	} else {
+		notification_added_item = true;
+
 		//New item to be added
 		items.set(asin, etv);
 		imageUrls.add(img_url);
-		playSoundIfEnabled(shouldHighlight, etv == "0.00");
 
 		Tpl.setVar("asin", asin);
 		Tpl.setVar("domain", vineDomain);
@@ -287,11 +305,7 @@ function formatDate(date) {
 	return new Date(date + " GMT").toLocaleString(vineLocale);
 }
 
-function playSoundIfEnabled(highlightMatch = false, zeroETV = false) {
-	if (muteSound) {
-		return false;
-	}
-
+function playSoundAccordingToNotificationType(highlightMatch = false, zeroETV = false) {
 	let volume, filename;
 
 	//Highlight notification
@@ -322,7 +336,6 @@ function playSoundIfEnabled(highlightMatch = false, zeroETV = false) {
 }
 
 function playSound(filename, volume) {
-	muteSound = true; // Don't play the notification sound again within 30 sec.
 	const audioElement = new Audio(browser.runtime.getURL("resource/sound/" + filename + ".mp3"));
 	const handleEnded = () => {
 		audioElement.removeEventListener("ended", handleEnded); // Remove the event listener

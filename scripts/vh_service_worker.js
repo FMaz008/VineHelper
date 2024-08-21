@@ -176,6 +176,7 @@ async function checkNewItems(getAllItems = false) {
 					}
 				}
 			}
+			sendMessageToAllTabs({ type: "newItemCheckEnd" }, "End of notification(s) update");
 		})
 		.catch(function () {
 			(error) => console.log(error);
