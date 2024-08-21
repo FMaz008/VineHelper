@@ -157,14 +157,13 @@ async function init() {
 		} else {
 			//Display a specific type of notifications only
 			document.querySelectorAll(".vh-notification-box").forEach(function (node, key, parent) {
+				const notificationType = node.getAttribute("data-notification-type");
+
 				if (filter.value == 9) {
-					node.style.display =
-						node.getAttribute("data-notification-type") == TYPE_HIGHLIGHT ||
-						node.getAttribute("data-notification-type") == TYPE_ZEROETV
-							? "grid"
-							: "none";
+					const typesToShow = [TYPE_HIGHLIGHT, TYPE_ZEROETV];
+					node.style.display = typesToShow.includes(notificationType) ? "grid" : "none";
 				} else {
-					node.style.display = node.getAttribute("data-notification-type") == filter.value ? "grid" : "none";
+					node.style.display = typesToShow == filter.value ? "grid" : "none";
 				}
 			});
 		}
