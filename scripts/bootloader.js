@@ -977,6 +977,7 @@ window.addEventListener("keyup", async function (e) {
 	const keybindingMap = {
 		[appSettings.keyBindings?.hideAll]: hideAllItems,
 		[appSettings.keyBindings?.showAll]: showAllItems,
+		[appSettings.keyBindings?.hideAllNext]: hideAllItemsNext,
 		[appSettings.keyBindings?.nextPage]: () =>
 			document.querySelector("#vvp-items-grid-container>div>ul.a-pagination li:last-child a")?.click(),
 		[appSettings.keyBindings?.previousPage]: () =>
@@ -1013,9 +1014,10 @@ window.addEventListener("keyup", async function (e) {
 			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=10"),
 	};
 
-	//Only allow the hideAll and showAll keybinding if the hiddenTab is activated.
+	//Only allow the hideAll, hideAllNext and showAll keybinding if the hiddenTab is activated.
 	if (
 		(e.key.toLowerCase() == appSettings.keyBindings?.hideAll ||
+			e.key.toLowerCase() == appSettings.keyBindings?.hideAllNext ||
 			e.key.toLowerCase() == appSettings.keyBindings?.showAll) &&
 		!appSettings.hiddenTab?.active
 	) {

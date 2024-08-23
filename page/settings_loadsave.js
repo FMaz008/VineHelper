@@ -288,6 +288,7 @@ function initiateSettings() {
 	manageInputText("keyBindings.AIPage10");
 	manageInputText("keyBindings.hideAll");
 	manageInputText("keyBindings.showAll");
+	manageInputText("keyBindings.hideAllNext");
 	manageInputText("keyBindings.debug");
 
 	//##TAB - STYLES
