@@ -151,9 +151,13 @@ async function createGridInterface() {
 			vtabs.appendChild(clonedContent);
 			clonedContent.style.marginTop = "5px";
 
-			// Add event listeners to .vh-hideall and .vh-showall elements
+			// Add event listeners to .vh-hideall and .vh-showall elements AND vh-hideallnext
 			document.querySelectorAll(".vh-hideall").forEach((element) => {
 				element.addEventListener("click", () => this.hideAllItems());
+			});
+
+			document.querySelectorAll(".vh-hideallnext").forEach((element) => {
+				element.addEventListener("click", () => this.hideAllItems_next());
 			});
 
 			document.querySelectorAll(".vh-showall").forEach((element) => {
@@ -242,6 +246,11 @@ async function hideAllItems() {
 	// Scoll to the RFY/AFA/AI header
 	var scrollTarget = document.getElementById("vvp-items-button-container");
 	scrollTarget.scrollIntoView({ behavior: "smooth" });
+}
+
+async function hideAllItems_next() {
+	hideAllItems();
+	window.location = document.getElementsByClassName('a-text-center topPagination')[0].getElementsByClassName('a-last')[0].firstChild.getAttribute('href')
 }
 
 async function showAllItems() {

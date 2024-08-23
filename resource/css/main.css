@@ -107,6 +107,7 @@ div#bookmark {
 
 /* Add visual cues for the keybinding */
 a.vh-hideall span,
+a.vh-hideallnext span,
 a.vh-showall span,
 .vh-pagination-previous {
 	display: inline-block;
@@ -115,6 +116,7 @@ a.vh-showall span,
 ul.a-pagination li:first-child a span:last-child::first-letter,
 div:not([class*="topPaginationVerbose"]) > ul.a-pagination li:last-child a::first-letter,
 a.vh-hideall span::first-letter,
+a.vh-hideallnext span::first-letter,
 a.vh-showall span::first-letter {
 	text-decoration: underline;
 }
