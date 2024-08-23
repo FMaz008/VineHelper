@@ -157,7 +157,7 @@ async function createGridInterface() {
 			});
 
 			document.querySelectorAll(".vh-hideallnext").forEach((element) => {
-				element.addEventListener("click", () => this.hideAllItems_next());
+				element.addEventListener("click", () => this.hideAllItemsNext());
 			});
 
 			document.querySelectorAll(".vh-showall").forEach((element) => {
@@ -248,9 +248,14 @@ async function hideAllItems() {
 	scrollTarget.scrollIntoView({ behavior: "smooth" });
 }
 
-async function hideAllItems_next() {
+async function hideAllItemsNext() {
 	hideAllItems();
-	window.location = document.getElementsByClassName('a-text-center topPagination')[0].getElementsByClassName('a-last')[0].firstChild.getAttribute('href')
+	let nextPage = "";
+	try{	
+		nextPage = document.getElementsByClassName('a-text-center topPagination')[0].getElementsByClassName('a-last')[0].firstChild.getAttribute('href');
+   	} catch(e){}
+
+	if (nextPage) window.location = nextPage;
 }
 
 async function showAllItems() {
