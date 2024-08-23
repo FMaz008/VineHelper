@@ -7,3 +7,4 @@
 !/plugins/_pluginsInit.js
 *.zip
 node_modules
+.DS_Store
