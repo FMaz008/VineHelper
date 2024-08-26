@@ -20,7 +20,9 @@ const VERSION_MINOR_CHANGE = 2;
 const VERSION_REVISION_CHANGE = 1;
 const VERSION_NO_CHANGE = 0;
 
+//Timing variable used to wait until the status change before proceeding with further code
 var toolbarsDrawn = false;
+var productUpdated = false;
 
 const DEBUGGER_TITLE = "Vine Helper - Debugger";
 const VINE_INFO_TITLE = "Vine Helper update info";
@@ -65,6 +67,7 @@ async function init() {
 	await initInsertBookmarkButton();
 	initFixPreviousButton();
 	await initTilesAndDrawToolbars(); //Create the tiles, and move the locally hidden tiles to the hidden tab
+	initModalNagivation();
 
 	hookExecute("EndOfBootloader", null);
 
@@ -395,7 +398,7 @@ async function initTilesAndDrawToolbars() {
 	let tile = null;
 	let a = null;
 	for (let i = 0; i < arrObj.length; i++) {
-		tile = generateTile(arrObj[i]);
+		tile = await generateTile(arrObj[i]);
 		t = new Toolbar(tile);
 
 		//Add tool tip to the truncated item title link
@@ -477,7 +480,7 @@ function getAllProductData() {
 }
 
 //Convert the regular tile to the Vine Helper version.
-function generateTile(obj) {
+async function generateTile(obj) {
 	let tile;
 	tile = new Tile(obj, gridRegular);
 
@@ -514,7 +517,7 @@ function generateTile(obj) {
 	//Move the hidden item to the hidden tab
 	if (appSettings.hiddenTab.active && tile.isHidden()) {
 		showRuntime("BOOT: The item is locally hidden, move it to the hidden grid.");
-		tile.moveToGrid(gridHidden, false); //This is the main sort, do not animate it
+		await tile.moveToGrid(gridHidden, false); //This is the main sort, do not animate it
 	}
 
 	if (appSettings.general.displayVariantIcon) {
@@ -611,7 +614,7 @@ async function serverProductsResponse(data) {
 	showRuntime("FETCH: Interface loaded, processing fetch data...");
 
 	//For each product provided by the server, modify the local listings
-	$.each(data["products"], function (key, values) {
+	for (const [key, values] of Object.entries(data["products"])) {
 		showRuntime("DRAW: Processing ASIN #" + key);
 		//console.log(values);
 		let tile = getTileByAsin(key);
@@ -636,10 +639,10 @@ async function serverProductsResponse(data) {
 		if (appSettings.hiddenTab.remote == true && values.hidden != null) {
 			if (values.hidden == true && !tile.isHidden()) {
 				showRuntime("DRAW: Remote is ordering to hide item");
-				tile.hideTile(); //Will update the placement and list
+				await tile.hideTile(); //Will update the placement and list
 			} else if (values.hidden == false && tile.isHidden()) {
 				showRuntime("DRAW: Remote is ordering to show item");
-				tile.showTile(); //Will update the placement and list
+				await tile.showTile(); //Will update the placement and list
 			}
 		}
 
@@ -653,15 +656,15 @@ async function serverProductsResponse(data) {
 				showRuntime("DRAW: B");
 			} else if (tile.getStatus() >= DISCARDED_ORDER_FAILED) {
 				showRuntime("DRAW: moving the tile to Unavailable (failed order(s))");
-				tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
+				await tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
 			}
 
 			showRuntime("DRAW: Updating the toolbar");
 			tile.getToolbar().updateToolbar();
 			showRuntime("DRAW: Done updating the toolbar");
 		}
-		tile.initiateTile();
-	});
+		await tile.initiateTile();
+	}
 
 	if (appSettings.pinnedTab?.active && appSettings.hiddenTab?.remote) {
 		if (data["pinned_products"] != undefined) {
@@ -678,6 +681,7 @@ async function serverProductsResponse(data) {
 
 	updateTileCounts();
 	showRuntime("Done updating products");
+	productUpdated = true;
 }
 
 //#########################
@@ -957,6 +961,11 @@ window.addEventListener("keyup", async function (e) {
 		return false;
 	}
 
+	if (appSettings.general.modalNavigation && (e.key == "ArrowRight" || e.key == "ArrowLeft")) {
+		showRuntime("Arrow key detected.");
+		handleModalNavigation(e);
+	}
+
 	//Debug: secret keybind to generate dummy hidden items
 	/*if (e.key == "g") {
 		if (
@@ -1130,7 +1139,7 @@ let modalNavigatorNextIndex = 0;
  */
 function modalNavigatorHandleTileButtonClick(index, asin) {
 	modalNavigatorCurrentIndex = index;
-	console.log("[DEBUG] Tile clicked, current index: ", modalNavigatorCurrentIndex, "with ASIN:", asin);
+	showRuntime("[DEBUG] Tile clicked, current index: " + modalNavigatorCurrentIndex + " with ASIN: " + asin);
 }
 
 /**
@@ -1141,26 +1150,29 @@ function modalNavigatorHandleTileButtonClick(index, asin) {
  */
 function modalNavigatorCloseModal(modal) {
 	return new Promise((resolve) => {
-		console.log("[DEBUG] Closing modal...");
+		showRuntime("[DEBUG] Closing modal...");
 		modal.querySelector('button[data-action="a-popover-close"]').click();
 		setTimeout(() => {
-			console.log("[DEBUG] Modal closed!");
+			showRuntime("[DEBUG] Modal closed!");
 			resolve();
 		}, 300);
 	});
 }
 
-if (appSettings.general.modalNavigation) {
-	// Alert the user for experimental feature (debug only)
-	console.log(
-		"%cExperimental feature loaded: VineHelper modal navigator",
-		"color:#FFF;background:#F00;padding:8px;font-size:1.2rem"
-	);
+async function initModalNagivation() {
+	if (!appSettings.general.modalNavigation) {
+		return false;
+	}
+
+	//Wait for the interface to be loaded and product to have been sorted
+	while (productUpdated == false) {
+		await new Promise((r) => setTimeout(r, 10));
+	}
 
 	/**
 	 * Attach the 'click' eventListener to each yellow "See Details" button in the grid
 	 */
-	document.querySelectorAll(".vvp-item-tile").forEach((tile, index) => {
+	document.querySelectorAll("#vvp-items-grid .vvp-item-tile").forEach((tile, index) => {
 		const modalNavigatorButton = tile.querySelector(".vvp-details-btn input");
 		const modalNavigatorAsin = modalNavigatorButton.getAttribute("data-modalNavigatorAsin");
 
@@ -1168,69 +1180,63 @@ if (appSettings.general.modalNavigation) {
 			modalNavigatorHandleTileButtonClick(index, modalNavigatorAsin);
 		});
 	});
+}
+
+async function handleModalNavigation(event) {
+	/**
+	 * Let's check if the modal is open by looking for the (active) modal element on the page
+	 * If not, let's exit since there is nothing to click
+	 */
+	let modalNavigatorModal = document.querySelector('.a-popover-modal[aria-hidden="false"]');
+	const itemCount = document.querySelectorAll("#vvp-items-grid .vvp-item-tile").length;
+	if (!modalNavigatorModal) {
+		showRuntime("[DEBUG] Modal not open, nothing to navigate through; ignoring!");
+		return;
+	}
+
+	if (modalNavigatorCurrentIndex === -1) {
+		showRuntime("[DEBUG] There is no active tile; exiting");
+		return; // Exit if there's no current tile tracked
+	}
 
 	/**
-	 * Adds a keydown eventListener for navigation through the modals;
-	 * Handles both left and right arrow key presses to navigate between the items in the grid
+	 * Figure out the previous/next index based on keyPress
+	 * We'll use the {document[...].length} to find the first/last item so we'll not run out of bounds
 	 */
-	document.addEventListener("keydown", async function (event) {
-		console.log("Key pressed:", event.key);
+	if (event.key === "ArrowRight") {
+		modalNavigatorNextIndex = (modalNavigatorCurrentIndex + 1) % itemCount;
+	} else if (event.key === "ArrowLeft") {
+		modalNavigatorNextIndex = (modalNavigatorCurrentIndex - 1 + itemCount) % itemCount;
+	} else {
+		showRuntime("[DEBUG] No left/right arrowkey pressed; exiting");
+		return;
+	}
 
-		/**
-		 * Let's check if the modal is open by looking for the (active) modal element on the page
-		 * If not, let's exit since there is nothing to click
-		 */
-		let modalNavigatorModal = document.querySelector('.a-popover-modal[aria-hidden="false"]');
-		if (!modalNavigatorModal) {
-			console.log("[DEBUG] Modal not open, nothing to navigate through; ignoring!");
-			return;
-		}
+	showRuntime("[DEBUG] Next index in the grid: " + modalNavigatorNextIndex);
 
-		if (modalNavigatorCurrentIndex === -1) {
-			console.log("[DEBUG] There is no active tile; exiting");
-			return; // Exit if there's no current tile tracked
-		}
+	// Close the modalNavigatorModal, await it, then continue
+	await modalNavigatorCloseModal(modalNavigatorModal);
 
-		/**
-		 * Figure out the previous/next index based on keyPress
-		 * We'll use the {document[...].length} to find the first/last item so we'll not run out of bounds
-		 */
-		if (event.key === "ArrowRight") {
-			modalNavigatorNextIndex =
-				(modalNavigatorCurrentIndex + 1) % document.querySelectorAll(".vvp-item-tile").length;
-		} else if (event.key === "ArrowLeft") {
-			modalNavigatorNextIndex =
-				(modalNavigatorCurrentIndex - 1 + document.querySelectorAll(".vvp-item-tile").length) %
-				document.querySelectorAll(".vvp-item-tile").length;
+	/**
+	 * Target the button with the correct {data-asin} and click it, baby!
+	 * HOWEVER, we require a delay of 600ms right now, perhaps fixable in a later release
+	 */
+	setTimeout(() => {
+		const modalNavigatorNextTile = document.querySelectorAll("#vvp-items-grid .vvp-item-tile")[
+			modalNavigatorNextIndex
+		];
+		const modalNavigatorNextButton = modalNavigatorNextTile.querySelector(".vvp-details-btn input");
+		const modalNavigatorNextAsin = modalNavigatorNextButton.getAttribute("data-asin");
+
+		if (modalNavigatorNextButton) {
+			showRuntime("[DEBUG] Trying to open modal with ASIN: " + modalNavigatorNextAsin);
+			modalNavigatorNextButton.click();
 		} else {
-			console.log("[DEBUG] No left/right arrowkey pressed; exiting");
-			return;
+			showRuntime("[DEBUG] There is no such button, broken? ASIN: " + modalNavigatorNextAsin);
 		}
+	}, 600);
 
-		console.log("[DEBUG] Next index in the grid:", modalNavigatorNextIndex);
-
-		// Close the modalNavigatorModal, await it, then continue
-		await modalNavigatorCloseModal(modalNavigatorModal);
-
-		/**
-		 * Target the button with the correct {data-asin} and click it, baby!
-		 * HOWEVER, we require a delay of 600ms right now, perhaps fixable in a later release
-		 */
-		setTimeout(() => {
-			const modalNavigatorNextTile = document.querySelectorAll(".vvp-item-tile")[modalNavigatorNextIndex];
-			const modalNavigatorNextButton = modalNavigatorNextTile.querySelector(".vvp-details-btn input");
-			const modalNavigatorNextAsin = modalNavigatorNextButton.getAttribute("data-asin");
-
-			if (modalNavigatorNextButton) {
-				console.log("[DEBUG] Trying to open modal with ASIN", modalNavigatorNextAsin);
-				modalNavigatorNextButton.click();
-			} else {
-				console.log("[DEBUG] There is no such button, broken? ASIN:", modalNavigatorNextAsin);
-			}
-		}, 600);
-
-		// Finally update the current index
-		modalNavigatorCurrentIndex = modalNavigatorNextIndex;
-		console.log("[DEBUG] Updated the current index to:", modalNavigatorCurrentIndex);
-	});
+	// Finally update the current index
+	modalNavigatorCurrentIndex = modalNavigatorNextIndex;
+	showRuntime("[DEBUG] Updated the current index to: " + modalNavigatorCurrentIndex);
 }

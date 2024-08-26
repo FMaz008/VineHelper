@@ -15,26 +15,32 @@ class Grid {
 		return this.pGrid;
 	}
 
-	addTile(t) {
-		this.pArrTile.push(t);
+	async addTile(t) {
+		return new Promise((resolve) => {
+			this.pArrTile.push(t);
 
-		if (Object.keys(t).length !== 0) {
-			$(t.getDOM())
-				.detach()
-				.appendTo("#" + this.getId());
-			$(t.getDOM()).show();
-		}
+			if (Object.keys(t).length !== 0) {
+				const domElement = t.getDOM();
+				domElement.parentNode?.removeChild(domElement); // Detach from the current parent
+				document.getElementById(this.getId()).appendChild(domElement); // Append to the new parent
+				domElement.style.display = ""; // Show the element
+			}
+			resolve();
+		});
 	}
 
-	removeTile(t) {
-		$.each(
-			this.pArrTile,
-			function (key, value) {
-				if (value != undefined && value.getAsin() == t.getAsin()) {
-					this.pArrTile.splice(key, 1);
+	async removeTile(t) {
+		return new Promise((resolve) => {
+			// Iterate over the array in reverse order to safely remove items
+			for (let i = this.pArrTile.length - 1; i >= 0; i--) {
+				const value = this.pArrTile[i];
+				if (value !== undefined && value.getAsin() === t.getAsin()) {
+					this.pArrTile.splice(i, 1);
 				}
-			}.bind(this)
-		);
+			}
+
+			resolve();
+		});
 	}
 
 	async removeTileAnimate(t) {
@@ -44,8 +50,11 @@ class Grid {
 	}
 
 	getTileCount(trueCount = false) {
-		if (trueCount) return $(this.pGrid).children().length;
-		else return this.pArrTile.length;
+		if (trueCount) {
+			return $(this.pGrid).children().length;
+		} else {
+			return this.pArrTile.length;
+		}
 	}
 
 	getTileByASIN(asin) {
@@ -251,9 +260,14 @@ async function hideAllItems() {
 async function hideAllItemsNext() {
 	hideAllItems();
 	let nextPage = "";
-	try{	
-		nextPage = document.getElementsByClassName('a-text-center topPagination')[0].getElementsByClassName('a-last')[0].firstChild.getAttribute('href');
-   	} catch(e){}
+	try {
+		nextPage = document
+			.getElementsByClassName("a-text-center topPagination")[0]
+			.getElementsByClassName("a-last")[0]
+			.firstChild.getAttribute("href");
+	} catch (e) {
+		//Do nothing
+	}
 
 	if (nextPage) window.location = nextPage;
 }

@@ -207,11 +207,14 @@ function Tile(obj, gridInstance) {
 		//If we are asking to move the tile to the same grid, don't do anything
 		if (g.getId() == pGrid.getId()) return false;
 
-		if (animate) await pGrid.removeTileAnimate(this);
-		else pGrid.removeTile(this); //Avoiding the await keep the method synchronous
+		if (animate) {
+			await pGrid.removeTileAnimate(this);
+		} else {
+			await pGrid.removeTile(this); //Avoiding the await keep the method synchronous
+		}
 
 		pGrid = g; //Update the new grid as the current one
-		pGrid.addTile(this);
+		await pGrid.addTile(this);
 
 		return true;
 	};
