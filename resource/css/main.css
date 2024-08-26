@@ -116,7 +116,6 @@ a.vh-showall span,
 ul.a-pagination li:first-child a span:last-child::first-letter,
 div:not([class*="topPaginationVerbose"]) > ul.a-pagination li:last-child a::first-letter,
 a.vh-hideall span::first-letter,
-a.vh-hideallnext span::first-letter,
 a.vh-showall span::first-letter {
 	text-decoration: underline;
 }

@@ -7,7 +7,7 @@ div.vh-status {
 
 div.hidden-toolbar {
 	float: right;
-	width: 130px;
+	width: 240px;
 	text-align: right;
 	padding-right: 5px;
 }
@@ -142,7 +142,6 @@ div.vh-order-widget {
 	clear: right;
 	text-align: center;
 }
-
 
 .compact div.vh-order-widget {
 	display: inline-block;
