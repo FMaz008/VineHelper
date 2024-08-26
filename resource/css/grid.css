@@ -80,3 +80,17 @@ body.darktheme #vvp-items-grid-container div.keyword-highlight a:visited,
 body.darktheme #vvp-items-grid-container div.keyword-highlight a:active {
 }
 */
+
+/* Pinned items */
+#tab-pinned .vh-notification-toolbar {
+	padding: 5px;
+}
+#tab-pinned .vh-notification-content {
+	padding: 5px;
+}
+#tab-pinned .vh-notification-content img {
+	float: left;
+	width: 100px;
+	height: 100px;
+	margin-right: 5px;
+}

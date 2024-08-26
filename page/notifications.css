@@ -30,9 +30,9 @@
 
 #vh-items-container .vh-notification-content img {
 	float: left;
-	width: 100;
-	height: 100;
-	margin-right: 5;
+	width: 100px;
+	height: 100px;
+	margin-right: 5px;
 }
 
 #vh-items-container .vh-notification-footer {
