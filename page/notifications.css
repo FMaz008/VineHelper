@@ -47,12 +47,14 @@
 	vertical-align: middle;
 }
 
-.zeroETV {
-	background-color: hsla(140, 100%, 30%, 25%);
+.monitor-toolbar {
+	width: 100%;
+	display: flex;
+	justify-content: flex-end;
 }
 
-.keyword-highlight {
-	background-color: rgba(255, 232, 21, 0.50);
+.monitor-toolbar label {
+	margin-right: 20px;
 }
 
 .etv_value {

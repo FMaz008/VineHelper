@@ -29,7 +29,7 @@ var TplMgr = new TemplateMgr();
 
 	initTabs();
 
-	init(); //popup/homepage.js, initialize the loading and saving code for the page
+	initiateSettings(); //page/settings_loadsave.js, initialize the loading and saving code for the page
 })();
 
 function getAppVersion() {

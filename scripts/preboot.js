@@ -74,20 +74,26 @@ function getDefaultSettings() {
 				active: false,
 				thumbnail: true,
 				regular: {
-					sound: 0,
-					volume: 100,
+					sound: "0",
+					volume: 1,
 				},
 			},
 			monitor: {
 				hideList: false,
 				hideDuplicateThumbnail: false,
 				regular: {
-					sound: 0,
-					volume: 100,
+					sound: "0",
+					volume: 1,
 				},
 				highlight: {
-					sound: 0,
-					volume: 100,
+					sound: "0",
+					volume: 1,
+					color: "#FFE815",
+				},
+				zeroETV: {
+					sound: "0",
+					volume: 1,
+					color: "#009933",
 				},
 			},
 		},
@@ -222,8 +228,8 @@ async function getSettings() {
 				active: appSettings.general.displayNewItemNotifications,
 				thumbnail: appSettings.general.newItemNotificationImage,
 				regular: {
-					sound: "notification",
-					volume: 100,
+					sound: "0",
+					volume: 0,
 				},
 			},
 			monitor: {
@@ -231,11 +237,17 @@ async function getSettings() {
 				hideDuplicateThumbnail: appSettings.general.newItemMonitorDuplicateImageHiding,
 				regular: {
 					sound: "notification",
-					volume: appSettings.general.newItemMonitorNotificationSound == 2 ? 0 : 100,
+					volume: appSettings.general.newItemMonitorNotificationSound == 2 ? 0 : 1,
 				},
 				highlight: {
 					sound: "notification",
-					volume: 100,
+					volume: 1,
+					color: "#FFE815",
+				},
+				zeroETV: {
+					sound: "0",
+					volume: 1,
+					color: "#009933",
 				},
 			},
 		};

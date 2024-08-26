@@ -91,12 +91,12 @@ label.right-align select {
 .setting-summary {
 	font-style: italic;
 	margin-left: 30px;
-	width: 500px;
 	background-color: #f6f6f6;
 	border: 1px solid #eee;
 	padding: 5px;
 	padding-left: 25px;
 }
+
 
 .vh-toolbar-icon {
 	margin-left: -20px;

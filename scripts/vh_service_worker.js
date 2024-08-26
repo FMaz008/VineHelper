@@ -67,6 +67,10 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 			//sendMessageToAllTabs({ type: "vineCountry", domain: vineCountry }, "Vine Country - keep alive");
 		}
 	}
+	if (data.type == "fetchLast100Items") {
+		//Get the last 100 most recent items
+		checkNewItems(true);
+	}
 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
@@ -109,7 +113,7 @@ async function init() {
 
 init();
 
-async function checkNewItems() {
+async function checkNewItems(getAllItems = false) {
 	let arrJSON = {
 		api_version: 4,
 		country: vineCountry,
@@ -142,7 +146,7 @@ async function checkNewItems() {
 
 			for (let i = response.products.length - 1; i >= 0; i--) {
 				//Only display notification for product more recent than the last displayed notification
-				if (DEBUG_MODE || response.products[i].date > latestProduct || latestProduct == 0) {
+				if (getAllItems || DEBUG_MODE || response.products[i].date > latestProduct || latestProduct == 0) {
 					//Only display notification for products with a title and image url
 					if (response.products[i].img_url != "" && response.products[i].title != "") {
 						if (i == 0) {
@@ -172,6 +176,7 @@ async function checkNewItems() {
 					}
 				}
 			}
+			sendMessageToAllTabs({ type: "newItemCheckEnd" }, "End of notification(s) update");
 		})
 		.catch(function () {
 			(error) => console.log(error);

@@ -1,6 +1,16 @@
-var muteSound = false;
-const SOUND_SETTING_ALWAYS = 0;
-const SOUND_SETTING_KEYWORD = 1;
+//Notification arrive one at the time
+//These variable allow to remember the type of notifications received
+//so that when the batch end, if notification(s) were received
+//the proper sound effect can be played.
+var notification_added_item = false;
+var notification_highlight = false;
+var notification_zeroETV = false;
+
+const TYPE_REGULAR = 0;
+const TYPE_ZEROETV = 1;
+const TYPE_HIGHLIGHT = 2;
+//const TYPE_HIGHLIGHT_OR_ZEROETV = 9;
+
 var appSettings = [];
 if (typeof browser === "undefined") {
 	var browser = chrome;
@@ -71,6 +81,14 @@ window.onload = function () {
 			note.lifespan = 3;
 			Notifications.pushNotification(note);
 		}
+		if (data.type == "newItemCheckEnd") {
+			if (notification_added_item) {
+				playSoundAccordingToNotificationType(notification_highlight, notification_zeroETV);
+			}
+			notification_added_item = false;
+			notification_highlight = false;
+			notification_zeroETV = false;
+		}
 		if (data.type == "vineCountry") {
 			if (vineDomain === null) {
 				setLocale(data.domain);
@@ -127,6 +145,41 @@ async function init() {
 			}
 		}
 	);
+
+	//Bind the event when changing the filter
+	const filter = document.querySelector("select[name='filter-type']");
+	filter.addEventListener("change", function () {
+		if (filter.value == "-1") {
+			//Display all notifications
+			document.querySelectorAll(".vh-notification-box").forEach(function (node, key, parent) {
+				node.style.display = "grid";
+			});
+		} else {
+			//Display a specific type of notifications only
+			document.querySelectorAll(".vh-notification-box").forEach(function (node, key, parent) {
+				if (filter.value == 9) {
+					node.style.display =
+						node.getAttribute("data-notification-type") == TYPE_HIGHLIGHT ||
+						node.getAttribute("data-notification-type") == TYPE_ZEROETV
+							? "grid"
+							: "none";
+				} else {
+					node.style.display = node.getAttribute("data-notification-type") == filter.value ? "grid" : "none";
+				}
+			});
+		}
+	});
+
+	//Bind fetch-last-100 button
+	const btnLast100 = document.querySelector("button[name='fetch-last-100']");
+	btnLast100.addEventListener("click", function () {
+		browser.runtime.sendMessage(
+			{
+				type: "fetchLast100Items",
+			},
+			function (response) {}
+		);
+	});
 }
 
 //Set the locale and currency based on the domain.
@@ -159,8 +212,15 @@ function addItem(data) {
 	let { date, asin, title, search, img_url, domain, etv } = data;
 	let { hideKeywords, highlightKeywords } = appSettings.general;
 
+	let type = TYPE_REGULAR;
+
 	//If the locale is not define, set it.
 	if (vineLocale == null) setLocale(domain);
+
+	if (etv == "0.00") {
+		type = TYPE_ZEROETV;
+		notification_zeroETV = true;
+	}
 
 	if (appSettings.notification.monitor.hideDuplicateThumbnail && imageUrls.has(img_url)) {
 		showRuntime("NOTIFICATION: item " + asin + " has a duplicate image and won't be shown.");
@@ -168,8 +228,11 @@ function addItem(data) {
 	}
 
 	let shouldHighlight = keywordMatch(highlightKeywords, title);
-	if (shouldHighlight)
+	if (shouldHighlight) {
 		showRuntime("NOTIFICATION: item " + asin + " match the highlight list and will be highlighed.");
+		type = TYPE_HIGHLIGHT;
+		notification_highlight = true;
+	}
 
 	if (!shouldHighlight && appSettings.notification.monitor.hideList && keywordMatch(hideKeywords, title)) {
 		showRuntime("NOTIFICATION: item " + asin + " match the hidden list and won't be shown.");
@@ -183,35 +246,47 @@ function addItem(data) {
 			setETV(asin, etv);
 		}
 	} else {
+		notification_added_item = true;
+
 		//New item to be added
 		items.set(asin, etv);
 		imageUrls.add(img_url);
-		playSoundIfEnabled(shouldHighlight);
 
-		Tpl.setVar("id", asin);
+		Tpl.setVar("asin", asin);
 		Tpl.setVar("domain", vineDomain);
 		Tpl.setVar("title", "New item");
 		Tpl.setVar("date", formatDate(date));
 		Tpl.setVar("search", search);
-		Tpl.setVar("asin", asin);
 		Tpl.setVar("description", title);
 		Tpl.setVar("img_url", img_url);
+		Tpl.setVar("type", type);
 		Tpl.setVar("etv", formatETV(etv));
-		Tpl.setIf("shouldHighlight", shouldHighlight);
 		let content = Tpl.render(loadedTpl, true); //true to return a DOM object instead of an HTML string
 
 		const newBody = document.getElementById("vh-items-container");
 		newBody.prepend(content);
 
+		//Set ETV
+		setETV(asin, etv);
+
+		//Highlight background color
+		if (shouldHighlight) {
+			const obj = elementByAsin(asin);
+			obj.style.backgroundColor = appSettings.notification.monitor.highlight.color;
+		}
+
 		// Add new click listener for the report button
 		document
 			.querySelector("#vh-notification-" + asin + " .report-link")
 			.addEventListener("click", handleReportClick);
-		setETV(asin, etv);
 
 		//Update the most recent date
 		document.getElementById("date_most_recent_item").innerText = formatDate(date);
 	}
+
+	//Apply the filter.
+	const filter = document.querySelector("select[name='filter-type']");
+	filter.dispatchEvent(new Event("change"));
 }
 
 //Prepare the ETV to be displayed
@@ -230,27 +305,38 @@ function formatDate(date) {
 	return new Date(date + " GMT").toLocaleString(vineLocale);
 }
 
-function playSoundIfEnabled(highlightMatch = false) {
-	if (muteSound) {
-		return false;
+function playSoundAccordingToNotificationType(highlightMatch = false, zeroETV = false) {
+	let volume, filename;
+
+	//Highlight notification
+	volume = appSettings.notification.monitor.highlight.volume;
+	filename = appSettings.notification.monitor.highlight.sound;
+	if (highlightMatch && filename != "0" && volume > 0) {
+		playSound(filename, volume);
+		return true;
 	}
 
-	let volume, fileName;
-	if (highlightMatch) {
-		volume = appSettings.notification.monitor.highlight.volume;
-		fileName = appSettings.notification.monitor.highlight.sound;
-	} else {
-		//Regular notification
-		volume = appSettings.notification.monitor.regular.volume;
-		fileName = appSettings.notification.monitor.regular.sound;
+	//Zero ETV notification
+	volume = appSettings.notification.monitor.zeroETV.volume;
+	filename = appSettings.notification.monitor.zeroETV.sound;
+	if (zeroETV && filename != "0" && volume > 0) {
+		playSound(filename, volume);
+		return true;
 	}
 
-	if (fileName == "0" || volume == 0) {
-		return false;
+	//Regular notification
+	volume = appSettings.notification.monitor.regular.volume;
+	filename = appSettings.notification.monitor.regular.sound;
+	if (filename != "0" || volume > 0) {
+		playSound(filename, volume);
+		return true;
 	}
 
-	muteSound = true; // Don't play the notification sound again within 30 sec.
-	const audioElement = new Audio(browser.runtime.getURL("resource/sound/" + fileName + ".mp3"));
+	return false;
+}
+
+function playSound(filename, volume) {
+	const audioElement = new Audio(browser.runtime.getURL("resource/sound/" + filename + ".mp3"));
 	const handleEnded = () => {
 		audioElement.removeEventListener("ended", handleEnded); // Remove the event listener
 		audioElement.remove(); // Remove the audio element from the DOM
@@ -269,11 +355,14 @@ function elementByAsin(asin) {
 }
 
 function setETV(asin, etv) {
-	const etvClass = elementByAsin(asin);
+	const obj = elementByAsin(asin);
 
 	//Highlight for ETV
 	if (etv == "0.00") {
-		etvClass.classList.add("zeroETV");
+		obj.style.backgroundColor = appSettings.notification.monitor.zeroETV.color;
+		if (obj.getAttribute("data-notification-type") != TYPE_HIGHLIGHT) {
+			obj.setAttribute("data-notification-type", TYPE_ZEROETV);
+		}
 	}
 	//Remove ETV Value if it does not exist
 	let etvElement = document.querySelector("#" + itemID(asin) + " .etv_value");

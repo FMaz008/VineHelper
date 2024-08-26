@@ -102,6 +102,51 @@
 					<button id="playMonitorHighlightNotification">&#9654;</button>
 				</label>
 			</div>
+			<div class="setting-container">
+				<label for="notification.monitor.highlight.color" style="margin-left: 20px"
+					>Color:
+					<input type="text" name="notification.monitor.highlight.color" size="7" maxlength="7" />
+				</label>
+				<div class="setting-summary">
+					<div class="vh-toolbar-icon vh-icon-question"></div>
+					Defines the background color of notifications matching highlight keywords.
+				</div>
+			</div>
+		</div>
+		Zero ETV
+		<div class="tabulation">
+			<div class="setting-container">
+				<label for="notification.monitor.zeroETV.sound" style="margin-left: 20px"
+					>Sound:
+					<select name="notification.monitor.zeroETV.sound">
+						<option value="0">None</option>
+						<option value="notification">Notification</option>
+						<option value="upgrade">Upgrade</option>
+						<option value="vintage-horn">Vintage Horn</option>
+					</select>
+				</label>
+				<div class="setting-summary">
+					<div class="vh-toolbar-icon vh-icon-question"></div>
+					Defines what sound effect to play when a notification has a zero ETV.
+				</div>
+			</div>
+			<div class="setting-container">
+				<label for="notification.monitor.zeroETV.volume" style="margin-left: 20px"
+					>Volume:
+					<input type="range" name="notification.monitor.zeroETV.volume" min="0" max="1" step="0.05" />
+					<button id="playMonitorZeroETVNotification">&#9654;</button>
+				</label>
+			</div>
+			<div class="setting-container">
+				<label for="notification.monitor.zeroETV.color" style="margin-left: 20px"
+					>Color:
+					<input type="text" name="notification.monitor.zeroETV.color" size="7" maxlength="7" />
+				</label>
+				<div class="setting-summary">
+					<div class="vh-toolbar-icon vh-icon-question"></div>
+					Defines the background color of notifications with a zero ETV.
+				</div>
+			</div>
 		</div>
 		Regular notifications
 		<div class="tabulation">
