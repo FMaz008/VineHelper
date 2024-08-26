@@ -1097,3 +1097,138 @@ function removeElements(selector) {
 function getRandomNumber(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
+/**
+ * ========================================================================
+ * ================ EXPERIMENTAL FEATURE: MODAL NAVIGATION ================
+ * ========================================================================
+ */
+
+/**
+ * Tracks the index of the current active tile within the grid
+ * Defaulted it to -1 to indicate no active tile initially (on load)
+ *
+ * @type {number}
+ */
+let modalNavigatorCurrentIndex = -1;
+
+/**
+ * Tracks the index of the current active tile we want to navigate to
+ * Defaulted to 0 to start from the first tile, unless another is clicked
+ *
+ * @type {number}
+ */
+let modalNavigatorNextIndex = 0;
+
+/**
+ * Handles the click event on the detail button and stores both the index and ASIN code.
+ *
+ * @param {number} index - The index of the current tile
+ * @param {string} asin - The ASIN code associated with the product/tile
+ */
+function modalNavigatorHandleTileButtonClick(index, asin) {
+	modalNavigatorCurrentIndex = index;
+	console.log("[DEBUG] Tile clicked, current index: ", modalNavigatorCurrentIndex, "with ASIN:", asin);
+}
+
+/**
+ * Closes popup modal and returns the Promise when it's finished
+ *
+ * @param {HTMLElement} modal - The modal that we need to close
+ * @returns {Promise<void>} - A promise that resolves after it's closed
+ */
+function modalNavigatorCloseModal(modal) {
+	return new Promise((resolve) => {
+		console.log("[DEBUG] Closing modal...");
+		modal.querySelector('button[data-action="a-popover-close"]').click();
+		setTimeout(() => {
+			console.log("[DEBUG] Modal closed!");
+			resolve();
+		}, 300);
+	});
+}
+
+if (appSettings.general.modalNavigation) {
+	// Alert the user for experimental feature (debug only)
+	console.log(
+		"%cExperimental feature loaded: VineHelper modal navigator",
+		"color:#FFF;background:#F00;padding:8px;font-size:1.2rem"
+	);
+
+	/**
+	 * Attach the 'click' eventListener to each yellow "See Details" button in the grid
+	 */
+	document.querySelectorAll(".vvp-item-tile").forEach((tile, index) => {
+		const modalNavigatorButton = tile.querySelector(".vvp-details-btn input");
+		const modalNavigatorAsin = modalNavigatorButton.getAttribute("data-modalNavigatorAsin");
+
+		modalNavigatorButton.addEventListener("click", function () {
+			modalNavigatorHandleTileButtonClick(index, modalNavigatorAsin);
+		});
+	});
+
+	/**
+	 * Adds a keydown eventListener for navigation through the modals;
+	 * Handles both left and right arrow key presses to navigate between the items in the grid
+	 */
+	document.addEventListener("keydown", async function (event) {
+		console.log("Key pressed:", event.key);
+
+		/**
+		 * Let's check if the modal is open by looking for the (active) modal element on the page
+		 * If not, let's exit since there is nothing to click
+		 */
+		let modalNavigatorModal = document.querySelector('.a-popover-modal[aria-hidden="false"]');
+		if (!modalNavigatorModal) {
+			console.log("[DEBUG] Modal not open, nothing to navigate through; ignoring!");
+			return;
+		}
+
+		if (modalNavigatorCurrentIndex === -1) {
+			console.log("[DEBUG] There is no active tile; exiting");
+			return; // Exit if there's no current tile tracked
+		}
+
+		/**
+		 * Figure out the previous/next index based on keyPress
+		 * We'll use the {document[...].length} to find the first/last item so we'll not run out of bounds
+		 */
+		if (event.key === "ArrowRight") {
+			modalNavigatorNextIndex =
+				(modalNavigatorCurrentIndex + 1) % document.querySelectorAll(".vvp-item-tile").length;
+		} else if (event.key === "ArrowLeft") {
+			modalNavigatorNextIndex =
+				(modalNavigatorCurrentIndex - 1 + document.querySelectorAll(".vvp-item-tile").length) %
+				document.querySelectorAll(".vvp-item-tile").length;
+		} else {
+			console.log("[DEBUG] No left/right arrowkey pressed; exiting");
+			return;
+		}
+
+		console.log("[DEBUG] Next index in the grid:", modalNavigatorNextIndex);
+
+		// Close the modalNavigatorModal, await it, then continue
+		await modalNavigatorCloseModal(modalNavigatorModal);
+
+		/**
+		 * Target the button with the correct {data-asin} and click it, baby!
+		 * HOWEVER, we require a delay of 600ms right now, perhaps fixable in a later release
+		 */
+		setTimeout(() => {
+			const modalNavigatorNextTile = document.querySelectorAll(".vvp-item-tile")[modalNavigatorNextIndex];
+			const modalNavigatorNextButton = modalNavigatorNextTile.querySelector(".vvp-details-btn input");
+			const modalNavigatorNextAsin = modalNavigatorNextButton.getAttribute("data-asin");
+
+			if (modalNavigatorNextButton) {
+				console.log("[DEBUG] Trying to open modal with ASIN", modalNavigatorNextAsin);
+				modalNavigatorNextButton.click();
+			} else {
+				console.log("[DEBUG] There is no such button, broken? ASIN:", modalNavigatorNextAsin);
+			}
+		}, 600);
+
+		// Finally update the current index
+		modalNavigatorCurrentIndex = modalNavigatorNextIndex;
+		console.log("[DEBUG] Updated the current index to:", modalNavigatorCurrentIndex);
+	});
+}
