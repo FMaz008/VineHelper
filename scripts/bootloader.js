@@ -394,7 +394,7 @@ async function initTilesAndDrawToolbars() {
 	tooltip.className = "hover-tooltip";
 	document.body.appendChild(tooltip);
 
-	const arrObj = document.querySelectorAll(".vvp-item-tile");
+	const arrObj = document.querySelectorAll(".vvp-item-tile:not(.pinned)");
 	let tile = null;
 	let a = null;
 	for (let i = 0; i < arrObj.length; i++) {

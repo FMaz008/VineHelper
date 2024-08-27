@@ -1,14 +1,22 @@
-<div id="vh-pin-{{$id}}" class="vh-notification-box" style="clear: both; margin: 2px">
-	<div class="vh-notification-toolbar" style="background-color: var(--bookmark); height: 36px">
-		<a href="https://amazon.{{$domain}}/vine/vine-items?search={{$search}}" target="_blank">
-			<div class="vh-toolbar-large-icon vh-icon-search" style="float: left"></div>
-		</a>
-		<a href="#" class="unpin-link" onclick="return false;">
-			<div class="vh-toolbar-large-icon vh-icon-unpin" data-asin="{{$asin}}" style="float: right"></div>
-		</a>
-	</div>
-	<div class="vh-notification-content">
+<div id="vh-pin-{{$id}}" class="vvp-item-tile pinned">
+	<div class="vh-img-container">
 		<img src="{{$img_url}}" />
-		<a href="https://amazon.{{$domain}}/dp/{{$asin}}" target="_blank">{{$description}}</a>
+	</div>
+	<div class="vvp-item-tile-content vh-status compact">
+		<div class="vh-status-container" style="height: 20px">
+			<div class="vh-status-container2">
+				<a href="#" class="vh-floating-icon vh-announce-link unpin-link" onclick="return false;">
+					<div class="vh-toolbar-icon vh-icon-unpin" data-asin="{{$asin}}"></div>
+				</a>
+				<a
+					href="https://amazon.{{$domain}}/vine/vine-items?search={{$search}}"
+					class="vh-floating-icon"
+					target="_blank"
+				>
+					<div class="vh-toolbar-icon vh-icon-search"></div>
+				</a>
+			</div>
+		</div>
+		<a href="https://amazon.{{$domain}}/dp/{{$asin}}" class="a-link-normal" target="_blank">{{$description}}</a>
 	</div>
 </div>
