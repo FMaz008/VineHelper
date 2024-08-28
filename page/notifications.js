@@ -157,14 +157,7 @@ async function init() {
 		} else {
 			//Display a specific type of notifications only
 			document.querySelectorAll(".vh-notification-box").forEach(function (node, key, parent) {
-				const notificationType = parseInt(node.getAttribute("data-notification-type"));
-
-				if (filter.value == 9) {
-					const typesToShow = [TYPE_HIGHLIGHT, TYPE_ZEROETV];
-					node.style.display = typesToShow.includes(notificationType) ? "grid" : "none";
-				} else {
-					node.style.display = notificationType == filter.value ? "grid" : "none";
-				}
+				processNotificationFiltering(node);
 			});
 		}
 	});
@@ -179,6 +172,18 @@ async function init() {
 			function (response) {}
 		);
 	});
+}
+
+function processNotificationFiltering(node) {
+	const filter = document.querySelector("select[name='filter-type']");
+	const notificationType = parseInt(node.getAttribute("data-notification-type"));
+
+	if (filter.value == 9) {
+		const typesToShow = [TYPE_HIGHLIGHT, TYPE_ZEROETV];
+		node.style.display = typesToShow.includes(notificationType) ? "grid" : "none";
+	} else {
+		node.style.display = notificationType == filter.value ? "grid" : "none";
+	}
 }
 
 //Set the locale and currency based on the domain.
@@ -265,6 +270,9 @@ function addItem(data) {
 		const newBody = document.getElementById("vh-items-container");
 		newBody.prepend(content);
 
+		//Apply the filter.
+		processNotificationFiltering(content);
+
 		//Set ETV
 		setETV(asin, etv);
 
@@ -282,10 +290,6 @@ function addItem(data) {
 		//Update the most recent date
 		document.getElementById("date_most_recent_item").innerText = formatDate(date);
 	}
-
-	//Apply the filter.
-	const filter = document.querySelector("select[name='filter-type']");
-	filter.dispatchEvent(new Event("change"));
 }
 
 //Prepare the ETV to be displayed
