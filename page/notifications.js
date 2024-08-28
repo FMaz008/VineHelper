@@ -157,13 +157,13 @@ async function init() {
 		} else {
 			//Display a specific type of notifications only
 			document.querySelectorAll(".vh-notification-box").forEach(function (node, key, parent) {
-				const notificationType = node.getAttribute("data-notification-type");
+				const notificationType = parseInt(node.getAttribute("data-notification-type"));
 
 				if (filter.value == 9) {
 					const typesToShow = [TYPE_HIGHLIGHT, TYPE_ZEROETV];
 					node.style.display = typesToShow.includes(notificationType) ? "grid" : "none";
 				} else {
-					node.style.display = typesToShow == filter.value ? "grid" : "none";
+					node.style.display = notificationType == filter.value ? "grid" : "none";
 				}
 			});
 		}
@@ -341,7 +341,9 @@ function playSound(filename, volume) {
 		audioElement.remove(); // Remove the audio element from the DOM
 	};
 	audioElement.addEventListener("ended", handleEnded);
-	audioElement.volume = Number(volume);
+	if (volume >= 0 && volume <= 1) {
+		audioElement.volume = Number(volume);
+	}
 	audioElement.play();
 }
 
