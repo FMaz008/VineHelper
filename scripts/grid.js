@@ -238,17 +238,12 @@ async function hideAllItems() {
 		currentTab = "#tab-unavailable";
 	}
 
-	let vvpItemTile = document.querySelector(currentTab + " .vvp-item-tile");
-	if (vvpItemTile) {
-		while (vvpItemTile && vvpItemTile.children.length > 0) {
-			let tDom = vvpItemTile.children[0];
-			let asin = getAsinFromDom(tDom);
-			arrTile.push({ asin: asin, hidden: true });
-			let tile = getTileByAsin(asin); // Obtain the real tile
-			await tile.hideTile(false, false); // Do not update local storage
-
-			vvpItemTile = document.querySelector(currentTab + " .vvp-item-tile");
-		}
+	const vvpItemTiles = document.querySelectorAll(currentTab + " .vvp-item-tile");
+	for (const vvpItemTile of vvpItemTiles) {
+		let asin = getAsinFromDom(vvpItemTile);
+		arrTile.push({ asin: asin, hidden: true });
+		let tile = getTileByAsin(asin); // Obtain the real tile
+		await tile.hideTile(false, false); // Do not update local storage
 	}
 	HiddenList.saveList();
 
@@ -277,17 +272,12 @@ async function showAllItems() {
 	let arrTile = [];
 	HiddenList.loadFromLocalStorage(); //Refresh the list in case it was altered in a different tab
 
-	let vvpItemTile = document.querySelector("#tab-hidden .vvp-item-tile");
-	if (vvpItemTile) {
-		while (vvpItemTile && vvpItemTile.children.length > 0) {
-			let tDom = vvpItemTile.children[0];
-			let asin = getAsinFromDom(tDom);
-			arrTile.push({ asin: asin, hidden: false });
-			let tile = getTileByAsin(asin); //Obtain the real tile
-			await tile.showTile(false, false); //Do not update local storage
-
-			vvpItemTile = document.querySelector("#tab-hidden .vvp-item-tile");
-		}
+	const vvpItemTiles = document.querySelectorAll("#tab-hidden .vvp-item-tile");
+	for (const vvpItemTile of vvpItemTiles) {
+		let asin = getAsinFromDom(vvpItemTile);
+		arrTile.push({ asin: asin, hidden: false });
+		let tile = getTileByAsin(asin); //Obtain the real tile
+		await tile.showTile(false, false); //Do not update local storage
 	}
 	HiddenList.saveList();
 }
