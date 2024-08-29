@@ -117,6 +117,16 @@
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/unpin.png");
 		background-repeat: no-repeat;
 	}
+	.vh-icon-toggler-open {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/caret-left.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-toggler-close {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/caret-right.png");
+		background-repeat: no-repeat;
+	}
 }
 
 @supports (-moz-appearance: none) {
@@ -235,6 +245,16 @@
 	.vh-icon-unpin {
 		background-size: 100%;
 		background-image: url("/resource/image/unpin.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-toggler-open {
+		background-size: 100%;
+		background-image: url("/resource/image/caret-left.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-toggler-close {
+		background-size: 100%;
+		background-image: url("/resource/image/caret-right.png");
 		background-repeat: no-repeat;
 	}
 }
