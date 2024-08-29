@@ -93,7 +93,7 @@ function getDefaultSettings() {
 				zeroETV: {
 					sound: "0",
 					volume: 1,
-					color: "#009933",
+					color: "#64af4b",
 				},
 			},
 		},
@@ -247,7 +247,7 @@ async function getSettings() {
 				zeroETV: {
 					sound: "0",
 					volume: 1,
-					color: "#009933",
+					color: "#64af4b",
 				},
 			},
 		};
