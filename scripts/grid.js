@@ -248,8 +248,10 @@ async function hideAllItems() {
 	HiddenList.saveList();
 
 	// Scoll to the RFY/AFA/AI header
-	var scrollTarget = document.getElementById("vvp-items-button-container");
-	scrollTarget.scrollIntoView({ behavior: "smooth" });
+	if (appSettings.hiddenTab.scrollToRFY) {
+		var scrollTarget = document.getElementById("vvp-items-button-container");
+		scrollTarget.scrollIntoView({ behavior: "smooth" });
+	}
 }
 
 async function hideAllItemsNext() {
@@ -280,6 +282,12 @@ async function showAllItems() {
 		await tile.showTile(false, false); //Do not update local storage
 	}
 	HiddenList.saveList();
+
+	// Scoll to the RFY/AFA/AI header
+	if (appSettings.hiddenTab.scrollToRFY) {
+		var scrollTarget = document.getElementById("vvp-items-button-container");
+		scrollTarget.scrollIntoView({ behavior: "smooth" });
+	}
 }
 
 function selectCurrentTab(firstRun = false) {

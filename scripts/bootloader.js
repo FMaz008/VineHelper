@@ -426,6 +426,12 @@ async function initTilesAndDrawToolbars() {
 
 	showRuntime("done creating toolbars.");
 
+	// Scoll to the RFY/AFA/AI header
+	if (appSettings.general.scrollToRFY) {
+		var scrollTarget = document.getElementById("vvp-items-button-container");
+		scrollTarget.scrollIntoView({ behavior: "smooth" });
+	}
+
 	toolbarsDrawn = true;
 }
 

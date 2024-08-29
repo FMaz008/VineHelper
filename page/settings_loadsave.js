@@ -102,11 +102,13 @@ function initiateSettings() {
 	manageCheckboxSetting("general.bookmark");
 	manageCheckboxSetting("hiddenTab.active");
 	manageCheckboxSetting("hiddenTab.remote");
+	manageCheckboxSetting("hiddenTab.scrollToRFY");
 	manageCheckboxSetting("pinnedTab.active");
 	manageCheckboxSetting("unavailableTab.active");
 	manageCheckboxSetting("unavailableTab.compactToolbar");
 	manageCheckboxSetting("general.modalNavigation");
 	manageCheckboxSetting("general.listView");
+	manageCheckboxSetting("general.scrollToRFY");
 
 	//##TAB - NOTIFICATIONS
 
