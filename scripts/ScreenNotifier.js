@@ -55,11 +55,13 @@ class ScreenNotifier {
 	 */
 	async init() {
 		//If the container does not exist, create it and append it to the body.
-		if ($("#vh-notifications-container").length == 0) {
-			//Load the container
-			const prom = await Tpl.loadFile("view/notification_container.html");
-			$("body").append(Tpl.render(prom));
-		}
+		document.addEventListener("DOMContentLoaded", async function () {
+			if (document.getElementById("vh-notifications-container") === null) {
+				// Load the container
+				const prom = await Tpl.loadFile("view/notification_container.html");
+				document.body.append(Tpl.render(prom, true));
+			}
+		});
 	}
 
 	async pushNotification(note) {
