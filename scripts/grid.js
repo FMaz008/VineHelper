@@ -259,17 +259,18 @@ async function hideAllItems() {
 
 async function hideAllItemsNext() {
 	hideAllItems();
-	let nextPage = "";
+
 	try {
-		nextPage = document
-			.getElementsByClassName("a-text-center topPagination")[0]
-			.getElementsByClassName("a-last")[0]
-			.firstChild.getAttribute("href");
+		const pagination = document.querySelector("ul.a-pagination");
+		const currentLi = pagination.querySelector("li.a-selected");
+		const nextLi = currentLi.nextElementSibling;
+		if (nextLi) {
+			const nextPage = nextLi.querySelector("a").getAttribute("href");
+			window.location = nextPage;
+		}
 	} catch (e) {
 		//Do nothing
 	}
-
-	if (nextPage) window.location = nextPage;
 }
 
 async function showAllItems() {
