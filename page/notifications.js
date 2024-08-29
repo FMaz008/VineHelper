@@ -6,6 +6,7 @@ var notification_added_item = false;
 var notification_highlight = false;
 var notification_zeroETV = false;
 
+//const TYPE_SHOW_ALL = -1;
 const TYPE_REGULAR = 0;
 const TYPE_ZEROETV = 1;
 const TYPE_HIGHLIGHT = 2;
@@ -178,7 +179,9 @@ function processNotificationFiltering(node) {
 	const filter = document.querySelector("select[name='filter-type']");
 	const notificationType = parseInt(node.getAttribute("data-notification-type"));
 
-	if (filter.value == 9) {
+	if (filter.value == -1) {
+		node.style.display = "grid";
+	} else if (filter.value == 9) {
 		const typesToShow = [TYPE_HIGHLIGHT, TYPE_ZEROETV];
 		node.style.display = typesToShow.includes(notificationType) ? "grid" : "none";
 	} else {
@@ -245,7 +248,6 @@ function addItem(data) {
 
 	if (items.has(asin)) {
 		//Item already exist, update ETV
-		("checking etv");
 		if (etv != items.get(asin)) {
 			setETV(asin, etv);
 		}
