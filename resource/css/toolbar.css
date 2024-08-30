@@ -12,6 +12,10 @@ div.hidden-toolbar {
 	padding-right: 5px;
 }
 
+div.hidden-toolbar.mobile {
+	width: 120px;
+}
+
 div.vh-status-container {
 	position: absolute;
 	z-index: 1;

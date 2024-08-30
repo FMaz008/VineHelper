@@ -150,8 +150,10 @@ async function createGridInterface() {
 		Tpl.setVar("class", appSettings.thorvarium.darktheme ? "invert" : "");
 		if (appSettings.thorvarium.mobileandroid || appSettings.thorvarium.mobileios) {
 			Tpl.setIf("not_mobile", false);
+			Tpl.setIf("mobile", true);
 		} else {
 			Tpl.setIf("not_mobile", true);
+			Tpl.setIf("mobile", false);
 		}
 		let content = Tpl.render(prom, true);
 		if (content == null) {
