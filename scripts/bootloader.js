@@ -645,7 +645,7 @@ async function serverProductsResponse(data) {
 		if (appSettings.hiddenTab.remote == true && values.hidden != null) {
 			if (values.hidden == true && !tile.isHidden()) {
 				showRuntime("DRAW: Remote is ordering to hide item");
-				await tile.hideTile(); //Will update the placement and list
+				await tile.hideTile(false); //Will update the placement and list
 			} else if (values.hidden == false && tile.isHidden()) {
 				showRuntime("DRAW: Remote is ordering to show item");
 				await tile.showTile(); //Will update the placement and list
