@@ -69,13 +69,42 @@ class ScreenNotifier {
 
 		//Render the notification and insert it into the container
 		let content = await note.render();
-		$("#vh-notifications-container").prepend(content);
+		const notificationsContainer = document.getElementById("vh-notifications-container");
+		if (notificationsContainer) {
+			notificationsContainer.insertAdjacentHTML("afterbegin", content);
+		}
 
-		//Bind the "close" link
-		$("#vh-notification-" + note.id + " .vh-notification-close a").on("click", { id: note.id }, function (event) {
-			Notifications.removeNote($("#vh-notification-" + event.data.id));
-		});
+		// Bind the "close" link
+		const closeLink = document.querySelector(`#vh-notification-${note.id} .vh-notification-close a`);
+		if (closeLink) {
+			closeLink.addEventListener("click", function (event) {
+				const notificationElement = document.getElementById(`vh-notification-${note.id}`);
+				if (notificationElement) {
+					Notifications.removeNote(notificationElement);
+				}
+			});
+		}
 
+		//Bind the "toggle"  click
+		const collapseLink = document.querySelector("#vh-notification-" + note.id + " .vh-notification-toggle");
+		if (collapseLink) {
+			collapseLink.addEventListener("click", function () {
+				const containerPosition = document.getElementById("vh-notifications-container").style.right;
+				if (containerPosition === "0px" || containerPosition === "") {
+					document.getElementById("vh-notifications-container").style.right = "-270px";
+					document.querySelectorAll(".vh-notification-toggle").forEach(function (node) {
+						node.classList.remove("vh-icon-toggler-right");
+						node.classList.add("vh-icon-toggler-left");
+					});
+				} else {
+					document.getElementById("vh-notifications-container").style.right = "0px";
+					document.querySelectorAll(".vh-notification-toggle").forEach(function (node) {
+						node.classList.remove("vh-icon-toggler-left");
+						node.classList.add("vh-icon-toggler-right");
+					});
+				}
+			});
+		}
 		//Activate the self dismissal
 		if (note.lifespan > 0) {
 			setTimeout(function () {
