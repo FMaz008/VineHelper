@@ -148,6 +148,11 @@ async function createGridInterface() {
 		//Generate the html for the hide all and show all widget
 		let prom = await Tpl.loadFile("view/widget_hideall.html");
 		Tpl.setVar("class", appSettings.thorvarium.darktheme ? "invert" : "");
+		if (appSettings.thorvarium.mobileandroid || appSettings.thorvarium.mobileios) {
+			Tpl.setIf("not_mobile", false);
+		} else {
+			Tpl.setIf("not_mobile", true);
+		}
 		let content = Tpl.render(prom, true);
 		if (content == null) {
 			showRuntime("!!ERROR: Unable to fetch view/widget_hideall.html. Skipping.");

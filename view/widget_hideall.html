@@ -2,16 +2,23 @@
 	All page items:<br />
 	<a href="#" onclick="return false;" class="vh-hideall">
 		<div class="vh-toolbar-icon vh-icon-hide {{$class}}"></div>
+		{{if not_mobile}}
 		<span>Hide</span>
+		{{endif}}
 	</a>
 	/
 	<a href="#" onclick="return false;" class="vh-hideallnext">
 		<div class="vh-toolbar-icon vh-icon-hide {{$class}}"></div>
+		<div class="vh-toolbar-icon vh-icon-toggler-right {{$class}}"></div>
+		{{if not_mobile}}
 		<span>Hide + Next</span>
+		{{endif}}
 	</a>
 	/
 	<a href="#" onclick="return false;" class="vh-showall">
 		<div class="vh-toolbar-icon vh-icon-show {{$class}}"></div>
+		{{if not_mobile}}
 		<span>Show</span>
+		{{endif}}
 	</a>
 </div>

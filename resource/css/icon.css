@@ -117,12 +117,12 @@
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/unpin.png");
 		background-repeat: no-repeat;
 	}
-	.vh-icon-toggler-open {
+	.vh-icon-toggler-left {
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/caret-left.png");
 		background-repeat: no-repeat;
 	}
-	.vh-icon-toggler-close {
+	.vh-icon-toggler-right {
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/caret-right.png");
 		background-repeat: no-repeat;
@@ -247,12 +247,12 @@
 		background-image: url("/resource/image/unpin.png");
 		background-repeat: no-repeat;
 	}
-	.vh-icon-toggler-open {
+	.vh-icon-toggler-left {
 		background-size: 100%;
 		background-image: url("/resource/image/caret-left.png");
 		background-repeat: no-repeat;
 	}
-	.vh-icon-toggler-close {
+	.vh-icon-toggler-right {
 		background-size: 100%;
 		background-image: url("/resource/image/caret-right.png");
 		background-repeat: no-repeat;
