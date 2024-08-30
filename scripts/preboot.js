@@ -342,10 +342,6 @@ async function getSettings() {
 		appSettings.general.country = vineCountry;
 		saveSettings();
 	}
-	browser.runtime.sendMessage({
-		type: "vineCountry",
-		vineCountry: vineCountry,
-	});
 
 	let manifest = chrome.runtime.getManifest();
 	appVersion = manifest.version;

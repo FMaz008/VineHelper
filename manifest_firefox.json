@@ -27,6 +27,16 @@
 	"options_ui": {
 		"page": "popup/homepage.html"
 	},
+	"host_permissions": [
+		"*://*.amazon.ca/*",
+		"*://*.amazon.it/*",
+		"*://*.amazon.es/*",
+		"*://*.amazon.de/*",
+		"*://*.amazon.fr/*",
+		"*://*.amazon.co.uk/*",
+		"*://*.amazon.co.jp/*",
+		"*://*.amazon.com/*"
+	],
 	"web_accessible_resources": [
 		{
 			"resources": [

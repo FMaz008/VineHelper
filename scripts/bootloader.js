@@ -948,6 +948,7 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 			Notifications.pushNotification(note2);
 		}
 	}
+	sendResponse({ success: true });
 });
 
 //Key bindings/keyboard shortcuts for navigation

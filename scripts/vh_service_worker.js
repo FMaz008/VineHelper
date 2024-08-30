@@ -52,14 +52,6 @@ chrome.permissions.contains({ permissions: ["scripting"] }, (result) => {
 //## LISTENERS
 //#####################################################
 browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
-	if (data.type == "vineCountry") {
-		console.log("Received country from preboot.js: " + data.vineCountry);
-		vineCountry = data.vineCountry;
-
-		//Passing the country to the Monitor tab
-		sendMessageToAllTabs({ type: "vineCountry", domain: data.vineCountry }, "Vine Country");
-	}
-
 	if (data.type == "queryVineCountry") {
 		//If we know the country, reply it
 		if (vineCountry != null) {
@@ -70,6 +62,7 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 	if (data.type == "fetchLast100Items") {
 		//Get the last 100 most recent items
 		checkNewItems(true);
+		sendResponse({ success: true });
 	}
 });
 
@@ -146,7 +139,7 @@ async function checkNewItems(getAllItems = false) {
 
 			for (let i = response.products.length - 1; i >= 0; i--) {
 				//Only display notification for product more recent than the last displayed notification
-				if (getAllItems || DEBUG_MODE || response.products[i].date > latestProduct || latestProduct == 0) {
+				if (getAllItems || response.products[i].date > latestProduct || latestProduct == 0) {
 					//Only display notification for products with a title and image url
 					if (response.products[i].img_url != "" && response.products[i].title != "") {
 						if (i == 0) {
@@ -209,7 +202,12 @@ async function sendMessageToAllTabs(data, debugInfo) {
 						}
 
 						try {
-							browser.tabs.sendMessage(tab.id, data);
+							browser.tabs.sendMessage(tab.id, data, (response) => {
+								if (browser.runtime.lastError) {
+									console.log(tab);
+									console.error("Error sending message to tab:", browser.runtime.lastError.message);
+								}
+							});
 						} catch (e) {
 							if (DEBUG_MODE) {
 								console.error("Error sending message to tab:", e);

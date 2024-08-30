@@ -97,13 +97,6 @@ window.onload = function () {
 		}
 	};
 
-	//Send keep alive message every 25 secs to keep the service worker alive.
-	setInterval(async () => {
-		browser.runtime.sendMessage({
-			type: "keepAlive",
-		});
-	}, 25000);
-
 	//Clear the debug log every 30 minutes to save memory usage.
 	setInterval(
 		async () => {
@@ -141,6 +134,9 @@ async function init() {
 			type: "queryVineCountry",
 		},
 		function (response) {
+			if (browser.runtime.lastError) {
+				console.error("Error sending message:", browser.runtime.lastError.message);
+			}
 			if (response?.domain !== undefined) {
 				setLocale(response.domain);
 			}
@@ -170,7 +166,11 @@ async function init() {
 			{
 				type: "fetchLast100Items",
 			},
-			function (response) {}
+			function (response) {
+				if (browser.runtime.lastError) {
+					console.error("Error sending message:", browser.runtime.lastError.message);
+				}
+			}
 		);
 	});
 }
@@ -332,7 +332,7 @@ function playSoundAccordingToNotificationType(highlightMatch = false, zeroETV = 
 	//Regular notification
 	volume = appSettings.notification.monitor.regular.volume;
 	filename = appSettings.notification.monitor.regular.sound;
-	if (filename != "0" || volume > 0) {
+	if (filename != "0" && volume > 0) {
 		playSound(filename, volume);
 		return true;
 	}
