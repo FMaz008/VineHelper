@@ -66,7 +66,9 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 	}
 });
 
-chrome.alarms.onAlarm.addListener((alarm) => {
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+	await retrieveSettings();
+
 	if (alarm.name === "checkNewItems") {
 		if (appSettings == undefined || !appSettings.notification.active) {
 			return; //Not setup to check for notifications. Will try again in 30 secs.
@@ -79,11 +81,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 //## BUSINESS LOGIC
 //#####################################################
 
-//Load the settings, if no settings, try again in 10 sec
-async function init() {
-	//Create an alarm task to keep the service worker alive
-	//browser.alarms.create("keepAlive", { periodInMinutes: 1 }); // Adjust the interval as needed
-
+async function retrieveSettings() {
 	//Obtain appSettings
 	const data = await chrome.storage.local.get("settings");
 
@@ -99,6 +97,10 @@ async function init() {
 
 	//Set the country
 	vineCountry = appSettings.general.country;
+}
+//Load the settings, if no settings, try again in 10 sec
+async function init() {
+	await retrieveSettings();
 
 	//Check for new items (if the option is disabled the method will return)
 	browser.alarms.create("checkNewItems", { periodInMinutes: newItemCheckInterval });
