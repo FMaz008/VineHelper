@@ -648,7 +648,7 @@ async function serverProductsResponse(data) {
 				await tile.hideTile(false); //Will update the placement and list
 			} else if (values.hidden == false && tile.isHidden()) {
 				showRuntime("DRAW: Remote is ordering to show item");
-				await tile.showTile(); //Will update the placement and list
+				await tile.showTile(false); //Will update the placement and list
 			}
 		}
 
