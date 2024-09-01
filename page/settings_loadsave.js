@@ -264,6 +264,9 @@ function initiateSettings() {
 		document.querySelector("#discord-guid-link").style.display = "block";
 		document.querySelector("#discord-guid-unlink").style.display = "none";
 	};
+	if (appSettings.discord.guid) {
+		document.querySelector("#guid-txt").innerText = appSettings.discord.guid;
+	}
 
 	//##TAB - KEYWORDS
 

@@ -97,7 +97,6 @@ label.right-align select {
 	padding-left: 25px;
 }
 
-
 .vh-toolbar-icon {
 	margin-left: -20px;
 }
@@ -110,4 +109,45 @@ textarea {
 
 #generaluuid {
 	width: 300px;
+}
+
+div.buttons-header {
+	display: flex;
+	width: 600px;
+	flex-direction: row;
+	margin-bottom: 10px;
+}
+div.button-notification-monitor {
+	flex-grow: 1;
+	border: 2px solid #000000;
+	border-radius: 5px;
+	background-color: var(--tab-border);
+	/*background-color: var(--tab-border-active);*/
+	height: 40px;
+	margin-right: 5px;
+	font-size: 14pt;
+	font-weight: bold;
+}
+div.button-notification-monitor:hover {
+	background-color: var(--tab-border-active);
+}
+div.button-notification-monitor a {
+	text-decoration: none;
+	color: #ffffff;
+}
+div.button-settings {
+	border: 2px solid #000000;
+	border-radius: 5px;
+	background-color: #cccccc;
+	width: 40px;
+	height: 40px;
+}
+div.button-settings:hover {
+	background-color: #aaaaaa;
+}
+div.buttons-header .button-inner {
+	color: #ffffff;
+	padding: 5px;
+	text-align: center;
+	vertical-align: middle;
 }

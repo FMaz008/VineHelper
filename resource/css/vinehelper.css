@@ -47,9 +47,11 @@ begin, migrating css into a common file, to allow uniform display and updates
 	--lapisdark-100: #7a6800;
 	--lapisdark-300: #0070e0;
 	--lapisdark-600: #002366;
-	--button-overlay: radial-gradient(circle farthest-side at 10% 20%,
-			rgba(255, 255, 255, 0.3) 0%,
-			rgba(255, 255, 255, 0) 80%);
+	--button-overlay: radial-gradient(
+		circle farthest-side at 10% 20%,
+		rgba(255, 255, 255, 0.3) 0%,
+		rgba(255, 255, 255, 0) 80%
+	);
 }
 
 .theme-default {
@@ -365,7 +367,7 @@ begin, migrating css into a common file, to allow uniform display and updates
 	width: 300px;
 }
 
-.vh-select>option {
+.vh-select > option {
 	background: var(--button-overlay), var(--highlight-dark);
 }
 
@@ -399,7 +401,6 @@ div#account-extra-stats {
 	color: var(--text-light);
 	width: max-content;
 	background: var(--background-light);
-
 }
 
 #review-toolbar {
@@ -466,6 +467,7 @@ div#account-extra-stats {
 .vh-tabs li {
 	background: var(--button-overlay), var(--tab-border);
 	border: 2px solid white;
+	border-bottom: 3px solid var(--tab-border-active);
 	border-top-left-radius: 5px;
 	border-top-right-radius: 5px;
 	cursor: pointer;
@@ -479,21 +481,22 @@ div#account-extra-stats {
 .vh-tabs li.active {
 	background: var(--button-overlay), var(--tab-border-active);
 	border: 2px solid var(--tab-border-active);
+	border-bottom: 3px solid var(--tab-border-active);
 	justify-content: end;
 }
 
-.vh-tabs li>a {
+.vh-tabs li > a {
 	color: var(--text-black);
 	font-size: 12px;
 	font-weight: 500;
 	text-decoration: none;
 }
 
-.vh-tabs li>a:hover {
+.vh-tabs li > a:hover {
 	text-decoration: none;
 }
 
-.vh-tabs li.active>a {
+.vh-tabs li.active > a {
 	color: var(--text-dark);
 }
 
@@ -551,9 +554,11 @@ input[type="checkbox"] {
 
 	.vh-tabs li {
 		border: 2px solid var(--background-dark);
+		border-bottom: 3px solid var(--tab-border);
 	}
 
 	.vh-container {
+		background-color: var(--background-dark);
 		color: var(--text-dark);
 	}
 
