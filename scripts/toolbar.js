@@ -20,13 +20,16 @@ class BrendaAnnounceQueue {
 
 	async announce(asin, etv, queue) {
 		if (this.queue.length >= this.MAX_QUEUE_LENGTH) {
-			await Notifications.pushNotification(
-				new ScreenNotification({
-					title: "Announce to Brenda",
-					lifespan: 10,
-					content: "The announcement queue is full, not everything should be shared. Please be selective.",
-				})
-			);
+			if (!appSettings.notification.reduce) {
+				await Notifications.pushNotification(
+					new ScreenNotification({
+						title: "Announce to Brenda",
+						lifespan: 10,
+						content:
+							"The announcement queue is full, not everything should be shared. Please be selective.",
+					})
+				);
+			}
 			return;
 		}
 
@@ -84,14 +87,16 @@ class BrendaAnnounceQueue {
 		this.lastProcessTime = Date.now();
 
 		// Replace placeholders in the message
-		message = message.replace("{asin}", item.asin);
-		await Notifications.pushNotification(
-			new ScreenNotification({
-				title: "Announce to Brenda",
-				lifespan: 10,
-				content: message,
-			})
-		);
+		if (!appSettings.notification.reduce) {
+			message = message.replace("{asin}", item.asin);
+			await Notifications.pushNotification(
+				new ScreenNotification({
+					title: "Announce to Brenda",
+					lifespan: 10,
+					content: message,
+				})
+			);
+		}
 	}
 }
 
@@ -371,12 +376,18 @@ async function announceItem(event) {
 
 	window.BrendaAnnounceQueue.announce(event.data.asin, etv, vineQueue);
 
-	let note = new ScreenNotification();
-	note.title = "Announce to Brenda";
-	note.lifespan = 10;
-	note.content =
-		"Sending this product " + event.data.asin + " from the " + vineQueueAbbr + " queue to Brenda over on discord";
-	await Notifications.pushNotification(note);
+	if (!appSettings.notification.reduce) {
+		let note = new ScreenNotification();
+		note.title = "Announce to Brenda";
+		note.lifespan = 10;
+		note.content =
+			"Sending this product " +
+			event.data.asin +
+			" from the " +
+			vineQueueAbbr +
+			" queue to Brenda over on discord";
+		await Notifications.pushNotification(note);
+	}
 
 	//Visually deactivate this item, will be reset on the next page load, but it's just to help navigation and avoid double-clicking
 	$(this).off("click");
