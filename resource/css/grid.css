@@ -80,3 +80,30 @@ body.darktheme #vvp-items-grid-container div.keyword-highlight a:visited,
 body.darktheme #vvp-items-grid-container div.keyword-highlight a:active {
 }
 */
+
+/* The Pinned items are always using a list view */
+#tab-pinned.tab-grid {
+	grid-template-columns: auto !important;
+}
+
+#vh-tabs > #tab-pinned.tab-grid > .vvp-item-tile {
+	display: flex;
+	flex-direction: row;
+	margin: 10px;
+}
+
+#vh-tabs > #tab-pinned.tab-grid > .vvp-item-tile .vvp-item-tile-content {
+	display: flex;
+	flex-direction: column;
+	margin-left: 10px;
+	width: 100% !important;
+}
+
+#vh-tabs > #tab-pinned.tab-grid > .vvp-item-tile .vvp-details-btn {
+	width: 150px;
+	margin: 0 auto !important;
+}
+
+#vh-tabs.smallitems #tab-pinned .vh-img-container {
+	width: 130px;
+}

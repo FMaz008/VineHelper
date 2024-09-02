@@ -1,10 +1,13 @@
 /* Toolbar */
-div.vh-status {
+#vh-tabs .vvp-item-tile .vvp-item-tile-content > div.vh-status,
+#vh-tabs .vvp-item-tile .vvp-item-tile-content.vh-status > * {
 	position: relative;
 	margin-top: 5px !important;
 	margin-bottom: 0px !important;
 }
-
+#vh-tabs .vvp-item-tile .vvp-item-tile-content > div.vh-img-container {
+	margin-top: 5px;
+}
 div.hidden-toolbar {
 	float: right;
 	width: 240px;
@@ -68,6 +71,7 @@ div.compact div.vh-status-container {
 div.compact div.vh-status-container2 {
 	padding-left: 0px;
 	text-align: center;
+	min-height: 20px;
 }
 div.compact div.vh-icon {
 	display: none;

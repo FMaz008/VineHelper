@@ -169,7 +169,7 @@ class Toolbar {
 
 		//If the ordering system is off, only the icons have to be shown
 		if (!appSettings.unavailableTab.active) {
-			pToolbar.classList.add("toolbar-icon-only");
+			pToolbar.classList.add("vh-background-neutral");
 		}
 
 		//Display the hide link
