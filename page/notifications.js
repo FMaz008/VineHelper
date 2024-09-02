@@ -216,8 +216,7 @@ async function setLocale(country) {
 }
 
 function addItem(data) {
-	let { date, asin, title, search, img_url, domain, etv } = data;
-	let { hideKeywords, highlightKeywords } = appSettings.general;
+	let { date, asin, title, search, img_url, domain, etv, KWsMatch, hideMatch } = data;
 
 	let type = TYPE_REGULAR;
 
@@ -234,14 +233,13 @@ function addItem(data) {
 		return;
 	}
 
-	let shouldHighlight = keywordMatch(highlightKeywords, title);
-	if (shouldHighlight) {
+	if (KWsMatch) {
 		showRuntime("NOTIFICATION: item " + asin + " match the highlight list and will be highlighed.");
 		type = TYPE_HIGHLIGHT;
 		notification_highlight = true;
 	}
 
-	if (!shouldHighlight && appSettings.notification.monitor.hideList && keywordMatch(hideKeywords, title)) {
+	if (!KWsMatch && appSettings.notification.monitor.hideList && hideMatch) {
 		showRuntime("NOTIFICATION: item " + asin + " match the hidden list and won't be shown.");
 		return;
 	}
@@ -279,7 +277,7 @@ function addItem(data) {
 		setETV(asin, etv);
 
 		//Highlight background color
-		if (shouldHighlight) {
+		if (KWsMatch) {
 			const obj = elementByAsin(asin);
 			obj.style.backgroundColor = appSettings.notification.monitor.highlight.color;
 		}
@@ -378,27 +376,6 @@ function setETV(asin, etv) {
 	} else {
 		etvElement.innerText = etv;
 	}
-}
-
-function keywordMatch(keywords, title) {
-	return keywords.some((word) => {
-		let regex;
-		try {
-			regex = new RegExp(`\\b${word}\\b`, "i");
-		} catch (error) {
-			if (error instanceof SyntaxError) {
-				showRuntime("NOTIFICATION: The keyword '" + word + "' is not a valid regular expression, skipping it.");
-				return false;
-			}
-		}
-
-		if (regex.test(title)) {
-			showRuntime("Matched keyword: " + word + " for title " + title);
-			return true;
-		}
-
-		return false;
-	});
 }
 
 function report(asin) {

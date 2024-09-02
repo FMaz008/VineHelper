@@ -70,6 +70,7 @@ function getDefaultSettings() {
 		notification: {
 			active: false,
 			reduce: false,
+			pushNotifications: false,
 			screen: {
 				active: false,
 				thumbnail: true,

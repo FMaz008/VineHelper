@@ -111,6 +111,7 @@ function initiateSettings() {
 	//##TAB - NOTIFICATIONS
 
 	manageCheckboxSetting("notification.active");
+	manageCheckboxSetting("notification.pushNotifications");
 	manageCheckboxSetting("notification.screen.active");
 	manageCheckboxSetting("notification.screen.thumbnail");
 	manageCheckboxSetting("notification.monitor.hideList");

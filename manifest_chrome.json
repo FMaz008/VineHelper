@@ -6,7 +6,8 @@
 	"permissions": [
 		"alarms",
 		"storage",
-		"tabs"
+		"tabs",
+		"notifications"
 	],
 	"icons": {
 		"32": "resource/image/icon-32.png",

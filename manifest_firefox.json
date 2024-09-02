@@ -6,7 +6,8 @@
 	"permissions": [
 		"alarms",
 		"storage",
-		"tabs"
+		"tabs",
+		"notifications"
 	],
 	"browser_specific_settings": {
 		"gecko": {

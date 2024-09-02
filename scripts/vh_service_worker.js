@@ -3,6 +3,17 @@ var appSettings = [];
 var vineCountry = null;
 var newItemCheckInterval = 0.5;
 const broadcastChannel = new BroadcastChannel("VineHelperChannel");
+const vineDomains = {
+	ca: "ca",
+	com: "com",
+	uk: "co.uk",
+	jp: "co.jp",
+	de: "de",
+	fr: "fr",
+	es: "es",
+	it: "it",
+};
+var vineDomain;
 
 if (typeof browser === "undefined") {
 	var browser = chrome;
@@ -97,6 +108,7 @@ async function retrieveSettings() {
 
 	//Set the country
 	vineCountry = appSettings.general.country;
+	vineDomain = vineDomains[vineCountry];
 }
 //Load the settings, if no settings, try again in 10 sec
 async function init() {
@@ -140,31 +152,66 @@ async function checkNewItems(getAllItems = false) {
 			});
 
 			for (let i = response.products.length - 1; i >= 0; i--) {
+				const { title, date, asin, img_url, etv } = response.products[i];
+
 				//Only display notification for product more recent than the last displayed notification
-				if (getAllItems || response.products[i].date > latestProduct || latestProduct == 0) {
+				if (getAllItems || date > latestProduct || latestProduct == 0) {
 					//Only display notification for products with a title and image url
-					if (response.products[i].img_url != "" && response.products[i].title != "") {
+					if (img_url != "" && title != "") {
 						if (i == 0) {
 							await browser.storage.local.set({
-								latestProduct: response.products[0].date,
+								latestProduct: date,
 							});
 						}
 
-						let search = response.products[i].title.replace(/^([a-zA-Z0-9\s',]{0,40})[\s]+.*$/, "$1");
+						const search = title.replace(/^([a-zA-Z0-9\s',]{0,40})[\s]+.*$/, "$1");
+						const highlightKWMatch = keywordMatch(appSettings.general.highlightKeywords, title);
+						const hideKWMatch = keywordMatch(appSettings.general.hideKeywords, title);
+
+						//If the new item match a highlight keyword, push a real notification.
+						if (appSettings.notification.pushNotifications && highlightKWMatch) {
+							chrome.notifications.onClicked.addListener((notificationId) => {
+								chrome.tabs.create({
+									url:
+										"https://www.amazon." +
+										vineDomain +
+										"/vine/vine-items?search=" +
+										notificationId,
+								});
+							});
+
+							chrome.notifications.create(
+								search,
+								{
+									type: "basic",
+									iconUrl: chrome.runtime.getURL("resource/image/icon-128.png"),
+									title: "Vine Helper - New item match!",
+									message: title,
+									priority: 2,
+								},
+								(notificationId) => {
+									if (chrome.runtime.lastError) {
+										console.error("Notification error:", chrome.runtime.lastError);
+									}
+								}
+							);
+						}
 
 						//Broadcast the notification
-						console.log("Broadcasting new item " + response.products[i].asin);
+						console.log("Broadcasting new item " + asin);
 						sendMessageToAllTabs(
 							{
 								index: i,
 								type: "newItem",
 								domain: vineCountry,
-								date: response.products[i].date,
-								asin: response.products[i].asin,
-								title: response.products[i].title,
+								date: date,
+								asin: asin,
+								title: title,
 								search: search,
-								img_url: response.products[i].img_url,
-								etv: response.products[i].etv,
+								img_url: img_url,
+								etv: etv,
+								KWsMatch: highlightKWMatch,
+								hideMatch: hideKWMatch,
 							},
 							"notification"
 						);
@@ -176,6 +223,25 @@ async function checkNewItems(getAllItems = false) {
 		.catch(function () {
 			(error) => console.log(error);
 		});
+}
+
+function keywordMatch(keywords, title) {
+	return keywords.some((word) => {
+		let regex;
+		try {
+			regex = new RegExp(`\\b${word}\\b`, "i");
+		} catch (error) {
+			if (error instanceof SyntaxError) {
+				return false;
+			}
+		}
+
+		if (regex.test(title)) {
+			return true;
+		}
+
+		return false;
+	});
 }
 
 async function sendMessageToAllTabs(data, debugInfo) {
