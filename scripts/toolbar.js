@@ -300,9 +300,6 @@ class Toolbar {
 			case DISCARDED_ORDER_FAILED:
 				this.setStatusIcon("vh-icon-order-failed");
 				statusColor = "vh-background-fees";
-				//tileOpacity = appSettings.unavailableTab.unavailableOpacity / 100;
-
-				if (appSettings.discord.active) $("#vh-announce-link-" + this.pTile.getAsin()).hide();
 				break;
 			case NOT_DISCARDED_ORDER_SUCCESS:
 				this.setStatusIcon("vh-icon-order-success");
