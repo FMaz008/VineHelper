@@ -11,8 +11,9 @@ label {
 	padding: 0;
 }
 
-.vh-tabs ul li {
-	width: 92px;
+#tabs-index.vh-tabs ul li {
+	padding: 4px 0px;
+	width: 80px;
 }
 #tabs-content .tab {
 	width: 350px;
@@ -29,7 +30,7 @@ body {
 }
 
 div.buttons-header {
-	width: 350px;
+	width: 335px;
 }
 
 #guid-txt {

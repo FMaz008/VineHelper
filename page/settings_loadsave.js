@@ -53,7 +53,6 @@ function initiateSettings() {
 	selectCurrentTab(true);
 	drawDiscord();
 
-	document.getElementById("notificationsMonitor").href = chrome.runtime.getURL("page/notifications.html");
 	document.getElementById("notificationsMonitorLink").href = chrome.runtime.getURL("page/notifications.html");
 	document.getElementById("settingsLink").href = chrome.runtime.getURL("page/settings.html");
 
@@ -101,7 +100,6 @@ function initiateSettings() {
 	manageCheckboxSetting("general.displayFirstSeen");
 	manageCheckboxSetting("general.bookmark");
 	manageCheckboxSetting("hiddenTab.active");
-	manageCheckboxSetting("hiddenTab.remote");
 	manageCheckboxSetting("hiddenTab.scrollToRFY");
 	manageCheckboxSetting("pinnedTab.active");
 	manageCheckboxSetting("unavailableTab.active");
@@ -160,6 +158,7 @@ function initiateSettings() {
 
 	//##TAB - SYSTEM
 
+	manageCheckboxSetting("hiddenTab.remote");
 	manageCheckboxSetting("general.versionInfoPopup", false);
 	manageCheckboxSetting("general.GDPRPopup", false);
 

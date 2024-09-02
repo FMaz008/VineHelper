@@ -1,60 +1,80 @@
-<div class="setting-container">
-	<label for="general.uuid">
-		UUID:
-		<input type="password" name="general.uuid" id="generaluuid" value="" maxlength="36" />
-		<input type="button" id="saveUUID" value="Save" />
-	</label>
-	<div class="setting-summary">
-		<div class="vh-toolbar-icon vh-icon-question"></div>
-		Your unique user ID. If you have multiple devices, you may want to sync them up to the same value.
-	</div>
-</div>
+<fieldset>
+	<legend>Vine Helper Server</legend>
 
-<div class="setting-container">
-	<label for="general.versionInfoPopup">
-		<input type="checkbox" name="general.versionInfoPopup" value="1" />
-		Reset Template Cache
-	</label>
-	<div class="setting-summary">
-		<div class="vh-toolbar-icon vh-icon-question"></div>
-		Reload the templates from their current file and will display the version note popup again, once, on the next
-		page load.
+	<div class="setting-container">
+		<label for="general.uuid">
+			UUID:
+			<input type="password" name="general.uuid" id="generaluuid" value="" maxlength="36" size="30" />
+			<input type="button" id="saveUUID" value="Save" />
+		</label>
+		<div class="setting-summary">
+			<div class="vh-toolbar-icon vh-icon-question"></div>
+			Your unique user ID. If you have multiple devices, you may want to sync them up to the same value.
+		</div>
 	</div>
-</div>
-
-<div class="setting-container">
-	<label for="general.GDPRPopup">
-		<input type="checkbox" name="general.GDPRPopup" value="1" />
-		Show GDPR popup
-	</label>
-	<div class="setting-summary">
-		<div class="vh-toolbar-icon vh-icon-question"></div>
-		Display the GDPR popup again upon reloading a Vine page.
+	<div class="setting-container">
+		<label for="hiddenTab.remote">
+			<input type="checkbox" name="hiddenTab.remote" value="1" />
+			Store Hidden/Pinned Items Remotely.
+		</label>
+		<div class="setting-summary">
+			<div class="vh-toolbar-icon vh-icon-question"></div>
+			This feature exchange data to Vine Helper's server, and stores the UUID and the ASIN of the hidden items.
+			Hidden items will also be stored on the home server under your UUID. If you have multiple devices, use the
+			same UUID accross all devices.
+		</div>
 	</div>
-</div>
+</fieldset>
 
-<div class="setting-container">
-	<label for="general.hiddenItemsCacheSize" class="right-align">
-		Hidden Items Max Size
+<fieldset>
+	<legend>System</legend>
 
-		<select name="general.hiddenItemsCacheSize" id="hiddenItemsCacheSize">
-			<option value="2">2MB</option>
-			<option value="3">3MB</option>
-			<option value="4">4MB (chrome &lt;113)</option>
-			<option value="5">5MB</option>
-			<option value="6">6MB</option>
-			<option value="7">7MB</option>
-			<option value="8">8MB</option>
-			<option value="9">9MB (default)</option>
-		</select>
-	</label>
-	<div class="setting-summary">
-		<div class="vh-toolbar-icon vh-icon-question"></div>
-		This will decide the maximum amount of storage space to allow hidden items to take locally. When reached, ~1MB
-		of storage space will be cleared.
+	<div class="setting-container">
+		<label for="general.versionInfoPopup">
+			<input type="checkbox" name="general.versionInfoPopup" value="1" />
+			Reset Template Cache & Display changelog
+		</label>
+		<div class="setting-summary">
+			<div class="vh-toolbar-icon vh-icon-question"></div>
+			Reload the templates from their current file and will display the version note popup again, once, on the
+			next page load.
+		</div>
 	</div>
-</div>
-<br />
+
+	<div class="setting-container">
+		<label for="general.GDPRPopup">
+			<input type="checkbox" name="general.GDPRPopup" value="1" />
+			Show GDPR popup
+		</label>
+		<div class="setting-summary">
+			<div class="vh-toolbar-icon vh-icon-question"></div>
+			Display the GDPR popup again upon reloading a Vine page.
+		</div>
+	</div>
+
+	<div class="setting-container">
+		<label for="general.hiddenItemsCacheSize" class="right-align">
+			Hidden Items Max Size
+
+			<select name="general.hiddenItemsCacheSize" id="hiddenItemsCacheSize">
+				<option value="2">2MB</option>
+				<option value="3">3MB</option>
+				<option value="4">4MB (chrome &lt;113)</option>
+				<option value="5">5MB</option>
+				<option value="6">6MB</option>
+				<option value="7">7MB</option>
+				<option value="8">8MB</option>
+				<option value="9">9MB (default)</option>
+			</select>
+		</label>
+		<div class="setting-summary">
+			<div class="vh-toolbar-icon vh-icon-question"></div>
+			This will decide the maximum amount of storage space to allow hidden items to take locally. When reached,
+			~1MB of storage space will be cleared.
+		</div>
+	</div>
+</fieldset>
+
 <fieldset>
 	<legend>DANGER ZONE</legend>
 
