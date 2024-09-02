@@ -1,5 +1,6 @@
 const DEBUG_MODE = false; // Will always display notification even if they are not new
 var appSettings = [];
+var notificationsData = {};
 var vineCountry = null;
 var newItemCheckInterval = 0.5;
 const broadcastChannel = new BroadcastChannel("VineHelperChannel");
@@ -176,12 +177,14 @@ async function checkNewItems(getAllItems = false) {
 										"https://www.amazon." +
 										vineDomain +
 										"/vine/vine-items?search=" +
-										notificationId,
+										notificationsData[notificationId].search,
 								});
 							});
 
+							const notifId = generateUUID();
+							notificationsData[notifId] = { search: search };
 							chrome.notifications.create(
-								search,
+								notifId,
 								{
 									type: "basic",
 									iconUrl: chrome.runtime.getURL("resource/image/icon-128.png"),
@@ -290,4 +293,23 @@ async function sendMessageToAllTabs(data, debugInfo) {
 			}
 		}
 	}
+}
+
+function generateUUID() {
+	// Public Domain/MIT
+	let d = new Date().getTime(); // Timestamp
+	let d2 = (performance && performance.now && performance.now() * 1000) || 0; // Time in microseconds
+	return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+		let r = Math.random() * 16; // Random number between 0 and 16
+		if (d > 0) {
+			// Use timestamp until depleted
+			r = (d + r) % 16 | 0;
+			d = Math.floor(d / 16);
+		} else {
+			// Use microseconds since timestamp depleted
+			r = (d2 + r) % 16 | 0;
+			d2 = Math.floor(d2 / 16);
+		}
+		return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+	});
 }
