@@ -181,10 +181,9 @@ async function checkNewItems(getAllItems = false) {
 								});
 							});
 
-							const notifId = generateUUID();
-							notificationsData[notifId] = { search: search };
+							notificationsData["item-" + asin] = { search: search };
 							chrome.notifications.create(
-								notifId,
+								"item-" + asin,
 								{
 									type: "basic",
 									iconUrl: chrome.runtime.getURL("resource/image/icon-128.png"),
