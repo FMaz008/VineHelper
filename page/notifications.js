@@ -70,8 +70,9 @@ const handleBrendaClick = (e) => {
 	e.preventDefault();
 
 	const asin = e.target.dataset.asin;
+	const queue = e.target.dataset.queue;
 	const etv = document.querySelector("#vh-notification-" + asin + " .etv_value").innerText;
-	window.BrendaAnnounceQueue.announce(asin, etv, "encore");
+	window.BrendaAnnounceQueue.announce(asin, etv, queue);
 };
 
 window.onload = function () {
@@ -224,7 +225,7 @@ async function setLocale(country) {
 }
 
 function addItem(data) {
-	let { date, asin, title, search, img_url, domain, etv, KWsMatch, hideMatch } = data;
+	let { date, asin, title, search, img_url, domain, etv, queue, KWsMatch, hideMatch } = data;
 
 	let type = TYPE_REGULAR;
 
@@ -271,6 +272,7 @@ function addItem(data) {
 		Tpl.setVar("search", search);
 		Tpl.setVar("description", title);
 		Tpl.setVar("img_url", img_url);
+		Tpl.setVar("queue", queue);
 		Tpl.setVar("type", type);
 		Tpl.setVar("etv", formatETV(etv));
 		Tpl.setIf("announce", appSettings.discord.active && appSettings.discord.guid != null);
