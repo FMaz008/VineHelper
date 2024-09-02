@@ -3,6 +3,21 @@
 		<a href="https://www.amazon.{{$domain}}/vine/vine-items?search={{$search}}" target="_blank">
 			<div class="vh-toolbar-large-icon vh-icon-search" style="float: right"></div>
 		</a>
+		{{if announce}}
+		<div style="clear: right"></div>
+		<a
+			href="#"
+			id="vh-announce-link-{{$asin}}"
+			class="vh-floating-icon vh-announce-link"
+			title="Announce the product on discord! (The ETV must be known)"
+		>
+			<div
+				class="vh-toolbar-large-icon vh-icon-announcement"
+				data-asin="{{$asin}}"
+				style="float: right; margin-top: 10px"
+			></div>
+		</a>
+		{{endif}}
 		<div style="clear: right"></div>
 		<a href="#" class="report-link">
 			<div

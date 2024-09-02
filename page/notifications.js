@@ -66,6 +66,14 @@ const handleReportClick = (e) => {
 	report(e.target.dataset.asin);
 };
 
+const handleBrendaClick = (e) => {
+	e.preventDefault();
+
+	const asin = e.target.dataset.asin;
+	const etv = document.querySelector("#vh-notification-" + asin + " .etv_value").innerText;
+	window.BrendaAnnounceQueue.announce(asin, etv, "encore");
+};
+
 window.onload = function () {
 	broadcastChannel.onmessage = async function (event) {
 		let data = event.data;
@@ -265,6 +273,7 @@ function addItem(data) {
 		Tpl.setVar("img_url", img_url);
 		Tpl.setVar("type", type);
 		Tpl.setVar("etv", formatETV(etv));
+		Tpl.setIf("announce", appSettings.discord.active && appSettings.discord.guid != null);
 		let content = Tpl.render(loadedTpl, true); //true to return a DOM object instead of an HTML string
 
 		const newBody = document.getElementById("vh-items-container");
@@ -286,6 +295,11 @@ function addItem(data) {
 		document
 			.querySelector("#vh-notification-" + asin + " .report-link")
 			.addEventListener("click", handleReportClick);
+
+		//Add new click listener for Brenda announce:
+		document
+			.querySelector("#vh-notification-" + asin + " .vh-announce-link")
+			.addEventListener("click", handleBrendaClick);
 
 		//Update the most recent date
 		document.getElementById("date_most_recent_item").innerText = formatDate(date);
@@ -373,8 +387,12 @@ function setETV(asin, etv) {
 	let etvElement = document.querySelector("#" + itemID(asin) + " .etv_value");
 	if (etv == null) {
 		etvElement.style.display = "none";
+
+		document.querySelector("#vh-announce-link-" + asin).style.visibility = "hidden";
 	} else {
 		etvElement.innerText = etv;
+
+		document.querySelector("#vh-announce-link-" + asin).style.visibility = "visible";
 	}
 }
 

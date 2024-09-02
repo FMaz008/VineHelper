@@ -111,6 +111,7 @@
 				"scripts/HiddenListMgr.js",
 				"scripts/PinnedListMgr.js",
 				"scripts/ModalMgr.js",
+				"scripts/BrendaAnnounce.js",
 				"scripts/preboot.js"
 			],
 			"matches": [
