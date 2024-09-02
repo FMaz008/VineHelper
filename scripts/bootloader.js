@@ -897,6 +897,8 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 	let data = message;
 	if (data.type == undefined) return;
 
+	sendResponse({ success: true });
+
 	//If we received a request for a hook execution
 	if (data.type && data.type == "hookExecute") {
 		console.log("Hook Execute request");
@@ -948,7 +950,6 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 			Notifications.pushNotification(note2);
 		}
 	}
-	sendResponse({ success: true });
 });
 
 //Key bindings/keyboard shortcuts for navigation
