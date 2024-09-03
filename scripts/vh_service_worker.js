@@ -153,7 +153,8 @@ async function checkNewItems(getAllItems = false) {
 			});
 
 			for (let i = response.products.length - 1; i >= 0; i--) {
-				const { title, date, asin, img_url, etv, queue } = response.products[i];
+				const { title, date, asin, img_url, etv, queue, is_parent_asin, enrollment_guid } =
+					response.products[i];
 
 				//Only display notification for product more recent than the last displayed notification
 				if (getAllItems || date > latestProduct || latestProduct == 0) {
@@ -215,6 +216,8 @@ async function checkNewItems(getAllItems = false) {
 								queue: queue,
 								KWsMatch: highlightKWMatch,
 								hideMatch: hideKWMatch,
+								is_parent_asin: is_parent_asin,
+								enrollment_guid: enrollment_guid,
 							},
 							"notification"
 						);

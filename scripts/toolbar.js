@@ -106,9 +106,12 @@ class Toolbar {
 				//Get the item title, thumbnail
 				let title = tile.getTitle();
 				let thumbnail = tile.getThumbnail();
+				const btn = document.querySelector(`input[data-asin="${asin}"]`);
+				const isParentAsin = btn.dataset.isParentAsin;
+				const enrollmentGUID = btn.dataset.recommendationId.match(/#vine\.enrollment\.([a-f0-9-]+)/i)[1];
 
-				PinnedList.addItem(asin, title, thumbnail);
-				await addPinnedTile(asin, title, thumbnail); //grid.js
+				PinnedList.addItem(asin, title, thumbnail, isParentAsin, enrollmentGUID);
+				await addPinnedTile(asin, title, thumbnail, isParentAsin, enrollmentGUID); //grid.js
 
 				updateTileCounts();
 			});

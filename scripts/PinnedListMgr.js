@@ -16,7 +16,15 @@ class PinnedListMgr {
 
 			if (ev.data.type == "pinnedItem") {
 				showRuntime("Broadcast received: pinned item " + ev.data.asin);
-				this.addItem(ev.data.asin, ev.data.title, ev.data.thumbnail, false, false);
+				this.addItem(
+					ev.data.asin,
+					ev.data.title,
+					ev.data.thumbnail,
+					ev.data.is_parent_asin,
+					ev.data.enrollment_guid,
+					false,
+					false
+				);
 			}
 			if (ev.data.type == "unpinnedItem") {
 				showRuntime("Broadcast received: unpinned item " + ev.data.asin);
@@ -38,7 +46,12 @@ class PinnedListMgr {
 				showRuntime("Failed to parse pinnedItems as JSON, treating as array:");
 				if (Array.isArray(data.pinnedItems)) {
 					this.mapPin = data.pinnedItems.reduce((map, product) => {
-						map.set(product.asin, { title: product.title, thumbnail: product.thumbnail });
+						map.set(product.asin, {
+							title: product.title,
+							thumbnail: product.thumbnail,
+							is_parent_asin: product.is_parent_asin,
+							enrollment_guid: product.enrollment_guid,
+						});
 						return map;
 					}, new Map());
 				} else {
@@ -71,19 +84,38 @@ class PinnedListMgr {
 		}
 	}
 
-	async addItem(asin, title, thumbnail, save = true, broadcast = true) {
+	async addItem(asin, title, thumbnail, isParentAsin, enrollmentGUID, save = true, broadcast = true) {
 		if (save) await this.loadFromLocalStorage(); //Load the list in case it was altered in a different tab
 
-		this.mapPin.set(asin, { title: title, thumbnail: thumbnail });
+		this.mapPin.set(asin, {
+			title: title,
+			thumbnail: thumbnail,
+			is_parent_asin: isParentAsin,
+			enrollment_guid: enrollmentGUID,
+		});
 
 		//The server may not be in sync with the local list, and will deal with duplicate.
-		this.updateArrChange({ asin: asin, pinned: true, title: title, thumbnail: thumbnail });
+		this.updateArrChange({
+			asin: asin,
+			pinned: true,
+			title: title,
+			thumbnail: thumbnail,
+			is_parent_asin: isParentAsin,
+			enrollment_guid: enrollmentGUID,
+		});
 
 		if (save) this.saveList();
 
 		//Broadcast the change to other tabs
 		if (broadcast) {
-			this.broadcast.postMessage({ type: "pinnedItem", asin: asin, title: title, thumbnail: thumbnail });
+			this.broadcast.postMessage({
+				type: "pinnedItem",
+				asin: asin,
+				title: title,
+				thumbnail: thumbnail,
+				is_parent_asin: isParentAsin,
+				enrollment_guid: enrollmentGUID,
+			});
 		}
 	}
 

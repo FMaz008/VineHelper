@@ -187,7 +187,7 @@ async function createGridInterface() {
 		let mapPin = new Map();
 		mapPin = PinnedList.getList();
 		mapPin.forEach(async (value, key) => {
-			addPinnedTile(key, value.title, value.thumbnail);
+			addPinnedTile(key, value.title, value.thumbnail, value.is_parent_asin, value.enrollment_guid);
 		});
 	}
 
@@ -209,7 +209,7 @@ async function createGridInterface() {
 	selectCurrentTab(true);
 }
 
-async function addPinnedTile(asin, title, thumbnail) {
+async function addPinnedTile(asin, title, thumbnail, isParentAsin, enrollmentGUID) {
 	//Check if the pin already exist:
 	if (document.getElementById("vh-pin-" + asin) != undefined) return false;
 
@@ -221,6 +221,8 @@ async function addPinnedTile(asin, title, thumbnail) {
 	Tpl.setVar("img_url", thumbnail);
 	Tpl.setVar("asin", asin);
 	Tpl.setVar("description", title);
+	Tpl.setVar("is_parent_asin", isParentAsin);
+	Tpl.setVar("enrollment_guid", enrollmentGUID);
 	let content = Tpl.render(prom2, true);
 	document.getElementById("tab-pinned").appendChild(content);
 

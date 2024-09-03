@@ -225,7 +225,20 @@ async function setLocale(country) {
 }
 
 function addItem(data) {
-	let { date, asin, title, search, img_url, domain, etv, queue, KWsMatch, hideMatch } = data;
+	let {
+		date,
+		asin,
+		title,
+		search,
+		img_url,
+		domain,
+		etv,
+		queue,
+		KWsMatch,
+		hideMatch,
+		is_parent_asin,
+		enrollment_guid,
+	} = data;
 
 	let type = TYPE_REGULAR;
 
@@ -266,6 +279,8 @@ function addItem(data) {
 		imageUrls.add(img_url);
 
 		Tpl.setVar("asin", asin);
+		Tpl.setVar("is_parent_asin", is_parent_asin);
+		Tpl.setVar("enrollment_guid", enrollment_guid);
 		Tpl.setVar("domain", vineDomain);
 		Tpl.setVar("title", "New item");
 		Tpl.setVar("date", formatDate(date));

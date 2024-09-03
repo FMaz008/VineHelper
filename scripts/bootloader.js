@@ -28,6 +28,8 @@ const DEBUGGER_TITLE = "Vine Helper - Debugger";
 const VINE_INFO_TITLE = "Vine Helper update info";
 const GDPR_TITLE = "Vine Helper - GDPR";
 
+var websiteOpts = null;
+
 //Do not run the extension if ultraviner is running
 if (!ultraviner) {
 	init();
@@ -475,12 +477,20 @@ function getAllProductData() {
 	let arrUrl = []; //Will be use to store the URL identifier of the listed products.
 	const arrObj = $(".vvp-item-tile");
 	for (let i = 0; i < arrObj.length; i++) {
-		//Create the tile and assign it to the main grid
-		obj = arrObj[i];
-		asin = getAsinFromDom(obj);
-		title = getTitleFromDom(obj);
-		thumbnail = getThumbnailURLFromDom(obj);
-		arrUrl.push({ asin: asin, title: title, thumbnail: thumbnail });
+		const obj = arrObj[i];
+		const asin = getAsinFromDom(obj);
+		const btn = document.querySelector(`input[data-asin="${asin}"]`);
+		const isParent = btn.dataset.isParentAsin;
+		const enrollmentGUID = btn.dataset.recommendationId.match(/#vine\.enrollment\.([a-f0-9-]+)/i)[1];
+		const title = getTitleFromDom(obj);
+		const thumbnail = getThumbnailURLFromDom(obj);
+		arrUrl.push({
+			asin: asin,
+			title: title,
+			thumbnail: thumbnail,
+			is_parent_asin: isParent,
+			enrollment_guid: enrollmentGUID,
+		});
 	}
 	return arrUrl;
 }
@@ -679,7 +689,9 @@ async function serverProductsResponse(data) {
 				await addPinnedTile(
 					data["pinned_products"][i]["asin"],
 					data["pinned_products"][i]["title"],
-					data["pinned_products"][i]["thumbnail"]
+					data["pinned_products"][i]["thumbnail"],
+					data["pinned_products"][i]["is_parent_asin"],
+					data["pinned_products"][i]["enrollment_guid"]
 				); //grid.js
 			}
 		}
@@ -888,6 +900,11 @@ window.addEventListener("message", async function (event) {
 		note.content = "Item broken with error " + event.data.data.error + ".";
 		await Notifications.pushNotification(note);
 	}
+
+	if (event.data.type && event.data.type == "websiteOpts") {
+		websiteOpts = event.data.data;
+		showRuntime("BOOT: Opts data obtained from inj.js.");
+	}
 });
 
 //Message from within the context of the extension
@@ -921,7 +938,7 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 			vineBrowsingListing && //Only show notification on listing pages
 			appSettings.notification.screen.active
 		) {
-			let { date, asin, title, search, img_url, domain, etv } = data;
+			let { date, asin, title, search, img_url, domain, etv, is_parent_asin, enrollment_guid } = data;
 
 			//Generate the content to be displayed in the notification
 			const prom = await Tpl.loadFile("/view/notification_new_item.html");
@@ -932,6 +949,8 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 			Tpl.setVar("asin", asin);
 			Tpl.setVar("description", title);
 			Tpl.setVar("img_url", img_url);
+			Tpl.setVar("is_parent_asin", is_parent_asin);
+			Tpl.setVar("enrollment_guid", enrollment_guid);
 
 			//Generate the notification
 			let note2 = new ScreenNotification();
@@ -1247,4 +1266,38 @@ async function handleModalNavigation(event) {
 	// Finally update the current index
 	modalNavigatorCurrentIndex = modalNavigatorNextIndex;
 	showRuntime("[DEBUG] Updated the current index to: " + modalNavigatorCurrentIndex);
+}
+
+function generateModalButton(asin, isParent, enrollmentGUID, isRFY = false) {
+	if (websiteOpts == null) {
+		console.error("Failed to fetch opts data");
+	}
+
+	const container1 = document.createElement("span");
+	container1.id = "dynamicModalBtn-" + asin;
+	container1.classList.add("vvp-details-btn");
+	const container2 = document.createElement("span");
+	container1.appendChild(container2);
+	const btn = document.createElement("input");
+	btn.type = "submit";
+	btn.dataset.asin = asin;
+	btn.dataset.isParentAsin = isParent;
+
+	if (isRFY) {
+		btn.dataset.recommendationType = "VENDOR_TARGETED";
+		btn.dataset.recommendationId =
+			websiteOpts.obfuscatedMarketId +
+			"#" +
+			asin +
+			"#" +
+			websiteOpts.customerId +
+			"#vine.enrollment." +
+			enrollmentGUID;
+	} else {
+		btn.dataset.recommendationType = "VINE_FOR_ALL";
+		btn.dataset.recommendationId =
+			websiteOpts.obfuscatedMarketId + "#" + asin + "#vine.enrollment." + enrollmentGUID;
+	}
+	container2.appendChild(btn);
+	document.body.appendChild(container1);
 }
