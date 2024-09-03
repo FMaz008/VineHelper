@@ -278,7 +278,7 @@ function addItem(data) {
 		items.set(asin, etv);
 		imageUrls.add(img_url);
 
-		if (appSettings.general.searchOpenModal) {
+		if (appSettings.general.searchOpenModal && is_parent_asin != null && enrollment_guid != null) {
 			Tpl.setVar(
 				"url",
 				`https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${is_parent_asin};${enrollment_guid}`

@@ -958,7 +958,7 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 			//Generate the content to be displayed in the notification
 			const prom = await Tpl.loadFile("/view/notification_new_item.html");
 
-			if (appSettings.general.searchOpenModal) {
+			if (appSettings.general.searchOpenModal && is_parent_asin != null && enrollment_guid != null) {
 				Tpl.setVar(
 					"url",
 					`/vine/vine-items?queue=encore#openModal;${asin};${is_parent_asin};${enrollment_guid}`
