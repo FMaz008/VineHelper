@@ -176,7 +176,7 @@ async function checkNewItems(getAllItems = false) {
 								if (appSettings.general.searchOpenModal) {
 									const { asin, is_parent_asin, enrollment_guid } = notificationsData[notificationId];
 									chrome.tabs.create({
-										url: `https://www.amazon.${vineDomain}/vine/vine-items#openModal;${asin};${is_parent_asin};${enrollment_guid}`,
+										url: `https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${is_parent_asin};${enrollment_guid}`,
 									});
 								} else {
 									chrome.tabs.create({

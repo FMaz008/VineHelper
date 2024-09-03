@@ -319,7 +319,7 @@ async function getSettings() {
 	}
 
 	//Figure out what domain the extension is working on
-	let currentUrl = window.location.href;
+	const currentUrl = window.location.href;
 	regex = /^.+?amazon\.([a-z.]+).*\/vine\/.*$/;
 	arrMatches = currentUrl.match(regex);
 	vineDomain = arrMatches[1];

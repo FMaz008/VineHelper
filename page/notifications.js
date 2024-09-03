@@ -281,7 +281,7 @@ function addItem(data) {
 		if (appSettings.general.searchOpenModal) {
 			Tpl.setVar(
 				"url",
-				`https://www.amazon.${vineDomain}/vine/vine-items#openModal;${asin};${is_parent_asin};${enrollment_guid}`
+				`https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${is_parent_asin};${enrollment_guid}`
 			);
 		} else {
 			Tpl.setVar("url", "/vine/vine-items?search=" + search);

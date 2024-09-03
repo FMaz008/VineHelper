@@ -904,6 +904,21 @@ window.addEventListener("message", async function (event) {
 	if (event.data.type && event.data.type == "websiteOpts") {
 		websiteOpts = event.data.data;
 		showRuntime("BOOT: Opts data obtained from inj.js.");
+
+		//Check the current URL for the following pattern:
+		///vine/vine-items#openModal;${asin};${is_parent_asin};${enrollment_guid}
+		const currentUrl = window.location.href;
+		regex = /^[^#]+#openModal;(.+);(.+);(.+)$/;
+		arrMatches = currentUrl.match(regex);
+		if (arrMatches != null) {
+			showRuntime("BOOT: Open modal URL detected.");
+			//We have an open modal URL
+			const asin = arrMatches[1];
+			const isParentAsin = arrMatches[2];
+			const enrollmentGUID = arrMatches[3];
+
+			openDynamicModal(asin, isParentAsin, enrollmentGUID);
+		}
 	}
 });
 
@@ -944,7 +959,10 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 			const prom = await Tpl.loadFile("/view/notification_new_item.html");
 
 			if (appSettings.general.searchOpenModal) {
-				Tpl.setVar("url", `/vine/vine-items#openModal;${asin};${is_parent_asin};${enrollment_guid}`);
+				Tpl.setVar(
+					"url",
+					`/vine/vine-items?queue=encore#openModal;${asin};${is_parent_asin};${enrollment_guid}`
+				);
 			} else {
 				Tpl.setVar("url", "/vine/vine-items?search=" + search);
 			}
@@ -1273,11 +1291,12 @@ async function handleModalNavigation(event) {
 	showRuntime("[DEBUG] Updated the current index to: " + modalNavigatorCurrentIndex);
 }
 
-function generateModalButton(asin, isParent, enrollmentGUID, isRFY = false) {
+function openDynamicModal(asin, isParent, enrollmentGUID, isRFY = false) {
 	if (websiteOpts == null) {
 		console.error("Failed to fetch opts data");
 	}
 
+	//Generate the dynamic modal button
 	const container1 = document.createElement("span");
 	container1.id = "dynamicModalBtn-" + asin;
 	container1.classList.add("vvp-details-btn");
@@ -1304,5 +1323,12 @@ function generateModalButton(asin, isParent, enrollmentGUID, isRFY = false) {
 			websiteOpts.obfuscatedMarketId + "#" + asin + "#vine.enrollment." + enrollmentGUID;
 	}
 	container2.appendChild(btn);
-	document.body.appendChild(container1);
+	document.getElementById("vvp-items-grid").appendChild(container1);
+
+	//Dispatch a click event on the button
+	btn.click();
+
+	setTimeout(function () {
+		container1.remove(); // Removes container1 from the DOM
+	}, 1000);
 }
