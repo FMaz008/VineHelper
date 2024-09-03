@@ -105,6 +105,7 @@ function initiateSettings() {
 	manageCheckboxSetting("unavailableTab.active");
 	manageCheckboxSetting("unavailableTab.compactToolbar");
 	manageCheckboxSetting("general.modalNavigation");
+	manageCheckboxSetting("general.searchOpenModal");
 	manageCheckboxSetting("general.listView");
 	manageCheckboxSetting("general.scrollToRFY");
 

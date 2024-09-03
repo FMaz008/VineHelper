@@ -173,16 +173,28 @@ async function checkNewItems(getAllItems = false) {
 						//If the new item match a highlight keyword, push a real notification.
 						if (appSettings.notification.pushNotifications && highlightKWMatch) {
 							chrome.notifications.onClicked.addListener((notificationId) => {
-								chrome.tabs.create({
-									url:
-										"https://www.amazon." +
-										vineDomain +
-										"/vine/vine-items?search=" +
-										notificationsData[notificationId].search,
-								});
+								if (appSettings.general.searchOpenModal) {
+									const { asin, is_parent_asin, enrollment_guid } = notificationsData[notificationId];
+									chrome.tabs.create({
+										url: `https://www.amazon.${vineDomain}/vine/vine-items#openModal;${asin};${is_parent_asin};${enrollment_guid}`,
+									});
+								} else {
+									chrome.tabs.create({
+										url:
+											"https://www.amazon." +
+											vineDomain +
+											"/vine/vine-items?search=" +
+											notificationsData[notificationId].search,
+									});
+								}
 							});
 
-							notificationsData["item-" + asin] = { search: search };
+							notificationsData["item-" + asin] = {
+								asin: asin,
+								is_parent_asin: is_parent_asin,
+								enrollment_guid: enrollment_guid,
+								search: search,
+							};
 							chrome.notifications.create(
 								"item-" + asin,
 								{

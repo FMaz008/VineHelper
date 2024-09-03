@@ -278,6 +278,15 @@ function addItem(data) {
 		items.set(asin, etv);
 		imageUrls.add(img_url);
 
+		if (appSettings.general.searchOpenModal) {
+			Tpl.setVar(
+				"url",
+				`https://www.amazon.${vineDomain}/vine/vine-items#openModal;${asin};${is_parent_asin};${enrollment_guid}`
+			);
+		} else {
+			Tpl.setVar("url", "/vine/vine-items?search=" + search);
+		}
+
 		Tpl.setVar("asin", asin);
 		Tpl.setVar("is_parent_asin", is_parent_asin);
 		Tpl.setVar("enrollment_guid", enrollment_guid);

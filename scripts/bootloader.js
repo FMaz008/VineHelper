@@ -943,6 +943,11 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 			//Generate the content to be displayed in the notification
 			const prom = await Tpl.loadFile("/view/notification_new_item.html");
 
+			if (appSettings.general.searchOpenModal) {
+				Tpl.setVar("url", `/vine/vine-items#openModal;${asin};${is_parent_asin};${enrollment_guid}`);
+			} else {
+				Tpl.setVar("url", "/vine/vine-items?search=" + search);
+			}
 			Tpl.setIf("show_image", appSettings.notification.screen.thumbnail);
 			Tpl.setVar("date", date);
 			Tpl.setVar("search", search);

@@ -185,7 +185,6 @@ class Toolbar {
 			showRuntime("! Could not find #vh-toolbar-" + this.pTile.getAsin());
 			return;
 		}
-		let tileOpacity;
 		let statusColor;
 
 		//If the hidden tab system is activated, update the visibility icon
