@@ -961,10 +961,10 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 			if (appSettings.general.searchOpenModal && is_parent_asin != null && enrollment_guid != null) {
 				Tpl.setVar(
 					"url",
-					`/vine/vine-items?queue=encore#openModal;${asin};${is_parent_asin};${enrollment_guid}`
+					`https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${is_parent_asin};${enrollment_guid}`
 				);
 			} else {
-				Tpl.setVar("url", "/vine/vine-items?search=" + search);
+				Tpl.setVar("url", `https://www.amazon.${vineDomain}/vine/vine-items?search=${search}`);
 			}
 			Tpl.setIf("show_image", appSettings.notification.screen.thumbnail);
 			Tpl.setVar("date", date);

@@ -284,7 +284,7 @@ function addItem(data) {
 				`https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${is_parent_asin};${enrollment_guid}`
 			);
 		} else {
-			Tpl.setVar("url", "/vine/vine-items?search=" + search);
+			Tpl.setVar("url", `https://www.amazon.${vineDomain}/vine/vine-items?search=${search}`);
 		}
 
 		Tpl.setVar("asin", asin);

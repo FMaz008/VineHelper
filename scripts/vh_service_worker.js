@@ -173,7 +173,8 @@ async function checkNewItems(getAllItems = false) {
 						//If the new item match a highlight keyword, push a real notification.
 						if (appSettings.notification.pushNotifications && highlightKWMatch) {
 							chrome.notifications.onClicked.addListener((notificationId) => {
-								const { asin, is_parent_asin, enrollment_guid } = notificationsData[notificationId];
+								const { asin, is_parent_asin, enrollment_guid, search } =
+									notificationsData[notificationId];
 								if (
 									appSettings.general.searchOpenModal &&
 									is_parent_asin != null &&
@@ -184,11 +185,7 @@ async function checkNewItems(getAllItems = false) {
 									});
 								} else {
 									chrome.tabs.create({
-										url:
-											"https://www.amazon." +
-											vineDomain +
-											"/vine/vine-items?search=" +
-											notificationsData[notificationId].search,
+										url: `https://www.amazon.${vineDomain}/vine/vine-items?search=${search}`,
 									});
 								}
 							});
