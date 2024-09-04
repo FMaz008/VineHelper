@@ -292,6 +292,10 @@ function initiateSettings() {
 	manageInputText("keyBindings.AIPage8");
 	manageInputText("keyBindings.AIPage9");
 	manageInputText("keyBindings.AIPage10");
+	manageInputText("keyBindings.availableTab");
+	manageInputText("keyBindings.unavailableTab");
+	manageInputText("keyBindings.hiddenTab");
+	manageInputText("keyBindings.pinnedTab");
 	manageInputText("keyBindings.hideAll");
 	manageInputText("keyBindings.showAll");
 	manageInputText("keyBindings.hideAllNext");

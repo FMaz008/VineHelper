@@ -1071,6 +1071,30 @@ window.addEventListener("keyup", async function (e) {
 			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=9"),
 		[appSettings.keyBindings?.AIPage10]: () =>
 			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=10"),
+		[appSettings.keyBindings?.availableTab]: () => {
+			const tab = document.querySelector('#tabs ul a[href="#vvp-items-grid"]');
+			if (tab) {
+				tab.click();
+			}
+		},
+		[appSettings.keyBindings?.unavailableTab]: () => {
+			const tab = document.querySelector('#tabs ul a[href="#tab-unavailable"]');
+			if (tab) {
+				tab.click();
+			}
+		},
+		[appSettings.keyBindings?.hiddenTab]: () => {
+			const tab = document.querySelector('#tabs ul a[href="#tab-hidden"]');
+			if (tab) {
+				tab.click();
+			}
+		},
+		[appSettings.keyBindings?.pinnedTab]: () => {
+			const tab = document.querySelector('#tabs ul a[href="#tab-pinned"]');
+			if (tab) {
+				tab.click();
+			}
+		},
 	};
 
 	//Only allow the hideAll, hideAllNext and showAll keybinding if the hiddenTab is activated.
