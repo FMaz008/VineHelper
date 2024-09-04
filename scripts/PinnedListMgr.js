@@ -84,11 +84,12 @@ class PinnedListMgr {
 		}
 	}
 
-	async addItem(asin, title, thumbnail, isParentAsin, enrollmentGUID, save = true, broadcast = true) {
+	async addItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID, save = true, broadcast = true) {
 		if (save) await this.loadFromLocalStorage(); //Load the list in case it was altered in a different tab
 
 		this.mapPin.set(asin, {
 			title: title,
+			queue: queue,
 			thumbnail: thumbnail,
 			is_parent_asin: isParentAsin,
 			enrollment_guid: enrollmentGUID,
@@ -98,6 +99,7 @@ class PinnedListMgr {
 		this.updateArrChange({
 			asin: asin,
 			pinned: true,
+			queue: queue,
 			title: title,
 			thumbnail: thumbnail,
 			is_parent_asin: isParentAsin,
@@ -111,6 +113,7 @@ class PinnedListMgr {
 			this.broadcast.postMessage({
 				type: "pinnedItem",
 				asin: asin,
+				queue: queue,
 				title: title,
 				thumbnail: thumbnail,
 				is_parent_asin: isParentAsin,

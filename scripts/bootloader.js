@@ -6,8 +6,7 @@ var gridUnavailable = null; //Will be populated after the grid will be created.
 var gridHidden = null; //Will be populated after the grid will be created.
 var gridPinned = null; //Will be populated after the grid will be created.
 
-//Inject the script to fix the infinite loading wheel into the main environment.
-var scriptTag = document.createElement("script");
+//Tooltip used to display full titles/description. Same tooltip will get reused for all uses.
 const tooltip = document.createElement("div");
 
 //Constants
@@ -164,6 +163,9 @@ async function initFlushTplCache() {
 }
 
 function initInjectScript() {
+	//Inject the script to fix the infinite loading wheel into the main environment.
+	const scriptTag = document.createElement("script");
+
 	//Inject the infinite loading wheel fix to the "main world"
 	scriptTag.src = chrome.runtime.getURL("scripts/inj.js");
 	scriptTag.onload = function () {
@@ -688,6 +690,7 @@ async function serverProductsResponse(data) {
 			for (let i = 0; i < data["pinned_products"].length; i++) {
 				await addPinnedTile(
 					data["pinned_products"][i]["asin"],
+					data["pinned_products"][i]["queue"],
 					data["pinned_products"][i]["title"],
 					data["pinned_products"][i]["thumbnail"],
 					data["pinned_products"][i]["is_parent_asin"],
@@ -908,16 +911,17 @@ window.addEventListener("message", async function (event) {
 		//Check the current URL for the following pattern:
 		///vine/vine-items#openModal;${asin};${is_parent_asin};${enrollment_guid}
 		const currentUrl = window.location.href;
-		regex = /^[^#]+#openModal;(.+);(.+);(.+)$/;
+		regex = /^[^#]+#openModal;(.+);(.+);(.+);(.+)$/;
 		arrMatches = currentUrl.match(regex);
 		if (arrMatches != null) {
 			showRuntime("BOOT: Open modal URL detected.");
 			//We have an open modal URL
 			const asin = arrMatches[1];
-			const isParentAsin = arrMatches[2];
-			const enrollmentGUID = arrMatches[3];
+			const queue = arrMatches[2];
+			const isParentAsin = arrMatches[3];
+			const enrollmentGUID = arrMatches[4];
 
-			openDynamicModal(asin, isParentAsin, enrollmentGUID);
+			openDynamicModal(asin, queue, isParentAsin, enrollmentGUID);
 		}
 	}
 });
@@ -953,7 +957,7 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 			vineBrowsingListing && //Only show notification on listing pages
 			appSettings.notification.screen.active
 		) {
-			let { date, asin, title, search, img_url, domain, etv, is_parent_asin, enrollment_guid } = data;
+			let { date, asin, queue, title, search, img_url, domain, etv, is_parent_asin, enrollment_guid } = data;
 
 			//Generate the content to be displayed in the notification
 			const prom = await Tpl.loadFile("/view/notification_new_item.html");
@@ -961,7 +965,7 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 			if (appSettings.general.searchOpenModal && is_parent_asin != null && enrollment_guid != null) {
 				Tpl.setVar(
 					"url",
-					`https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${is_parent_asin};${enrollment_guid}`
+					`https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`
 				);
 			} else {
 				Tpl.setVar("url", `https://www.amazon.${vineDomain}/vine/vine-items?search=${search}`);
@@ -972,6 +976,7 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 			Tpl.setVar("asin", asin);
 			Tpl.setVar("description", title);
 			Tpl.setVar("img_url", img_url);
+			Tpl.setVar("queue", queue);
 			Tpl.setVar("is_parent_asin", is_parent_asin);
 			Tpl.setVar("enrollment_guid", enrollment_guid);
 
@@ -1315,10 +1320,18 @@ async function handleModalNavigation(event) {
 	showRuntime("[DEBUG] Updated the current index to: " + modalNavigatorCurrentIndex);
 }
 
-function openDynamicModal(asin, isParent, enrollmentGUID, isRFY = false) {
+function openDynamicModal(asin, queue, isParent, enrollmentGUID) {
 	if (websiteOpts == null) {
 		console.error("Failed to fetch opts data");
 	}
+
+	const recommendationTypes = {
+		potluck: "VENDOR_TARGETED",
+		last_chance: "VENDOR_VINE_FOR_ALL",
+		encore: "VINE_FOR_ALL",
+	};
+
+	const recommendationType = recommendationTypes[queue] || null;
 
 	//Generate the dynamic modal button
 	const container1 = document.createElement("span");
@@ -1331,8 +1344,8 @@ function openDynamicModal(asin, isParent, enrollmentGUID, isRFY = false) {
 	btn.dataset.asin = asin;
 	btn.dataset.isParentAsin = isParent;
 
-	if (isRFY) {
-		btn.dataset.recommendationType = "VENDOR_TARGETED";
+	if (recommendationType == "VENDOR_TARGETED") {
+		btn.dataset.recommendationType = recommendationType;
 		btn.dataset.recommendationId =
 			websiteOpts.obfuscatedMarketId +
 			"#" +
@@ -1342,7 +1355,7 @@ function openDynamicModal(asin, isParent, enrollmentGUID, isRFY = false) {
 			"#vine.enrollment." +
 			enrollmentGUID;
 	} else {
-		btn.dataset.recommendationType = "VINE_FOR_ALL";
+		btn.dataset.recommendationType = recommendationType;
 		btn.dataset.recommendationId =
 			websiteOpts.obfuscatedMarketId + "#" + asin + "#vine.enrollment." + enrollmentGUID;
 	}

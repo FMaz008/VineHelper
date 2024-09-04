@@ -187,7 +187,7 @@ async function createGridInterface() {
 		let mapPin = new Map();
 		mapPin = PinnedList.getList();
 		mapPin.forEach(async (value, key) => {
-			addPinnedTile(key, value.title, value.thumbnail, value.is_parent_asin, value.enrollment_guid);
+			addPinnedTile(key, value.queue, value.title, value.thumbnail, value.is_parent_asin, value.enrollment_guid);
 		});
 	}
 
@@ -209,7 +209,7 @@ async function createGridInterface() {
 	selectCurrentTab(true);
 }
 
-async function addPinnedTile(asin, title, thumbnail, is_parent_asin, enrollment_guid) {
+async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enrollment_guid) {
 	//Check if the pin already exist:
 	if (document.getElementById("vh-pin-" + asin) != undefined) return false;
 
@@ -219,7 +219,7 @@ async function addPinnedTile(asin, title, thumbnail, is_parent_asin, enrollment_
 	if (appSettings.general.searchOpenModal && is_parent_asin != null && enrollment_guid != null) {
 		Tpl.setVar(
 			"url",
-			`https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${is_parent_asin};${enrollment_guid}`
+			`https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`
 		);
 	} else {
 		Tpl.setVar("url", `https://www.amazon.${vineDomain}/vine/vine-items?search=${search}`);

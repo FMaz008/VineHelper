@@ -110,8 +110,8 @@ class Toolbar {
 				const isParentAsin = btn.dataset.isParentAsin;
 				const enrollmentGUID = btn.dataset.recommendationId.match(/#vine\.enrollment\.([a-f0-9-]+)/i)[1];
 
-				PinnedList.addItem(asin, title, thumbnail, isParentAsin, enrollmentGUID);
-				await addPinnedTile(asin, title, thumbnail, isParentAsin, enrollmentGUID); //grid.js
+				PinnedList.addItem(asin, vineQueue, title, thumbnail, isParentAsin, enrollmentGUID);
+				await addPinnedTile(asin, vineQueue, title, thumbnail, isParentAsin, enrollmentGUID); //grid.js
 
 				updateTileCounts();
 			});
