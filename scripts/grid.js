@@ -215,6 +215,15 @@ async function addPinnedTile(asin, title, thumbnail, isParentAsin, enrollmentGUI
 
 	let prom2 = await Tpl.loadFile("view/pinned_tile.html");
 	let search = title.replace(/^([a-zA-Z0-9\s',]{0,40})[\s]+.*$/, "$1");
+
+	if (appSettings.general.searchOpenModal && is_parent_asin != null && enrollment_guid != null) {
+		Tpl.setVar(
+			"url",
+			`https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${is_parent_asin};${enrollment_guid}`
+		);
+	} else {
+		Tpl.setVar("url", `https://www.amazon.${vineDomain}/vine/vine-items?search=${search}`);
+	}
 	Tpl.setVar("id", asin);
 	Tpl.setVar("domain", vineDomain); //preboot.js
 	Tpl.setVar("search", search);
