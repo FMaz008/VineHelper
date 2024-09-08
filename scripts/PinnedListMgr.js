@@ -149,23 +149,39 @@ class PinnedListMgr {
 	 * Send new items on the server to be added or removed from the changed list.
 	 */
 	notifyServerOfChangedItem() {
-		let arrJSON = {
-			api_version: 4,
-			country: vineCountry,
-			action: "save_pinned_list",
-			uuid: appSettings.general.uuid,
-		};
-		let jsonArrURL = JSON.stringify(arrJSON);
+		if (appSettings.general.apiv5) {
+			let arrJSON = {
+				api_version: 5,
+				country: vineCountry,
+				action: "save_pinned_list",
+				uuid: appSettings.general.uuid,
+				items: this.arrChanges,
+			};
+			//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
+			fetch(VINE_HELPER_API_V5_URL, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(arrJSON),
+			});
+		} else {
+			let arrJSON = {
+				api_version: 4,
+				country: vineCountry,
+				action: "save_pinned_list",
+				uuid: appSettings.general.uuid,
+			};
+			let jsonArrURL = JSON.stringify(arrJSON);
 
-		showRuntime("Saving pinned item(s) remotely...");
+			showRuntime("Saving pinned item(s) remotely...");
 
-		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-		let url = "https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
-		fetch(url, {
-			method: "POST",
-			headers: { "Content-Type": "application/x-www-form-urlencoded" },
-			body: JSON.stringify(this.arrChanges),
-		});
+			//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
+			let url = "https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
+			fetch(url, {
+				method: "POST",
+				headers: { "Content-Type": "application/x-www-form-urlencoded" },
+				body: JSON.stringify(this.arrChanges),
+			});
+		}
 	}
 
 	isPinned(asin) {

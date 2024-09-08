@@ -1,5 +1,6 @@
 const startTime = Date.now();
 const VINE_HELPER_API_URL = "https://vinehelper.ovh/vinehelper.php?data=";
+const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
 
 if (typeof browser === "undefined") {
 	var browser = chrome;
@@ -446,17 +447,32 @@ async function requestNewUUID() {
 	showRuntime("PRE: Generating new UUID.");
 
 	//Request a new UUID from the server
-	let arrJSON = {
-		api_version: 4,
-		action: "get_uuid",
-		country: vineCountry,
-	};
+	let url, options;
+	if (appSettings.general.apiv5) {
+		const content = {
+			api_version: 5,
+			action: "get_uuid",
+			country: vineCountry,
+		};
+		url = VINE_HELPER_API_V5_URL;
+		options = {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(content),
+		};
+	} else {
+		const arrJSON = {
+			api_version: 4,
+			action: "get_uuid",
+			country: vineCountry,
+		};
+		options = {};
+		//Build the URL request
+		const jsonArrURL = JSON.stringify(arrJSON);
+		url = VINE_HELPER_API_URL + jsonArrURL;
+	}
 
-	//Build the URL request
-	let jsonArrURL = JSON.stringify(arrJSON);
-	let url = VINE_HELPER_API_URL + jsonArrURL;
-
-	let response = await fetch(url);
+	let response = await fetch(url, options);
 
 	if (!response.ok) {
 		throw new Error("Network response was not ok PRE:obtainNewUUID");

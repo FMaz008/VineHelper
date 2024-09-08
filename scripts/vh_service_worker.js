@@ -1,4 +1,5 @@
 const DEBUG_MODE = false; // Will always display notification even if they are not new
+const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
 var appSettings = [];
 var notificationsData = {};
 var vineCountry = null;
@@ -122,20 +123,37 @@ async function init() {
 init();
 
 async function checkNewItems(getAllItems = false) {
-	let arrJSON = {
-		api_version: 4,
-		country: vineCountry,
-		orderby: "date",
-		limit: 100,
-	};
-	let jsonArrURL = JSON.stringify(arrJSON);
-
 	//Broadcast a new message to tell the tabs to display a loading wheel.
 	sendMessageToAllTabs({ type: "newItemCheck" }, "Loading wheel");
 
-	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-	let url = "https://vinehelper.ovh/vineHelperLatest.php" + "?data=" + jsonArrURL;
-	fetch(url)
+	let url, options;
+	if (appSettings.general.apiv5) {
+		const content = (arrJSON = {
+			api_version: 5,
+			country: vineCountry,
+			action: "get_latest_notifications",
+			uuid: appSettings.general.uuid,
+		});
+		url = VINE_HELPER_API_V5_URL;
+		options = {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(content),
+		};
+	} else {
+		const arrJSON = {
+			api_version: 4,
+			country: vineCountry,
+			orderby: "date",
+			limit: 100,
+		};
+		const jsonArrURL = JSON.stringify(arrJSON);
+
+		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
+		url = "https://vinehelper.ovh/vineHelperLatest.php" + "?data=" + jsonArrURL;
+		options = {};
+	}
+	fetch(url, options)
 		.then((response) => response.json())
 		.then(async function (response) {
 			let latestProduct = await browser.storage.local.get("latestProduct");
