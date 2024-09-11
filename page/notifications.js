@@ -1,3 +1,5 @@
+const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
+
 //Notification arrive one at the time
 //These variable allow to remember the type of notifications received
 //so that when the batch end, if notification(s) were received
@@ -104,6 +106,14 @@ window.onload = function () {
 				setLocale(data.domain);
 			}
 		}
+		if (data.type == "wsOpen") {
+			document.getElementById("statusWS").innerHTML =
+				"<strong>Server status: </strong><div class='vh-switch-32 vh-icon-switch-on'></div> Listening for notifications...";
+		}
+		if (data.type == "wsClosed") {
+			document.getElementById("statusWS").innerHTML =
+				"<strong>Server status: </strong><div class='vh-switch-32 vh-icon-switch-off'></div> Not connected. Retrying in 30 sec.";
+		}
 	};
 
 	//Clear the debug log every 30 minutes to save memory usage.
@@ -182,6 +192,11 @@ async function init() {
 			}
 		);
 	});
+
+	//Obtain the status of the WebSocket connection.
+	browser.runtime.sendMessage({
+		type: "wsStatus",
+	});
 }
 
 function processNotificationFiltering(node) {
@@ -209,7 +224,7 @@ async function setLocale(country) {
 
 		if (appSettings != undefined && appSettings.notification.active) {
 			document.getElementById("status").innerHTML =
-				"<strong>Status: </strong><div class='vh-switch-32 vh-icon-switch-on'></div> Listening for notifications...";
+				"<strong>ServiceWorker Status: </strong><div class='vh-switch-32 vh-icon-switch-on'></div>";
 		}
 
 		//Now that we have the locale, display the date of the most recent item
@@ -439,25 +454,43 @@ function report(asin) {
 
 function send_report(asin) {
 	let manifest = chrome.runtime.getManifest();
-	let arrJSON = {
-		api_version: 4,
-		app_version: manifest.version,
-		asin: asin,
-		action: "report_asin",
-		country: vineDomain,
-		uuid: appSettings.general.uuid,
-	};
-	let jsonArrURL = JSON.stringify(arrJSON);
-
+	let url, options;
+	if (appSettings.general.apiv5) {
+		const content = {
+			api_version: 5,
+			app_version: manifest.version,
+			country: vineCountry,
+			action: "report_asin",
+			uuid: appSettings.general.uuid,
+			asin: asin,
+		};
+		url = VINE_HELPER_API_V5_URL;
+		options = {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(content),
+		};
+	} else {
+		let arrJSON = {
+			api_version: 4,
+			app_version: manifest.version,
+			asin: asin,
+			action: "report_asin",
+			country: vineDomain,
+			uuid: appSettings.general.uuid,
+		};
+		let jsonArrURL = JSON.stringify(arrJSON);
+		url = "https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
+		options = {
+			method: "POST",
+			headers: { "Content-Type": "application/x-www-form-urlencoded" },
+		};
+	}
 	showRuntime("Sending report...");
 
 	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-	let url = "https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
 
-	fetch(url, {
-		method: "POST",
-		headers: { "Content-Type": "application/x-www-form-urlencoded" },
-	})
+	fetch(url, options)
 		.then(report_sent)
 		.catch(function () {
 			showRuntime(error);

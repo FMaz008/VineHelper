@@ -1,5 +1,6 @@
 const DEBUG_MODE = false; // Will always display notification even if they are not new
 const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
+const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
 var appSettings = [];
 var notificationsData = {};
 var vineCountry = null;
@@ -71,11 +72,20 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 			sendResponse({ success: true, domain: vineCountry });
 			//sendMessageToAllTabs({ type: "vineCountry", domain: vineCountry }, "Vine Country - keep alive");
 		}
+		sendResponse({ success: true });
 	}
 	if (data.type == "fetchLast100Items") {
 		//Get the last 100 most recent items
 		checkNewItems(true);
 		sendResponse({ success: true });
+	}
+	if (data.type == "wsStatus") {
+		sendResponse({ success: true });
+		if (ws?.readyState === WebSocket.OPEN) {
+			sendMessageToAllTabs({ type: "wsOpen" }, "Websocket server connected.");
+		} else {
+			sendMessageToAllTabs({ type: "wsClosed" }, "Websocket server disconnected.");
+		}
 	}
 });
 
@@ -83,6 +93,8 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 	await retrieveSettings();
 
 	if (alarm.name === "checkNewItems") {
+		connectWebSocket(); //Check the status of the websocket, reconnect if closed.
+
 		if (appSettings == undefined || !appSettings.notification.active) {
 			return; //Not setup to check for notifications. Will try again in 30 secs.
 		}
@@ -112,12 +124,58 @@ async function retrieveSettings() {
 	vineCountry = appSettings.general.country;
 	vineDomain = vineDomains[vineCountry];
 }
+
+let ws;
+function connectWebSocket() {
+	if (ws?.readyState === WebSocket.OPEN) {
+		return;
+	}
+
+	ws = new WebSocket(VINE_HELPER_API_V5_WS_URL, appSettings.general.country);
+	ws.onopen = () => {
+		console.log("WS open");
+		sendMessageToAllTabs({ type: "wsOpen" }, "Websocket server connected.");
+	};
+	ws.onmessage = (event) => {
+		console.log("message");
+		const data = tryParseJSON(event.data);
+		console.log(data);
+		if (data.type == "newItem") {
+			dispatchNewItem({
+				index: 0,
+				type: "newItem",
+				domain: vineCountry,
+				date: data.item.date,
+				asin: data.item.asin,
+				title: data.item.title,
+				search: data.item.search,
+				img_url: data.item.img_url,
+				etv: data.item.etv,
+				queue: data.item.queue,
+				is_parent_asin: data.item.is_parent_asin,
+				enrollment_guid: data.item.enrollment_guid,
+			});
+		}
+	};
+	ws.onclose = () => {
+		console.log("WS closed");
+		sendMessageToAllTabs({ type: "wsClosed" }, "Websocket server disconnected.");
+	};
+
+	// Event listener for when there is an error
+	ws.onerror = (error) => {
+		console.error(`WebSocket error: ${error.message}`);
+	};
+}
+
 //Load the settings, if no settings, try again in 10 sec
 async function init() {
 	await retrieveSettings();
 
 	//Check for new items (if the option is disabled the method will return)
 	browser.alarms.create("checkNewItems", { periodInMinutes: newItemCheckInterval });
+
+	connectWebSocket();
 }
 
 init();
@@ -128,12 +186,12 @@ async function checkNewItems(getAllItems = false) {
 
 	let url, options;
 	if (appSettings.general.apiv5) {
-		const content = (arrJSON = {
+		const content = {
 			api_version: 5,
 			country: vineCountry,
 			action: "get_latest_notifications",
 			uuid: appSettings.general.uuid,
-		});
+		};
 		url = VINE_HELPER_API_V5_URL;
 		options = {
 			method: "POST",
@@ -184,75 +242,22 @@ async function checkNewItems(getAllItems = false) {
 							});
 						}
 
-						const search = title.replace(/^([a-zA-Z0-9\s',]{0,40})[\s]+.*$/, "$1");
-						const highlightKWMatch = keywordMatch(appSettings.general.highlightKeywords, title);
-						const hideKWMatch = keywordMatch(appSettings.general.hideKeywords, title);
-
-						//If the new item match a highlight keyword, push a real notification.
-						if (appSettings.notification.pushNotifications && highlightKWMatch) {
-							chrome.notifications.onClicked.addListener((notificationId) => {
-								const { asin, queue, is_parent_asin, enrollment_guid, search } =
-									notificationsData[notificationId];
-								if (
-									appSettings.general.searchOpenModal &&
-									is_parent_asin != null &&
-									enrollment_guid != null
-								) {
-									chrome.tabs.create({
-										url: `https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`,
-									});
-								} else {
-									chrome.tabs.create({
-										url: `https://www.amazon.${vineDomain}/vine/vine-items?search=${search}`,
-									});
-								}
-							});
-
-							notificationsData["item-" + asin] = {
-								asin: asin,
-								queue: queue,
-								is_parent_asin: is_parent_asin,
-								enrollment_guid: enrollment_guid,
-								search: search,
-							};
-							chrome.notifications.create(
-								"item-" + asin,
-								{
-									type: "basic",
-									iconUrl: chrome.runtime.getURL("resource/image/icon-128.png"),
-									title: "Vine Helper - New item match!",
-									message: title,
-									priority: 2,
-								},
-								(notificationId) => {
-									if (chrome.runtime.lastError) {
-										console.error("Notification error:", chrome.runtime.lastError);
-									}
-								}
-							);
-						}
-
-						//Broadcast the notification
-						console.log("Broadcasting new item " + asin);
-						sendMessageToAllTabs(
-							{
-								index: i,
-								type: "newItem",
-								domain: vineCountry,
-								date: date,
-								asin: asin,
-								title: title,
-								search: search,
-								img_url: img_url,
-								etv: etv,
-								queue: queue,
-								KWsMatch: highlightKWMatch,
-								hideMatch: hideKWMatch,
-								is_parent_asin: is_parent_asin,
-								enrollment_guid: enrollment_guid,
-							},
-							"notification"
-						);
+						dispatchNewItem({
+							index: i,
+							type: "newItem",
+							domain: vineCountry,
+							date: date,
+							asin: asin,
+							title: title,
+							search: search,
+							img_url: img_url,
+							etv: etv,
+							queue: queue,
+							KWsMatch: highlightKWMatch,
+							hideMatch: hideKWMatch,
+							is_parent_asin: is_parent_asin,
+							enrollment_guid: enrollment_guid,
+						});
 					}
 				}
 			}
@@ -261,6 +266,73 @@ async function checkNewItems(getAllItems = false) {
 		.catch(function () {
 			(error) => console.log(error);
 		});
+}
+
+function dispatchNewItem(data) {
+	const search = data.title.replace(/^([a-zA-Z0-9\s',]{0,40})[\s]+.*$/, "$1");
+	const highlightKWMatch = keywordMatch(appSettings.general.highlightKeywords, data.title);
+	const hideKWMatch = keywordMatch(appSettings.general.hideKeywords, data.title);
+
+	//If the new item match a highlight keyword, push a real notification.
+	if (appSettings.notification.pushNotifications && highlightKWMatch) {
+		chrome.notifications.onClicked.addListener((notificationId) => {
+			const { asin, queue, is_parent_asin, enrollment_guid, search } = notificationsData[notificationId];
+			if (appSettings.general.searchOpenModal && is_parent_asin != null && enrollment_guid != null) {
+				chrome.tabs.create({
+					url: `https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`,
+				});
+			} else {
+				chrome.tabs.create({
+					url: `https://www.amazon.${vineDomain}/vine/vine-items?search=${search}`,
+				});
+			}
+		});
+
+		notificationsData["item-" + data.asin] = {
+			asin: data.asin,
+			queue: data.queue,
+			is_parent_asin: data.is_parent_asin,
+			enrollment_guid: data.enrollment_guid,
+			search: data.search,
+		};
+		chrome.notifications.create(
+			"item-" + data.asin,
+			{
+				type: "basic",
+				iconUrl: chrome.runtime.getURL("resource/image/icon-128.png"),
+				title: "Vine Helper - New item match!",
+				message: data.title,
+				priority: 2,
+			},
+			(notificationId) => {
+				if (chrome.runtime.lastError) {
+					console.error("Notification error:", chrome.runtime.lastError);
+				}
+			}
+		);
+	}
+
+	//Broadcast the notification
+	console.log("Broadcasting new item " + data.asin);
+	sendMessageToAllTabs(
+		{
+			index: data.index,
+			type: data.type,
+			domain: vineCountry,
+			date: data.date,
+			asin: data.asin,
+			title: data.title,
+			search: search,
+			img_url: data.img_url,
+			etv: data.etv,
+			queue: data.queue,
+			KWsMatch: highlightKWMatch,
+			hideMatch: hideKWMatch,
+			is_parent_asin: data.is_parent_asin,
+			enrollment_guid: data.enrollment_guid,
+		},
+		"notification"
+	);
 }
 
 function keywordMatch(keywords, title) {
@@ -347,4 +419,20 @@ function generateUUID() {
 		}
 		return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
 	});
+}
+
+function tryParseJSON(data) {
+	try {
+		const parsedData = JSON.parse(data); // Try to parse the JSON string
+
+		// Check if the parsed result is an object
+		if (parsedData && typeof parsedData === "object") {
+			return parsedData; // Return the parsed object
+		}
+	} catch (e) {
+		// If JSON parsing fails, return null or handle the error
+		return null;
+	}
+
+	return null; // If not JSON, return null
 }
