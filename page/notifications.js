@@ -459,7 +459,7 @@ function send_report(asin) {
 		const content = {
 			api_version: 5,
 			app_version: manifest.version,
-			country: vineCountry,
+			country: vineDomain,
 			action: "report_asin",
 			uuid: appSettings.general.uuid,
 			asin: asin,

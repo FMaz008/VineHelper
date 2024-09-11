@@ -249,12 +249,9 @@ async function checkNewItems(getAllItems = false) {
 							date: date,
 							asin: asin,
 							title: title,
-							search: search,
 							img_url: img_url,
 							etv: etv,
 							queue: queue,
-							KWsMatch: highlightKWMatch,
-							hideMatch: hideKWMatch,
 							is_parent_asin: is_parent_asin,
 							enrollment_guid: enrollment_guid,
 						});
