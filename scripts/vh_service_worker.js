@@ -102,29 +102,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 	}
 });
 
-//#####################################################
-//## BUSINESS LOGIC
-//#####################################################
-
-async function retrieveSettings() {
-	//Obtain appSettings
-	const data = await chrome.storage.local.get("settings");
-
-	if (data == null || Object.keys(data).length === 0) {
-		console.log("Settings not available yet. Waiting 10 sec...");
-		setTimeout(function () {
-			init();
-		}, 10000);
-		return; //Settings have not been initialized yet.
-	} else {
-		Object.assign(appSettings, data.settings);
-	}
-
-	//Set the country
-	vineCountry = appSettings.general.country;
-	vineDomain = vineDomains[vineCountry];
-}
-
+//Websocket
 let ws;
 function connectWebSocket() {
 	if (!appSettings.notification.active || ws?.readyState === WebSocket.OPEN) {
@@ -167,6 +145,12 @@ function connectWebSocket() {
 	};
 }
 
+//#####################################################
+//## BUSINESS LOGIC
+//#####################################################
+
+init();
+
 //Load the settings, if no settings, try again in 10 sec
 async function init() {
 	await retrieveSettings();
@@ -177,7 +161,24 @@ async function init() {
 	connectWebSocket();
 }
 
-init();
+async function retrieveSettings() {
+	//Obtain appSettings
+	const data = await chrome.storage.local.get("settings");
+
+	if (data == null || Object.keys(data).length === 0) {
+		console.log("Settings not available yet. Waiting 10 sec...");
+		setTimeout(function () {
+			init();
+		}, 10000);
+		return; //Settings have not been initialized yet.
+	} else {
+		Object.assign(appSettings, data.settings);
+	}
+
+	//Set the country
+	vineCountry = appSettings.general.country;
+	vineDomain = vineDomains[vineCountry];
+}
 
 async function fetchLast100Items() {
 	//Broadcast a new message to tell the tabs to display a loading wheel.
@@ -347,8 +348,8 @@ async function sendMessageToAllTabs(data, debugInfo) {
 						try {
 							browser.tabs.sendMessage(tab.id, data, (response) => {
 								if (browser.runtime.lastError) {
-									console.log(tab);
-									console.error("Error sending message to tab:", browser.runtime.lastError.message);
+									//console.log(tab);
+									//console.error("Error sending message to tab:", browser.runtime.lastError.message);
 								}
 							});
 						} catch (e) {

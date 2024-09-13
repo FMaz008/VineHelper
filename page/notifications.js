@@ -341,11 +341,13 @@ function addItem(data) {
 
 		//Auto truncate
 		if (document.getElementById("auto-truncate").checked) {
-			const items = document.getElementsByClassName("vh-notification-box");
-			const itemsCount = items.length;
+			const itemsD = document.getElementsByClassName("vh-notification-box");
+			const itemsCount = itemsD.length;
 			if (itemsCount > 2000) {
 				for (let i = itemsCount - 1; i >= 2000; i--) {
-					items[i].remove(); //remove the element from the DOM
+					const asin = itemsD[i].dataset.asin;
+					items.delete(asin);
+					itemsD[i].remove(); //remove the element from the DOM
 				}
 			}
 		}

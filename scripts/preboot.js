@@ -1,5 +1,4 @@
 const startTime = Date.now();
-const VINE_HELPER_API_URL = "https://vinehelper.ovh/vinehelper.php?data=";
 const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
 
 if (typeof browser === "undefined") {
