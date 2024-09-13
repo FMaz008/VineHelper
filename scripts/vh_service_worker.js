@@ -127,7 +127,7 @@ async function retrieveSettings() {
 
 let ws;
 function connectWebSocket() {
-	if (ws?.readyState === WebSocket.OPEN) {
+	if (!appSettings.notification.active || ws?.readyState === WebSocket.OPEN) {
 		return;
 	}
 
@@ -138,22 +138,22 @@ function connectWebSocket() {
 	ws.onmessage = (event) => {
 		const data = tryParseJSON(event.data);
 		if (data.type == "newItem") {
-			if (appSettings.notification.active) {
-				dispatchNewItem({
-					index: 0,
-					type: "newItem",
-					domain: vineCountry,
-					date: data.item.date,
-					asin: data.item.asin,
-					title: data.item.title,
-					search: data.item.search,
-					img_url: data.item.img_url,
-					etv: data.item.etv,
-					queue: data.item.queue,
-					is_parent_asin: data.item.is_parent_asin,
-					enrollment_guid: data.item.enrollment_guid,
-				});
-			}
+			//Prepare to send a broadcast of a new item
+			dispatchNewItem({
+				index: 0,
+				type: "newItem",
+				domain: vineCountry,
+				date: data.item.date,
+				asin: data.item.asin,
+				title: data.item.title,
+				search: data.item.search,
+				img_url: data.item.img_url,
+				etv: data.item.etv,
+				queue: data.item.queue,
+				is_parent_asin: data.item.is_parent_asin,
+				enrollment_guid: data.item.enrollment_guid,
+			});
+
 			sendMessageToAllTabs({ type: "newItemCheckEnd" }, "End of notification(s) update");
 		}
 	};
