@@ -76,7 +76,7 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 	}
 	if (data.type == "fetchLast100Items") {
 		//Get the last 100 most recent items
-		checkNewItems(true);
+		fetchLast100Items();
 		sendResponse({ success: true });
 	}
 	if (data.type == "wsStatus") {
@@ -154,6 +154,7 @@ function connectWebSocket() {
 					enrollment_guid: data.item.enrollment_guid,
 				});
 			}
+			sendMessageToAllTabs({ type: "newItemCheckEnd" }, "End of notification(s) update");
 		}
 	};
 	ws.onclose = () => {
@@ -178,7 +179,7 @@ async function init() {
 
 init();
 
-async function checkNewItems(getAllItems = false) {
+async function fetchLast100Items() {
 	//Broadcast a new message to tell the tabs to display a loading wheel.
 	sendMessageToAllTabs({ type: "newItemCheck" }, "Loading wheel");
 
@@ -197,13 +198,6 @@ async function checkNewItems(getAllItems = false) {
 	fetch(VINE_HELPER_API_V5_URL, options)
 		.then((response) => response.json())
 		.then(async function (response) {
-			let latestProduct = await browser.storage.local.get("latestProduct");
-			if (Object.keys(latestProduct).length === 0) {
-				latestProduct = 0;
-			} else {
-				latestProduct = latestProduct.latestProduct;
-			}
-
 			//TODO: Client side sort the response.products array in order of response.products[i].date DESC. (most recent at the top)
 			response.products.sort((a, b) => {
 				const dateA = new Date(a.date);
@@ -215,30 +209,21 @@ async function checkNewItems(getAllItems = false) {
 				const { title, date, asin, img_url, etv, queue, is_parent_asin, enrollment_guid } =
 					response.products[i];
 
-				//Only display notification for product more recent than the last displayed notification
-				if (getAllItems || date > latestProduct || latestProduct == 0) {
-					//Only display notification for products with a title and image url
-					if (img_url != "" && title != "") {
-						if (i == 0) {
-							await browser.storage.local.set({
-								latestProduct: date,
-							});
-						}
-
-						dispatchNewItem({
-							index: i,
-							type: "newItem",
-							domain: vineCountry,
-							date: date,
-							asin: asin,
-							title: title,
-							img_url: img_url,
-							etv: etv,
-							queue: queue,
-							is_parent_asin: is_parent_asin,
-							enrollment_guid: enrollment_guid,
-						});
-					}
+				//Only display notification for products with a title and image url
+				if (img_url != "" && title != "") {
+					dispatchNewItem({
+						index: i,
+						type: "newItem",
+						domain: vineCountry,
+						date: date,
+						asin: asin,
+						title: title,
+						img_url: img_url,
+						etv: etv,
+						queue: queue,
+						is_parent_asin: is_parent_asin,
+						enrollment_guid: enrollment_guid,
+					});
 				}
 			}
 			sendMessageToAllTabs({ type: "newItemCheckEnd" }, "End of notification(s) update");

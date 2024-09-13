@@ -199,6 +199,7 @@ async function init() {
 	});
 }
 
+//Function to determine if the notification has to be displayed base on the filtering option.
 function processNotificationFiltering(node) {
 	const filter = document.querySelector("select[name='filter-type']");
 	const notificationType = parseInt(node.getAttribute("data-notification-type"));
@@ -227,14 +228,6 @@ async function setLocale(country) {
 				"<strong>ServiceWorker Status: </strong><div class='vh-switch-32 vh-icon-switch-on'></div>";
 		}
 
-		//Now that we have the locale, display the date of the most recent item
-		let latestProduct = await browser.storage.local.get("latestProduct");
-		if (Object.keys(latestProduct).length === 0) {
-			latestProduct = 0;
-		} else {
-			latestProduct = latestProduct.latestProduct;
-		}
-		document.getElementById("date_most_recent_item").innerText = formatDate(latestProduct);
 		document.getElementById("date_loaded").innerText = new Date().toLocaleString(vineLocale);
 	}
 }
@@ -270,13 +263,14 @@ function addItem(data) {
 		return;
 	}
 
+	//Highlight the item
 	if (KWsMatch) {
 		showRuntime("NOTIFICATION: item " + asin + " match the highlight list and will be highlighed.");
 		type = TYPE_HIGHLIGHT;
 		notification_highlight = true;
-	}
 
-	if (!KWsMatch && appSettings.notification.monitor.hideList && hideMatch) {
+		//Hide the item
+	} else if (appSettings.notification.monitor.hideList && hideMatch) {
 		showRuntime("NOTIFICATION: item " + asin + " match the hidden list and won't be shown.");
 		return;
 	}
@@ -344,6 +338,17 @@ function addItem(data) {
 
 		//Update the most recent date
 		document.getElementById("date_most_recent_item").innerText = formatDate(date);
+
+		//Auto truncate
+		if (document.getElementById("auto-truncate").checked) {
+			const items = document.getElementsByClassName("vh-notification-box");
+			const itemsCount = items.length;
+			if (itemsCount > 2000) {
+				for (let i = itemsCount - 1; i >= 2000; i--) {
+					items[i].remove(); //remove the element from the DOM
+				}
+			}
+		}
 	}
 }
 
