@@ -98,7 +98,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 		if (appSettings == undefined || !appSettings.notification.active) {
 			return; //Not setup to check for notifications. Will try again in 30 secs.
 		}
-		checkNewItems();
+		//checkNewItems();
 	}
 });
 
@@ -133,32 +133,30 @@ function connectWebSocket() {
 
 	ws = new WebSocket(VINE_HELPER_API_V5_WS_URL, appSettings.general.country);
 	ws.onopen = () => {
-		console.log("WS open");
 		sendMessageToAllTabs({ type: "wsOpen" }, "Websocket server connected.");
 	};
 	ws.onmessage = (event) => {
-		console.log("message");
 		const data = tryParseJSON(event.data);
-		console.log(data);
 		if (data.type == "newItem") {
-			dispatchNewItem({
-				index: 0,
-				type: "newItem",
-				domain: vineCountry,
-				date: data.item.date,
-				asin: data.item.asin,
-				title: data.item.title,
-				search: data.item.search,
-				img_url: data.item.img_url,
-				etv: data.item.etv,
-				queue: data.item.queue,
-				is_parent_asin: data.item.is_parent_asin,
-				enrollment_guid: data.item.enrollment_guid,
-			});
+			if (appSettings.notification.active) {
+				dispatchNewItem({
+					index: 0,
+					type: "newItem",
+					domain: vineCountry,
+					date: data.item.date,
+					asin: data.item.asin,
+					title: data.item.title,
+					search: data.item.search,
+					img_url: data.item.img_url,
+					etv: data.item.etv,
+					queue: data.item.queue,
+					is_parent_asin: data.item.is_parent_asin,
+					enrollment_guid: data.item.enrollment_guid,
+				});
+			}
 		}
 	};
 	ws.onclose = () => {
-		console.log("WS closed");
 		sendMessageToAllTabs({ type: "wsClosed" }, "Websocket server disconnected.");
 	};
 
@@ -184,34 +182,19 @@ async function checkNewItems(getAllItems = false) {
 	//Broadcast a new message to tell the tabs to display a loading wheel.
 	sendMessageToAllTabs({ type: "newItemCheck" }, "Loading wheel");
 
-	let url, options;
-	if (appSettings.general.apiv5) {
-		const content = {
-			api_version: 5,
-			country: vineCountry,
-			action: "get_latest_notifications",
-			uuid: appSettings.general.uuid,
-		};
-		url = VINE_HELPER_API_V5_URL;
-		options = {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(content),
-		};
-	} else {
-		const arrJSON = {
-			api_version: 4,
-			country: vineCountry,
-			orderby: "date",
-			limit: 100,
-		};
-		const jsonArrURL = JSON.stringify(arrJSON);
+	const content = {
+		api_version: 5,
+		country: vineCountry,
+		action: "get_latest_notifications",
+		uuid: appSettings.general.uuid,
+	};
+	const options = {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(content),
+	};
 
-		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-		url = "https://vinehelper.ovh/vineHelperLatest.php" + "?data=" + jsonArrURL;
-		options = {};
-	}
-	fetch(url, options)
+	fetch(VINE_HELPER_API_V5_URL, options)
 		.then((response) => response.json())
 		.then(async function (response) {
 			let latestProduct = await browser.storage.local.get("latestProduct");

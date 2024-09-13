@@ -104,7 +104,6 @@ function initiateSettings() {
 	manageCheckboxSetting("pinnedTab.active");
 	manageCheckboxSetting("unavailableTab.active");
 	manageCheckboxSetting("unavailableTab.compactToolbar");
-	manageCheckboxSetting("general.apiv5");
 	manageCheckboxSetting("general.modalNavigation");
 	manageCheckboxSetting("general.searchOpenModal");
 	manageCheckboxSetting("general.listView");
@@ -203,33 +202,18 @@ function initiateSettings() {
 		let key = CSS.escape("generaluuid");
 		//Post a fetch request to confirm if the UUID is valid
 
-		let url, options;
-		if (appSettings.general.apiv5) {
-			const content = {
-				api_version: 5,
-				action: "validate_uuid",
-				uuid: document.querySelector("#" + key).value,
-				country: "loremipsum",
-			};
-			url = VINE_HELPER_API_V5_URL;
-			options = {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(content),
-			};
-		} else {
-			const arrJSON = {
-				api_version: 4,
-				action: "validate_uuid",
-				uuid: document.querySelector("#" + key).value,
-				country: "loremipsum",
-			};
-			let jsonArrURL = JSON.stringify(arrJSON);
-
-			url = "https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
-			options = {};
-		}
-		await fetch(url, options)
+		const content = {
+			api_version: 5,
+			action: "validate_uuid",
+			uuid: document.querySelector("#" + key).value,
+			country: "loremipsum",
+		};
+		const options = {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(content),
+		};
+		await fetch(VINE_HELPER_API_V5_URL, options)
 			.then((response) => response.json())
 			.then(async function (serverResponse) {
 				if (serverResponse["ok"] == "ok") {

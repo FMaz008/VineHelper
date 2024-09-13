@@ -447,32 +447,18 @@ async function requestNewUUID() {
 	showRuntime("PRE: Generating new UUID.");
 
 	//Request a new UUID from the server
-	let url, options;
-	if (appSettings.general.apiv5) {
-		const content = {
-			api_version: 5,
-			action: "get_uuid",
-			country: vineCountry,
-		};
-		url = VINE_HELPER_API_V5_URL;
-		options = {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(content),
-		};
-	} else {
-		const arrJSON = {
-			api_version: 4,
-			action: "get_uuid",
-			country: vineCountry,
-		};
-		options = {};
-		//Build the URL request
-		const jsonArrURL = JSON.stringify(arrJSON);
-		url = VINE_HELPER_API_URL + jsonArrURL;
-	}
+	const content = {
+		api_version: 5,
+		action: "get_uuid",
+		country: vineCountry,
+	};
+	const options = {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(content),
+	};
 
-	let response = await fetch(url, options);
+	let response = await fetch(VINE_HELPER_API_V5_URL, options);
 
 	if (!response.ok) {
 		throw new Error("Network response was not ok PRE:obtainNewUUID");

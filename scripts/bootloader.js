@@ -56,11 +56,8 @@ async function init() {
 	//The following method is called early as it does a XHR request to the server, which takes a while
 	//Upon receiving the results, it will loop&wait for initTilesAndDrawToolbars() to have completed.
 	//This allow the page to be rendered while we wait for the server's response.
-	if (appSettings.general.apiv5) {
-		fetchProductsDatav5(); //Obtain the data to fill the toolbars with it.
-	} else {
-		fetchProductsDatav4(getAllAsin()); //Obtain the data to fill the toolbars with it.
-	}
+	fetchProductsDatav5(); //Obtain the data to fill the toolbars with it.
+
 	displayAccountData();
 	showGDPRPopup();
 	await initFlushTplCache(); //And display the version changelog popup
@@ -275,19 +272,12 @@ async function initInsertBookmarkButton() {
 				country: vineCountry,
 				action: "date",
 			};
-			let url, options;
-			if (appSettings.general.apiv5) {
-				url = VINE_HELPER_API_V5_URL;
-				options = {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify(arrJSON),
-				};
-			} else {
-				url = VINE_HELPER_API_URL + JSON.stringify(arrJSON);
-				options = {};
-			}
-			fetch(url, options)
+			const options = {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(arrJSON),
+			};
+			fetch(VINE_HELPER_API_V5_URL, options)
 				.then((response) => response.json())
 				.then(async function (response) {
 					appSettings.general.bookmarkDate = new Date(response.date + " GMT").toString();
@@ -310,19 +300,12 @@ async function initInsertBookmarkButton() {
 				country: vineCountry,
 				action: "date",
 			};
-			let url, options;
-			if (appSettings.general.apiv5) {
-				url = VINE_HELPER_API_V5_URL;
-				options = {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify(arrJSON),
-				};
-			} else {
-				url = VINE_HELPER_API_URL + JSON.stringify(arrJSON);
-				options = {};
-			}
-			fetch(url, options)
+			const options = {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(arrJSON),
+			};
+			fetch(VINE_HELPER_API_V5_URL, options)
 				.then((response) => response.json())
 				.then(async function (response) {
 					appSettings.general.bookmarkDate = new Date(
@@ -347,19 +330,12 @@ async function initInsertBookmarkButton() {
 				country: vineCountry,
 				action: "date",
 			};
-			let url, options;
-			if (appSettings.general.apiv5) {
-				url = VINE_HELPER_API_V5_URL;
-				options = {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify(arrJSON),
-				};
-			} else {
-				url = VINE_HELPER_API_URL + JSON.stringify(arrJSON);
-				options = {};
-			}
-			fetch(url, options)
+			const options = {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(arrJSON),
+			};
+			fetch(VINE_HELPER_API_V5_URL, options)
 				.then((response) => response.json())
 				.then(async function (response) {
 					appSettings.general.bookmarkDate = new Date(
@@ -384,19 +360,12 @@ async function initInsertBookmarkButton() {
 				country: vineCountry,
 				action: "date",
 			};
-			let url, options;
-			if (appSettings.general.apiv5) {
-				url = VINE_HELPER_API_V5_URL;
-				options = {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify(arrJSON),
-				};
-			} else {
-				url = VINE_HELPER_API_URL + JSON.stringify(arrJSON);
-				options = {};
-			}
-			fetch(url, options)
+			const options = {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(arrJSON),
+			};
+			fetch(VINE_HELPER_API_V5_URL, options)
 				.then((response) => response.json())
 				.then(async function (response) {
 					appSettings.general.bookmarkDate = new Date(
@@ -510,18 +479,6 @@ function positionTooltip(event) {
 	tooltip.style.top = `${tooltipY}px`;
 }
 
-function getAllAsin() {
-	let arrUrl = []; //Will be use to store the URL identifier of the listed products.
-	const arrObj = $(".vvp-item-tile");
-	for (let i = 0; i < arrObj.length; i++) {
-		//Create the tile and assign it to the main grid
-		obj = arrObj[i];
-		asin = getAsinFromDom(obj);
-		arrUrl.push(asin);
-	}
-	return arrUrl;
-}
-
 //This function will return an array of all the product on the page, with their description and thumbnail url
 function getAllProductData() {
 	let arrUrl = []; //Will be use to store the URL identifier of the listed products.
@@ -601,7 +558,7 @@ async function generateTile(obj) {
 
 //Get data from the server about the products listed on this page
 function fetchProductsDatav5() {
-	let content = {
+	const content = {
 		api_version: 5,
 		app_version: appVersion,
 		action: "get_info",
@@ -625,39 +582,6 @@ function fetchProductsDatav5() {
 			});
 		});
 }
-function fetchProductsDatav4(arrUrl) {
-	let arrJSON = {
-		api_version: 4,
-		app_version: appVersion,
-		action: "getinfo",
-		country: vineCountry,
-		uuid: appSettings.general.uuid,
-		queue: vineQueue,
-		arr_asin: arrUrl,
-	};
-	let jsonArrURL = JSON.stringify(arrJSON);
-
-	showRuntime("Fetching products data...");
-
-	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-	let url = VINE_HELPER_API_URL + jsonArrURL;
-
-	let content = getAllProductData();
-
-	fetch(url, {
-		method: "POST",
-		headers: { "Content-Type": "application/x-www-form-urlencoded" },
-		body: JSON.stringify(content),
-	})
-		.then((response) => response.json())
-		.then(serverProductsResponse)
-		.catch(function () {
-			//error =>  console.log(error);
-			$.each(arrUrl, function (key, val) {
-				let t = getTileByAsin(val); //server offline
-			});
-		});
-}
 
 //Process the results obtained from the server
 //Update each tile with the data pertaining to it.
@@ -666,7 +590,7 @@ async function serverProductsResponse(data) {
 		await obtainNewUUID();
 
 		//Reattempt to obtain product data
-		fetchProductsData(getAllAsin());
+		fetchProductsDatav5();
 
 		//Do no complete this execution
 		return false;
@@ -870,40 +794,22 @@ window.addEventListener("message", async function (event) {
 		if (tileASIN === null) {
 			tileASIN = event.data.data.asin;
 		}
-		let url;
-		if (appSettings.general.apiv5) {
-			const content = {
-				api_version: 5,
-				action: "record_etv",
-				country: vineCountry,
-				uuid: uuid,
-				asin: event.data.data.asin,
-				parent_asin: event.data.data.parent_asin,
-				queue: vineQueue,
-				etv: event.data.data.etv,
-			};
+		const content = {
+			api_version: 5,
+			action: "record_etv",
+			country: vineCountry,
+			uuid: uuid,
+			asin: event.data.data.asin,
+			parent_asin: event.data.data.parent_asin,
+			queue: vineQueue,
+			etv: event.data.data.etv,
+		};
 
-			url = VINE_HELPER_API_V5_URL;
-			await fetch(url, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(content),
-			});
-		} else {
-			const arrJSON = {
-				api_version: 4,
-				action: "report_etv",
-				country: vineCountry,
-				uuid: uuid,
-				asin: event.data.data.asin,
-				parent_asin: event.data.data.parent_asin,
-				queue: vineQueue,
-				etv: event.data.data.etv,
-			};
-
-			url = VINE_HELPER_API_URL + JSON.stringify(arrJSON);
-			await fetch(url); //Await to wait until the query to have been processed before refreshing the display
-		}
+		await fetch(VINE_HELPER_API_V5_URL, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(content),
+		});
 
 		//Update the product tile ETV in the Toolbar
 		const tile = getTileByAsin(tileASIN);
@@ -948,40 +854,22 @@ window.addEventListener("message", async function (event) {
 			event.data.data.error == "ITEM_NOT_IN_ENROLLMENT"
 		) {
 			//Report the order status to the server
-			let url;
-			if (appSettings.general.apiv5) {
-				const content = {
-					api_version: 5,
-					action: "record_order",
-					country: vineCountry,
-					uuid: uuid,
-					asin: event.data.data.asin,
-					parent_asin: event.data.data.parent_asin,
-					order_status: event.data.data.status,
-				};
+			const content = {
+				api_version: 5,
+				action: "record_order",
+				country: vineCountry,
+				uuid: uuid,
+				asin: event.data.data.asin,
+				parent_asin: event.data.data.parent_asin,
+				order_status: event.data.data.status,
+			};
 
-				//Form the full URL
-				url = VINE_HELPER_API_V5_URL;
-				await fetch(url, {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify(content),
-				});
-			} else {
-				const arrJSON = {
-					api_version: 4,
-					action: "report_order",
-					country: vineCountry,
-					uuid: uuid,
-					asin: event.data.data.asin,
-					parent_asin: event.data.data.parent_asin,
-					order_status: event.data.data.status,
-				};
-
-				//Form the full URL
-				url = VINE_HELPER_API_URL + JSON.stringify(arrJSON);
-				await fetch(url); //Await to wait until the query to have been processed before refreshing the display
-			}
+			//Form the full URL
+			await fetch(VINE_HELPER_API_V5_URL, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(content),
+			});
 
 			//Update the product tile ETV in the Toolbar
 			let tile = getTileByAsin(tileASIN);

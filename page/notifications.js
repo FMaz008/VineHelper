@@ -454,43 +454,25 @@ function report(asin) {
 
 function send_report(asin) {
 	let manifest = chrome.runtime.getManifest();
-	let url, options;
-	if (appSettings.general.apiv5) {
-		const content = {
-			api_version: 5,
-			app_version: manifest.version,
-			country: vineDomain,
-			action: "report_asin",
-			uuid: appSettings.general.uuid,
-			asin: asin,
-		};
-		url = VINE_HELPER_API_V5_URL;
-		options = {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(content),
-		};
-	} else {
-		let arrJSON = {
-			api_version: 4,
-			app_version: manifest.version,
-			asin: asin,
-			action: "report_asin",
-			country: vineDomain,
-			uuid: appSettings.general.uuid,
-		};
-		let jsonArrURL = JSON.stringify(arrJSON);
-		url = "https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
-		options = {
-			method: "POST",
-			headers: { "Content-Type": "application/x-www-form-urlencoded" },
-		};
-	}
+
+	const content = {
+		api_version: 5,
+		app_version: manifest.version,
+		country: vineDomain,
+		action: "report_asin",
+		uuid: appSettings.general.uuid,
+		asin: asin,
+	};
+	const options = {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(content),
+	};
+
 	showRuntime("Sending report...");
 
-	//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-
-	fetch(url, options)
+	//Send the report to VH's server
+	fetch(VINE_HELPER_API_V5_URL, options)
 		.then(report_sent)
 		.catch(function () {
 			showRuntime(error);

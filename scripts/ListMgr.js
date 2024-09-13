@@ -1,3 +1,7 @@
+/**
+ * I think this class is useless.
+ */
+
 class ListMgr {
 	constructor() {
 		this.mapItem = new Map();
@@ -88,20 +92,20 @@ class ListMgr {
 	 *
 	 */
 	notifyServerOfItemChanges(actionName) {
-		let arrJSON = {
-			api_version: 4,
+		const content = {
+			api_version: 5,
 			country: vineCountry,
 			action: actionName,
 			uuid: appSettings.general.uuid,
 			arr: this.arrChanges,
 		};
-		let jsonArrURL = JSON.stringify(arrJSON);
-
 		showRuntime("Saving " + actionName + " item(s) remotely...");
 
-		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-		let url = "https://www.vinehelper.ovh/vinehelper.php" + "?data=" + jsonArrURL;
-		fetch(url);
+		fetch(VINE_HELPER_API_V5_URL, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(content),
+		});
 	}
 
 	serialize(map) {
