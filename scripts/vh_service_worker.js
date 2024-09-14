@@ -2,6 +2,7 @@ const DEBUG_MODE = false; // Will always display notification even if they are n
 const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
 const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_WS_URL = "http://127.0.0.1:3000";
+
 var appSettings = [];
 var notificationsData = {};
 var vineCountry = null;
@@ -63,10 +64,6 @@ chrome.permissions.contains({ permissions: ["scripting"] }, (result) => {
 	}
 });
 
-self.addEventListener("offline", (event) => {
-	//Do nothing
-});
-
 //#####################################################
 //## LISTENERS
 //#####################################################
@@ -126,22 +123,20 @@ function connectWebSocket() {
 	});
 
 	socket.on("newItem", (data) => {
-		const jsonData = JSON.parse(data);
-
 		// Assuming the server sends the data in the same format as before
 		dispatchNewItem({
 			index: 0,
 			type: "newItem",
 			domain: vineCountry,
-			date: jsonData.item.date,
-			asin: jsonData.item.asin,
-			title: jsonData.item.title,
-			search: jsonData.item.search,
-			img_url: jsonData.item.img_url,
-			etv: jsonData.item.etv,
-			queue: jsonData.item.queue,
-			is_parent_asin: jsonData.item.is_parent_asin,
-			enrollment_guid: jsonData.item.enrollment_guid,
+			date: data.item.date,
+			asin: data.item.asin,
+			title: data.item.title,
+			search: data.item.search,
+			img_url: data.item.img_url,
+			etv: data.item.etv,
+			queue: data.item.queue,
+			is_parent_asin: data.item.is_parent_asin,
+			enrollment_guid: data.item.enrollment_guid,
 		});
 
 		sendMessageToAllTabs({ type: "newItemCheckEnd" }, "End of notification(s) update");
