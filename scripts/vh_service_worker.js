@@ -1,6 +1,7 @@
 const DEBUG_MODE = false; // Will always display notification even if they are not new
 const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
 const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
+//const VINE_HELPER_API_V5_WS_URL = "http://127.0.0.1:3000";
 var appSettings = [];
 var notificationsData = {};
 var vineCountry = null;
@@ -62,6 +63,10 @@ chrome.permissions.contains({ permissions: ["scripting"] }, (result) => {
 	}
 });
 
+self.addEventListener("offline", (event) => {
+	//Do nothing
+});
+
 //#####################################################
 //## LISTENERS
 //#####################################################
@@ -81,7 +86,7 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 	}
 	if (data.type == "wsStatus") {
 		sendResponse({ success: true });
-		if (ws?.readyState === WebSocket.OPEN) {
+		if (socket?.connected) {
 			sendMessageToAllTabs({ type: "wsOpen" }, "Websocket server connected.");
 		} else {
 			sendMessageToAllTabs({ type: "wsClosed" }, "Websocket server disconnected.");
@@ -103,46 +108,54 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 });
 
 //Websocket
-let ws;
+importScripts("../node_modules/socket.io/client-dist/socket.io.min.js");
+let socket;
 function connectWebSocket() {
-	if (!appSettings.notification.active || ws?.readyState === WebSocket.OPEN) {
+	if (!appSettings.notification.active || socket?.connected) {
 		return;
 	}
 
-	ws = new WebSocket(VINE_HELPER_API_V5_WS_URL, appSettings.general.country);
-	ws.onopen = () => {
-		sendMessageToAllTabs({ type: "wsOpen" }, "Websocket server connected.");
-	};
-	ws.onmessage = (event) => {
-		const data = tryParseJSON(event.data);
-		if (data.type == "newItem") {
-			//Prepare to send a broadcast of a new item
-			dispatchNewItem({
-				index: 0,
-				type: "newItem",
-				domain: vineCountry,
-				date: data.item.date,
-				asin: data.item.asin,
-				title: data.item.title,
-				search: data.item.search,
-				img_url: data.item.img_url,
-				etv: data.item.etv,
-				queue: data.item.queue,
-				is_parent_asin: data.item.is_parent_asin,
-				enrollment_guid: data.item.enrollment_guid,
-			});
+	socket = io.connect(VINE_HELPER_API_V5_WS_URL, {
+		query: { countryCode: appSettings.general.country }, // Pass the country code as a query parameter
+		transports: ["websocket"],
+	});
 
-			sendMessageToAllTabs({ type: "newItemCheckEnd" }, "End of notification(s) update");
-		}
-	};
-	ws.onclose = () => {
-		sendMessageToAllTabs({ type: "wsClosed" }, "Websocket server disconnected.");
-	};
+	// On connection success
+	socket.on("connect", () => {
+		sendMessageToAllTabs({ type: "wsOpen" }, "Socket.IO server connected.");
+	});
 
-	// Event listener for when there is an error
-	ws.onerror = (error) => {
-		console.error(`WebSocket error: ${error.message}`);
-	};
+	socket.on("newItem", (data) => {
+		const jsonData = JSON.parse(data);
+
+		// Assuming the server sends the data in the same format as before
+		dispatchNewItem({
+			index: 0,
+			type: "newItem",
+			domain: vineCountry,
+			date: jsonData.item.date,
+			asin: jsonData.item.asin,
+			title: jsonData.item.title,
+			search: jsonData.item.search,
+			img_url: jsonData.item.img_url,
+			etv: jsonData.item.etv,
+			queue: jsonData.item.queue,
+			is_parent_asin: jsonData.item.is_parent_asin,
+			enrollment_guid: jsonData.item.enrollment_guid,
+		});
+
+		sendMessageToAllTabs({ type: "newItemCheckEnd" }, "End of notification(s) update");
+	});
+
+	// On disconnection
+	socket.on("disconnect", () => {
+		sendMessageToAllTabs({ type: "wsClosed" }, "Socket.IO server disconnected.");
+	});
+
+	// On error
+	socket.on("connect_error", (error) => {
+		console.error(`Socket.IO error: ${error.message}`);
+	});
 }
 
 //#####################################################

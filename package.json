@@ -25,6 +25,7 @@
 	"homepage": "https://github.com/FMaz008/VineHelper#readme",
 	"dependencies": {
 		"jquery": "^3.7.1",
+		"socket.io": "^4.7.5",
 		"vine-styling": "github:Thorvarium/vine-styling.git#main"
 	},
 	"devDependencies": {

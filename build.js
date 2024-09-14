@@ -13,6 +13,10 @@ const pkg = require("./package.json");
 	fs.cpSync("./scripts/", "./dist/scripts/", { recursive: true });
 	fs.cpSync("./view/", "./dist/view/", { recursive: true });
 	fs.cpSync("./node_modules/jquery/dist/jquery.min.js", "./dist/node_modules/jquery/dist/jquery.min.js");
+	fs.cpSync(
+		"./node_modules/socket.io/client-dist/socket.io.min.js",
+		"./dist/node_modules/socket.io/client-dist/socket.io.min.js"
+	);
 	fs.cpSync("./node_modules/vine-styling/", "./dist/node_modules/vine-styling/", { recursive: true });
 
 	const platforms = ["firefox", "chrome"];
