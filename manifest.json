@@ -98,6 +98,7 @@
 		{
 			"js": [
 				"node_modules/jquery/dist/jquery.min.js",
+				"scripts/SettingsMgr.js",
 				"scripts/Template.js",
 				"scripts/ScreenNotifier.js",
 				"scripts/HiddenListMgr.js",

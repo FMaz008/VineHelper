@@ -103,7 +103,7 @@ class HiddenListMgr {
 			}
 		});
 
-		if (appSettings.hiddenTab.remote) {
+		if (Settings.get("hiddenTab.remote")) {
 			this.notifyServerOfHiddenItem();
 			this.arrChanges = [];
 		}
@@ -140,7 +140,7 @@ class HiddenListMgr {
 			api_version: 5,
 			country: vineCountry,
 			action: "save_hidden_list",
-			uuid: appSettings.general.uuid,
+			uuid: Settings.get("general.uuid", false),
 			items: this.arrChanges,
 		};
 		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
@@ -155,22 +155,21 @@ class HiddenListMgr {
 		if (!this.mapHidden) {
 			return false;
 		}
-		if (isNaN(appSettings.general.hiddenItemsCacheSize)) {
+		if (isNaN(Settings.get("general.hiddenItemsCacheSize"))) {
 			return false;
 		}
-		if (appSettings.general.hiddenItemsCacheSize < 2 || appSettings.general.hiddenItemsCacheSize > 9) {
+		if (Settings.get("general.hiddenItemsCacheSize") < 2 || Settings.get("general.hiddenItemsCacheSize") > 9) {
 			return false;
 		}
 
 		//Delete items older than 90 days
 		let needsSave = false;
 		let timestampNow = Math.floor(Date.now() / 1000);
-		if (appSettings.hiddenTab.lastGC == undefined) {
-			appSettings.hiddenTab.lastGC = timestampNow;
-			saveSettings(); //preboot.js
+		if (Settings.get("hiddenTab.lastGC") == undefined) {
+			Settings.set("hiddenTab.lastGC", timestampNow);
 		}
 
-		if (appSettings.hiddenTab.lastGC < timestampNow - 24 * 60 * 60) {
+		if (Settings.get("hiddenTab.lastGC") < timestampNow - 24 * 60 * 60) {
 			let expiredDate = new Date();
 			expiredDate.setDate(expiredDate.getDate() - 90);
 
@@ -187,8 +186,7 @@ class HiddenListMgr {
 				}
 			}
 
-			appSettings.hiddenTab.lastGC = timestampNow;
-			saveSettings(); //preboot.js
+			Settings.set("hiddenTab.lastGC", timestampNow);
 		}
 		if (needsSave) {
 			this.saveList();
@@ -196,8 +194,8 @@ class HiddenListMgr {
 
 		//Delete older items if the storage space is exceeded.
 		let bytes = await getStorageSizeFull();
-		const storageLimit = appSettings.general.hiddenItemsCacheSize * 1048576; // 9MB
-		const deletionThreshold = (appSettings.general.hiddenItemsCacheSize - 1) * 1048576; // 8MB
+		const storageLimit = Settings.get("general.hiddenItemsCacheSize") * 1048576; // 9MB
+		const deletionThreshold = (Settings.get("general.hiddenItemsCacheSize") - 1) * 1048576; // 8MB
 		if (bytes > storageLimit) {
 			let itemDeleted = 0;
 			let note = new ScreenNotification();

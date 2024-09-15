@@ -73,14 +73,14 @@ class Grid {
 
 function updateTileCounts() {
 	//Calculate how many tiles within each grids
-	if (appSettings.unavailableTab?.active || appSettings.hiddenTab.active)
+	if (Settings.get("unavailableTab.active") || Settings.get("hiddenTab.active"))
 		$("#vh-available-count").text(gridRegular.getTileCount(true));
 
-	if (appSettings.unavailableTab?.active) $("#vh-unavailable-count").text(gridUnavailable.getTileCount(true));
+	if (Settings.get("unavailableTab.active")) $("#vh-unavailable-count").text(gridUnavailable.getTileCount(true));
 
-	if (appSettings.hiddenTab?.active) $("#vh-hidden-count").text(gridHidden.getTileCount(true));
+	if (Settings.get("hiddenTab.active")) $("#vh-hidden-count").text(gridHidden.getTileCount(true));
 
-	if (appSettings.pinnedTab?.active) $("#vh-pinned-count").text(gridPinned.getTileCount(true));
+	if (Settings.get("pinnedTab.active")) $("#vh-pinned-count").text(gridPinned.getTileCount(true));
 }
 
 async function createGridInterface() {
@@ -117,7 +117,7 @@ async function createGridInterface() {
 	let tplTabs = await Tpl.loadFile("view/tabs.html");
 
 	Tpl.setIf("not_mobile", true);
-	if (appSettings.thorvarium.mobileandroid || appSettings.thorvarium.mobileios) {
+	if (Settings.get("thorvarium.mobileandroid") || Settings.get("thorvarium.mobileios")) {
 		Tpl.setVar("available", "A");
 		Tpl.setVar("unavailable", "U");
 		Tpl.setVar("hidden", "H");
@@ -129,26 +129,26 @@ async function createGridInterface() {
 		Tpl.setVar("pinned", "Pinned");
 	}
 	//If ordering system enabled
-	Tpl.setIf("unavailable", appSettings.unavailableTab.active);
+	Tpl.setIf("unavailable", Settings.get("unavailableTab.active"));
 
 	//If the hidden tab system is activated
-	Tpl.setIf("hidden", appSettings.hiddenTab.active);
+	Tpl.setIf("hidden", Settings.get("hiddenTab.active"));
 
 	//If the hidden tab system is activated
-	Tpl.setIf("pinned", appSettings.pinnedTab?.active);
+	Tpl.setIf("pinned", Settings.get("pinnedTab.active"));
 
 	let tabsHtml = Tpl.render(tplTabs, false);
 	tabs.insertAdjacentHTML("afterbegin", tabsHtml);
 
-	if (appSettings.hiddenTab.active) {
+	if (Settings.get("hiddenTab.active")) {
 		//Add the toolbar for Hide All & Show All
 		//Delete the previous one if any exist:
 		removeElements("#vh-tabs .hidden-toolbar"); //bootloader.js
 
 		//Generate the html for the hide all and show all widget
 		let prom = await Tpl.loadFile("view/widget_hideall.html");
-		Tpl.setVar("class", appSettings.thorvarium.darktheme ? "invert" : "");
-		if (appSettings.thorvarium.mobileandroid || appSettings.thorvarium.mobileios) {
+		Tpl.setVar("class", Settings.get("thorvarium.darktheme") ? "invert" : "");
+		if (Settings.get("thorvarium.mobileandroid") || Settings.get("thorvarium.mobileios")) {
 			Tpl.setIf("not_mobile", false);
 			Tpl.setIf("mobile", true);
 		} else {
@@ -183,7 +183,7 @@ async function createGridInterface() {
 	}
 
 	//Populate the Pinned tab
-	if (appSettings.pinnedTab?.active) {
+	if (Settings.get("pinnedTab.active")) {
 		let mapPin = new Map();
 		mapPin = PinnedList.getList();
 		mapPin.forEach(async (value, key) => {
@@ -216,7 +216,7 @@ async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enro
 	let prom2 = await Tpl.loadFile("view/pinned_tile.html");
 	let search = title.replace(/^([a-zA-Z0-9\s',]{0,40})[\s]+.*$/, "$1");
 
-	if (appSettings.general.searchOpenModal && is_parent_asin != null && enrollment_guid != null) {
+	if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
 		Tpl.setVar(
 			"url",
 			`https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`
@@ -266,7 +266,7 @@ async function hideAllItems() {
 	HiddenList.saveList();
 
 	// Scoll to the RFY/AFA/AI header
-	if (appSettings.hiddenTab.scrollToRFY) {
+	if (Settings.get("hiddenTab.scrollToRFY")) {
 		var scrollTarget = document.getElementById("vvp-items-button-container");
 		scrollTarget.scrollIntoView({ behavior: "smooth" });
 	}
@@ -302,7 +302,7 @@ async function showAllItems() {
 	HiddenList.saveList();
 
 	// Scoll to the RFY/AFA/AI header
-	if (appSettings.hiddenTab.scrollToRFY) {
+	if (Settings.get("hiddenTab.scrollToRFY")) {
 		var scrollTarget = document.getElementById("vvp-items-button-container");
 		scrollTarget.scrollIntoView({ behavior: "smooth" });
 	}

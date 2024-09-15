@@ -139,7 +139,7 @@ class PinnedListMgr {
 			}
 		});
 
-		if (appSettings.hiddenTab.remote) {
+		if (Settings.get("hiddenTab.remote")) {
 			this.notifyServerOfChangedItem();
 			this.arrChanges = [];
 		}
@@ -153,7 +153,7 @@ class PinnedListMgr {
 			api_version: 5,
 			country: vineCountry,
 			action: "save_pinned_list",
-			uuid: appSettings.general.uuid,
+			uuid: Settings.get("general.uuid", false),
 			items: this.arrChanges,
 		};
 		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page

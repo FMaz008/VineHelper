@@ -96,7 +96,7 @@ class ListMgr {
 			api_version: 5,
 			country: vineCountry,
 			action: actionName,
-			uuid: appSettings.general.uuid,
+			uuid: Settings.get("general.uuid", false),
 			arr: this.arrChanges,
 		};
 		showRuntime("Saving " + actionName + " item(s) remotely...");

@@ -41,12 +41,12 @@ if (!ultraviner) {
 async function init() {
 	//Wait for the config to be loaded before running this script
 	showRuntime("BOOT: Waiting on config to be loaded...");
-	while (Object.keys(appSettings).length === 0) {
+	while (!Settings.isLoaded()) {
 		await new Promise((r) => setTimeout(r, 10));
 	}
 	showRuntime("BOOT: Config available. Begining init() function");
 
-	if (appSettings.thorvarium.darktheme) {
+	if (Settings.get("thorvarium.darktheme")) {
 		document.getElementsByTagName("body")[0].classList.add("darktheme");
 	}
 
@@ -127,7 +127,7 @@ function displayAccountData() {
 }
 
 async function showGDPRPopup() {
-	if (appSettings.general.GDPRPopup == true || appSettings.general.GDPRPopup == undefined) {
+	if (Settings.get("general.GDPRPopup", false) == true || Settings.get("general.GDPRPopup", false) == undefined) {
 		prom = await Tpl.loadFile("view/popup_gdpr.html");
 		let content = Tpl.render(prom);
 
@@ -136,17 +136,17 @@ async function showGDPRPopup() {
 		m.content = content;
 		m.show();
 
-		appSettings.general.GDPRPopup = false;
+		Settings.set("general.GDPRPopup", false);
 		saveSettings();
 	}
 }
 async function initFlushTplCache() {
 	//Show version info popup : new version
-	if (appVersion != appSettings.general.versionInfoPopup) {
+	if (appVersion != Settings.get("general.versionInfoPopup", false)) {
 		showRuntime("BOOT: Flushing template cache");
 		await TplMgr.flushLocalStorage(new ScreenNotification()); //Delete all template from cache
 
-		if (compareVersion(appSettings.general.versionInfoPopup, appVersion) > VERSION_REVISION_CHANGE) {
+		if (compareVersion(Settings.get("general.versionInfoPopup", false), appVersion) > VERSION_REVISION_CHANGE) {
 			prom = await Tpl.loadFile("view/popup_changelog.html");
 			Tpl.setVar("appVersion", appVersion);
 			let content = Tpl.render(prom);
@@ -157,7 +157,7 @@ async function initFlushTplCache() {
 			m.show();
 		}
 
-		appSettings.general.versionInfoPopup = appVersion;
+		Settings.set("general.versionInfoPopup", appVersion);
 		saveSettings();
 	}
 }
@@ -199,22 +199,22 @@ function initSetPageTitle() {
 async function initCreateTabs() {
 	//Create the Discard grid
 	showRuntime("BOOT: Creating tabs system");
-	var tabSystem = appSettings.unavailableTab?.active || appSettings.hiddenTab?.active;
+	var tabSystem = Settings.get("unavailableTab.active") || Settings.get("hiddenTab.active");
 	if (tabSystem) {
 		await createGridInterface();
 	}
 
 	gridRegular = new Grid(document.getElementById("vvp-items-grid"));
 
-	if (appSettings.hiddenTab?.active) {
+	if (Settings.get("hiddenTab.active")) {
 		gridHidden = new Grid(document.getElementById("tab-hidden"));
 	}
 
-	if (appSettings.unavailableTab?.active) {
+	if (Settings.get("unavailableTab.active")) {
 		gridUnavailable = new Grid(document.getElementById("tab-unavailable"));
 	}
 
-	if (appSettings.pinnedTab?.active) {
+	if (Settings.get("pinnedTab.active")) {
 		gridPinned = new Grid(document.getElementById("tab-pinned"));
 	}
 
@@ -223,12 +223,12 @@ async function initCreateTabs() {
 
 function initInsertTopPagination() {
 	//Top pagination
-	if (appSettings.general.topPagination) {
+	if (Settings.get("general.topPagination")) {
 		removeElements("#vvp-items-grid-container .topPagination");
 		removeElements("#vvp-items-grid-container .topPaginationVerbose");
 
 		let currentPageDOM = document.querySelector("ul.a-pagination li.a-selected"); //If Null there is no pagination on the page
-		if (appSettings.general.verbosePagination && vineQueueAbbr == "AI" && currentPageDOM != undefined) {
+		if (Settings.get("general.verbosePagination") && vineQueueAbbr == "AI" && currentPageDOM != undefined) {
 			//Fetch total items from the page
 			const TOTAL_ITEMS = parseInt(
 				document.querySelector("#vvp-items-grid-container p strong:last-child").innerText.replace(/,/g, "")
@@ -258,17 +258,17 @@ function initInsertTopPagination() {
 
 async function initInsertBookmarkButton() {
 	//Insert bookmark button
-	if (appSettings.general.displayFirstSeen && appSettings.general.bookmark) {
+	if (Settings.get("general.displayFirstSeen") && Settings.get("general.bookmark")) {
 		removeElements("button.bookmark");
 		prom = await Tpl.loadFile("view/bookmark.html");
-		Tpl.setVar("date", appSettings.general.bookmarkDate);
+		Tpl.setVar("date", Settings.get("general.bookmarkDate"));
 		let bookmarkContent = Tpl.render(prom);
 		document.querySelector("#vvp-items-button-container").insertAdjacentHTML("beforeend", bookmarkContent);
 		$("button.bookmarknow").on("click", function (event) {
 			//Fetch the current date/time from the server
 
 			let arrJSON = {
-				api_version: appSettings.general.apiv5 ? 5 : 4,
+				api_version: 5,
 				country: vineCountry,
 				action: "date",
 			};
@@ -280,15 +280,14 @@ async function initInsertBookmarkButton() {
 			fetch(VINE_HELPER_API_V5_URL, options)
 				.then((response) => response.json())
 				.then(async function (response) {
-					appSettings.general.bookmarkDate = new Date(response.date + " GMT").toString();
-					saveSettings();
+					Settings.set("general.bookmarkDate", new Date(response.date + " GMT").toString());
 
 					let note = new ScreenNotification();
 					note.title = "Marker set !";
 					note.lifespan = 30;
 					note.content =
 						"Marker set for <br />" +
-						appSettings.general.bookmarkDate +
+						Settings.get("general.bookmarkDate") +
 						"<br />Newer items will be highlighted.";
 					await Notifications.pushNotification(note);
 				});
@@ -296,7 +295,7 @@ async function initInsertBookmarkButton() {
 		$("button.bookmark3").on("click", function (event) {
 			//Fetch the current date/time from the server
 			let arrJSON = {
-				api_version: appSettings.general.apiv5 ? 5 : 4,
+				api_version: 5,
 				country: vineCountry,
 				action: "date",
 			};
@@ -308,17 +307,17 @@ async function initInsertBookmarkButton() {
 			fetch(VINE_HELPER_API_V5_URL, options)
 				.then((response) => response.json())
 				.then(async function (response) {
-					appSettings.general.bookmarkDate = new Date(
-						new Date(response.date + " GMT").getTime() - 3 * 60 * 60 * 1000
-					).toString();
-					saveSettings();
+					Settings.set(
+						"general.bookmarkDate",
+						new Date(new Date(response.date + " GMT").getTime() - 3 * 60 * 60 * 1000).toString()
+					);
 
 					let note = new ScreenNotification();
 					note.title = "Marker set !";
 					note.lifespan = 30;
 					note.content =
 						"Marker set for <br />" +
-						appSettings.general.bookmarkDate +
+						Settings.get("general.bookmarkDate") +
 						"<br />Newer items will be highlighted.";
 					await Notifications.pushNotification(note);
 				});
@@ -326,7 +325,7 @@ async function initInsertBookmarkButton() {
 		$("button.bookmark12").on("click", function (event) {
 			//Fetch the current date/time from the server
 			let arrJSON = {
-				api_version: appSettings.general.apiv5 ? 5 : 4,
+				api_version: 5,
 				country: vineCountry,
 				action: "date",
 			};
@@ -338,17 +337,17 @@ async function initInsertBookmarkButton() {
 			fetch(VINE_HELPER_API_V5_URL, options)
 				.then((response) => response.json())
 				.then(async function (response) {
-					appSettings.general.bookmarkDate = new Date(
-						new Date(response.date + " GMT").getTime() - 12 * 60 * 60 * 1000
-					).toString();
-					saveSettings();
+					Settings.set(
+						"general.bookmarkDate",
+						new Date(new Date(response.date + " GMT").getTime() - 12 * 60 * 60 * 1000).toString()
+					);
 
 					let note = new ScreenNotification();
 					note.title = "Marker set !";
 					note.lifespan = 30;
 					note.content =
 						"Marker set for <br />" +
-						appSettings.general.bookmarkDate +
+						Settings.get("general.bookmarkDate") +
 						"<br />Newer items will be highlighted.";
 					await Notifications.pushNotification(note);
 				});
@@ -356,7 +355,7 @@ async function initInsertBookmarkButton() {
 		$("button.bookmark24").on("click", function (event) {
 			//Fetch the current date/time from the server
 			let arrJSON = {
-				api_version: appSettings.general.apiv5 ? 5 : 4,
+				api_version: 5,
 				country: vineCountry,
 				action: "date",
 			};
@@ -368,17 +367,17 @@ async function initInsertBookmarkButton() {
 			fetch(VINE_HELPER_API_V5_URL, options)
 				.then((response) => response.json())
 				.then(async function (response) {
-					appSettings.general.bookmarkDate = new Date(
-						new Date(response.date + " GMT").getTime() - 24 * 60 * 60 * 1000
-					).toString();
-					saveSettings();
+					Settings.set(
+						"general.bookmarkDate",
+						new Date(new Date(response.date + " GMT").getTime() - 24 * 60 * 60 * 1000).toString()
+					);
 
 					let note = new ScreenNotification();
 					note.title = "Marker set !";
 					note.lifespan = 30;
 					note.content =
 						"Marker set for <br />" +
-						appSettings.general.bookmarkDate +
+						Settings.get("general.bookmarkDate") +
 						"<br />Newer items will be highlighted.";
 					await Notifications.pushNotification(note);
 				});
@@ -423,7 +422,7 @@ async function initTilesAndDrawToolbars() {
 		t = new Toolbar(tile);
 
 		//Add tool tip to the truncated item title link
-		if (appSettings.general.displayFullTitleTooltip === true) {
+		if (Settings.get("general.displayFullTitleTooltip")) {
 			a = arrObj[i].querySelector(".a-link-normal");
 			a.setAttribute("data-tooltip", tile.getTitle());
 			a.addEventListener("mouseenter", (event) => {
@@ -448,7 +447,7 @@ async function initTilesAndDrawToolbars() {
 	showRuntime("done creating toolbars.");
 
 	// Scoll to the RFY/AFA/AI header
-	if (appSettings.general.scrollToRFY) {
+	if (Settings.get("general.scrollToRFY")) {
 		var scrollTarget = document.getElementById("vvp-items-button-container");
 		scrollTarget.scrollIntoView({ behavior: "smooth" });
 	}
@@ -513,7 +512,7 @@ async function generateTile(obj) {
 	$(img).detach().appendTo($(imgContainer));
 
 	//If the listing are set to listview, move the image container before its parent item.
-	if (appSettings.general.listView) {
+	if (Settings.get("general.listView")) {
 		$(imgContainer).detach().prependTo($(obj));
 
 		//Display the full titles
@@ -529,21 +528,21 @@ async function generateTile(obj) {
 
 		//If small items stylesheet are used, add a class to resize-down the thumnails.
 		if (
-			appSettings.thorvarium.mobileios ||
-			appSettings.thorvarium.mobileandroid ||
-			appSettings.thorvarium.smallItems
+			Settings.get("thorvarium.mobileios") ||
+			Settings.get("thorvarium.mobileandroid") ||
+			Settings.get("thorvarium.smallItems")
 		) {
 			document.querySelector("#vh-tabs").classList.add("smallitems");
 		}
 	}
 
 	//Move the hidden item to the hidden tab
-	if (appSettings.hiddenTab.active && tile.isHidden()) {
+	if (Settings.get("hiddenTab.active") && tile.isHidden()) {
 		showRuntime("BOOT: The item is locally hidden, move it to the hidden grid.");
 		await tile.moveToGrid(gridHidden, false); //This is the main sort, do not animate it
 	}
 
-	if (appSettings.general.displayVariantIcon) {
+	if (Settings.get("general.displayVariantIcon")) {
 		//Check if the item is a parent ASIN (as variants)
 		let variant = $(obj).find(".a-button-input").attr("data-is-parent-asin");
 		if (variant == "true") {
@@ -563,7 +562,7 @@ function fetchProductsDatav5() {
 		app_version: appVersion,
 		action: "get_info",
 		country: vineCountry,
-		uuid: appSettings.general.uuid,
+		uuid: Settings.get("general.uuid", false),
 		queue: vineQueue,
 		items: getAllProductData(),
 	};
@@ -596,7 +595,7 @@ async function serverProductsResponse(data) {
 		return false;
 	}
 
-	if (appSettings.hiddenTab.active) {
+	if (Settings.get("hiddenTab.active")) {
 		showRuntime("FETCH: Waiting on hidden items list to be loaded...");
 		while (!HiddenList.listLoaded) {
 			await new Promise((r) => setTimeout(r, 10));
@@ -647,7 +646,7 @@ async function serverProductsResponse(data) {
 			tile.setDateAdded(timenow, values.date_added);
 		}
 		//If there is a remote value for the hidden item, ensure it is sync'ed up with the local list
-		if (appSettings.hiddenTab.remote == true && values.hidden != null) {
+		if (Settings.get("hiddenTab.remote") && values.hidden != null) {
 			if (values.hidden == true && !tile.isHidden()) {
 				showRuntime("DRAW: Remote is ordering to hide item");
 				await tile.hideTile(false); //Will update the placement and list
@@ -657,12 +656,12 @@ async function serverProductsResponse(data) {
 			}
 		}
 
-		if (appSettings.unavailableTab.active) {
+		if (Settings.get("unavailableTab.active")) {
 			showRuntime("DRAW: Setting orders");
 			tile.setOrders(values.order_success, values.order_failed);
 			showRuntime("DRAW: A");
 			//Assign the tiles to the proper grid
-			if (appSettings.hiddenTab?.active && tile.isHidden()) {
+			if (Settings.get("hiddenTab.active") && tile.isHidden()) {
 				//The hidden tiles were already moved, keep the there.
 				showRuntime("DRAW: B");
 			} else if (tile.getStatus() >= DISCARDED_ORDER_FAILED) {
@@ -677,7 +676,7 @@ async function serverProductsResponse(data) {
 		await tile.initiateTile();
 	}
 
-	if (appSettings.pinnedTab?.active && appSettings.hiddenTab?.remote) {
+	if (Settings.get("pinnedTab.active") && Settings.get("hiddenTab.remote")) {
 		if (data["pinned_products"] != undefined) {
 			showRuntime("DRAW: Loading remote pinned products");
 			for (let i = 0; i < data["pinned_products"].length; i++) {
@@ -816,7 +815,7 @@ window.addEventListener("message", async function (event) {
 		tile.getToolbar().setETV(event.data.data.etv, event.data.data.etv, true);
 
 		//Show a notification
-		if (!appSettings.notification.reduce) {
+		if (!Settings.get("notification.reduce")) {
 			const note = new ScreenNotification();
 			note.title = "ETV data shared";
 			note.lifespan = 2;
@@ -830,7 +829,7 @@ window.addEventListener("message", async function (event) {
 		}
 
 		if (
-			appSettings.general.displayModalETV &&
+			Settings.get("general.displayModalETV") &&
 			document.getElementById("vvp-product-details-modal--tax-value").style?.display == "none"
 		) {
 			document.getElementById("vvp-product-details-modal--tax-value").style.display = "block";
@@ -940,7 +939,7 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 	}
 
 	if (data.type == "newItemCheck") {
-		if (appSettings.notification.screen.active) {
+		if (Settings.get("notification.screen.active")) {
 			//Display a notification that we have checked for items.
 			let note = new ScreenNotification();
 			note.template = "view/notification_loading.html";
@@ -953,14 +952,14 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 		if (
 			data.index < 10 && //Limit the notification to the top 10 most recents
 			vineBrowsingListing && //Only show notification on listing pages
-			appSettings.notification.screen.active
+			Settings.get("notification.screen.active")
 		) {
 			let { date, asin, queue, title, search, img_url, domain, etv, is_parent_asin, enrollment_guid } = data;
 
 			//Generate the content to be displayed in the notification
 			const prom = await Tpl.loadFile("/view/notification_new_item.html");
 
-			if (appSettings.general.searchOpenModal && is_parent_asin != null && enrollment_guid != null) {
+			if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
 				Tpl.setVar(
 					"url",
 					`https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`
@@ -968,7 +967,7 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 			} else {
 				Tpl.setVar("url", `https://www.amazon.${vineDomain}/vine/vine-items?search=${search}`);
 			}
-			Tpl.setIf("show_image", appSettings.notification.screen.thumbnail);
+			Tpl.setIf("show_image", Settings.get("notification.screen.thumbnail"));
 			Tpl.setVar("date", date);
 			Tpl.setVar("search", search);
 			Tpl.setVar("asin", asin);
@@ -985,11 +984,11 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 
 			//Play the notification sound
 			if (
-				appSettings.notification.screen.regular.volume > 0 &&
-				appSettings.notification.screen.regular.sound != "0"
+				Settings.get("notification.screen.regular.volume") > 0 &&
+				Settings.get("notification.screen.regular.sound") != "0"
 			) {
-				note2.sound = "resource/sound/" + appSettings.notification.screen.regular.sound + ".mp3";
-				note2.volume = appSettings.notification.screen.regular.volume;
+				note2.sound = "resource/sound/" + Settings.get("notification.screen.regular.sound") + ".mp3";
+				note2.volume = Settings.get("notification.screen.regular.volume");
 			}
 			note2.content = Tpl.render(prom);
 			Notifications.pushNotification(note2);
@@ -1004,7 +1003,7 @@ window.addEventListener("keyup", async function (e) {
 		return;
 	}
 
-	if (!appSettings.keyBindings?.active || e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) {
+	if (!Settings.get("keyBindings.active") || e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) {
 		return false;
 	}
 
@@ -1014,7 +1013,7 @@ window.addEventListener("keyup", async function (e) {
 		return false;
 	}
 
-	if (appSettings.general.modalNavigation && (e.key == "ArrowRight" || e.key == "ArrowLeft")) {
+	if (Settings.get("general.modalNavigation") && (e.key == "ArrowRight" || e.key == "ArrowLeft")) {
 		showRuntime("Arrow key detected.");
 		handleModalNavigation(e);
 	}
@@ -1037,14 +1036,14 @@ window.addEventListener("keyup", async function (e) {
 	*/
 
 	const keybindingMap = {
-		[appSettings.keyBindings?.hideAll]: hideAllItems,
-		[appSettings.keyBindings?.showAll]: showAllItems,
-		[appSettings.keyBindings?.hideAllNext]: hideAllItemsNext,
-		[appSettings.keyBindings?.nextPage]: () =>
+		[Settings.get("keyBindings.hideAll")]: hideAllItems,
+		[Settings.get("keyBindings.showAll")]: showAllItems,
+		[Settings.get("keyBindings.hideAllNext")]: hideAllItemsNext,
+		[Settings.get("keyBindings.nextPage")]: () =>
 			document.querySelector("#vvp-items-grid-container>div>ul.a-pagination li:last-child a")?.click(),
-		[appSettings.keyBindings?.previousPage]: () =>
+		[Settings.get("keyBindings.previousPage")]: () =>
 			document.querySelector("#vvp-items-grid-container>div>ul.a-pagination li:first-child a")?.click(),
-		[appSettings.keyBindings?.debug]: async () => {
+		[Settings.get("keyBindings.debug")]: async () => {
 			let content = await getRunTimeJSON();
 			regex = /\s*{<br\/>\n\s*"time": ([0-9]+),<br\/>\n\s*"event": "(.+?)"<br\/>\n\s*}(?:,<br\/>\n)?/gm;
 			const content2 = content.replace(regex, `<strong>$1ms:</strong> $2<br/>\n`);
@@ -1053,46 +1052,46 @@ window.addEventListener("keyup", async function (e) {
 			m.content = content2;
 			m.show();
 		},
-		[appSettings.keyBindings?.RFYPage]: () => (window.location.href = "/vine/vine-items?queue=potluck"),
-		[appSettings.keyBindings?.AFAPage]: () => (window.location.href = "/vine/vine-items?queue=last_chance"),
-		[appSettings.keyBindings?.AIPage]: () => (window.location.href = "/vine/vine-items?queue=encore"),
-		[appSettings.keyBindings?.AIPage2]: () =>
+		[Settings.get("keyBindings.RFYPage")]: () => (window.location.href = "/vine/vine-items?queue=potluck"),
+		[Settings.get("keyBindings.AFAPage")]: () => (window.location.href = "/vine/vine-items?queue=last_chance"),
+		[Settings.get("keyBindings.AIPage")]: () => (window.location.href = "/vine/vine-items?queue=encore"),
+		[Settings.get("keyBindings.AIPage2")]: () =>
 			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=2"),
-		[appSettings.keyBindings?.AIPage3]: () =>
+		[Settings.get("keyBindings.AIPage3")]: () =>
 			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=3"),
-		[appSettings.keyBindings?.AIPage4]: () =>
+		[Settings.get("keyBindings.AIPage4")]: () =>
 			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=4"),
-		[appSettings.keyBindings?.AIPage5]: () =>
+		[Settings.get("keyBindings.AIPage5")]: () =>
 			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=5"),
-		[appSettings.keyBindings?.AIPage6]: () =>
+		[Settings.get("keyBindings.AIPage6")]: () =>
 			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=6"),
-		[appSettings.keyBindings?.AIPage7]: () =>
+		[Settings.get("keyBindings.AIPage7")]: () =>
 			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=7"),
-		[appSettings.keyBindings?.AIPage8]: () =>
+		[Settings.get("keyBindings.AIPage8")]: () =>
 			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=8"),
-		[appSettings.keyBindings?.AIPage9]: () =>
+		[Settings.get("keyBindings.AIPage9")]: () =>
 			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=9"),
-		[appSettings.keyBindings?.AIPage10]: () =>
+		[Settings.get("keyBindings.AIPage10")]: () =>
 			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=10"),
-		[appSettings.keyBindings?.availableTab]: () => {
+		[Settings.get("keyBindings.availableTab")]: () => {
 			const tab = document.querySelector('#tabs ul a[href="#vvp-items-grid"]');
 			if (tab) {
 				tab.click();
 			}
 		},
-		[appSettings.keyBindings?.unavailableTab]: () => {
+		[Settings.get("keyBindings.unavailableTab")]: () => {
 			const tab = document.querySelector('#tabs ul a[href="#tab-unavailable"]');
 			if (tab) {
 				tab.click();
 			}
 		},
-		[appSettings.keyBindings?.hiddenTab]: () => {
+		[Settings.get("keyBindings.hiddenTab")]: () => {
 			const tab = document.querySelector('#tabs ul a[href="#tab-hidden"]');
 			if (tab) {
 				tab.click();
 			}
 		},
-		[appSettings.keyBindings?.pinnedTab]: () => {
+		[Settings.get("keyBindings.pinnedTab")]: () => {
 			const tab = document.querySelector('#tabs ul a[href="#tab-pinned"]');
 			if (tab) {
 				tab.click();
@@ -1102,10 +1101,10 @@ window.addEventListener("keyup", async function (e) {
 
 	//Only allow the hideAll, hideAllNext and showAll keybinding if the hiddenTab is activated.
 	if (
-		(e.key.toLowerCase() == appSettings.keyBindings?.hideAll ||
-			e.key.toLowerCase() == appSettings.keyBindings?.hideAllNext ||
-			e.key.toLowerCase() == appSettings.keyBindings?.showAll) &&
-		!appSettings.hiddenTab?.active
+		(e.key.toLowerCase() == Settings.get("keyBindings.hideAll") ||
+			e.key.toLowerCase() == Settings.get("keyBindings.hideAllNext") ||
+			e.key.toLowerCase() == Settings.get("keyBindings.showAll")) &&
+		!Settings.get("hiddenTab.active")
 	) {
 		return false;
 	}
@@ -1237,7 +1236,7 @@ function modalNavigatorCloseModal(modal) {
 }
 
 async function initModalNagivation() {
-	if (!appSettings.general.modalNavigation) {
+	if (!Settings.get("general.modalNavigation")) {
 		return false;
 	}
 

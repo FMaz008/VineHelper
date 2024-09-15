@@ -1,9 +1,9 @@
 function generatePagination(url, totalItems, itemsPerPage, currentPage) {
 	const LAST_PAGE = Math.ceil(totalItems / itemsPerPage);
 	const START_PAGE_PADDING =
-		appSettings.general.verbosePaginationStartPadding == undefined
+		Settings.get("general.verbosePaginationStartPadding") == undefined
 			? 1
-			: parseInt(appSettings.general.verbosePaginationStartPadding);
+			: parseInt(Settings.get("general.verbosePaginationStartPadding"));
 	const CURRENT_PAGE_PADDING = 3;
 	const END_PAGE_PADDING = 0;
 

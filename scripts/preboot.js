@@ -7,7 +7,6 @@ if (typeof browser === "undefined") {
 }
 
 //Extension settings
-var appSettings = {};
 var arrHidden = [];
 var arrDebug = [];
 var mapHook = new Map();
@@ -27,6 +26,7 @@ var uuid = null;
 var appVersion = 0;
 var ultraviner = false; //If Ultravine is detected, Vine Helper will deactivate itself to avoid conflicts.
 
+var Settings = new SettingsMgr();
 var Tpl = new Template();
 var TplMgr = new TemplateMgr();
 var DialogMgr = new ModalMgr();
@@ -36,115 +36,6 @@ var PinnedList = new PinnedListMgr();
 
 function showRuntime(eventName) {
 	arrDebug.push({ time: Date.now() - startTime, event: eventName });
-}
-
-//#########################
-//### Load settings
-
-//This method will initiate the settings for the first time,
-function getDefaultSettings() {
-	//Craft the new settings in JSON
-	settings = {
-		unavailableTab: {
-			active: true,
-			compactToolbar: false,
-		},
-
-		general: {
-			country: null,
-			uuid: null,
-			topPagination: true,
-			displayFirstSeen: true,
-			bookmark: false,
-			bookmarkDate: 0,
-			hideKeywords: [],
-			highlightKeywords: [],
-			displayVariantIcon: false,
-			versionInfoPopup: 0,
-			GDPRPopup: true,
-			hiddenItemsCacheSize: 9,
-			customCSS: "",
-			modalNavigation: false,
-			listView: false,
-		},
-
-		notification: {
-			active: false,
-			reduce: false,
-			pushNotifications: false,
-			screen: {
-				active: false,
-				thumbnail: true,
-				regular: {
-					sound: "0",
-					volume: 1,
-				},
-			},
-			monitor: {
-				hideList: false,
-				hideDuplicateThumbnail: false,
-				regular: {
-					sound: "0",
-					volume: 1,
-				},
-				highlight: {
-					sound: "0",
-					volume: 1,
-					color: "#FFE815",
-				},
-				zeroETV: {
-					sound: "0",
-					volume: 1,
-					color: "#64af4b",
-				},
-			},
-		},
-
-		keyBindings: {
-			active: true,
-			nextPage: "n",
-			previousPage: "p",
-			RFYPage: "r",
-			AFAPage: "a",
-			AIPage: "i",
-			hideAll: "h",
-			showAll: "s",
-			debug: "d",
-		},
-
-		hiddenTab: {
-			active: true,
-			remote: false,
-		},
-
-		PinnedTab: {
-			active: true,
-		},
-
-		discord: {
-			active: false,
-			guid: null,
-		},
-
-		thorvarium: {
-			mobileios: false,
-			mobileandroid: false,
-			smallItems: false,
-			removeHeader: false,
-			removeFooter: false,
-			removeAssociateHeader: false,
-			moreDescriptionText: false,
-			ETVModalOnTop: false,
-			categoriesWithEmojis: false,
-			paginationOnTop: false,
-			collapsableCategories: false,
-			stripedCategories: false,
-			limitedQuantityIcon: false,
-			RFYAFAAITabs: false,
-		},
-	};
-
-	return settings;
 }
 
 async function loadStyleSheet(path) {
@@ -162,161 +53,54 @@ async function loadStyleSheetContent(content, path = "injected") {
 
 //Loading the settings from the local storage
 async function getSettings() {
-	const data = await chrome.storage.local.get("settings");
-
-	showRuntime("PRE: Done reading settings");
-
-	//If no settings exist already, create the default ones
-	if (data == null || Object.keys(data).length === 0) {
-		showRuntime("Settings not found, generating default configuration...");
-		//Will generate default settings
-		await chrome.storage.local.clear(); //Delete all local storage
-		appSettings = getDefaultSettings();
-		saveSettings();
-	} else {
-		Object.assign(appSettings, data.settings);
-	}
-
-	//V2.2.0: Move the keybinding settings
-	if (appSettings.general.keyBindings !== undefined) {
-		appSettings.keyBindings = {};
-		appSettings.keyBindings.active = appSettings.general.keyBindings;
-		appSettings.keyBindings.nextPage = "n";
-		appSettings.keyBindings.previousPage = "p";
-		appSettings.keyBindings.RFYPage = "r";
-		appSettings.keyBindings.AFAPage = "a";
-		appSettings.keyBindings.AIPage = "i";
-		appSettings.keyBindings.hideAll = "h";
-		appSettings.keyBindings.showAll = "s";
-		appSettings.keyBindings.debug = "d";
-		appSettings.general.keyBindings = undefined;
-		saveSettings();
-	}
-
-	//V2.2.3: Configure garbage collector for hidden items
-	if (appSettings.general.hiddenItemsCacheSize == undefined) {
-		appSettings.general.hiddenItemsCacheSize = 9;
-		saveSettings();
-	}
-	if (appSettings.general.newItemNotificationImage == undefined) {
-		appSettings.general.newItemNotificationImage = true;
-		saveSettings();
-	}
-
-	//v2.2.7
-	if (appSettings.general.displayNewItemNotifications == undefined) {
-		appSettings.general.displayNewItemNotifications = appSettings.general.newItemNotification;
-		saveSettings();
-	}
-
-	//v2.3.3
-	if (appSettings.general.hideKeywords == undefined) {
-		appSettings.general.hideKeywords = [];
-		saveSettings();
-	}
-	if (appSettings.general.highlightKeywords == undefined) {
-		appSettings.general.highlightKeywords = [];
-		saveSettings();
-	}
-
-	//v2.7.6
-	if (appSettings.notification == undefined) {
-		console.log("Updating settings...");
-		//Convert the old settings to the new format
-		appSettings.notification = {
-			active: appSettings.general.newItemNotification,
-			reduce: appSettings.general.reduceNotifications,
-			screen: {
-				active: appSettings.general.displayNewItemNotifications,
-				thumbnail: appSettings.general.newItemNotificationImage,
-				regular: {
-					sound: "0",
-					volume: 0,
-				},
-			},
-			monitor: {
-				hideList: appSettings.general.newItemMonitorNotificationHiding,
-				hideDuplicateThumbnail: appSettings.general.newItemMonitorDuplicateImageHiding,
-				regular: {
-					sound: "notification",
-					volume: appSettings.general.newItemMonitorNotificationSound == 2 ? 0 : 1,
-				},
-				highlight: {
-					sound: "notification",
-					volume: 1,
-					color: "#FFE815",
-				},
-				zeroETV: {
-					sound: "0",
-					volume: 1,
-					color: "#64af4b",
-				},
-			},
-		};
-		appSettings.customCSS = "";
-		delete appSettings.general.newItemNotification;
-		delete appSettings.general.displayNewItemNotifications;
-		delete appSettings.general.newItemNotificationImage;
-		delete appSettings.general.newItemMonitorNotificationHiding;
-		delete appSettings.general.newItemMonitorDuplicateImageHiding;
-		delete appSettings.general.newItemMonitorNotificationSound;
-		delete appSettings.general.reduceNotifications;
-		delete appSettings.general.newItemNotificationVolume;
-		delete appSettings.general.newItemNotificationSound;
-		delete appSettings.general.newItemMonitorNotificationVolume;
-		delete appSettings.general.newItemMonitorNotificationSoundCondition;
-
-		delete appSettings.general.firstVotePopup;
-		delete appSettings.unavailableTab.consensusDiscard;
-		delete appSettings.unavailableTab.selfDiscard;
-		delete appSettings.unavailableTab.unavailableOpacity;
-		delete appSettings.unavailableTab.votingToolbar;
-		delete appSettings.unavailableTab.consensusThreshold;
-
-		saveSettings();
+	showRuntime("PREBOOT: Waiting on config to be loaded...");
+	while (!Settings.isLoaded()) {
+		await new Promise((r) => setTimeout(r, 10));
 	}
 
 	//Load Thorvarium stylesheets
-	if (appSettings.thorvarium.mobileios) loadStyleSheet("node_modules/vine-styling/mobile/ios-with-bugfix.css");
+	if (Settings.get("thorvarium.mobileios")) loadStyleSheet("node_modules/vine-styling/mobile/ios-with-bugfix.css");
 
-	if (appSettings.thorvarium.mobileandroid) loadStyleSheet("node_modules/vine-styling/mobile/mobile.css");
+	if (Settings.get("thorvarium.mobileandroid")) loadStyleSheet("node_modules/vine-styling/mobile/mobile.css");
 
-	if (appSettings.thorvarium.smallItems) loadStyleSheet("node_modules/vine-styling/desktop/small-items.css");
+	if (Settings.get("thorvarium.smallItems")) loadStyleSheet("node_modules/vine-styling/desktop/small-items.css");
 
-	if (appSettings.thorvarium.removeHeader) loadStyleSheet("node_modules/vine-styling/desktop/remove-header.css");
+	if (Settings.get("thorvarium.removeHeader")) loadStyleSheet("node_modules/vine-styling/desktop/remove-header.css");
 
-	if (appSettings.thorvarium.removeFooter) loadStyleSheet("node_modules/vine-styling/desktop/remove-footer.css");
+	if (Settings.get("thorvarium.removeFooter")) loadStyleSheet("node_modules/vine-styling/desktop/remove-footer.css");
 
-	if (appSettings.thorvarium.removeAssociateHeader)
+	if (Settings.get("thorvarium.removeAssociateHeader"))
 		loadStyleSheet("node_modules/vine-styling/desktop/remove-associate-header.css");
 
-	if (appSettings.thorvarium.moreDescriptionText)
+	if (Settings.get("thorvarium.moreDescriptionText"))
 		loadStyleSheet("node_modules/vine-styling/desktop/more-description-text.css");
 
-	if (appSettings.thorvarium.darktheme) loadStyleSheet("node_modules/vine-styling/desktop/dark-theme.css");
+	if (Settings.get("thorvarium.darktheme")) loadStyleSheet("node_modules/vine-styling/desktop/dark-theme.css");
 
-	if (appSettings.thorvarium.ETVModalOnTop) loadStyleSheet("node_modules/vine-styling/desktop/etv-modal-on-top.css");
+	if (Settings.get("thorvarium.ETVModalOnTop"))
+		loadStyleSheet("node_modules/vine-styling/desktop/etv-modal-on-top.css");
 
-	if (appSettings.thorvarium.paginationOnTop)
+	if (Settings.get("thorvarium.paginationOnTop"))
 		loadStyleSheet("node_modules/vine-styling/desktop/pagination-on-top.css");
 
-	if (appSettings.thorvarium.collapsableCategories)
+	if (Settings.get("thorvarium.collapsableCategories"))
 		loadStyleSheet("node_modules/vine-styling/desktop/collapsable-categories.css");
 
-	if (appSettings.thorvarium.stripedCategories)
+	if (Settings.get("thorvarium.stripedCategories"))
 		loadStyleSheet("node_modules/vine-styling/desktop/striped-categories.css");
 
-	if (appSettings.thorvarium.limitedQuantityIcon)
+	if (Settings.get("thorvarium.limitedQuantityIcon"))
 		loadStyleSheet("node_modules/vine-styling/desktop/limited-quantity-icon.css");
 
-	if (appSettings.thorvarium.RFYAFAAITabs) loadStyleSheet("node_modules/vine-styling/desktop/rfy-afa-ai-tabs.css");
+	if (Settings.get("thorvarium.RFYAFAAITabs"))
+		loadStyleSheet("node_modules/vine-styling/desktop/rfy-afa-ai-tabs.css");
 
 	showRuntime("BOOT: Thorvarium stylesheets injected");
 
-	if (appSettings.general.listView) loadStyleSheet("resource/css/listView.css");
+	if (Settings.get("general.listView")) loadStyleSheet("resource/css/listView.css");
 
-	if (appSettings.general.customCSS != undefined) {
-		loadStyleSheetContent(appSettings.general.customCSS);
+	if (Settings.get("general.customCSS")) {
+		loadStyleSheetContent(Settings.get("general.customCSS"));
 	}
 
 	//Figure out what domain the extension is working on
@@ -327,7 +111,7 @@ async function getSettings() {
 	vineCountry = vineDomain.split(".").pop();
 
 	// Load the country specific stylesheet
-	if (appSettings.thorvarium.categoriesWithEmojis) {
+	if (Settings.get("thorvarium.categoriesWithEmojis")) {
 		// The default stylesheet is for the US
 		var emojiList = "categories-with-emojis";
 		// For all other countries, append the country code to the stylesheet
@@ -339,10 +123,8 @@ async function getSettings() {
 	showRuntime("BOOT: Thorvarium country-specific stylesheets injected");
 
 	//Send the country code to the Service Worker
-	if (appSettings.general.country == null || appSettings.general.country != vineCountry) {
-		//or undefined
-		appSettings.general.country = vineCountry;
-		saveSettings();
+	if (Settings.get("general.country") != vineCountry) {
+		Settings.set("general.country", vineCountry);
 	}
 
 	let manifest = chrome.runtime.getManifest();
@@ -350,7 +132,7 @@ async function getSettings() {
 
 	//If the domain if not from outside the countries supported by the discord API, disable discord
 	if (["ca", "com", "co.uk"].indexOf(vineDomain) == -1) {
-		appSettings.discord.active = false;
+		Settings.set("discord.active", false);
 	}
 
 	switch (vineDomain) {
@@ -419,10 +201,10 @@ async function getSettings() {
 	if (vineQueue != null) vineQueueAbbr = arrQueues[vineQueue];
 
 	//Generate a UUID for the user
-	if (appSettings.general?.uuid == undefined || appSettings.general?.uuid == null) {
-		uuid = await obtainNewUUID();
-	} else {
-		uuid = appSettings.general.uuid;
+	uuid = Settings.get("general.uuid");
+	if (!uuid) {
+		uuid = await requestNewUUID();
+		Settings.set("general.uuid", uuid);
 	}
 	// Request the background script to inject the additional script
 	browser.runtime.sendMessage({ action: "injectPluginsContentScripts" });
@@ -430,15 +212,6 @@ async function getSettings() {
 	showRuntime("PRE: Settings loaded");
 }
 showRuntime("PRE: Begining to load settings");
-
-/** Obtain (and store) a new UUID
- */
-async function obtainNewUUID() {
-	let uuid = await requestNewUUID();
-	appSettings.general.uuid = uuid;
-	saveSettings();
-	return uuid;
-}
 
 /** Request a new UUID from the server.
  * @return string UUID
@@ -461,14 +234,14 @@ async function requestNewUUID() {
 	let response = await fetch(VINE_HELPER_API_V5_URL, options);
 
 	if (!response.ok) {
-		throw new Error("Network response was not ok PRE:obtainNewUUID");
+		throw new Error("Network response was not ok PRE:requestNewUUID");
 	}
 
 	// Parse the JSON response
 	let serverResponse = await response.json();
 
 	if (serverResponse["ok"] !== "ok") {
-		throw new Error("Content response was not ok PRE:obtainNewUUID");
+		throw new Error("Content response was not ok PRE:requestNewUUID");
 	}
 
 	// Return the obtained UUID
@@ -501,32 +274,6 @@ function hookExecute(hookname, variables) {
 		console.log("Calling function for hook " + hookname);
 		func(variables); // Call each function for the hook
 	});
-}
-
-async function saveSettings() {
-	try {
-		chrome.storage.local.set({ settings: appSettings });
-	} catch (e) {
-		if (e.name === "QuotaExceededError") {
-			// The local storage space has been exceeded
-			alert("Local storage quota exceeded! Hidden items will be cleared to make space.");
-			await chrome.storage.local.set({ hiddenItems: [] });
-			saveSettings();
-		} else {
-			// Some other error occurred
-			alert("Error:", e.name, e.message);
-			return false;
-		}
-	}
-
-	if (!appSettings.notification.reduce) {
-		let note = new ScreenNotification();
-		note.title = "Settings saved.";
-		note.lifespan = 3;
-		note.content = "";
-		note.title_only = true;
-		Notifications.pushNotification(note);
-	}
 }
 
 function getRunTime() {

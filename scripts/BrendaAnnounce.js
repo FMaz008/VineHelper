@@ -20,7 +20,7 @@ class BrendaAnnounceQueue {
 
 	async announce(asin, etv, queue) {
 		if (this.queue.length >= this.MAX_QUEUE_LENGTH) {
-			if (!appSettings.notification.reduce) {
+			if (!Settings.get("notification.reduce")) {
 				await Notifications.pushNotification(
 					new ScreenNotification({
 						title: "Announce to Brenda",
@@ -61,7 +61,7 @@ class BrendaAnnounceQueue {
 				headers: { "Content-Type": "application/x-www-form-urlencoded" },
 				body: new URLSearchParams({
 					version: 1,
-					token: appSettings.discord.guid,
+					token: Settings.get("discord.guid", false),
 					domain: "amazon." + vineDomain,
 					tab: item.queue,
 					asin: item.asin,
@@ -87,7 +87,7 @@ class BrendaAnnounceQueue {
 		this.lastProcessTime = Date.now();
 
 		// Replace placeholders in the message
-		if (!appSettings.notification.reduce) {
+		if (!Settings.get("notification.reduce")) {
 			message = message.replace("{asin}", item.asin);
 			await Notifications.pushNotification(
 				new ScreenNotification({

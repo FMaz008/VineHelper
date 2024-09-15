@@ -16,10 +16,13 @@ class Toolbar {
 		Tpl.setVar("asin", this.pTile.getAsin());
 		Tpl.setIf(
 			"announce",
-			appSettings.discord.active && appSettings.discord.guid != null && vineQueue != null && vineSearch == false
+			Settings.get("discord.active") &&
+				Settings.get("discord.guid", false) != null &&
+				vineQueue != null &&
+				vineSearch == false
 		);
-		Tpl.setIf("pinned", appSettings.pinnedTab?.active);
-		Tpl.setIf("toggleview", appSettings.hiddenTab.active);
+		Tpl.setIf("pinned", Settings.get("pinnedTab.active"));
+		Tpl.setIf("toggleview", Settings.get("hiddenTab.active"));
 		let pToolbar = Tpl.render(prom, true);
 
 		//Attach the toolbar to the tile's .vvp-item-tile-content container.
@@ -44,30 +47,30 @@ class Toolbar {
 
 		//It the small tiles will be shown, hide the ETV icon to gain space
 		if (
-			appSettings.thorvarium.smallItems ||
-			appSettings.thorvarium.mobileios ||
-			appSettings.thorvarium.mobileandroid
+			Settings.get("thorvarium.smallItems") ||
+			Settings.get("thorvarium.mobileios") ||
+			Settings.get("thorvarium.mobileandroid")
 		) {
 			$(".vh-icon-etv").hide();
 		}
 
-		if (appSettings.unavailableTab.compactToolbar) {
+		if (Settings.get("unavailableTab.compactToolbar")) {
 			pToolbar.classList.add("compact");
 		}
 
-		if (appSettings.unavailableTab.active) {
+		if (Settings.get("unavailableTab.active")) {
 			$("<div />")
 				.addClass("vh-icon vh-icon-loading")
 				.prependTo("#" + toolbarId + " .vh-status-container");
 		}
 
 		//If the ordering system is off, only the icons have to be shown
-		if (!appSettings.unavailableTab.active) {
+		if (!Settings.get("unavailableTab.active")) {
 			pToolbar.classList.add("vh-background-neutral");
 		}
 
 		//Display the hide link
-		if (appSettings.hiddenTab.active) {
+		if (Settings.get("hiddenTab.active")) {
 			let h = $("#vh-hide-link-" + this.pTile.getAsin());
 			h.on("click", { asin: this.pTile.getAsin() }, async function (event) {
 				//A hide/display item button was pressed
@@ -94,7 +97,7 @@ class Toolbar {
 		}
 
 		//Pinned items event handler
-		if (appSettings.pinnedTab?.active) {
+		if (Settings.get("pinnedTab.active")) {
 			let h = $("#vh-pin-link-" + this.pTile.getAsin());
 			h.on("click", { asin: this.pTile.getAsin() }, async function (event) {
 				this.style.opacity = 0.3;
@@ -119,7 +122,9 @@ class Toolbar {
 	}
 
 	updateVisibilityIcon() {
-		if (!appSettings.hiddenTab.active) return false;
+		if (!Settings.get("hiddenTab.active")) {
+			return false;
+		}
 
 		let icon = $("#vh-hide-link-" + this.pTile.getAsin() + " div.vh-toolbar-icon");
 		let gridId = this.pTile.getGridId();
@@ -173,7 +178,9 @@ class Toolbar {
 		}
 		span.trigger("change");
 
-		if (appSettings.general.displayETV) context.find(".vh-toolbar-etv").show();
+		if (Settings.get("general.displayETV")) {
+			context.find(".vh-toolbar-etv").show();
+		}
 	}
 
 	//This method is called from bootloader.js, serverResponse() when the data has been received, after the tile was moved.
@@ -188,7 +195,9 @@ class Toolbar {
 		let statusColor;
 
 		//If the hidden tab system is activated, update the visibility icon
-		if (appSettings.hiddenTab.active) this.updateVisibilityIcon();
+		if (Settings.get("hiddenTab.active")) {
+			this.updateVisibilityIcon();
+		}
 
 		//Set the icons
 		showRuntime("DRAW-UPDATE-TOOLBAR: Setting icon status");
@@ -211,7 +220,7 @@ class Toolbar {
 				break;
 		}
 
-		if (appSettings.unavailableTab.compactToolbar) {
+		if (Settings.get("unavailableTab.compactToolbar")) {
 			//No icon, no text
 			this.setStatusIcon("");
 			context.addClass("compact");
@@ -221,7 +230,7 @@ class Toolbar {
 		//$(this.pTile.getDOM()).css("opacity", tileOpacity);
 
 		//Display voting system if active.
-		if (appSettings.unavailableTab.active) {
+		if (Settings.get("unavailableTab.active")) {
 			showRuntime("DRAW-UPDATE-TOOLBAR: Create order widget");
 			await this.createOrderWidget();
 		}
@@ -247,11 +256,11 @@ class Toolbar {
 		let prom = await Tpl.loadFile("view/widget_order.html");
 		Tpl.setVar("order_success", this.pTile.getOrderSuccess());
 		Tpl.setVar("order_failed", this.pTile.getOrderFailed());
-		Tpl.setIf("not-compact", !appSettings.unavailableTab.compactToolbar);
+		Tpl.setIf("not-compact", !Settings.get("unavailableTab.compactToolbar"));
 		let content = Tpl.render(prom);
 		$(content).appendTo(container);
 
-		if (appSettings.thorvarium.smallItems) {
+		if (Settings.get("thorvarium.smallItems")) {
 			$(".compact div.vh-order-widget").css("clear", "both");
 		}
 	}
@@ -269,7 +278,7 @@ async function announceItem(event) {
 
 	window.BrendaAnnounceQueue.announce(event.data.asin, etv, vineQueue);
 
-	if (!appSettings.notification.reduce) {
+	if (!Settings.get("notification.reduce")) {
 		let note = new ScreenNotification();
 		note.title = "Announce to Brenda";
 		note.lifespan = 10;

@@ -86,7 +86,7 @@ function Tile(obj, gridInstance) {
 	};
 
 	this.getStatus = function () {
-		if (appSettings.unavailableTab?.active) {
+		if (Settings.get("unavailableTab.active")) {
 			if (pOrderSuccess > 0 && pOrderSuccess > pOrderFailed) return NOT_DISCARDED_ORDER_SUCCESS;
 
 			if (pOrderFailed > 0 && pOrderFailed > pOrderSuccess) return DISCARDED_ORDER_FAILED;
@@ -118,11 +118,11 @@ function Tile(obj, gridInstance) {
 	};
 
 	this.setDateAdded = function (timenow, mysqlDate) {
-		if (mysqlDate == undefined || !appSettings.general.displayFirstSeen) return false;
+		if (mysqlDate == undefined || !Settings.get("general.displayFirstSeen")) return false;
 
 		let serverCurrentDate = new Date(timenow + " GMT");
 		let itemDateAdded = new Date(mysqlDate + " GMT");
-		let bookmarkDate = new Date(appSettings.general.bookmarkDate);
+		let bookmarkDate = new Date(Settings.get("general.bookmarkDate"));
 		if (isNaN(serverCurrentDate.getTime()) || isNaN(itemDateAdded.getTime())) {
 			showRuntime(
 				"! Time firstseen wrong: serverCurrentDate:" +
@@ -137,7 +137,7 @@ function Tile(obj, gridInstance) {
 			return;
 		}
 		let textDate = timeSince(serverCurrentDate, itemDateAdded);
-		dateAddedMessage = appSettings.unavailableTab.compactToolbar
+		dateAddedMessage = Settings.get("unavailableTab.compactToolbar")
 			? `${textDate} ago`
 			: `First seen: ${textDate} ago`;
 
@@ -145,7 +145,11 @@ function Tile(obj, gridInstance) {
 		dateAddedDiv.text(dateAddedMessage).appendTo($(pTile).find(".vh-img-container"));
 
 		//Highlight the tile background if the bookmark date is in the past
-		if (appSettings.general.bookmark && itemDateAdded > bookmarkDate && appSettings.general.bookmarkDate != 0) {
+		if (
+			Settings.get("general.bookmark") &&
+			itemDateAdded > bookmarkDate &&
+			Settings.get("general.bookmarkDate") != 0
+		) {
 			showRuntime("TILE: The item is more recent than the time marker, highlight it.");
 			$(pTile).addClass("bookmark-highlight");
 		}
@@ -154,8 +158,8 @@ function Tile(obj, gridInstance) {
 	this.initiateTile = async function () {
 		//Highlight the tile border if the title match highlight keywords
 		let highligthed = false;
-		if (appSettings.general.highlightKeywords.length > 0) {
-			match = appSettings.general.highlightKeywords.find((word) => {
+		if (Settings.get("general.highlightKeywords").length > 0) {
+			match = Settings.get("general.highlightKeywords").find((word) => {
 				let regex;
 				try {
 					regex = new RegExp(`\\b${word}\\b`, "i");
@@ -176,8 +180,8 @@ function Tile(obj, gridInstance) {
 		}
 
 		//Match with hide keywords. Only hide if not highlighed.
-		if (!highligthed && appSettings.general.hideKeywords.length > 0) {
-			match = appSettings.general.hideKeywords.find((word) => {
+		if (!highligthed && Settings.get("general.hideKeywords").length > 0) {
+			match = Settings.get("general.hideKeywords").find((word) => {
 				let regex;
 				try {
 					regex = new RegExp(`\\b${word}\\b`, "i");
@@ -220,7 +224,7 @@ function Tile(obj, gridInstance) {
 	};
 
 	this.isHidden = function () {
-		if (!appSettings.hiddenTab?.active) return false;
+		if (!Settings.get("hiddenTab.active")) return false;
 
 		return HiddenList.isHidden(pAsin);
 	};
