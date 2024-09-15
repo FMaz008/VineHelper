@@ -1,3 +1,4 @@
+var Settings = new SettingsMgr();
 var Tpl = new Template();
 var TplMgr = new TemplateMgr();
 

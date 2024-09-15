@@ -2,20 +2,13 @@
 //          The console used is the browser console, not the inspector console.
 const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
 const arrSounds = ["notification", "upgrade", "vintage-horn"];
-var appSettings = {};
-
-async function loadSettings() {
-	const data = await chrome.storage.local.get("settings");
-	Object.assign(appSettings, data.settings);
-}
-loadSettings();
 
 async function drawDiscord() {
 	//Show or hide the discord options
-	document.querySelector("#discordOptions").style.display = appSettings.discord.active ? "block" : "none";
+	document.querySelector("#discordOptions").style.display = Settings.get("discord.active") ? "block" : "none";
 
-	if (appSettings.discord.active) {
-		let showLink = JSONGetPathValue(appSettings, "discord.guid") === null;
+	if (Settings.get("discord.active")) {
+		let showLink = Settings.get("discord.guid", false) === null;
 
 		document.querySelector("#discord-guid-link").style.display = showLink ? "block" : "none";
 		document.querySelector("#discord-guid-unlink").style.display = showLink ? "none" : "block";
@@ -38,7 +31,12 @@ function selectCurrentTab(firstRun = false) {
 	//Display the current tab
 	document.querySelector("#" + currentTab).style.display = "flex";
 }
-function initiateSettings() {
+async function initiateSettings() {
+	//Wait for the settings to be loaded.
+	while (!Settings.isLoaded()) {
+		await new Promise((r) => setTimeout(r, 10));
+	}
+
 	//##########################
 	// TABS
 	//Bind the click event for the tabs
@@ -195,7 +193,7 @@ function initiateSettings() {
 		document.querySelector(`#${key}`).type = "password";
 	};
 
-	document.querySelector(`#${key}`).value = appSettings.general.uuid;
+	document.querySelector(`#${key}`).value = Settings.get("general.uuid", false);
 
 	document.querySelector("#saveUUID").onclick = async function () {
 		document.querySelector("#saveUUID").disabled = true;
@@ -217,12 +215,11 @@ function initiateSettings() {
 			.then((response) => response.json())
 			.then(async function (serverResponse) {
 				if (serverResponse["ok"] == "ok") {
-					appSettings.general.uuid = serverResponse["uuid"];
-					await chrome.storage.local.set({ settings: appSettings });
+					Settings.set("general.uuid", serverResponse["uuid"]);
 				} else {
 					alert("Invalid UUID");
 					key = CSS.escape("general.uuid");
-					document.querySelector(`#${key}`).value = appSettings.general.uuid;
+					document.querySelector(`#${key}`).value = Settings.get("general.uuid", false);
 				}
 			})
 			.catch(function () {
@@ -250,9 +247,9 @@ function initiateSettings() {
 		let url = "https://api.llamastories.com/brenda/user/" + document.querySelector("#" + key).value;
 		const response = await fetch(url, { method: "GET" });
 		if (response.status == 200) {
-			appSettings.discord.guid = document.querySelector(`#${key}`).value;
-			await chrome.storage.local.set({ settings: appSettings });
-			document.querySelector("#guid-txt").innerText = appSettings.discord.guid;
+			Settings.set("discord.guid", document.querySelector(`#${key}`).value);
+
+			document.querySelector("#guid-txt").innerText = Settings.get("discord.guid", false);
 			document.querySelector("#discord-guid-link").style.display = "none";
 			document.querySelector("#discord-guid-unlink").style.display = "block";
 		} else {
@@ -262,14 +259,13 @@ function initiateSettings() {
 		document.querySelector("#saveGUID").disabled = false;
 	};
 	document.querySelector("#unlinkGUID").onclick = async function () {
-		appSettings.discord.guid = null;
-		await chrome.storage.local.set({ settings: appSettings });
+		Settings.set("discord.guid", null);
 
 		document.querySelector("#discord-guid-link").style.display = "block";
 		document.querySelector("#discord-guid-unlink").style.display = "none";
 	};
-	if (appSettings.discord.guid) {
-		document.querySelector("#guid-txt").innerText = appSettings.discord.guid;
+	if (Settings.get("discord.guid", false)) {
+		document.querySelector("#guid-txt").innerText = Settings.get("discord.guid");
 	}
 
 	//##TAB - KEYWORDS
@@ -352,7 +348,7 @@ function initiateSettings() {
 
 //CSK: Comma Separated Keywords
 function manageTextareaCSK(key) {
-	const val = JSONGetPathValue(appSettings, key);
+	const val = Settings.get(key);
 	const obj = document.querySelector(`textarea[name='${key}']`);
 	if (obj == null) {
 		throw new Error("Textarea name='" + key + "' does not exist");
@@ -367,26 +363,24 @@ function manageTextareaCSK(key) {
 		if (arr.length == 1 && arr[0] == "") {
 			arr = [];
 		}
-		deepSet(appSettings, key, arr);
-		await chrome.storage.local.set({ settings: appSettings });
+		Settings.set(key, arr);
 	});
 }
 
 function manageTextarea(key) {
-	const val = JSONGetPathValue(appSettings, key);
+	const val = Settings.get(key);
 	const obj = document.querySelector(`textarea[name='${key}']`);
 	if (obj == null) {
 		throw new Error("Textarea name='" + key + "' does not exist");
 	}
 	obj.value = val;
 	obj.addEventListener("change", async function () {
-		deepSet(appSettings, key, obj.value);
-		await chrome.storage.local.set({ settings: appSettings });
+		Settings.set(key, obj.value);
 	});
 }
 
 function manageInputText(key) {
-	const val = JSONGetPathValue(appSettings, key);
+	const val = Settings.get(key);
 	const obj = document.querySelector(`label[for='${key}'] input`);
 	if (obj == null) {
 		throw new Error("Keybinding input name='" + key + "' does not exist");
@@ -394,21 +388,19 @@ function manageInputText(key) {
 	obj.value = val == null ? "" : val;
 
 	obj.addEventListener("change", async function () {
-		deepSet(appSettings, key, obj.value);
-		await chrome.storage.local.set({ settings: appSettings });
+		Settings.set(key, obj.value);
 	});
 }
 
 function manageSlider(key) {
-	const val = JSONGetPathValue(appSettings, key);
+	const val = Settings.get(key);
 	const volumeObj = document.querySelector(`label[for='${key}'] input`);
 	if (volumeObj == null) {
 		throw new Error("Slider input name='" + key + "' does not exist");
 	}
 	volumeObj.value = Number(val == null ? 0 : val);
 	volumeObj.addEventListener("change", async function () {
-		deepSet(appSettings, key, volumeObj.value);
-		await chrome.storage.local.set({ settings: appSettings });
+		Settings.set(key, volumeObj.value);
 	});
 }
 function managePlayButton(btnId, selectName, volumeName) {
@@ -433,7 +425,7 @@ function managePlayButton(btnId, selectName, volumeName) {
 }
 
 function manageSelectBox(key) {
-	const val = JSONGetPathValue(appSettings, key);
+	const val = Settings.get(key);
 	const keyE = CSS.escape(key);
 	const selectObj = document.querySelector(`label[for='${keyE}'] select`);
 
@@ -444,13 +436,12 @@ function manageSelectBox(key) {
 	}
 
 	selectObj.addEventListener("change", async function () {
-		deepSet(appSettings, key, selectObj.value);
-		await chrome.storage.local.set({ settings: appSettings });
+		Settings.set(key, selectObj.value);
 	});
 }
 
 function manageCheckboxSetting(key, def = null) {
-	const val = def === null ? JSONGetPathValue(appSettings, key) : def;
+	const val = def === null ? Settings.get(key) : def;
 	const keyE = CSS.escape(key);
 	const checkObj = document.querySelector(`input[name='${keyE}']`);
 	checkObj.checked = val;
@@ -462,8 +453,7 @@ function manageCheckboxSetting(key, def = null) {
 	//Saving the change
 	checkObj.addEventListener("change", async function () {
 		//Change in value
-		deepSet(appSettings, key, checkObj.checked);
-		await chrome.storage.local.set({ settings: appSettings });
+		Settings.set(key, checkObj.checked);
 	});
 
 	//Clicking the label will check the checkbox
@@ -482,38 +472,4 @@ function manageCheckboxSetting(key, def = null) {
 
 function isNumeric(n) {
 	return !isNaN(parseFloat(n)) && isFinite(n);
-}
-
-const deepSet = (obj, path, val) => {
-	path = path.replaceAll("[", ".[");
-	const keys = path.split(".");
-
-	for (let i = 0; i < keys.length; i++) {
-		let currentKey = keys[i];
-		let nextKey = keys[i + 1];
-		if (currentKey.includes("[")) {
-			currentKey = parseInt(currentKey.substring(1, currentKey.length - 1));
-		}
-		if (nextKey && nextKey.includes("[")) {
-			nextKey = parseInt(nextKey.substring(1, nextKey.length - 1));
-		}
-
-		if (typeof nextKey !== "undefined") {
-			obj[currentKey] = obj[currentKey] ? obj[currentKey] : isNaN(nextKey) ? {} : [];
-		} else {
-			obj[currentKey] = val;
-		}
-
-		obj = obj[currentKey];
-	}
-};
-
-function JSONGetPathValue(obj, path) {
-	try {
-		let val = path.split(".").reduce((c, s) => c[s], obj);
-		if (val == undefined) return null;
-		else return val;
-	} catch (error) {
-		return null;
-	}
 }
