@@ -14,7 +14,6 @@ const TYPE_ZEROETV = 1;
 const TYPE_HIGHLIGHT = 2;
 //const TYPE_HIGHLIGHT_OR_ZEROETV = 9;
 
-var appSettings = [];
 if (typeof browser === "undefined") {
 	var browser = chrome;
 }
@@ -32,6 +31,7 @@ function showDebug() {
 	console.log(JSON.stringify(arrDebug));
 }
 
+var Settings = new SettingsMgr();
 var Tpl = new Template();
 var TplMgr = new TemplateMgr();
 var loadedTpl = null;
@@ -128,21 +128,14 @@ window.onload = function () {
 };
 
 async function init() {
-	const data = await browser.storage.local.get("settings");
+	//Wait for the settings to be loaded.
+	while (!Settings.isLoaded()) {
+		await new Promise((r) => setTimeout(r, 10));
+	}
 
 	loadedTpl = await Tpl.loadFile("/view/notification_monitor.html");
 
-	if (data == null || Object.keys(data).length === 0) {
-		showRuntime("Settings not available yet. Waiting 10 sec...");
-		setTimeout(function () {
-			init();
-		}, 10000);
-		return; //Settings have not been initialized yet.
-	} else {
-		Object.assign(appSettings, data.settings);
-	}
-
-	if (!appSettings.notification.active) {
+	if (!Settings.get("notification.active")) {
 		document.getElementById("status").innerHTML =
 			"<strong>Notifications disabled</strong> You need to enable the notifications for this window to work.";
 	}
@@ -223,7 +216,7 @@ async function setLocale(country) {
 		vineCurrency = vineLocales[country].currency;
 		vineDomain = vineDomains[country];
 
-		if (appSettings != undefined && appSettings.notification.active) {
+		if (Settings.get("notification.active")) {
 			document.getElementById("status").innerHTML =
 				"<strong>ServiceWorker Status: </strong><div class='vh-switch-32 vh-icon-switch-on'></div>";
 		}
@@ -258,7 +251,7 @@ function addItem(data) {
 		notification_zeroETV = true;
 	}
 
-	if (appSettings.notification.monitor.hideDuplicateThumbnail && imageUrls.has(img_url)) {
+	if (Settings.get("notification.monitor.hideDuplicateThumbnail") && imageUrls.has(img_url)) {
 		showRuntime("NOTIFICATION: item " + asin + " has a duplicate image and won't be shown.");
 		return;
 	}
@@ -270,7 +263,7 @@ function addItem(data) {
 		notification_highlight = true;
 
 		//Hide the item
-	} else if (appSettings.notification.monitor.hideList && hideMatch) {
+	} else if (Settings.get("notification.monitor.hideList") && hideMatch) {
 		showRuntime("NOTIFICATION: item " + asin + " match the hidden list and won't be shown.");
 		return;
 	}
@@ -287,7 +280,7 @@ function addItem(data) {
 		items.set(asin, etv);
 		imageUrls.add(img_url);
 
-		if (appSettings.general.searchOpenModal && is_parent_asin != null && enrollment_guid != null) {
+		if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
 			Tpl.setVar(
 				"url",
 				`https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`
@@ -308,7 +301,7 @@ function addItem(data) {
 		Tpl.setVar("queue", queue);
 		Tpl.setVar("type", type);
 		Tpl.setVar("etv", formatETV(etv));
-		Tpl.setIf("announce", appSettings.discord.active && appSettings.discord.guid != null);
+		Tpl.setIf("announce", Settings.get("discord.active") && Settings.get("discord.guid", false) != null);
 		let content = Tpl.render(loadedTpl, true); //true to return a DOM object instead of an HTML string
 
 		const newBody = document.getElementById("vh-items-container");
@@ -323,7 +316,7 @@ function addItem(data) {
 		//Highlight background color
 		if (KWsMatch) {
 			const obj = elementByAsin(asin);
-			obj.style.backgroundColor = appSettings.notification.monitor.highlight.color;
+			obj.style.backgroundColor = Settings.get("notification.monitor.highlight.color");
 		}
 
 		// Add new click listener for the report button
@@ -374,24 +367,24 @@ function playSoundAccordingToNotificationType(highlightMatch = false, zeroETV = 
 	let volume, filename;
 
 	//Highlight notification
-	volume = appSettings.notification.monitor.highlight.volume;
-	filename = appSettings.notification.monitor.highlight.sound;
+	volume = Settings.get("notification.monitor.highlight.volume");
+	filename = Settings.get("notification.monitor.highlight.sound");
 	if (highlightMatch && filename != "0" && volume > 0) {
 		playSound(filename, volume);
 		return true;
 	}
 
 	//Zero ETV notification
-	volume = appSettings.notification.monitor.zeroETV.volume;
-	filename = appSettings.notification.monitor.zeroETV.sound;
+	volume = Settings.get("notification.monitor.zeroETV.volume");
+	filename = Settings.get("notification.monitor.zeroETV.sound");
 	if (zeroETV && filename != "0" && volume > 0) {
 		playSound(filename, volume);
 		return true;
 	}
 
 	//Regular notification
-	volume = appSettings.notification.monitor.regular.volume;
-	filename = appSettings.notification.monitor.regular.sound;
+	volume = Settings.get("notification.monitor.regular.volume");
+	filename = Settings.get("notification.monitor.regular.sound");
 	if (filename != "0" && volume > 0) {
 		playSound(filename, volume);
 		return true;
@@ -426,7 +419,7 @@ function setETV(asin, etv) {
 
 	//Highlight for ETV
 	if (etv == "0.00") {
-		obj.style.backgroundColor = appSettings.notification.monitor.zeroETV.color;
+		obj.style.backgroundColor = Settings.get("notification.monitor.zeroETV.color");
 		if (obj.getAttribute("data-notification-type") != TYPE_HIGHLIGHT) {
 			obj.setAttribute("data-notification-type", TYPE_ZEROETV);
 		}
@@ -467,7 +460,7 @@ function send_report(asin) {
 		app_version: manifest.version,
 		country: vineDomain,
 		action: "report_asin",
-		uuid: appSettings.general.uuid,
+		uuid: Settings.get("general.uuid", false),
 		asin: asin,
 	};
 	const options = {
