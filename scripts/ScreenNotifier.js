@@ -1,4 +1,4 @@
-/** Notification, use to configure a notificication
+/** Notification, use to configure a notification
  *  will be fed to ScreenNotifier
  * */
 class ScreenNotification {
@@ -44,16 +44,19 @@ class ScreenNotification {
 
 /** Handle the display of notification */
 class ScreenNotifier {
+	#noteCounter;
+	#lastSoundPlayedAt;
+
 	constructor() {
-		this.noteCounter = 0;
-		this.lastSoundPlayedAt = Date.now();
-		this.init();
+		this.#noteCounter = 0;
+		this.#lastSoundPlayedAt = Date.now();
+		this.#init();
 	}
 
 	/**
 	 * This method can be called multiple times to ensure a container is created as early as possible.
 	 */
-	async init() {
+	async #init() {
 		//If the container does not exist, create it and append it to the body.
 		document.addEventListener("DOMContentLoaded", async function () {
 			if (document.getElementById("vh-notifications-container") === null) {
@@ -65,7 +68,7 @@ class ScreenNotifier {
 	}
 
 	async pushNotification(note) {
-		note.id = this.noteCounter++;
+		note.id = this.#noteCounter++;
 
 		//Render the notification and insert it into the container
 		let content = await note.render();
@@ -114,9 +117,9 @@ class ScreenNotifier {
 
 		//Play a sound
 		if (note.sound != null) {
-			if (Date.now() - this.lastSoundPlayedAt > 30000) {
+			if (Date.now() - this.#lastSoundPlayedAt > 30000) {
 				// Don't play the notification sound again within 30 sec.
-				this.lastSoundPlayedAt = Date.now();
+				this.#lastSoundPlayedAt = Date.now();
 				const audioElement = new Audio(chrome.runtime.getURL(note.sound));
 				const handleEnded = () => {
 					audioElement.removeEventListener("ended", handleEnded); // Remove the event listener

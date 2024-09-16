@@ -1,8 +1,16 @@
 class SettingsMgr {
+	static #instance = null;
 	#defaultSettings;
 	#settings;
 
 	constructor() {
+		if (SettingsMgr.#instance) {
+			// Return the existing instance if it already exists
+			return SettingsMgr.#instance;
+		}
+		// Initialize the instance if it doesn't exist
+		SettingsMgr.#instance = this;
+
 		this.#settings = {};
 		this.#getDefaultSettings();
 		this.#loadSettingsFromStorage();

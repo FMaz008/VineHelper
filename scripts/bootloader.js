@@ -56,7 +56,6 @@ async function init() {
 	}
 
 	//### Run the boot sequence
-	Notifications.init(); //Ensure the container for notification was created, in case it was not in preboot.
 
 	//The following method is called early as it does a XHR request to the server, which takes a while
 	//Upon receiving the results, it will loop&wait for initTilesAndDrawToolbars() to have completed.
