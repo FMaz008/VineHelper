@@ -1,4 +1,7 @@
 const startTime = Date.now();
+var timeMarker = []; //Array to store important performance data point.
+timeMarker["document_start"] = startTime;
+
 const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_URL = "http://127.0.0.1:3000";
 
@@ -34,21 +37,13 @@ var Notifications = new ScreenNotifier();
 var HiddenList = new HiddenListMgr();
 var PinnedList = new PinnedListMgr();
 
-function showRuntime(eventName) {
-	arrDebug.push({ time: Date.now() - startTime, event: eventName });
-}
-
-async function loadStyleSheet(path) {
-	prom = await Tpl.loadFile(path);
-	let content = Tpl.render(prom);
-
-	loadStyleSheetContent(content, path);
-}
-
-async function loadStyleSheetContent(content, path = "injected") {
-	if (content != "") {
-		$("head").append("<style type='text/css'>\n/*" + path + "*/\n" + content + "</style>");
-	}
+//Do not run the extension if ultraviner is running
+regex = /^.+?amazon\..+\/vine\/.*ultraviner.*?$/;
+if (!regex.test(window.location.href)) {
+	getSettings(); //First call to launch the extension.
+} else {
+	ultraviner = true;
+	console.log("VineHelper detected UltraViner. Disabling VineHelper on this page.");
 }
 
 //Loading the settings from the local storage
@@ -57,6 +52,7 @@ async function getSettings() {
 	while (!Settings.isLoaded()) {
 		await new Promise((r) => setTimeout(r, 10));
 	}
+	showRuntime("PREBOOT: config loaded!");
 
 	//Load Thorvarium stylesheets
 	if (Settings.get("thorvarium.mobileios")) loadStyleSheet("node_modules/vine-styling/mobile/ios-with-bugfix.css");
@@ -209,7 +205,7 @@ async function getSettings() {
 	// Request the background script to inject the additional script
 	browser.runtime.sendMessage({ action: "injectPluginsContentScripts" });
 
-	showRuntime("PRE: Settings loaded");
+	showRuntime("PREBOOT: Settings loaded");
 }
 showRuntime("PRE: Begining to load settings");
 
@@ -248,17 +244,38 @@ async function requestNewUUID() {
 	return serverResponse["uuid"];
 }
 
-//Do not run the extension if ultraviner is running
-regex = /^.+?amazon\..+\/vine\/.*ultraviner.*?$/;
-if (!regex.test(window.location.href)) {
-	getSettings(); //First call to launch the extension.
-} else {
-	ultraviner = true;
-	console.log("VineHelper detected UltraViner. Disabling VineHelper on this page.");
-}
-
 //#################################################3
 //### UTILITY FUNCTIONS
+
+function showRuntime(eventName) {
+	arrDebug.push({ time: Date.now() - startTime, event: eventName });
+}
+
+async function loadStyleSheet(path, injected = true) {
+	if (injected) {
+		prom = await Tpl.loadFile(path);
+		let content = Tpl.render(prom);
+
+		loadStyleSheetContent(content, path); //Put content between <style></style>
+	} else {
+		loadStyleSheetExternal(path); //Insert as an external stylesheet.
+	}
+}
+
+function loadStyleSheetContent(content, path = "injected") {
+	if (content != "") {
+		const style = document.createElement("style");
+		style.innerHTML = "/*" + path + "*/\n" + content;
+		document.head.appendChild(style);
+	}
+}
+
+function loadStyleSheetExternal(path) {
+	const link = document.createElement("link");
+	link.rel = "stylesheet";
+	link.href = browser.runtime.getURL(path); // Set the path to the CSS file
+	document.head.appendChild(link);
+}
 
 function hookBind(hookname, func) {
 	let arrBinding = mapHook.get(hookname);

@@ -1,4 +1,9 @@
-showRuntime("BOOT: Booterloader starting");
+timeMarker["document_end"] = Date.now();
+showRuntime(
+	"BOOT: Booterloader starting. DOM load time from Amazon: " +
+		(timeMarker["document_end"] - timeMarker["document_start"]) +
+		"ms"
+);
 
 //Create the 2 grids/tabs:
 var gridRegular = null;
@@ -169,7 +174,7 @@ function initInjectScript() {
 	const scriptTag = document.createElement("script");
 
 	//Inject the infinite loading wheel fix to the "main world"
-	scriptTag.src = chrome.runtime.getURL("scripts/inj.js");
+	scriptTag.src = browser.runtime.getURL("scripts/inj.js");
 	scriptTag.onload = function () {
 		this.remove();
 	};
@@ -258,6 +263,37 @@ function initInsertTopPagination() {
 	}
 }
 
+async function setBookmarkDate(timeOffset) {
+	//Fetch the current date/time from the server
+	let arrJSON = {
+		api_version: 5,
+		country: vineCountry,
+		action: "date",
+	};
+	const options = {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(arrJSON),
+	};
+	fetch(VINE_HELPER_API_V5_URL, options)
+		.then((response) => response.json())
+		.then(async function (response) {
+			Settings.set(
+				"general.bookmarkDate",
+				new Date(new Date(response.date + " GMT").getTime() - timeOffset).toString()
+			);
+
+			let note = new ScreenNotification();
+			note.title = "Marker set !";
+			note.lifespan = 30;
+			note.content =
+				"Marker set for <br />" +
+				Settings.get("general.bookmarkDate") +
+				"<br />Newer items will be highlighted.";
+			await Notifications.pushNotification(note);
+		});
+}
+
 async function initInsertBookmarkButton() {
 	//Insert bookmark button
 	if (Settings.get("general.displayFirstSeen") && Settings.get("general.bookmark")) {
@@ -267,122 +303,16 @@ async function initInsertBookmarkButton() {
 		let bookmarkContent = Tpl.render(prom);
 		document.querySelector("#vvp-items-button-container").insertAdjacentHTML("beforeend", bookmarkContent);
 		$("button.bookmarknow").on("click", function (event) {
-			//Fetch the current date/time from the server
-
-			let arrJSON = {
-				api_version: 5,
-				country: vineCountry,
-				action: "date",
-			};
-			const options = {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(arrJSON),
-			};
-			fetch(VINE_HELPER_API_V5_URL, options)
-				.then((response) => response.json())
-				.then(async function (response) {
-					Settings.set("general.bookmarkDate", new Date(response.date + " GMT").toString());
-
-					let note = new ScreenNotification();
-					note.title = "Marker set !";
-					note.lifespan = 30;
-					note.content =
-						"Marker set for <br />" +
-						Settings.get("general.bookmarkDate") +
-						"<br />Newer items will be highlighted.";
-					await Notifications.pushNotification(note);
-				});
+			setBookmarkDate(0);
 		});
 		$("button.bookmark3").on("click", function (event) {
-			//Fetch the current date/time from the server
-			let arrJSON = {
-				api_version: 5,
-				country: vineCountry,
-				action: "date",
-			};
-			const options = {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(arrJSON),
-			};
-			fetch(VINE_HELPER_API_V5_URL, options)
-				.then((response) => response.json())
-				.then(async function (response) {
-					Settings.set(
-						"general.bookmarkDate",
-						new Date(new Date(response.date + " GMT").getTime() - 3 * 60 * 60 * 1000).toString()
-					);
-
-					let note = new ScreenNotification();
-					note.title = "Marker set !";
-					note.lifespan = 30;
-					note.content =
-						"Marker set for <br />" +
-						Settings.get("general.bookmarkDate") +
-						"<br />Newer items will be highlighted.";
-					await Notifications.pushNotification(note);
-				});
+			setBookmarkDate(3 * 60 * 60 * 1000);
 		});
 		$("button.bookmark12").on("click", function (event) {
-			//Fetch the current date/time from the server
-			let arrJSON = {
-				api_version: 5,
-				country: vineCountry,
-				action: "date",
-			};
-			const options = {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(arrJSON),
-			};
-			fetch(VINE_HELPER_API_V5_URL, options)
-				.then((response) => response.json())
-				.then(async function (response) {
-					Settings.set(
-						"general.bookmarkDate",
-						new Date(new Date(response.date + " GMT").getTime() - 12 * 60 * 60 * 1000).toString()
-					);
-
-					let note = new ScreenNotification();
-					note.title = "Marker set !";
-					note.lifespan = 30;
-					note.content =
-						"Marker set for <br />" +
-						Settings.get("general.bookmarkDate") +
-						"<br />Newer items will be highlighted.";
-					await Notifications.pushNotification(note);
-				});
+			setBookmarkDate(12 * 60 * 60 * 1000);
 		});
 		$("button.bookmark24").on("click", function (event) {
-			//Fetch the current date/time from the server
-			let arrJSON = {
-				api_version: 5,
-				country: vineCountry,
-				action: "date",
-			};
-			const options = {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(arrJSON),
-			};
-			fetch(VINE_HELPER_API_V5_URL, options)
-				.then((response) => response.json())
-				.then(async function (response) {
-					Settings.set(
-						"general.bookmarkDate",
-						new Date(new Date(response.date + " GMT").getTime() - 24 * 60 * 60 * 1000).toString()
-					);
-
-					let note = new ScreenNotification();
-					note.title = "Marker set !";
-					note.lifespan = 30;
-					note.content =
-						"Marker set for <br />" +
-						Settings.get("general.bookmarkDate") +
-						"<br />Newer items will be highlighted.";
-					await Notifications.pushNotification(note);
-				});
+			setBookmarkDate(24 * 60 * 60 * 1000);
 		});
 	}
 }
@@ -481,9 +411,14 @@ function positionTooltip(event) {
 }
 
 //This function will return an array of all the product on the page, with their description and thumbnail url
-function getAllProductData() {
+function getAllProductsData() {
 	let arrUrl = []; //Will be use to store the URL identifier of the listed products.
 	const arrObj = $(".vvp-item-tile");
+
+	if (arrObj.length == 0) {
+		return [];
+	}
+
 	for (let i = 0; i < arrObj.length; i++) {
 		const obj = arrObj[i];
 		const asin = getAsinFromDom(obj);
@@ -559,6 +494,14 @@ async function generateTile(obj) {
 
 //Get data from the server about the products listed on this page
 function fetchProductsDatav5() {
+	const arrProductsData = getAllProductsData();
+	if (arrProductsData.length == 0) {
+		return false; //No product on this page
+	}
+
+	timeMarker["fetch_start"] = Date.now();
+	showRuntime("FETCH: Fetching data from VineHelper's server...");
+
 	const content = {
 		api_version: 5,
 		app_version: appVersion,
@@ -566,7 +509,7 @@ function fetchProductsDatav5() {
 		country: vineCountry,
 		uuid: Settings.get("general.uuid", false),
 		queue: vineQueue,
-		items: getAllProductData(),
+		items: arrProductsData,
 	};
 
 	fetch(VINE_HELPER_API_V5_URL, {
@@ -587,6 +530,12 @@ function fetchProductsDatav5() {
 //Process the results obtained from the server
 //Update each tile with the data pertaining to it.
 async function serverProductsResponse(data) {
+	timeMarker["fetch_end"] = Date.now();
+	showRuntime(
+		"FETCH: Response received from VineHelper's server..." +
+			(timeMarker["fetch_end"] - timeMarker["fetch_start"]) +
+			"ms"
+	);
 	if (data["invalid_uuid"] == true) {
 		await obtainNewUUID();
 
@@ -602,6 +551,7 @@ async function serverProductsResponse(data) {
 		while (!HiddenList.listLoaded) {
 			await new Promise((r) => setTimeout(r, 10));
 		}
+		showRuntime("FETCH: Hidden items list loaded...");
 	}
 
 	timenow = data["current_time"];
