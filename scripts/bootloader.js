@@ -56,7 +56,9 @@ async function init() {
 	//The following method is called early as it does a XHR request to the server, which takes a while
 	//Upon receiving the results, it will loop&wait for initTilesAndDrawToolbars() to have completed.
 	//This allow the page to be rendered while we wait for the server's response.
-	fetchProductsDatav5(); //Obtain the data to fill the toolbars with it.
+	if (vineQueue != null) {
+		fetchProductsDatav5(); //Obtain the data to fill the toolbars with it.
+	}
 
 	displayAccountData();
 	showGDPRPopup();
