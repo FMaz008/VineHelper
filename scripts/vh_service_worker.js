@@ -3,7 +3,9 @@ const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
 const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_WS_URL = "http://127.0.0.1:3000";
 
-var appSettings = [];
+importScripts("../scripts/SettingsMgr.js");
+
+var Settings = new SettingsMgr();
 var notificationsData = {};
 var vineCountry = null;
 var newItemCheckInterval = 0.5;
@@ -97,7 +99,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 	if (alarm.name === "checkNewItems") {
 		connectWebSocket(); //Check the status of the websocket, reconnect if closed.
 
-		if (appSettings == undefined || !appSettings.notification.active) {
+		if (!Settings.get("notification.active")) {
 			return; //Not setup to check for notifications. Will try again in 30 secs.
 		}
 		//checkNewItems();
@@ -108,12 +110,12 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 importScripts("../node_modules/socket.io/client-dist/socket.io.min.js");
 let socket;
 function connectWebSocket() {
-	if (!appSettings.notification.active || socket?.connected) {
+	if (!Settings.get("notification.active") || socket?.connected) {
 		return;
 	}
 
 	socket = io.connect(VINE_HELPER_API_V5_WS_URL, {
-		query: { countryCode: appSettings.general.country }, // Pass the country code as a query parameter
+		query: { countryCode: Settings.get("general.country") }, // Pass the country code as a query parameter
 		transports: ["websocket"],
 	});
 
@@ -170,21 +172,13 @@ async function init() {
 }
 
 async function retrieveSettings() {
-	//Obtain appSettings
-	const data = await chrome.storage.local.get("settings");
-
-	if (data == null || Object.keys(data).length === 0) {
-		console.log("Settings not available yet. Waiting 10 sec...");
-		setTimeout(function () {
-			init();
-		}, 10000);
-		return; //Settings have not been initialized yet.
-	} else {
-		Object.assign(appSettings, data.settings);
+	//Wait for the settings to be loaded.
+	while (!Settings.isLoaded()) {
+		await new Promise((r) => setTimeout(r, 10));
 	}
 
 	//Set the country
-	vineCountry = appSettings.general.country;
+	vineCountry = Settings.get("general.country");
 	vineDomain = vineDomains[vineCountry];
 }
 
@@ -196,7 +190,7 @@ async function fetchLast100Items() {
 		api_version: 5,
 		country: vineCountry,
 		action: "get_latest_notifications",
-		uuid: appSettings.general.uuid,
+		uuid: Settings.get("general.uuid", false),
 	};
 	const options = {
 		method: "POST",
@@ -244,14 +238,14 @@ async function fetchLast100Items() {
 
 function dispatchNewItem(data) {
 	const search = data.title.replace(/^([a-zA-Z0-9\s',]{0,40})[\s]+.*$/, "$1");
-	const highlightKWMatch = keywordMatch(appSettings.general.highlightKeywords, data.title);
-	const hideKWMatch = keywordMatch(appSettings.general.hideKeywords, data.title);
+	const highlightKWMatch = keywordMatch(Settings.get("general.highlightKeywords"), data.title);
+	const hideKWMatch = keywordMatch(Settings.get("general.hideKeywords"), data.title);
 
 	//If the new item match a highlight keyword, push a real notification.
-	if (appSettings.notification.pushNotifications && highlightKWMatch) {
+	if (Settings.get("notification.pushNotifications") && highlightKWMatch) {
 		chrome.notifications.onClicked.addListener((notificationId) => {
 			const { asin, queue, is_parent_asin, enrollment_guid, search } = notificationsData[notificationId];
-			if (appSettings.general.searchOpenModal && is_parent_asin != null && enrollment_guid != null) {
+			if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
 				chrome.tabs.create({
 					url: `https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`,
 				});
@@ -339,7 +333,7 @@ async function sendMessageToAllTabs(data, debugInfo) {
 	}
 
 	//Send to other tabs for the on screen notification
-	if (appSettings?.notification.screen.active) {
+	if (Settings.get("notification.screen.active")) {
 		try {
 			const tabs = await browser.tabs.query({ currentWindow: true });
 			const regex = /^.+?amazon\.([a-z.]+).*\/vine\/.*$/;

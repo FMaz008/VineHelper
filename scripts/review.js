@@ -2,7 +2,6 @@ if (typeof browser === "undefined") {
 	var browser = chrome;
 }
 
-var appSettings = {};
 var arrReview = [];
 var arrTemplate = [];
 var asin = null;
@@ -19,7 +18,6 @@ async function loadSettings() {
 	if (Object.keys(localStorageSettings).length === 0) {
 		return; //Can't display this page before settings are initiated
 	}
-	await initializeLocalStorageKeys("settings", appSettings, [], true);
 	await initializeLocalStorageKeys("reviews", arrReview, []);
 	await initializeLocalStorageKeys("reviews_templates", arrTemplate, []);
 
