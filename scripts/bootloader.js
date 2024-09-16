@@ -165,7 +165,6 @@ async function initFlushTplCache() {
 		}
 
 		Settings.set("general.versionInfoPopup", appVersion);
-		saveSettings();
 	}
 }
 
@@ -189,9 +188,9 @@ function initSetPageTitle() {
 	regex = /^.+?amazon\..+\/vine\/.*[?&]search=(.*?)(?:[&].*)?$/;
 	arrMatches = currentUrl.match(regex);
 	if (arrMatches?.length) {
-		$("title").text("Vine - S: " + arrMatches[1]);
+		document.title = "Vine - S: " + arrMatches[1];
 	} else if (vineQueue != null) {
-		$("title").text("Vine - " + vineQueueAbbr);
+		document.title = "Vine - " + vineQueueAbbr;
 	}
 
 	//Add the category, is any, that is currently being browsed to the title of the page.
@@ -199,7 +198,14 @@ function initSetPageTitle() {
 	arrMatches = currentUrl.match(regex);
 	if (arrMatches?.length === 3) {
 		const selector = arrMatches[2] == undefined ? ".parent-node" : ".child-node";
-		$("title").append(" - " + $(`#vvp-browse-nodes-container > ${selector} > a.selectedNode`).text());
+		const selectedNode = document.querySelector(`#vvp-browse-nodes-container > ${selector} > a.selectedNode`);
+
+		// Check if the element exists to avoid errors
+		if (selectedNode) {
+			// Get the text content of the element
+			const selectedNodeText = selectedNode.textContent;
+			document.title = document.title + " - " + selectedNodeText;
+		}
 	}
 }
 
@@ -302,18 +308,32 @@ async function initInsertBookmarkButton() {
 		Tpl.setVar("date", Settings.get("general.bookmarkDate"));
 		let bookmarkContent = Tpl.render(prom);
 		document.querySelector("#vvp-items-button-container").insertAdjacentHTML("beforeend", bookmarkContent);
-		$("button.bookmarknow").on("click", function (event) {
-			setBookmarkDate(0);
-		});
-		$("button.bookmark3").on("click", function (event) {
-			setBookmarkDate(3 * 60 * 60 * 1000);
-		});
-		$("button.bookmark12").on("click", function (event) {
-			setBookmarkDate(12 * 60 * 60 * 1000);
-		});
-		$("button.bookmark24").on("click", function (event) {
-			setBookmarkDate(24 * 60 * 60 * 1000);
-		});
+		const button0 = document.querySelector("button.bookmarknow");
+		if (button0) {
+			button0.addEventListener("click", function (event) {
+				setBookmarkDate(0);
+			});
+		}
+		const button3 = document.querySelector("button.bookmark3");
+		if (button3) {
+			button3.addEventListener("click", function (event) {
+				setBookmarkDate(3 * 60 * 60 * 1000);
+			});
+		}
+
+		const button12 = document.querySelector("button.bookmark12");
+		if (button12) {
+			button12.addEventListener("click", function (event) {
+				setBookmarkDate(12 * 60 * 60 * 1000);
+			});
+		}
+
+		const button24 = document.querySelector("button.bookmark24");
+		if (button24) {
+			button24.addEventListener("click", function (event) {
+				setBookmarkDate(24 * 60 * 60 * 1000);
+			});
+		}
 	}
 }
 
@@ -398,11 +418,11 @@ function positionTooltip(event) {
 	let tooltipY = event.pageY + offsetY;
 
 	// Ensure the tooltip doesn't go off-screen
-	if (tooltipX + tooltipRect.width > window.pageXOffset + document.documentElement.clientWidth) {
+	if (tooltipX + tooltipRect.width > window.scrollX + document.documentElement.clientWidth) {
 		tooltipX = event.pageX - tooltipRect.width - offsetX;
 	}
 
-	if (tooltipY + tooltipRect.height > window.pageYOffset + document.documentElement.clientHeight) {
+	if (tooltipY + tooltipRect.height > window.scrollY + document.documentElement.clientHeight) {
 		tooltipY = event.pageY - tooltipRect.height - offsetY;
 	}
 
@@ -413,7 +433,7 @@ function positionTooltip(event) {
 //This function will return an array of all the product on the page, with their description and thumbnail url
 function getAllProductsData() {
 	let arrUrl = []; //Will be use to store the URL identifier of the listed products.
-	const arrObj = $(".vvp-item-tile");
+	const arrObj = document.querySelectorAll(".vvp-item-tile");
 
 	if (arrObj.length == 0) {
 		return [];
@@ -444,13 +464,19 @@ async function generateTile(obj) {
 	tile = new Tile(obj, gridRegular);
 
 	//Add a container for the image and place the image in it.
-	let img = $(obj).children(".vvp-item-tile-content").children("img");
-	let imgContainer = $("<div>").addClass("vh-img-container").insertBefore(img);
-	$(img).detach().appendTo($(imgContainer));
+	let img = obj.querySelector(".vvp-item-tile-content img"); // Get the img element
+	let imgContainer = document.createElement("div"); // Create a new div element
+	imgContainer.classList.add("vh-img-container"); // Add the 'vh-img-container' class to the div
+	img.parentNode.insertBefore(imgContainer, img); // Insert the imgContainer before the img element
+
+	// Remove (detach) the img from its parent node
+	img.parentNode.removeChild(img);
+	imgContainer.appendChild(img); // Move the img into the imgContainer
 
 	//If the listing are set to listview, move the image container before its parent item.
 	if (Settings.get("general.listView")) {
-		$(imgContainer).detach().prependTo($(obj));
+		imgContainer.parentNode.removeChild(imgContainer);
+		obj.insertBefore(imgContainer, obj.firstChild);
 
 		//Display the full titles
 		/*
@@ -481,11 +507,26 @@ async function generateTile(obj) {
 
 	if (Settings.get("general.displayVariantIcon")) {
 		//Check if the item is a parent ASIN (as variants)
-		let variant = $(obj).find(".a-button-input").attr("data-is-parent-asin");
-		if (variant == "true") {
-			let div = $("<div>").addClass("vh-variant-indicator-container").appendTo($(imgContainer));
-			let alink = $("<a href='#' onclick='return false;' title='The item has variant(s).'>").appendTo(div);
-			alink.append($("<div>").addClass("vh-indicator-icon vh-icon-choice "));
+		let buttonInput = obj.querySelector(".a-button-input");
+		let variant = buttonInput.getAttribute("data-is-parent-asin");
+
+		if (variant === "true") {
+			// Create the div element and add a class
+			let div = document.createElement("div");
+			div.classList.add("vh-variant-indicator-container");
+			imgContainer.appendChild(div);
+
+			// Create the <a> element with a link that does nothing
+			let alink = document.createElement("a");
+			alink.href = "#";
+			alink.setAttribute("onclick", "return false;");
+			alink.setAttribute("title", "The item has variant(s).");
+			div.appendChild(alink);
+
+			// Create another div element for the icon and add classes
+			let iconDiv = document.createElement("div");
+			iconDiv.classList.add("vh-indicator-icon", "vh-icon-choice");
+			alink.appendChild(iconDiv);
 		}
 	}
 
@@ -521,9 +562,11 @@ function fetchProductsDatav5() {
 		.then(serverProductsResponse)
 		.catch(function () {
 			//error =>  console.log(error);
-			$.each(content.items, function (key, val) {
+			/*
+			content.items.forEach(function (val, key) {
 				let t = getTileByAsin(val.asin); //server offline
 			});
+			*/
 		});
 }
 
@@ -662,7 +705,9 @@ window.addEventListener("message", async function (event) {
 	}
 
 	// We only accept messages from ourselves
-	if (event.source != window) return;
+	if (event.source != window) {
+		return;
+	}
 
 	//If we received a request for validation of a variant
 	if (event.data.type && event.data.type == "variantValidationRequest") {
@@ -720,13 +765,26 @@ window.addEventListener("message", async function (event) {
 		let prom = await Tpl.loadFile("view/infinite_wheel_fix.html");
 		let content = Tpl.render(prom);
 
-		$("#a-popover-content-3").prepend(content);
-		let textContainer = $("#vh-healing-text").hide(); //Begin the animation hidden
-		let healingAnim = $("#vh-healing");
+		// Prepend content to the element with ID 'a-popover-content-3'
+		const popoverContent = document.getElementById("a-popover-content-3");
+		if (popoverContent) {
+			popoverContent.insertAdjacentHTML("afterbegin", content);
+		}
 
-		await textContainer.slideDown("slow").promise();
-		await healingAnim.delay(1000).animate({ opacity: "hide" }, { duration: 500 }).promise();
-		await textContainer.slideUp("slow").promise();
+		//Animate
+
+		const healingAnim = document.getElementById("vh-healing");
+		if (healingAnim) {
+			healingAnim.classList.add("slide-transition");
+			await new Promise((resolve) => setTimeout(resolve, 1000)); // Delay 1 second
+			await fadeOut(healingAnim);
+		}
+
+		const textContainer = document.getElementById("vh-healing-text");
+		if (textContainer) {
+			await fadeOut(textContainer);
+		}
+
 		removeElements("#vh-healing");
 		removeElements("#vh-healing-text");
 
@@ -947,6 +1005,29 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 		}
 	}
 });
+
+// ##########################################
+// #### ANIMATIONS
+
+function fadeOut(element) {
+	element.style.transition = "opacity 0.5s ease-out";
+	element.style.opacity = "0";
+	return new Promise((resolve) => {
+		element.addEventListener(
+			"transitionend",
+			function handler() {
+				element.removeEventListener("transitionend", handler);
+				resolve();
+			},
+			{ once: true }
+		);
+	});
+}
+
+function fadeIn(element) {
+	element.style.transition = "opacity 0.5s ease-in";
+	element.style.opacity = "1";
+}
 
 //Key bindings/keyboard shortcuts for navigation
 window.addEventListener("keyup", async function (e) {

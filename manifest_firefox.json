@@ -80,9 +80,9 @@
 				"resource/css/vinehelper.css"
 			],
 			"js": [
-				"scripts/grid.js",
-				"scripts/tile.js",
-				"scripts/toolbar.js",
+				"scripts/Grid.js",
+				"scripts/Tile.js",
+				"scripts/Toolbar.js",
 				"scripts/pagination.js",
 				"scripts/bootloader.js"
 			],
