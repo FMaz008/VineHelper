@@ -267,7 +267,7 @@ function dispatchNewItem(data) {
 			"item-" + data.asin,
 			{
 				type: "basic",
-				iconUrl: chrome.runtime.getURL("resource/image/icon-128.png"),
+				iconUrl: data.img_url,
 				title: "Vine Helper - New item match!",
 				message: data.title,
 				priority: 2,

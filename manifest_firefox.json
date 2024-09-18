@@ -9,6 +9,9 @@
 		"tabs",
 		"notifications"
 	],
+	"content_security_policy": {
+		"extension_pages": "default-src 'self'; script-src 'self';  style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.vinehelper.ovh wss://api.vinehelper.ovh https://*.media-amazon.com; img-src 'self' https://*.media-amazon.com https://*.paypal.com https://*.paypalobjects.com;"
+	},
 	"browser_specific_settings": {
 		"gecko": {
 			"id": "{5951bf9a-25ae-4043-9fa2-54dc0ac1ce70}",
