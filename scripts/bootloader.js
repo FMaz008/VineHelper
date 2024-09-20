@@ -76,6 +76,8 @@ async function init() {
 	await initTilesAndDrawToolbars(); //Create the tiles, and move the locally hidden tiles to the hidden tab
 	initModalNagivation();
 
+	updateTileCounts();
+
 	hookExecute("EndOfBootloader", null);
 
 	HiddenList.garbageCollection();
