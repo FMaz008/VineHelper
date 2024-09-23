@@ -70,14 +70,6 @@ chrome.permissions.contains({ permissions: ["scripting"] }, (result) => {
 //## LISTENERS
 //#####################################################
 browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
-	if (data.type == "queryVineCountry") {
-		//If we know the country, reply it
-		if (vineCountry != null) {
-			sendResponse({ success: true, domain: vineCountry });
-			//sendMessageToAllTabs({ type: "vineCountry", domain: vineCountry }, "Vine Country - keep alive");
-		}
-		sendResponse({ success: true });
-	}
 	if (data.type == "fetchLast100Items") {
 		//Get the last 100 most recent items
 		fetchLast100Items();

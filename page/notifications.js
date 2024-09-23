@@ -101,11 +101,6 @@ window.onload = function () {
 			notification_highlight = false;
 			notification_zeroETV = false;
 		}
-		if (data.type == "vineCountry") {
-			if (vineDomain === null) {
-				setLocale(data.domain);
-			}
-		}
 		if (data.type == "wsOpen") {
 			document.getElementById("statusWS").innerHTML =
 				"<strong>Server status: </strong><div class='vh-switch-32 vh-icon-switch-on'></div> Listening for notifications...";
@@ -132,28 +127,14 @@ async function init() {
 	while (!Settings.isLoaded()) {
 		await new Promise((r) => setTimeout(r, 10));
 	}
-
+	vineCountry = Settings.get("general.country");
+	setLocale(vineCountry);
 	loadedTpl = await Tpl.loadFile("/view/notification_monitor.html");
 
 	if (!Settings.get("notification.active")) {
 		document.getElementById("status").innerHTML =
 			"<strong>Notifications disabled</strong> You need to enable the notifications for this window to work.";
 	}
-
-	//Ask the service worker if the country is known.
-	browser.runtime.sendMessage(
-		{
-			type: "queryVineCountry",
-		},
-		function (response) {
-			if (browser.runtime.lastError) {
-				console.error("Error sending message:", browser.runtime.lastError.message);
-			}
-			if (response?.domain !== undefined) {
-				setLocale(response.domain);
-			}
-		}
-	);
 
 	//Bind the event when changing the filter
 	const filter = document.querySelector("select[name='filter-type']");
@@ -218,7 +199,7 @@ async function setLocale(country) {
 
 		if (Settings.get("notification.active")) {
 			document.getElementById("status").innerHTML =
-				"<strong>ServiceWorker Status: </strong><div class='vh-switch-32 vh-icon-switch-on'></div>";
+				"<strong>Notification Monitor: </strong><div class='vh-switch-32 vh-icon-switch-on'></div>";
 		}
 
 		document.getElementById("date_loaded").innerText = new Date().toLocaleString(vineLocale);
