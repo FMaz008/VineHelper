@@ -26,7 +26,8 @@ var vineSearch = false;
 var vineBrowsingListing = false;
 var uuid = null;
 
-var appVersion = 0;
+var appVersion = null;
+var prebootCompleted = false;
 var ultraviner = false; //If Ultravine is detected, Vine Helper will deactivate itself to avoid conflicts.
 
 var Settings = new SettingsMgr();
@@ -91,7 +92,7 @@ async function getSettings() {
 	if (Settings.get("thorvarium.RFYAFAAITabs"))
 		loadStyleSheet("node_modules/vine-styling/desktop/rfy-afa-ai-tabs.css");
 
-	showRuntime("BOOT: Thorvarium stylesheets injected");
+	showRuntime("PREBOOT: Thorvarium stylesheets injected");
 
 	if (Settings.get("general.listView")) loadStyleSheet("resource/css/listView.css");
 
@@ -116,7 +117,7 @@ async function getSettings() {
 		loadStyleSheet("node_modules/vine-styling/desktop/" + emojiList + ".css");
 	}
 
-	showRuntime("BOOT: Thorvarium country-specific stylesheets injected");
+	showRuntime("PREBOOT: Thorvarium country-specific stylesheets injected");
 
 	//Send the country code to the Service Worker
 	if (Settings.get("general.country") != vineCountry) {
@@ -202,18 +203,20 @@ async function getSettings() {
 		uuid = await requestNewUUID();
 		Settings.set("general.uuid", uuid);
 	}
+
+	prebootCompleted = true;
+
+	showRuntime("PREBOOT: Preboot routine completed.");
+
 	// Request the background script to inject the additional script
 	browser.runtime.sendMessage({ action: "injectPluginsContentScripts" });
-
-	showRuntime("PREBOOT: Settings loaded");
 }
-showRuntime("PRE: Begining to load settings");
 
 /** Request a new UUID from the server.
  * @return string UUID
  */
 async function requestNewUUID() {
-	showRuntime("PRE: Generating new UUID.");
+	showRuntime("PREBOOT: Generating new UUID.");
 
 	//Request a new UUID from the server
 	const content = {
@@ -230,14 +233,14 @@ async function requestNewUUID() {
 	let response = await fetch(VINE_HELPER_API_V5_URL, options);
 
 	if (!response.ok) {
-		throw new Error("Network response was not ok PRE:requestNewUUID");
+		throw new Error("Network response was not ok PREBOOT:requestNewUUID");
 	}
 
 	// Parse the JSON response
 	let serverResponse = await response.json();
 
 	if (serverResponse["ok"] !== "ok") {
-		throw new Error("Content response was not ok PRE:requestNewUUID");
+		throw new Error("Content response was not ok PREBOOT:requestNewUUID");
 	}
 
 	// Return the obtained UUID

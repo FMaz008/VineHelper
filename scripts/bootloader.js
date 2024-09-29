@@ -45,8 +45,8 @@ if (!ultraviner) {
 //Initiate the extension
 async function init() {
 	//Wait for the config to be loaded before running this script
-	showRuntime("BOOT: Waiting on config to be loaded...");
-	while (!Settings.isLoaded()) {
+	showRuntime("BOOT: Waiting on preboot to complete...");
+	while (!Settings.isLoaded() || !prebootCompleted) {
 		await new Promise((r) => setTimeout(r, 10));
 	}
 	showRuntime("BOOT: Config available. Begining init() function");
@@ -149,6 +149,10 @@ async function showGDPRPopup() {
 	}
 }
 async function initFlushTplCache() {
+	if (appVersion == null) {
+		return false;
+	}
+
 	//Show version info popup : new version
 	if (appVersion != Settings.get("general.versionInfoPopup", false)) {
 		showRuntime("BOOT: Flushing template cache");
@@ -1150,6 +1154,9 @@ window.addEventListener("keyup", async function (e) {
 });
 
 function compareVersion(oldVer, newVer) {
+	//Sometimes newVer is not populated for some odd reason. Assume no version change.
+	if (newVer == null) return VERSION_NO_CHANGE;
+
 	if (oldVer == null || oldVer == undefined || oldVer == true) return VERSION_MAJOR_CHANGE;
 
 	if (oldVer == false || oldVer == newVer) return VERSION_NO_CHANGE;
