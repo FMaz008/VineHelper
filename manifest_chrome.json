@@ -10,7 +10,7 @@
 		"notifications"
 	],
 	"content_security_policy": {
-		"extension_pages": "default-src 'self'; script-src 'self';  style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.vinehelper.ovh wss://api.vinehelper.ovh https://*.media-amazon.com; img-src 'self' https://*.media-amazon.com https://*.paypal.com https://*.paypalobjects.com;"
+		"extension_pages": "default-src 'self'; script-src 'self';  style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.vinehelper.ovh wss://api.vinehelper.ovh https://*.media-amazon.com https://api.llamastories.com; img-src 'self' https://*.media-amazon.com https://*.paypal.com https://*.paypalobjects.com;"
 	},
 	"icons": {
 		"32": "resource/image/icon-32.png",
