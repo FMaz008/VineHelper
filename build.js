@@ -17,6 +17,10 @@ const pkg = require("./package.json");
 		"./node_modules/socket.io/client-dist/socket.io.min.js",
 		"./dist/node_modules/socket.io/client-dist/socket.io.min.js"
 	);
+	fs.cpSync(
+		"./node_modules/socket.io/client-dist/socket.io.min.js.map",
+		"./dist/node_modules/socket.io/client-dist/socket.io.min.js.map"
+	);
 	fs.cpSync("./node_modules/vine-styling/", "./dist/node_modules/vine-styling/", { recursive: true });
 
 	const platforms = ["firefox", "chrome"];

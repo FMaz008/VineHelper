@@ -204,4 +204,6 @@ async function testVariants(content) {
 }
 
 //Send the opts options containing the customerId and obfuscatedMarketId
-window.postMessage({ type: "websiteOpts", data: opts }, "/");
+if (opts !== undefined) {
+	window.postMessage({ type: "websiteOpts", data: opts }, "/");
+}
