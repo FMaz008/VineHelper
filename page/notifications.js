@@ -411,14 +411,19 @@ function setETV(asin, etv) {
 	}
 	//Remove ETV Value if it does not exist
 	let etvElement = document.querySelector("#" + itemID(asin) + " .etv_value");
+	let brendaAnnounce = document.querySelector("#vh-announce-link-" + asin);
 	if (etv == null) {
 		etvElement.style.display = "none";
 
-		document.querySelector("#vh-announce-link-" + asin).style.visibility = "hidden";
+		if (brendaAnnounce) {
+			brendaAnnounce.style.visibility = "hidden";
+		}
 	} else {
 		etvElement.innerText = etv;
 
-		document.querySelector("#vh-announce-link-" + asin).style.visibility = "visible";
+		if (brendaAnnounce) {
+			brendaAnnounce.style.visibility = "visible";
+		}
 	}
 }
 
