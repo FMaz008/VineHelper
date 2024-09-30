@@ -101,6 +101,7 @@ window.onload = function () {
 			notification_highlight = false;
 			notification_zeroETV = false;
 		}
+		/*
 		if (data.type == "wsOpen") {
 			document.getElementById("statusWS").innerHTML =
 				"<strong>Server status: </strong><div class='vh-switch-32 vh-icon-switch-on'></div> Listening for notifications...";
@@ -109,6 +110,7 @@ window.onload = function () {
 			document.getElementById("statusWS").innerHTML =
 				"<strong>Server status: </strong><div class='vh-switch-32 vh-icon-switch-off'></div> Not connected. Retrying in 30 sec.";
 		}
+		*/
 	};
 
 	//Clear the debug log every 30 minutes to save memory usage.
@@ -153,6 +155,7 @@ async function init() {
 	});
 
 	//Bind fetch-last-100 button
+	/*
 	const btnLast100 = document.querySelector("button[name='fetch-last-100']");
 	btnLast100.addEventListener("click", function () {
 		browser.runtime.sendMessage(
@@ -166,6 +169,7 @@ async function init() {
 			}
 		);
 	});
+	*/
 
 	//Obtain the status of the WebSocket connection.
 	browser.runtime.sendMessage({

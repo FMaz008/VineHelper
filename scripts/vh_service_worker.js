@@ -74,11 +74,14 @@ if ("function" == typeof importScripts) {
 //## LISTENERS
 //#####################################################
 browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
+	/*
 	if (data.type == "fetchLast100Items") {
 		//Get the last 100 most recent items
 		fetchLast100Items();
 		sendResponse({ success: true });
 	}
+	*/
+	/*
 	if (data.type == "wsStatus") {
 		sendResponse({ success: true });
 		if (socket?.connected) {
@@ -87,25 +90,29 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 			sendMessageToAllTabs({ type: "wsClosed" }, "Websocket server disconnected.");
 		}
 	}
+	*/
 });
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
 	await retrieveSettings();
 
 	if (alarm.name === "checkNewItems") {
-		connectWebSocket(); //Check the status of the websocket, reconnect if closed.
+		//connectWebSocket(); //Check the status of the websocket, reconnect if closed.
 
 		if (!Settings.get("notification.active")) {
 			return; //Not setup to check for notifications. Will try again in 30 secs.
 		}
+		fetchLast100Items();
 		//checkNewItems();
 	}
 });
 
 //Websocket
+/*
 if ("function" == typeof importScripts) {
 	importScripts("../node_modules/socket.io/client-dist/socket.io.min.js");
 }
+
 let socket;
 function connectWebSocket() {
 	if (!Settings.get("notification.active") || socket?.connected) {
@@ -152,6 +159,7 @@ function connectWebSocket() {
 		console.error(`Socket.IO error: ${error.message}`);
 	});
 }
+*/
 
 //#####################################################
 //## BUSINESS LOGIC
@@ -166,7 +174,7 @@ async function init() {
 	//Check for new items (if the option is disabled the method will return)
 	browser.alarms.create("checkNewItems", { periodInMinutes: newItemCheckInterval });
 
-	connectWebSocket();
+	//connectWebSocket();
 }
 
 async function retrieveSettings() {
