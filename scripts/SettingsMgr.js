@@ -20,6 +20,10 @@ class SettingsMgr {
 		return Object.keys(this.#settings).length > 0;
 	}
 
+	async refresh() {
+		await this.#loadSettingsFromStorage();
+	}
+
 	get(settingPath, undefinedReturnDefault = true) {
 		let answer = this.#getFromObject(this.#settings, settingPath);
 

@@ -189,6 +189,10 @@ async function retrieveSettings() {
 }
 
 async function fetchLast100Items() {
+	//Reload the settings as a change to the keyword list would require the SW to be reloaded to
+	//be taken into consideration
+	await Settings.refresh();
+
 	//Broadcast a new message to tell the tabs to display a loading wheel.
 	sendMessageToAllTabs({ type: "newItemCheck" }, "Loading wheel");
 
@@ -294,6 +298,7 @@ function dispatchNewItem(data) {
 			type: data.type,
 			domain: vineCountry,
 			date: data.date,
+			timestamp: dateToUnixTimestamp(data.date),
 			asin: data.asin,
 			title: data.title,
 			search: search,
@@ -409,4 +414,11 @@ function tryParseJSON(data) {
 	}
 
 	return null; // If not JSON, return null
+}
+
+function dateToUnixTimestamp(dateString) {
+	const date = new Date(dateString + " UTC");
+
+	// Get the Unix timestamp in seconds
+	return Math.floor(date.getTime() / 1000);
 }
