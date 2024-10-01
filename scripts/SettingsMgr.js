@@ -229,6 +229,7 @@ class SettingsMgr {
 			notification: {
 				active: false,
 				reduce: false,
+				websocket: false,
 				pushNotifications: false,
 				screen: {
 					active: false,

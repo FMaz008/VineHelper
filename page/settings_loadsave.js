@@ -104,6 +104,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("unavailableTab.compactToolbar");
 	manageCheckboxSetting("general.modalNavigation");
 	manageCheckboxSetting("general.searchOpenModal");
+	manageCheckboxSetting("notification.websocket");
 	manageCheckboxSetting("general.listView");
 	manageCheckboxSetting("general.scrollToRFY");
 

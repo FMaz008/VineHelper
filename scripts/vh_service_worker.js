@@ -1,7 +1,8 @@
 const DEBUG_MODE = false; // Will always display notification even if they are not new
 const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
+//const VINE_HELPER_API_V5_URL = "http://127.0.0.1:3000";
 const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
-//const VINE_HELPER_API_V5_WS_URL = "http://127.0.0.1:3000";
+//const VINE_HELPER_API_V5_WS_URL = "ws://127.0.0.1:3000";
 
 if ("function" == typeof importScripts) {
 	importScripts("../scripts/SettingsMgr.js");
@@ -81,7 +82,7 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 		sendResponse({ success: true });
 	}
 	*/
-	/*
+
 	if (data.type == "wsStatus") {
 		sendResponse({ success: true });
 		if (socket?.connected) {
@@ -90,25 +91,30 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 			sendMessageToAllTabs({ type: "wsClosed" }, "Websocket server disconnected.");
 		}
 	}
-	*/
 });
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
-	await retrieveSettings();
+	//Reload the settings as a change to the keyword list would require the SW to be reloaded to
+	//be taken into consideration
+	await Settings.refresh();
 
 	if (alarm.name === "checkNewItems") {
-		//connectWebSocket(); //Check the status of the websocket, reconnect if closed.
-
-		if (!Settings.get("notification.active")) {
-			return; //Not setup to check for notifications. Will try again in 30 secs.
+		if (!Settings.get("notification.websocket") || !Settings.get("notification.active")) {
+			socket?.disconnect();
 		}
-		fetchLast100Items();
-		//checkNewItems();
+		if (Settings.get("notification.active")) {
+			if (Settings.get("notification.websocket")) {
+				connectWebSocket(); //Check the status of the websocket, reconnect if closed.
+			} else {
+				fetchLast100Items();
+				//checkNewItems();
+			}
+		}
 	}
 });
 
 //Websocket
-/*
+
 if ("function" == typeof importScripts) {
 	importScripts("../node_modules/socket.io/client-dist/socket.io.min.js");
 }
@@ -116,16 +122,23 @@ if ("function" == typeof importScripts) {
 let socket;
 function connectWebSocket() {
 	if (!Settings.get("notification.active") || socket?.connected) {
+		//Not reconnecting to WS.
 		return;
 	}
 
+	console.log("Connecting to WS.");
 	socket = io.connect(VINE_HELPER_API_V5_WS_URL, {
-		query: { countryCode: Settings.get("general.country") }, // Pass the country code as a query parameter
+		query: {
+			countryCode: Settings.get("general.country"),
+			uuid: Settings.get("general.uuid", false),
+		}, // Pass the country code as a query parameter
 		transports: ["websocket"],
+		reconnection: false, //Handled manually every 30 seconds.
 	});
 
 	// On connection success
 	socket.on("connect", () => {
+		console.log("WS Connected");
 		sendMessageToAllTabs({ type: "wsOpen" }, "Socket.IO server connected.");
 	});
 
@@ -151,6 +164,7 @@ function connectWebSocket() {
 
 	// On disconnection
 	socket.on("disconnect", () => {
+		console.log("WS Disconnected");
 		sendMessageToAllTabs({ type: "wsClosed" }, "Socket.IO server disconnected.");
 	});
 
@@ -159,7 +173,6 @@ function connectWebSocket() {
 		console.error(`Socket.IO error: ${error.message}`);
 	});
 }
-*/
 
 //#####################################################
 //## BUSINESS LOGIC
@@ -174,7 +187,9 @@ async function init() {
 	//Check for new items (if the option is disabled the method will return)
 	browser.alarms.create("checkNewItems", { periodInMinutes: newItemCheckInterval });
 
-	//connectWebSocket();
+	if (Settings.get("notification.active") && Settings.get("notification.websocket")) {
+		connectWebSocket();
+	}
 }
 
 async function retrieveSettings() {
@@ -189,10 +204,6 @@ async function retrieveSettings() {
 }
 
 async function fetchLast100Items() {
-	//Reload the settings as a change to the keyword list would require the SW to be reloaded to
-	//be taken into consideration
-	await Settings.refresh();
-
 	//Broadcast a new message to tell the tabs to display a loading wheel.
 	sendMessageToAllTabs({ type: "newItemCheck" }, "Loading wheel");
 
@@ -291,7 +302,7 @@ function dispatchNewItem(data) {
 	}
 
 	//Broadcast the notification
-	console.log("Broadcasting new item " + data.asin);
+	//console.log("Broadcasting new item " + data.asin);
 	sendMessageToAllTabs(
 		{
 			index: data.index,

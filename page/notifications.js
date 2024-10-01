@@ -1,4 +1,5 @@
 const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
+//const VINE_HELPER_API_V5_URL = "http://127.0.0.1:3000";
 
 //Notification arrive one at the time
 //These variable allow to remember the type of notifications received
@@ -20,7 +21,7 @@ if (typeof browser === "undefined") {
 
 //Required for the Template engine but not of any use in this script.
 var arrDebug = [];
-const items = new Map();
+const items = new Map(); //Store ASIN => etv
 const imageUrls = new Set();
 
 var startTime = Date.now();
@@ -101,7 +102,7 @@ window.onload = function () {
 			notification_highlight = false;
 			notification_zeroETV = false;
 		}
-		/*
+
 		if (data.type == "wsOpen") {
 			document.getElementById("statusWS").innerHTML =
 				"<strong>Server status: </strong><div class='vh-switch-32 vh-icon-switch-on'></div> Listening for notifications...";
@@ -110,7 +111,6 @@ window.onload = function () {
 			document.getElementById("statusWS").innerHTML =
 				"<strong>Server status: </strong><div class='vh-switch-32 vh-icon-switch-off'></div> Not connected. Retrying in 30 sec.";
 		}
-		*/
 	};
 
 	//Clear the debug log every 30 minutes to save memory usage.
@@ -136,6 +136,10 @@ async function init() {
 	if (!Settings.get("notification.active")) {
 		document.getElementById("status").innerHTML =
 			"<strong>Notifications disabled</strong> You need to enable the notifications for this window to work.";
+	}
+
+	if (!Settings.get("notification.websocket")) {
+		document.getElementById("statusWS").style.display = "none";
 	}
 
 	//Bind the event when changing the filter
@@ -259,6 +263,7 @@ function addItem(data) {
 			setETV(asin, etv);
 		}
 	} else {
+		console.log("Adding item " + asin);
 		notification_added_item = true;
 
 		//New item to be added
@@ -326,6 +331,7 @@ function addItem(data) {
 					const asin = itemsD[i].dataset.asin;
 					items.delete(asin);
 					itemsD[i].remove(); //remove the element from the DOM
+					console.log("Truncating " + asin);
 				}
 			}
 		}
