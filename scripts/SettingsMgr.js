@@ -233,6 +233,7 @@ class SettingsMgr {
 				screen: {
 					active: false,
 					thumbnail: true,
+					lastProduct: 0,
 					regular: {
 						sound: "0",
 						volume: 1,
