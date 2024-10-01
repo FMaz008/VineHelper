@@ -230,11 +230,13 @@ async function fetchLast100Items() {
 			});
 
 			for (let i = response.products.length - 1; i >= 0; i--) {
-				const { title, date, asin, img_url, etv, queue, is_parent_asin, enrollment_guid } =
+				const { title, date, timestamp, asin, img_url, etv, queue, is_parent_asin, enrollment_guid } =
 					response.products[i];
 
 				//Only display notification for products with a title and image url
-				if (img_url != "" && title != "") {
+				//And that are more recent than the latest notification received.
+				if (img_url != "" && title != "" && timestamp > Settings.get("notification.lastProduct")) {
+					Settings.set("notification.lastProduct", timestamp);
 					dispatchNewItem({
 						index: i,
 						type: "newItem",

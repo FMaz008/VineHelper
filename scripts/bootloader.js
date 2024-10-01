@@ -964,14 +964,11 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 
 	if (data.type == "newItem") {
 		if (
-			data.timestamp > Settings.get("notification.screen.lastProduct") && //A new notification
 			data.index < 10 && //Limit the notification to the top 10 most recents
 			vineBrowsingListing && //Only show notification on listing pages
 			Settings.get("notification.screen.active")
 		) {
 			let { date, asin, queue, title, search, img_url, domain, etv, is_parent_asin, enrollment_guid } = data;
-
-			Settings.set("notification.screen.lastProduct", data.timestamp);
 
 			//Generate the content to be displayed in the notification
 			const prom = await Tpl.loadFile("/view/notification_new_item.html");

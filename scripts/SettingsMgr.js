@@ -230,11 +230,11 @@ class SettingsMgr {
 				active: false,
 				reduce: false,
 				websocket: false,
+				lastProduct: 0,
 				pushNotifications: false,
 				screen: {
 					active: false,
 					thumbnail: true,
-					lastProduct: 0,
 					regular: {
 						sound: "0",
 						volume: 1,
