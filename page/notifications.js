@@ -315,9 +315,11 @@ function addItem(data) {
 			.addEventListener("click", handleReportClick);
 
 		//Add new click listener for Brenda announce:
-		document
-			.querySelector("#vh-notification-" + asin + " .vh-announce-link")
-			.addEventListener("click", handleBrendaClick);
+		const announce = document.querySelector("#vh-notification-" + asin + " .vh-announce-link");
+
+		if (announce) {
+			announce.addEventListener("click", handleBrendaClick);
+		}
 
 		//Update the most recent date
 		document.getElementById("date_most_recent_item").innerText = formatDate(date);

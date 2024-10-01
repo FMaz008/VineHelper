@@ -126,7 +126,6 @@ function connectWebSocket() {
 		return;
 	}
 
-	console.log("Connecting to WS.");
 	socket = io.connect(VINE_HELPER_API_V5_WS_URL, {
 		query: {
 			countryCode: Settings.get("general.country"),
@@ -188,7 +187,12 @@ async function init() {
 	browser.alarms.create("checkNewItems", { periodInMinutes: newItemCheckInterval });
 
 	if (Settings.get("notification.active") && Settings.get("notification.websocket")) {
-		connectWebSocket();
+		//Firefox re-initialize the background script every time an alarm is called.
+		//Do not attempt to recreate a new websocket if this method is called when
+		//a websocket already exist.
+		if (socket?.connected == undefined) {
+			connectWebSocket();
+		}
 	}
 }
 
