@@ -11,7 +11,7 @@ if ("function" == typeof importScripts) {
 var Settings = new SettingsMgr();
 var notificationsData = {};
 var vineCountry = null;
-var newItemCheckInterval = 0.5;
+var newItemCheckInterval = 0.3; //Firefox shutdown the background script after 30seconds.
 const broadcastChannel = new BroadcastChannel("VineHelperChannel");
 const vineDomains = {
 	ca: "ca",
@@ -93,7 +93,7 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 	}
 });
 
-chrome.alarms.onAlarm.addListener(async (alarm) => {
+browser.alarms.onAlarm.addListener(async (alarm) => {
 	//Reload the settings as a change to the keyword list would require the SW to be reloaded to
 	//be taken into consideration
 	await Settings.refresh();
@@ -122,6 +122,12 @@ if ("function" == typeof importScripts) {
 let socket;
 function connectWebSocket() {
 	if (!Settings.get("notification.active") || socket?.connected) {
+		/*
+		if (socket?.connected) {
+			console.log("ping");
+			socket.emit("sendData", "ping");
+		}
+		*/
 		//Not reconnecting to WS.
 		return;
 	}
@@ -187,7 +193,7 @@ async function init() {
 	browser.alarms.create("checkNewItems", { periodInMinutes: newItemCheckInterval });
 
 	if (Settings.get("notification.active") && Settings.get("notification.websocket")) {
-		//Firefox re-initialize the background script every time an alarm is called.
+		//Firefox sometimes re-initialize the background script.
 		//Do not attempt to recreate a new websocket if this method is called when
 		//a websocket already exist.
 		if (socket?.connected == undefined) {
