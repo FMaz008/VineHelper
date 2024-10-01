@@ -47,6 +47,7 @@ function init_review() {
 	const currentUrl = window.location.href;
 	const arrRegex = [
 		/^(?:.+?).amazon\.(?:.+?)\/review\/create-review.*[?&]asin=([^&]+).*?$/,
+		/^(?:.+?).amazon\.(?:.+?)\/review\/review-your-purchases.*[?&]asin=([^&]+).*$/,
 		/^(?:.+?).amazon\.(?:.+?)\/reviews\/edit-review\/edit.*[?&]asin=([^&]+).*$/,
 	];
 	for (let i = 0; i < arrRegex.length; i++) {

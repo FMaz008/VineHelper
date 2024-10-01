@@ -3,12 +3,7 @@
 	"name": "Amazon Vine Helper",
 	"description": "Improve the Amazon Vine experience.",
 	"version": "2.9.6",
-	"permissions": [
-		"alarms",
-		"storage",
-		"tabs",
-		"notifications"
-	],
+	"permissions": ["alarms", "storage", "tabs", "notifications"],
 	"content_security_policy": {
 		"extension_pages": "default-src 'self'; script-src 'self';  style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.vinehelper.ovh wss://api.vinehelper.ovh https://*.media-amazon.com https://api.llamastories.com; img-src 'self' https://*.media-amazon.com https://*.paypal.com https://*.paypalobjects.com;"
 	},
@@ -122,25 +117,19 @@
 			"run_at": "document_start"
 		},
 		{
-			"css": [
-				"resource/css/vinehelper.css",
-				"resource/css/main.css"
-			],
-			"js": [
-				"scripts/Template.js",
-				"scripts/review.js"
-			],
+			"css": ["resource/css/vinehelper.css", "resource/css/main.css"],
+			"js": ["scripts/Template.js", "scripts/review.js"],
 			"matches": [
-				"*://*.amazon.ca/review/create-review*",
-				"*://*.amazon.it/review/create-review*",
-				"*://*.amazon.de/review/create-review*",
-				"*://*.amazon.de/*/review/create-review*",
-				"*://*.amazon.es/review/create-review*",
-				"*://*.amazon.fr/review/create-review*",
-				"*://*.amazon.co.uk/review/create-review*",
-				"*://*.amazon.co.jp/review/create-review*",
-				"*://*.amazon.co.jp/*/review/create-review*",
-				"*://*.amazon.com/review/create-review*",
+				"*://*.amazon.ca/review/*",
+				"*://*.amazon.it/review/*",
+				"*://*.amazon.de/review/*",
+				"*://*.amazon.de/*/review/*",
+				"*://*.amazon.es/review/*",
+				"*://*.amazon.fr/review/*",
+				"*://*.amazon.co.uk/review/*",
+				"*://*.amazon.co.jp/review/*",
+				"*://*.amazon.co.jp/*/review/*",
+				"*://*.amazon.com/review/*",
 				"*://*.amazon.ca/reviews/edit-review/edit*",
 				"*://*.amazon.it/reviews/edit-review/edit*",
 				"*://*.amazon.de/reviews/edit-review/edit*",

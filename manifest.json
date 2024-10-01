@@ -136,25 +136,19 @@
 			"run_at": "document_start"
 		},
 		{
-			"css": [
-				"resource/css/vinehelper.css",
-				"resource/css/main.css"
-			],
-			"js": [
-				"scripts/Template.js",
-				"scripts/review.js"
-			],
+			"css": ["resource/css/vinehelper.css", "resource/css/main.css"],
+			"js": ["scripts/Template.js", "scripts/review.js"],
 			"matches": [
-				"*://*.amazon.ca/review/create-review*",
-				"*://*.amazon.it/review/create-review*",
-				"*://*.amazon.de/review/create-review*",
-				"*://*.amazon.de/*/review/create-review*",
-				"*://*.amazon.es/review/create-review*",
-				"*://*.amazon.fr/review/create-review*",
-				"*://*.amazon.co.uk/review/create-review*",
-				"*://*.amazon.co.jp/review/create-review*",
-				"*://*.amazon.co.jp/*/review/create-review*",
-				"*://*.amazon.com/review/create-review*",
+				"*://*.amazon.ca/review/*",
+				"*://*.amazon.it/review/*",
+				"*://*.amazon.de/review/*",
+				"*://*.amazon.de/*/review/*",
+				"*://*.amazon.es/review/*",
+				"*://*.amazon.fr/review/*",
+				"*://*.amazon.co.uk/review/*",
+				"*://*.amazon.co.jp/review/*",
+				"*://*.amazon.co.jp/*/review/*",
+				"*://*.amazon.com/review/*",
 				"*://*.amazon.ca/reviews/edit-review/edit*",
 				"*://*.amazon.it/reviews/edit-review/edit*",
 				"*://*.amazon.de/reviews/edit-review/edit*",
