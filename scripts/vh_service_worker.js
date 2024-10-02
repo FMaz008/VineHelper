@@ -238,7 +238,6 @@ async function fetchLast100Items() {
 				const dateB = new Date(b.date);
 				return dateB - dateA;
 			});
-
 			for (let i = response.products.length - 1; i >= 0; i--) {
 				const { title, date, timestamp, asin, img_url, etv, queue, is_parent_asin, enrollment_guid } =
 					response.products[i];
@@ -265,15 +264,16 @@ async function fetchLast100Items() {
 					});
 				} else {
 					//Send a message to update the ETV.
-					sendMessageToNotificationMonitor(
-						{
-							type: "ETVUpdate",
-							asin: asin,
-							etv: etv,
-						},
-						"ETV notification"
-					);
-					dispatchETV({ asin: asin, etv: etv });
+					if (etv != null) {
+						sendMessageToNotificationMonitor(
+							{
+								type: "ETVUpdate",
+								asin: asin,
+								etv: etv,
+							},
+							"ETV notification"
+						);
+					}
 				}
 			}
 			sendMessageToAllTabs({ type: "newItemCheckEnd" }, "End of notification(s) update");

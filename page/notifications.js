@@ -142,6 +142,11 @@ async function init() {
 			"<strong>Notifications disabled</strong> You need to enable the notifications for this window to work.";
 	}
 
+	//Display the date/time of the most recent item that was previously shown.
+	document.getElementById("date_most_recent_item").innerText = new Date(
+		Settings.get("notification.lastProduct") * 1000
+	);
+
 	if (!Settings.get("notification.websocket")) {
 		document.getElementById("statusWS").style.display = "none";
 	}
@@ -411,9 +416,15 @@ function setETV(asin, etv) {
 	}
 	const etvObj = obj.querySelector(".etv_value");
 
-	//Todo: Extract the current ETV, compare it to the new ETV.
-	//      If changed from none to "0.00", trigger a sound and bring it to the top
-	etvObj.innerText = "Last shared ETV: " + formatETV(etv);
+	if (etvObj.innerText == "" && etv == "0.00") {
+		//      If changed from none to "0.00", trigger a sound and bring it to the top
+		console.log("New 0etv found!", asin, etv);
+		playSoundAccordingToNotificationType(false, true);
+
+		//Move the notification to the top
+		const container = document.getElementById("vh-items-container");
+		container.insertBefore(obj, container.firstChild);
+	}
 
 	//Highlight for ETV
 	if (etv == "0.00") {
@@ -423,17 +434,16 @@ function setETV(asin, etv) {
 		}
 	}
 	//Remove ETV Value if it does not exist
-	let etvElement = document.querySelector("#" + itemID(asin) + " .etv_value");
 	let brendaAnnounce = document.querySelector("#vh-announce-link-" + asin);
 	if (etv == null) {
-		etvElement.style.display = "none";
+		etvObj.style.display = "none";
 
 		if (brendaAnnounce) {
 			brendaAnnounce.style.visibility = "hidden";
 		}
 	} else {
-		etvElement.innerText = etv;
-
+		etvObj.style.display = "inline-block";
+		etvObj.innerText = formatETV(etv);
 		if (brendaAnnounce) {
 			brendaAnnounce.style.visibility = "visible";
 		}
