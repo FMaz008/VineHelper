@@ -270,9 +270,15 @@ async function fetchLast100Items() {
 }
 
 function dispatchNewItem(data) {
+	if (Settings.get("notification.hideList")) {
+		const hideKWMatch = keywordMatch(Settings.get("general.hideKeywords"), data.title);
+		if (hideKWMatch) {
+			return; //Do not display the notification as it matches the hide list.
+		}
+	}
+
 	const search = data.title.replace(/^([a-zA-Z0-9\s',]{0,40})[\s]+.*$/, "$1");
 	const highlightKWMatch = keywordMatch(Settings.get("general.highlightKeywords"), data.title);
-	const hideKWMatch = keywordMatch(Settings.get("general.hideKeywords"), data.title);
 
 	//If the new item match a highlight keyword, push a real notification.
 	if (Settings.get("notification.pushNotifications") && highlightKWMatch) {
@@ -329,7 +335,6 @@ function dispatchNewItem(data) {
 			etv: data.etv,
 			queue: data.queue,
 			KWsMatch: highlightKWMatch,
-			hideMatch: hideKWMatch,
 			is_parent_asin: data.is_parent_asin,
 			enrollment_guid: data.enrollment_guid,
 		},

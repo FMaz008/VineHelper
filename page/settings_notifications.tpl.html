@@ -23,7 +23,17 @@
 			Send push notifications when a new item match the highlight keywords
 		</div>
 	</div>
-
+	<div class="setting-container">
+		<label for="notification.hideList">
+			<input type="checkbox" name="notification.hideList" value="1" />
+			Hide Notifications with auto-hide Keywords
+		</label>
+		<div class="setting-summary">
+			<div class="vh-toolbar-icon vh-icon-question"></div>
+			This hides a notification in the monitor tab when it matches a hide keyword and does not also match a
+			highlight keyword.
+		</div>
+	</div>
 	<fieldset>
 		<legend>
 			<label for="notification.screen.active">
@@ -181,17 +191,7 @@
 			</div>
 		</div>
 
-		<div class="setting-container">
-			<label for="notification.monitor.hideList">
-				<input type="checkbox" name="notification.monitor.hideList" value="1" />
-				Hide Notifications with auto-hide Keywords
-			</label>
-			<div class="setting-summary">
-				<div class="vh-toolbar-icon vh-icon-question"></div>
-				This hides a notification in the monitor tab when it matches a hide keyword and does not also match a
-				highlight keyword.
-			</div>
-		</div>
+		
 		<div class="setting-container">
 			<label for="notification.monitor.hideDuplicateThumbnail">
 				<input type="checkbox" name="notification.monitor.hideDuplicateThumbnail" value="1" />

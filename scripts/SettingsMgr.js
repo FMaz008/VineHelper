@@ -232,6 +232,7 @@ class SettingsMgr {
 				websocket: false,
 				lastProduct: 0,
 				pushNotifications: false,
+				hideList: false,
 				screen: {
 					active: false,
 					thumbnail: true,
@@ -241,7 +242,6 @@ class SettingsMgr {
 					},
 				},
 				monitor: {
-					hideList: false,
 					hideDuplicateThumbnail: false,
 					regular: {
 						sound: "0",

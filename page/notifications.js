@@ -188,11 +188,14 @@ function processNotificationFiltering(node) {
 
 	if (filter.value == -1) {
 		node.style.display = "grid";
+		return true;
 	} else if (filter.value == 9) {
 		const typesToShow = [TYPE_HIGHLIGHT, TYPE_ZEROETV];
 		node.style.display = typesToShow.includes(notificationType) ? "grid" : "none";
+		return typesToShow.includes(notificationType);
 	} else {
 		node.style.display = notificationType == filter.value ? "grid" : "none";
+		return notificationType == filter.value;
 	}
 }
 
@@ -215,20 +218,7 @@ async function setLocale(country) {
 }
 
 function addItem(data) {
-	let {
-		date,
-		asin,
-		title,
-		search,
-		img_url,
-		domain,
-		etv,
-		queue,
-		KWsMatch,
-		hideMatch,
-		is_parent_asin,
-		enrollment_guid,
-	} = data;
+	let { date, asin, title, search, img_url, domain, etv, queue, KWsMatch, is_parent_asin, enrollment_guid } = data;
 
 	let type = TYPE_REGULAR;
 
@@ -236,8 +226,8 @@ function addItem(data) {
 	if (vineLocale == null) setLocale(domain);
 
 	if (etv == "0.00") {
+		console.log("zero ETV detected", etv);
 		type = TYPE_ZEROETV;
-		notification_zeroETV = true;
 	}
 
 	if (Settings.get("notification.monitor.hideDuplicateThumbnail") && imageUrls.has(img_url)) {
@@ -249,12 +239,6 @@ function addItem(data) {
 	if (KWsMatch) {
 		showRuntime("NOTIFICATION: item " + asin + " match the highlight list and will be highlighed.");
 		type = TYPE_HIGHLIGHT;
-		notification_highlight = true;
-
-		//Hide the item
-	} else if (Settings.get("notification.monitor.hideList") && hideMatch) {
-		showRuntime("NOTIFICATION: item " + asin + " match the hidden list and won't be shown.");
-		return;
 	}
 
 	if (items.has(asin)) {
@@ -264,7 +248,6 @@ function addItem(data) {
 		}
 	} else {
 		console.log("Adding item " + asin);
-		notification_added_item = true;
 
 		//New item to be added
 		items.set(asin, etv);
@@ -298,7 +281,14 @@ function addItem(data) {
 		newBody.prepend(content);
 
 		//Apply the filter.
-		processNotificationFiltering(content);
+		let displayItem = processNotificationFiltering(content);
+
+		if (displayItem) {
+			notification_added_item = true;
+			if (etv == "0.00") {
+				notification_zeroETV = true;
+			}
+		}
 
 		//Set ETV
 		setETV(asin, etv);
@@ -307,6 +297,10 @@ function addItem(data) {
 		if (KWsMatch) {
 			const obj = elementByAsin(asin);
 			obj.style.backgroundColor = Settings.get("notification.monitor.highlight.color");
+
+			if (displayItem) {
+				notification_highlight = true;
+			}
 		}
 
 		// Add new click listener for the report button
@@ -316,7 +310,6 @@ function addItem(data) {
 
 		//Add new click listener for Brenda announce:
 		const announce = document.querySelector("#vh-notification-" + asin + " .vh-announce-link");
-
 		if (announce) {
 			announce.addEventListener("click", handleBrendaClick);
 		}
