@@ -245,7 +245,10 @@ async function fetchLast100Items() {
 
 				//Only display notification for products with a title and image url
 				//And that are more recent than the latest notification received.
-				if (img_url != "" && title != "" && timestamp > Settings.get("notification.lastProduct")) {
+				if (img_url == "" || title == "") {
+					continue;
+				}
+				if (timestamp > Settings.get("notification.lastProduct")) {
 					Settings.set("notification.lastProduct", timestamp);
 					dispatchNewItem({
 						index: i,
@@ -260,6 +263,17 @@ async function fetchLast100Items() {
 						is_parent_asin: is_parent_asin,
 						enrollment_guid: enrollment_guid,
 					});
+				} else {
+					//Send a message to update the ETV.
+					sendMessageToNotificationMonitor(
+						{
+							type: "ETVUpdate",
+							asin: asin,
+							etv: etv,
+						},
+						"ETV notification"
+					);
+					dispatchETV({ asin: asin, etv: etv });
 				}
 			}
 			sendMessageToAllTabs({ type: "newItemCheckEnd" }, "End of notification(s) update");
@@ -361,8 +375,7 @@ function keywordMatch(keywords, title) {
 	});
 }
 
-async function sendMessageToAllTabs(data, debugInfo) {
-	//Send to the notification monitor tab
+async function sendMessageToNotificationMonitor(data, debugInfo) {
 	try {
 		broadcastChannel.postMessage(data);
 	} catch (e) {
@@ -370,6 +383,10 @@ async function sendMessageToAllTabs(data, debugInfo) {
 			console.error("Error posting message to broadcastChannel:", e);
 		}
 	}
+}
+async function sendMessageToAllTabs(data, debugInfo) {
+	//Send to the notification monitor tab
+	sendMessageToNotificationMonitor(data, debugInfo);
 
 	//Send to other tabs for the on screen notification
 	if (Settings.get("notification.screen.active")) {

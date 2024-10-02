@@ -86,6 +86,10 @@ window.onload = function () {
 		if (data.type == "newItem") {
 			addItem(data);
 		}
+		if (data.type == "ETVUpdate") {
+			setETV(data.asin, data.etv);
+		}
+
 		if (data.type == "newItemCheck") {
 			muteSound = false;
 			//Display a notification that we have checked for items.
@@ -402,6 +406,14 @@ function elementByAsin(asin) {
 
 function setETV(asin, etv) {
 	const obj = elementByAsin(asin);
+	if (!obj) {
+		return false; //This notification does not exist.
+	}
+	const etvObj = obj.querySelector(".etv_value");
+
+	//Todo: Extract the current ETV, compare it to the new ETV.
+	//      If changed from none to "0.00", trigger a sound and bring it to the top
+	etvObj.innerText = "Last shared ETV: " + formatETV(etv);
 
 	//Highlight for ETV
 	if (etv == "0.00") {
