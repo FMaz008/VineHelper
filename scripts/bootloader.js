@@ -144,7 +144,6 @@ async function showGDPRPopup() {
 		m.show();
 
 		Settings.set("general.GDPRPopup", false);
-		saveSettings();
 	}
 }
 async function initFlushTplCache() {
