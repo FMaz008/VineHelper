@@ -87,6 +87,7 @@ window.onload = function () {
 			addItem(data);
 		}
 		if (data.type == "ETVUpdate") {
+			console.log("ETV Update received for item " + data.asin + " @ " + data.etv);
 			setETV(data.asin, data.etv);
 		}
 

@@ -166,6 +166,16 @@ function connectWebSocket() {
 
 		sendMessageToAllTabs({ type: "newItemCheckEnd" }, "End of notification(s) update");
 	});
+	socket.on("newETV", (data) => {
+		sendMessageToAllTabs(
+			{
+				type: "ETVUpdate",
+				asin: data.item.asin,
+				etv: data.item.etv,
+			},
+			"ETV update"
+		);
+	});
 
 	// On disconnection
 	socket.on("disconnect", () => {
