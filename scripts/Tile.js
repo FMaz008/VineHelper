@@ -180,7 +180,7 @@ function Tile(obj, gridInstance) {
 		}
 
 		//Match with hide keywords. Only hide if not highlighed.
-		if (!highligthed && Settings.get("general.hideKeywords").length > 0) {
+		if (!highligthed && Settings.get("hiddenTab.active") && Settings.get("general.hideKeywords").length > 0) {
 			match = Settings.get("general.hideKeywords").find((word) => {
 				let regex;
 				try {
@@ -208,6 +208,10 @@ function Tile(obj, gridInstance) {
 	};
 
 	this.moveToGrid = async function (g, animate = false) {
+		if (g === null) {
+			return false;
+		}
+
 		//If we are asking to move the tile to the same grid, don't do anything
 		if (g.getId() == pGrid.getId()) return false;
 
