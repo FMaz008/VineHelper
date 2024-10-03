@@ -310,6 +310,13 @@ async function getRunTimeJSON() {
 	}
 }
 
+/** Convert the format "2024-10-03 17:00:45" to
+ * a new Date object constructed with "2024-10-04T17:00:45Z"
+ * */
+function YMDHiStoISODate(datetime) {
+	return new Date(datetime.replace(" ", "T") + "Z");
+}
+
 function bytesToSize(bytes, decimals = 2) {
 	if (!Number(bytes)) {
 		return "0 Bytes";

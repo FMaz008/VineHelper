@@ -38,7 +38,7 @@ function updateReviewTable() {
 		const tableBody = document.getElementById("reviews_list").querySelector("tbody");
 		arrReview.forEach((review) => {
 			let { date, asin, title } = review;
-			let formattedDate = new Date(date + " GMT").toLocaleDateString();
+			let formattedDate = new Date(date).toLocaleDateString();
 			const row = tableBody.insertRow();
 			const actionCell = row.insertCell();
 			const titleCell = row.insertCell();

@@ -356,7 +356,7 @@ function formatETV(etv) {
 }
 
 function formatDate(date) {
-	return new Date(date + " GMT").toLocaleString(vineLocale);
+	return new Date(date.replace(" ", "T") + "Z").toLocaleString(vineLocale);
 }
 
 function playSoundAccordingToNotificationType(highlightMatch = false, zeroETV = false) {

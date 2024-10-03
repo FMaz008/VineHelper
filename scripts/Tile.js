@@ -120,8 +120,8 @@ function Tile(obj, gridInstance) {
 	this.setDateAdded = function (timenow, mysqlDate) {
 		if (mysqlDate == undefined || !Settings.get("general.displayFirstSeen")) return false;
 
-		let serverCurrentDate = new Date(timenow + " GMT");
-		let itemDateAdded = new Date(mysqlDate + " GMT");
+		let serverCurrentDate = YMDHiStoISODate(timenow);
+		let itemDateAdded = YMDHiStoISODate(mysqlDate);
 		let bookmarkDate = new Date(Settings.get("general.bookmarkDate"));
 		if (isNaN(serverCurrentDate.getTime()) || isNaN(itemDateAdded.getTime())) {
 			showRuntime(

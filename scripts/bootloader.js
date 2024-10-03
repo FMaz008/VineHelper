@@ -289,7 +289,8 @@ async function setBookmarkDate(timeOffset) {
 		.then(async function (response) {
 			Settings.set(
 				"general.bookmarkDate",
-				new Date(new Date(response.date + " GMT").getTime() - timeOffset).toString()
+
+				new Date(YMDHiStoISODate(response.date).getTime() - timeOffset).toString()
 			);
 
 			let note = new ScreenNotification();
