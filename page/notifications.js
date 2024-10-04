@@ -438,6 +438,9 @@ function setETV(asin, etv, immediatelyPlaySound) {
 		//Move the notification to the top
 		const container = document.getElementById("vh-items-container");
 		container.insertBefore(obj, container.firstChild);
+
+		//Run the filter on the item
+		processNotificationFiltering(obj);
 	}
 
 	//Remove ETV Value and Brenda announce icon if it does not exist
