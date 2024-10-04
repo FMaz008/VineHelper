@@ -78,7 +78,8 @@ const handleBrendaClick = (e) => {
 
 	const asin = e.target.dataset.asin;
 	const queue = e.target.dataset.queue;
-	const etv = document.querySelector("#vh-notification-" + asin + " .etv_value").innerText;
+	let etv = document.querySelector("#vh-notification-" + asin + " .etv_value").innerText;
+	etv = Number(etv.replace(/[^0-9-.]+/g, ""));
 	window.BrendaAnnounceQueue.announce(asin, etv, queue);
 };
 
@@ -289,7 +290,7 @@ function addItem(data) {
 	Tpl.setVar("img_url", img_url);
 	Tpl.setVar("queue", queue);
 	Tpl.setVar("type", type);
-	Tpl.setVar("etv", formatETV(etv));
+	Tpl.setVar("etv", ""); //We will let SetETV() handle it.
 	Tpl.setIf("announce", Settings.get("discord.active") && Settings.get("discord.guid", false) != null);
 	let content = Tpl.render(loadedTpl, true); //true to return a DOM object instead of an HTML string
 
