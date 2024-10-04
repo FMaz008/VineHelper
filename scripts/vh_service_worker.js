@@ -78,7 +78,7 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 	/*
 	if (data.type == "fetchLast100Items") {
 		//Get the last 100 most recent items
-		fetchLast100Items();
+		fetchLast100Items(true);
 		sendResponse({ success: true });
 	}
 	*/
@@ -107,7 +107,6 @@ browser.alarms.onAlarm.addListener(async (alarm) => {
 				connectWebSocket(); //Check the status of the websocket, reconnect if closed.
 			} else {
 				fetchLast100Items();
-				//checkNewItems();
 			}
 		}
 	}
@@ -122,12 +121,6 @@ if ("function" == typeof importScripts) {
 let socket;
 function connectWebSocket() {
 	if (!Settings.get("notification.active") || socket?.connected) {
-		/*
-		if (socket?.connected) {
-			console.log("ping");
-			socket.emit("sendData", "ping");
-		}
-		*/
 		//Not reconnecting to WS.
 		return;
 	}
@@ -223,7 +216,7 @@ async function retrieveSettings() {
 	vineDomain = vineDomains[vineCountry];
 }
 
-async function fetchLast100Items() {
+async function fetchLast100Items(fetchAll = false) {
 	//Broadcast a new message to tell the tabs to display a loading wheel.
 	sendMessageToAllTabs({ type: "newItemCheck" }, "Loading wheel");
 
@@ -257,7 +250,7 @@ async function fetchLast100Items() {
 				if (img_url == "" || title == "") {
 					continue;
 				}
-				if (timestamp > Settings.get("notification.lastProduct")) {
+				if (fetchAll || timestamp > Settings.get("notification.lastProduct")) {
 					Settings.set("notification.lastProduct", timestamp);
 					dispatchNewItem({
 						index: i,

@@ -15,6 +15,10 @@ const TYPE_ZEROETV = 1;
 const TYPE_HIGHLIGHT = 2;
 //const TYPE_HIGHLIGHT_OR_ZEROETV = 9;
 
+const SOUND_NONE = 0;
+const SOUND_NOW = 1;
+const SOUND_QUEUE = 2;
+
 if (typeof browser === "undefined") {
 	var browser = chrome;
 }
@@ -87,8 +91,14 @@ window.onload = function () {
 			addItem(data);
 		}
 		if (data.type == "ETVUpdate") {
-			console.log("ETV Update received for item " + data.asin + " @ " + data.etv);
-			setETV(data.asin, data.etv);
+			if (Settings.get("notification.websocket")) {
+				if (items.get(data.asin) === null) {
+					console.log("ETV Update received for item " + data.asin + " @ " + data.etv);
+				}
+				setETV(data.asin, data.etv, SOUND_NOW);
+			} else {
+				setETV(data.asin, data.etv, SOUND_QUEUE); //Do not play a sound for a batch update
+			}
 		}
 
 		if (data.type == "newItemCheck") {
@@ -230,114 +240,106 @@ async function setLocale(country) {
 function addItem(data) {
 	let { date, asin, title, search, img_url, domain, etv, queue, KWsMatch, is_parent_asin, enrollment_guid } = data;
 
-	let type = TYPE_REGULAR;
-
 	//If the locale is not define, set it.
 	if (vineLocale == null) setLocale(domain);
 
-	if (etv == "0.00") {
-		console.log("zero ETV detected", etv);
-		type = TYPE_ZEROETV;
+	//If the item already exist, do not display it again
+	if (items.has(asin)) {
+		return false;
 	}
 
+	//If the item has a duplicate thumbnail, hide it (if the option is enabled)
 	if (Settings.get("notification.monitor.hideDuplicateThumbnail") && imageUrls.has(img_url)) {
 		showRuntime("NOTIFICATION: item " + asin + " has a duplicate image and won't be shown.");
 		return;
 	}
 
-	//Highlight the item
+	//New item to be added
+	console.log("Adding item " + asin);
+	items.set(asin, etv);
+	imageUrls.add(img_url);
+
+	//Define the type for the template
+	let type = TYPE_REGULAR;
+	if (etv == "0.00") {
+		type = TYPE_ZEROETV;
+	}
 	if (KWsMatch) {
-		showRuntime("NOTIFICATION: item " + asin + " match the highlight list and will be highlighed.");
 		type = TYPE_HIGHLIGHT;
 	}
 
-	if (items.has(asin)) {
-		//Item already exist, update ETV
-		if (etv != items.get(asin)) {
-			setETV(asin, etv);
-		}
+	//Create the notification
+	if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
+		Tpl.setVar(
+			"url",
+			`https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`
+		);
 	} else {
-		console.log("Adding item " + asin);
+		Tpl.setVar("url", `https://www.amazon.${vineDomain}/vine/vine-items?search=${search}`);
+	}
 
-		//New item to be added
-		items.set(asin, etv);
-		imageUrls.add(img_url);
+	Tpl.setVar("asin", asin);
+	Tpl.setVar("is_parent_asin", is_parent_asin);
+	Tpl.setVar("enrollment_guid", enrollment_guid);
+	Tpl.setVar("domain", vineDomain);
+	Tpl.setVar("title", "New item");
+	Tpl.setVar("date", formatDate(date));
+	Tpl.setVar("search", search);
+	Tpl.setVar("description", title);
+	Tpl.setVar("img_url", img_url);
+	Tpl.setVar("queue", queue);
+	Tpl.setVar("type", type);
+	Tpl.setVar("etv", formatETV(etv));
+	Tpl.setIf("announce", Settings.get("discord.active") && Settings.get("discord.guid", false) != null);
+	let content = Tpl.render(loadedTpl, true); //true to return a DOM object instead of an HTML string
 
-		if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
-			Tpl.setVar(
-				"url",
-				`https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`
-			);
-		} else {
-			Tpl.setVar("url", `https://www.amazon.${vineDomain}/vine/vine-items?search=${search}`);
+	const newBody = document.getElementById("vh-items-container");
+	newBody.prepend(content);
+
+	//Apply the filter.
+	let displayItem = processNotificationFiltering(content);
+
+	if (displayItem) {
+		notification_added_item = true;
+
+		//Define the type of item that we found
+		if (etv == "0.00") {
+			notification_zeroETV = true;
 		}
 
-		Tpl.setVar("asin", asin);
-		Tpl.setVar("is_parent_asin", is_parent_asin);
-		Tpl.setVar("enrollment_guid", enrollment_guid);
-		Tpl.setVar("domain", vineDomain);
-		Tpl.setVar("title", "New item");
-		Tpl.setVar("date", formatDate(date));
-		Tpl.setVar("search", search);
-		Tpl.setVar("description", title);
-		Tpl.setVar("img_url", img_url);
-		Tpl.setVar("queue", queue);
-		Tpl.setVar("type", type);
-		Tpl.setVar("etv", formatETV(etv));
-		Tpl.setIf("announce", Settings.get("discord.active") && Settings.get("discord.guid", false) != null);
-		let content = Tpl.render(loadedTpl, true); //true to return a DOM object instead of an HTML string
-
-		const newBody = document.getElementById("vh-items-container");
-		newBody.prepend(content);
-
-		//Apply the filter.
-		let displayItem = processNotificationFiltering(content);
-
-		if (displayItem) {
-			notification_added_item = true;
-			if (etv == "0.00") {
-				notification_zeroETV = true;
-			}
-		}
-
-		//Set ETV
-		setETV(asin, etv);
-
-		//Highlight background color
+		//Highlight the item
 		if (KWsMatch) {
 			const obj = elementByAsin(asin);
 			obj.style.backgroundColor = Settings.get("notification.monitor.highlight.color");
-
-			if (displayItem) {
-				notification_highlight = true;
-			}
+			notification_highlight = true;
 		}
+	}
 
-		// Add new click listener for the report button
-		document
-			.querySelector("#vh-notification-" + asin + " .report-link")
-			.addEventListener("click", handleReportClick);
+	//Set ETV
+	setETV(asin, etv, SOUND_NONE); //Do not play a sound (Instant ETV will receive an update, batch need to wait until the end)
 
-		//Add new click listener for Brenda announce:
-		const announce = document.querySelector("#vh-notification-" + asin + " .vh-announce-link");
-		if (announce) {
-			announce.addEventListener("click", handleBrendaClick);
-		}
+	// Add new click listener for the report button
+	document.querySelector("#vh-notification-" + asin + " .report-link").addEventListener("click", handleReportClick);
 
-		//Update the most recent date
-		document.getElementById("date_most_recent_item").innerText = formatDate(date);
+	//Add new click listener for Brenda announce:
+	const announce = document.querySelector("#vh-notification-" + asin + " .vh-announce-link");
+	if (announce) {
+		announce.addEventListener("click", handleBrendaClick);
+	}
 
-		//Auto truncate
-		if (document.getElementById("auto-truncate").checked) {
-			const itemsD = document.getElementsByClassName("vh-notification-box");
-			const itemsCount = itemsD.length;
-			if (itemsCount > 2000) {
-				for (let i = itemsCount - 1; i >= 2000; i--) {
-					const asin = itemsD[i].dataset.asin;
-					items.delete(asin);
-					itemsD[i].remove(); //remove the element from the DOM
-					console.log("Truncating " + asin);
-				}
+	//Update the most recent date
+	document.getElementById("date_most_recent_item").innerText = formatDate(date);
+
+	//Auto truncate
+	if (document.getElementById("auto-truncate").checked) {
+		const itemsD = document.getElementsByClassName("vh-notification-box");
+		const itemsCount = itemsD.length;
+		if (itemsCount > 2000) {
+			for (let i = itemsCount - 1; i >= 2000; i--) {
+				const asin = itemsD[i].dataset.asin;
+				items.delete(asin);
+				itemsD[i].remove(); //remove the element from the DOM
+				console.log("Truncating " + asin);
 			}
 		}
 	}
@@ -410,7 +412,7 @@ function elementByAsin(asin) {
 	return document.getElementById(itemID(asin));
 }
 
-function setETV(asin, etv) {
+function setETV(asin, etv, immediatelyPlaySound) {
 	const obj = elementByAsin(asin);
 	if (!obj) {
 		return false; //This notification does not exist.
@@ -418,23 +420,27 @@ function setETV(asin, etv) {
 	const etvObj = obj.querySelector(".etv_value");
 
 	if (etvObj.innerText == "" && etv == "0.00") {
-		//      If changed from none to "0.00", trigger a sound and bring it to the top
-		console.log("New 0etv found!", asin, etv);
-		playSoundAccordingToNotificationType(false, true);
+		//If ETV changed from none to "0.00", trigger a sound and bring it to the top
+		if (immediatelyPlaySound == SOUND_NOW) {
+			playSoundAccordingToNotificationType(false, true);
+		}
+		if (immediatelyPlaySound == SOUND_QUEUE) {
+			notification_added_item = true;
+			notification_zeroETV = true;
+		}
+
+		//Highlight for ETV
+		obj.style.backgroundColor = Settings.get("notification.monitor.zeroETV.color");
+		if (obj.getAttribute("data-notification-type") != TYPE_HIGHLIGHT) {
+			obj.setAttribute("data-notification-type", TYPE_ZEROETV);
+		}
 
 		//Move the notification to the top
 		const container = document.getElementById("vh-items-container");
 		container.insertBefore(obj, container.firstChild);
 	}
 
-	//Highlight for ETV
-	if (etv == "0.00") {
-		obj.style.backgroundColor = Settings.get("notification.monitor.zeroETV.color");
-		if (obj.getAttribute("data-notification-type") != TYPE_HIGHLIGHT) {
-			obj.setAttribute("data-notification-type", TYPE_ZEROETV);
-		}
-	}
-	//Remove ETV Value if it does not exist
+	//Remove ETV Value and Brenda announce icon if it does not exist
 	let brendaAnnounce = document.querySelector("#vh-announce-link-" + asin);
 	if (etv == null) {
 		etvObj.style.display = "none";
