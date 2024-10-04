@@ -65,7 +65,7 @@ class BrendaAnnounceQueue {
 					domain: "amazon." + vineDomain,
 					tab: item.queue,
 					asin: item.asin,
-					etv: item.etv,
+					etv: stripCurrency(item.etv),
 				}),
 			});
 
@@ -102,4 +102,9 @@ class BrendaAnnounceQueue {
 
 if (typeof window.BrendaAnnounceQueue === "undefined") {
 	window.BrendaAnnounceQueue = new BrendaAnnounceQueue();
+}
+
+function stripCurrency(value) {
+	// Use a regular expression to replace currency symbols and commas
+	return parseFloat(value.replace(/[^0-9.-]+/g, ""));
 }
