@@ -1,0 +1,80 @@
+name: Bug report
+description: Create a report to help us improve
+title: "[Bug]: "
+labels: ["bug"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+
+  - type: input
+    id: bug_description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: Describe the bug
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction_steps
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations:
+      required: true
+
+  - type: input
+    id: expected_behavior
+    attributes:
+      label: Expected Behavior
+      description: A clear and concise description of what you expected to happen.
+      placeholder: Describe the expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots (optional)
+      description: If applicable, add screenshots to help explain your problem.
+      placeholder: Add screenshots
+
+  - type: textarea
+    id: error_console
+    attributes:
+      label: Error in Developer Console (optional)
+      description: |
+        Right click anywhere, Inspect. Then check the console tab for any red error related to Vine Helper.
+      placeholder: Add error messages from the console
+
+  - type: textarea
+    id: debug_log
+    attributes:
+      label: Last Page of Debug Log (optional)
+      description: |
+        If you have an issue where the tabs are no longer showing the item count:
+        With the keybinding activated, press 'd' to show the debug log of vine helper, scroll down to the last page and copy its content. This should tell us where the execution of the script ended if an error was encountered.
+      placeholder: Add the last page of the debug log
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      description: e.g. chrome, firefox, kiwi
+      placeholder: Add your browser
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here.
+      placeholder: Add any additional context
