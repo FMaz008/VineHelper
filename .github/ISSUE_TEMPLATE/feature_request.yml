@@ -1,0 +1,17 @@
+name: Feature Request
+description: Submit a feature request or enhancement.
+title: "[Feature Request]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to submit a feature request or enhancement!
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Feature Description
+      description: Describe the feature or enhancement you would like to see.
+      placeholder: Tell us about the feature!
+    validations:
+      required: true
