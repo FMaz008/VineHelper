@@ -1,6 +1,6 @@
 {
 	"name": "vinehelper",
-	"version": "2.9.13",
+	"version": "2.9.14",
 	"description": "Improve the Amazon Vine experience.",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
