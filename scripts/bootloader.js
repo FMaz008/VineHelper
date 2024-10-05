@@ -33,6 +33,9 @@ const VINE_INFO_TITLE = "Vine Helper update info";
 const GDPR_TITLE = "Vine Helper - GDPR";
 
 var websiteOpts = null;
+var vvpContext = null;
+var marketplaceId = null;
+var customerId = null;
 
 //Do not run the extension if ultraviner is running
 if (!ultraviner) {
@@ -44,6 +47,16 @@ if (!ultraviner) {
 
 //Initiate the extension
 async function init() {
+	//Obtain the marketplaceId
+	try {
+		vvpContext = JSON.parse(document.querySelector('script[data-a-state=\'{"key":"vvp-context"}\'').innerHTML);
+
+		marketplaceId = vvpContext.marketplaceId;
+		customerId = vvpContext.customerId;
+	} catch (err) {
+		//Do nothing
+	}
+
 	//Wait for the config to be loaded before running this script
 	showRuntime("BOOT: Waiting on preboot to complete...");
 	while (!Settings.isLoaded() || !prebootCompleted) {
@@ -102,15 +115,12 @@ function displayAccountData() {
 	container.id = "account-extra-stats";
 	parentContainer.append(container);
 
-	let json = JSON.parse(document.getElementsByClassName("vvp-body")[0].childNodes[0].innerHTML);
-
 	let date;
 	let div;
-
 	div = document.createElement("div");
 	div.innerHTML =
 		"<h4>Vine Helper extra stats:</h4><strong>Customer Id: </strong><span class='masked-text'>" +
-		escapeHTML(json.customerId) +
+		escapeHTML(customerId) +
 		"</span><br /><br />";
 	container.appendChild(div);
 
@@ -121,7 +131,7 @@ function displayAccountData() {
 	};
 
 	for (const [key, value] of Object.entries(additionalStats)) {
-		date = new Date(json.voiceDetails[key]).toLocaleString(vineLocale);
+		date = new Date(vvpContext.voiceDetails[key]).toLocaleString(vineLocale);
 		div = document.createElement("div");
 		div.innerHTML = `<strong>${value}:</strong><br /> ${date}<br/><br />`;
 		container.appendChild(div);
@@ -129,7 +139,7 @@ function displayAccountData() {
 
 	div = document.createElement("div");
 	div.innerHTML =
-		"<strong>Re-evaluation in progress:</strong> " + escapeHTML(json.voiceDetails.isTierEvaluationInProgress);
+		"<strong>Re-evaluation in progress:</strong> " + escapeHTML(vvpContext.voiceDetails.isTierEvaluationInProgress);
 	container.appendChild(div);
 }
 
@@ -917,6 +927,12 @@ window.addEventListener("message", async function (event) {
 
 	if (event.data.type && event.data.type == "websiteOpts") {
 		websiteOpts = event.data.data;
+		if (!marketplaceId) {
+			marketplaceId = websiteOpts.obfuscatedMarketId;
+		}
+		if (!customerId) {
+			customerId = websiteOpts.customerId;
+		}
 		showRuntime("BOOT: Opts data obtained from inj.js.");
 
 		//Check the current URL for the following pattern:
@@ -1358,8 +1374,8 @@ async function handleModalNavigation(event) {
 }
 
 function openDynamicModal(asin, queue, isParent, enrollmentGUID) {
-	if (websiteOpts == null) {
-		console.error("Failed to fetch opts data");
+	if (!marketplaceId || customerId) {
+		console.error("Failed to fetch opts/vvp-context data");
 	}
 
 	const recommendationTypes = {
@@ -1384,17 +1400,10 @@ function openDynamicModal(asin, queue, isParent, enrollmentGUID) {
 	if (recommendationType == "VENDOR_TARGETED") {
 		btn.dataset.recommendationType = recommendationType;
 		btn.dataset.recommendationId =
-			websiteOpts.obfuscatedMarketId +
-			"#" +
-			asin +
-			"#" +
-			websiteOpts.customerId +
-			"#vine.enrollment." +
-			enrollmentGUID;
+			marketplaceId + "#" + asin + "#" + customerId + "#vine.enrollment." + enrollmentGUID;
 	} else {
 		btn.dataset.recommendationType = recommendationType;
-		btn.dataset.recommendationId =
-			websiteOpts.obfuscatedMarketId + "#" + asin + "#vine.enrollment." + enrollmentGUID;
+		btn.dataset.recommendationId = MarketplaceId + "#" + asin + "#vine.enrollment." + enrollmentGUID;
 	}
 	container2.appendChild(btn);
 	document.getElementById("vvp-items-grid").appendChild(container1);

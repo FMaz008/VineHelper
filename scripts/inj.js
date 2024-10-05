@@ -204,6 +204,10 @@ async function testVariants(content) {
 }
 
 //Send the opts options containing the customerId and obfuscatedMarketId
-if (opts !== undefined) {
+if (typeof opts !== "undefined") {
+	window.postMessage({ type: "websiteOpts", data: opts }, "/");
+} else if (typeof fwcimData === "object" && typeof ue_mid === "string") {
+	//Mobile often doesn't have opts, but will have fwcimData and ue_mid
+	let opts = { obfuscatedMarketId: ue_mid, customerId: fwcimData.customerId };
 	window.postMessage({ type: "websiteOpts", data: opts }, "/");
 }
