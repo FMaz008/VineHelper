@@ -106,5 +106,9 @@ if (typeof window.BrendaAnnounceQueue === "undefined") {
 
 function stripCurrency(value) {
 	// Use a regular expression to replace currency symbols and commas
-	return parseFloat(value.replace(/[^0-9.-]+/g, ""));
+	if (typeof value == "string") {
+		return parseFloat(value.replace(/[^0-9.-]+/g, ""));
+	} else {
+		return value;
+	}
 }
