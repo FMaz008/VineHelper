@@ -75,13 +75,13 @@ if ("function" == typeof importScripts) {
 //## LISTENERS
 //#####################################################
 browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
-	/*
 	if (data.type == "fetchLast100Items") {
 		//Get the last 100 most recent items
-		fetchLast100Items(true);
+		if (Settings.get("notification.websocket")) {
+			fetchLast100Items(true);
+		}
 		sendResponse({ success: true });
 	}
-	*/
 
 	if (data.type == "wsStatus") {
 		sendResponse({ success: true });

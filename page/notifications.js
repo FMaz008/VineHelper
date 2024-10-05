@@ -18,6 +18,7 @@ const TYPE_HIGHLIGHT = 2;
 const SOUND_NONE = 0;
 const SOUND_NOW = 1;
 const SOUND_QUEUE = 2;
+var muteLiveSound = false;
 
 if (typeof browser === "undefined") {
 	var browser = chrome;
@@ -124,7 +125,7 @@ window.onload = function () {
 			addItem(data);
 		}
 		if (data.type == "ETVUpdate") {
-			if (Settings.get("notification.websocket")) {
+			if (Settings.get("notification.websocket") && !muteLiveSound) {
 				if (items.get(data.asin) === null) {
 					console.log("ETV Update received for item " + data.asin + " @ " + data.etv);
 				}
@@ -135,7 +136,7 @@ window.onload = function () {
 		}
 
 		if (data.type == "newItemCheck") {
-			muteSound = false;
+			muteLiveSound = true;
 			//Display a notification that we have checked for items.
 			let note = new ScreenNotification();
 			note.template = "view/notification_loading.html";
@@ -149,17 +150,20 @@ window.onload = function () {
 			notification_added_item = false;
 			notification_highlight = false;
 			notification_zeroETV = false;
+			muteLiveSound = false;
 		}
 
 		if (data.type == "wsOpen") {
 			document.getElementById("statusWS").innerHTML =
 				"<strong>Server status: </strong><div class='vh-switch-32 vh-icon-switch-on'></div> Listening for notifications...";
-			document.querySelector("label[for=fetch-last-100]").display = "block";
+			document.querySelector("label[for='fetch-last-100']").style.display = "block";
+			document.getElementById("statusWS").style.display = "block";
+			muteLiveSound = false;
 		}
 		if (data.type == "wsClosed") {
 			document.getElementById("statusWS").innerHTML =
 				"<strong>Server status: </strong><div class='vh-switch-32 vh-icon-switch-off'></div> Not connected. Retrying in 30 sec.";
-			document.querySelector("label[for=fetch-last-100]").display = "none";
+			document.querySelector("label[for='fetch-last-100']").style.display = "none";
 		}
 	};
 
@@ -195,6 +199,7 @@ async function init() {
 
 	if (!Settings.get("notification.websocket")) {
 		document.getElementById("statusWS").style.display = "none";
+		document.querySelector("label[for='fetch-last-100']").style.display = "none";
 	}
 
 	//Bind the event when changing the filter
@@ -216,6 +221,10 @@ async function init() {
 	//Bind fetch-last-100 button
 	const btnLast100 = document.querySelector("button[name='fetch-last-100']");
 	btnLast100.addEventListener("click", function () {
+		if (!Settings.get("notification.websocket")) {
+			console.warn("Instant notifications must be enabled for the Fetch Last 100 button to be available.");
+			return false;
+		}
 		browser.runtime.sendMessage(
 			{
 				type: "fetchLast100Items",
