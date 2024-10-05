@@ -321,7 +321,7 @@ function getThumbnailURLFromDom(tileDom) {
 
 	if (url == undefined) {
 		//Post load of VH added an image container.
-		url = $(tileDom).find(".vvp-item-tile-content > .vh-img-container > img").attr("src");
+		url = $(tileDom).find(".vh-img-container > img").attr("src");
 	}
 
 	return url == undefined ? null : url;

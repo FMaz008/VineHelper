@@ -13,7 +13,7 @@ var notification_zeroETV = false;
 const TYPE_REGULAR = 0;
 const TYPE_ZEROETV = 1;
 const TYPE_HIGHLIGHT = 2;
-//const TYPE_HIGHLIGHT_OR_ZEROETV = 9;
+const TYPE_HIGHLIGHT_OR_ZEROETV = 9;
 
 const SOUND_NONE = 0;
 const SOUND_NOW = 1;
@@ -251,7 +251,7 @@ function processNotificationFiltering(node) {
 	if (filter.value == -1) {
 		node.style.display = "grid";
 		return true;
-	} else if (filter.value == 9) {
+	} else if (filter.value == TYPE_HIGHLIGHT_OR_ZEROETV) {
 		const typesToShow = [TYPE_HIGHLIGHT, TYPE_ZEROETV];
 		node.style.display = typesToShow.includes(notificationType) ? "grid" : "none";
 		return typesToShow.includes(notificationType);
