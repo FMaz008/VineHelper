@@ -1,4 +1,4 @@
-const DEBUG_MODE = false; // Will always display notification even if they are not new
+const DEBUG_MODE = false; //Will switch the notification countries to "com"
 const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_URL = "http://127.0.0.1:3000";
 const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
@@ -127,7 +127,7 @@ function connectWebSocket() {
 
 	socket = io.connect(VINE_HELPER_API_V5_WS_URL, {
 		query: {
-			countryCode: Settings.get("general.country"),
+			countryCode: DEBUG_MODE ? "com" : Settings.get("general.country"),
 			uuid: Settings.get("general.uuid", false),
 		}, // Pass the country code as a query parameter
 		transports: ["websocket"],
@@ -222,7 +222,7 @@ async function fetchLast100Items(fetchAll = false) {
 
 	const content = {
 		api_version: 5,
-		country: vineCountry,
+		country: DEBUG_MODE ? "com" : vineCountry,
 		action: "get_latest_notifications",
 		uuid: Settings.get("general.uuid", false),
 	};
