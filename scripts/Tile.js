@@ -176,6 +176,9 @@ function Tile(obj, gridInstance) {
 				highligthed = true;
 				showRuntime("TILE: The item match the keyword '" + match + "', highlight it");
 				$(pTile).addClass("keyword-highlight");
+
+				//Move the highlighted item to the top of the grid
+				gridRegular.getDOM().insertBefore(obj, gridRegular.getDOM().firstChild);
 			}
 		}
 
