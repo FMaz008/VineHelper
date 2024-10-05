@@ -210,6 +210,10 @@ async function createGridInterface() {
 }
 
 async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enrollment_guid) {
+	if (!asin) {
+		return false;
+	}
+
 	//Check if the pin already exist:
 	if (document.getElementById("vh-pin-" + asin) != undefined) return false;
 

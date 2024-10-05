@@ -85,6 +85,10 @@ class PinnedListMgr {
 	}
 
 	async addItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID, save = true, broadcast = true) {
+		if (!asin || !queue || !title || !thumbnail || !isParentAsin || !enrollmentGUID) {
+			throw new Error("Invalid data");
+		}
+
 		if (save) await this.loadFromLocalStorage(); //Load the list in case it was altered in a different tab
 
 		this.mapPin.set(asin, {
@@ -145,6 +149,10 @@ class PinnedListMgr {
 		}
 	}
 
+	async wipe() {
+		let storableVal = JSON.stringify([]);
+		await browser.storage.local.set({ pinnedItems: storableVal });
+	}
 	/**
 	 * Send new items on the server to be added or removed from the changed list.
 	 */
