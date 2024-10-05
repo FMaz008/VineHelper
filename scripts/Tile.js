@@ -178,7 +178,7 @@ function Tile(obj, gridInstance) {
 				$(pTile).addClass("keyword-highlight");
 
 				//Move the highlighted item to the top of the grid
-				gridRegular.getDOM().insertBefore(obj, gridRegular.getDOM().firstChild);
+				pGrid.getDOM().insertBefore(obj, pGrid.getDOM().firstChild);
 			}
 		}
 
