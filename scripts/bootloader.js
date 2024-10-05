@@ -1374,7 +1374,7 @@ async function handleModalNavigation(event) {
 }
 
 function openDynamicModal(asin, queue, isParent, enrollmentGUID) {
-	if (!marketplaceId || customerId) {
+	if (!marketplaceId || !customerId) {
 		console.error("Failed to fetch opts/vvp-context data");
 	}
 
@@ -1403,7 +1403,7 @@ function openDynamicModal(asin, queue, isParent, enrollmentGUID) {
 			marketplaceId + "#" + asin + "#" + customerId + "#vine.enrollment." + enrollmentGUID;
 	} else {
 		btn.dataset.recommendationType = recommendationType;
-		btn.dataset.recommendationId = MarketplaceId + "#" + asin + "#vine.enrollment." + enrollmentGUID;
+		btn.dataset.recommendationId = marketplaceId + "#" + asin + "#vine.enrollment." + enrollmentGUID;
 	}
 	container2.appendChild(btn);
 	document.getElementById("vvp-items-grid").appendChild(container1);
