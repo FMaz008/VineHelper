@@ -39,6 +39,7 @@ function showDebug() {
 var Settings = new SettingsMgr();
 var Tpl = new Template();
 var TplMgr = new TemplateMgr();
+var PinnedList = new PinnedListMgr();
 var loadedTpl = null;
 
 const vineLocales = {
@@ -74,6 +75,7 @@ const handleReportClick = (e) => {
 };
 
 const handleBrendaClick = (e) => {
+	console.log("Branda");
 	e.preventDefault();
 
 	const asin = e.target.dataset.asin;
@@ -81,6 +83,36 @@ const handleBrendaClick = (e) => {
 	let etv = document.querySelector("#vh-notification-" + asin + " .etv_value").innerText;
 	etv = Number(etv.replace(/[^0-9-.]+/g, ""));
 	window.BrendaAnnounceQueue.announce(asin, etv, queue);
+};
+
+const handlePinClick = (e) => {
+	e.preventDefault();
+
+	const asin = e.target.dataset.asin;
+	const isParentAsin = e.target.dataset.isParentAsin;
+	const enrollmentGUID = e.target.dataset.enrollmentGuid;
+	const queue = e.target.dataset.queue;
+	const title = e.target.dataset.title;
+	const thumbnail = e.target.dataset.thumbnail;
+
+	PinnedList.addItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID);
+
+	//Display notification
+	Notifications.pushNotification(
+		new ScreenNotification({
+			title: `Item ${asin} pinned.`,
+			lifespan: 3,
+			content: title,
+		})
+	);
+};
+
+const handleHideClick = (e) => {
+	e.preventDefault();
+
+	const asin = e.target.dataset.asin;
+	items.delete(asin);
+	elementByAsin(asin).remove();
 };
 
 window.onload = function () {
@@ -122,10 +154,12 @@ window.onload = function () {
 		if (data.type == "wsOpen") {
 			document.getElementById("statusWS").innerHTML =
 				"<strong>Server status: </strong><div class='vh-switch-32 vh-icon-switch-on'></div> Listening for notifications...";
+			document.querySelector("label[for=fetch-last-100]").display = "block";
 		}
 		if (data.type == "wsClosed") {
 			document.getElementById("statusWS").innerHTML =
 				"<strong>Server status: </strong><div class='vh-switch-32 vh-icon-switch-off'></div> Not connected. Retrying in 30 sec.";
+			document.querySelector("label[for=fetch-last-100]").display = "none";
 		}
 	};
 
@@ -180,7 +214,6 @@ async function init() {
 	});
 
 	//Bind fetch-last-100 button
-	/*
 	const btnLast100 = document.querySelector("button[name='fetch-last-100']");
 	btnLast100.addEventListener("click", function () {
 		browser.runtime.sendMessage(
@@ -194,7 +227,6 @@ async function init() {
 			}
 		);
 	});
-	*/
 
 	//Obtain the status of the WebSocket connection.
 	browser.runtime.sendMessage({
@@ -292,6 +324,7 @@ function addItem(data) {
 	Tpl.setVar("type", type);
 	Tpl.setVar("etv", ""); //We will let SetETV() handle it.
 	Tpl.setIf("announce", Settings.get("discord.active") && Settings.get("discord.guid", false) != null);
+	Tpl.setIf("pinned", Settings.get("pinnedTab.active"));
 	let content = Tpl.render(loadedTpl, true); //true to return a DOM object instead of an HTML string
 
 	const newBody = document.getElementById("vh-items-container");
@@ -323,10 +356,20 @@ function addItem(data) {
 	document.querySelector("#vh-notification-" + asin + " .report-link").addEventListener("click", handleReportClick);
 
 	//Add new click listener for Brenda announce:
-	const announce = document.querySelector("#vh-notification-" + asin + " .vh-announce-link");
-	if (announce) {
+	if (Settings.get("discord.active") && Settings.get("discord.guid", false) != null) {
+		const announce = document.querySelector("#vh-announce-link-" + asin);
 		announce.addEventListener("click", handleBrendaClick);
 	}
+
+	//Add new click listener for the pinned button
+	if (Settings.get("pinnedTab.active")) {
+		const pinIcon = document.querySelector("#vh-pin-link-" + asin);
+		pinIcon.addEventListener("click", handlePinClick);
+	}
+
+	//Add new click listener for the hide button
+	const hideIcon = document.querySelector("#vh-hide-link-" + asin);
+	hideIcon.addEventListener("click", handleHideClick);
 
 	//Update the most recent date
 	document.getElementById("date_most_recent_item").innerText = formatDate(date);

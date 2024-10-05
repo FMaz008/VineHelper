@@ -15,8 +15,21 @@
 				style="float: right"
 			></div>
 		</a>
-		{{if announce}}
-		<div style="clear: right"></div>
+		{{if pinned}}
+		<a href="#{{$asin}}" id="vh-pin-link-{{$asin}}" class="vh-floating-icon" title="Pin item">
+			<div
+				class="vh-toolbar-large-icon vh-icon-pin"
+				data-asin="{{$asin}}"
+				data-queue="{{$queue}}"
+				data-is-parent-asin="{{$is_parent_asin}}"
+				data-enrollment-guid="{{$enrollment_guid}}"
+				data-title="{{$description}}"
+				data-thumbnail="{{$img_url}}"
+				style="float: right; margin-right: 20px"
+			></div>
+		</a>
+		{{endif}} {{if announce}}
+
 		<a
 			href="#"
 			id="vh-announce-link-{{$asin}}"
@@ -27,10 +40,18 @@
 				class="vh-toolbar-large-icon vh-icon-announcement"
 				data-asin="{{$asin}}"
 				data-queue="{{$queue}}"
-				style="float: right; margin-top: 10px"
+				style="float: right; margin-right: 20px"
 			></div>
 		</a>
 		{{endif}}
+		<a href="#" id="vh-hide-link-{{$asin}}" class="vh-floating-icon" title="Hide item">
+			<div
+				class="vh-toolbar-large-icon vh-icon-hide"
+				data-asin="{{$asin}}"
+				style="float: right; margin-right: 20px"
+			></div>
+		</a>
+
 		<div style="clear: right"></div>
 		<a href="#" class="report-link">
 			<div
@@ -40,9 +61,11 @@
 			></div>
 		</a>
 	</div>
-	<div class="vh-notification-content">
-		<img src="{{$img_url}}" />
-		<a href="https://www.amazon.{{$domain}}/dp/{{$asin}}" target="_blank">{{$description}}</a>
+	<div class="vh-notification-content" style="margin-top: 20px">
+		<img src="{{$img_url}}" style="margin-top: -20px" />
+		<div>
+			<a href="https://www.amazon.{{$domain}}/dp/{{$asin}}" target="_blank">{{$description}}</a>
+		</div>
 	</div>
 	<div class="vh-notification-footer">
 		<span class="etv_value">{{$etv}}</span><span class="date_shown">{{$date}}</span>

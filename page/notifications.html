@@ -3,6 +3,7 @@
 		<title>Vine Helper - Notifications Monitor</title>
 		<script src="../node_modules/jquery/dist/jquery.min.js"></script>
 		<script src="../scripts/SettingsMgr.js"></script>
+		<script src="../scripts/PinnedListMgr.js"></script>
 		<script src="../scripts/Template.js"></script>
 		<script src="../scripts/ScreenNotifier.js"></script>
 		<script src="../scripts/BrendaAnnounce.js"></script>
@@ -38,11 +39,9 @@
 			</i>
 		</div>
 		<div class="monitor-toolbar">
-			<!--
-			<label for="fetch-last-100">
+			<label for="fetch-last-100" style="display: none">
 				<button name="fetch-last-100">Fetch last 100</button>
 			</label>
-			-->
 			<label for="auto-truncate">
 				<input type="checkbox" name="auto-truncate" id="auto-truncate" /> Auto truncate after 2000 items.
 			</label>
