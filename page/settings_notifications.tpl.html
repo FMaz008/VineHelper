@@ -14,6 +14,24 @@
 	</div>
 
 	<div class="setting-container">
+		<label for="notification.websocket">
+			Notification mode:&nbsp;
+			<select name="notification.websocket">
+				<option value="0">Batch notifications (old)</option>
+				<option value="1">Instant notifications</option>
+			</select>
+		</label>
+		<div class="setting-summary">
+			<div class="vh-toolbar-icon vh-icon-question"></div>
+			<strong>Batch notifications:</strong> Old method: Query the server at regular interval to receive a list of
+			the recent products. Use more server resources and add a ~30 second delay between the updates.
+			<br />
+			<strong>Instant notifications:</strong> Use Websockets to try to establish a persistent connection with the
+			API to received notifications in real time.
+		</div>
+	</div>
+	<hr />
+	<div class="setting-container">
 		<label for="notification.pushNotifications">
 			<input type="checkbox" name="notification.pushNotifications" value="1" />
 			Push Notification when KW match.
@@ -60,7 +78,7 @@
 		</div>
 		<div class="setting-container">
 			<label for="notification.screen.regular.sound" style="margin-left: 20px"
-				>Sound:
+				>Sound:&nbsp;
 				<select name="notification.screen.regular.sound">
 					<option value="0">None</option>
 					<option value="notification">Notification</option>
@@ -75,7 +93,7 @@
 		</div>
 		<div class="setting-container">
 			<label for="notification.screen.regular.volume" style="margin-left: 20px"
-				>Volume
+				>Volume&nbsp;
 				<input type="range" name="notification.screen.regular.volume" min="0" max="1" step="0.05" />
 				<button id="playScreenNotification">&#9654;</button>
 			</label>
@@ -98,7 +116,7 @@
 		<div class="tabulation">
 			<div class="setting-container">
 				<label for="notification.monitor.highlight.sound" style="margin-left: 20px"
-					>Sound:
+					>Sound:&nbsp;
 					<select name="notification.monitor.highlight.sound">
 						<option value="0">None</option>
 						<option value="notification">Notification</option>
@@ -114,14 +132,14 @@
 			</div>
 			<div class="setting-container">
 				<label for="notification.monitor.highlight.volume" style="margin-left: 20px"
-					>Volume:
+					>Volume:&nbsp;
 					<input type="range" name="notification.monitor.highlight.volume" min="0" max="1" step="0.05" />
 					<button id="playMonitorHighlightNotification">&#9654;</button>
 				</label>
 			</div>
 			<div class="setting-container">
 				<label for="notification.monitor.highlight.color" style="margin-left: 20px"
-					>Color:
+					>Color:&nbsp;
 					<input type="text" name="notification.monitor.highlight.color" size="7" maxlength="7" />
 				</label>
 				<div class="setting-summary">
@@ -134,7 +152,7 @@
 		<div class="tabulation">
 			<div class="setting-container">
 				<label for="notification.monitor.zeroETV.sound" style="margin-left: 20px"
-					>Sound:
+					>Sound:&nbsp;
 					<select name="notification.monitor.zeroETV.sound">
 						<option value="0">None</option>
 						<option value="notification">Notification</option>
@@ -149,14 +167,14 @@
 			</div>
 			<div class="setting-container">
 				<label for="notification.monitor.zeroETV.volume" style="margin-left: 20px"
-					>Volume:
+					>Volume:&nbsp;
 					<input type="range" name="notification.monitor.zeroETV.volume" min="0" max="1" step="0.05" />
 					<button id="playMonitorZeroETVNotification">&#9654;</button>
 				</label>
 			</div>
 			<div class="setting-container">
 				<label for="notification.monitor.zeroETV.color" style="margin-left: 20px"
-					>Color:
+					>Color:&nbsp;
 					<input type="text" name="notification.monitor.zeroETV.color" size="7" maxlength="7" />
 				</label>
 				<div class="setting-summary">
@@ -169,7 +187,7 @@
 		<div class="tabulation">
 			<div class="setting-container">
 				<label for="notification.monitor.regular.sound" style="margin-left: 20px"
-					>Sound:
+					>Sound:&nbsp;
 					<select name="notification.monitor.regular.sound">
 						<option value="0">None</option>
 						<option value="notification">Notification</option>
@@ -184,14 +202,13 @@
 			</div>
 			<div class="setting-container">
 				<label for="notification.monitor.regular.volume" style="margin-left: 20px"
-					>Volume:
+					>Volume:&nbsp;
 					<input type="range" name="notification.monitor.regular.volume" min="0" max="1" step="0.05" />
 					<button id="playMonitorRegularNotification">&#9654;</button>
 				</label>
 			</div>
 		</div>
 
-		
 		<div class="setting-container">
 			<label for="notification.monitor.hideDuplicateThumbnail">
 				<input type="checkbox" name="notification.monitor.hideDuplicateThumbnail" value="1" />

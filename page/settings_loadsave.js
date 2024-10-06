@@ -104,7 +104,6 @@ async function initiateSettings() {
 	manageCheckboxSetting("unavailableTab.compactToolbar");
 	manageCheckboxSetting("general.modalNavigation");
 	manageCheckboxSetting("general.searchOpenModal");
-	manageCheckboxSetting("notification.websocket");
 	manageCheckboxSetting("general.listView");
 	manageCheckboxSetting("general.scrollToRFY");
 
@@ -117,6 +116,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("notification.hideList");
 	manageCheckboxSetting("notification.monitor.hideDuplicateThumbnail");
 	manageCheckboxSetting("notification.reduce");
+	manageSelectBox("notification.websocket");
 
 	//Sliders
 	manageSlider("notification.screen.regular.volume");
