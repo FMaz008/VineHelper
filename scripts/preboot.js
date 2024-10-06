@@ -221,6 +221,7 @@ async function requestNewUUID() {
 	//Request a new UUID from the server
 	const content = {
 		api_version: 5,
+		app_version: appVersion,
 		action: "get_uuid",
 		country: vineCountry,
 	};
