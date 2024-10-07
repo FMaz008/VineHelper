@@ -1,6 +1,9 @@
-var Settings = new SettingsMgr();
+import { initiateSettings } from "../page/settings_loadsave.js";
+
 var Tpl = new Template();
 var TplMgr = new TemplateMgr();
+window.Tpl = Tpl;
+window.TplMgr = TplMgr;
 
 //Render the main layout
 (async () => {
@@ -36,10 +39,6 @@ var TplMgr = new TemplateMgr();
 function getAppVersion() {
 	const manifest = chrome.runtime.getManifest();
 	return manifest.version;
-}
-
-function showRuntime(eventName) {
-	//Required for the template system
 }
 
 //Tab management

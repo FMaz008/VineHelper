@@ -1,17 +1,18 @@
 {
-  "env": {
-    "browser": true,
-    "node": true,
-    "es2021": true
-  },
+	"env": {
+		"browser": true,
+		"node": true,
+		"es2021": true
+	},
 	"extends": ["eslint:recommended", "prettier"],
-  "parserOptions": {
-    "ecmaVersion": 2022
-  },
-  "rules": {
-    "no-console": "warn",
-    "no-undef": "warn",
-    "no-unsafe-finally": "warn",
-    "no-unused-vars": "warn"
-  }
+	"parserOptions": {
+		"sourceType": "module",
+		"ecmaVersion": 2022
+	},
+	"rules": {
+		"no-console": "warn",
+		"no-undef": "warn",
+		"no-unsafe-finally": "warn",
+		"no-unused-vars": "warn"
+	}
 }

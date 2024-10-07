@@ -37,10 +37,13 @@ function showDebug() {
 	console.log(JSON.stringify(arrDebug));
 }
 
-var Settings = new SettingsMgr();
-var Tpl = new Template();
-var TplMgr = new TemplateMgr();
-var PinnedList = new PinnedListMgr();
+import { SettingsMgr } from "../scripts/SettingsMgr.js";
+window.Settings = new SettingsMgr();
+
+window.Tpl = new Template();
+window.TplMgr = new TemplateMgr();
+window.Notifications = new ScreenNotifier();
+window.PinnedList = new PinnedListMgr();
 var loadedTpl = null;
 
 const vineLocales = {
@@ -67,8 +70,22 @@ const vineDomains = {
 var vineLocale = null;
 var vineCurrency = null;
 var vineDomain = null;
-var Notifications = new ScreenNotifier();
+
 const broadcastChannel = new BroadcastChannel("VineHelperChannel");
+
+//Load stream-browserify
+/*
+(async () => {
+	const src = chrome.runtime.getURL("node_modules/stream-browserify/index.js");
+	await import(src);
+})();
+
+async function run() {
+	await pipeline(console.log("pipeline"), console.log("action2"));
+	console.log("Pipeline succeeded.");
+}
+run().catch(console.error);
+*/
 
 const handleReportClick = (e) => {
 	e.preventDefault(); // Prevent the default click behavior
@@ -180,10 +197,10 @@ window.onload = function () {
 
 async function init() {
 	//Wait for the settings to be loaded.
-	while (!Settings.isLoaded()) {
+	while (!Settings || !Settings.isLoaded()) {
 		await new Promise((r) => setTimeout(r, 10));
 	}
-	vineCountry = Settings.get("general.country");
+	let vineCountry = Settings.get("general.country");
 	setLocale(vineCountry);
 	loadedTpl = await Tpl.loadFile("/view/notification_monitor.html");
 
@@ -245,6 +262,9 @@ async function init() {
 
 //Function to determine if the notification has to be displayed base on the filtering option.
 function processNotificationFiltering(node) {
+	if (!node) {
+		return false;
+	}
 	const filter = document.querySelector("select[name='filter-type']");
 	const notificationType = parseInt(node.getAttribute("data-notification-type"));
 

@@ -1,3 +1,6 @@
+import { SettingsMgr } from "../scripts/SettingsMgr.js";
+const Settings = new SettingsMgr();
+
 //Reminder: This script is executed from the extension popup.
 //          The console used is the browser console, not the inspector console.
 const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
@@ -185,7 +188,7 @@ async function initiateSettings() {
 	});
 
 	//UUID:
-	key = CSS.escape("generaluuid");
+	let key = CSS.escape("generaluuid");
 	document.querySelector(`#${key}`).onmouseenter = function () {
 		let key = CSS.escape("generaluuid");
 		document.querySelector(`#${key}`).type = "text";
@@ -431,7 +434,7 @@ function manageSelectBox(key) {
 	const keyE = CSS.escape(key);
 	const selectObj = document.querySelector(`label[for='${keyE}'] select`);
 
-	for (i = 0; i < selectObj.options.length; i++) {
+	for (let i = 0; i < selectObj.options.length; i++) {
 		if (selectObj.options[i].value == val) {
 			selectObj.options[i].selected = true;
 		}
@@ -475,3 +478,5 @@ function manageCheckboxSetting(key, def = null) {
 function isNumeric(n) {
 	return !isNaN(parseFloat(n)) && isFinite(n);
 }
+
+export { initiateSettings };

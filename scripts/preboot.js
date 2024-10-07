@@ -30,7 +30,21 @@ var appVersion = null;
 var prebootCompleted = false;
 var ultraviner = false; //If Ultravine is detected, Vine Helper will deactivate itself to avoid conflicts.
 
-var Settings = new SettingsMgr();
+var Settings = null;
+
+// Factory function to load a module
+(async () => {
+	try {
+		let module = null;
+
+		//Load the SettingMgr.
+		module = await import(chrome.runtime.getURL("../scripts/SettingsMgr.js"));
+		Settings = new module.SettingsMgr();
+	} catch (error) {
+		console.error("Error loading module:", error);
+	}
+})();
+
 var Tpl = new Template();
 var TplMgr = new TemplateMgr();
 var DialogMgr = new ModalMgr();
@@ -50,7 +64,7 @@ if (!regex.test(window.location.href)) {
 //Loading the settings from the local storage
 async function getSettings() {
 	showRuntime("PREBOOT: Waiting on config to be loaded...");
-	while (!Settings.isLoaded()) {
+	while (!Settings || !Settings.isLoaded()) {
 		await new Promise((r) => setTimeout(r, 10));
 	}
 	showRuntime("PREBOOT: config loaded!");

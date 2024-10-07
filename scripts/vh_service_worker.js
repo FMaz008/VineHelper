@@ -1,12 +1,18 @@
-const DEBUG_MODE = true; //Will switch the notification countries to "com"
+const DEBUG_MODE = false; //Will switch the notification countries to "com"
 const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_URL = "http://127.0.0.1:3000";
 const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_WS_URL = "ws://127.0.0.1:3000";
 
+import { SettingsMgr } from "../scripts/SettingsMgr.js";
+import "../node_modules/socket.io/client-dist/socket.io.min.js";
+import "../plugins/_pluginsInit.js";
+
+/*
 if ("function" == typeof importScripts) {
 	importScripts("../scripts/SettingsMgr.js");
 }
+*/
 
 var Settings = new SettingsMgr();
 var notificationsData = {};
@@ -27,48 +33,6 @@ var vineDomain;
 
 if (typeof browser === "undefined") {
 	var browser = chrome;
-}
-
-//#####################################################
-//## PLUGIN SYSTEM
-//#####################################################
-
-//The plugin can't be run using the official release as they are bundled and can't be changed.
-//Check if the manifest.json pas the scripting permission, which is the case for the github code.
-//If so, activate the plugin system.
-if ("function" == typeof importScripts) {
-	chrome.permissions.contains({ permissions: ["scripting"] }, (result) => {
-		if (result) {
-			//Import plugin service workers' scripts
-			importScripts("../plugins/_pluginsInit.js");
-			for (let i = 0; i < ARR_PLUGIN_SERVICE_WORKERS.length; i++) {
-				console.log("Importing service worker " + ARR_PLUGIN_SERVICE_WORKERS[i]);
-				importScripts("../plugins/" + ARR_PLUGIN_SERVICE_WORKERS[i]);
-			}
-
-			//Import plugin content_scripts
-			browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-				if (message.action === "injectPluginsContentScripts") {
-					for (let i = 0; i < ARR_PLUGIN_CONTENT_SCRIPTS.length; i++) {
-						// Inject the specified script into the content script context
-						browser.scripting.executeScript(
-							{
-								target: { tabId: sender.tab.id, frameIds: [sender.frameId] },
-								files: ["plugins/" + ARR_PLUGIN_CONTENT_SCRIPTS[i]],
-							},
-							() => {
-								if (browser.runtime.lastError) {
-									console.error(browser.runtime.lastError);
-								} else {
-									console.log(`Imported content_script ${ARR_PLUGIN_CONTENT_SCRIPTS[i]}.`);
-								}
-							}
-						);
-					}
-				}
-			});
-		}
-	});
 }
 
 //#####################################################
@@ -113,10 +77,6 @@ browser.alarms.onAlarm.addListener(async (alarm) => {
 });
 
 //Websocket
-
-if ("function" == typeof importScripts) {
-	importScripts("../node_modules/socket.io/client-dist/socket.io.min.js");
-}
 
 let socket;
 function connectWebSocket() {

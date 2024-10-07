@@ -1,4 +1,9 @@
 //No JQuery
+
+if (typeof showRuntime === "undefined") {
+	showRuntime = function () {};
+}
+
 class Template {
 	constructor() {
 		this.arrCache = [];

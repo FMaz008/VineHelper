@@ -1,5 +1,9 @@
 //No JQuery
 
+if (typeof browser === "undefined") {
+	var browser = chrome;
+}
+
 class PinnedListMgr {
 	constructor() {
 		this.mapPin = new Map();

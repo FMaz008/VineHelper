@@ -59,7 +59,7 @@ async function init() {
 
 	//Wait for the config to be loaded before running this script
 	showRuntime("BOOT: Waiting on preboot to complete...");
-	while (!Settings.isLoaded() || !prebootCompleted) {
+	while (!Settings || !Settings.isLoaded() || !prebootCompleted) {
 		await new Promise((r) => setTimeout(r, 10));
 	}
 	showRuntime("BOOT: Config available. Begining init() function");
