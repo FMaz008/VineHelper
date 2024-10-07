@@ -305,7 +305,7 @@ async function fetchLast100Items(fetchAll = false) {
 					}
 				}
 			}
-			sendMessageToAllTabs({ type: "newItemCheckEnd" }, "End of notification(s) update");
+			//sendMessageToAllTabs({ type: "newItemCheckEnd" }, "End of notification(s) update");
 		})
 		.catch(function () {
 			(error) => console.log(error);
@@ -392,8 +392,8 @@ async function sendMessageToAllTabs(data, debugInfo) {
 					const match = regex.exec(tab.url);
 					if (tab.url != undefined && match) {
 						if (DEBUG_MODE) {
-							console.log("Sending message to tab " + tab.id);
-							console.log(tab.url);
+							//console.log("Sending message to tab " + tab.id);
+							//console.log(tab.url);
 						}
 
 						try {

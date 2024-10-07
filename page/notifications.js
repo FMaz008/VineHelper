@@ -1,24 +1,11 @@
 const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_URL = "http://127.0.0.1:3000";
 
-//Notification arrive one at the time
-//These variable allow to remember the type of notifications received
-//so that when the batch end, if notification(s) were received
-//the proper sound effect can be played.
-var notification_added_item = false;
-var notification_highlight = false;
-var notification_zeroETV = false;
-
 //const TYPE_SHOW_ALL = -1;
 const TYPE_REGULAR = 0;
 const TYPE_ZEROETV = 1;
 const TYPE_HIGHLIGHT = 2;
 const TYPE_HIGHLIGHT_OR_ZEROETV = 9;
-
-const SOUND_NONE = 0;
-const SOUND_NOW = 1;
-const SOUND_QUEUE = 2;
-var muteLiveSound = false;
 
 if (typeof browser === "undefined") {
 	var browser = chrome;
@@ -39,6 +26,8 @@ function showDebug() {
 
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
 window.Settings = new SettingsMgr();
+import { NotificationsSoundPlayer } from "../scripts/NotificationsSoundPlayer.js";
+var notificationsSoundPlayer = new NotificationsSoundPlayer();
 
 window.Tpl = new Template();
 window.TplMgr = new TemplateMgr();
@@ -79,7 +68,7 @@ const handleReportClick = (e) => {
 };
 
 const handleBrendaClick = (e) => {
-	console.log("Branda");
+	console.log("Brenda");
 	e.preventDefault();
 
 	const asin = e.target.dataset.asin;
@@ -128,33 +117,20 @@ window.onload = function () {
 			addItem(data);
 		}
 		if (data.type == "ETVUpdate") {
-			if (Settings.get("notification.websocket") && !muteLiveSound) {
+			if (Settings.get("notification.websocket")) {
 				if (items.get(data.asin) === null) {
 					console.log("ETV Update received for item " + data.asin + " @ " + data.etv);
 				}
-				setETV(data.asin, data.etv, SOUND_NOW);
-			} else {
-				setETV(data.asin, data.etv, SOUND_QUEUE); //Do not play a sound for a batch update
 			}
+			setETV(data.asin, data.etv);
 		}
 
 		if (data.type == "newItemCheck") {
-			muteLiveSound = true;
 			//Display a notification that we have checked for items.
 			let note = new ScreenNotification();
 			note.template = "view/notification_loading.html";
 			note.lifespan = 3;
 			Notifications.pushNotification(note);
-		}
-		if (data.type == "newItemCheckEnd") {
-			console.log("end");
-			if (notification_added_item) {
-				playSoundAccordingToNotificationType(notification_highlight, notification_zeroETV);
-			}
-			notification_added_item = false;
-			notification_highlight = false;
-			notification_zeroETV = false;
-			muteLiveSound = false;
 		}
 
 		if (data.type == "wsOpen") {
@@ -162,7 +138,6 @@ window.onload = function () {
 				"<strong>Server status: </strong><div class='vh-switch-32 vh-icon-switch-on'></div> Listening for notifications...";
 			document.querySelector("label[for='fetch-last-100']").style.display = "block";
 			document.getElementById("statusWS").style.display = "block";
-			muteLiveSound = false;
 		}
 		if (data.type == "wsClosed") {
 			document.getElementById("statusWS").innerHTML =
@@ -348,25 +323,17 @@ function addItem(data) {
 
 	//Apply the filter.
 	let displayItem = processNotificationFiltering(content);
-
 	if (displayItem) {
-		notification_added_item = true;
-
-		//Define the type of item that we found
-		if (etv == "0.00") {
-			notification_zeroETV = true;
-		}
-
-		//Highlight the item
-		if (KWsMatch) {
-			const obj = elementByAsin(asin);
-			obj.style.backgroundColor = Settings.get("notification.monitor.highlight.color");
-			notification_highlight = true;
-		}
+		notificationsSoundPlayer.play(type);
+	}
+	//Highlight the item
+	if (KWsMatch) {
+		const obj = elementByAsin(asin);
+		obj.style.backgroundColor = Settings.get("notification.monitor.highlight.color");
 	}
 
 	//Set ETV
-	setETV(asin, etv, SOUND_NONE); //Do not play a sound (Instant ETV will receive an update, batch need to wait until the end)
+	setETV(asin, etv); //Do not play a sound (Instant ETV will receive an update, batch need to wait until the end)
 
 	// Add new click listener for the report button
 	document.querySelector("#vh-notification-" + asin + " .report-link").addEventListener("click", handleReportClick);
@@ -421,49 +388,6 @@ function formatDate(date) {
 	return new Date(date.replace(" ", "T") + "Z").toLocaleString(vineLocale);
 }
 
-function playSoundAccordingToNotificationType(highlightMatch = false, zeroETV = false) {
-	let volume, filename;
-
-	//Highlight notification
-	volume = Settings.get("notification.monitor.highlight.volume");
-	filename = Settings.get("notification.monitor.highlight.sound");
-	if (highlightMatch && filename != "0" && volume > 0) {
-		playSound(filename, volume);
-		return true;
-	}
-
-	//Zero ETV notification
-	volume = Settings.get("notification.monitor.zeroETV.volume");
-	filename = Settings.get("notification.monitor.zeroETV.sound");
-	if (zeroETV && filename != "0" && volume > 0) {
-		playSound(filename, volume);
-		return true;
-	}
-
-	//Regular notification
-	volume = Settings.get("notification.monitor.regular.volume");
-	filename = Settings.get("notification.monitor.regular.sound");
-	if (filename != "0" && volume > 0) {
-		playSound(filename, volume);
-		return true;
-	}
-
-	return false;
-}
-
-function playSound(filename, volume) {
-	const audioElement = new Audio(browser.runtime.getURL("resource/sound/" + filename + ".mp3"));
-	const handleEnded = () => {
-		audioElement.removeEventListener("ended", handleEnded); // Remove the event listener
-		audioElement.remove(); // Remove the audio element from the DOM
-	};
-	audioElement.addEventListener("ended", handleEnded);
-	if (volume >= 0 && volume <= 1) {
-		audioElement.volume = Number(volume);
-	}
-	audioElement.play();
-}
-
 function itemID(asin) {
 	return `vh-notification-${asin}`;
 }
@@ -472,7 +396,7 @@ function elementByAsin(asin) {
 	return document.getElementById(itemID(asin));
 }
 
-function setETV(asin, etv, immediatelyPlaySound) {
+function setETV(asin, etv) {
 	const obj = elementByAsin(asin);
 	if (!obj) {
 		return false; //This notification does not exist.
@@ -481,13 +405,7 @@ function setETV(asin, etv, immediatelyPlaySound) {
 
 	if (etvObj.innerText == "" && etv == "0.00") {
 		//If ETV changed from none to "0.00", trigger a sound and bring it to the top
-		if (immediatelyPlaySound == SOUND_NOW) {
-			playSoundAccordingToNotificationType(false, true);
-		}
-		if (immediatelyPlaySound == SOUND_QUEUE) {
-			notification_added_item = true;
-			notification_zeroETV = true;
-		}
+		notificationsSoundPlayer.play(TYPE_ZEROETV);
 
 		//Highlight for ETV
 		obj.style.backgroundColor = Settings.get("notification.monitor.zeroETV.color");
