@@ -311,7 +311,7 @@ function dispatchNewItem(data) {
 		);
 	}
 	//If the new item match in AFA queue, push a real notification.
-	else if (Settings.get("notification.pushNotificationsAFA") && queue == "last_chance") {
+	else if (Settings.get("notification.pushNotificationsAFA") && data.queue == "last_chance") {
 		pushNotification(
 			data.asin,
 			data.queue,
