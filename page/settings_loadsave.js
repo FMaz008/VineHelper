@@ -127,6 +127,7 @@ async function initiateSettings() {
 	manageSlider("notification.monitor.highlight.volume");
 	manageSlider("notification.monitor.regular.volume");
 	manageSlider("notification.monitor.zeroETV.volume");
+	manageSelectBox("notification.soundCooldownDelay");
 
 	//Select boxes
 	manageSelectBox("general.hiddenItemsCacheSize");

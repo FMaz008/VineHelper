@@ -232,6 +232,7 @@ class SettingsMgr {
 				websocket: true,
 				lastProduct: 0,
 				pushNotifications: false,
+				soundCooldownDelay: 2000,
 				hideList: false,
 				screen: {
 					active: false,
