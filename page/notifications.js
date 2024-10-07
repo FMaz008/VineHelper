@@ -73,20 +73,6 @@ var vineDomain = null;
 
 const broadcastChannel = new BroadcastChannel("VineHelperChannel");
 
-//Load stream-browserify
-/*
-(async () => {
-	const src = chrome.runtime.getURL("node_modules/stream-browserify/index.js");
-	await import(src);
-})();
-
-async function run() {
-	await pipeline(console.log("pipeline"), console.log("action2"));
-	console.log("Pipeline succeeded.");
-}
-run().catch(console.error);
-*/
-
 const handleReportClick = (e) => {
 	e.preventDefault(); // Prevent the default click behavior
 	report(e.target.dataset.asin);
@@ -161,6 +147,7 @@ window.onload = function () {
 			Notifications.pushNotification(note);
 		}
 		if (data.type == "newItemCheckEnd") {
+			console.log("end");
 			if (notification_added_item) {
 				playSoundAccordingToNotificationType(notification_highlight, notification_zeroETV);
 			}

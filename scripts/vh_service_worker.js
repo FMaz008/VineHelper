@@ -7,6 +7,72 @@ const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
 import "../node_modules/socket.io/client-dist/socket.io.min.js";
 import "../plugins/_pluginsInit.js";
+import { Streamy } from "./Streamy.js";
+
+const myStream = new Streamy();
+const filterHideitem = myStream.filter(function (data) {
+	if (Settings.get("notification.hideList")) {
+		const hideKWMatch = keywordMatch(Settings.get("general.hideKeywords"), data.title);
+		if (hideKWMatch) {
+			return false; //Do not display the notification as it matches the hide list.
+		}
+	}
+	return true;
+});
+const transformIsHighlight = myStream.transformer(function (data) {
+	const highlightKWMatch = keywordMatch(Settings.get("general.highlightKeywords"), data.title);
+	data.KWsMatch = highlightKWMatch;
+	return data;
+});
+const transformSearchPhrase = myStream.transformer(function (data) {
+	const search = data.title.replace(/^([a-zA-Z0-9\s',]{0,40})[\s]+.*$/, "$1");
+	data.search = search;
+	return data;
+});
+const transformUnixTimestamp = myStream.transformer(function (data) {
+	data.timestamp = dateToUnixTimestamp(data.date);
+	return data;
+});
+const transformPostNotification = myStream.transformer(function (data) {
+	//If the new item match a highlight keyword, push a real notification.
+	if (Settings.get("notification.pushNotifications") && data.highlightKWMatch) {
+		pushNotification(
+			data.asin,
+			data.queue,
+			data.is_parent_asin,
+			data.enrollment_guid,
+			data.search,
+			"Vine Helper - New item match KW!",
+			data.title,
+			data.img_url
+		);
+	}
+	//If the new item match in AFA queue, push a real notification.
+	else if (Settings.get("notification.pushNotificationsAFA") && data.queue == "last_chance") {
+		pushNotification(
+			data.asin,
+			data.queue,
+			data.is_parent_asin,
+			data.enrollment_guid,
+			data.search,
+			"Vine Helper - New AFA item",
+			data.title,
+			data.img_url
+		);
+	}
+	return data;
+});
+myStream
+	.pipe(filterHideitem)
+	.pipe(transformIsHighlight)
+	.pipe(transformSearchPhrase)
+	.pipe(transformUnixTimestamp)
+	.pipe(transformPostNotification)
+	.output((data) => {
+		//Broadcast the notification
+		//console.log("Broadcasting new item " + data.asin);
+		sendMessageToAllTabs(data, "notification");
+	});
 
 /*
 if ("function" == typeof importScripts) {
@@ -102,7 +168,7 @@ function connectWebSocket() {
 
 	socket.on("newItem", (data) => {
 		// Assuming the server sends the data in the same format as before
-		dispatchNewItem({
+		myStream.input({
 			index: 0,
 			type: "newItem",
 			domain: vineCountry,
@@ -212,7 +278,7 @@ async function fetchLast100Items(fetchAll = false) {
 				}
 				if (fetchAll || timestamp > Settings.get("notification.lastProduct")) {
 					Settings.set("notification.lastProduct", timestamp);
-					dispatchNewItem({
+					myStream.input({
 						index: i,
 						type: "newItem",
 						domain: vineCountry,
@@ -244,67 +310,6 @@ async function fetchLast100Items(fetchAll = false) {
 		.catch(function () {
 			(error) => console.log(error);
 		});
-}
-
-function dispatchNewItem(data) {
-	if (Settings.get("notification.hideList")) {
-		const hideKWMatch = keywordMatch(Settings.get("general.hideKeywords"), data.title);
-		if (hideKWMatch) {
-			return; //Do not display the notification as it matches the hide list.
-		}
-	}
-
-	const search = data.title.replace(/^([a-zA-Z0-9\s',]{0,40})[\s]+.*$/, "$1");
-	const highlightKWMatch = keywordMatch(Settings.get("general.highlightKeywords"), data.title);
-
-	//If the new item match a highlight keyword, push a real notification.
-	if (Settings.get("notification.pushNotifications") && highlightKWMatch) {
-		pushNotification(
-			data.asin,
-			data.queue,
-			data.is_parent_asin,
-			data.enrollment_guid,
-			search,
-			"Vine Helper - New item match KW!",
-			data.title,
-			data.img_url
-		);
-	}
-	//If the new item match in AFA queue, push a real notification.
-	else if (Settings.get("notification.pushNotificationsAFA") && data.queue == "last_chance") {
-		pushNotification(
-			data.asin,
-			data.queue,
-			data.is_parent_asin,
-			data.enrollment_guid,
-			search,
-			"Vine Helper - New AFA item",
-			data.title,
-			data.img_url
-		);
-	}
-
-	//Broadcast the notification
-	//console.log("Broadcasting new item " + data.asin);
-	sendMessageToAllTabs(
-		{
-			index: data.index,
-			type: data.type,
-			domain: vineCountry,
-			date: data.date,
-			timestamp: dateToUnixTimestamp(data.date),
-			asin: data.asin,
-			title: data.title,
-			search: search,
-			img_url: data.img_url,
-			etv: data.etv,
-			queue: data.queue,
-			KWsMatch: highlightKWMatch,
-			is_parent_asin: data.is_parent_asin,
-			enrollment_guid: data.enrollment_guid,
-		},
-		"notification"
-	);
 }
 
 function pushNotification(asin, queue, is_parent_asin, enrollment_guid, search_string, title, description, img_url) {
