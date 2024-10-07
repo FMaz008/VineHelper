@@ -851,7 +851,11 @@ window.addEventListener("message", async function (event) {
 
 		//Update the product tile ETV in the Toolbar
 		const tile = getTileByAsin(tileASIN);
-		tile.getToolbar().setETV(event.data.data.etv, event.data.data.etv, true);
+		if (tile) {
+			tile.getToolbar().setETV(event.data.data.etv, event.data.data.etv, true);
+		} else {
+			console.error("Unable to find the tile for ASIN " + tileASIN);
+		}
 
 		//Show a notification
 		if (!Settings.get("notification.reduce")) {

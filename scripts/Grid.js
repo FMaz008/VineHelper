@@ -217,8 +217,28 @@ async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enro
 	//Check if the pin already exist:
 	if (document.getElementById("vh-pin-" + asin) != undefined) return false;
 
-	let prom2 = await Tpl.loadFile("view/pinned_tile.html");
+	let templateFile;
+	if (Settings.get("general.listView")) {
+		templateFile = "pinned_tile_listview.html";
+	} else {
+		templateFile = "pinned_tile_gridview.html";
+	}
+	let prom2 = await Tpl.loadFile("view/" + templateFile);
 	let search = title.replace(/^([a-zA-Z0-9\s',]{0,40})[\s]+.*$/, "$1");
+
+	const recommendationTypes = {
+		potluck: "VENDOR_TARGETED",
+		last_chance: "VENDOR_VINE_FOR_ALL",
+		encore: "VINE_FOR_ALL",
+	};
+
+	const recommendationType = recommendationTypes[queue] || null;
+	let recommendationId;
+	if (recommendationType == "VENDOR_TARGETED") {
+		recommendationId = marketplaceId + "#" + asin + "#" + customerId + "#vine.enrollment." + enrollment_guid;
+	} else {
+		recommendationId = marketplaceId + "#" + asin + "#vine.enrollment." + enrollment_guid;
+	}
 
 	if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
 		Tpl.setVar(
@@ -236,6 +256,10 @@ async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enro
 	Tpl.setVar("description", title);
 	Tpl.setVar("is_parent_asin", is_parent_asin);
 	Tpl.setVar("enrollment_guid", enrollment_guid);
+	Tpl.setVar("recommendationType", recommendationType);
+	Tpl.setVar("recommendationId", recommendationId);
+	Tpl.setVar("recommendationId", recommendationId);
+
 	let content = Tpl.render(prom2, true);
 	document.getElementById("tab-pinned").appendChild(content);
 
