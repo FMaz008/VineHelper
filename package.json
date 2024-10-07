@@ -5,7 +5,7 @@
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"lint": "eslint .",
-		"build": "node build.js",
+		"build:release": "node build.js",
 		"prepare": "husky"
 	},
 	"repository": {
@@ -59,7 +59,7 @@
 		},
 		"hooks": {
 			"after:bump": [
-				"yarn build"
+				"yarn build:release"
 			]
 		},
 		"npm": {
