@@ -77,6 +77,7 @@ async function init() {
 	fetchProductsDatav5(); //Obtain the data to fill the toolbars with it.
 
 	displayAccountData();
+	initAddNotificationMonitorLink();
 	showGDPRPopup();
 	await initFlushTplCache(); //And display the version changelog popup
 	initInjectScript();
@@ -222,6 +223,20 @@ function initSetPageTitle() {
 	}
 }
 
+function initAddNotificationMonitorLink() {
+	const ul = document.querySelector("ul.vvp-header-links-container");
+	if (ul) {
+		const li = document.createElement("li");
+		li.classList.add("vvp-header-link");
+		ul.appendChild(li);
+
+		const a = document.createElement("a");
+		a.href = chrome.runtime.getURL("page/notifications.html");
+		a.target = "_blank";
+		a.innerText = "VH Notifications Monitor";
+		li.appendChild(a);
+	}
+}
 async function initCreateTabs() {
 	//Create the Discard grid
 	showRuntime("BOOT: Creating tabs system");
