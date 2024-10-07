@@ -1,4 +1,4 @@
-const DEBUG_MODE = false; //Will switch the notification countries to "com"
+const DEBUG_MODE = true; //Will switch the notification countries to "com"
 const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_URL = "http://127.0.0.1:3000";
 const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
@@ -299,40 +299,28 @@ function dispatchNewItem(data) {
 
 	//If the new item match a highlight keyword, push a real notification.
 	if (Settings.get("notification.pushNotifications") && highlightKWMatch) {
-		chrome.notifications.onClicked.addListener((notificationId) => {
-			const { asin, queue, is_parent_asin, enrollment_guid, search } = notificationsData[notificationId];
-			if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
-				chrome.tabs.create({
-					url: `https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`,
-				});
-			} else {
-				chrome.tabs.create({
-					url: `https://www.amazon.${vineDomain}/vine/vine-items?search=${search}`,
-				});
-			}
-		});
-
-		notificationsData["item-" + data.asin] = {
-			asin: data.asin,
-			queue: data.queue,
-			is_parent_asin: data.is_parent_asin,
-			enrollment_guid: data.enrollment_guid,
-			search: data.search,
-		};
-		chrome.notifications.create(
-			"item-" + data.asin,
-			{
-				type: "basic",
-				iconUrl: data.img_url,
-				title: "Vine Helper - New item match!",
-				message: data.title,
-				priority: 2,
-			},
-			(notificationId) => {
-				if (chrome.runtime.lastError) {
-					console.error("Notification error:", chrome.runtime.lastError);
-				}
-			}
+		pushNotification(
+			data.asin,
+			data.queue,
+			data.is_parent_asin,
+			data.enrollment_guid,
+			search,
+			"Vine Helper - New item match KW!",
+			data.title,
+			data.img_url
+		);
+	}
+	//If the new item match in AFA queue, push a real notification.
+	else if (Settings.get("notification.pushNotificationsAFA") && queue == "last_chance") {
+		pushNotification(
+			data.asin,
+			data.queue,
+			data.is_parent_asin,
+			data.enrollment_guid,
+			search,
+			"Vine Helper - New AFA item",
+			data.title,
+			data.img_url
 		);
 	}
 
@@ -359,6 +347,43 @@ function dispatchNewItem(data) {
 	);
 }
 
+function pushNotification(asin, queue, is_parent_asin, enrollment_guid, search_string, title, description, img_url) {
+	chrome.notifications.onClicked.addListener((notificationId) => {
+		const { asin, queue, is_parent_asin, enrollment_guid, search } = notificationsData[notificationId];
+		if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
+			chrome.tabs.create({
+				url: `https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`,
+			});
+		} else {
+			chrome.tabs.create({
+				url: `https://www.amazon.${vineDomain}/vine/vine-items?search=${search}`,
+			});
+		}
+	});
+
+	notificationsData["item-" + asin] = {
+		asin: asin,
+		queue: queue,
+		is_parent_asin: is_parent_asin,
+		enrollment_guid: enrollment_guid,
+		search: search_string,
+	};
+	chrome.notifications.create(
+		"item-" + asin,
+		{
+			type: "basic",
+			iconUrl: img_url,
+			title: title,
+			message: description,
+			priority: 2,
+		},
+		(notificationId) => {
+			if (chrome.runtime.lastError) {
+				console.error("Notification error:", chrome.runtime.lastError);
+			}
+		}
+	);
+}
 function keywordMatch(keywords, title) {
 	return keywords.some((word) => {
 		let regex;

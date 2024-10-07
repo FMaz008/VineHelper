@@ -111,6 +111,7 @@ async function initiateSettings() {
 
 	manageCheckboxSetting("notification.active");
 	manageCheckboxSetting("notification.pushNotifications");
+	manageCheckboxSetting("notification.pushNotificationsAFA");
 	manageCheckboxSetting("notification.screen.active");
 	manageCheckboxSetting("notification.screen.thumbnail");
 	manageCheckboxSetting("notification.hideList");
