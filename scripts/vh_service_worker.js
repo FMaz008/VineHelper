@@ -35,7 +35,7 @@ const transformUnixTimestamp = myStream.transformer(function (data) {
 });
 const transformPostNotification = myStream.transformer(function (data) {
 	//If the new item match a highlight keyword, push a real notification.
-	if (Settings.get("notification.pushNotifications") && data.highlightKWMatch) {
+	if (Settings.get("notification.pushNotifications") && data.KWsMatch) {
 		pushNotification(
 			data.asin,
 			data.queue,
