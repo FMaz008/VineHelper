@@ -80,7 +80,7 @@
 		border-color: var(--border-dark, #f9f9f9);
 	}
 
-	.vh-icon-search {
+	.vh-toolbar-large-icon {
 		filter: invert(1);
 	}
 }
