@@ -854,7 +854,8 @@ window.addEventListener("message", async function (event) {
 		if (tile) {
 			tile.getToolbar().setETV(event.data.data.etv, event.data.data.etv, true);
 		} else {
-			console.error("Unable to find the tile for ASIN " + tileASIN);
+			//This can happen when we force an open modal for an item that is not present on the page
+			//console.error("Unable to find the tile for ASIN " + tileASIN);
 		}
 
 		//Show a notification
@@ -915,7 +916,12 @@ window.addEventListener("message", async function (event) {
 
 			//Update the product tile ETV in the Toolbar
 			let tile = getTileByAsin(tileASIN);
-			tile.getToolbar().createOrderWidget(event.data.data.status == "success");
+			if (tile) {
+				tile.getToolbar().createOrderWidget(event.data.data.status == "success");
+			} else {
+				//This can happen when we force an open modal for an item that is not present on the page
+				//console.error("Unable to find the tile for ASIN " + tileASIN);
+			}
 		}
 
 		const note = new ScreenNotification();

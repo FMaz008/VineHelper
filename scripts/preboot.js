@@ -212,7 +212,7 @@ async function getSettings() {
 	if (vineQueue != null) vineQueueAbbr = arrQueues[vineQueue];
 
 	//Generate a UUID for the user
-	uuid = Settings.get("general.uuid");
+	uuid = Settings.get("general.uuid", false);
 	if (!uuid) {
 		uuid = await requestNewUUID();
 		Settings.set("general.uuid", uuid);
