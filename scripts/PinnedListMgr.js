@@ -89,7 +89,10 @@ class PinnedListMgr {
 	}
 
 	async addItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID, save = true, broadcast = true) {
-		if (!asin || !queue || !title || !thumbnail || !isParentAsin || !enrollmentGUID) {
+		if (!queue) {
+			queue = "encore"; //Not really a good fix but if there is no known queue, assume it's AI.
+		}
+		if (!asin || !title || !thumbnail || !isParentAsin || !enrollmentGUID) {
 			throw new Error("Invalid data");
 		}
 
