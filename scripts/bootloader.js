@@ -944,9 +944,13 @@ window.addEventListener("message", async function (event) {
 	if (event.data.type && event.data.type == "error") {
 		//Show a notification
 		let note = new ScreenNotification();
-		note.title = "Broken product detected.";
+		note.title = "Product unavailable.";
 		note.lifespan = 10;
-		note.content = "Item broken with error " + event.data.data.error + ".";
+		note.content =
+			"<strong>Type:</strong> " +
+			event.data.data.errorType +
+			"<br/><strong>Details:</strong> " +
+			event.data.data.error;
 		await Notifications.pushNotification(note);
 	}
 

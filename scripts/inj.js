@@ -63,17 +63,16 @@ window.fetch = async (...args) => {
 		let { result, error } = extHelper_responseData;
 
 		if (result === null) {
-			if (error?.exceptionType) {
-				window.postMessage(
-					{
-						type: "error",
-						data: {
-							error: error.exceptionType,
-						},
+			window.postMessage(
+				{
+					type: "error",
+					data: {
+						errorType: error.exceptionType,
+						error: error.message,
 					},
-					"/" //message should be sent to the same origin as the current document.
-				);
-			}
+				},
+				"/" //message should be sent to the same origin as the current document.
+			);
 			return response;
 		}
 
