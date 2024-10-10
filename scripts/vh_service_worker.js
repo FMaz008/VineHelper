@@ -312,19 +312,23 @@ async function fetchLast100Items(fetchAll = false) {
 		});
 }
 
+let isListenerAdded = false;
 function pushNotification(asin, queue, is_parent_asin, enrollment_guid, search_string, title, description, img_url) {
-	chrome.notifications.onClicked.addListener((notificationId) => {
-		const { asin, queue, is_parent_asin, enrollment_guid, search } = notificationsData[notificationId];
-		if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
-			chrome.tabs.create({
-				url: `https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`,
-			});
-		} else {
-			chrome.tabs.create({
-				url: `https://www.amazon.${vineDomain}/vine/vine-items?search=${search}`,
-			});
-		}
-	});
+	if (!isListenerAdded) {
+		chrome.notifications.onClicked.addListener((notificationId) => {
+			const { asin, queue, is_parent_asin, enrollment_guid, search } = notificationsData[notificationId];
+			if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
+				chrome.tabs.create({
+					url: `https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`,
+				});
+			} else {
+				chrome.tabs.create({
+					url: `https://www.amazon.${vineDomain}/vine/vine-items?search=${search}`,
+				});
+			}
+			isListenerAdded = true;
+		});
+	}
 
 	notificationsData["item-" + asin] = {
 		asin: asin,
