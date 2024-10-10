@@ -2,7 +2,7 @@
 	"manifest_version": 3,
 	"name": "Amazon Vine Helper",
 	"description": "Improve the Amazon Vine experience.",
-	"version": "2.10.3",
+	"version": "2.10.4",
 	"permissions": [
 		"alarms",
 		"storage",
@@ -47,8 +47,7 @@
 				"node_modules/vine-styling/mobile/*",
 				"node_modules/socket.io/client-dist/*",
 				"scripts/inj.js",
-				"scripts/*",
-				"plugins/*"
+				"scripts/*"
 			],
 			"matches": [
 				"*://*.amazon.ca/*",

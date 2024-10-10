@@ -6,7 +6,7 @@ const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
 
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
 import "../node_modules/socket.io/client-dist/socket.io.min.js";
-import "../plugins/_pluginsInit.js";
+//import "../plugins/_pluginsInit.js";
 import { Streamy } from "./Streamy.js";
 
 const myStream = new Streamy();
