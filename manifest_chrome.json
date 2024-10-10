@@ -46,7 +46,8 @@
 				"node_modules/vine-styling/desktop/*",
 				"node_modules/vine-styling/mobile/*",
 				"node_modules/socket.io/client-dist/*",
-				"scripts/inj.js"
+				"scripts/inj.js",
+				"scripts/*"
 			],
 			"matches": [
 				"*://*.amazon.ca/*",
