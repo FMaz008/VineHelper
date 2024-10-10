@@ -9,6 +9,7 @@ const pkg = require("./package.json");
 	fs.cpSync("./popup/", "./dist/popup/", { recursive: true });
 	fs.cpSync("./resource/", "./dist/resource/", { recursive: true });
 	fs.cpSync("./scripts/", "./dist/scripts/", { recursive: true });
+	fs.cpSync("./plugins/_pluginsInit.js", "./dist/plugins/_pluginsInit.js");
 	fs.cpSync("./view/", "./dist/view/", { recursive: true });
 	fs.mkdirSync("./dist/node_modules/jquery/dist", { recursive: true });
 	fs.cpSync("./node_modules/jquery/dist/jquery.min.js", "./dist/node_modules/jquery/dist/jquery.min.js");

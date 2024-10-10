@@ -2,7 +2,7 @@
 	"manifest_version": 3,
 	"name": "Amazon Vine Helper",
 	"description": "Improve the Amazon Vine experience.",
-	"version": "2.10.2",
+	"version": "2.10.3",
 	"permissions": [
 		"alarms",
 		"storage",
@@ -72,7 +72,6 @@
 		"type": "module",
 		"scripts": [
 			"node_modules/socket.io/client-dist/socket.io.min.js",
-			"scripts/SettingsMgr.js",
 			"scripts/vh_service_worker.js"
 		]
 	},
