@@ -263,7 +263,8 @@ async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enro
 	document.getElementById("tab-pinned").appendChild(content);
 
 	//Bind the click event for the unpin button
-	document.querySelector("#vh-pin-" + asin + " .unpin-link").onclick = () => {
+	document.querySelector("#vh-pin-" + asin + " .unpin-link").onclick = (e) => {
+		e.preventDefault();
 		PinnedList.removeItem(asin);
 		document.getElementById("vh-pin-" + asin).remove();
 
