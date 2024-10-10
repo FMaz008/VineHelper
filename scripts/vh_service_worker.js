@@ -5,9 +5,11 @@ const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_WS_URL = "ws://127.0.0.1:3000";
 
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
-import "../node_modules/socket.io/client-dist/socket.io.min.js";
-//import "../plugins/_pluginsInit.js";
 import { Streamy } from "./Streamy.js";
+import "../node_modules/socket.io/client-dist/socket.io.min.js";
+
+//Plugin line must be commented for official releases:
+//import "../plugins/_pluginsInit.js";
 
 const myStream = new Streamy();
 const filterHideitem = myStream.filter(function (data) {
