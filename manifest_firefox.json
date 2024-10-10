@@ -2,8 +2,13 @@
 	"manifest_version": 3,
 	"name": "Amazon Vine Helper",
 	"description": "Improve the Amazon Vine experience.",
-	"version": "2.9.14",
-	"permissions": ["alarms", "storage", "tabs", "notifications"],
+	"version": "2.10.0",
+	"permissions": [
+		"alarms",
+		"storage",
+		"tabs",
+		"notifications"
+	],
 	"content_security_policy": {
 		"extension_pages": "default-src 'self'; script-src 'self';  style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.vinehelper.ovh wss://api.vinehelper.ovh https://*.media-amazon.com https://api.llamastories.com; img-src 'self' https://*.media-amazon.com https://*.paypal.com https://*.paypalobjects.com;"
 	},
@@ -127,8 +132,14 @@
 			"run_at": "document_start"
 		},
 		{
-			"css": ["resource/css/vinehelper.css", "resource/css/main.css"],
-			"js": ["scripts/Template.js", "scripts/review.js"],
+			"css": [
+				"resource/css/vinehelper.css",
+				"resource/css/main.css"
+			],
+			"js": [
+				"scripts/Template.js",
+				"scripts/review.js"
+			],
 			"matches": [
 				"*://*.amazon.ca/review/*",
 				"*://*.amazon.it/review/*",
