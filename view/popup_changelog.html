@@ -1,22 +1,25 @@
 <strong>Version {{$appVersion}} change notes:</strong>
 <br />
 <ul>
-	<li>NEW: Server API completely redone, which now allow for:</li>
-	<li>NEW: Push notifications option for items matching the highlight keywords list.</li>
-	<li>NEW: Items can be shared to Brenda from the Notification Monitor.</li>
-	<li>NEW: Notification Monitor can auto-truncate items exceeding 2000 notifications.</li>
+	<li>NEW: Push notifications for AFA items.</li>
+	<li>NEW: Notifications sound cooldown time.</li>
+	<li>NEW: Added "VH Notification Monitor" on the vine pages' "contact us" menu.</li>
+	<li>IMPROVED: Improved error catching when opening a See Details modal window.</li>
+	<li>IMPROVED: Pinned tab displays the same as the other tabs.</li>
+	<li>FIX: Push notifications searching for "undefined"</li>
+	<li>FIX: Push notifications opening multiple tabs</li>
+	<li>FIX: Open See Details modal (via search button) generated an error "tile does not exist".</li>
 	<li>
-		NEW: (EXPERIMENTAL WARNING) Option for the "search" buttons to attempt opening the item's See Details modal
-		window.
+		FIX: Inverse the color of the icons in the notifications monitor if the browser's darkmode/nightmode is used.
 	</li>
-	<li>NEW: Keybindings to access available/unavailable/hidden/pinned tabs</li>
-	<li>IMPROVED: Settings tabs spacing.</li>
-	<li>IMPROVED: Brenda announce feature is available in the unavailable tab.</li>
-	<li>IMPROVED: Brenda API settings design improvement.</li>
-	<li>IMPROVED: Pinned tab is now showing as a proper list view.</li>
+	<li>FIX: Pinning an item from the Search generated an error as the queue was unknown (We now assume AI)</li>
+	<li>CHANGE: Moved the instant notifications setting from the Experimental features to the Notification tabs.</li>
+	<li>CHANGE: Instant notification is now the default selection for new installations.</li>
+	<li>
+		CHANGE: Open See Details modal window in a new tab now open in AFA instead of AI, increasing the chances of
+		catching new AFA items.
+	</li>
 </ul>
-
-<p style="margin-top: 20px">Note: The mobile browser <strong>Kiwi</strong> for android support Vine Helper.</p>
 
 <div style="text-align: center">
 	<form action="https://www.paypal.com/donate" method="post" target="_blank">

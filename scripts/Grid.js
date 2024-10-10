@@ -258,7 +258,6 @@ async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enro
 	Tpl.setVar("enrollment_guid", enrollment_guid);
 	Tpl.setVar("recommendationType", recommendationType);
 	Tpl.setVar("recommendationId", recommendationId);
-	Tpl.setVar("recommendationId", recommendationId);
 
 	let content = Tpl.render(prom2, true);
 	document.getElementById("tab-pinned").appendChild(content);
