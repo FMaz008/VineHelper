@@ -252,7 +252,15 @@ async function setLocale(country) {
 		vineCurrency = vineLocales[country].currency;
 		vineDomain = vineDomains[country];
 
-		if (Settings.get("notification.active")) {
+		if (country === null) {
+			document.getElementById("status").innerHTML =
+				"<strong>Notification Monitor: </strong><div class='vh-switch-32 vh-icon-switch-off'> Your country has not been detected, ensure to load a vine page before using the notification monitor.</div>";
+		} else if (vineDomain === null) {
+			document.getElementById("status").innerHTML =
+				"<strong>Notification Monitor: </strong><div class='vh-switch-32 vh-icon-switch-off'> No valid country found. You current country is detected as: '" +
+				country +
+				"', which is not currently supported by Vine Helper. Reach out so we can add it!";
+		} else if (Settings.get("notification.active")) {
 			document.getElementById("status").innerHTML =
 				"<strong>Notification Monitor: </strong><div class='vh-switch-32 vh-icon-switch-on'></div>";
 		}

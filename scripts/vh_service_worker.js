@@ -8,9 +8,6 @@ import { SettingsMgr } from "../scripts/SettingsMgr.js";
 import { Streamy } from "./Streamy.js";
 import "../node_modules/socket.io/client-dist/socket.io.min.js";
 
-//Plugin line must be commented for official releases:
-//import "../plugins/_pluginsInit.js";
-
 const myStream = new Streamy();
 const filterHideitem = myStream.filter(function (data) {
 	if (Settings.get("notification.hideList")) {
@@ -84,7 +81,6 @@ if ("function" == typeof importScripts) {
 
 var Settings = new SettingsMgr();
 var notificationsData = {};
-var vineCountry = null;
 var newItemCheckInterval = 0.3; //Firefox shutdown the background script after 30seconds.
 const broadcastChannel = new BroadcastChannel("VineHelperChannel");
 const vineDomains = {
@@ -129,6 +125,7 @@ browser.alarms.onAlarm.addListener(async (alarm) => {
 	//Reload the settings as a change to the keyword list would require the SW to be reloaded to
 	//be taken into consideration
 	await Settings.refresh();
+	await retrieveSettings();
 
 	if (alarm.name === "checkNewItems") {
 		if (!Settings.get("notification.websocket") || !Settings.get("notification.active")) {
@@ -153,6 +150,10 @@ function connectWebSocket() {
 		return;
 	}
 
+	if (Settings.get("general.country") === null) {
+		return; //If the country is not known, do not connect
+	}
+
 	socket = io.connect(VINE_HELPER_API_V5_WS_URL, {
 		query: {
 			countryCode: DEBUG_MODE ? "com" : Settings.get("general.country"),
@@ -173,7 +174,7 @@ function connectWebSocket() {
 		myStream.input({
 			index: 0,
 			type: "newItem",
-			domain: vineCountry,
+			domain: Settings.get("general.country"),
 			date: data.item.date,
 			asin: data.item.asin,
 			title: data.item.title,
@@ -240,17 +241,20 @@ async function retrieveSettings() {
 	}
 
 	//Set the country
-	vineCountry = Settings.get("general.country");
-	vineDomain = vineDomains[vineCountry];
+	vineDomain = vineDomains[Settings.get("general.country")];
 }
 
 async function fetchLast100Items(fetchAll = false) {
+	if (Settings.get("general.country") === null) {
+		return false; //If the country is not known, do not query
+	}
+
 	//Broadcast a new message to tell the tabs to display a loading wheel.
 	sendMessageToAllTabs({ type: "newItemCheck" }, "Loading wheel");
 
 	const content = {
 		api_version: 5,
-		country: DEBUG_MODE ? "com" : vineCountry,
+		country: DEBUG_MODE ? "com" : Settings.get("general.country"),
 		action: "get_latest_notifications",
 		uuid: Settings.get("general.uuid", false),
 	};
@@ -283,7 +287,7 @@ async function fetchLast100Items(fetchAll = false) {
 					myStream.input({
 						index: i,
 						type: "newItem",
-						domain: vineCountry,
+						domain: Settings.get("general.country"),
 						date: date,
 						asin: asin,
 						title: title,
