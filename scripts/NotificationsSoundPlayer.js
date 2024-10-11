@@ -49,9 +49,9 @@ class NotificationsSoundPlayer {
 	#playSound() {
 		this.#setState(STATE_PLAY);
 
-		let data = this.#getSoundAccordingToNotificationType();
+		let data = this.#getSoundAccordingToNotificationType(this.#notificationType);
 		if (data == null) {
-			throw new Error("Play was called with notification type of -1");
+			return false; // don't play any sound.
 		}
 		let filename = data.filename;
 		let volume = data.volume;
@@ -80,25 +80,36 @@ class NotificationsSoundPlayer {
 		}, this.#cooldownDelay);
 	}
 
-	#getSoundAccordingToNotificationType() {
-		switch (this.#notificationType) {
+	#getSoundAccordingToNotificationType(soundType) {
+		switch (soundType) {
 			case 0:
+				if (Settings.get("notification.monitor.regular.sound") == "0") {
+					return null;
+				}
 				return {
 					volume: Settings.get("notification.monitor.regular.volume"),
 					filename: Settings.get("notification.monitor.regular.sound"),
 				};
 			case 1:
+				if (Settings.get("notification.monitor.zeroETV.sound") == "0") {
+					return this.#getSoundAccordingToNotificationType(0);
+				}
 				return {
 					volume: Settings.get("notification.monitor.zeroETV.volume"),
 					filename: Settings.get("notification.monitor.zeroETV.sound"),
 				};
+
 			case 2:
+				if (Settings.get("notification.monitor.highlight.sound") == "0") {
+					return this.#getSoundAccordingToNotificationType(0);
+				}
 				return {
 					volume: Settings.get("notification.monitor.highlight.volume"),
 					filename: Settings.get("notification.monitor.highlight.sound"),
 				};
 		}
-		return null;
+
+		throw new Error("Sound type '" + soundType + "' unsupported.");
 	}
 }
 
