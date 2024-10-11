@@ -476,13 +476,16 @@ function getAllProductsData() {
 		const enrollmentGUID = btn.dataset.recommendationId.match(/#vine\.enrollment\.([a-f0-9-]+)/i)[1];
 		const title = getTitleFromDom(obj);
 		const thumbnail = getThumbnailURLFromDom(obj);
-		arrUrl.push({
-			asin: asin,
-			title: title,
-			thumbnail: thumbnail,
-			is_parent_asin: isParent,
-			enrollment_guid: enrollmentGUID,
-		});
+		//Do not query product info for product without a title or a thumbnail.
+		if (title && thumbnail) {
+			arrUrl.push({
+				asin: asin,
+				title: title,
+				thumbnail: thumbnail,
+				is_parent_asin: isParent,
+				enrollment_guid: enrollmentGUID,
+			});
+		}
 	}
 	return arrUrl;
 }
