@@ -141,6 +141,19 @@ browser.alarms.onAlarm.addListener(async (alarm) => {
 	}
 });
 
+chrome.notifications.onClicked.addListener((notificationId) => {
+	const { asin, queue, is_parent_asin, enrollment_guid, search } = notificationsData[notificationId];
+	if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
+		chrome.tabs.create({
+			url: `https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`,
+		});
+	} else {
+		chrome.tabs.create({
+			url: `https://www.amazon.${vineDomain}/vine/vine-items?search=${search}`,
+		});
+	}
+});
+
 //Websocket
 
 let socket;
@@ -318,24 +331,7 @@ async function fetchLast100Items(fetchAll = false) {
 		});
 }
 
-let isListenerAdded = false;
 function pushNotification(asin, queue, is_parent_asin, enrollment_guid, search_string, title, description, img_url) {
-	if (!isListenerAdded) {
-		chrome.notifications.onClicked.addListener((notificationId) => {
-			const { asin, queue, is_parent_asin, enrollment_guid, search } = notificationsData[notificationId];
-			if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
-				chrome.tabs.create({
-					url: `https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`,
-				});
-			} else {
-				chrome.tabs.create({
-					url: `https://www.amazon.${vineDomain}/vine/vine-items?search=${search}`,
-				});
-			}
-			isListenerAdded = true;
-		});
-	}
-
 	notificationsData["item-" + asin] = {
 		asin: asin,
 		queue: queue,
@@ -427,41 +423,6 @@ async function sendMessageToAllTabs(data, debugInfo) {
 			}
 		}
 	}
-}
-
-function generateUUID() {
-	// Public Domain/MIT
-	let d = new Date().getTime(); // Timestamp
-	let d2 = (performance && performance.now && performance.now() * 1000) || 0; // Time in microseconds
-	return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-		let r = Math.random() * 16; // Random number between 0 and 16
-		if (d > 0) {
-			// Use timestamp until depleted
-			r = (d + r) % 16 | 0;
-			d = Math.floor(d / 16);
-		} else {
-			// Use microseconds since timestamp depleted
-			r = (d2 + r) % 16 | 0;
-			d2 = Math.floor(d2 / 16);
-		}
-		return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
-	});
-}
-
-function tryParseJSON(data) {
-	try {
-		const parsedData = JSON.parse(data); // Try to parse the JSON string
-
-		// Check if the parsed result is an object
-		if (parsedData && typeof parsedData === "object") {
-			return parsedData; // Return the parsed object
-		}
-	} catch (e) {
-		// If JSON parsing fails, return null or handle the error
-		return null;
-	}
-
-	return null; // If not JSON, return null
 }
 
 function dateToUnixTimestamp(dateString) {
