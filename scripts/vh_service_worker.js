@@ -24,7 +24,7 @@ const transformIsHighlight = myStream.transformer(function (data) {
 	return data;
 });
 const transformSearchPhrase = myStream.transformer(function (data) {
-	const search = data.title.replace(/^([a-zA-Z0-9\s',]{0,40})[\s]+.*$/, "$1");
+	const search = data.title.replace(/^([a-zA-Z0-9\s'".,]{0,40})[\s]+.*$/, "$1");
 	data.search = search;
 	return data;
 });
