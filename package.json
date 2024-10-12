@@ -26,7 +26,7 @@
 	"dependencies": {
 		"jquery": "^3.7.1",
 		"socket.io": "^4.7.5",
-		"vine-styling": "github:Thorvarium/vine-styling.git#main"
+		"vine-styling": "github:FMaz008/vine-styling.git#main"
 	},
 	"devDependencies": {
 		"@commitlint/cli": "^19.2.1",
