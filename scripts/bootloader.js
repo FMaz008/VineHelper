@@ -370,7 +370,6 @@ function initFixPreviousButton() {
 	//Place the text-content of the Previous button before the other child elements.
 	//This is to enable the first letter of the previous button to be styled for the keybinding.
 
-	//let text = $("ul.a-pagination li:first-child a").innerText;
 	let textContent = "";
 	document.querySelectorAll("ul.a-pagination li:first-child a").forEach(function (item) {
 		if (item.childNodes[3] != undefined) {
@@ -381,10 +380,16 @@ function initFixPreviousButton() {
 
 	//console.log(text);
 	removeElements(".vh-pagination-previous");
-	$("div:not([class*='topPaginationVerbose']) > ul.a-pagination li:first-child a").append(
-		"<span class='vh-pagination-previous'>" + textContent + "</span>"
-	);
-	//$("ul.a-pagination li:first-child a").prepend(text);
+
+	document
+		.querySelectorAll("div:not([class*='topPaginationVerbose']) > ul.a-pagination li:first-child a")
+		.forEach((div) => {
+			const span = document.createElement("span");
+			span.className = "vh-pagination-previous";
+			span.textContent = textContent;
+
+			div.appendChild(span);
+		});
 }
 async function initTilesAndDrawToolbars() {
 	//Browse each items from the Regular grid

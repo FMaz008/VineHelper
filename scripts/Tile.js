@@ -20,36 +20,14 @@ function Tile(obj, gridInstance) {
 	}
 
 	this.animateVanish = async function () {
-		let defaultOpacity = $(pTile).css("opacity");
+		const defaultOpacity = window.getComputedStyle(pTile).opacity;
 
-		$(pTile).animate(
-			{
-				height: ["20%", "swing"],
-			},
-			{
-				duration: 300,
-				queue: false,
-			}
-		);
+		// Animate opacity to 0 (hide)
+		await animateOpacity(pTile, 0, 150);
 
-		await $(pTile)
-			.delay(150)
-			.animate(
-				{
-					opacity: "hide",
-				},
-				{
-					duration: 150,
-					complete: function () {
-						$(pTile).css({
-							opacity: defaultOpacity,
-							height: "100%",
-						});
-					},
-				}
-			)
-			.promise(); //Converting the animation to a promise allow for the await clause to work.
-		$(pTile).css("height", "100%");
+		// Reset styles
+		pTile.style.opacity = defaultOpacity;
+		pTile.style.height = "100%";
 	};
 
 	//#################
@@ -141,8 +119,13 @@ function Tile(obj, gridInstance) {
 			? `${textDate} ago`
 			: `First seen: ${textDate} ago`;
 
-		let dateAddedDiv = $("<div>").addClass("vh-date-added");
-		dateAddedDiv.text(dateAddedMessage).appendTo($(pTile).find(".vh-img-container"));
+		let dateAddedDiv = document.createElement("div");
+		dateAddedDiv.classList.add("vh-date-added"); // Add the class
+		dateAddedDiv.textContent = dateAddedMessage;
+
+		// Find the container and append the new div
+		const container = pTile.querySelector(".vh-img-container");
+		container.appendChild(dateAddedDiv);
 
 		//Highlight the tile background if the bookmark date is in the past
 		if (
@@ -151,7 +134,7 @@ function Tile(obj, gridInstance) {
 			Settings.get("general.bookmarkDate") != 0
 		) {
 			showRuntime("TILE: The item is more recent than the time marker, highlight it.");
-			$(pTile).addClass("bookmark-highlight");
+			pTile.classList.add("bookmark-highlight");
 		}
 	};
 
@@ -175,7 +158,7 @@ function Tile(obj, gridInstance) {
 			if (match != undefined) {
 				highligthed = true;
 				showRuntime("TILE: The item match the keyword '" + match + "', highlight it");
-				$(pTile).addClass("keyword-highlight");
+				pTile.classList.add("keyword-highlight");
 
 				//Move the highlighted item to the top of the grid
 				pGrid.getDOM().insertBefore(obj, pGrid.getDOM().firstChild);
@@ -303,7 +286,8 @@ function getTileByAsin(asin) {
 
 function getAsinFromDom(tileDom) {
 	let regex = /^(?:.*\/dp\/)(.+?)(?:\?.*)?$/; //Isolate the product ID in the URL.
-	let url = $(tileDom).find(".a-link-normal").attr("href");
+	let urlElement = tileDom.querySelector(".a-link-normal");
+	let url = urlElement ? urlElement.getAttribute("href") : null;
 	if (url == null) {
 		throw new Error("The provided DOM content does not contain an .a-link-normal element.");
 	}
@@ -312,17 +296,44 @@ function getAsinFromDom(tileDom) {
 }
 
 function getTitleFromDom(tileDom) {
-	return $(tileDom).find(".a-truncate-full").text();
+	let textElement = tileDom.querySelector(".a-truncate-full");
+	return textElement ? textElement.textContent : "";
 }
 
 function getThumbnailURLFromDom(tileDom) {
 	//Preload.
-	let url = $(tileDom).find(".vvp-item-tile-content > img").attr("src");
+	let imgElement = tileDom.querySelector(".vvp-item-tile-content > img");
+	let url = imgElement ? imgElement.getAttribute("src") : null;
 
 	if (url == undefined) {
 		//Post load of VH added an image container.
-		url = $(tileDom).find(".vh-img-container > img").attr("src");
+		imgElement = tileDom.querySelector(".vh-img-container > img");
+		url = imgElement ? imgElement.getAttribute("src") : null;
 	}
 
 	return url == undefined ? null : url;
+}
+
+// Function to animate opacity
+function animateOpacity(element, targetOpacity, duration) {
+	return new Promise((resolve) => {
+		const startOpacity = parseFloat(getComputedStyle(element).opacity);
+		const opacityChange = targetOpacity - startOpacity;
+		const startTime = performance.now();
+
+		function animate(time) {
+			const elapsed = time - startTime;
+			const progress = Math.min(elapsed / duration, 1);
+			element.style.opacity = startOpacity + opacityChange * progress;
+
+			if (progress < 1) {
+				requestAnimationFrame(animate);
+			} else {
+				element.style.display = "none"; // Optionally hide the element
+				resolve();
+			}
+		}
+
+		requestAnimationFrame(animate);
+	});
 }

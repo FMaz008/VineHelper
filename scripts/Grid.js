@@ -8,7 +8,7 @@ class Grid {
 	}
 
 	getId() {
-		return $(this.pGrid).attr("id");
+		return this.pGrid.id;
 	}
 
 	getDOM() {
@@ -51,7 +51,7 @@ class Grid {
 
 	getTileCount(trueCount = false) {
 		if (trueCount) {
-			return $(this.pGrid).children().length;
+			return this.pGrid?.children.length;
 		} else {
 			return this.pArrTile.length;
 		}
@@ -73,14 +73,30 @@ class Grid {
 
 function updateTileCounts() {
 	//Calculate how many tiles within each grids
-	if (Settings.get("unavailableTab.active") || Settings.get("hiddenTab.active"))
-		$("#vh-available-count").text(gridRegular.getTileCount(true));
-
-	if (Settings.get("unavailableTab.active")) $("#vh-unavailable-count").text(gridUnavailable.getTileCount(true));
-
-	if (Settings.get("hiddenTab.active")) $("#vh-hidden-count").text(gridHidden.getTileCount(true));
-
-	if (Settings.get("pinnedTab.active")) $("#vh-pinned-count").text(gridPinned.getTileCount(true));
+	if (Settings.get("unavailableTab.active") || Settings.get("hiddenTab.active")) {
+		const tab1 = document.getElementById("vh-available-count");
+		if (tab1) {
+			tab1.innerText = gridRegular.getTileCount(true);
+		}
+	}
+	if (Settings.get("unavailableTab.active")) {
+		const tab2 = document.getElementById("vh-unavailable-count");
+		if (tab2) {
+			tab2.innerText = gridUnavailable.getTileCount(true);
+		}
+	}
+	if (Settings.get("hiddenTab.active")) {
+		const tab3 = document.getElementById("vh-hidden-count");
+		if (tab3) {
+			tab3.innerText = gridHidden.getTileCount(true);
+		}
+	}
+	if (Settings.get("pinnedTab.active")) {
+		const tab4 = document.getElementById("vh-pinned-count");
+		if (tab4) {
+			tab4.innerText = gridPinned.getTileCount(true);
+		}
+	}
 }
 
 async function createGridInterface() {

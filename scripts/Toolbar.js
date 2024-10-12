@@ -28,30 +28,68 @@ class Toolbar {
 		//Attach the toolbar to the tile's .vvp-item-tile-content container.
 		anchorTo.insertAdjacentElement("afterbegin", pToolbar);
 
-		let container = $("#" + toolbarId + " .vh-status-container2");
-		$("#" + toolbarId + " .vh-toolbar-etv").hide();
+		let container = document.querySelector(`#${toolbarId} .vh-status-container2`);
+		document.querySelector(`#${toolbarId} .vh-toolbar-etv`).style.display = "none";
 
-		//Activate the announce button when the ETV is set (changed)
-		container.find(".etv").on("change", { asin: this.pTile.getAsin() }, (event) => {
-			if (event.currentTarget.innerText == "") return false;
-			if (vineSearch == true) return false;
+		// Activate the announce button when the ETV is set (changed)
+		const etvElements = container.querySelectorAll(".etv");
 
-			let tile = getTileByAsin(event.data.asin);
-			$(tile.getDOM())
-				.find(".vh-icon-announcement")
-				.css("opacity", "1")
-				.parent("a")
-				.off("click")
-				.on("click", { asin: this.pTile.getAsin() }, announceItem);
+		etvElements.forEach((etv) => {
+			etv.addEventListener("change", (event) => {
+				if (event.currentTarget.innerText === "") return false;
+				if (vineSearch) return false;
+
+				let tile = getTileByAsin(this.pTile.getAsin());
+				let tileDOM = tile.getDOM();
+				let announcementIcon = tileDOM.querySelector(".vh-icon-announcement");
+
+				if (announcementIcon) {
+					announcementIcon.style.opacity = "1";
+					let parentAnchor = announcementIcon.parentElement;
+					const announceClickHandler = async (e) => {
+						e.preventDefault();
+
+						if (vineQueue == null) throw new Exception("Cannot announce an item in an unknown queue.");
+
+						let tile = getTileByAsin(this.pTile.getAsin());
+						let etv = tile.getDOM().querySelector(".etv").textContent;
+
+						// In case of price range, only send the highest value
+						etv = etv.split("-").pop();
+						etv = Number(etv.replace(/[^0-9-.]+/g, ""));
+
+						window.BrendaAnnounceQueue.announce(event.data.asin, etv, vineQueue);
+
+						if (!Settings.get("notification.reduce")) {
+							let note = new ScreenNotification();
+							note.title = "Announce to Brenda";
+							note.lifespan = 10;
+							note.content = `Sending this product ${this.pTile.getAsin()} from the ${vineQueueAbbr} queue to Brenda over on discord`;
+							await Notifications.pushNotification(note);
+						}
+
+						// Visually deactivate this item
+						parentAnchor.removeEventListener("click", announceClickHandler);
+						parentAnchor.style.opacity = "0.3";
+					};
+					if (parentAnchor && parentAnchor.tagName === "A") {
+						parentAnchor.removeEventListener("click", announceClickHandler); // Remove any previous click handlers
+						parentAnchor.addEventListener("click", announceClickHandler);
+					}
+				}
+			});
 		});
 
-		//It the small tiles will be shown, hide the ETV icon to gain space
+		// If the small tiles will be shown, hide the ETV icon to gain space
 		if (
 			Settings.get("thorvarium.smallItems") ||
 			Settings.get("thorvarium.mobileios") ||
 			Settings.get("thorvarium.mobileandroid")
 		) {
-			$(".vh-icon-etv").hide();
+			let etvIcons = document.querySelectorAll(".vh-icon-etv");
+			etvIcons.forEach((icon) => {
+				icon.style.display = "none";
+			});
 		}
 
 		if (Settings.get("unavailableTab.compactToolbar")) {
@@ -59,9 +97,14 @@ class Toolbar {
 		}
 
 		if (Settings.get("unavailableTab.active")) {
-			$("<div />")
-				.addClass("vh-icon vh-icon-loading")
-				.prependTo("#" + toolbarId + " .vh-status-container");
+			let loadingDiv = document.createElement("div");
+			loadingDiv.classList.add("vh-icon", "vh-icon-loading");
+
+			// Prepend the div to the specified container
+			let container = document.querySelector(`#${toolbarId} .vh-status-container`);
+			if (container) {
+				container.insertBefore(loadingDiv, container.firstChild);
+			}
 		}
 
 		//If the ordering system is off, only the icons have to be shown
@@ -71,53 +114,64 @@ class Toolbar {
 
 		//Display the hide link
 		if (Settings.get("hiddenTab.active")) {
-			let h = $("#vh-hide-link-" + this.pTile.getAsin());
-			h.on("click", { asin: this.pTile.getAsin() }, async function (event) {
-				//A hide/display item button was pressed
-				let asin = event.data.asin;
-				let tile = getTileByAsin(asin);
-				let gridId = tile.getGridId();
+			let h = document.getElementById(`vh-hide-link-${this.pTile.getAsin()}`);
+			if (h) {
+				h.addEventListener("click", async (event) => {
+					// A hide/display item button was pressed
+					let asin = this.pTile.getAsin(); // Directly access ASIN from the context
+					let tile = getTileByAsin(asin);
+					let gridId = tile.getGridId();
 
-				switch (
-					gridId //Current Grid
-				) {
-					case "vvp-items-grid":
-					case "tab-unavailable":
-						tile.hideTile();
-						break;
-					case "tab-hidden":
-						tile.showTile();
-						break;
-				}
+					switch (
+						gridId // Current Grid
+					) {
+						case "vvp-items-grid":
+						case "tab-unavailable":
+							tile.hideTile();
+							break;
+						case "tab-hidden":
+							tile.showTile();
+							break;
+					}
 
-				updateTileCounts();
-			});
+					updateTileCounts();
+				});
+			}
 
 			this.updateVisibilityIcon();
 		}
 
 		//Pinned items event handler
 		if (Settings.get("pinnedTab.active")) {
-			let h = $("#vh-pin-link-" + this.pTile.getAsin());
-			h.on("click", { asin: this.pTile.getAsin() }, async function (event) {
-				this.style.opacity = 0.3;
+			let h2 = document.getElementById(`vh-pin-link-${this.pTile.getAsin()}`);
 
-				//A hide/display item button was pressed
-				let asin = event.data.asin;
-				let tile = getTileByAsin(asin);
+			if (h2) {
+				h2.addEventListener("click", async (event) => {
+					h2.style.opacity = 0.3;
 
-				//Get the item title, thumbnail
-				let title = tile.getTitle();
-				let thumbnail = tile.getThumbnail();
-				const btn = document.querySelector(`input[data-asin="${asin}"]`);
-				const isParentAsin = btn.dataset.isParentAsin;
-				const enrollmentGUID = btn.dataset.recommendationId.match(/#vine\.enrollment\.([a-f0-9-]+)/i)[1];
+					// A hide/display item button was pressed
+					let asin = this.pTile.getAsin(); // Directly access ASIN
+					let tile = getTileByAsin(asin);
 
-				PinnedList.addItem(asin, vineQueue, title, thumbnail, isParentAsin, enrollmentGUID);
-				await addPinnedTile(asin, vineQueue, title, thumbnail, isParentAsin, enrollmentGUID); //grid.js
+					// Get the item title and thumbnail
+					let title = tile.getTitle();
+					let thumbnail = tile.getThumbnail();
 
-				updateTileCounts();
-			});
+					const btn = document.querySelector(`input[data-asin="${asin}"]`);
+
+					if (btn) {
+						const isParentAsin = btn.dataset.isParentAsin;
+						const enrollmentGUID = btn.dataset.recommendationId.match(
+							/#vine\.enrollment\.([a-f0-9-]+)/i
+						)[1];
+
+						PinnedList.addItem(asin, vineQueue, title, thumbnail, isParentAsin, enrollmentGUID);
+						await addPinnedTile(asin, vineQueue, title, thumbnail, isParentAsin, enrollmentGUID); // grid.js
+
+						updateTileCounts();
+					}
+				});
+			}
 		}
 	}
 
@@ -126,42 +180,43 @@ class Toolbar {
 			return false;
 		}
 
-		let icon = $("#vh-hide-link-" + this.pTile.getAsin() + " div.vh-toolbar-icon");
+		let icon = document.querySelector(`#vh-hide-link-${this.pTile.getAsin()} div.vh-toolbar-icon`);
 		let gridId = this.pTile.getGridId();
 
-		icon.removeClass("vh-icon-hide");
-		icon.removeClass("vh-icon-show");
-		switch (gridId) {
-			case "vvp-items-grid":
-			case "tab-unavailable":
-				icon.addClass("vh-icon-hide");
-				break;
-			case "tab-hidden":
-				icon.addClass("vh-icon-show");
-				break;
+		if (icon) {
+			// Remove classes
+			icon.classList.remove("vh-icon-hide", "vh-icon-show");
+
+			// Add classes based on gridId
+			switch (gridId) {
+				case "vvp-items-grid":
+				case "tab-unavailable":
+					icon.classList.add("vh-icon-hide");
+					break;
+				case "tab-hidden":
+					icon.classList.add("vh-icon-show");
+					break;
+			}
 		}
 	}
 
 	setStatusIcon(iconClass) {
-		let context = $("#vh-toolbar-" + this.pTile.getAsin());
-		let icon = $(context).find(".vh-icon");
+		let context = document.getElementById(`vh-toolbar-${this.pTile.getAsin()}`);
+		let icon = context.querySelector(".vh-icon");
 
-		//Remove all images for the icon
-		icon.removeClass("vh-icon-info");
-		icon.removeClass("vh-icon-loading");
-		icon.removeClass("vh-icon-order-success");
-		icon.removeClass("vh-icon-order-failed");
-
-		icon.addClass(iconClass);
+		// Remove all images for the icon
+		icon.classList.remove("vh-icon-info", "vh-icon-loading", "vh-icon-order-success", "vh-icon-order-failed");
+		if (iconClass) {
+			icon.classList.add(iconClass);
+		}
 	}
 
 	setETV(etv1, etv2, onlyIfEmpty = false) {
-		let context = $("#vh-toolbar-" + this.pTile.getAsin());
-		let span = $(context).find(".vh-toolbar-etv .etv");
-
+		let context = document.getElementById(`vh-toolbar-${this.pTile.getAsin()}`);
+		let span = context.querySelector(".vh-toolbar-etv .etv");
 		this.pTile.setETV(etv2);
 
-		if (onlyIfEmpty && span.text() != "") return false;
+		if (onlyIfEmpty && span.textContent !== "") return false;
 
 		etv1 = new Intl.NumberFormat(vineLocale, {
 			style: "currency",
@@ -171,35 +226,36 @@ class Toolbar {
 			style: "currency",
 			currency: vineCurrency,
 		}).format(etv2);
-		if (etv1 == etv2) {
-			span.text(etv2);
-		} else {
-			span.text(etv1 + "-" + etv2);
-		}
-		span.trigger("change");
+
+		span.textContent = etv1 === etv2 ? etv2 : `${etv1}-${etv2}`;
+
+		// Trigger change event manually
+		let changeEvent = new Event("change", { bubbles: true });
+		span.dispatchEvent(changeEvent);
 
 		if (Settings.get("general.displayETV")) {
-			context.find(".vh-toolbar-etv").show();
+			context.querySelector(".vh-toolbar-etv").style.display = "block";
 		}
 	}
 
 	//This method is called from bootloader.js, serverResponse() when the data has been received, after the tile was moved.
 	async updateToolbar() {
-		showRuntime("DRAW-UPDATE-TOOLBAR: Updating #vh-toolbar-" + this.pTile.getAsin());
-		let context = $("#vh-toolbar-" + this.pTile.getAsin());
+		showRuntime(`DRAW-UPDATE-TOOLBAR: Updating #vh-toolbar-${this.pTile.getAsin()}`);
+		let context = document.getElementById(`vh-toolbar-${this.pTile.getAsin()}`);
 
-		if (context.length == 0) {
-			showRuntime("! Could not find #vh-toolbar-" + this.pTile.getAsin());
+		if (!context) {
+			showRuntime(`! Could not find #vh-toolbar-${this.pTile.getAsin()}`);
 			return;
 		}
+
 		let statusColor;
 
-		//If the hidden tab system is activated, update the visibility icon
+		// If the hidden tab system is activated, update the visibility icon
 		if (Settings.get("hiddenTab.active")) {
 			this.updateVisibilityIcon();
 		}
 
-		//Set the icons
+		// Set the icons
 		showRuntime("DRAW-UPDATE-TOOLBAR: Setting icon status");
 		switch (this.pTile.getStatus()) {
 			case DISCARDED_ORDER_FAILED:
@@ -209,27 +265,20 @@ class Toolbar {
 			case NOT_DISCARDED_ORDER_SUCCESS:
 				this.setStatusIcon("vh-icon-order-success");
 				statusColor = "vh-background-nofees";
-				//tileOpacity = 1.0;
 				break;
-
 			case NOT_DISCARDED:
-				//The item is not registered
 				this.setStatusIcon("vh-icon-info");
 				statusColor = "vh-background-neutral";
-				//tileOpacity = 1.0;
 				break;
 		}
 
 		if (Settings.get("unavailableTab.compactToolbar")) {
-			//No icon, no text
+			// No icon, no text
 			this.setStatusIcon("");
-			context.addClass("compact");
-			context.addClass(statusColor);
+			context.classList.add("compact", statusColor);
 		}
 
-		//$(this.pTile.getDOM()).css("opacity", tileOpacity);
-
-		//Display voting system if active.
+		// Display voting system if active
 		if (Settings.get("unavailableTab.active")) {
 			showRuntime("DRAW-UPDATE-TOOLBAR: Create order widget");
 			await this.createOrderWidget();
@@ -239,59 +288,31 @@ class Toolbar {
 	//Create the order widget part of the toolbar
 	//Can ben called by bootloader when receiving order messages
 	async createOrderWidget(status = null) {
-		if (status != null) {
-			//Get the current order info
+		if (status !== null) {
+			// Get the current order info
 			let success = status ? this.pTile.getOrderSuccess() + 1 : this.pTile.getOrderSuccess();
 			let failed = !status ? this.pTile.getOrderFailed() + 1 : this.pTile.getOrderFailed();
 			this.pTile.setOrders(success, failed);
 		}
 
-		let context = $("#vh-toolbar-" + this.pTile.getAsin());
-		let container = $(context).find("div.vh-status-container2");
+		let context = document.getElementById(`vh-toolbar-${this.pTile.getAsin()}`);
+		let container = context.querySelector("div.vh-status-container2");
 
-		//Remove any previous order widget, we will create a new one.
-		$(container).children(".vh-order-widget").remove();
+		// Remove any previous order widget
+		container.querySelectorAll(".vh-order-widget").forEach((widget) => widget.remove());
 
-		//Generate the HTML for the widget
+		// Generate the HTML for the widget
 		let prom = await Tpl.loadFile("view/widget_order.html");
 		Tpl.setVar("order_success", this.pTile.getOrderSuccess());
 		Tpl.setVar("order_failed", this.pTile.getOrderFailed());
 		Tpl.setIf("not-compact", !Settings.get("unavailableTab.compactToolbar"));
-		let content = Tpl.render(prom);
-		$(content).appendTo(container);
+		let content = Tpl.render(prom, true);
+		container.appendChild(content);
 
 		if (Settings.get("thorvarium.smallItems")) {
-			$(".compact div.vh-order-widget").css("clear", "both");
+			document.querySelectorAll(".compact div.vh-order-widget").forEach((widget) => {
+				widget.style.clear = "both";
+			});
 		}
 	}
-}
-
-async function announceItem(event) {
-	if (vineQueue == null) throw new Exception("Cannot announce an item in an unknown queue.");
-
-	let tile = getTileByAsin(event.data.asin);
-	let etv = $(tile.getDOM()).find(".etv").text();
-
-	//In case of price range, only send the highest value.
-	etv = etv.split("-").pop();
-	etv = Number(etv.replace(/[^0-9-.]+/g, ""));
-
-	window.BrendaAnnounceQueue.announce(event.data.asin, etv, vineQueue);
-
-	if (!Settings.get("notification.reduce")) {
-		let note = new ScreenNotification();
-		note.title = "Announce to Brenda";
-		note.lifespan = 10;
-		note.content =
-			"Sending this product " +
-			event.data.asin +
-			" from the " +
-			vineQueueAbbr +
-			" queue to Brenda over on discord";
-		await Notifications.pushNotification(note);
-	}
-
-	//Visually deactivate this item, will be reset on the next page load, but it's just to help navigation and avoid double-clicking
-	$(this).off("click");
-	$(this).css("opacity", "0.3");
 }

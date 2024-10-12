@@ -111,7 +111,7 @@ class ScreenNotifier {
 		//Activate the self dismissal
 		if (note.lifespan > 0) {
 			setTimeout(function () {
-				Notifications.removeNote($("#vh-notification-" + note.id));
+				Notifications.removeNote(document.getElementById("vh-notification-" + note.id));
 			}, note.lifespan * 1000);
 		}
 
@@ -133,19 +133,33 @@ class ScreenNotifier {
 	}
 
 	async removeNote(obj) {
-		//await $(obj).fadeOut().promise();
-		await $(obj)
-			.animate(
-				{
-					opacity: 0,
-					left: "+=50",
-				},
-				250,
-				function () {
-					// Animation complete.
+		return new Promise((resolve) => {
+			let opacity = 1;
+			let position = 0; // Assuming the initial left position is 0, adjust as needed.
+			const duration = 250; // Animation duration in milliseconds.
+			const frames = 60; // Number of frames for the animation.
+			const interval = duration / frames; // Time per frame.
+			const incrementOpacity = 1 / frames; // Opacity decrease per frame.
+			const incrementPosition = 50 / frames; // Position change per frame.
+
+			function animate() {
+				opacity -= incrementOpacity;
+				position += incrementPosition;
+
+				if (opacity <= 0) {
+					opacity = 0;
+					obj.style.display = "none"; // Hide the element after animation
+					resolve(); // Resolve the promise when done
+				} else {
+					obj.style.opacity = opacity;
+					obj.style.transform = `translateX(${position}px)`;
+					requestAnimationFrame(animate);
 				}
-			)
-			.promise();
-		$(obj).remove();
+			}
+
+			animate();
+		}).then(() => {
+			obj.remove(); // Remove the element from the DOM
+		});
 	}
 }
