@@ -62,7 +62,16 @@
 		</a>
 	</div>
 	<div class="vh-notification-content" style="margin-top: 20px">
-		<img src="{{$img_url}}" style="margin-top: -20px" />
+		<div class="vh-img-container">
+			<img src="{{$img_url}}" style="margin-top: -20px" />
+			{{if variant}}
+			<div class="vh-variant-indicator-container">
+				<a href="#" onclick="return false;" title="The item has variant(s)">
+					<div class="vh-indicator-icon vh-icon-choice"></div>
+				</a>
+			</div>
+			{{endif}}
+		</div>
 		<div>
 			<a href="https://www.amazon.{{$domain}}/dp/{{$asin}}" target="_blank">{{$description}}</a>
 		</div>

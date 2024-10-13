@@ -64,6 +64,19 @@
 .date_shown {
 	float: right;
 }
+.vh-img-container {
+	position: relative;
+	width: 100px;
+}
+.vh-indicator-icon {
+	width: 16px;
+	height: 16px;
+}
+.vh-variant-indicator-container {
+	position: absolute;
+	margin-top: 60px;
+	right: 0;
+}
 
 @media (prefers-color-scheme: dark) {
 	body {

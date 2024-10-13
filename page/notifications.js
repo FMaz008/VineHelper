@@ -324,6 +324,8 @@ function addItem(data) {
 	Tpl.setVar("etv", ""); //We will let SetETV() handle it.
 	Tpl.setIf("announce", Settings.get("discord.active") && Settings.get("discord.guid", false) != null);
 	Tpl.setIf("pinned", Settings.get("pinnedTab.active"));
+	Tpl.setIf("variant", Settings.get("general.displayVariantIcon") && is_parent_asin);
+
 	let content = Tpl.render(loadedTpl, true); //true to return a DOM object instead of an HTML string
 
 	const newBody = document.getElementById("vh-items-container");
