@@ -58,7 +58,7 @@ class Toolbar {
 						etv = etv.split("-").pop();
 						etv = Number(etv.replace(/[^0-9-.]+/g, ""));
 
-						window.BrendaAnnounceQueue.announce(event.data.asin, etv, vineQueue);
+						window.BrendaAnnounceQueue.announce(this.pTile.getAsin(), etv, vineQueue);
 
 						if (!Settings.get("notification.reduce")) {
 							let note = new ScreenNotification();
