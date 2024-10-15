@@ -465,7 +465,7 @@ function setETV(asin, etv_min, etv_max) {
 		}
 
 		//Display ETV
-		if (etv_min == etv_max) {
+		if (obj.dataset.etvMin == obj.dataset.etvMax) {
 			etvObj.innerText = formatETV(obj.dataset.etvMin);
 		} else {
 			etvObj.innerText = formatETV(obj.dataset.etvMin) + "-" + formatETV(obj.dataset.etvMax);
