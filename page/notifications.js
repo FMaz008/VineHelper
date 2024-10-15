@@ -75,7 +75,7 @@ const handleBrendaClick = (e) => {
 	const queue = e.target.dataset.queue;
 	let etv = document.querySelector("#vh-notification-" + asin + " .etv_value").innerText;
 	etv = Number(etv.replace(/[^0-9-.]+/g, ""));
-	window.BrendaAnnounceQueue.announce(asin, etv, queue);
+	window.BrendaAnnounceQueue.announce(asin, etv, queue, vineDomain);
 };
 
 const handlePinClick = (e) => {

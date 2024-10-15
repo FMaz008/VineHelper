@@ -18,7 +18,7 @@ class BrendaAnnounceQueue {
 		this.isProcessing = false;
 	}
 
-	async announce(asin, etv, queue) {
+	async announce(asin, etv, queue, vineDomain) {
 		if (this.queue.length >= this.MAX_QUEUE_LENGTH) {
 			if (!Settings.get("notification.reduce")) {
 				await Notifications.pushNotification(
@@ -33,7 +33,7 @@ class BrendaAnnounceQueue {
 			return;
 		}
 
-		this.queue.push({ asin, etv, queue });
+		this.queue.push({ asin, etv, queue, vineDomain });
 
 		if (this.queueTimer !== null || this.isProcessing) {
 			return;
@@ -62,7 +62,7 @@ class BrendaAnnounceQueue {
 				body: new URLSearchParams({
 					version: 1,
 					token: Settings.get("discord.guid", false),
-					domain: "amazon." + vineDomain,
+					domain: "amazon." + item.vineDomain,
 					tab: item.queue,
 					asin: item.asin,
 					etv: stripCurrency(item.etv),
