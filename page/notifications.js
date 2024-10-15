@@ -74,6 +74,8 @@ const handleBrendaClick = (e) => {
 	const asin = e.target.dataset.asin;
 	const queue = e.target.dataset.queue;
 	let etv = document.querySelector("#vh-notification-" + asin + " .etv_value").innerText;
+	// In case of price range, only send the highest value
+	etv = etv.split("-").pop();
 	etv = Number(etv.replace(/[^0-9-.]+/g, ""));
 	window.BrendaAnnounceQueue.announce(asin, etv, queue, vineDomain);
 };
@@ -122,7 +124,7 @@ window.onload = function () {
 					console.log("ETV Update received for item " + data.asin + " @ " + data.etv);
 				}
 			}
-			setETV(data.asin, data.etv);
+			setETV(data.asin, data.etv, data.etv);
 		}
 
 		if (data.type == "newItemCheck") {
@@ -270,7 +272,20 @@ async function setLocale(country) {
 }
 
 function addItem(data) {
-	let { date, asin, title, search, img_url, domain, etv, queue, KWsMatch, is_parent_asin, enrollment_guid } = data;
+	let {
+		date,
+		asin,
+		title,
+		search,
+		img_url,
+		domain,
+		etv_min,
+		etv_max,
+		queue,
+		KWsMatch,
+		is_parent_asin,
+		enrollment_guid,
+	} = data;
 
 	//If the locale is not define, set it.
 	if (vineLocale == null) setLocale(domain);
@@ -288,12 +303,12 @@ function addItem(data) {
 
 	//New item to be added
 	console.log("Adding item " + asin);
-	items.set(asin, etv);
+	items.set(asin, etv_min);
 	imageUrls.add(img_url);
 
 	//Define the type for the template
 	let type = TYPE_REGULAR;
-	if (etv == "0.00") {
+	if (etv_min == "0.00") {
 		type = TYPE_ZEROETV;
 	}
 	if (KWsMatch) {
@@ -321,7 +336,6 @@ function addItem(data) {
 	Tpl.setVar("img_url", img_url);
 	Tpl.setVar("queue", queue);
 	Tpl.setVar("type", type);
-	Tpl.setVar("etv", ""); //We will let SetETV() handle it.
 	Tpl.setIf("announce", Settings.get("discord.active") && Settings.get("discord.guid", false) != null);
 	Tpl.setIf("pinned", Settings.get("pinnedTab.active"));
 	Tpl.setIf("variant", Settings.get("general.displayVariantIcon") && is_parent_asin);
@@ -343,7 +357,7 @@ function addItem(data) {
 	}
 
 	//Set ETV
-	setETV(asin, etv); //Do not play a sound (Instant ETV will receive an update, batch need to wait until the end)
+	setETV(asin, etv_min, etv_max); //Do not play a sound (Instant ETV will receive an update, batch need to wait until the end)
 
 	// Add new click listener for the report button
 	document.querySelector("#vh-notification-" + asin + " .report-link").addEventListener("click", handleReportClick);
@@ -406,14 +420,14 @@ function elementByAsin(asin) {
 	return document.getElementById(itemID(asin));
 }
 
-function setETV(asin, etv) {
+function setETV(asin, etv_min, etv_max) {
 	const obj = elementByAsin(asin);
 	if (!obj) {
 		return false; //This notification does not exist.
 	}
 	const etvObj = obj.querySelector(".etv_value");
 
-	if (etvObj.innerText == "" && etv == "0.00") {
+	if (etvObj.innerText == "" && etv_min == "0.00") {
 		//If ETV changed from none to "0.00", trigger a sound and bring it to the top
 		notificationsSoundPlayer.play(TYPE_ZEROETV);
 
@@ -433,7 +447,7 @@ function setETV(asin, etv) {
 
 	//Remove ETV Value and Brenda announce icon if it does not exist
 	let brendaAnnounce = document.querySelector("#vh-announce-link-" + asin);
-	if (etv == null) {
+	if (etv_min == null) {
 		etvObj.style.display = "none";
 
 		if (brendaAnnounce) {
@@ -441,7 +455,21 @@ function setETV(asin, etv) {
 		}
 	} else {
 		etvObj.style.display = "inline-block";
-		etvObj.innerText = formatETV(etv);
+
+		//Update product ETV
+		if (obj.dataset.etvMin == "" || obj.dataset.etvMin > etv_min) {
+			obj.dataset.etvMin = etv_min;
+		}
+		if (obj.dataset.etvMax == "" || obj.dataset.etvMax < etv_max) {
+			obj.dataset.etvMax = etv_max;
+		}
+
+		//Display ETV
+		if (etv_min == etv_max) {
+			etvObj.innerText = formatETV(obj.dataset.etvMin);
+		} else {
+			etvObj.innerText = formatETV(obj.dataset.etvMin) + "-" + formatETV(obj.dataset.etvMax);
+		}
 		if (brendaAnnounce) {
 			brendaAnnounce.style.visibility = "visible";
 		}

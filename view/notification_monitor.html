@@ -1,6 +1,8 @@
 <div
 	id="vh-notification-{{$asin}}"
 	data-asin="{{$asin}}"
+	data-etv-min=""
+	data-etv-max=""
 	class="vh-notification-box"
 	data-notification-type="{{$type}}"
 >
@@ -76,8 +78,6 @@
 			<a href="https://www.amazon.{{$domain}}/dp/{{$asin}}" target="_blank">{{$description}}</a>
 		</div>
 	</div>
-	<div class="vh-notification-footer">
-		<span class="etv_value">{{$etv}}</span><span class="date_shown">{{$date}}</span>
-	</div>
+	<div class="vh-notification-footer"><span class="etv_value"></span><span class="date_shown">{{$date}}</span></div>
 	<div style="clear: both"></div>
 </div>

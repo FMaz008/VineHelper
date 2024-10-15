@@ -193,7 +193,8 @@ function connectWebSocket() {
 			title: data.item.title,
 			search: data.item.search,
 			img_url: data.item.img_url,
-			etv: data.item.etv,
+			etv_min: data.item.etv_min, //null
+			etv_max: data.item.etv_max, //null
 			queue: data.item.queue,
 			is_parent_asin: data.item.is_parent_asin,
 			enrollment_guid: data.item.enrollment_guid,
@@ -287,8 +288,18 @@ async function fetchLast100Items(fetchAll = false) {
 				return dateB - dateA;
 			});
 			for (let i = response.products.length - 1; i >= 0; i--) {
-				const { title, date, timestamp, asin, img_url, etv, queue, is_parent_asin, enrollment_guid } =
-					response.products[i];
+				const {
+					title,
+					date,
+					timestamp,
+					asin,
+					img_url,
+					etv_min,
+					etv_max,
+					queue,
+					is_parent_asin,
+					enrollment_guid,
+				} = response.products[i];
 
 				//Only display notification for products with a title and image url
 				//And that are more recent than the latest notification received.
@@ -305,7 +316,8 @@ async function fetchLast100Items(fetchAll = false) {
 						asin: asin,
 						title: title,
 						img_url: img_url,
-						etv: etv,
+						etv_min: etv_min,
+						etv_max: etv_max,
 						queue: queue,
 						is_parent_asin: is_parent_asin,
 						enrollment_guid: enrollment_guid,
@@ -317,10 +329,20 @@ async function fetchLast100Items(fetchAll = false) {
 							{
 								type: "ETVUpdate",
 								asin: asin,
-								etv: etv,
+								etv: etv_min,
 							},
 							"ETV notification"
 						);
+						if (etv_min != etv_max) {
+							sendMessageToNotificationMonitor(
+								{
+									type: "ETVUpdate",
+									asin: asin,
+									etv: etv_max,
+								},
+								"ETV notification"
+							);
+						}
 					}
 				}
 			}
