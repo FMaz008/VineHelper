@@ -5,7 +5,7 @@ showRuntime(
 		"ms"
 );
 
-//Create the 2 grids/tabs:
+//Create the 4 grids/tabs:
 var gridRegular = null;
 var gridUnavailable = null; //Will be populated after the grid will be created.
 var gridHidden = null; //Will be populated after the grid will be created.
