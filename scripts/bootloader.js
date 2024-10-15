@@ -477,7 +477,7 @@ function getAllProductsData() {
 		const obj = arrObj[i];
 		const asin = getAsinFromDom(obj);
 		const btn = document.querySelector(`input[data-asin="${asin}"]`);
-		const isParent = btn.dataset.isParentAsin;
+		const isParent = btn.dataset.isParentAsin == "true";
 		const enrollmentGUID = btn.dataset.recommendationId.match(/#vine\.enrollment\.([a-f0-9-]+)/i)[1];
 		const title = getTitleFromDom(obj);
 		const thumbnail = getThumbnailURLFromDom(obj);
