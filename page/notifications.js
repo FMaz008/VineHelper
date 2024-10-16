@@ -319,7 +319,7 @@ function addItem(data) {
 	if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
 		Tpl.setVar(
 			"url",
-			`https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`
+			`https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`
 		);
 	} else {
 		Tpl.setVar("url", `https://www.amazon.${vineDomain}/vine/vine-items?search=${search}`);
