@@ -136,8 +136,8 @@ class ScreenNotifier {
 		return new Promise((resolve) => {
 			let opacity = 1;
 			let position = 0; // Assuming the initial left position is 0, adjust as needed.
-			const duration = 250; // Animation duration in milliseconds.
-			const frames = 60; // Number of frames for the animation.
+			const duration = 100; // Animation duration in milliseconds.
+			const frames = 20; // Number of frames for the animation.
 			const interval = duration / frames; // Time per frame.
 			const incrementOpacity = 1 / frames; // Opacity decrease per frame.
 			const incrementPosition = 50 / frames; // Position change per frame.
