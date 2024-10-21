@@ -229,7 +229,6 @@ class SettingsMgr {
 			notification: {
 				active: false,
 				reduce: false,
-				websocket: true,
 				lastProduct: 0,
 				pushNotifications: false,
 				soundCooldownDelay: 2000,

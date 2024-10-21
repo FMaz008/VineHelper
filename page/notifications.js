@@ -134,11 +134,10 @@ window.onload = function () {
 			addItem(data);
 		}
 		if (data.type == "ETVUpdate") {
-			if (Settings.get("notification.websocket") == "1") {
-				if (items.get(data.asin) === null) {
-					console.log("ETV Update received for item " + data.asin + " @ " + data.etv);
-				}
+			if (items.get(data.asin) === null) {
+				console.log("ETV Update received for item " + data.asin + " @ " + data.etv);
 			}
+
 			setETV(data.asin, data.etv, data.etv);
 		}
 
@@ -193,11 +192,6 @@ async function init() {
 		Settings.get("notification.lastProduct") * 1000
 	);
 
-	if (Settings.get("notification.websocket") == "0") {
-		document.getElementById("statusWS").style.display = "none";
-		document.querySelector("label[for='fetch-last-100']").style.display = "none";
-	}
-
 	//Bind the event when changing the filter
 	const filter = document.querySelector("select[name='filter-type']");
 	filter.addEventListener("change", function () {
@@ -221,10 +215,6 @@ async function init() {
 	//Bind fetch-last-100 button
 	const btnLast100 = document.querySelector("button[name='fetch-last-100']");
 	btnLast100.addEventListener("click", function () {
-		if (Settings.get("notification.websocket") == "0") {
-			console.warn("Instant notifications must be enabled for the Fetch Last 100 button to be available.");
-			return false;
-		}
 		browser.runtime.sendMessage(
 			{
 				type: "fetchLast100Items",

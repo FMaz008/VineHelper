@@ -105,9 +105,7 @@ if (typeof browser === "undefined") {
 browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 	if (data.type == "fetchLast100Items") {
 		//Get the last 100 most recent items
-		if (Settings.get("notification.websocket") == "1") {
-			fetchLast100Items(true);
-		}
+		fetchLast100Items(true);
 		sendResponse({ success: true });
 	}
 
@@ -128,15 +126,10 @@ browser.alarms.onAlarm.addListener(async (alarm) => {
 	await retrieveSettings();
 
 	if (alarm.name === "checkNewItems") {
-		if (Settings.get("notification.websocket") == "0" || !Settings.get("notification.active")) {
-			socket?.disconnect();
-		}
 		if (Settings.get("notification.active")) {
-			if (Settings.get("notification.websocket") == "1") {
-				connectWebSocket(); //Check the status of the websocket, reconnect if closed.
-			} else {
-				fetchLast100Items();
-			}
+			connectWebSocket(); //Check the status of the websocket, reconnect if closed.
+		} else {
+			socket?.disconnect();
 		}
 	}
 });
@@ -238,7 +231,7 @@ async function init() {
 	//Check for new items (if the option is disabled the method will return)
 	browser.alarms.create("checkNewItems", { periodInMinutes: newItemCheckInterval });
 
-	if (Settings.get("notification.active") && Settings.get("notification.websocket") == "1") {
+	if (Settings.get("notification.active")) {
 		//Firefox sometimes re-initialize the background script.
 		//Do not attempt to recreate a new websocket if this method is called when
 		//a websocket already exist.

@@ -14,24 +14,6 @@
 	</div>
 
 	<div class="setting-container">
-		<label for="notification.websocket">
-			Notification mode:&nbsp;
-			<select name="notification.websocket">
-				<option value="0">Batch notifications (old)</option>
-				<option value="1">Instant notifications</option>
-			</select>
-		</label>
-		<div class="setting-summary">
-			<div class="vh-toolbar-icon vh-icon-question"></div>
-			<strong>Batch notifications:</strong> Old method: Query the server at regular interval to receive a list of
-			the recent products. Use more server resources and add a ~30 second delay between the updates.
-			<br />
-			<strong>Instant notifications:</strong> Use Websockets to try to establish a persistent connection with the
-			API to received notifications in real time.
-		</div>
-	</div>
-	<hr />
-	<div class="setting-container">
 		<label for="notification.pushNotificationsAFA">
 			<input type="checkbox" name="notification.pushNotificationsAFA" value="1" />
 			Push Notification for all AFA items.

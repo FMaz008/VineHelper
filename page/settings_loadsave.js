@@ -120,7 +120,6 @@ async function initiateSettings() {
 	manageCheckboxSetting("notification.hideList");
 	manageCheckboxSetting("notification.monitor.hideDuplicateThumbnail");
 	manageCheckboxSetting("notification.reduce");
-	manageSelectBox("notification.websocket");
 
 	//Sliders
 	manageSlider("notification.screen.regular.volume");
