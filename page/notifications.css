@@ -9,6 +9,24 @@
 	--border-free: #ffd700;
 }
 
+#topbar {
+	position: fixed;
+	z-index: 1;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	box-sizing: border-box;
+	height: 30px;
+	padding: 5px;
+	background-color: black;
+	text-align: center;
+	color: white;
+}
+
+body {
+	margin-top: 35px;
+}
+
 #vh-items-container {
 	display: flex;
 	width: 100%;

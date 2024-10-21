@@ -59,6 +59,7 @@ const vineDomains = {
 var vineLocale = null;
 var vineCurrency = null;
 var vineDomain = null;
+var feedPaused = false;
 
 const broadcastChannel = new BroadcastChannel("VineHelperChannel");
 
@@ -110,6 +111,20 @@ const handleHideClick = (e) => {
 	elementByAsin(asin).remove();
 };
 
+const handlePauseFeedClick = (e) => {
+	feedPaused = !feedPaused;
+	if (feedPaused) {
+		document.getElementById("pauseFeed").value = "Resume Feed";
+	} else {
+		document.getElementById("pauseFeed").value = "Pause & Buffer Feed";
+		document.querySelectorAll(".vh-notification-box").forEach(function (node, key, parent) {
+			if (node.dataset.feedPaused == "true") {
+				node.style.display = "grid";
+				node.dataset.feedPaused = "false";
+			}
+		});
+	}
+};
 window.onload = function () {
 	broadcastChannel.onmessage = async function (event) {
 		let data = event.data;
@@ -138,7 +153,7 @@ window.onload = function () {
 		if (data.type == "wsOpen") {
 			document.getElementById("statusWS").innerHTML =
 				"<strong>Server status: </strong><div class='vh-switch-32 vh-icon-switch-on'></div> Listening for notifications...";
-			document.querySelector("label[for='fetch-last-100']").style.display = "block";
+			document.querySelector("label[for='fetch-last-100']").style.display = "inline-block";
 			document.getElementById("statusWS").style.display = "block";
 		}
 		if (data.type == "wsClosed") {
@@ -199,6 +214,10 @@ async function init() {
 		}
 	});
 
+	//Bind Pause Feed button
+	const btnPauseFeed = document.getElementById("pauseFeed");
+	btnPauseFeed.addEventListener("click", handlePauseFeedClick);
+
 	//Bind fetch-last-100 button
 	const btnLast100 = document.querySelector("button[name='fetch-last-100']");
 	btnLast100.addEventListener("click", function () {
@@ -231,6 +250,12 @@ function processNotificationFiltering(node) {
 	}
 	const filter = document.querySelector("select[name='filter-type']");
 	const notificationType = parseInt(node.getAttribute("data-notification-type"));
+
+	//Feed Paused
+	if (node.dataset.feedPaused == "true") {
+		node.style.display = "none";
+		return false;
+	}
 
 	if (filter.value == -1) {
 		node.style.display = "grid";
@@ -336,12 +361,12 @@ function addItem(data) {
 	Tpl.setVar("img_url", img_url);
 	Tpl.setVar("queue", queue);
 	Tpl.setVar("type", type);
+	Tpl.setVar("feedPaused", feedPaused);
 	Tpl.setIf("announce", Settings.get("discord.active") && Settings.get("discord.guid", false) != null);
 	Tpl.setIf("pinned", Settings.get("pinnedTab.active"));
 	Tpl.setIf("variant", Settings.get("general.displayVariantIcon") && is_parent_asin);
 
 	let content = Tpl.render(loadedTpl, true); //true to return a DOM object instead of an HTML string
-
 	const newBody = document.getElementById("vh-items-container");
 	newBody.prepend(content);
 

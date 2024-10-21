@@ -15,6 +15,24 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	</head>
 	<body class="theme-default">
+		<div id="topbar">
+			<label for="fetch-last-100">
+				<button name="fetch-last-100">Fetch last 100</button>
+			</label>
+			<label for="pauseFeed">
+				<input type="button" name="pauseFeed" id="pauseFeed" value="Pause & Buffer Feed" />
+			</label>
+			<label for="filter-type" style="float: right; margin-right: 20px">
+				Filter by:
+				<select name="filter-type">
+					<option value="-1">Show all notifications</option>
+					<option value="0">Regular only</option>
+					<option value="1">Zero ETV only</option>
+					<option value="2">KW match only</option>
+					<option value="9">Zero ETV or KW match only</option>
+				</select>
+			</label>
+		</div>
 		<h1>Notifications monitoring:</h1>
 
 		<div class="vh-container">
@@ -33,26 +51,14 @@
 			<br />
 			<i>
 				New notifications will automatically pop up here. No need to refresh the page unless you want to clear
-				the list, or experiencing resources usage issues. Do not rely on notification as your sole source of
-				checking for new items; You will miss items switching from RFY to AI, re-drops, etc.
+				the list, or experiencing resources usage issues.<br />
+				Do not rely on notification as your sole source of checking for new items; You will miss items switching
+				from RFY to AI, re-drops, etc.
 			</i>
 		</div>
 		<div class="monitor-toolbar">
-			<label for="fetch-last-100">
-				<button name="fetch-last-100">Fetch last 100</button>
-			</label>
 			<label for="auto-truncate">
 				<input type="checkbox" name="auto-truncate" id="auto-truncate" /> Auto truncate after 2000 items.
-			</label>
-			<label for="filter-type">
-				Filter by:
-				<select name="filter-type">
-					<option value="-1">Show all notifications</option>
-					<option value="0">Regular only</option>
-					<option value="1">Zero ETV only</option>
-					<option value="2">KW match only</option>
-					<option value="9">Zero ETV or KW match only</option>
-				</select>
 			</label>
 		</div>
 		<div id="vh-items-container"></div>
