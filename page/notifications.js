@@ -193,19 +193,19 @@ async function init() {
 	);
 
 	//Bind the event when changing the filter
-	const filter = document.querySelector("select[name='filter-type']");
-	filter.addEventListener("change", function () {
-		if (filter.value == "-1") {
-			//Display all notifications
-			document.querySelectorAll(".vh-notification-box").forEach(function (node, key, parent) {
-				node.style.display = "grid";
-			});
-		} else {
-			//Display a specific type of notifications only
-			document.querySelectorAll(".vh-notification-box").forEach(function (node, key, parent) {
-				processNotificationFiltering(node);
-			});
-		}
+	const filterType = document.querySelector("select[name='filter-type']");
+	filterType.addEventListener("change", function () {
+		//Display a specific type of notifications only
+		document.querySelectorAll(".vh-notification-box").forEach(function (node, key, parent) {
+			processNotificationFiltering(node);
+		});
+	});
+	const filterQueue = document.querySelector("select[name='filter-queue']");
+	filterQueue.addEventListener("change", function () {
+		//Display a specific type of notifications only
+		document.querySelectorAll(".vh-notification-box").forEach(function (node, key, parent) {
+			processNotificationFiltering(node);
+		});
 	});
 
 	//Bind Pause Feed button
@@ -238,8 +238,10 @@ function processNotificationFiltering(node) {
 	if (!node) {
 		return false;
 	}
-	const filter = document.querySelector("select[name='filter-type']");
+	const filterType = document.querySelector("select[name='filter-type']");
 	const notificationType = parseInt(node.getAttribute("data-notification-type"));
+	const filterQueue = document.querySelector("select[name='filter-queue']");
+	const queueType = node.getAttribute("data-queue");
 
 	//Feed Paused
 	if (node.dataset.feedPaused == "true") {
@@ -247,16 +249,26 @@ function processNotificationFiltering(node) {
 		return false;
 	}
 
-	if (filter.value == -1) {
+	if (filterType.value == -1) {
 		node.style.display = "grid";
-		return true;
-	} else if (filter.value == TYPE_HIGHLIGHT_OR_ZEROETV) {
+	} else if (filterType.value == TYPE_HIGHLIGHT_OR_ZEROETV) {
 		const typesToShow = [TYPE_HIGHLIGHT, TYPE_ZEROETV];
 		node.style.display = typesToShow.includes(notificationType) ? "grid" : "none";
-		return typesToShow.includes(notificationType);
+		typesToShow.includes(notificationType);
 	} else {
-		node.style.display = notificationType == filter.value ? "grid" : "none";
-		return notificationType == filter.value;
+		node.style.display = notificationType == filterType.value ? "grid" : "none";
+		notificationType == filterType.value;
+	}
+
+	if (node.style.display == "grid") {
+		if (filterQueue.value == "-1") {
+			return true;
+		} else {
+			node.style.display = queueType == filterQueue.value ? "grid" : "none";
+			return queueType == filterQueue.value;
+		}
+	} else {
+		return false;
 	}
 }
 

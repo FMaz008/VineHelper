@@ -22,8 +22,13 @@
 			<label for="pauseFeed">
 				<input type="button" name="pauseFeed" id="pauseFeed" value="Pause & Buffer Feed" />
 			</label>
-			<label for="filter-type" style="float: right; margin-right: 20px">
+			<label for="filter-queue" style="float: right; margin-right: 20px">
 				Filter by:
+				<select name="filter-queue">
+					<option value="-1">Show all queues</option>
+					<option value="last_chance">AFA</option>
+					<option value="encore">AI</option>
+				</select>
 				<select name="filter-type">
 					<option value="-1">Show all notifications</option>
 					<option value="0">Regular only</option>
