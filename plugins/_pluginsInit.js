@@ -1,7 +1,7 @@
 //This file contain the list of service worker scripts to be loaded for plugins
 //import "./myPlugin/serviceWorker.js";
 
-//const ARR_PLUGIN_CONTENT_SCRIPTS = ["myPlugin/contentScript.js"];
+const ARR_PLUGIN_CONTENT_SCRIPTS = []; // ["myPlugin/contentScript.js"];
 
 //#####################################################
 //## PLUGIN SYSTEM
