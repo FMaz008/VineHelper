@@ -998,11 +998,10 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 	if (data.type == undefined) return;
 
 	sendResponse({ success: true });
-
+	
 	//If we received a request for a hook execution
-	if (data.type && data.type == "hookExecute") {
-		console.log("Hook Execute request");
-		hookExecute(data.hookname, data.data);
+	if (data.type == "hookExecute") {
+		hookExecute(data.hookname, data);
 	}
 
 	if (data.type == "newItemCheck") {
@@ -1410,7 +1409,7 @@ async function handleModalNavigation(event) {
 	showRuntime("[DEBUG] Updated the current index to: " + modalNavigatorCurrentIndex);
 }
 
-function openDynamicModal(asin, queue, isParent, enrollmentGUID) {
+function openDynamicModal(asin, queue, isParent, enrollmentGUID, autoClick = true) {
 	if (!marketplaceId || !customerId) {
 		console.error("Failed to fetch opts/vvp-context data");
 	}
@@ -1446,9 +1445,13 @@ function openDynamicModal(asin, queue, isParent, enrollmentGUID) {
 	document.getElementById("vvp-items-grid").appendChild(container1);
 
 	//Dispatch a click event on the button
-	btn.click();
+	if(autoClick){
+		btn.click();
 
-	setTimeout(function () {
-		container1.remove(); // Removes container1 from the DOM
-	}, 1000);
+		setTimeout(function () {
+			container1.remove(); // Removes container1 from the DOM
+		}, 1000);
+	}
+
+	return btn;
 }

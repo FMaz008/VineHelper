@@ -12,7 +12,8 @@ const myStream = new Streamy();
 const filterHideitem = myStream.filter(function (data) {
 	if (Settings.get("notification.hideList")) {
 		const hideKWMatch = keywordMatch(Settings.get("general.hideKeywords"), data.title);
-		if (hideKWMatch) {
+		if (hideKWMatch!==false) {
+			console.log("Item " + data.title + " matched hide keyword " + hideKWMatch + " hide it.");
 			return false; //Do not display the notification as it matches the hide list.
 		}
 	}
@@ -20,7 +21,14 @@ const filterHideitem = myStream.filter(function (data) {
 });
 const transformIsHighlight = myStream.transformer(function (data) {
 	const highlightKWMatch = keywordMatch(Settings.get("general.highlightKeywords"), data.title);
-	data.KWsMatch = highlightKWMatch;
+	data.KWsMatch = highlightKWMatch!==false;
+	data.KW = highlightKWMatch;
+	if(highlightKWMatch!==false){
+		let data2 = { ...data };
+		data2.type = "hookExecute";
+		data2.hookname = "newItemKWMatch";
+		sendMessageToAllTabs(data2, "newItemKWMatch");
+	}
 	return data;
 });
 const transformSearchPhrase = myStream.transformer(function (data) {
@@ -69,7 +77,6 @@ myStream
 	.pipe(transformPostNotification)
 	.output((data) => {
 		//Broadcast the notification
-		//console.log("Broadcasting new item " + data.asin);
 		sendMessageToAllTabs(data, "notification");
 	});
 
@@ -105,7 +112,7 @@ if (typeof browser === "undefined") {
 browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 	if (data.type == "fetchLast100Items") {
 		//Get the last 100 most recent items
-		fetchLast100Items(true);
+		fetchLast100Items();
 		sendResponse({ success: true });
 	}
 
@@ -204,6 +211,15 @@ function connectWebSocket() {
 			},
 			"ETV update"
 		);
+
+		let data1 = {};
+		data1.type = "hookExecute";
+		data1.hookname = "newItemETV";
+		data1.asin = data.item.asin;
+		data1.etv = data.item.etv;
+		sendMessageToAllTabs(data1, "newItemETV");
+
+		
 	});
 
 	// On disconnection
@@ -251,7 +267,7 @@ async function retrieveSettings() {
 	vineDomain = vineDomains[Settings.get("general.country")];
 }
 
-async function fetchLast100Items(fetchAll = false) {
+async function fetchLast100Items() {
 	if (Settings.get("general.country") === null) {
 		return false; //If the country is not known, do not query
 	}
@@ -299,47 +315,24 @@ async function fetchLast100Items(fetchAll = false) {
 				if (img_url == "" || title == "") {
 					continue;
 				}
-				if (fetchAll || timestamp > Settings.get("notification.lastProduct")) {
-					Settings.set("notification.lastProduct", timestamp);
-					myStream.input({
-						index: i,
-						type: "newItem",
-						domain: Settings.get("general.country"),
-						date: date,
-						asin: asin,
-						title: title,
-						img_url: img_url,
-						etv_min: etv_min,
-						etv_max: etv_max,
-						queue: queue,
-						is_parent_asin: is_parent_asin,
-						enrollment_guid: enrollment_guid,
-					});
-				} else {
-					//Send a message to update the ETV.
-					if (etv != null) {
-						sendMessageToNotificationMonitor(
-							{
-								type: "ETVUpdate",
-								asin: asin,
-								etv: etv_min,
-							},
-							"ETV notification"
-						);
-						if (etv_min != etv_max) {
-							sendMessageToNotificationMonitor(
-								{
-									type: "ETVUpdate",
-									asin: asin,
-									etv: etv_max,
-								},
-								"ETV notification"
-							);
-						}
-					}
-				}
+				
+				Settings.set("notification.lastProduct", timestamp);
+				myStream.input({
+					index: i,
+					type: "newItem",
+					domain: Settings.get("general.country"),
+					date: date,
+					asin: asin,
+					title: title,
+					img_url: img_url,
+					etv_min: etv_min,
+					etv_max: etv_max,
+					queue: queue,
+					is_parent_asin: is_parent_asin,
+					enrollment_guid: enrollment_guid,
+				});
+				
 			}
-			//sendMessageToAllTabs({ type: "newItemCheckEnd" }, "End of notification(s) update");
 		})
 		.catch(function () {
 			(error) => console.log(error);
@@ -371,7 +364,7 @@ function pushNotification(asin, queue, is_parent_asin, enrollment_guid, search_s
 	);
 }
 function keywordMatch(keywords, title) {
-	return keywords.some((word) => {
+	const found = keywords.find((word) => {
 		let regex;
 		try {
 			regex = new RegExp(`\\b${word}\\b`, "i");
@@ -382,11 +375,13 @@ function keywordMatch(keywords, title) {
 		}
 
 		if (regex.test(title)) {
-			return true;
+			return word; // Return the matched word
 		}
 
-		return false;
+		return false; // Continue searching
 	});
+	return found === undefined ? false : found;
+	
 }
 
 async function sendMessageToNotificationMonitor(data, debugInfo) {

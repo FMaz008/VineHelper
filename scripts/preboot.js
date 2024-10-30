@@ -306,7 +306,7 @@ function hookExecute(hookname, variables) {
 	let arrBinding = mapHook.get(hookname);
 	if (arrBinding == undefined) return false;
 	arrBinding.forEach(function (func) {
-		console.log("Calling function for hook " + hookname);
+		//console.log("Calling function for hook " + hookname);
 		func(variables); // Call each function for the hook
 	});
 }
