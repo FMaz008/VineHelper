@@ -300,7 +300,6 @@ function hookBind(hookname, func) {
 	if (arrBinding == undefined) arrBinding = [];
 	arrBinding.push(func);
 	mapHook.set(hookname, arrBinding);
-	console.log(mapHook);
 }
 function hookExecute(hookname, variables) {
 	let arrBinding = mapHook.get(hookname);

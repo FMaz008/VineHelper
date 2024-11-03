@@ -23,12 +23,7 @@ const transformIsHighlight = myStream.transformer(function (data) {
 	const highlightKWMatch = keywordMatch(Settings.get("general.highlightKeywords"), data.title);
 	data.KWsMatch = highlightKWMatch!==false;
 	data.KW = highlightKWMatch;
-	if(highlightKWMatch!==false){
-		let data2 = { ...data };
-		data2.type = "hookExecute";
-		data2.hookname = "newItemKWMatch";
-		sendMessageToAllTabs(data2, "newItemKWMatch");
-	}
+	
 	return data;
 });
 const transformSearchPhrase = myStream.transformer(function (data) {
@@ -69,12 +64,28 @@ const transformPostNotification = myStream.transformer(function (data) {
 	}
 	return data;
 });
+const transformExecuteHooks = myStream.transformer(function (data) {
+	let data2 = { ...data };
+	
+	if(data.KWsMatch){
+		data2.type = "hookExecute";
+		data2.hookname = "newItemKWMatch";
+		sendMessageToAllTabs(data2, "newItemKWMatch");
+	}else{
+		data2.type = "hookExecute";
+		data2.hookname = "newItemNoKWMatch";
+		sendMessageToAllTabs(data2, "newItemNoKWMatch");
+	}
+
+	return data;
+});
 myStream
 	.pipe(filterHideitem)
 	.pipe(transformIsHighlight)
 	.pipe(transformSearchPhrase)
 	.pipe(transformUnixTimestamp)
 	.pipe(transformPostNotification)
+	.pipe(transformExecuteHooks)
 	.output((data) => {
 		//Broadcast the notification
 		sendMessageToAllTabs(data, "notification");
