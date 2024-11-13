@@ -106,6 +106,9 @@ function displayAccountData() {
 	//Add the Evaluation Metric styling:
 	displayAccountDataEvaluationMetrics();
 
+	//Hide Opt out of Vine button
+	displayAccountHideOptOutButton();
+
 	//Add a container to the status table
 	document.getElementById("vvp-current-status-box").style.height = "auto";
 	let elem = document.getElementById("vvp-current-status-box").children[0];
@@ -148,6 +151,11 @@ function displayAccountData() {
 	container.appendChild(div);
 }
 
+function displayAccountHideOptOutButton() {
+	if (Settings.get("general.hideOptOutButton") == true) {
+		document.getElementById("vvp-opt-out-of-vine-button").style.display = "none";
+	}
+}
 
 /**
  * Contribution from https://github.com/robartsd/VineTools/blob/main/evaluationMetrics.user.js

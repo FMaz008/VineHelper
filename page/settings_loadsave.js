@@ -109,6 +109,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("general.searchOpenModal");
 	manageCheckboxSetting("general.listView");
 	manageCheckboxSetting("general.scrollToRFY");
+	manageCheckboxSetting("general.hideOptOutButton");
 
 	//##TAB - NOTIFICATIONS
 
