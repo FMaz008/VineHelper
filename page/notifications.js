@@ -63,6 +63,15 @@ var feedPaused = false;
 
 const broadcastChannel = new BroadcastChannel("VineHelperChannel");
 
+//Load custom CSS
+function loadStyleSheetContent(content, path = "injected") {
+	if (content != "") {
+		const style = document.createElement("style");
+		style.innerHTML = "/*" + path + "*/\n" + content;
+		document.head.appendChild(style);
+	}
+}
+
 const handleReportClick = (e) => {
 	e.preventDefault(); // Prevent the default click behavior
 	report(e.target.dataset.asin);
@@ -181,6 +190,10 @@ async function init() {
 	let vineCountry = Settings.get("general.country");
 	setLocale(vineCountry);
 	loadedTpl = await Tpl.loadFile("/view/notification_monitor.html");
+
+	if (Settings.get("general.customCSS")) {
+		loadStyleSheetContent(Settings.get("general.customCSS"));
+	}
 
 	if (!Settings.get("notification.active")) {
 		document.getElementById("status").innerHTML =
