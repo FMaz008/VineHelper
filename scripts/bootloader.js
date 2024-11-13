@@ -103,6 +103,9 @@ function displayAccountData() {
 	arrMatches = window.location.href.match(regex);
 	if (arrMatches == null) return;
 
+	//Add the Evaluation Metric styling:
+	displayAccountDataEvaluationMetrics();
+
 	//Add a container to the status table
 	document.getElementById("vvp-current-status-box").style.height = "auto";
 	let elem = document.getElementById("vvp-current-status-box").children[0];
@@ -143,6 +146,65 @@ function displayAccountData() {
 	div.innerHTML =
 		"<strong>Re-evaluation in progress:</strong> " + escapeHTML(vvpContext.voiceDetails.isTierEvaluationInProgress);
 	container.appendChild(div);
+}
+
+
+/**
+ * Contribution from https://github.com/robartsd/VineTools/blob/main/evaluationMetrics.user.js
+ */
+function displayAccountDataEvaluationMetrics() {
+	const periodStart = new Date(parseInt(document.querySelector("#vvp-eval-start-stamp").innerText));
+	const periodEnd = new Date(parseInt(document.querySelector("#vvp-eval-end-stamp").innerText));
+
+	document.querySelector("#vvp-evaluation-period-tooltip-trigger").innerText =
+		`Evaluation period: ${periodStart.toLocaleDateString()} - ${periodEnd.toLocaleString()}`;
+
+	const percent = Math.round(
+		parseFloat(document.querySelector("#vvp-perc-reviewed-metric-display strong").innerText)
+	);
+	if (percent > 0) {
+		const count = parseInt(document.querySelector("#vvp-num-reviewed-metric-display strong").innerText);
+		const orderCount = Math.round((count / percent) * 100);
+		const orderMin = Math.min(Math.ceil((count / (percent + 0.5)) * 100), orderCount);
+		const orderMax = Math.max(Math.floor((count / (percent - 0.5)) * 100), orderCount);
+		const targetMin = Math.ceil(orderMin * 0.9) - count;
+		const targetMax = Math.ceil(orderMax * 0.9) - count;
+		const orderEstimate = orderMin == orderMax ? orderMax : `${orderMin}&ndash;${orderMax}`;
+		const targetRequired = targetMin == targetMax ? targetMax : `${targetMin}&ndash;${targetMax}`;
+
+		if (targetMax > 0) {
+			document.querySelector("#vvp-perc-reviewed-metric-display p").innerHTML =
+				`You have reviewed <strong>${percent}%</strong> of ${orderEstimate} items; review ${targetRequired} more to reach 90%`;
+		} else {
+			document.querySelector("#vvp-perc-reviewed-metric-display p").innerHTML =
+				`You have reviewed <strong>${percent}%</strong> of ${orderEstimate} Vine items this period`;
+		}
+
+		const periodFraction = (new Date().setUTCHours(0, 0, 0, 0) - periodStart) / (periodEnd - periodStart);
+		if (periodFraction > 0) {
+			const awaitingEstimate = orderMax - count;
+			const projectedCount = count / periodFraction;
+			const projectedOrders = orderMin / periodFraction;
+			const projectedPercent = (projectedOrders - awaitingEstimate) / projectedOrders;
+			const countBar = document.querySelector("#vvp-num-reviewed-metric-display .animated-progress span");
+			const percentBar = document.querySelector("#vvp-perc-reviewed-metric-display .animated-progress span");
+			if (projectedCount < 70) {
+				countBar.style.backgroundColor = "red";
+			} else if (projectedCount < 77) {
+				countBar.style.backgroundColor = "orange";
+			} else if (projectedCount < 80) {
+				countBar.style.backgroundColor = "yellow";
+			}
+
+			if (projectedPercent < 0.8) {
+				percentBar.style.backgroundColor = "red";
+			} else if (projectedPercent < 0.88) {
+				percentBar.style.backgroundColor = "orange";
+			} else if (projectedPercent < 0.92) {
+				percentBar.style.backgroundColor = "yellow";
+			}
+		}
+	}
 }
 
 async function showGDPRPopup() {
@@ -239,17 +301,17 @@ function initAddNotificationMonitorLink() {
 	}
 }
 
-function addRecommendationLink(){
+function addRecommendationLink() {
 	const tab = document.querySelector(".a-tab-container > ul > li:last-of-type");
-    if (tab) {
-        const rec = tab.cloneNode(true);
-        rec.style.float = "right";
-        const a = rec.firstChild;
-        a.rel = "noreferrer";
-        a.href = "/gp/yourstore/iyr/";
-        a.textContent = "Recommendations";
-        tab.parentNode.appendChild(rec);
-    }
+	if (tab) {
+		const rec = tab.cloneNode(true);
+		rec.style.float = "right";
+		const a = rec.firstChild;
+		a.rel = "noreferrer";
+		a.href = "/gp/yourstore/iyr/";
+		a.textContent = "Recommendations";
+		tab.parentNode.appendChild(rec);
+	}
 }
 
 async function initCreateTabs() {
@@ -1013,7 +1075,7 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 	if (data.type == undefined) return;
 
 	sendResponse({ success: true });
-	
+
 	//If we received a request for a hook execution
 	if (data.type == "hookExecute") {
 		hookExecute(data.hookname, data);
@@ -1460,7 +1522,7 @@ function openDynamicModal(asin, queue, isParent, enrollmentGUID, autoClick = tru
 	document.getElementById("vvp-items-grid").appendChild(container1);
 
 	//Dispatch a click event on the button
-	if(autoClick){
+	if (autoClick) {
 		btn.click();
 
 		setTimeout(function () {
