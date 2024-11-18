@@ -107,7 +107,7 @@ a {
 	}
 
 	a {
-		color: var(--link-dark, #f9f9f9);
+		color: var(--text-dark, #f9f9f9);
 		display: contents;
 	}
 
