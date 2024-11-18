@@ -171,7 +171,9 @@ function displayAccountDataEvaluationMetrics() {
 		parseFloat(document.querySelector("#vvp-perc-reviewed-metric-display strong").innerText)
 	);
 	if (percent > 0) {
-		const count = parseInt(document.querySelector("#vvp-num-reviewed-metric-display strong").innerText);
+		const count = parseInt(
+			document.querySelector("#vvp-num-reviewed-metric-display strong").innerText.replace(/,/g, "")
+		);
 		const orderCount = Math.round((count / percent) * 100);
 		const orderMin = Math.min(Math.ceil((count / (percent + 0.5)) * 100), orderCount);
 		const orderMax = Math.max(Math.floor((count / (percent - 0.5)) * 100), orderCount);
