@@ -26,6 +26,8 @@ function showDebug() {
 
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
 window.Settings = new SettingsMgr();
+import { Internationalization } from "../scripts/Internationalization.js";
+window.I13n = new Internationalization();
 import { NotificationsSoundPlayer } from "../scripts/NotificationsSoundPlayer.js";
 var notificationsSoundPlayer = new NotificationsSoundPlayer();
 
@@ -33,34 +35,9 @@ window.Tpl = new Template();
 window.TplMgr = new TemplateMgr();
 window.Notifications = new ScreenNotifier();
 window.PinnedList = new PinnedListMgr();
+
 var loadedTpl = null;
 
-const vineLocales = {
-	ca: { locale: "en-CA", currency: "CAD" },
-	com: { locale: "en-US", currency: "USD" },
-	uk: { locale: "en-GB", currency: "GBP" },
-	jp: { locale: "ja-JP", currency: "JPY" },
-	de: { locale: "de-DE", currency: "EUR" },
-	fr: { locale: "fr-FR", currency: "EUR" },
-	es: { locale: "es-ES", currency: "EUR" },
-	it: { locale: "it-IT", currency: "EUR" },
-	au: { locale: "en-AU", currency: "AUD" },
-};
-const vineDomains = {
-	ca: "ca",
-	com: "com",
-	uk: "co.uk",
-	jp: "co.jp",
-	de: "de",
-	fr: "fr",
-	es: "es",
-	it: "it",
-	au: "com.au",
-};
-
-var vineLocale = null;
-var vineCurrency = null;
-var vineDomain = null;
 var feedPaused = false;
 
 const broadcastChannel = new BroadcastChannel("VineHelperChannel");
@@ -89,7 +66,7 @@ const handleBrendaClick = (e) => {
 	// In case of price range, only send the highest value
 	etv = etv.split("-").pop();
 	etv = Number(etv.replace(/[^0-9-.]+/g, ""));
-	window.BrendaAnnounceQueue.announce(asin, etv, queue, vineDomain);
+	window.BrendaAnnounceQueue.announce(asin, etv, queue, I13n.getDomainTLD());
 };
 
 const handlePinClick = (e) => {
@@ -189,8 +166,10 @@ async function init() {
 	while (!Settings || !Settings.isLoaded()) {
 		await new Promise((r) => setTimeout(r, 10));
 	}
-	let vineCountry = Settings.get("general.country");
-	setLocale(vineCountry);
+	const domainTLD = Settings.get("general.country");
+	I13n.setDomainTLD(domainTLD);
+	loadLocale();
+
 	loadedTpl = await Tpl.loadFile("/view/notification_monitor.html");
 
 	if (Settings.get("general.customCSS")) {
@@ -288,29 +267,21 @@ function processNotificationFiltering(node) {
 }
 
 //Set the locale and currency based on the domain.
-//As this is an internal page from the extension, we can only know what
-//country/domain is being used when we first receive data.
-async function setLocale(country) {
-	if (Object.prototype.hasOwnProperty.call(vineLocales, country)) {
-		vineLocale = vineLocales[country].locale;
-		vineCurrency = vineLocales[country].currency;
-		vineDomain = vineDomains[country];
-
-		if (country === null) {
-			document.getElementById("status").innerHTML =
-				"<strong>Notification Monitor: </strong><div class='vh-switch-32 vh-icon-switch-off'> Your country has not been detected, ensure to load a vine page before using the notification monitor.</div>";
-		} else if (vineDomain === null) {
-			document.getElementById("status").innerHTML =
-				"<strong>Notification Monitor: </strong><div class='vh-switch-32 vh-icon-switch-off'> No valid country found. You current country is detected as: '" +
-				country +
-				"', which is not currently supported by Vine Helper. Reach out so we can add it!";
-		} else if (Settings.get("notification.active")) {
-			document.getElementById("status").innerHTML =
-				"<strong>Notification Monitor: </strong><div class='vh-switch-32 vh-icon-switch-on'></div>";
-		}
-
-		document.getElementById("date_loaded").innerText = new Date().toLocaleString(vineLocale);
+async function loadLocale() {
+	if (I13n.getCountryCode() === null) {
+		document.getElementById("status").innerHTML =
+			"<strong>Notification Monitor: </strong><div class='vh-switch-32 vh-icon-switch-off'> Your country has not been detected, ensure to load a vine page before using the notification monitor.</div>";
+	} else if (I13n.getDomainTLD() === null) {
+		document.getElementById("status").innerHTML =
+			"<strong>Notification Monitor: </strong><div class='vh-switch-32 vh-icon-switch-off'> No valid country found. You current country is detected as: '" +
+			I13n.getCountryCode() +
+			"', which is not currently supported by Vine Helper. Reach out so we can add it!";
+	} else if (Settings.get("notification.active")) {
+		document.getElementById("status").innerHTML =
+			"<strong>Notification Monitor: </strong><div class='vh-switch-32 vh-icon-switch-on'></div>";
 	}
+
+	document.getElementById("date_loaded").innerText = new Date().toLocaleString(I13n.getLocale());
 }
 
 function addItem(data) {
@@ -320,7 +291,6 @@ function addItem(data) {
 		title,
 		search,
 		img_url,
-		domain,
 		etv_min,
 		etv_max,
 		queue,
@@ -329,9 +299,6 @@ function addItem(data) {
 		is_parent_asin,
 		enrollment_guid,
 	} = data;
-
-	//If the locale is not define, set it.
-	if (vineLocale == null) setLocale(domain);
 
 	//If the item already exist, do not display it again
 	if (items.has(asin)) {
@@ -362,16 +329,16 @@ function addItem(data) {
 	if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
 		Tpl.setVar(
 			"url",
-			`https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`
+			`https://www.amazon.${I13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`
 		);
 	} else {
-		Tpl.setVar("url", `https://www.amazon.${vineDomain}/vine/vine-items?search=${search}`);
+		Tpl.setVar("url", `https://www.amazon.${I13n.getDomainTLD()}/vine/vine-items?search=${search}`);
 	}
 
 	Tpl.setVar("asin", asin);
 	Tpl.setVar("is_parent_asin", is_parent_asin);
 	Tpl.setVar("enrollment_guid", enrollment_guid);
-	Tpl.setVar("domain", vineDomain);
+	Tpl.setVar("domain", I13n.getDomainTLD());
 	Tpl.setVar("title", "New item");
 	Tpl.setVar("date", formatDate(date));
 	Tpl.setVar("search", search);
@@ -450,16 +417,16 @@ function addItem(data) {
 function formatETV(etv) {
 	let formattedETV = "";
 	if (etv != null) {
-		formattedETV = new Intl.NumberFormat(vineLocale, {
+		formattedETV = new Intl.NumberFormat(I13n.getLocale(), {
 			style: "currency",
-			currency: vineCurrency,
+			currency: I13n.getCurrency(),
 		}).format(etv);
 	}
 	return formattedETV;
 }
 
 function formatDate(date) {
-	return new Date(date.replace(" ", "T") + "Z").toLocaleString(vineLocale);
+	return new Date(date.replace(" ", "T") + "Z").toLocaleString(I13n.getLocale());
 }
 
 function itemID(asin) {
@@ -547,7 +514,7 @@ function send_report(asin) {
 	const content = {
 		api_version: 5,
 		app_version: manifest.version,
-		country: vineDomain,
+		country: I13n.getCountryCode(),
 		action: "report_asin",
 		uuid: Settings.get("general.uuid", false),
 		asin: asin,

@@ -16,22 +16,6 @@ var mapHook = new Map();
 
 let debugMessage = "";
 
-var vineDomain = null; //com.au
-var vineCountry = null; //au
-var vineLocale = null; //en-AU
-var vineCurrency = null; //AUD
-const vineLocales = {
-	ca: { locale: "en-CA", currency: "CAD" },
-	com: { locale: "en-US", currency: "USD" },
-	uk: { locale: "en-GB", currency: "GBP" },
-	jp: { locale: "ja-JP", currency: "JPY" },
-	de: { locale: "de-DE", currency: "EUR" },
-	fr: { locale: "fr-FR", currency: "EUR" },
-	es: { locale: "es-ES", currency: "EUR" },
-	it: { locale: "it-IT", currency: "EUR" },
-	au: { locale: "en-AU", currency: "AUD" },
-};
-
 var vineQueue = null;
 var vineQueueAbbr = null;
 var vineSearch = false;
@@ -42,12 +26,17 @@ var appVersion = null;
 var prebootCompleted = false;
 var ultraviner = false; //If Ultravine is detected, Vine Helper will deactivate itself to avoid conflicts.
 
+var I13n = null;
 var Settings = null;
 
 // Factory function to load a module
 (async () => {
 	try {
 		let module = null;
+
+		//Load the Internationalization.
+		module = await import(chrome.runtime.getURL("../scripts/Internationalization.js"));
+		I13n = new module.Internationalization();
 
 		//Load the SettingMgr.
 		module = await import(chrome.runtime.getURL("../scripts/SettingsMgr.js"));
@@ -126,25 +115,12 @@ async function getSettings() {
 		loadStyleSheetContent(Settings.get("general.customCSS"));
 	}
 
-	//Figure out what domain the extension is working on
-	const currentUrl = window.location.href;
-	regex = /^.+?amazon\.([a-z.]+).*\/vine\/.*$/;
-	arrMatches = currentUrl.match(regex);
-	vineDomain = arrMatches[1];
-	vineCountry = vineDomain.split(".").pop();
-	vineLocale = vineLocales[vineCountry].locale;
-	vineCurrency = vineLocales[vineCountry].currency;
-	showRuntime("PREBOOT: Detected domain: " + vineDomain);
-	showRuntime("PREBOOT: Detected country: " + vineCountry);
-	showRuntime("PREBOOT: Using locale: " + vineLocale);
-	showRuntime("PREBOOT: Using currency: " + vineCurrency);
-
 	// Load the country specific stylesheet
 	if (Settings.get("thorvarium.categoriesWithEmojis")) {
 		// The default stylesheet is for the US
 		var emojiList = "categories-with-emojis";
 		// For all other countries, append the country code to the stylesheet
-		if (vineCountry != "com") emojiList += "-" + vineCountry.toUpperCase();
+		if (I13n.getCountryCode() != "com") emojiList += "-" + I13n.getCountryCode().toUpperCase();
 
 		loadStyleSheet("node_modules/vine-styling/desktop/" + emojiList + ".css");
 	}
@@ -152,19 +128,20 @@ async function getSettings() {
 	showRuntime("PREBOOT: Thorvarium country-specific stylesheets injected");
 
 	//Send the country code to the Service Worker
-	if (Settings.get("general.country") != vineCountry) {
-		Settings.set("general.country", vineCountry);
+	if (Settings.get("general.country") != I13n.getCountryCode()) {
+		Settings.set("general.country", I13n.getCountryCode());
 	}
 
 	let manifest = chrome.runtime.getManifest();
 	appVersion = manifest.version;
 
 	//If the domain if not from outside the countries supported by the discord API, disable discord
-	if (["ca", "com", "co.uk"].indexOf(vineDomain) == -1) {
+	if (["ca", "com", "co.uk"].indexOf(I13n.getDomainTLD()) == -1) {
 		Settings.set("discord.active", false);
 	}
 
 	//Determine if we are browsing a queue
+	const currentUrl = window.location.href;
 	regex = /^.+?amazon\..+\/vine\/vine-items(?:\?(queue|search)=(.+?))?(?:[#&].*)?$/;
 	arrMatches = currentUrl.match(regex);
 	vineQueue = null;
@@ -220,7 +197,7 @@ async function requestNewUUID() {
 		api_version: 5,
 		app_version: appVersion,
 		action: "get_uuid",
-		country: vineCountry,
+		country: I13n.getCountryCode(),
 	};
 	const options = {
 		method: "POST",

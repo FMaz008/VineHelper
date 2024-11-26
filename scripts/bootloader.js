@@ -139,7 +139,7 @@ function displayAccountData() {
 	};
 
 	for (const [key, value] of Object.entries(additionalStats)) {
-		date = new Date(vvpContext.voiceDetails[key]).toLocaleString(vineLocale);
+		date = new Date(vvpContext.voiceDetails[key]).toLocaleString(I13n.getLocale());
 		div = document.createElement("div");
 		div.innerHTML = `<strong>${value}:</strong><br /> ${date}<br/><br />`;
 		container.appendChild(div);
@@ -388,7 +388,7 @@ async function setBookmarkDate(timeOffset) {
 	//Fetch the current date/time from the server
 	let arrJSON = {
 		api_version: 5,
-		country: vineCountry,
+		country: I13n.getCountryCode(),
 		action: "date",
 	};
 	const options = {
@@ -671,7 +671,7 @@ function fetchProductsDatav5() {
 		api_version: 5,
 		app_version: appVersion,
 		action: "get_info",
-		country: vineCountry,
+		country: I13n.getCountryCode(),
 		uuid: Settings.get("general.uuid", false),
 		queue: vineQueue,
 		items: arrProductsData,
@@ -930,7 +930,7 @@ window.addEventListener("message", async function (event) {
 		const content = {
 			api_version: 5,
 			action: "record_etv",
-			country: vineCountry,
+			country: I13n.getCountryCode(),
 			uuid: uuid,
 			asin: event.data.data.asin,
 			parent_asin: event.data.data.parent_asin,
@@ -995,7 +995,7 @@ window.addEventListener("message", async function (event) {
 			const content = {
 				api_version: 5,
 				action: "record_order",
-				country: vineCountry,
+				country: I13n.getCountryCode(),
 				uuid: uuid,
 				asin: event.data.data.asin,
 				parent_asin: event.data.data.parent_asin,
@@ -1115,10 +1115,10 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 			if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
 				Tpl.setVar(
 					"url",
-					`https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`
+					`https://www.amazon.${I13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`
 				);
 			} else {
-				Tpl.setVar("url", `https://www.amazon.${vineDomain}/vine/vine-items?search=${search}`);
+				Tpl.setVar("url", `https://www.amazon.${I13n.getDomainTLD()}/vine/vine-items?search=${search}`);
 			}
 			Tpl.setIf("show_image", Settings.get("notification.screen.thumbnail"));
 			Tpl.setVar("date", date);

@@ -4,6 +4,7 @@ const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
 const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_WS_URL = "ws://127.0.0.1:3000";
 
+import { Internationalization } from "../scripts/Internationalization.js";
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
 import { Streamy } from "./Streamy.js";
 import "../node_modules/socket.io/client-dist/socket.io.min.js";
@@ -105,21 +106,11 @@ if ("function" == typeof importScripts) {
 }
 */
 
+var I13n = new Internationalization();
 var Settings = new SettingsMgr();
 var notificationsData = {};
 var newItemCheckInterval = 0.3; //Firefox shutdown the background script after 30seconds.
 const broadcastChannel = new BroadcastChannel("VineHelperChannel");
-const vineDomains = {
-	ca: "ca",
-	com: "com",
-	uk: "co.uk",
-	jp: "co.jp",
-	de: "de",
-	fr: "fr",
-	es: "es",
-	it: "it",
-};
-var vineDomain;
 
 if (typeof browser === "undefined") {
 	var browser = chrome;
@@ -164,11 +155,11 @@ chrome.notifications.onClicked.addListener((notificationId) => {
 	const { asin, queue, is_parent_asin, enrollment_guid, search } = notificationsData[notificationId];
 	if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
 		chrome.tabs.create({
-			url: `https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`,
+			url: `https://www.amazon.${I13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`,
 		});
 	} else {
 		chrome.tabs.create({
-			url: `https://www.amazon.${vineDomain}/vine/vine-items?search=${search}`,
+			url: `https://www.amazon.${I13n.getDomainTLD()}/vine/vine-items?search=${search}`,
 		});
 	}
 });
@@ -183,6 +174,7 @@ function connectWebSocket() {
 	}
 
 	if (Settings.get("general.country") === null) {
+		console.log("Country not known");
 		return; //If the country is not known, do not connect
 	}
 
@@ -280,8 +272,9 @@ async function retrieveSettings() {
 		await new Promise((r) => setTimeout(r, 10));
 	}
 
-	//Set the country
-	vineDomain = vineDomains[Settings.get("general.country")];
+	//Set the locale
+	const domainTLD = Settings.get("general.country");
+	I13n.setDomainTLD(domainTLD);
 }
 
 async function fetchLast100Items() {

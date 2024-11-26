@@ -138,7 +138,7 @@ class HiddenListMgr {
 
 		const content = {
 			api_version: 5,
-			country: vineCountry,
+			country: I13n.getCountryCode(),
 			action: "save_hidden_list",
 			uuid: Settings.get("general.uuid", false),
 			items: this.arrChanges,

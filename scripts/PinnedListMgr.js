@@ -166,7 +166,7 @@ class PinnedListMgr {
 	notifyServerOfChangedItem() {
 		const content = {
 			api_version: 5,
-			country: vineCountry,
+			country: I13n.getCountryCode(),
 			action: "save_pinned_list",
 			uuid: Settings.get("general.uuid", false),
 			items: this.arrChanges,
