@@ -186,6 +186,23 @@ async function initiateSettings() {
 			chrome.storage.local.set({ hiddenItems: [] });
 			alert("Hidden items in local storage emptied.");
 		}
+		if (confirm("Delete all remotely stored hidden items from Vine Helper?")) {
+			const content = {
+				api_version: 5,
+				country: "loremipsum",
+				action: "save_hidden_list",
+				uuid: Settings.get("general.uuid", false),
+				items: "DELETE_ALL",
+			};
+			//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
+			fetch(VINE_HELPER_API_V5_URL, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(content),
+			}).then(async function (response) {
+				alert("Hidden items in remote storage emptied.");
+			});
+		}
 	});
 
 	//UUID:
