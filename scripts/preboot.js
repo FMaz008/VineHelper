@@ -16,10 +16,22 @@ var mapHook = new Map();
 
 let debugMessage = "";
 
-var vineDomain = null;
-var vineCountry = null;
-var vineLocale = null;
-var vineCurrency = null;
+var vineDomain = null; //com.au
+var vineCountry = null; //au
+var vineLocale = null; //en-AU
+var vineCurrency = null; //AUD
+const vineLocales = {
+	ca: { locale: "en-CA", currency: "CAD" },
+	com: { locale: "en-US", currency: "USD" },
+	uk: { locale: "en-GB", currency: "GBP" },
+	jp: { locale: "ja-JP", currency: "JPY" },
+	de: { locale: "de-DE", currency: "EUR" },
+	fr: { locale: "fr-FR", currency: "EUR" },
+	es: { locale: "es-ES", currency: "EUR" },
+	it: { locale: "it-IT", currency: "EUR" },
+	au: { locale: "en-AU", currency: "AUD" },
+};
+
 var vineQueue = null;
 var vineQueueAbbr = null;
 var vineSearch = false;
@@ -120,6 +132,12 @@ async function getSettings() {
 	arrMatches = currentUrl.match(regex);
 	vineDomain = arrMatches[1];
 	vineCountry = vineDomain.split(".").pop();
+	vineLocale = vineLocales[vineCountry].locale;
+	vineCurrency = vineLocales[vineCountry].currency;
+	showRuntime("PREBOOT: Detected domain: " + vineDomain);
+	showRuntime("PREBOOT: Detected country: " + vineCountry);
+	showRuntime("PREBOOT: Using locale: " + vineLocale);
+	showRuntime("PREBOOT: Using currency: " + vineCurrency);
 
 	// Load the country specific stylesheet
 	if (Settings.get("thorvarium.categoriesWithEmojis")) {
@@ -144,41 +162,6 @@ async function getSettings() {
 	//If the domain if not from outside the countries supported by the discord API, disable discord
 	if (["ca", "com", "co.uk"].indexOf(vineDomain) == -1) {
 		Settings.set("discord.active", false);
-	}
-
-	switch (vineDomain) {
-		case "ca":
-			vineLocale = "en-CA";
-			vineCurrency = "CAD";
-			break;
-		case "com":
-			vineLocale = "en-US";
-			vineCurrency = "USD";
-			break;
-		case "co.uk":
-			vineLocale = "en-GB";
-			vineCurrency = "GBP";
-			break;
-		case "co.jp":
-			vineLocale = "ja-JP";
-			vineCurrency = "JPY";
-			break;
-		case "de":
-			vineLocale = "de-DE";
-			vineCurrency = "EUR";
-			break;
-		case "fr":
-			vineLocale = "fr-FR";
-			vineCurrency = "EUR";
-			break;
-		case "es":
-			vineLocale = "es-ES";
-			vineCurrency = "EUR";
-			break;
-		case "it":
-			vineLocale = "it-IT";
-			vineCurrency = "EUR";
-			break;
 	}
 
 	//Determine if we are browsing a queue
