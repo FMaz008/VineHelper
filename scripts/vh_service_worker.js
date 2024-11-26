@@ -12,7 +12,7 @@ const myStream = new Streamy();
 const filterHideitem = myStream.filter(function (data) {
 	if (Settings.get("notification.hideList")) {
 		const hideKWMatch = keywordMatch(Settings.get("general.hideKeywords"), data.title);
-		if (hideKWMatch!==false) {
+		if (hideKWMatch !== false) {
 			console.log("Item " + data.title + " matched hide keyword " + hideKWMatch + " hide it.");
 			return false; //Do not display the notification as it matches the hide list.
 		}
@@ -21,9 +21,16 @@ const filterHideitem = myStream.filter(function (data) {
 });
 const transformIsHighlight = myStream.transformer(function (data) {
 	const highlightKWMatch = keywordMatch(Settings.get("general.highlightKeywords"), data.title);
-	data.KWsMatch = highlightKWMatch!==false;
+	data.KWsMatch = highlightKWMatch !== false;
 	data.KW = highlightKWMatch;
-	
+
+	return data;
+});
+const transformIsBlur = myStream.transformer(function (data) {
+	const blurKWMatch = keywordMatch(Settings.get("general.blurKeywords"), data.title);
+	data.BlurKWsMatch = blurKWMatch !== false;
+	data.BlurKW = blurKWMatch;
+
 	return data;
 });
 const transformSearchPhrase = myStream.transformer(function (data) {
@@ -66,12 +73,12 @@ const transformPostNotification = myStream.transformer(function (data) {
 });
 const transformExecuteHooks = myStream.transformer(function (data) {
 	let data2 = { ...data };
-	
-	if(data.KWsMatch){
+
+	if (data.KWsMatch) {
 		data2.type = "hookExecute";
 		data2.hookname = "newItemKWMatch";
 		sendMessageToAllTabs(data2, "newItemKWMatch");
-	}else{
+	} else {
 		data2.type = "hookExecute";
 		data2.hookname = "newItemNoKWMatch";
 		sendMessageToAllTabs(data2, "newItemNoKWMatch");
@@ -82,6 +89,7 @@ const transformExecuteHooks = myStream.transformer(function (data) {
 myStream
 	.pipe(filterHideitem)
 	.pipe(transformIsHighlight)
+	.pipe(transformIsBlur)
 	.pipe(transformSearchPhrase)
 	.pipe(transformUnixTimestamp)
 	.pipe(transformPostNotification)
@@ -229,8 +237,6 @@ function connectWebSocket() {
 		data1.asin = data.item.asin;
 		data1.etv = data.item.etv;
 		sendMessageToAllTabs(data1, "newItemETV");
-
-		
 	});
 
 	// On disconnection
@@ -326,7 +332,7 @@ async function fetchLast100Items() {
 				if (img_url == "" || title == "") {
 					continue;
 				}
-				
+
 				Settings.set("notification.lastProduct", timestamp);
 				myStream.input({
 					index: i,
@@ -342,7 +348,6 @@ async function fetchLast100Items() {
 					is_parent_asin: is_parent_asin,
 					enrollment_guid: enrollment_guid,
 				});
-				
 			}
 		})
 		.catch(function () {
@@ -392,7 +397,6 @@ function keywordMatch(keywords, title) {
 		return false; // Continue searching
 	});
 	return found === undefined ? false : found;
-	
 }
 
 async function sendMessageToNotificationMonitor(data, debugInfo) {

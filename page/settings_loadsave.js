@@ -278,6 +278,7 @@ async function initiateSettings() {
 
 	manageTextareaCSK("general.highlightKeywords");
 	manageTextareaCSK("general.hideKeywords");
+	manageTextareaCSK("general.blurKeywords");
 
 	//##TAB - KEYBINDINGS
 
@@ -357,9 +358,10 @@ function manageTextareaCSK(key) {
 	const val = Settings.get(key);
 	const obj = document.querySelector(`textarea[name='${key}']`);
 	if (obj == null) {
+		alert("Textarea name='" + key + "' does not exist");
 		throw new Error("Textarea name='" + key + "' does not exist");
 	}
-	obj.value = val.join(", ");
+	obj.value = val === undefined ? "" : val.join(", ");
 	obj.addEventListener("change", async function () {
 		let arr = [];
 		arr = obj.value
@@ -369,6 +371,7 @@ function manageTextareaCSK(key) {
 		if (arr.length == 1 && arr[0] == "") {
 			arr = [];
 		}
+
 		Settings.set(key, arr);
 	});
 }

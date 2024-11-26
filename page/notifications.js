@@ -323,6 +323,7 @@ function addItem(data) {
 		etv_max,
 		queue,
 		KWsMatch,
+		BlurKWsMatch,
 		is_parent_asin,
 		enrollment_guid,
 	} = data;
@@ -394,6 +395,13 @@ function addItem(data) {
 	if (KWsMatch) {
 		const obj = elementByAsin(asin);
 		obj.style.backgroundColor = Settings.get("notification.monitor.highlight.color");
+	}
+
+	//Blur the item
+	if (BlurKWsMatch) {
+		const obj = elementByAsin(asin);
+		obj.querySelector(".vh-img-container>img")?.classList.add("blur");
+		obj.querySelector(".vh-notification-content>div>a")?.classList.add("dynamic-blur");
 	}
 
 	//Set ETV

@@ -572,3 +572,17 @@ input[type="checkbox"] {
 		text-shadow: none;
 	}
 }
+
+.blur {
+	filter: blur(10px);
+	-webkit-filter: blur(10px);
+}
+
+.dynamic-blur {
+	filter: blur(10px);
+	-webkit-filter: blur(10px);
+}
+.dynamic-blur:hover {
+	filter: blur(0px);
+	-webkit-filter: blur(0px);
+}
