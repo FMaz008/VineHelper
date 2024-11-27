@@ -126,6 +126,11 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 		sendResponse({ success: true });
 	}
 
+	if (data.type == "setCountryCode") {
+		I13n.setCountryCode(data.countryCode);
+		sendResponse({ success: true });
+	}
+
 	if (data.type == "wsStatus") {
 		sendResponse({ success: true });
 		if (socket?.connected) {
@@ -273,8 +278,10 @@ async function retrieveSettings() {
 	}
 
 	//Set the locale
-	const domainTLD = Settings.get("general.country");
-	I13n.setDomainTLD(domainTLD);
+	const countryCode = Settings.get("general.country");
+	if (countryCode != null) {
+		I13n.setCountryCode(countryCode);
+	}
 }
 
 async function fetchLast100Items() {

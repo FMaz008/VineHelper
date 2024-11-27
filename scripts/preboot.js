@@ -130,6 +130,18 @@ async function getSettings() {
 	//Send the country code to the Service Worker
 	if (Settings.get("general.country") != I13n.getCountryCode()) {
 		Settings.set("general.country", I13n.getCountryCode());
+
+		browser.runtime.sendMessage(
+			{
+				type: "setCountryCode",
+				countryCode: I13n.getCountryCode(),
+			},
+			function (response) {
+				if (browser.runtime.lastError) {
+					console.error("Error sending message:", browser.runtime.lastError.message);
+				}
+			}
+		);
 	}
 
 	let manifest = chrome.runtime.getManifest();
