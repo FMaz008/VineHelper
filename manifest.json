@@ -35,7 +35,10 @@
 		"*://*.amazon.co.uk/*",
 		"*://*.amazon.co.jp/*",
 		"*://*.amazon.com/*",
-		"*://*.amazon.com.au/*"
+		"*://*.amazon.com.au/*",
+		"*://*.amazon.com.br/*",
+		"*://*.amazon.com.mx/*",
+		"*://*.amazon.sg/*"
 	],
 	"web_accessible_resources": [
 		{
@@ -62,7 +65,10 @@
 				"*://*.amazon.co.uk/*",
 				"*://*.amazon.co.jp/*",
 				"*://*.amazon.com/*",
-				"*://*.amazon.com.au/*"
+				"*://*.amazon.com.au/*",
+				"*://*.amazon.com.br/*",
+				"*://*.amazon.com.mx/*",
+				"*://*.amazon.sg/*"
 			]
 		}
 	],
@@ -100,7 +106,10 @@
 				"*://*.amazon.co.jp/vine/*",
 				"*://*.amazon.co.jp/*/vine/*",
 				"*://*.amazon.com/vine/*",
-				"*://*.amazon.com.au/vine/*"
+				"*://*.amazon.com.au/vine/*",
+				"*://*.amazon.com.br/vine/*",
+				"*://*.amazon.com.mx/vine/*",
+				"*://*.amazon.sg/vine/*"
 			],
 			"run_at": "document_end"
 		},
@@ -126,7 +135,10 @@
 				"*://*.amazon.co.jp/vine/*",
 				"*://*.amazon.co.jp/*/vine/*",
 				"*://*.amazon.com/vine/*",
-				"*://*.amazon.com.au/vine/*"
+				"*://*.amazon.com.au/vine/*",
+				"*://*.amazon.com.br/vine/*",
+				"*://*.amazon.com.mx/vine/*",
+				"*://*.amazon.sg/vine/*"
 			],
 			"run_at": "document_start"
 		},
@@ -145,6 +157,9 @@
 				"*://*.amazon.co.jp/*/review/*",
 				"*://*.amazon.com/review/*",
 				"*://*.amazon.com.au/review/*",
+				"*://*.amazon.com.br/review/*",
+				"*://*.amazon.com.mx/review/*",
+				"*://*.amazon.sg/review/*",
 				"*://*.amazon.ca/reviews/edit-review/edit*",
 				"*://*.amazon.it/reviews/edit-review/edit*",
 				"*://*.amazon.de/reviews/edit-review/edit*",
@@ -155,7 +170,10 @@
 				"*://*.amazon.co.jp/reviews/edit-review/edit*",
 				"*://*.amazon.co.jp/*/reviews/edit-review/edit*",
 				"*://*.amazon.com/reviews/edit-review/edit*",
-				"*://*.amazon.com.au/reviews/edit-review/edit*"
+				"*://*.amazon.com.au/reviews/edit-review/edit*",
+				"*://*.amazon.com.br/reviews/edit-review/edit*",
+				"*://*.amazon.com.mx/reviews/edit-review/edit*",
+				"*://*.amazon.sg/reviews/edit-review/edit*"
 			],
 			"run_at": "document_end"
 		}

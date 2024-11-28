@@ -44,6 +44,9 @@ class Internationalization {
 			es: { locale: "es-ES", currency: "EUR", domain: "es" },
 			it: { locale: "it-IT", currency: "EUR", domain: "it" },
 			au: { locale: "en-AU", currency: "AUD", domain: "com.au" },
+			br: { locale: "pt-BR", currency: "BRL", domain: "com.br" },
+			mx: { locale: "es-MX", currency: "MXN", domain: "com.mx" },
+			sg: { locale: "en-SG", currency: "SGD", domain: "sg" },
 		};
 	}
 
