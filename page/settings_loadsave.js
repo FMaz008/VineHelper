@@ -159,8 +159,8 @@ async function initiateSettings() {
 		"notification.monitor.regular.volume"
 	);
 
-	manageInputText("notification.monitor.highlight.color");
-	manageInputText("notification.monitor.zeroETV.color");
+	manageColorPicker("notification.monitor.highlight.color");
+	manageColorPicker("notification.monitor.zeroETV.color");
 
 	//##TAB - SYSTEM
 
@@ -410,6 +410,19 @@ function manageInputText(key) {
 	const obj = document.querySelector(`label[for='${key}'] input`);
 	if (obj == null) {
 		throw new Error("Keybinding input name='" + key + "' does not exist");
+	}
+	obj.value = val == null ? "" : val;
+
+	obj.addEventListener("change", async function () {
+		Settings.set(key, obj.value);
+	});
+}
+
+function manageColorPicker(key) {
+	const val = Settings.get(key);
+	const obj = document.querySelector(`label[for='${key}'] input[type='color']`);
+	if (obj == null) {
+		throw new Error("Color picker input name='" + key + "' does not exist");
 	}
 	obj.value = val == null ? "" : val;
 
