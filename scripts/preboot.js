@@ -16,10 +16,6 @@ var mapHook = new Map();
 
 let debugMessage = "";
 
-var vineDomain = null;
-var vineCountry = null;
-var vineLocale = null;
-var vineCurrency = null;
 var vineQueue = null;
 var vineQueueAbbr = null;
 var vineSearch = false;
@@ -30,12 +26,17 @@ var appVersion = null;
 var prebootCompleted = false;
 var ultraviner = false; //If Ultravine is detected, Vine Helper will deactivate itself to avoid conflicts.
 
+var I13n = null;
 var Settings = null;
 
 // Factory function to load a module
 (async () => {
 	try {
 		let module = null;
+
+		//Load the Internationalization.
+		module = await import(chrome.runtime.getURL("../scripts/Internationalization.js"));
+		I13n = new module.Internationalization();
 
 		//Load the SettingMgr.
 		module = await import(chrome.runtime.getURL("../scripts/SettingsMgr.js"));
@@ -114,19 +115,12 @@ async function getSettings() {
 		loadStyleSheetContent(Settings.get("general.customCSS"));
 	}
 
-	//Figure out what domain the extension is working on
-	const currentUrl = window.location.href;
-	regex = /^.+?amazon\.([a-z.]+).*\/vine\/.*$/;
-	arrMatches = currentUrl.match(regex);
-	vineDomain = arrMatches[1];
-	vineCountry = vineDomain.split(".").pop();
-
 	// Load the country specific stylesheet
 	if (Settings.get("thorvarium.categoriesWithEmojis")) {
 		// The default stylesheet is for the US
 		var emojiList = "categories-with-emojis";
 		// For all other countries, append the country code to the stylesheet
-		if (vineCountry != "com") emojiList += "-" + vineCountry.toUpperCase();
+		if (I13n.getCountryCode() != "com") emojiList += "-" + I13n.getCountryCode().toUpperCase();
 
 		loadStyleSheet("node_modules/vine-styling/desktop/" + emojiList + ".css");
 	}
@@ -134,54 +128,32 @@ async function getSettings() {
 	showRuntime("PREBOOT: Thorvarium country-specific stylesheets injected");
 
 	//Send the country code to the Service Worker
-	if (Settings.get("general.country") != vineCountry) {
-		Settings.set("general.country", vineCountry);
+	if (Settings.get("general.country") != I13n.getCountryCode()) {
+		Settings.set("general.country", I13n.getCountryCode());
+
+		browser.runtime.sendMessage(
+			{
+				type: "setCountryCode",
+				countryCode: I13n.getCountryCode(),
+			},
+			function (response) {
+				if (browser.runtime.lastError) {
+					console.error("Error sending message:", browser.runtime.lastError.message);
+				}
+			}
+		);
 	}
 
 	let manifest = chrome.runtime.getManifest();
 	appVersion = manifest.version;
 
 	//If the domain if not from outside the countries supported by the discord API, disable discord
-	if (["ca", "com", "co.uk"].indexOf(vineDomain) == -1) {
+	if (["ca", "com", "co.uk"].indexOf(I13n.getDomainTLD()) == -1) {
 		Settings.set("discord.active", false);
 	}
 
-	switch (vineDomain) {
-		case "ca":
-			vineLocale = "en-CA";
-			vineCurrency = "CAD";
-			break;
-		case "com":
-			vineLocale = "en-US";
-			vineCurrency = "USD";
-			break;
-		case "co.uk":
-			vineLocale = "en-GB";
-			vineCurrency = "GBP";
-			break;
-		case "co.jp":
-			vineLocale = "ja-JP";
-			vineCurrency = "JPY";
-			break;
-		case "de":
-			vineLocale = "de-DE";
-			vineCurrency = "EUR";
-			break;
-		case "fr":
-			vineLocale = "fr-FR";
-			vineCurrency = "EUR";
-			break;
-		case "es":
-			vineLocale = "es-ES";
-			vineCurrency = "EUR";
-			break;
-		case "it":
-			vineLocale = "it-IT";
-			vineCurrency = "EUR";
-			break;
-	}
-
 	//Determine if we are browsing a queue
+	const currentUrl = window.location.href;
 	regex = /^.+?amazon\..+\/vine\/vine-items(?:\?(queue|search)=(.+?))?(?:[#&].*)?$/;
 	arrMatches = currentUrl.match(regex);
 	vineQueue = null;
@@ -237,7 +209,7 @@ async function requestNewUUID() {
 		api_version: 5,
 		app_version: appVersion,
 		action: "get_uuid",
-		country: vineCountry,
+		country: I13n.getCountryCode(),
 	};
 	const options = {
 		method: "POST",
@@ -300,13 +272,12 @@ function hookBind(hookname, func) {
 	if (arrBinding == undefined) arrBinding = [];
 	arrBinding.push(func);
 	mapHook.set(hookname, arrBinding);
-	console.log(mapHook);
 }
 function hookExecute(hookname, variables) {
 	let arrBinding = mapHook.get(hookname);
 	if (arrBinding == undefined) return false;
 	arrBinding.forEach(function (func) {
-		console.log("Calling function for hook " + hookname);
+		//console.log("Calling function for hook " + hookname);
 		func(variables); // Call each function for the hook
 	});
 }

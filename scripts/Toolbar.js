@@ -58,7 +58,7 @@ class Toolbar {
 						etv = etv.split("-").pop();
 						etv = Number(etv.replace(/[^0-9-.]+/g, ""));
 
-						window.BrendaAnnounceQueue.announce(this.pTile.getAsin(), etv, vineQueue, vineDomain);
+						window.BrendaAnnounceQueue.announce(this.pTile.getAsin(), etv, vineQueue, I13n.getDomainTLD());
 
 						if (!Settings.get("notification.reduce")) {
 							let note = new ScreenNotification();
@@ -218,13 +218,13 @@ class Toolbar {
 
 		if (onlyIfEmpty && span.textContent !== "") return false;
 
-		etv1 = new Intl.NumberFormat(vineLocale, {
+		etv1 = new Intl.NumberFormat(I13n.getLocale(), {
 			style: "currency",
-			currency: vineCurrency,
+			currency: I13n.getCurrency(),
 		}).format(etv1);
-		etv2 = new Intl.NumberFormat(vineLocale, {
+		etv2 = new Intl.NumberFormat(I13n.getLocale(), {
 			style: "currency",
-			currency: vineCurrency,
+			currency: I13n.getCurrency(),
 		}).format(etv2);
 
 		span.textContent = etv1 === etv2 ? etv2 : `${etv1}-${etv2}`;

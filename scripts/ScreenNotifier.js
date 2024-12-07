@@ -133,6 +133,9 @@ class ScreenNotifier {
 	}
 
 	async removeNote(obj) {
+		if (obj == null) {
+			return false;
+		}
 		return new Promise((resolve) => {
 			let opacity = 1;
 			let position = 0; // Assuming the initial left position is 0, adjust as needed.

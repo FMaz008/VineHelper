@@ -78,6 +78,7 @@ async function init() {
 
 	displayAccountData();
 	initAddNotificationMonitorLink();
+	addRecommendationLink();
 	showGDPRPopup();
 	await initFlushTplCache(); //And display the version changelog popup
 	initInjectScript();
@@ -101,6 +102,12 @@ function displayAccountData() {
 	regex = /^.+?amazon\..+\/vine\/account?$/;
 	arrMatches = window.location.href.match(regex);
 	if (arrMatches == null) return;
+
+	//Add the Evaluation Metric styling:
+	displayAccountDataEvaluationMetrics();
+
+	//Hide Opt out of Vine button
+	displayAccountHideOptOutButton();
 
 	//Add a container to the status table
 	document.getElementById("vvp-current-status-box").style.height = "auto";
@@ -132,7 +139,7 @@ function displayAccountData() {
 	};
 
 	for (const [key, value] of Object.entries(additionalStats)) {
-		date = new Date(vvpContext.voiceDetails[key]).toLocaleString(vineLocale);
+		date = new Date(vvpContext.voiceDetails[key]).toLocaleString(I13n.getLocale());
 		div = document.createElement("div");
 		div.innerHTML = `<strong>${value}:</strong><br /> ${date}<br/><br />`;
 		container.appendChild(div);
@@ -142,6 +149,72 @@ function displayAccountData() {
 	div.innerHTML =
 		"<strong>Re-evaluation in progress:</strong> " + escapeHTML(vvpContext.voiceDetails.isTierEvaluationInProgress);
 	container.appendChild(div);
+}
+
+function displayAccountHideOptOutButton() {
+	if (Settings.get("general.hideOptOutButton") == true) {
+		document.getElementById("vvp-opt-out-of-vine-button").style.display = "none";
+	}
+}
+
+/**
+ * Contribution from https://github.com/robartsd/VineTools/blob/main/evaluationMetrics.user.js
+ */
+function displayAccountDataEvaluationMetrics() {
+	const periodStart = new Date(parseInt(document.querySelector("#vvp-eval-start-stamp").innerText));
+	const periodEnd = new Date(parseInt(document.querySelector("#vvp-eval-end-stamp").innerText));
+
+	document.querySelector("#vvp-evaluation-period-tooltip-trigger").innerText =
+		`Evaluation period: ${periodStart.toLocaleDateString()} - ${periodEnd.toLocaleString()}`;
+
+	const percent = Math.round(
+		parseFloat(document.querySelector("#vvp-perc-reviewed-metric-display strong").innerText)
+	);
+	if (percent > 0) {
+		const count = parseInt(
+			document.querySelector("#vvp-num-reviewed-metric-display strong").innerText.replace(/,/g, "")
+		);
+		const orderCount = Math.round((count / percent) * 100);
+		const orderMin = Math.min(Math.ceil((count / (percent + 0.5)) * 100), orderCount);
+		const orderMax = Math.max(Math.floor((count / (percent - 0.5)) * 100), orderCount);
+		const targetMin = Math.ceil(orderMin * 0.9) - count;
+		const targetMax = Math.ceil(orderMax * 0.9) - count;
+		const orderEstimate = orderMin == orderMax ? orderMax : `${orderMin}&ndash;${orderMax}`;
+		const targetRequired = targetMin == targetMax ? targetMax : `${targetMin}&ndash;${targetMax}`;
+
+		if (targetMax > 0) {
+			document.querySelector("#vvp-perc-reviewed-metric-display p").innerHTML =
+				`You have reviewed <strong>${percent}%</strong> of ${orderEstimate} items; review ${targetRequired} more to reach 90%`;
+		} else {
+			document.querySelector("#vvp-perc-reviewed-metric-display p").innerHTML =
+				`You have reviewed <strong>${percent}%</strong> of ${orderEstimate} Vine items this period`;
+		}
+
+		const periodFraction = (new Date().setUTCHours(0, 0, 0, 0) - periodStart) / (periodEnd - periodStart);
+		if (periodFraction > 0) {
+			const awaitingEstimate = orderMax - count;
+			const projectedCount = count / periodFraction;
+			const projectedOrders = orderMin / periodFraction;
+			const projectedPercent = (projectedOrders - awaitingEstimate) / projectedOrders;
+			const countBar = document.querySelector("#vvp-num-reviewed-metric-display .animated-progress span");
+			const percentBar = document.querySelector("#vvp-perc-reviewed-metric-display .animated-progress span");
+			if (projectedCount < 70) {
+				countBar.style.backgroundColor = "red";
+			} else if (projectedCount < 77) {
+				countBar.style.backgroundColor = "orange";
+			} else if (projectedCount < 80) {
+				countBar.style.backgroundColor = "yellow";
+			}
+
+			if (projectedPercent < 0.8) {
+				percentBar.style.backgroundColor = "red";
+			} else if (projectedPercent < 0.88) {
+				percentBar.style.backgroundColor = "orange";
+			} else if (projectedPercent < 0.92) {
+				percentBar.style.backgroundColor = "yellow";
+			}
+		}
+	}
 }
 
 async function showGDPRPopup() {
@@ -237,6 +310,20 @@ function initAddNotificationMonitorLink() {
 		li.appendChild(a);
 	}
 }
+
+function addRecommendationLink() {
+	const tab = document.querySelector(".a-tab-container > ul > li:last-of-type");
+	if (tab) {
+		const rec = tab.cloneNode(true);
+		rec.style.float = "right";
+		const a = rec.firstChild;
+		a.rel = "noreferrer";
+		a.href = "/gp/yourstore/iyr/";
+		a.textContent = "Recommendations";
+		tab.parentNode.appendChild(rec);
+	}
+}
+
 async function initCreateTabs() {
 	//Create the Discard grid
 	showRuntime("BOOT: Creating tabs system");
@@ -301,7 +388,7 @@ async function setBookmarkDate(timeOffset) {
 	//Fetch the current date/time from the server
 	let arrJSON = {
 		api_version: 5,
-		country: vineCountry,
+		country: I13n.getCountryCode(),
 		action: "date",
 	};
 	const options = {
@@ -584,7 +671,7 @@ function fetchProductsDatav5() {
 		api_version: 5,
 		app_version: appVersion,
 		action: "get_info",
-		country: vineCountry,
+		country: I13n.getCountryCode(),
 		uuid: Settings.get("general.uuid", false),
 		queue: vineQueue,
 		items: arrProductsData,
@@ -843,7 +930,7 @@ window.addEventListener("message", async function (event) {
 		const content = {
 			api_version: 5,
 			action: "record_etv",
-			country: vineCountry,
+			country: I13n.getCountryCode(),
 			uuid: uuid,
 			asin: event.data.data.asin,
 			parent_asin: event.data.data.parent_asin,
@@ -908,7 +995,7 @@ window.addEventListener("message", async function (event) {
 			const content = {
 				api_version: 5,
 				action: "record_order",
-				country: vineCountry,
+				country: I13n.getCountryCode(),
 				uuid: uuid,
 				asin: event.data.data.asin,
 				parent_asin: event.data.data.parent_asin,
@@ -1000,9 +1087,8 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 	sendResponse({ success: true });
 
 	//If we received a request for a hook execution
-	if (data.type && data.type == "hookExecute") {
-		console.log("Hook Execute request");
-		hookExecute(data.hookname, data.data);
+	if (data.type == "hookExecute") {
+		hookExecute(data.hookname, data);
 	}
 
 	if (data.type == "newItemCheck") {
@@ -1029,10 +1115,10 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 			if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
 				Tpl.setVar(
 					"url",
-					`https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`
+					`https://www.amazon.${I13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`
 				);
 			} else {
-				Tpl.setVar("url", `https://www.amazon.${vineDomain}/vine/vine-items?search=${search}`);
+				Tpl.setVar("url", `https://www.amazon.${I13n.getDomainTLD()}/vine/vine-items?search=${search}`);
 			}
 			Tpl.setIf("show_image", Settings.get("notification.screen.thumbnail"));
 			Tpl.setVar("date", date);
@@ -1410,7 +1496,7 @@ async function handleModalNavigation(event) {
 	showRuntime("[DEBUG] Updated the current index to: " + modalNavigatorCurrentIndex);
 }
 
-function openDynamicModal(asin, queue, isParent, enrollmentGUID) {
+function openDynamicModal(asin, queue, isParent, enrollmentGUID, autoClick = true) {
 	if (!marketplaceId || !customerId) {
 		console.error("Failed to fetch opts/vvp-context data");
 	}
@@ -1446,9 +1532,13 @@ function openDynamicModal(asin, queue, isParent, enrollmentGUID) {
 	document.getElementById("vvp-items-grid").appendChild(container1);
 
 	//Dispatch a click event on the button
-	btn.click();
+	if (autoClick) {
+		btn.click();
 
-	setTimeout(function () {
-		container1.remove(); // Removes container1 from the DOM
-	}, 1000);
+		setTimeout(function () {
+			container1.remove(); // Removes container1 from the DOM
+		}, 1000);
+	}
+
+	return btn;
 }

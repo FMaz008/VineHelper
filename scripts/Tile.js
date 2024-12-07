@@ -141,7 +141,7 @@ function Tile(obj, gridInstance) {
 	this.initiateTile = async function () {
 		//Highlight the tile border if the title match highlight keywords
 		let highligthed = false;
-		if (Settings.get("general.highlightKeywords").length > 0) {
+		if (Settings.get("general.highlightKeywords")?.length > 0) {
 			match = Settings.get("general.highlightKeywords").find((word) => {
 				let regex;
 				try {
@@ -166,7 +166,7 @@ function Tile(obj, gridInstance) {
 		}
 
 		//Match with hide keywords. Only hide if not highlighed.
-		if (!highligthed && Settings.get("hiddenTab.active") && Settings.get("general.hideKeywords").length > 0) {
+		if (!highligthed && Settings.get("hiddenTab.active") && Settings.get("general.hideKeywords")?.length > 0) {
 			match = Settings.get("general.hideKeywords").find((word) => {
 				let regex;
 				try {
@@ -185,6 +185,28 @@ function Tile(obj, gridInstance) {
 				showRuntime("TILE: The item match the keyword '" + match + "', hide it");
 				this.hideTile(false, false, true); //Do not save, skip the hidden manager: just move the tile.
 				document.getElementById("vh-hide-link-" + this.getAsin()).style.display = "none";
+			}
+		}
+
+		//Match with blur keywords.
+		if (Settings.get("general.blurKeywords")?.length > 0) {
+			match = Settings.get("general.blurKeywords").find((word) => {
+				let regex;
+				try {
+					regex = new RegExp(`\\b${word}\\b`, "i");
+				} catch (error) {
+					if (error instanceof SyntaxError) {
+						showRuntime(
+							"TILE: The blur keyword '" + word + "' is not a valid regular expression, skipping it."
+						);
+					}
+				}
+				return word && regex.test(this.getTitle());
+			});
+			if (match != undefined) {
+				showRuntime("TILE: The item match the keyword '" + match + "', blur it");
+				pTile.querySelector("img")?.classList.add("blur");
+				pTile.querySelector(".vvp-item-product-title-container")?.classList.add("dynamic-blur");
 			}
 		}
 

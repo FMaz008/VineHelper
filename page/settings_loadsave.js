@@ -109,6 +109,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("general.searchOpenModal");
 	manageCheckboxSetting("general.listView");
 	manageCheckboxSetting("general.scrollToRFY");
+	manageCheckboxSetting("general.hideOptOutButton");
 
 	//##TAB - NOTIFICATIONS
 
@@ -158,8 +159,8 @@ async function initiateSettings() {
 		"notification.monitor.regular.volume"
 	);
 
-	manageInputText("notification.monitor.highlight.color");
-	manageInputText("notification.monitor.zeroETV.color");
+	manageColorPicker("notification.monitor.highlight.color");
+	manageColorPicker("notification.monitor.zeroETV.color");
 
 	//##TAB - SYSTEM
 
@@ -184,6 +185,23 @@ async function initiateSettings() {
 		if (confirm("Delete all locally stored hidden items from Vine Helper?")) {
 			chrome.storage.local.set({ hiddenItems: [] });
 			alert("Hidden items in local storage emptied.");
+		}
+		if (confirm("Delete all remotely stored hidden items from Vine Helper?")) {
+			const content = {
+				api_version: 5,
+				country: "loremipsum",
+				action: "save_hidden_list",
+				uuid: Settings.get("general.uuid", false),
+				items: "DELETE_ALL",
+			};
+			//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
+			fetch(VINE_HELPER_API_V5_URL, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(content),
+			}).then(async function (response) {
+				alert("Hidden items in remote storage emptied.");
+			});
 		}
 	});
 
@@ -277,6 +295,7 @@ async function initiateSettings() {
 
 	manageTextareaCSK("general.highlightKeywords");
 	manageTextareaCSK("general.hideKeywords");
+	manageTextareaCSK("general.blurKeywords");
 
 	//##TAB - KEYBINDINGS
 
@@ -356,9 +375,10 @@ function manageTextareaCSK(key) {
 	const val = Settings.get(key);
 	const obj = document.querySelector(`textarea[name='${key}']`);
 	if (obj == null) {
+		alert("Textarea name='" + key + "' does not exist");
 		throw new Error("Textarea name='" + key + "' does not exist");
 	}
-	obj.value = val.join(", ");
+	obj.value = val === undefined ? "" : val.join(", ");
 	obj.addEventListener("change", async function () {
 		let arr = [];
 		arr = obj.value
@@ -368,6 +388,7 @@ function manageTextareaCSK(key) {
 		if (arr.length == 1 && arr[0] == "") {
 			arr = [];
 		}
+
 		Settings.set(key, arr);
 	});
 }
@@ -389,6 +410,19 @@ function manageInputText(key) {
 	const obj = document.querySelector(`label[for='${key}'] input`);
 	if (obj == null) {
 		throw new Error("Keybinding input name='" + key + "' does not exist");
+	}
+	obj.value = val == null ? "" : val;
+
+	obj.addEventListener("change", async function () {
+		Settings.set(key, obj.value);
+	});
+}
+
+function manageColorPicker(key) {
+	const val = Settings.get(key);
+	const obj = document.querySelector(`label[for='${key}'] input[type='color']`);
+	if (obj == null) {
+		throw new Error("Color picker input name='" + key + "' does not exist");
 	}
 	obj.value = val == null ? "" : val;
 

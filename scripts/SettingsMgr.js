@@ -217,6 +217,7 @@ class SettingsMgr {
 				bookmarkDate: 0,
 				hideKeywords: [],
 				highlightKeywords: [],
+				blurKeywords: [],
 				displayVariantIcon: false,
 				versionInfoPopup: 0,
 				GDPRPopup: true,

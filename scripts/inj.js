@@ -104,6 +104,7 @@ window.fetch = async (...args) => {
 			);
 		}
 
+		//Fix broken variants causing infinite loop
 		let fixed = 0;
 		result.variations = result.variations?.map((variation) => {
 			if (Object.keys(variation.dimensions || {}).length === 0) {
@@ -115,6 +116,20 @@ window.fetch = async (...args) => {
 			}
 
 			for (const key in variation.dimensions) {
+				//Any variation with a weird "）" character instead of ")"
+				newValue = variation.dimensions[key].replace(/[）]/g, ")");
+				if (newValue !== variation.dimensions[key]) {
+					variation.dimensions[key] = newValue;
+					fixed++;
+				}
+
+				// Any variation ending with a space will crash, ensure there is no space at the end.
+				newValue = variation.dimensions[key].replace(/\s+$/g, "");
+				if (newValue !== variation.dimensions[key]) {
+					variation.dimensions[key] = newValue;
+					fixed++;
+				}
+
 				// The core of the issue is when a special character is at the end of a variation, the jQuery UI which amazon uses will attempt to evaluate it and fail since it attempts to utilize it as part of an html attribute.
 				// In order to resolve this, we make the string safe for an html attribute by escaping the special characters.
 				if (!variation.dimensions[key].match(/[a-z0-9]$/i)) {

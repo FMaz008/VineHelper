@@ -4,6 +4,7 @@ const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
 const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_WS_URL = "ws://127.0.0.1:3000";
 
+import { Internationalization } from "../scripts/Internationalization.js";
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
 import { Streamy } from "./Streamy.js";
 import "../node_modules/socket.io/client-dist/socket.io.min.js";
@@ -12,7 +13,8 @@ const myStream = new Streamy();
 const filterHideitem = myStream.filter(function (data) {
 	if (Settings.get("notification.hideList")) {
 		const hideKWMatch = keywordMatch(Settings.get("general.hideKeywords"), data.title);
-		if (hideKWMatch) {
+		if (hideKWMatch !== false) {
+			console.log("Item " + data.title + " matched hide keyword " + hideKWMatch + " hide it.");
 			return false; //Do not display the notification as it matches the hide list.
 		}
 	}
@@ -20,7 +22,16 @@ const filterHideitem = myStream.filter(function (data) {
 });
 const transformIsHighlight = myStream.transformer(function (data) {
 	const highlightKWMatch = keywordMatch(Settings.get("general.highlightKeywords"), data.title);
-	data.KWsMatch = highlightKWMatch;
+	data.KWsMatch = highlightKWMatch !== false;
+	data.KW = highlightKWMatch;
+
+	return data;
+});
+const transformIsBlur = myStream.transformer(function (data) {
+	const blurKWMatch = keywordMatch(Settings.get("general.blurKeywords"), data.title);
+	data.BlurKWsMatch = blurKWMatch !== false;
+	data.BlurKW = blurKWMatch;
+
 	return data;
 });
 const transformSearchPhrase = myStream.transformer(function (data) {
@@ -61,15 +72,31 @@ const transformPostNotification = myStream.transformer(function (data) {
 	}
 	return data;
 });
+const transformExecuteHooks = myStream.transformer(function (data) {
+	let data2 = { ...data };
+
+	if (data.KWsMatch) {
+		data2.type = "hookExecute";
+		data2.hookname = "newItemKWMatch";
+		sendMessageToAllTabs(data2, "newItemKWMatch");
+	} else {
+		data2.type = "hookExecute";
+		data2.hookname = "newItemNoKWMatch";
+		sendMessageToAllTabs(data2, "newItemNoKWMatch");
+	}
+
+	return data;
+});
 myStream
 	.pipe(filterHideitem)
 	.pipe(transformIsHighlight)
+	.pipe(transformIsBlur)
 	.pipe(transformSearchPhrase)
 	.pipe(transformUnixTimestamp)
 	.pipe(transformPostNotification)
+	.pipe(transformExecuteHooks)
 	.output((data) => {
 		//Broadcast the notification
-		//console.log("Broadcasting new item " + data.asin);
 		sendMessageToAllTabs(data, "notification");
 	});
 
@@ -79,21 +106,11 @@ if ("function" == typeof importScripts) {
 }
 */
 
+var I13n = new Internationalization();
 var Settings = new SettingsMgr();
 var notificationsData = {};
 var newItemCheckInterval = 0.3; //Firefox shutdown the background script after 30seconds.
 const broadcastChannel = new BroadcastChannel("VineHelperChannel");
-const vineDomains = {
-	ca: "ca",
-	com: "com",
-	uk: "co.uk",
-	jp: "co.jp",
-	de: "de",
-	fr: "fr",
-	es: "es",
-	it: "it",
-};
-var vineDomain;
 
 if (typeof browser === "undefined") {
 	var browser = chrome;
@@ -105,7 +122,12 @@ if (typeof browser === "undefined") {
 browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 	if (data.type == "fetchLast100Items") {
 		//Get the last 100 most recent items
-		fetchLast100Items(true);
+		fetchLast100Items();
+		sendResponse({ success: true });
+	}
+
+	if (data.type == "setCountryCode") {
+		I13n.setCountryCode(data.countryCode);
 		sendResponse({ success: true });
 	}
 
@@ -138,11 +160,11 @@ chrome.notifications.onClicked.addListener((notificationId) => {
 	const { asin, queue, is_parent_asin, enrollment_guid, search } = notificationsData[notificationId];
 	if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
 		chrome.tabs.create({
-			url: `https://www.amazon.${vineDomain}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`,
+			url: `https://www.amazon.${I13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`,
 		});
 	} else {
 		chrome.tabs.create({
-			url: `https://www.amazon.${vineDomain}/vine/vine-items?search=${search}`,
+			url: `https://www.amazon.${I13n.getDomainTLD()}/vine/vine-items?search=${search}`,
 		});
 	}
 });
@@ -157,6 +179,7 @@ function connectWebSocket() {
 	}
 
 	if (Settings.get("general.country") === null) {
+		console.log("Country not known");
 		return; //If the country is not known, do not connect
 	}
 
@@ -204,6 +227,13 @@ function connectWebSocket() {
 			},
 			"ETV update"
 		);
+
+		let data1 = {};
+		data1.type = "hookExecute";
+		data1.hookname = "newItemETV";
+		data1.asin = data.item.asin;
+		data1.etv = data.item.etv;
+		sendMessageToAllTabs(data1, "newItemETV");
 	});
 
 	// On disconnection
@@ -247,11 +277,14 @@ async function retrieveSettings() {
 		await new Promise((r) => setTimeout(r, 10));
 	}
 
-	//Set the country
-	vineDomain = vineDomains[Settings.get("general.country")];
+	//Set the locale
+	const countryCode = Settings.get("general.country");
+	if (countryCode != null) {
+		I13n.setCountryCode(countryCode);
+	}
 }
 
-async function fetchLast100Items(fetchAll = false) {
+async function fetchLast100Items() {
 	if (Settings.get("general.country") === null) {
 		return false; //If the country is not known, do not query
 	}
@@ -299,47 +332,23 @@ async function fetchLast100Items(fetchAll = false) {
 				if (img_url == "" || title == "") {
 					continue;
 				}
-				if (fetchAll || timestamp > Settings.get("notification.lastProduct")) {
-					Settings.set("notification.lastProduct", timestamp);
-					myStream.input({
-						index: i,
-						type: "newItem",
-						domain: Settings.get("general.country"),
-						date: date,
-						asin: asin,
-						title: title,
-						img_url: img_url,
-						etv_min: etv_min,
-						etv_max: etv_max,
-						queue: queue,
-						is_parent_asin: is_parent_asin,
-						enrollment_guid: enrollment_guid,
-					});
-				} else {
-					//Send a message to update the ETV.
-					if (etv != null) {
-						sendMessageToNotificationMonitor(
-							{
-								type: "ETVUpdate",
-								asin: asin,
-								etv: etv_min,
-							},
-							"ETV notification"
-						);
-						if (etv_min != etv_max) {
-							sendMessageToNotificationMonitor(
-								{
-									type: "ETVUpdate",
-									asin: asin,
-									etv: etv_max,
-								},
-								"ETV notification"
-							);
-						}
-					}
-				}
+
+				Settings.set("notification.lastProduct", timestamp);
+				myStream.input({
+					index: i,
+					type: "newItem",
+					domain: Settings.get("general.country"),
+					date: date,
+					asin: asin,
+					title: title,
+					img_url: img_url,
+					etv_min: etv_min,
+					etv_max: etv_max,
+					queue: queue,
+					is_parent_asin: is_parent_asin,
+					enrollment_guid: enrollment_guid,
+				});
 			}
-			//sendMessageToAllTabs({ type: "newItemCheckEnd" }, "End of notification(s) update");
 		})
 		.catch(function () {
 			(error) => console.log(error);
@@ -371,7 +380,7 @@ function pushNotification(asin, queue, is_parent_asin, enrollment_guid, search_s
 	);
 }
 function keywordMatch(keywords, title) {
-	return keywords.some((word) => {
+	const found = keywords.find((word) => {
 		let regex;
 		try {
 			regex = new RegExp(`\\b${word}\\b`, "i");
@@ -382,11 +391,12 @@ function keywordMatch(keywords, title) {
 		}
 
 		if (regex.test(title)) {
-			return true;
+			return word; // Return the matched word
 		}
 
-		return false;
+		return false; // Continue searching
 	});
+	return found === undefined ? false : found;
 }
 
 async function sendMessageToNotificationMonitor(data, debugInfo) {
