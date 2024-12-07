@@ -7,10 +7,13 @@
 
 	<body id="reviews_manage" class="vh-body">
 		<h1>Saved reviews</h1>
-		<input type="text" id="title" class="vh-inputtext" readonly />
+		<input type="hidden" id="asin" />
+		<input type="text" id="title" class="vh-inputtext" />
 		<br />
 		<br />
-		<textarea type="text" class="vh-textarea" id="content" readonly></textarea>
+		<textarea type="text" class="vh-textarea" id="content"></textarea>
+		<br />
+		<button id="save" class="vh-button">Save</button>
 		<div class="vh-visible-container" style="width: 300px">
 			Your reviews are locally stored. Make sure you are deleting old ones as to keep their size to a minimum. A
 			maximum of 100 saved reviews are allowed.

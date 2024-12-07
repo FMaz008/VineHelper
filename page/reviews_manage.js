@@ -33,6 +33,18 @@ async function displayReviewsSize() {
 	document.getElementById("storage-used").innerText = `Currently using: ${await getStorageKeySizeinBytes("reviews")}`;
 }
 
+async function handleSaveClick() {
+	const asin = document.getElementById("asin").value;
+	if (asin == "") {
+		return false;
+	}
+
+	const index = arrReview.findIndex((review) => review.asin === asin);
+	arrReview[index].title = JSON.stringify(document.getElementById("title").value);
+	arrReview[index].content = JSON.stringify(document.getElementById("content").value);
+	await browser.storage.local.set({ reviews: arrReview });
+}
+
 function updateReviewTable() {
 	try {
 		const tableBody = document.getElementById("reviews_list").querySelector("tbody");
@@ -65,6 +77,8 @@ document.addEventListener("click", (event) => {
 		handleViewClick(target.dataset.asin);
 	} else if (target.matches("#delete")) {
 		handleDeleteClick(target.dataset.asin);
+	} else if (target.matches("#save")) {
+		handleSaveClick();
 	}
 });
 
@@ -81,6 +95,7 @@ async function handleViewClick(asin) {
 		const review = getReview(asin);
 		if (review) {
 			let { title, content } = review;
+			document.getElementById("asin").value = asin;
 			document.getElementById("title").value = JSON.parse(title);
 			document.getElementById("content").textContent = JSON.parse(content);
 		}
