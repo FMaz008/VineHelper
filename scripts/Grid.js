@@ -256,7 +256,12 @@ async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enro
 		recommendationId = marketplaceId + "#" + asin + "#vine.enrollment." + enrollment_guid;
 	}
 
-	if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
+	if (
+		Settings.isPremiumUser() &&
+		Settings.get("general.searchOpenModal") &&
+		is_parent_asin != null &&
+		enrollment_guid != null
+	) {
 		Tpl.setVar(
 			"url",
 			`https://www.amazon.${I13n.getDomainTLD()}/vine/vine-items?queue=last_chance#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`

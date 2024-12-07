@@ -152,7 +152,7 @@ function displayAccountData() {
 }
 
 function displayAccountHideOptOutButton() {
-	if (Settings.get("general.hideOptOutButton") == true) {
+	if (Settings.isPremiumUser() && Settings.get("general.hideOptOutButton") == true) {
 		document.getElementById("vvp-opt-out-of-vine-button").style.display = "none";
 	}
 }
@@ -356,7 +356,12 @@ function initInsertTopPagination() {
 		removeElements("#vvp-items-grid-container .topPaginationVerbose");
 
 		let currentPageDOM = document.querySelector("ul.a-pagination li.a-selected"); //If Null there is no pagination on the page
-		if (Settings.get("general.verbosePagination") && vineQueueAbbr == "AI" && currentPageDOM != undefined) {
+		if (
+			Settings.isPremiumUser() &&
+			Settings.get("general.verbosePagination") &&
+			vineQueueAbbr == "AI" &&
+			currentPageDOM != undefined
+		) {
 			//Fetch total items from the page
 			const TOTAL_ITEMS = parseInt(
 				document.querySelector("#vvp-items-grid-container p strong:last-child").innerText.replace(/,/g, "")
@@ -765,7 +770,7 @@ async function serverProductsResponse(data) {
 			tile.setDateAdded(timenow, values.date_added);
 		}
 		//If there is a remote value for the hidden item, ensure it is sync'ed up with the local list
-		if (Settings.get("hiddenTab.remote") && values.hidden != null) {
+		if (Settings.isPremiumUser() && Settings.get("hiddenTab.remote") && values.hidden != null) {
 			if (values.hidden == true && !tile.isHidden()) {
 				showRuntime("DRAW: Remote is ordering to hide item");
 				await tile.hideTile(false); //Will update the placement and list
@@ -795,7 +800,8 @@ async function serverProductsResponse(data) {
 		await tile.initiateTile();
 	}
 
-	if (Settings.get("pinnedTab.active") && Settings.get("hiddenTab.remote")) {
+	//Loading remote stored pinned items
+	if (Settings.isPremiumUser() && Settings.get("pinnedTab.active") && Settings.get("hiddenTab.remote")) {
 		if (data["pinned_products"] != undefined) {
 			showRuntime("DRAW: Loading remote pinned products");
 			for (let i = 0; i < data["pinned_products"].length; i++) {
@@ -809,6 +815,11 @@ async function serverProductsResponse(data) {
 				); //grid.js
 			}
 		}
+	}
+
+	//Update Patreon tier
+	if (Settings.get("general.patreon.tier") != data["patreon_membership_tier"]) {
+		Settings.set("general.patreon.tier", data["patreon_membership_tier"]);
 	}
 
 	updateTileCounts();
@@ -1112,7 +1123,12 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 			//Generate the content to be displayed in the notification
 			const prom = await Tpl.loadFile("/view/notification_new_item.html");
 
-			if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
+			if (
+				Settings.isPremiumUser() &&
+				Settings.get("general.searchOpenModal") &&
+				is_parent_asin != null &&
+				enrollment_guid != null
+			) {
 				Tpl.setVar(
 					"url",
 					`https://www.amazon.${I13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`
@@ -1415,7 +1431,7 @@ function modalNavigatorCloseModal(modal) {
 }
 
 async function initModalNagivation() {
-	if (!Settings.get("general.modalNavigation")) {
+	if (!Settings.isPremiumUser() || !Settings.get("general.modalNavigation")) {
 		return false;
 	}
 

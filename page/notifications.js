@@ -172,7 +172,7 @@ async function init() {
 
 	loadedTpl = await Tpl.loadFile("/view/notification_monitor.html");
 
-	if (Settings.get("general.customCSS")) {
+	if (Settings.isPremiumUser() && Settings.get("general.customCSS")) {
 		loadStyleSheetContent(Settings.get("general.customCSS"));
 	}
 
@@ -326,7 +326,12 @@ function addItem(data) {
 	}
 
 	//Create the notification
-	if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
+	if (
+		Settings.isPremiumUser() &&
+		Settings.get("general.searchOpenModal") &&
+		is_parent_asin != null &&
+		enrollment_guid != null
+	) {
 		Tpl.setVar(
 			"url",
 			`https://www.amazon.${I13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`
@@ -349,7 +354,7 @@ function addItem(data) {
 	Tpl.setVar("feedPaused", feedPaused);
 	Tpl.setIf("announce", Settings.get("discord.active") && Settings.get("discord.guid", false) != null);
 	Tpl.setIf("pinned", Settings.get("pinnedTab.active"));
-	Tpl.setIf("variant", Settings.get("general.displayVariantIcon") && is_parent_asin);
+	Tpl.setIf("variant", Settings.isPremiumUser() && Settings.get("general.displayVariantIcon") && is_parent_asin);
 
 	let content = Tpl.render(loadedTpl, true); //true to return a DOM object instead of an HTML string
 	const newBody = document.getElementById("vh-items-container");

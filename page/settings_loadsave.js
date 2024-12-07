@@ -3,7 +3,8 @@ const Settings = new SettingsMgr();
 
 //Reminder: This script is executed from the extension popup.
 //          The console used is the browser console, not the inspector console.
-const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
+//const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
+const VINE_HELPER_API_V5_URL = "http://localhost:3000";
 const arrSounds = ["notification", "upgrade", "vintage-horn"];
 
 async function drawDiscord() {
@@ -38,6 +39,17 @@ async function initiateSettings() {
 	//Wait for the settings to be loaded.
 	while (!Settings.isLoaded()) {
 		await new Promise((r) => setTimeout(r, 10));
+	}
+
+	//Disable the premium options for non-premium users.
+	if (!Settings.isPremiumUser()) {
+		document
+			.querySelectorAll(
+				".premium-feature input, .premium-feature select, .premium-feature button, .premium-feature textarea"
+			)
+			.forEach(function (item) {
+				item.disabled = true;
+			});
 	}
 
 	//##########################
@@ -368,6 +380,17 @@ async function initiateSettings() {
 				console.error("Failed to copy: ", err);
 			});
 	});
+
+	//Patreon login link:
+	document.getElementById("PatreonLogin").href =
+		"https://www.patreon.com/oauth2/authorize" +
+		"?response_type=code" +
+		"&client_id=AqsjZu6eHaLtO3y8bj0VPydtRCNNV2n-5aQoWVKil4IPNb3qoxkT75VQMhSALTcO" +
+		"&redirect_uri=" +
+		encodeURIComponent(VINE_HELPER_API_V5_URL + "/patreon-login") +
+		//"&scope=pledges-to-me" +
+		"&state=" +
+		Settings.get("general.uuid", false);
 }
 
 //CSK: Comma Separated Keywords

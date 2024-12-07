@@ -16,6 +16,11 @@ class SettingsMgr {
 		this.#loadSettingsFromStorage();
 	}
 
+	//Return true if the user has a valid premium membership on Patreon
+	isPremiumUser() {
+		return this.get("general.patreon.tier") == ("Premium user" || "Generous supporter");
+	}
+
 	isLoaded() {
 		return Object.keys(this.#settings).length > 0;
 	}

@@ -111,7 +111,7 @@ async function getSettings() {
 
 	if (Settings.get("general.listView")) loadStyleSheet("resource/css/listView.css");
 
-	if (Settings.get("general.customCSS")) {
+	if (Settings.isPremiumUser() && Settings.get("general.customCSS")) {
 		loadStyleSheetContent(Settings.get("general.customCSS"));
 	}
 

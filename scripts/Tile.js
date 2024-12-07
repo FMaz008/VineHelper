@@ -189,7 +189,7 @@ function Tile(obj, gridInstance) {
 		}
 
 		//Match with blur keywords.
-		if (Settings.get("general.blurKeywords")?.length > 0) {
+		if (Settings.isPremiumUser() && Settings.get("general.blurKeywords")?.length > 0) {
 			match = Settings.get("general.blurKeywords").find((word) => {
 				let regex;
 				try {
