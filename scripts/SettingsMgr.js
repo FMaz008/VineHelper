@@ -18,7 +18,7 @@ class SettingsMgr {
 
 	//Return true if the user has a valid premium membership on Patreon
 	isPremiumUser() {
-		return this.get("general.patreon.tier") == ("Premium user" || "Generous supporter");
+		return parseInt(this.get("general.patreon.tier")) > 1;
 	}
 
 	isLoaded() {

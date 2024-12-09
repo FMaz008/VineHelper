@@ -3,8 +3,8 @@ const Settings = new SettingsMgr();
 
 //Reminder: This script is executed from the extension popup.
 //          The console used is the browser console, not the inspector console.
-//const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
-const VINE_HELPER_API_V5_URL = "http://localhost:3000";
+const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
+//const VINE_HELPER_API_V5_URL = "http://localhost:3000";
 const arrSounds = ["notification", "upgrade", "vintage-horn"];
 
 async function drawDiscord() {
