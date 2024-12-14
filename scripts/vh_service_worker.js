@@ -109,7 +109,7 @@ if ("function" == typeof importScripts) {
 var I13n = new Internationalization();
 var Settings = new SettingsMgr();
 var notificationsData = {};
-var newItemCheckInterval = 0.3; //Firefox shutdown the background script after 30seconds.
+var WSReconnectInterval = 0.3; //Firefox shutdown the background script after 30seconds.
 const broadcastChannel = new BroadcastChannel("VineHelperChannel");
 
 if (typeof browser === "undefined") {
@@ -147,7 +147,7 @@ browser.alarms.onAlarm.addListener(async (alarm) => {
 	await Settings.refresh();
 	await retrieveSettings();
 
-	if (alarm.name === "checkNewItems") {
+	if (alarm.name === "websocketReconnect") {
 		if (Settings.get("notification.active")) {
 			connectWebSocket(); //Check the status of the websocket, reconnect if closed.
 		} else {
@@ -215,8 +215,6 @@ function connectWebSocket() {
 			is_parent_asin: data.item.is_parent_asin,
 			enrollment_guid: data.item.enrollment_guid,
 		});
-
-		sendMessageToAllTabs({ type: "newItemCheckEnd" }, "End of notification(s) update");
 	});
 	socket.on("newETV", (data) => {
 		sendMessageToAllTabs(
@@ -259,7 +257,7 @@ async function init() {
 	await retrieveSettings();
 
 	//Check for new items (if the option is disabled the method will return)
-	browser.alarms.create("checkNewItems", { periodInMinutes: newItemCheckInterval });
+	browser.alarms.create("websocketReconnect", { periodInMinutes: WSReconnectInterval });
 
 	if (Settings.get("notification.active")) {
 		//Firefox sometimes re-initialize the background script.
@@ -288,9 +286,6 @@ async function fetchLast100Items() {
 	if (Settings.get("general.country") === null) {
 		return false; //If the country is not known, do not query
 	}
-
-	//Broadcast a new message to tell the tabs to display a loading wheel.
-	sendMessageToAllTabs({ type: "newItemCheck" }, "Loading wheel");
 
 	const content = {
 		api_version: 5,

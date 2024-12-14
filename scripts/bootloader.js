@@ -1102,16 +1102,6 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 		hookExecute(data.hookname, data);
 	}
 
-	if (data.type == "newItemCheck") {
-		if (Settings.get("notification.screen.active")) {
-			//Display a notification that we have checked for items.
-			let note = new ScreenNotification();
-			note.template = "view/notification_loading.html";
-			note.lifespan = 3;
-			await Notifications.pushNotification(note);
-		}
-	}
-
 	if (data.type == "newItem") {
 		if (
 			data.index < 10 && //Limit the notification to the top 10 most recents

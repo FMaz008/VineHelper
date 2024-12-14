@@ -129,14 +129,6 @@ window.onload = function () {
 			setETV(data.asin, data.etv, data.etv);
 		}
 
-		if (data.type == "newItemCheck") {
-			//Display a notification that we have checked for items.
-			let note = new ScreenNotification();
-			note.template = "view/notification_loading.html";
-			note.lifespan = 3;
-			Notifications.pushNotification(note);
-		}
-
 		if (data.type == "wsOpen") {
 			document.getElementById("statusWS").innerHTML =
 				"<strong>Server status: </strong><div class='vh-switch-32 vh-icon-switch-on'></div> Listening for notifications...";
