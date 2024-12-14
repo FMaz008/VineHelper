@@ -70,6 +70,13 @@ async function init() {
 		document.getElementsByTagName("body")[0].classList.add("darktheme");
 	}
 
+	//### Run the boot sequence
+	initAddNotificationMonitorLink();
+	addRecommendationLink();
+	showGDPRPopup();
+	await initFlushTplCache(); //And display the version changelog popup
+	initInjectScript();
+
 	//Check if we want to display the notification monitor
 	const currentUrl = window.location.href;
 	regex = /^[^#]+#monitor$/;
@@ -77,10 +84,10 @@ async function init() {
 	if (arrMatches != null) {
 		//Initate the notification monitor
 		notificationMonitorActive = true;
+		NotificationMonitor.initialize();
 
 		return; //Do not initialize the page as normal
 	}
-	//### Run the boot sequence
 
 	//The following method is called early as it does a XHR request to the server, which takes a while
 	//Upon receiving the results, it will loop&wait for initTilesAndDrawToolbars() to have completed.
@@ -89,11 +96,6 @@ async function init() {
 	fetchProductsDatav5(); //Obtain the data to fill the toolbars with it.
 
 	displayAccountData();
-	initAddNotificationMonitorLink();
-	addRecommendationLink();
-	showGDPRPopup();
-	await initFlushTplCache(); //And display the version changelog popup
-	initInjectScript();
 	initSetPageTitle();
 	await initCreateTabs();
 	initInsertTopPagination();
@@ -967,13 +969,17 @@ window.addEventListener("message", async function (event) {
 			body: JSON.stringify(content),
 		});
 
-		//Update the product tile ETV in the Toolbar
-		const tile = getTileByAsin(tileASIN);
-		if (tile) {
-			tile.getToolbar().setETV(event.data.data.etv, event.data.data.etv, true);
-		} else {
-			//This can happen when we force an open modal for an item that is not present on the page
-			//console.error("Unable to find the tile for ASIN " + tileASIN);
+		//The notification monitor does not instanciate a grid as there is no tabs.
+		//But the ETV will be received from the server
+		if (!notificationMonitorActive) {
+			//Update the product tile ETV in the Toolbar
+			const tile = getTileByAsin(tileASIN);
+			if (tile) {
+				tile.getToolbar().setETV(event.data.data.etv, event.data.data.etv, true);
+			} else {
+				//This can happen when we force an open modal for an item that is not present on the page
+				//console.error("Unable to find the tile for ASIN " + tileASIN);
+			}
 		}
 
 		//Show a notification
@@ -1114,7 +1120,7 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 		hookExecute(data.hookname, data);
 	}
 
-	if (data.type == "ETVUpdate") {
+	if (data.type == "newETV") {
 		if (notificationMonitorActive) {
 			NotificationMonitor.setETV(data.asin, data.etv);
 		}
@@ -1139,13 +1145,19 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 			NotificationMonitor.addTileInGrid(
 				asin,
 				queue,
+				date,
 				title,
 				img_url,
 				is_parent_asin,
 				enrollment_guid,
+				etv_min,
+				etv_max,
 				KWsMatch,
 				BlurKWsMatch
 			);
+			if (data.reason) {
+				console.log(data);
+			}
 		} else if (
 			data.index < 10 && //Limit the notification to the top 10 most recents
 			vineBrowsingListing && //Only show notification on listing pages

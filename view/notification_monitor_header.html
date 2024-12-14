@@ -1,0 +1,27 @@
+<div>
+	<h3>Notification Monitor</h3>
+	<div class="vh-container">
+		<label for="fetch-last-100" style="float: left">
+			<input type="button" name="fetch-last-100" id="fetch-last-100" value="Fetch last 100" />
+		</label>
+		<label for="pauseFeed" style="float: left">
+			<input type="button" name="pauseFeed" id="pauseFeed" value="Pause & Buffer Feed" />
+		</label>
+		<label for="filter-queue" style="float: right; margin-right: 20px">
+			Filter by:
+			<select name="filter-queue">
+				<option value="-1">Show all queues</option>
+				<option value="last_chance">AFA</option>
+				<option value="encore">AI</option>
+			</select>
+			<select name="filter-type">
+				<option value="-1">Show all notifications</option>
+				<option value="0">Regular only</option>
+				<option value="1">Zero ETV only</option>
+				<option value="2">KW match only</option>
+				<option value="9">Zero ETV or KW match only</option>
+			</select>
+		</label>
+	</div>
+	<div style="clear: both"></div>
+</div>

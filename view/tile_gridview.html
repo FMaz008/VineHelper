@@ -11,6 +11,8 @@
 					<a
 						href="#{{$asin}}"
 						id="vh-announce-link-{{$asin}}"
+						data-asin="{{$asin}}"
+						data-queue="{{$queue}}"
 						class="vh-floating-icon vh-announce-link"
 						title="Announce the product on discord! (The ETV must be known)"
 						onclick="return false;"
@@ -20,18 +22,25 @@
 					<a
 						href="#{{$asin}}"
 						id="vh-pin-link-{{$asin}}"
+						data-asin="{{$asin}}"
+						data-queue="{{$queue}}"
+						data-is-parent-asin="{{$is_parent_asin}}"
+						data-enrollment-guid="{{$enrollment_guid}}"
+						data-title="{{$description}}"
+						data-thumbnail="{{$img_url}}"
 						class="vh-floating-icon vh-announce-link"
 						title="Pin item"
 						onclick="return false;"
 					>
 						<div class="vh-toolbar-icon vh-icon-pin"></div>
 					</a>
-					<span class="etv" data-etv-min="" date-etv-max=""></span>
+					<span class="etv" data-etv-min="" data-etv-max=""></span>
 				</div>
 			</div>
 		</div>
 		<div class="vh-img-container">
 			<img alt="" src="{{$img_url}}" />
+			<div class="vh-date-added">{{$date}}</div>
 		</div>
 		<div class="vvp-item-product-title-container">
 			<a class="a-link-normal" target="_blank" rel="noopener" href="/dp/{{$asin}}">

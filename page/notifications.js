@@ -121,7 +121,7 @@ window.onload = function () {
 		if (data.type == "newItem") {
 			addItem(data);
 		}
-		if (data.type == "ETVUpdate") {
+		if (data.type == "newETV") {
 			if (items.get(data.asin) === null) {
 				console.log("ETV Update received for item " + data.asin + " @ " + data.etv);
 			}

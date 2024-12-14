@@ -219,7 +219,7 @@ function connectWebSocket() {
 	socket.on("newETV", (data) => {
 		sendMessageToAllTabs(
 			{
-				type: "ETVUpdate",
+				type: "newETV",
 				asin: data.item.asin,
 				etv: data.item.etv,
 			},

@@ -8,7 +8,7 @@ const TYPE_HIGHLIGHT = 2;
 const TYPE_HIGHLIGHT_OR_ZEROETV = 9;
 
 class NotificationMonitor {
-	constructor() {
+	async initialize() {
 		//Remove the existing items.
 		document.getElementById("vvp-items-grid").innerHTML = "";
 
@@ -24,14 +24,25 @@ class NotificationMonitor {
 		//Create title
 		const parentContainer = document.querySelector("div.vvp-tab-content");
 		const mainContainer = document.querySelector("div.vvp-items-container");
-		const title = document.createElement("h2");
-		title.innerText = "Notification Monitor";
-		parentContainer.insertBefore(title, mainContainer);
+
+		//Insert the header
+		let prom2 = await Tpl.loadFile("view/notification_monitor_header.html");
+		const header = Tpl.render(prom2, true);
+		parentContainer.insertBefore(header, mainContainer);
+
+		//Bind fetch-last-100 button
+		const btnLast100 = document.getElementById("fetch-last-100");
+		btnLast100.addEventListener("click", function () {
+			browser.runtime.sendMessage({
+				type: "fetchLast100Items",
+			});
+		});
 	}
 
 	async addTileInGrid(
 		asin,
 		queue,
+		date,
 		title,
 		img_url,
 		is_parent_asin,
@@ -60,6 +71,8 @@ class NotificationMonitor {
 		Tpl.setVar("domain", I13n.getDomainTLD());
 		Tpl.setVar("img_url", img_url);
 		Tpl.setVar("asin", asin);
+		Tpl.setVar("date", this.#formatDate(date));
+		Tpl.setVar("queue", queue);
 		Tpl.setVar("description", title);
 		Tpl.setVar("is_parent_asin", is_parent_asin);
 		Tpl.setVar("enrollment_guid", enrollment_guid);
@@ -120,10 +133,13 @@ class NotificationMonitor {
 		}
 
 		//Display for formatted ETV in the toolbar
-		if (etvObj.dataset.etvMin == etvObj.dataset.etvMax) {
-			etvObj.innerText = this.#formatETV(etvObj.dataset.etvMin);
-		} else {
-			etvObj.innerText = this.#formatETV(etvObj.dataset.etvMin) + "-" + this.#formatETV(etvObj.dataset.etvMax);
+		if (etvObj.dataset.etvMin != "" && etvObj.dataset.etvMax != "") {
+			if (etvObj.dataset.etvMin == etvObj.dataset.etvMax) {
+				etvObj.innerText = this.#formatETV(etvObj.dataset.etvMin);
+			} else {
+				etvObj.innerText =
+					this.#formatETV(etvObj.dataset.etvMin) + "-" + this.#formatETV(etvObj.dataset.etvMax);
+			}
 		}
 
 		//Check if the item is a 0ETV
@@ -218,6 +234,10 @@ class NotificationMonitor {
 			}).format(etv);
 		}
 		return formattedETV;
+	}
+
+	#formatDate(date) {
+		return new Date(date.replace(" ", "T") + "Z").toLocaleString(I13n.getLocale());
 	}
 }
 
