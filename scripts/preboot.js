@@ -28,6 +28,7 @@ var ultraviner = false; //If Ultravine is detected, Vine Helper will deactivate 
 
 var I13n = null;
 var Settings = null;
+var NotificationMonitor = null;
 
 // Factory function to load a module
 (async () => {
@@ -41,6 +42,10 @@ var Settings = null;
 		//Load the SettingMgr.
 		module = await import(chrome.runtime.getURL("../scripts/SettingsMgr.js"));
 		Settings = new module.SettingsMgr();
+
+		//Load the Notification Monitor
+		module = await import(chrome.runtime.getURL("../scripts/NotificationMonitor.js"));
+		NotificationMonitor = new module.NotificationMonitor();
 	} catch (error) {
 		console.error("Error loading module:", error);
 	}

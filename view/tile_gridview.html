@@ -1,0 +1,67 @@
+<div
+	id="vh-notification-{{$asin}}"
+	class="vvp-item-tile"
+	data-recommendation-id="{{$recommendationId}}"
+	data-img-url="{{$img_url}}"
+>
+	<div class="vvp-item-tile-content">
+		<div class="vh-status compact">
+			<div class="vh-status-container">
+				<div class="vh-status-container2">
+					<a
+						href="#{{$asin}}"
+						id="vh-announce-link-{{$asin}}"
+						class="vh-floating-icon vh-announce-link"
+						title="Announce the product on discord! (The ETV must be known)"
+						onclick="return false;"
+					>
+						<div class="vh-toolbar-icon vh-icon-announcement" style="opacity: 1"></div>
+					</a>
+					<a
+						href="#{{$asin}}"
+						id="vh-pin-link-{{$asin}}"
+						class="vh-floating-icon vh-announce-link"
+						title="Pin item"
+						onclick="return false;"
+					>
+						<div class="vh-toolbar-icon vh-icon-pin"></div>
+					</a>
+					<span class="etv" data-etv-min="" date-etv-max=""></span>
+				</div>
+			</div>
+		</div>
+		<div class="vh-img-container">
+			<img alt="" src="{{$img_url}}" />
+		</div>
+		<div class="vvp-item-product-title-container">
+			<a class="a-link-normal" target="_blank" rel="noopener" href="/dp/{{$asin}}">
+				<span
+					class="a-truncate"
+					data-a-word-break="normal"
+					data-a-max-rows="2"
+					data-a-overflow-marker="&amp;hellip;"
+					style="line-height: 1.3em !important; max-height: 2.6em"
+					data-a-recalculate="false"
+					data-a-updated="true"
+				>
+					<span class="a-truncate-full a-offscreen">{{$description}}</span>
+					<span class="a-truncate-cut" aria-hidden="true" style="height: 2.6em">{{$description}}</span>
+				</span>
+			</a>
+		</div>
+		<span class="a-button a-button-primary vvp-details-btn" id="a-autoid-0">
+			<span class="a-button-inner">
+				<input
+					data-asin="{{$asin}}"
+					data-is-parent-asin="{{$is_parent_asin}}"
+					data-recommendation-id="{{$recommendationId}}"
+					data-recommendation-type="{{$recommendationType}}"
+					class="a-button-input"
+					type="submit"
+					aria-labelledby="a-autoid-0-announce"
+				/>
+				<span class="a-button-text" aria-hidden="true" id="a-autoid-0-announce">See details</span>
+			</span>
+		</span>
+	</div>
+</div>

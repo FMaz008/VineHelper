@@ -37,6 +37,8 @@ var vvpContext = null;
 var marketplaceId = null;
 var customerId = null;
 
+var notificationMonitorActive = false; //If true, the page is being displayed as a notification monitor.
+
 //Do not run the extension if ultraviner is running
 if (!ultraviner) {
 	init();
@@ -68,6 +70,16 @@ async function init() {
 		document.getElementsByTagName("body")[0].classList.add("darktheme");
 	}
 
+	//Check if we want to display the notification monitor
+	const currentUrl = window.location.href;
+	regex = /^[^#]+#monitor$/;
+	arrMatches = currentUrl.match(regex);
+	if (arrMatches != null) {
+		//Initate the notification monitor
+		notificationMonitorActive = true;
+
+		return; //Do not initialize the page as normal
+	}
 	//### Run the boot sequence
 
 	//The following method is called early as it does a XHR request to the server, which takes a while
@@ -1102,8 +1114,39 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 		hookExecute(data.hookname, data);
 	}
 
+	if (data.type == "ETVUpdate") {
+		if (notificationMonitorActive) {
+			NotificationMonitor.setETV(data.asin, data.etv);
+		}
+	}
 	if (data.type == "newItem") {
-		if (
+		if (notificationMonitorActive) {
+			let {
+				date,
+				asin,
+				title,
+				search,
+				img_url,
+				etv_min,
+				etv_max,
+				queue,
+				KWsMatch,
+				BlurKWsMatch,
+				is_parent_asin,
+				enrollment_guid,
+			} = data;
+
+			NotificationMonitor.addTileInGrid(
+				asin,
+				queue,
+				title,
+				img_url,
+				is_parent_asin,
+				enrollment_guid,
+				KWsMatch,
+				BlurKWsMatch
+			);
+		} else if (
 			data.index < 10 && //Limit the notification to the top 10 most recents
 			vineBrowsingListing && //Only show notification on listing pages
 			Settings.get("notification.screen.active")

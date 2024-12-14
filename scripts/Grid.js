@@ -242,19 +242,8 @@ async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enro
 	let prom2 = await Tpl.loadFile("view/" + templateFile);
 	let search = title.replace(/^([a-zA-Z0-9\s',]{0,40})[\s]+.*$/, "$1");
 
-	const recommendationTypes = {
-		potluck: "VENDOR_TARGETED",
-		last_chance: "VENDOR_VINE_FOR_ALL",
-		encore: "VINE_FOR_ALL",
-	};
-
-	const recommendationType = recommendationTypes[queue] || null;
-	let recommendationId;
-	if (recommendationType == "VENDOR_TARGETED") {
-		recommendationId = marketplaceId + "#" + asin + "#" + customerId + "#vine.enrollment." + enrollment_guid;
-	} else {
-		recommendationId = marketplaceId + "#" + asin + "#vine.enrollment." + enrollment_guid;
-	}
+	const recommendationType = getRecommendationTypeFromQueue(queue);
+	const recommendationId = generateRecommendationString(recommendationType, asin, enrollment_guid);
 
 	if (
 		Settings.isPremiumUser() &&
@@ -292,6 +281,26 @@ async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enro
 		updateTileCounts();
 	};
 }
+
+function getRecommendationTypeFromQueue(queue) {
+	const recommendationTypes = {
+		potluck: "VENDOR_TARGETED",
+		last_chance: "VENDOR_VINE_FOR_ALL",
+		encore: "VINE_FOR_ALL",
+	};
+
+	return recommendationTypes[queue] || null;
+}
+function generateRecommendationString(recommendationType, asin, enrollment_guid) {
+	//marketplaceId is global from bootload.js
+	//customerId is global from bootloader.js
+
+	if (recommendationType == "VENDOR_TARGETED") {
+		return marketplaceId + "#" + asin + "#" + customerId + "#vine.enrollment." + enrollment_guid;
+	}
+	return marketplaceId + "#" + asin + "#vine.enrollment." + enrollment_guid;
+}
+
 async function hideAllItems() {
 	let arrTile = [];
 	HiddenList.loadFromLocalStorage(); //Refresh the list in case it was altered in a different tab
