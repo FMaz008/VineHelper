@@ -398,9 +398,7 @@ button.bookmark {
 }
 
 div#account-extra-stats {
-	color: var(--text-light);
 	width: max-content;
-	background: var(--background-light);
 }
 
 #review-toolbar {
@@ -439,7 +437,6 @@ div#account-extra-stats {
 }
 
 .vinehelper#review_management {
-	background-color: var(--background-dark);
 	border-radius: 5px;
 	color: var(--text-dark);
 	margin: 10px;
@@ -555,16 +552,6 @@ input[type="checkbox"] {
 	.vh-tabs li {
 		border: 2px solid var(--background-dark);
 		border-bottom: 3px solid var(--tab-border);
-	}
-
-	.vh-container {
-		background-color: var(--background-dark);
-		color: var(--text-dark);
-	}
-
-	div#account-extra-stats {
-		color: var(--text-dark);
-		background: var(--background-dark);
 	}
 
 	.masked-text:hover {
