@@ -1038,13 +1038,16 @@ window.addEventListener("message", async function (event) {
 				body: JSON.stringify(content),
 			});
 
-			//Update the product tile ETV in the Toolbar
-			let tile = getTileByAsin(tileASIN);
-			if (tile) {
-				tile.getToolbar().createOrderWidget(event.data.data.status == "success");
-			} else {
-				//This can happen when we force an open modal for an item that is not present on the page
-				//console.error("Unable to find the tile for ASIN " + tileASIN);
+			//The notification monitor does not implement the regularGrid
+			if (!notificationMonitorActive) {
+				//Update the product tile ETV in the Toolbar
+				let tile = getTileByAsin(tileASIN);
+				if (tile) {
+					tile.getToolbar().createOrderWidget(event.data.data.status == "success");
+				} else {
+					//This can happen when we force an open modal for an item that is not present on the page
+					//console.error("Unable to find the tile for ASIN " + tileASIN);
+				}
 			}
 		}
 
