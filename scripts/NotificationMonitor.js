@@ -164,9 +164,7 @@ class NotificationMonitor {
 		this.#processNotificationFiltering(tileDOM);
 
 		// Add new click listener for the report button
-		document
-			.querySelector("#vh-notification-" + asin + " .report-link")
-			.addEventListener("click", this.#handleReportClick);
+		document.querySelector("#vh-report-link-" + asin).addEventListener("click", this.#handleReportClick);
 
 		//Add new click listener for Brenda announce:
 		if (Settings.get("discord.active") && Settings.get("discord.guid", false) != null) {
@@ -180,6 +178,10 @@ class NotificationMonitor {
 			pinIcon.addEventListener("click", this.#handlePinClick);
 		}
 
+		//Add new click listener for the hide button
+		const hideIcon = document.querySelector("#vh-hide-link-" + asin);
+		hideIcon.addEventListener("click", this.#handleHideClick);
+
 		return tileDOM; //Return the DOM element for the tile.
 	}
 
@@ -190,7 +192,7 @@ class NotificationMonitor {
 			return false;
 		}
 
-		const etvObj = notif.querySelector("span.etv");
+		const etvObj = notif.querySelector(".etv");
 		const brendaAnnounce = notif.querySelector("#vh-announce-link-" + asin);
 
 		//Update the ETV value in the hidden fields
@@ -341,13 +343,24 @@ class NotificationMonitor {
 		}
 	}
 
+	//############################################################
+	//## CLICK HANDLERS
+
+	#handleHideClick(e) {
+		e.preventDefault();
+
+		const asin = e.target.dataset.asin;
+
+		document.querySelector("#vh-notification-" + asin).remove();
+	}
+
 	#handleBrendaClick(e) {
 		e.preventDefault();
-		console.log(e);
+
 		const asin = e.target.dataset.asin;
 		const queue = e.target.dataset.queue;
-		console.log("#vh-notification-" + asin + " span.etv");
-		let etv = document.querySelector("#vh-notification-" + asin + " span.etv").dataset.etvMax;
+
+		let etv = document.querySelector("#vh-notification-" + asin + " .etv").dataset.etvMax;
 
 		window.BrendaAnnounceQueue.announce(asin, etv, queue, I13n.getDomainTLD());
 	}
@@ -415,6 +428,9 @@ class NotificationMonitor {
 			alert("Report sent. Thank you.");
 		});
 	}
+
+	//#######################################################
+	//## UTILITY METHODS
 
 	#getNotificationByASIN(asin) {
 		return document.querySelector("#vh-notification-" + asin);
