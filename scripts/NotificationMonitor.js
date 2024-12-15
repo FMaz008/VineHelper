@@ -262,7 +262,7 @@ class NotificationMonitor {
 
 		//Blur the thumbnail and title
 		notif.querySelector(".vh-img-container>img")?.classList.add("blur");
-		notif.querySelector(".vh-notification-content>div>a")?.classList.add("dynamic-blur");
+		notif.querySelector(".vvp-item-product-title-container>a")?.classList.add("dynamic-blur");
 	}
 
 	#processNotificationFiltering(node) {
