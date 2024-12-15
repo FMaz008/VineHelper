@@ -30,6 +30,7 @@ class NotificationsSoundPlayer {
 		if (this.#state !== STATE_COOLDOWN) {
 			this.#setState(STATE_WAIT);
 			clearTimeout(this.#waitTimer);
+			this.#waitTimer = null;
 			this.#waitTimer = setTimeout(() => {
 				this.#playSound();
 			}, this.#waitDelay);

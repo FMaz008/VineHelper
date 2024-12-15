@@ -9,6 +9,7 @@ const TYPE_HIGHLIGHT_OR_ZEROETV = 9;
 
 class NotificationMonitor {
 	#feedPaused;
+	#waitTimer; //Timer which wait a short delay to see if anything new is about to happen
 
 	async initialize() {
 		//Remove the existing items.
@@ -23,11 +24,12 @@ class NotificationMonitor {
 		//Remove the categories
 		document.querySelector("#vvp-browse-nodes-container").remove();
 
-		//Create title
+		this.#updateTabTitle();
+
+		//Insert the header
 		const parentContainer = document.querySelector("div.vvp-tab-content");
 		const mainContainer = document.querySelector("div.vvp-items-container");
 
-		//Insert the header
 		let prom2 = await Tpl.loadFile("view/notification_monitor_header.html");
 		const header = Tpl.render(prom2, true);
 		parentContainer.insertBefore(header, mainContainer);
@@ -65,6 +67,7 @@ class NotificationMonitor {
 			document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
 				this.#processNotificationFiltering(node);
 			});
+			this.#updateTabTitle();
 		});
 		const filterQueue = document.querySelector("select[name='filter-queue']");
 		filterQueue.addEventListener("change", (event) => {
@@ -72,6 +75,7 @@ class NotificationMonitor {
 			document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
 				this.#processNotificationFiltering(node);
 			});
+			this.#updateTabTitle();
 		});
 	}
 
@@ -162,6 +166,14 @@ class NotificationMonitor {
 
 		//Apply the filters
 		this.#processNotificationFiltering(tileDOM);
+
+		//Update the tab title:
+		//User a timer to avoid the Fetch Last 100 to call this 100 times, which slow things down.
+		clearTimeout(this.#waitTimer);
+		this.#waitTimer = null;
+		this.#waitTimer = setTimeout(() => {
+			this.#updateTabTitle();
+		}, 100);
 
 		// Add new click listener for the report button
 		document.querySelector("#vh-report-link-" + asin).addEventListener("click", this.#handleReportClick);
@@ -456,6 +468,18 @@ class NotificationMonitor {
 			second: "2-digit",
 			hour12: false,
 		});
+	}
+
+	#updateTabTitle() {
+		// Select all child elements of #vvp-items-grid
+		const children = document.querySelectorAll("#vvp-items-grid > *");
+
+		// Filter and count elements that are not display: none
+		const visibleChildrenCount = Array.from(children).filter(
+			(child) => window.getComputedStyle(child).display !== "none"
+		).length;
+
+		document.title = "VNM (" + visibleChildrenCount + ")";
 	}
 }
 
