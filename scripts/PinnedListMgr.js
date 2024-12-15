@@ -15,7 +15,7 @@ class PinnedListMgr {
 		this.loadFromLocalStorage(); //Can't be awaited
 
 		//Handle the reception of broadcasts:
-		this.broadcast.onmessage = function (ev) {
+		this.broadcast.onmessage = (ev) => {
 			if (ev.data.type == undefined) return;
 
 			if (ev.data.type == "pinnedItem") {
