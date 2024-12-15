@@ -432,7 +432,14 @@ class NotificationMonitor {
 	}
 
 	#formatDate(date) {
-		return new Date(date.replace(" ", "T") + "Z").toLocaleString(I13n.getLocale());
+		return new Date(date.replace(" ", "T") + "Z").toLocaleString(I13n.getLocale(), {
+			month: "2-digit",
+			day: "2-digit",
+			hour: "2-digit",
+			minute: "2-digit",
+			second: "2-digit",
+			hour12: false,
+		});
 	}
 }
 
