@@ -8,6 +8,8 @@ const TYPE_HIGHLIGHT = 2;
 const TYPE_HIGHLIGHT_OR_ZEROETV = 9;
 
 class NotificationMonitor {
+	#feedPaused;
+
 	async initialize() {
 		//Remove the existing items.
 		document.getElementById("vvp-items-grid").innerHTML = "";
@@ -32,9 +34,43 @@ class NotificationMonitor {
 
 		//Bind fetch-last-100 button
 		const btnLast100 = document.getElementById("fetch-last-100");
-		btnLast100.addEventListener("click", function () {
+		btnLast100.addEventListener("click", (event) => {
 			browser.runtime.sendMessage({
 				type: "fetchLast100Items",
+			});
+		});
+
+		//Bind Pause Feed button
+		this.#feedPaused = false;
+		const btnPauseFeed = document.getElementById("pauseFeed");
+		btnPauseFeed.addEventListener("click", (event) => {
+			this.#feedPaused = !this.#feedPaused;
+			if (this.#feedPaused) {
+				document.getElementById("pauseFeed").value = "Resume Feed";
+			} else {
+				document.getElementById("pauseFeed").value = "Pause & Buffer Feed";
+				document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
+					if (node.dataset.feedPaused == "true") {
+						node.style.display = "grid";
+						node.dataset.feedPaused = "false";
+					}
+				});
+			}
+		});
+
+		//Bind the event when changing the filter
+		const filterType = document.querySelector("select[name='filter-type']");
+		filterType.addEventListener("change", (event) => {
+			//Display a specific type of notifications only
+			document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
+				this.#processNotificationFiltering(node);
+			});
+		});
+		const filterQueue = document.querySelector("select[name='filter-queue']");
+		filterQueue.addEventListener("change", (event) => {
+			//Display a specific type of notifications only
+			document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
+				this.#processNotificationFiltering(node);
 			});
 		});
 	}
@@ -59,6 +95,10 @@ class NotificationMonitor {
 		const recommendationType = getRecommendationTypeFromQueue(queue); //grid.js
 		const recommendationId = generateRecommendationString(recommendationType, asin, enrollment_guid); //grid.js
 
+		//If the notification already exist, remove it to avoid duplicates
+		document.getElementById("vh-notification-" + asin)?.remove();
+
+		//Add the notification
 		let templateFile;
 		if (Settings.get("general.listView")) {
 			templateFile = "tile_listview.html";
@@ -72,6 +112,7 @@ class NotificationMonitor {
 		Tpl.setVar("img_url", img_url);
 		Tpl.setVar("asin", asin);
 		Tpl.setVar("date", this.#formatDate(date));
+		Tpl.setVar("feedPaused", this.#feedPaused);
 		Tpl.setVar("queue", queue);
 		Tpl.setVar("description", title);
 		Tpl.setVar("is_parent_asin", is_parent_asin);
@@ -109,6 +150,9 @@ class NotificationMonitor {
 		if (BlurKWsMatch) {
 			this.#blurItemFound(asin);
 		}
+
+		//Apply the filters
+		this.#processNotificationFiltering(tileDOM);
 
 		return tileDOM; //Return the DOM element for the tile.
 	}
@@ -219,6 +263,46 @@ class NotificationMonitor {
 		//Blur the thumbnail and title
 		notif.querySelector(".vh-img-container>img")?.classList.add("blur");
 		notif.querySelector(".vh-notification-content>div>a")?.classList.add("dynamic-blur");
+	}
+
+	#processNotificationFiltering(node) {
+		if (!node) {
+			return false;
+		}
+
+		const filterType = document.querySelector("select[name='filter-type']");
+		const filterQueue = document.querySelector("select[name='filter-queue']");
+
+		const notificationType = parseInt(node.dataset.type);
+		const queueType = node.dataset.queue;
+
+		//Feed Paused
+		if (node.dataset.feedPaused == "true") {
+			node.style.display = "none";
+			return false;
+		}
+
+		if (filterType.value == -1) {
+			node.style.display = "grid";
+		} else if (filterType.value == TYPE_HIGHLIGHT_OR_ZEROETV) {
+			const typesToShow = [TYPE_HIGHLIGHT, TYPE_ZEROETV];
+			node.style.display = typesToShow.includes(notificationType) ? "grid" : "none";
+			typesToShow.includes(notificationType);
+		} else {
+			node.style.display = notificationType == filterType.value ? "grid" : "none";
+			notificationType == filterType.value;
+		}
+
+		if (node.style.display == "grid") {
+			if (filterQueue.value == "-1") {
+				return true;
+			} else {
+				node.style.display = queueType == filterQueue.value ? "grid" : "none";
+				return queueType == filterQueue.value;
+			}
+		} else {
+			return false;
+		}
 	}
 
 	#getNotificationByASIN(asin) {

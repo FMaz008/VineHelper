@@ -318,7 +318,8 @@ function initAddNotificationMonitorLink() {
 		ul.appendChild(li);
 
 		const a = document.createElement("a");
-		a.href = chrome.runtime.getURL("page/notifications.html");
+		//a.href = chrome.runtime.getURL("page/notifications.html");
+		a.href = "/vine/vine-items?queue=encore#monitor";
 		a.target = "_blank";
 		a.innerText = "VH Notifications Monitor";
 		li.appendChild(a);
