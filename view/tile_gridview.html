@@ -11,38 +11,59 @@
 		<div class="vh-status compact">
 			<div class="vh-status-container">
 				<div class="vh-status-container2">
+					{{if announce}}
 					<a
 						href="#{{$asin}}"
 						id="vh-announce-link-{{$asin}}"
-						data-asin="{{$asin}}"
-						data-queue="{{$queue}}"
 						class="vh-floating-icon vh-announce-link"
 						title="Announce the product on discord! (The ETV must be known)"
-						onclick="return false;"
 					>
-						<div class="vh-toolbar-icon vh-icon-announcement" style="opacity: 1"></div>
+						<div
+							class="vh-toolbar-icon vh-icon-announcement"
+							style="opacity: 1"
+							data-asin="{{$asin}}"
+							data-queue="{{$queue}}"
+						></div>
 					</a>
+					{{endif}} {{if pinned}}
 					<a
 						href="#{{$asin}}"
 						id="vh-pin-link-{{$asin}}"
-						data-asin="{{$asin}}"
-						data-queue="{{$queue}}"
-						data-is-parent-asin="{{$is_parent_asin}}"
-						data-enrollment-guid="{{$enrollment_guid}}"
-						data-title="{{$description}}"
-						data-thumbnail="{{$img_url}}"
 						class="vh-floating-icon vh-announce-link"
 						title="Pin item"
-						onclick="return false;"
 					>
-						<div class="vh-toolbar-icon vh-icon-pin"></div>
+						<div
+							class="vh-toolbar-icon vh-icon-pin"
+							data-asin="{{$asin}}"
+							data-queue="{{$queue}}"
+							data-is-parent-asin="{{$is_parent_asin}}"
+							data-enrollment-guid="{{$enrollment_guid}}"
+							data-title="{{$description}}"
+							data-thumbnail="{{$img_url}}"
+						></div>
 					</a>
+					{{endif}}
 					<span class="etv" data-etv-min="" data-etv-max=""></span>
+
+					<a
+						href="#"
+						class="vh-floating-icon report-link"
+						title="This item is not a real vine item, report the user who submitted it."
+					>
+						<div class="vh-toolbar-icon vh-icon-report" data-asin="{{$asin}}" style="float: right"></div>
+					</a>
 				</div>
 			</div>
 		</div>
 		<div class="vh-img-container">
 			<img alt="" src="{{$img_url}}" />
+			{{if variant}}
+			<div class="vh-variant-indicator-container">
+				<a href="#" onclick="return false;" title="The item has variant(s)">
+					<div class="vh-indicator-icon vh-icon-choice"></div>
+				</a>
+			</div>
+			{{endif}}
 			<div class="vh-date-added">{{$date}}</div>
 		</div>
 		<div class="vvp-item-product-title-container">

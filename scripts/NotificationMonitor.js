@@ -119,6 +119,9 @@ class NotificationMonitor {
 		Tpl.setVar("enrollment_guid", enrollment_guid);
 		Tpl.setVar("recommendationType", recommendationType);
 		Tpl.setVar("recommendationId", recommendationId);
+		Tpl.setIf("announce", Settings.get("discord.active") && Settings.get("discord.guid", false) != null);
+		Tpl.setIf("pinned", Settings.get("pinnedTab.active"));
+		Tpl.setIf("variant", Settings.isPremiumUser() && Settings.get("general.displayVariantIcon") && is_parent_asin);
 
 		let tileDOM = Tpl.render(prom2, true);
 		const container = document.querySelector("#vvp-items-grid");
@@ -133,6 +136,12 @@ class NotificationMonitor {
 			//We found a zero ETV item, but we don't want to play a sound just yet
 			if (parseFloat(etv_min) == 0) {
 				this.#zeroETVItemFound(asin, false); //Ok now process 0etv, but no sound
+			}
+		} else {
+			//The ETV is not known
+			const brendaAnnounce = tileDOM.querySelector("#vh-announce-link-" + asin);
+			if (brendaAnnounce) {
+				brendaAnnounce.style.visibility = "hidden";
 			}
 		}
 
@@ -154,6 +163,23 @@ class NotificationMonitor {
 		//Apply the filters
 		this.#processNotificationFiltering(tileDOM);
 
+		// Add new click listener for the report button
+		document
+			.querySelector("#vh-notification-" + asin + " .report-link")
+			.addEventListener("click", this.#handleReportClick);
+
+		//Add new click listener for Brenda announce:
+		if (Settings.get("discord.active") && Settings.get("discord.guid", false) != null) {
+			const announce = document.querySelector("#vh-announce-link-" + asin);
+			announce.addEventListener("click", this.#handleBrendaClick);
+		}
+
+		//Add new click listener for the pinned button
+		if (Settings.get("pinnedTab.active")) {
+			const pinIcon = document.querySelector("#vh-pin-link-" + asin);
+			pinIcon.addEventListener("click", this.#handlePinClick);
+		}
+
 		return tileDOM; //Return the DOM element for the tile.
 	}
 
@@ -165,6 +191,7 @@ class NotificationMonitor {
 		}
 
 		const etvObj = notif.querySelector("span.etv");
+		const brendaAnnounce = notif.querySelector("#vh-announce-link-" + asin);
 
 		//Update the ETV value in the hidden fields
 		let oldMaxValue = etvObj.dataset.etvMax; //Used to determine if a new 0ETV was found
@@ -183,6 +210,15 @@ class NotificationMonitor {
 			} else {
 				etvObj.innerText =
 					this.#formatETV(etvObj.dataset.etvMin) + "-" + this.#formatETV(etvObj.dataset.etvMax);
+			}
+		}
+
+		//If Brenda is enabled, toggle the button display according to wether the ETV is known.
+		if (brendaAnnounce) {
+			if (etvObj.dataset.etvMin == "") {
+				brendaAnnounce.style.visibility = "hidden";
+			} else {
+				brendaAnnounce.style.visibility = "visible";
 			}
 		}
 
@@ -303,6 +339,81 @@ class NotificationMonitor {
 		} else {
 			return false;
 		}
+	}
+
+	#handleBrendaClick(e) {
+		e.preventDefault();
+		console.log(e);
+		const asin = e.target.dataset.asin;
+		const queue = e.target.dataset.queue;
+		console.log("#vh-notification-" + asin + " span.etv");
+		let etv = document.querySelector("#vh-notification-" + asin + " span.etv").dataset.etvMax;
+
+		window.BrendaAnnounceQueue.announce(asin, etv, queue, I13n.getDomainTLD());
+	}
+
+	#handlePinClick(e) {
+		e.preventDefault();
+
+		const asin = e.target.dataset.asin;
+		const isParentAsin = e.target.dataset.isParentAsin;
+		const enrollmentGUID = e.target.dataset.enrollmentGuid;
+		const queue = e.target.dataset.queue;
+		const title = e.target.dataset.title;
+		const thumbnail = e.target.dataset.thumbnail;
+
+		PinnedList.addItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID);
+
+		//Display notification
+		Notifications.pushNotification(
+			new ScreenNotification({
+				title: `Item ${asin} pinned.`,
+				lifespan: 3,
+				content: title,
+			})
+		);
+	}
+
+	#handleReportClick(e) {
+		e.preventDefault(); // Prevent the default click behavior
+		const asin = e.target.dataset.asin;
+
+		let val = prompt(
+			"Are you sure you want to REPORT the user who posted ASIN#" +
+				asin +
+				"?\n" +
+				"Only report notifications which are not Amazon products\n" +
+				"Note: False reporting may get you banned.\n\n" +
+				"type REPORT in the field below to send a report:"
+		);
+		if (val !== null && val.toLowerCase() == "report") {
+			this.#send_report(asin);
+		}
+	}
+
+	#send_report(asin) {
+		let manifest = chrome.runtime.getManifest();
+
+		const content = {
+			api_version: 5,
+			app_version: manifest.version,
+			country: I13n.getCountryCode(),
+			action: "report_asin",
+			uuid: Settings.get("general.uuid", false),
+			asin: asin,
+		};
+		const options = {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(content),
+		};
+
+		showRuntime("Sending report...");
+
+		//Send the report to VH's server
+		fetch(VINE_HELPER_API_V5_URL, options).then(function () {
+			alert("Report sent. Thank you.");
+		});
 	}
 
 	#getNotificationByASIN(asin) {
