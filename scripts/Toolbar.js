@@ -92,10 +92,6 @@ class Toolbar {
 			});
 		}
 
-		if (Settings.get("unavailableTab.compactToolbar")) {
-			pToolbar.classList.add("compact");
-		}
-
 		if (Settings.get("unavailableTab.active")) {
 			let loadingDiv = document.createElement("div");
 			loadingDiv.classList.add("vh-icon", "vh-icon-loading");
@@ -200,17 +196,6 @@ class Toolbar {
 		}
 	}
 
-	setStatusIcon(iconClass) {
-		let context = document.getElementById(`vh-toolbar-${this.pTile.getAsin()}`);
-		let icon = context.querySelector(".vh-icon");
-
-		// Remove all images for the icon
-		icon.classList.remove("vh-icon-info", "vh-icon-loading", "vh-icon-order-success", "vh-icon-order-failed");
-		if (iconClass) {
-			icon.classList.add(iconClass);
-		}
-	}
-
 	setETV(etv1, etv2, onlyIfEmpty = false) {
 		let context = document.getElementById(`vh-toolbar-${this.pTile.getAsin()}`);
 		let span = context.querySelector(".vh-toolbar-etv .etv");
@@ -259,24 +244,17 @@ class Toolbar {
 		showRuntime("DRAW-UPDATE-TOOLBAR: Setting icon status");
 		switch (this.pTile.getStatus()) {
 			case DISCARDED_ORDER_FAILED:
-				this.setStatusIcon("vh-icon-order-failed");
 				statusColor = "vh-background-fees";
 				break;
 			case NOT_DISCARDED_ORDER_SUCCESS:
-				this.setStatusIcon("vh-icon-order-success");
 				statusColor = "vh-background-nofees";
 				break;
 			case NOT_DISCARDED:
-				this.setStatusIcon("vh-icon-info");
 				statusColor = "vh-background-neutral";
 				break;
 		}
 
-		if (Settings.get("unavailableTab.compactToolbar")) {
-			// No icon, no text
-			this.setStatusIcon("");
-			context.classList.add("compact", statusColor);
-		}
+		context.classList.add(statusColor);
 
 		// Display voting system if active
 		if (Settings.get("unavailableTab.active")) {
@@ -305,12 +283,11 @@ class Toolbar {
 		let prom = await Tpl.loadFile("view/widget_order.html");
 		Tpl.setVar("order_success", this.pTile.getOrderSuccess());
 		Tpl.setVar("order_failed", this.pTile.getOrderFailed());
-		Tpl.setIf("not-compact", !Settings.get("unavailableTab.compactToolbar"));
 		let content = Tpl.render(prom, true);
 		container.appendChild(content);
 
 		if (Settings.get("thorvarium.smallItems")) {
-			document.querySelectorAll(".compact div.vh-order-widget").forEach((widget) => {
+			document.querySelectorAll(".vh-status div.vh-order-widget").forEach((widget) => {
 				widget.style.clear = "both";
 			});
 		}

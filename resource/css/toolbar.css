@@ -20,7 +20,9 @@ div.hidden-toolbar.mobile {
 }
 
 div.vh-status-container {
-	position: absolute;
+	position: relative;
+	margin-top: 5px;
+	padding: 0px;
 	z-index: 1;
 	width: 100%;
 	background-color: rgba(255, 255, 255, 0.7);
@@ -30,8 +32,11 @@ div.vh-status-container {
 }
 
 div.vh-status-container div.vh-status-container2 {
+	padding-left: 5px;
+	text-align: center;
+	min-height: 20px;
+
 	display: block;
-	padding-left: 35px;
 	font-weight: bold;
 	font-size: 10px;
 }
@@ -62,50 +67,24 @@ div.borderless div.vh-status-container {
 	border: 0;
 }
 
-div.compact div.vh-status-container {
-	margin-top: 5px;
-	padding: 0px;
-	position: relative;
-}
-
-div.compact div.vh-status-container2 {
-	padding-left: 0px;
-	text-align: center;
-	min-height: 20px;
-}
-div.compact div.vh-icon {
-	display: none;
-}
-div.compact .vh-announce-link {
-	float: left;
-	margin-left: 3px;
-}
-
 .vh-floating-icon {
-	float: right;
 	padding-top: 2px;
 	padding-right: 4px;
 	line-height: 16px;
-	padding-left: 10px;
 }
 
-div.compact .vh-floating-icon {
-	padding-left: 0;
+a.vh-announce-link,
+a.vh-pin-link {
+	float: left;
+}
+
+a.vh-hide-link,
+a.vh-report-link {
+	float: right;
 }
 
 div.vh-icon-announcement {
 	opacity: 0.3;
-}
-
-div.toolbar-icon-only div.vh-status-container {
-	float: right;
-	border: none;
-	margin: 0;
-	line-height: 12px;
-}
-
-div.toolbar-icon-only div.vh-status-container2 {
-	padding-left: 0px;
 }
 
 div.vh-background-nofees div.vh-status-container {
@@ -129,29 +108,10 @@ div.vh-toolbar-large-icon {
 	margin: 0 3px;
 }
 
-div.vh-icon {
-	float: left;
-	width: 30px;
-	height: 30px;
-	background-position: 0px 0px;
-	margin: 5px;
-}
-
-div.vh-icon-mini {
-	display: inline-block;
-	width: 16px;
-	height: 16px;
-	background-position: -16px 0px;
-}
-
 /* order Widgets */
 
 div.vh-order-widget {
-	clear: right;
 	text-align: center;
-}
-
-.compact div.vh-order-widget {
 	display: inline-block;
 	clear: none;
 	height: 20px;

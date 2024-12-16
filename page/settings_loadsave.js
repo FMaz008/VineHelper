@@ -116,7 +116,6 @@ async function initiateSettings() {
 	manageCheckboxSetting("hiddenTab.scrollToRFY");
 	manageCheckboxSetting("pinnedTab.active");
 	manageCheckboxSetting("unavailableTab.active");
-	manageCheckboxSetting("unavailableTab.compactToolbar");
 	manageCheckboxSetting("general.modalNavigation");
 	manageCheckboxSetting("general.searchOpenModal");
 	manageCheckboxSetting("general.listView");

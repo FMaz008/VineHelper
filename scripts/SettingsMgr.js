@@ -210,7 +210,6 @@ class SettingsMgr {
 		this.#defaultSettings = {
 			unavailableTab: {
 				active: true,
-				compactToolbar: false,
 			},
 
 			general: {

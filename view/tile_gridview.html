@@ -8,7 +8,7 @@
 	data-feed-paused="{{$feedPaused}}"
 >
 	<div class="vvp-item-tile-content">
-		<div class="vh-status compact">
+		<div class="vh-status">
 			<div class="vh-status-container">
 				<div class="vh-status-container2">
 					{{if announce}}
@@ -29,7 +29,7 @@
 					<a
 						href="#{{$asin}}"
 						id="vh-pin-link-{{$asin}}"
-						class="vh-floating-icon vh-announce-link"
+						class="vh-floating-icon vh-pin-link"
 						title="Pin item"
 					>
 						<div
@@ -47,12 +47,12 @@
 					<a
 						href="#"
 						id="vh-report-link-{{$asin}}"
-						class="vh-floating-icon"
+						class="vh-floating-icon vh-report-link"
 						title="This item is not a real vine item, report the user who submitted it."
 					>
 						<div class="vh-toolbar-icon vh-icon-report" data-asin="{{$asin}}" style="float: right"></div>
 					</a>
-					<a href="#" id="vh-hide-link-{{$asin}}" class="vh-floating-icon" title="Hide item">
+					<a href="#" id="vh-hide-link-{{$asin}}" class="vh-floating-icon vh-hide-link" title="Hide item">
 						<div class="vh-toolbar-icon vh-icon-hide" data-asin="{{$asin}}" style="float: right"></div>
 					</a>
 
