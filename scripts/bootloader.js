@@ -632,15 +632,15 @@ async function generateTile(obj) {
 		console.log(full.classList);
 		obj.querySelector(".a-truncate-cut").classList.add("a-offscreen");
 		*/
+	}
 
-		//If small items stylesheet are used, add a class to resize-down the thumnails.
-		if (
-			Settings.get("thorvarium.mobileios") ||
-			Settings.get("thorvarium.mobileandroid") ||
-			Settings.get("thorvarium.smallItems")
-		) {
-			document.querySelector("#vh-tabs").classList.add("smallitems");
-		}
+	//If small items stylesheet are used, add a class to resize-down the thumnails.
+	if (
+		Settings.get("thorvarium.mobileios") ||
+		Settings.get("thorvarium.mobileandroid") ||
+		Settings.get("thorvarium.smallItems")
+	) {
+		document.querySelector("#vh-tabs").classList.add("smallitems");
 	}
 
 	//Move the hidden item to the hidden tab
