@@ -29,10 +29,31 @@ class NotificationMonitor {
 		//Insert the header
 		const parentContainer = document.querySelector("div.vvp-tab-content");
 		const mainContainer = document.querySelector("div.vvp-items-container");
+		const topContainer = document.querySelector("div#vvp-items-grid-container");
+		const itemContainer = document.querySelector("div#vvp-items-grid");
 
 		let prom2 = await Tpl.loadFile("view/notification_monitor_header.html");
 		const header = Tpl.render(prom2, true);
 		parentContainer.insertBefore(header, mainContainer);
+
+		//Insert the VH tab container for the items even if there is no tabs
+		const tabContainer = document.createElement("div");
+		tabContainer.id = "vh-tabs";
+		itemContainer.classList.add("tab-grid");
+
+		if (
+			Settings.get("thorvarium.mobileios") ||
+			Settings.get("thorvarium.mobileandroid") ||
+			Settings.get("thorvarium.smallItems")
+		) {
+			tabContainer.classList.add("smallitems");
+		}
+
+		//Assign the tab to the top container
+		topContainer.appendChild(tabContainer);
+
+		//Assign the item container to the tab container
+		tabContainer.appendChild(itemContainer);
 
 		//Bind fetch-last-100 button
 		const btnLast100 = document.getElementById("fetch-last-100");
@@ -53,7 +74,7 @@ class NotificationMonitor {
 				document.getElementById("pauseFeed").value = "Pause & Buffer Feed";
 				document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
 					if (node.dataset.feedPaused == "true") {
-						node.style.display = "grid";
+						node.style.display = "flex";
 						node.dataset.feedPaused = "false";
 					}
 				});
@@ -333,21 +354,21 @@ class NotificationMonitor {
 		}
 
 		if (filterType.value == -1) {
-			node.style.display = "grid";
+			node.style.display = "flex";
 		} else if (filterType.value == TYPE_HIGHLIGHT_OR_ZEROETV) {
 			const typesToShow = [TYPE_HIGHLIGHT, TYPE_ZEROETV];
-			node.style.display = typesToShow.includes(notificationType) ? "grid" : "none";
+			node.style.display = typesToShow.includes(notificationType) ? "flex" : "none";
 			typesToShow.includes(notificationType);
 		} else {
-			node.style.display = notificationType == filterType.value ? "grid" : "none";
+			node.style.display = notificationType == filterType.value ? "flex" : "none";
 			notificationType == filterType.value;
 		}
 
-		if (node.style.display == "grid") {
+		if (node.style.display == "flex") {
 			if (filterQueue.value == "-1") {
 				return true;
 			} else {
-				node.style.display = queueType == filterQueue.value ? "grid" : "none";
+				node.style.display = queueType == filterQueue.value ? "flex" : "none";
 				return queueType == filterQueue.value;
 			}
 		} else {

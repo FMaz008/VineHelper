@@ -1,7 +1,7 @@
-#vvp-items-grid.tab-grid,
-#tab-unavailable.tab-grid,
-#tab-hidden.tab-grid,
-#tab-pinned.tab-grid {
+#vh-tabs #vvp-items-grid.tab-grid,
+#vh-tabs #tab-unavailable.tab-grid,
+#vh-tabs #tab-hidden.tab-grid,
+#vh-tabs #tab-pinned.tab-grid {
 	grid-template-columns: auto !important;
 }
 
@@ -28,5 +28,5 @@ div.vh-status-container {
 }
 
 #vh-tabs.smallitems .vh-img-container {
-	width: 130px;
+	width: 130px !important;
 }
