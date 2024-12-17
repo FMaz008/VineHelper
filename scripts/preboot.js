@@ -39,13 +39,13 @@ var NotificationMonitor = null;
 		module = await import(chrome.runtime.getURL("../scripts/Internationalization.js"));
 		I13n = new module.Internationalization();
 
-		//Load the SettingMgr.
-		module = await import(chrome.runtime.getURL("../scripts/SettingsMgr.js"));
-		Settings = new module.SettingsMgr();
-
 		//Load the Notification Monitor
 		module = await import(chrome.runtime.getURL("../scripts/NotificationMonitor.js"));
 		NotificationMonitor = new module.NotificationMonitor();
+
+		//Load the SettingMgr.
+		module = await import(chrome.runtime.getURL("../scripts/SettingsMgr.js"));
+		Settings = new module.SettingsMgr();
 	} catch (error) {
 		console.error("Error loading module:", error);
 	}

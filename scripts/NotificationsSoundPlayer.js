@@ -16,7 +16,7 @@ class NotificationsSoundPlayer {
 		this.#loadSettings();
 	}
 	async #loadSettings() {
-		while (!Settings.isLoaded()) {
+		while (!Settings || !Settings.isLoaded()) {
 			await new Promise((r) => setTimeout(r, 10));
 		}
 		this.#cooldownDelay = Settings.get("notification.soundCooldownDelay");
