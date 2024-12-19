@@ -72,7 +72,6 @@ async function init() {
 
 	//### Run the boot sequence
 	initAddNotificationMonitorLink();
-	addRecommendationLink();
 	showGDPRPopup();
 	await initFlushTplCache(); //And display the version changelog popup
 	initInjectScript();
@@ -323,19 +322,6 @@ function initAddNotificationMonitorLink() {
 		a.target = "_blank";
 		a.innerText = "VH Notifications Monitor";
 		li.appendChild(a);
-	}
-}
-
-function addRecommendationLink() {
-	const tab = document.querySelector(".a-tab-container > ul > li:last-of-type");
-	if (tab) {
-		const rec = tab.cloneNode(true);
-		rec.style.float = "right";
-		const a = rec.firstChild;
-		a.rel = "noreferrer";
-		a.href = "/gp/yourstore/iyr/";
-		a.textContent = "Recommendations";
-		tab.parentNode.appendChild(rec);
 	}
 }
 
