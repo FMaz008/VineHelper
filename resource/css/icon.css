@@ -137,6 +137,11 @@
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/premium.png");
 		background-repeat: no-repeat;
 	}
+	.vh-icon-vh {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/icon-32.png");
+		background-repeat: no-repeat;
+	}
 }
 
 @supports (-moz-appearance: none) {
@@ -275,6 +280,11 @@
 	.vh-icon-premium {
 		background-size: 100%;
 		background-image: url("/resource/image/premium.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-vh {
+		background-size: 100%;
+		background-image: url("/resource/image/icon-32.png");
 		background-repeat: no-repeat;
 	}
 }

@@ -320,7 +320,7 @@ function initAddNotificationMonitorLink() {
 		//a.href = chrome.runtime.getURL("page/notifications.html");
 		a.href = "/vine/vine-items?queue=encore#monitor";
 		a.target = "_blank";
-		a.innerText = "VH Notifications Monitor";
+		a.innerHTML = `<div class="vh-icon-16 vh-icon-vh"></div> Notifications Monitor`;
 		li.appendChild(a);
 	}
 }

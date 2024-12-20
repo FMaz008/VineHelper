@@ -66,7 +66,6 @@ async function initiateSettings() {
 	selectCurrentTab(true);
 	drawDiscord();
 
-	document.getElementById("notificationsMonitorLink").href = chrome.runtime.getURL("page/notifications.html");
 	document.getElementById("settingsLink").href = chrome.runtime.getURL("page/settings.html");
 
 	//###################
