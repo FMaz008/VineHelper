@@ -578,7 +578,7 @@ class NotificationMonitor {
 			(child) => window.getComputedStyle(child).display !== "none"
 		).length;
 
-		document.title = "VNM (" + visibleChildrenCount + ")";
+		document.title = "VHNM (" + visibleChildrenCount + ")";
 	}
 }
 
