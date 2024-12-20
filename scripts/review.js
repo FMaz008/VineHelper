@@ -2,6 +2,20 @@ if (typeof browser === "undefined") {
 	var browser = chrome;
 }
 
+var Settings = null;
+
+// Factory function to load a module
+(async () => {
+	try {
+		let module = null;
+		//Load the SettingMgr.
+		module = await import(chrome.runtime.getURL("../scripts/SettingsMgr.js"));
+		Settings = new module.SettingsMgr();
+	} catch (error) {
+		console.error("Error loading module:", error);
+	}
+})();
+
 var arrReview = [];
 var arrTemplate = [];
 var asin = null;
@@ -13,11 +27,15 @@ function showRuntime() {
 }
 
 async function loadSettings() {
-	const localStorageSettings = await browser.storage.local.get("settings");
-
-	if (Object.keys(localStorageSettings).length === 0) {
-		return; //Can't display this page before settings are initiated
+	while (!Settings || !Settings.isLoaded()) {
+		await new Promise((r) => setTimeout(r, 10));
 	}
+	if (!Settings.get("general.reviewToolbar")) {
+		//System deactivated
+		console.log("Review toolbar disabled.");
+		return false;
+	}
+
 	await initializeLocalStorageKeys("reviews", arrReview, []);
 	await initializeLocalStorageKeys("reviews_templates", arrTemplate, []);
 

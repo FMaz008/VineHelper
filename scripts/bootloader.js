@@ -174,6 +174,10 @@ function displayAccountHideOptOutButton() {
  * Contribution from https://github.com/robartsd/VineTools/blob/main/evaluationMetrics.user.js
  */
 function displayAccountDataEvaluationMetrics() {
+	if (!Settings.get("general.projectedAccountStatistics")) {
+		return false; //Setting not activated.
+	}
+
 	const periodStart = new Date(parseInt(document.querySelector("#vvp-eval-start-stamp").innerText));
 	const periodEnd = new Date(parseInt(document.querySelector("#vvp-eval-end-stamp").innerText));
 

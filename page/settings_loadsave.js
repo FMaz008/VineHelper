@@ -120,6 +120,8 @@ async function initiateSettings() {
 	manageCheckboxSetting("general.listView");
 	manageCheckboxSetting("general.scrollToRFY");
 	manageCheckboxSetting("general.hideOptOutButton");
+	manageCheckboxSetting("general.reviewToolbar");
+	manageCheckboxSetting("general.projectedAccountStatistics");
 
 	//##TAB - NOTIFICATIONS
 

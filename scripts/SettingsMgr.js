@@ -217,7 +217,7 @@ class SettingsMgr {
 				uuid: null,
 				topPagination: true,
 				displayFirstSeen: true,
-				bookmark: false,
+				bookmark: false, //Highlight recently added items
 				bookmarkDate: 0,
 				hideKeywords: [],
 				highlightKeywords: [],
@@ -229,6 +229,8 @@ class SettingsMgr {
 				customCSS: "",
 				modalNavigation: false,
 				listView: false,
+				reviewToolbar: true,
+				projectedAccountStatistics: false,
 			},
 
 			notification: {

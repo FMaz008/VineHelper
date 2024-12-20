@@ -48,8 +48,8 @@ async function handleSaveClick() {
 function updateReviewTable() {
 	try {
 		const tableBody = document.getElementById("reviews_list").querySelector("tbody");
-		arrReview.forEach((review) => {
-			let { date, asin, title } = review;
+		for (let i = arrReview.length - 1; i >= 0; i--) {
+			let { date, asin, title } = arrReview[i];
 			let formattedDate = new Date(date).toLocaleDateString();
 			const row = tableBody.insertRow();
 			const actionCell = row.insertCell();
@@ -63,7 +63,7 @@ function updateReviewTable() {
 			dateCell.textContent = formattedDate;
 			asinCell.textContent = asin;
 			titleCell.textContent = `${JSON.parse(title)}`;
-		});
+		}
 	} catch (e) {
 		logError([scriptName, "updateReviewTable", e.message]);
 	}

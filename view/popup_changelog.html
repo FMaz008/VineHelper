@@ -1,23 +1,43 @@
 <strong>Version {{$appVersion}} change notes:</strong>
 <br />
 <ul>
-	<li>NEW: Push notifications for AFA items.</li>
-	<li>NEW: Notifications sound cooldown time.</li>
-	<li>NEW: Added "VH Notification Monitor" on the vine pages' "contact us" menu.</li>
-	<li>IMPROVED: Improved error catching when opening a See Details modal window.</li>
-	<li>IMPROVED: Pinned tab displays the same as the other tabs.</li>
-	<li>FIX: Push notifications searching for "undefined"</li>
-	<li>FIX: Push notifications opening multiple tabs</li>
-	<li>FIX: Open See Details modal (via search button) generated an error "tile does not exist".</li>
 	<li>
-		FIX: Inverse the color of the icons in the notifications monitor if the browser's darkmode/nightmode is used.
+		NEW: <strong>Notification Monitor v2</strong>. Now accessible from the top right of Vine Pages, the new NM is
+		fully integrated with Vine, making it possible to:
+		<ul>
+			<li>open the See Details page directly</li>
+			<li>have its design be that of a regular listing and conform to your preferences</li>
+			<li>
+				better follow VH's core principle of improving Vine experience instead of creating a parallel interface
+			</li>
+		</ul>
 	</li>
-	<li>FIX: Pinning an item from the Search generated an error as the queue was unknown (We now assume AI)</li>
-	<li>CHANGE: Moved the instant notifications setting from the Experimental features to the Notification tabs.</li>
-	<li>CHANGE: Instant notification is now the default selection for new installations.</li>
+	<li>
+		CHANGE: <strong>Patreon</strong>. Due to the increasing amount of users, a patreon system was put in place to
+		support the project. Paywalled options were selected for <strong>not</strong> being paid to win, or core
+		features. Premium settings are designated with a diamond (
+		<div class="vh-toolbar-icon vh-icon-premium"></div>
+		) next to them. <br />I realize the subscription model is not convenient for everyone, as such previous forms of
+		donations are still very welcome and available but will not unlock features. You can access the Patreon from the
+		"?" tab in the settings.
+	</li>
+	<li>NEW: Color picker tool to select your colors in the settings</li>
+	<li>NEW: Edit saved reviews.</li>
+	<li>NEW: Review toolbar is now optional</li>
+	<li>NEW: Account statistics projection now optional</li>
+	<li>
+		NEW: Blur keywords
+		<div class="vh-toolbar-icon vh-icon-premium"></div>
+		: Will blur thumbnail and title of items matching those keywords.
+	</li>
+	<li>NEW: Support for Australia, Brazil, Mexico and Singapor.</li>
+	<li>REMOVAL: Removal of the "Recommendations" link as it was shown to have no effect on RFY.</li>
 </ul>
 
-<div style="text-align: center">
+<div style="float: left; width: 50%; text-align: center">
+	<a href="https://www.patreon.com/VineHelper" target="_blank">VineHelper's Patreon</a>
+</div>
+<div style="float: right; width: 50%; text-align: center">
 	<form action="https://www.paypal.com/donate" method="post" target="_blank">
 		<input type="hidden" name="hosted_button_id" value="MMS5MYRDRALBG" />
 		<input
