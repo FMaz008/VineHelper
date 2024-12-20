@@ -1115,6 +1115,13 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 			NotificationMonitor.setETV(data.asin, data.etv);
 		}
 	}
+	if (data.type == "wsOpen") {
+		NotificationMonitor.setWebSocketStatus(true);
+	}
+	if (data.type == "wsClosed") {
+		NotificationMonitor.setWebSocketStatus(false);
+	}
+
 	if (data.type == "newItem") {
 		if (notificationMonitorActive) {
 			let {

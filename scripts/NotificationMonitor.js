@@ -55,6 +55,16 @@ class NotificationMonitor {
 		//Assign the item container to the tab container
 		tabContainer.appendChild(itemContainer);
 
+		//Service worker status
+		this.#updateServiceWorkerStatus();
+
+		//Obtain the status of the WebSocket connection.
+		browser.runtime.sendMessage({
+			type: "wsStatus",
+		});
+
+		document.getElementById("date_loaded").innerText = new Date().toLocaleString(I13n.getLocale());
+
 		//Bind fetch-last-100 button
 		const btnLast100 = document.getElementById("fetch-last-100");
 		btnLast100.addEventListener("click", (event) => {
@@ -185,6 +195,9 @@ class NotificationMonitor {
 			this.#blurItemFound(asin);
 		}
 
+		//Update the most recent date
+		document.getElementById("date_most_recent_item").innerText = this.#formatDate(date);
+
 		//Apply the filters
 		this.#processNotificationFiltering(tileDOM);
 
@@ -214,6 +227,9 @@ class NotificationMonitor {
 		//Add new click listener for the hide button
 		const hideIcon = document.querySelector("#vh-hide-link-" + asin);
 		hideIcon.addEventListener("click", this.#handleHideClick);
+
+		//Autotruncate the items if there are too many
+		this.#autoTruncate();
 
 		return tileDOM; //Return the DOM element for the tile.
 	}
@@ -261,6 +277,55 @@ class NotificationMonitor {
 		if (processAsZeroETVFound && oldMaxValue == "" && parseFloat(etvObj.dataset.etvMin) == 0) {
 			this.#zeroETVItemFound(asin);
 		}
+	}
+
+	setWebSocketStatus(status) {
+		const icon = document.querySelector("#statusWS div.vh-switch-32");
+		const description = document.querySelector("#statusWS .description");
+		if (status) {
+			icon.classList.remove("vh-icon-switch-off");
+			icon.classList.add("vh-icon-switch-on");
+			description.innerText = "Listening for notifications...";
+		} else {
+			icon.classList.remove("vh-icon-switch-on");
+			icon.classList.add("vh-icon-switch-off");
+			description.innerText = "Not connected. Retrying in 30 sec...";
+		}
+	}
+
+	#updateServiceWorkerStatus() {
+		if (!Settings.get("notification.active")) {
+			this.#setServiceWorkerStatus(false, "You need to enable the notifications in the settings.");
+		} else if (I13n.getCountryCode() === null) {
+			this.#setServiceWorkerStatus(
+				false,
+				"Your country has not been detected, ensure to load a vine page first."
+			);
+		} else if (I13n.getDomainTLD() === null) {
+			this.#setServiceWorkerStatus(
+				false,
+				"No valid country found. You current country is detected as: '" +
+					I13n.getCountryCode() +
+					"', which is not currently supported by Vine Helper. Reach out so we can add it!"
+			);
+		} else if (Settings.get("notification.active")) {
+			this.#setServiceWorkerStatus(true, "Working.");
+		}
+	}
+
+	#setServiceWorkerStatus(status, desc = "") {
+		const icon = document.querySelector("#statusSW div.vh-switch-32");
+		const description = document.querySelector("#statusSW .description");
+
+		if (status) {
+			icon.classList.remove("vh-icon-switch-off");
+			icon.classList.add("vh-icon-switch-on");
+		} else {
+			icon.classList.remove("vh-icon-switch-on");
+			icon.classList.add("vh-icon-switch-off");
+		}
+
+		description.textContent = desc;
 	}
 
 	#zeroETVItemFound(asin, playSoundEffect = true) {
@@ -491,6 +556,19 @@ class NotificationMonitor {
 		});
 	}
 
+	#autoTruncate(max = 2000) {
+		//Auto truncate
+		if (document.getElementById("auto-truncate").checked) {
+			const itemsD = document.getElementsByClassName("vvp-item-tile");
+			const itemsCount = itemsD.length;
+			if (itemsCount > max) {
+				for (let i = itemsCount - 1; i >= 2000; i--) {
+					itemsD[i].remove(); //remove the element from the DOM
+					console.log("Truncating " + asin);
+				}
+			}
+		}
+	}
 	#updateTabTitle() {
 		// Select all child elements of #vvp-items-grid
 		const children = document.querySelectorAll("#vvp-items-grid > *");

@@ -1,11 +1,37 @@
 <div>
 	<h3>Notification Monitor</h3>
+	<div class="vh-container" style="display: flex">
+		<div style="width: 300px">
+			<strong>Loaded on: </strong><span id="date_loaded"></span><br />
+			<strong>Most recent item: </strong><span id="date_most_recent_item">(tba)</span><br />
+		</div>
+		<div>
+			<div class="notice" id="statusSW">
+				<table>
+					<tr id="statusSW">
+						<td width="36px"><div class="vh-switch-32 vh-icon-switch-off"></div></td>
+						<td width="130px" style="font-weight: bold">Service Worker:</td>
+						<td class="description"></td>
+					</tr>
+					<tr id="statusWS">
+						<td width="36px"><div class="vh-switch-32 vh-icon-switch-off"></div></td>
+						<td width="130px" style="font-weight: bold">Websocket Server:</td>
+						<td class="description"></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
 	<div class="vh-container">
 		<label for="fetch-last-100" style="float: left">
 			<input type="button" name="fetch-last-100" id="fetch-last-100" value="Fetch last 100" />
 		</label>
 		<label for="pauseFeed" style="float: left">
 			<input type="button" name="pauseFeed" id="pauseFeed" value="Pause & Buffer Feed" />
+		</label>
+		<label for="auto-truncate" style="float: left; margin-left: 10px">
+			<input type="checkbox" name="auto-truncate" id="auto-truncate" />
+			<span>Auto truncate after 2000 items.</span>
 		</label>
 		<label for="filter-queue" style="float: right; margin-right: 20px">
 			Filter by:
