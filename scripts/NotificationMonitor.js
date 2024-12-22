@@ -10,8 +10,10 @@ const TYPE_HIGHLIGHT_OR_ZEROETV = 9;
 class NotificationMonitor {
 	#feedPaused;
 	#waitTimer; //Timer which wait a short delay to see if anything new is about to happen
-
+	#imageUrls;
 	async initialize() {
+		this.#imageUrls = new Set();
+
 		//Remove the existing items.
 		document.getElementById("vvp-items-grid").innerHTML = "";
 
@@ -125,6 +127,16 @@ class NotificationMonitor {
 	) {
 		if (!asin) {
 			return false;
+		}
+
+		//Check if the de-duplicate image setting is on, if so, do not add items
+		//for which an item with the same thumbnail already exist.
+		if (Settings.get("notification.monitor.hideDuplicateThumbnail")) {
+			if (this.#imageUrls.has(img_url)) {
+				return false; //The image already exist, do not add the item
+			} else {
+				this.#imageUrls.add(img_url);
+			}
 		}
 
 		const recommendationType = getRecommendationTypeFromQueue(queue); //grid.js
