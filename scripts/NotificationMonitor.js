@@ -9,10 +9,12 @@ const TYPE_HIGHLIGHT_OR_ZEROETV = 9;
 
 class NotificationMonitor {
 	#feedPaused;
+	#feedPausedAmountStored;
 	#waitTimer; //Timer which wait a short delay to see if anything new is about to happen
 	#imageUrls;
 	async initialize() {
 		this.#imageUrls = new Set();
+		this.#feedPausedAmountStored = 0;
 
 		//Remove the existing items.
 		document.getElementById("vvp-items-grid").innerHTML = "";
@@ -81,7 +83,8 @@ class NotificationMonitor {
 		btnPauseFeed.addEventListener("click", (event) => {
 			this.#feedPaused = !this.#feedPaused;
 			if (this.#feedPaused) {
-				document.getElementById("pauseFeed").value = "Resume Feed";
+				this.#feedPausedAmountStored = 0;
+				document.getElementById("pauseFeed").value = "Resume Feed (0)";
 			} else {
 				document.getElementById("pauseFeed").value = "Pause & Buffer Feed";
 				document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
@@ -173,6 +176,12 @@ class NotificationMonitor {
 		let tileDOM = Tpl.render(prom2, true);
 		const container = document.querySelector("#vvp-items-grid");
 		container.insertBefore(tileDOM, container.firstChild);
+
+		//If the feed is paused, up the counter and rename the Resume button
+		if (this.#feedPaused) {
+			this.#feedPausedAmountStored++;
+			document.getElementById("pauseFeed").value = `Resume Feed (${this.#feedPausedAmountStored})`;
+		}
 
 		//If we received ETV data (ie: Fetch last 100), process them
 		if (etv_min != null && etv_max != null) {
