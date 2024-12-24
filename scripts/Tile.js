@@ -141,21 +141,10 @@ function Tile(obj, gridInstance) {
 	this.initiateTile = async function () {
 		//Highlight the tile border if the title match highlight keywords
 		let highligthed = false;
+		let match;
 		if (Settings.get("general.highlightKeywords")?.length > 0) {
-			match = Settings.get("general.highlightKeywords").find((word) => {
-				let regex;
-				try {
-					regex = new RegExp(`\\b${word}\\b`, "i");
-				} catch (error) {
-					if (error instanceof SyntaxError) {
-						showRuntime(
-							"TILE: The highlight keyword '" + word + "' is not a valid regular expression, skipping it."
-						);
-					}
-				}
-				return word && regex.test(this.getTitle());
-			});
-			if (match != undefined) {
+			match = this.matchKeywords(Settings.get("general.highlightKeywords"));
+			if (match) {
 				highligthed = true;
 				showRuntime("TILE: The item match the keyword '" + match + "', highlight it");
 				pTile.classList.add("keyword-highlight");
@@ -167,21 +156,8 @@ function Tile(obj, gridInstance) {
 
 		//Match with hide keywords. Only hide if not highlighed.
 		if (!highligthed && Settings.get("hiddenTab.active") && Settings.get("general.hideKeywords")?.length > 0) {
-			match = Settings.get("general.hideKeywords").find((word) => {
-				let regex;
-				try {
-					regex = new RegExp(`\\b${word}\\b`, "i");
-				} catch (error) {
-					if (error instanceof SyntaxError) {
-						showRuntime(
-							"TILE: The hidden keyword '" + word + "' is not a valid regular expression, skipping it."
-						);
-					}
-				}
-				return word && regex.test(this.getTitle());
-			});
-
-			if (match != undefined) {
+			match = this.matchKeywords(Settings.get("general.hideKeywords"));
+			if (match) {
 				showRuntime("TILE: The item match the keyword '" + match + "', hide it");
 				this.hideTile(false, false, true); //Do not save, skip the hidden manager: just move the tile.
 				document.getElementById("vh-hide-link-" + this.getAsin()).style.display = "none";
@@ -190,19 +166,7 @@ function Tile(obj, gridInstance) {
 
 		//Match with blur keywords.
 		if (Settings.isPremiumUser() && Settings.get("general.blurKeywords")?.length > 0) {
-			match = Settings.get("general.blurKeywords").find((word) => {
-				let regex;
-				try {
-					regex = new RegExp(`\\b${word}\\b`, "i");
-				} catch (error) {
-					if (error instanceof SyntaxError) {
-						showRuntime(
-							"TILE: The blur keyword '" + word + "' is not a valid regular expression, skipping it."
-						);
-					}
-				}
-				return word && regex.test(this.getTitle());
-			});
+			match = this.matchKeywords(Settings.get("general.blurKeywords"));
 			if (match != undefined) {
 				showRuntime("TILE: The item match the keyword '" + match + "', blur it");
 				pTile.querySelector("img")?.classList.add("blur");
@@ -213,6 +177,56 @@ function Tile(obj, gridInstance) {
 		//Unescape titles
 		const fullText = this.getDOM().querySelector(".a-truncate-full").innerText;
 		this.getDOM().querySelector(".a-truncate-full").innerText = unescapeHTML(fullText);
+	};
+
+	this.matchKeywords = function (arrWords) {
+		const match = arrWords.find((word) => {
+			let regex;
+			let regex2;
+			if (typeof word == "string") {
+				try {
+					regex = new RegExp(`\\b${word}\\b`, "i");
+				} catch (error) {
+					if (error instanceof SyntaxError) {
+						showRuntime(
+							"TILE: The highlight keyword '" + word + "' is not a valid regular expression, skipping it."
+						);
+					}
+				}
+				return word && regex.test(this.getTitle()); //This seems odd as a return value
+			} else if (typeof word == "object") {
+				try {
+					regex = new RegExp(`\\b${word.contains}\\b`, "i");
+					regex2 = new RegExp(`\\b${word.without}\\b`, "i");
+				} catch (error) {
+					if (error instanceof SyntaxError) {
+						showRuntime(
+							"TILE: The highlight keyword '" +
+								word.contains +
+								"' is not a valid regular expression, skipping it."
+						);
+					}
+				}
+				if (regex.test(this.getTitle())) {
+					if (word.without == "" || !regex2.test(this.getTitle())) {
+						if (
+							word.etv_min == "" ||
+							this.getETV() === null ||
+							parseFloat(this.getETV()) >= parseFloat(word.etv_min)
+						) {
+							if (
+								word.etv_max == "" ||
+								this.getETV() === null ||
+								parseFloat(this.getETV()) <= parseFloat(word.etv_max)
+							) {
+								return word.contains;
+							}
+						}
+					}
+				}
+			}
+		});
+		return match;
 	};
 
 	this.moveToGrid = async function (g, animate = false) {

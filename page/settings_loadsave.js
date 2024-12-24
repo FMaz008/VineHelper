@@ -305,8 +305,8 @@ async function initiateSettings() {
 
 	//##TAB - KEYWORDS
 
-	manageTextareaCSK("general.highlightKeywords");
-	manageTextareaCSK("general.hideKeywords");
+	manageKeywords("general.highlightKeywords");
+	manageKeywords("general.hideKeywords");
 	manageTextareaCSK("general.blurKeywords");
 
 	//##TAB - KEYBINDINGS
@@ -414,6 +414,110 @@ function manageTextareaCSK(key) {
 
 		Settings.set(key, arr);
 	});
+}
+
+function manageKeywords(key) {
+	const val = Settings.get(key);
+	const keyE = CSS.escape(key);
+
+	//Build the keywords GUI
+	const btnAdd = document.querySelector(`#${keyE} input[name="add"]`);
+	btnAdd.addEventListener("click", () => {
+		manageKeywordsAddLine(key, "", "", "", "");
+	});
+	const btnSave = document.querySelector(`#${keyE} input[name="save"]`);
+	btnSave.addEventListener("click", async () => {
+		btnSave.disabled = true;
+		let arrContent = [];
+		const lines = document.querySelectorAll(`#${keyE} table>tr`);
+		for (let i = 0; i < lines.length; i++) {
+			const contains = lines[i].querySelector(`td input[name="contains"]`).value.trim();
+			const without = lines[i].querySelector(`td input[name="without"]`).value.trim();
+			const etv_min = lines[i].querySelector(`td input[name="etv_min"]`).value.trim();
+			const etv_max = lines[i].querySelector(`td input[name="etv_max"]`).value.trim();
+
+			//Skip empty lines
+			if (contains == "" && without == "" && etv_min == "" && etv_max == "") {
+				continue;
+			}
+			arrContent.push({
+				contains: contains,
+				without: without,
+				etv_min: etv_min,
+				etv_max: etv_max,
+			});
+		}
+		await Settings.set(key, arrContent);
+		await new Promise((r) => setTimeout(r, 500)); //Wait to give user-feedback.
+		btnSave.disabled = false;
+	});
+
+	//Populate the list
+
+	for (let i = 0; i < val.length; i++) {
+		if (typeof val[i] == "string") {
+			//Load the old data format
+			manageKeywordsAddLine(key, val[i], "", "", "");
+		} else if (typeof val[i] == "object") {
+			//Load the new data format
+			manageKeywordsAddLine(key, val[i].contains, val[i].without, val[i].etv_min, val[i].etv_max);
+		}
+	}
+}
+function manageKeywordsAddLine(key, contains, without, etv_min, etv_max) {
+	const keyE = CSS.escape(key);
+	const table = document.querySelector(`#${keyE} table`);
+	const tr = document.createElement("tr");
+	table.append(tr);
+
+	const td1 = document.createElement("td");
+	tr.append(td1);
+	const input1 = document.createElement("input");
+	input1.type = "text";
+	input1.style.width = "98%";
+	input1.name = "contains";
+	input1.value = contains;
+	td1.append(input1);
+
+	const td2 = document.createElement("td");
+	tr.append(td2);
+	const input2 = document.createElement("input");
+	input2.type = "text";
+	input2.style.width = "98%";
+	input2.name = "without";
+	input2.value = without;
+	td2.append(input2);
+
+	const td3 = document.createElement("td");
+	tr.append(td3);
+	const input3 = document.createElement("input");
+	input3.type = "text";
+	input3.name = "etv_min";
+	input3.style.width = "90%";
+	input3.value = etv_min;
+	td3.append(input3);
+
+	const td4 = document.createElement("td");
+	tr.append(td4);
+	const input4 = document.createElement("input");
+	input4.type = "text";
+	input4.name = "etv_max";
+	input4.style.width = "90%";
+	input4.value = etv_max;
+	td4.append(input4);
+
+	const td5 = document.createElement("td");
+	tr.append(td5);
+	const input5 = document.createElement("input");
+	input5.type = "button";
+	input5.name = "remove";
+	input5.value = "[-]";
+	input5.addEventListener("click", () => {
+		if (confirm("Delete?")) {
+			tr.remove();
+		}
+	});
+	td5.append(input5);
 }
 
 function manageTextarea(key) {

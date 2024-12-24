@@ -1,11 +1,25 @@
 <fieldset>
 	<legend>Highlight items keywords</legend>
 
-	<div class="setting-container">
-		<textarea name="general.highlightKeywords"></textarea>
-		<div class="setting-summary">
-			<div class="vh-toolbar-icon vh-icon-question"></div>
-			Separate keywords with a comma (,). Regex supported.
+	<div class="setting-container" id="general.highlightKeywords">
+		<table>
+			<tbody>
+				<tr>
+					<th style="width: 50%">Contains</th>
+					<th style="width: 30%">but without</th>
+					<th style="width: 7%">ETV min</th>
+					<th style="width: 7%">ETV max</th>
+					<th style="width: auto"></th>
+				</tr>
+			</tbody>
+		</table>
+		<div class="toolbar" style="display: flex; margin-top: 10px">
+			<input type="button" name="add" value="[+]" style="display: flex" />
+			<p style="display: flex; flex-grow: 1; flex-direction: column; margin: 0; text-align: center">
+				The ETV only works for listing pages. Items with unknown ETV won't evaluate the ETV conditions. It has
+				no effect in the notification monitor.
+			</p>
+			<input type="button" name="save" value="Save" style="display: flex" />
 		</div>
 	</div>
 </fieldset>
@@ -17,17 +31,34 @@
 <fieldset>
 	<legend>Auto-hide items keywords</legend>
 
-	<div class="setting-container">
-		<textarea name="general.hideKeywords"></textarea>
-		<div class="setting-summary">
-			<div class="vh-toolbar-icon vh-icon-question"></div>
-			Separate keywords with a comma (,). Regex supported.
+	<div class="setting-container" id="general.hideKeywords">
+		<table>
+			<tbody>
+				<tr>
+					<th style="width: 50%">Contains</th>
+					<th style="width: 30%">but without</th>
+					<th style="width: 7%">ETV min</th>
+					<th style="width: 7%">ETV max</th>
+					<th style="width: auto"></th>
+				</tr>
+			</tbody>
+		</table>
+		<div class="toolbar" style="display: flex; margin-top: 10px">
+			<input type="button" name="add" value="[+]" style="display: flex" />
+			<p style="display: flex; flex-grow: 1; flex-direction: column; margin: 0; text-align: center">
+				The ETV only works for listing pages. Items with unknown ETV won't evaluate the ETV conditions. It has
+				no effect in the notification monitor.
+			</p>
+			<input type="button" name="save" value="Save" style="display: flex" />
 		</div>
 	</div>
 </fieldset>
 
 <fieldset>
-	<legend>Blur items matching the following keywords<div class="vh-toolbar-icon vh-icon-premium" style="margin-left: 5px"></div></legend>
+	<legend>
+		Blur items matching the following keywords
+		<div class="vh-toolbar-icon vh-icon-premium" style="margin-left: 5px"></div>
+	</legend>
 
 	<div class="setting-container premium-feature">
 		<textarea name="general.blurKeywords"></textarea>

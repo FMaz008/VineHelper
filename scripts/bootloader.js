@@ -849,46 +849,6 @@ window.addEventListener("message", async function (event) {
 		return;
 	}
 
-	//If we received a request for validation of a variant
-	if (event.data.type && event.data.type == "variantValidationRequest") {
-		let lastResortFixUsed = false;
-		for (const idx in event.data.variant) {
-			for (const dimension in event.data.variant[idx]["dimensions"]) {
-				try {
-					$(document).children(
-						'option[id="vvp-size-' + event.data.variant[idx]["dimensions"][dimension] + '-option"]'
-					); //This does nothing, just test the selector
-					//Don't change anything, it passed the test.
-				} catch (error) {
-					//If the validation failed, use the ASIN as a value for the variant's dimension which failed.
-					showRuntime("Found unfixable variant: " + event.data.variant[idx]["dimensions"][dimension]);
-					event.data.variant[idx]["dimensions"][dimension] =
-						event.data.variant[idx]["asin"] +
-						"-" +
-						event.data.variant[idx]["dimensions"][dimension].replace(/[^a-zA-Z0-9]/g, "");
-					lastResortFixUsed = true;
-				}
-			}
-		}
-		window.postMessage(
-			{
-				type: "variantValidationResponse",
-				result: event.data.variant,
-			},
-			"/" //message should be sent to the same origin as the current document.
-		);
-
-		if (lastResortFixUsed) {
-			window.postMessage(
-				{
-					type: "infiniteWheelFixed",
-					text: "Last resort method used.",
-				},
-				"/" //message should be sent to the same origin as the current document.
-			);
-		}
-	}
-
 	//Sometime, mostly for debugging purpose, the Service worker can try to display notifications.
 	if (event.data.type && event.data.type == "rawNotification") {
 		let note = new ScreenNotification();
@@ -925,8 +885,8 @@ window.addEventListener("message", async function (event) {
 			await fadeOut(textContainer);
 		}
 
-		removeElements("#vh-healing");
-		removeElements("#vh-healing-text");
+		//removeElements("#vh-healing");
+		//removeElements("#vh-healing-text");
 
 		//Show a notification
 		let note = new ScreenNotification();

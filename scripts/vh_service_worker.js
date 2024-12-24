@@ -377,16 +377,37 @@ function pushNotification(asin, queue, is_parent_asin, enrollment_guid, search_s
 function keywordMatch(keywords, title) {
 	const found = keywords.find((word) => {
 		let regex;
-		try {
-			regex = new RegExp(`\\b${word}\\b`, "i");
-		} catch (error) {
-			if (error instanceof SyntaxError) {
-				return false;
+		let regex2;
+		if (typeof word == "string") {
+			//Old data format where each keyword was a string
+			try {
+				regex = new RegExp(`\\b${word}\\b`, "i");
+			} catch (error) {
+				if (error instanceof SyntaxError) {
+					return false;
+				}
 			}
-		}
 
-		if (regex.test(title)) {
-			return word; // Return the matched word
+			if (regex.test(title)) {
+				return word; // Return the matched word
+			}
+		} else if (typeof word == "object") {
+			//New data format where keywords are objects
+			try {
+				regex = new RegExp(`\\b${word.contains}\\b`, "i");
+				regex2 = new RegExp(`\\b${word.without}\\b`, "i");
+			} catch (error) {
+				if (error instanceof SyntaxError) {
+					return false;
+				}
+			}
+			if (regex.test(title)) {
+				//Match the contains part
+				if (word.without == "" || !regex2.test(title)) {
+					//Does not match the without part
+					return word.contains;
+				}
+			}
 		}
 
 		return false; // Continue searching
