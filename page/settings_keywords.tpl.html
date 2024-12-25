@@ -14,13 +14,29 @@
 			</tbody>
 		</table>
 		<div class="toolbar" style="display: flex; margin-top: 10px">
-			<input type="button" name="add" value="[+]" style="display: flex" />
-			<p style="display: flex; flex-grow: 1; flex-direction: column; margin: 0; text-align: center">
-				The ETV only works for listing pages. Items with unknown ETV won't evaluate the ETV conditions. It has
-				no effect in the notification monitor.
+			<input
+				type="button"
+				class="vh-icon-add"
+				name="add"
+				style="display: flex; width: 30px; background-position: center"
+			/>
+			<p
+				style="
+					display: flex;
+					flex-grow: 1;
+					flex-direction: column;
+					margin: 0;
+					text-align: center;
+					font-size: 8pt;
+				"
+			>
+				ETV cond. only works for listing pages.<br />
+				ETV cond. are ignored for unknown ETVs.<br />
+				ETV cond. are ignored in the notif. monitor.
 			</p>
 			<input type="button" name="save" value="Save" style="display: flex" />
 		</div>
+		<div style="text-align: center; font-weight: bold">Use REGEX syntax.</div>
 	</div>
 </fieldset>
 
@@ -44,13 +60,29 @@
 			</tbody>
 		</table>
 		<div class="toolbar" style="display: flex; margin-top: 10px">
-			<input type="button" name="add" value="[+]" style="display: flex" />
-			<p style="display: flex; flex-grow: 1; flex-direction: column; margin: 0; text-align: center">
-				The ETV only works for listing pages. Items with unknown ETV won't evaluate the ETV conditions. It has
-				no effect in the notification monitor.
+			<input
+				type="button"
+				class="vh-icon-add"
+				name="add"
+				style="display: flex; width: 30px; background-position: center"
+			/>
+			<p
+				style="
+					display: flex;
+					flex-grow: 1;
+					flex-direction: column;
+					margin: 0;
+					text-align: center;
+					font-size: 8pt;
+				"
+			>
+				ETV cond. only works for listing pages.<br />
+				ETV cond. are ignored for unknown ETVs.<br />
+				ETV cond. are ignored in the notif. monitor.
 			</p>
 			<input type="button" name="save" value="Save" style="display: flex" />
 		</div>
+		<div style="text-align: center; font-weight: bold">Use REGEX syntax.</div>
 	</div>
 </fieldset>
 
@@ -62,9 +94,6 @@
 
 	<div class="setting-container premium-feature">
 		<textarea name="general.blurKeywords"></textarea>
-		<div class="setting-summary">
-			<div class="vh-toolbar-icon vh-icon-question"></div>
-			Separate keywords with a comma (,). Regex supported.
-		</div>
+		<div style="text-align: center; font-weight: bold">Separate keywords with a comma (,). Use REGEX syntax.</div>
 	</div>
 </fieldset>

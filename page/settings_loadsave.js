@@ -511,8 +511,9 @@ function manageKeywordsAddLine(key, contains, without, etv_min, etv_max) {
 	tr.append(td5);
 	const input5 = document.createElement("input");
 	input5.type = "button";
+	input5.classList.add("vh-icon-trash");
 	input5.name = "remove";
-	input5.value = "[-]";
+	input5.value = " ";
 	input5.addEventListener("click", () => {
 		if (confirm("Delete?")) {
 			tr.remove();

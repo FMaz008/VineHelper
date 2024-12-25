@@ -137,6 +137,16 @@
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/premium.png");
 		background-repeat: no-repeat;
 	}
+	.vh-icon-trash {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/trash.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-add {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/add.png");
+		background-repeat: no-repeat;
+	}
 	.vh-icon-vh {
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/icon-32.png");
@@ -280,6 +290,16 @@
 	.vh-icon-premium {
 		background-size: 100%;
 		background-image: url("/resource/image/premium.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-trash {
+		background-size: 100%;
+		background-image: url("/resource/image/trash.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-add {
+		background-size: 100%;
+		background-image: url("/resource/image/add.png");
 		background-repeat: no-repeat;
 	}
 	.vh-icon-vh {
