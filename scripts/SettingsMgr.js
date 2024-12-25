@@ -231,6 +231,8 @@ class SettingsMgr {
 				listView: false,
 				reviewToolbar: true,
 				projectedAccountStatistics: false,
+				hideRecommendations: false,
+				hideOptOutButton: false,
 			},
 
 			notification: {
@@ -297,6 +299,7 @@ class SettingsMgr {
 				mobileios: false,
 				mobileandroid: false,
 				smallItems: false,
+				mediumItems: true,
 				removeHeader: false,
 				removeFooter: false,
 				removeAssociateHeader: false,

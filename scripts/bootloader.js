@@ -72,6 +72,7 @@ async function init() {
 
 	//### Run the boot sequence
 	initAddNotificationMonitorLink();
+	hideRecommendationsAndBrowsingHistory();
 	showGDPRPopup();
 	await initFlushTplCache(); //And display the version changelog popup
 	initInjectScript();
@@ -164,6 +165,11 @@ function displayAccountData() {
 	container.appendChild(div);
 }
 
+function hideRecommendationsAndBrowsingHistory() {
+	if (Settings.isPremiumUser() && Settings.get("general.hideRecommendations") == true) {
+		document.getElementById("rhf").style.display = "none";
+	}
+}
 function displayAccountHideOptOutButton() {
 	if (Settings.isPremiumUser() && Settings.get("general.hideOptOutButton") == true) {
 		document.getElementById("vvp-opt-out-of-vine-button").style.display = "none";
