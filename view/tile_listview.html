@@ -54,20 +54,25 @@
 						></div>
 					</a>
 					{{endif}}
-
+					<div
+						class="etv"
+						data-etv-min=""
+						data-etv-max=""
+						style="display: flex; flex-direction: row; flex-grow: 1"
+					>
+						&nbsp;
+					</div>
 					<a
 						href="#"
 						id="vh-report-link-{{$asin}}"
 						class="vh-floating-icon vh-report-link"
 						title="This item is not a real vine item, report the user who submitted it."
 					>
-						<div class="vh-toolbar-icon vh-icon-report" data-asin="{{$asin}}" style="float: right"></div>
+						<div class="vh-toolbar-icon vh-icon-report" data-asin="{{$asin}}"></div>
 					</a>
 					<a href="#" id="vh-hide-link-{{$asin}}" class="vh-floating-icon vh-hide-link" title="Hide item">
-						<div class="vh-toolbar-icon vh-icon-hide" data-asin="{{$asin}}" style="float: right"></div>
+						<div class="vh-toolbar-icon vh-icon-hide" data-asin="{{$asin}}"></div>
 					</a>
-
-					<div class="etv" data-etv-min="" data-etv-max="" style="clear: both">&nbsp;</div>
 				</div>
 			</div>
 		</div>

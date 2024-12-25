@@ -29,7 +29,7 @@ class Toolbar {
 		anchorTo.insertAdjacentElement("afterbegin", pToolbar);
 
 		let container = document.querySelector(`#${toolbarId} .vh-status-container2`);
-		document.querySelector(`#${toolbarId} .vh-toolbar-etv`).style.display = "none";
+		document.querySelector(`#${toolbarId} .vh-toolbar-etv`).style.visibility = "hidden";
 
 		// Activate the announce button when the ETV is set (changed)
 		const etvElements = container.querySelectorAll(".etv");
@@ -219,7 +219,7 @@ class Toolbar {
 		span.dispatchEvent(changeEvent);
 
 		if (Settings.get("general.displayETV")) {
-			context.querySelector(".vh-toolbar-etv").style.display = "block";
+			context.querySelector(".vh-toolbar-etv").style.visibility = "visible";
 		}
 	}
 
@@ -274,7 +274,7 @@ class Toolbar {
 		}
 
 		let context = document.getElementById(`vh-toolbar-${this.pTile.getAsin()}`);
-		let container = context.querySelector("div.vh-status-container2");
+		let container = context.querySelector("div.vh-status-container");
 
 		// Remove any previous order widget
 		container.querySelectorAll(".vh-order-widget").forEach((widget) => widget.remove());

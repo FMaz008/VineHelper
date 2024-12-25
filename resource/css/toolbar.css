@@ -29,6 +29,8 @@ div.vh-status-container {
 	border: 1px solid #000;
 	border-radius: 8px;
 	color: #0f1111;
+	font-weight: bold;
+	font-size: 10px;
 }
 
 div.vh-status-container div.vh-status-container2 {
@@ -36,17 +38,16 @@ div.vh-status-container div.vh-status-container2 {
 	text-align: center;
 	min-height: 20px;
 
-	display: block;
-	font-weight: bold;
-	font-size: 10px;
+	display: flex;
 }
 
 .vh-toolbar-etv {
-	float: left;
+	display:flex;
+	flex-direction:row;
+	flex-grow: 1;
 	vertical-align: middle;
-	overflow: hidden;
+	overflow: visible;
 	line-height: 16px;
-	height: 16px;
 }
 
 .vh-toolbar-etv .vh-icon-etv {
@@ -71,16 +72,17 @@ div.borderless div.vh-status-container {
 	padding-top: 2px;
 	padding-right: 4px;
 	line-height: 16px;
+	display:flex;
 }
 
 a.vh-announce-link,
 a.vh-pin-link {
-	float: left;
+	flex-direction:row;
 }
 
 a.vh-hide-link,
 a.vh-report-link {
-	float: right;
+	flex-direction:row-reverse;
 }
 
 div.vh-icon-announcement {
@@ -112,9 +114,10 @@ div.vh-toolbar-large-icon {
 
 div.vh-order-widget {
 	text-align: center;
-	display: inline-block;
-	clear: none;
+	display: block;
+	margin:0 auto;
 	height: 20px;
+
 }
 
 .vh-reportlink-bad {
