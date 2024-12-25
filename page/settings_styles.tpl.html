@@ -6,20 +6,12 @@
 			<input type="checkbox" name="thorvarium.mobileios" value="1" />
 			ios-with-bugfix.css (for iOS)
 		</label>
-		<div class="setting-summary">
-			<div class="vh-toolbar-icon vh-icon-question"></div>
-			Tip: Enable Compact Toolbar
-		</div>
 	</div>
 	<div class="setting-container">
 		<label for="thorvarium.mobileandroid">
 			<input type="checkbox" name="thorvarium.mobileandroid" value="1" />
 			mobile.css (for Android)
 		</label>
-		<div class="setting-summary">
-			<div class="vh-toolbar-icon vh-icon-question"></div>
-			Tip: Enable Compact Toolbar
-		</div>
 	</div>
 </fieldset>
 
@@ -31,10 +23,12 @@
 			<input type="checkbox" name="thorvarium.smallItems" value="1" />
 			small-items.css
 		</label>
-		<div class="setting-summary">
-			<div class="vh-toolbar-icon vh-icon-question"></div>
-			Tip: Enable Compact Toolbar
-		</div>
+	</div>
+	<div class="setting-container">
+		<label for="thorvarium.mediumItems">
+			<input type="checkbox" name="thorvarium.mediumItems" value="1" />
+			medium-items.css
+		</label>
 	</div>
 	<div class="setting-container">
 		<label for="thorvarium.removeHeader">
@@ -111,7 +105,10 @@
 </fieldset>
 
 <fieldset>
-	<legend>Custom CSS<div class="vh-toolbar-icon vh-icon-premium" style="margin-left: 5px"></div></legend>
+	<legend>
+		Custom CSS
+		<div class="vh-toolbar-icon vh-icon-premium" style="margin-left: 5px"></div>
+	</legend>
 
 	<div class="setting-container premium-feature">
 		<textarea name="general.customCSS"></textarea>

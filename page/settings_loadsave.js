@@ -341,6 +341,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("thorvarium.mobileios");
 	manageCheckboxSetting("thorvarium.mobileandroid");
 	manageCheckboxSetting("thorvarium.smallItems");
+	manageCheckboxSetting("thorvarium.mediumItems");
 	manageCheckboxSetting("thorvarium.removeHeader");
 	manageCheckboxSetting("thorvarium.removeFooter");
 	manageCheckboxSetting("thorvarium.removeAssociateHeader");
