@@ -110,7 +110,6 @@ var I13n = new Internationalization();
 var Settings = new SettingsMgr();
 var notificationsData = {};
 var WSReconnectInterval = 0.3; //Firefox shutdown the background script after 30seconds.
-const broadcastChannel = new BroadcastChannel("VineHelperChannel");
 
 if (typeof browser === "undefined") {
 	var browser = chrome;
@@ -415,53 +414,38 @@ function keywordMatch(keywords, title) {
 	return found === undefined ? false : found;
 }
 
-async function sendMessageToNotificationMonitor(data, debugInfo) {
-	try {
-		broadcastChannel.postMessage(data);
-	} catch (e) {
-		if (DEBUG_MODE) {
-			console.error("Error posting message to broadcastChannel:", e);
-		}
-	}
-}
 async function sendMessageToAllTabs(data, debugInfo) {
-	//Send to the notification monitor tab
-	sendMessageToNotificationMonitor(data, debugInfo);
+	try {
+		const tabs = await browser.tabs.query({ currentWindow: true });
+		const regex = /^.+?amazon\.([a-z.]+).*\/vine\/.*$/;
+		tabs.forEach((tab) => {
+			if (tab) {
+				//Check to make sure this is a VineHelper tab:
+				const match = regex.exec(tab.url);
+				if (tab.url != undefined && match) {
+					if (DEBUG_MODE) {
+						//console.log("Sending message to tab " + tab.id);
+						//console.log(tab.url);
+					}
 
-	//Send to other tabs for the on screen notification
-	if (Settings.get("notification.screen.active")) {
-		try {
-			const tabs = await browser.tabs.query({ currentWindow: true });
-			const regex = /^.+?amazon\.([a-z.]+).*\/vine\/.*$/;
-			tabs.forEach((tab) => {
-				if (tab) {
-					//Check to make sure this is a VineHelper tab:
-					const match = regex.exec(tab.url);
-					if (tab.url != undefined && match) {
-						if (DEBUG_MODE) {
-							//console.log("Sending message to tab " + tab.id);
-							//console.log(tab.url);
-						}
-
-						try {
-							browser.tabs.sendMessage(tab.id, data, (response) => {
-								if (browser.runtime.lastError) {
-									//console.log(tab);
-									//console.error("Error sending message to tab:", browser.runtime.lastError.message);
-								}
-							});
-						} catch (e) {
-							if (DEBUG_MODE) {
-								console.error("Error sending message to tab:", e);
+					try {
+						browser.tabs.sendMessage(tab.id, data, (response) => {
+							if (browser.runtime.lastError) {
+								//console.log(tab);
+								//console.error("Error sending message to tab:", browser.runtime.lastError.message);
 							}
+						});
+					} catch (e) {
+						if (DEBUG_MODE) {
+							console.error("Error sending message to tab:", e);
 						}
 					}
 				}
-			});
-		} catch (error) {
-			if (DEBUG_MODE) {
-				console.error("Error querying tabs:", error);
 			}
+		});
+	} catch (error) {
+		if (DEBUG_MODE) {
+			console.error("Error querying tabs:", error);
 		}
 	}
 }
