@@ -42,15 +42,15 @@ div.vh-status-container div.vh-status-container2 {
 }
 
 .vh-toolbar-etv {
-	display:flex;
-	flex-direction:row;
+	display: flex;
+	flex-direction: row;
 	flex-grow: 1;
 	vertical-align: middle;
 	overflow: visible;
 	line-height: 16px;
 }
 
-.vh-toolbar-etv .vh-icon-etv {
+.vh-icon-etv {
 	display: inline-block;
 	width: 18px;
 	height: 16px;
@@ -72,17 +72,17 @@ div.borderless div.vh-status-container {
 	padding-top: 2px;
 	padding-right: 4px;
 	line-height: 16px;
-	display:flex;
+	display: flex;
 }
 
 a.vh-announce-link,
 a.vh-pin-link {
-	flex-direction:row;
+	flex-direction: row;
 }
 
 a.vh-hide-link,
 a.vh-report-link {
-	flex-direction:row-reverse;
+	flex-direction: row-reverse;
 }
 
 div.vh-icon-announcement {
@@ -115,9 +115,8 @@ div.vh-toolbar-large-icon {
 div.vh-order-widget {
 	text-align: center;
 	display: block;
-	margin:0 auto;
+	margin: 0 auto;
 	height: 20px;
-
 }
 
 .vh-reportlink-bad {

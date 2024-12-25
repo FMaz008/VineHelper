@@ -262,7 +262,8 @@ class NotificationMonitor {
 			return false;
 		}
 
-		const etvObj = notif.querySelector(".etv");
+		const etvObj = notif.querySelector("div.etv");
+		const etvTxt = etvObj.querySelector("span.etv");
 		const brendaAnnounce = notif.querySelector("#vh-announce-link-" + asin);
 
 		//Update the ETV value in the hidden fields
@@ -277,10 +278,11 @@ class NotificationMonitor {
 
 		//Display for formatted ETV in the toolbar
 		if (etvObj.dataset.etvMin != "" && etvObj.dataset.etvMax != "") {
+			etvObj.style.visibility = "visible";
 			if (etvObj.dataset.etvMin == etvObj.dataset.etvMax) {
-				etvObj.innerText = this.#formatETV(etvObj.dataset.etvMin);
+				etvTxt.innerText = this.#formatETV(etvObj.dataset.etvMin);
 			} else {
-				etvObj.innerText =
+				etvTxt.innerText =
 					this.#formatETV(etvObj.dataset.etvMin) + "-" + this.#formatETV(etvObj.dataset.etvMax);
 			}
 		}
