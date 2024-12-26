@@ -3,8 +3,8 @@ const Settings = new SettingsMgr();
 
 //Reminder: This script is executed from the extension popup.
 //          The console used is the browser console, not the inspector console.
-const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
-//const VINE_HELPER_API_V5_URL = "http://localhost:3000";
+//const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
+const VINE_HELPER_API_V5_URL = "http://127.0.0.1:3000";
 const arrSounds = ["notification", "upgrade", "vintage-horn"];
 
 async function drawDiscord() {
@@ -310,6 +310,25 @@ async function initiateSettings() {
 	manageKeywords("general.hideKeywords");
 	manageTextareaCSK("general.blurKeywords");
 
+	document.getElementById("saveHighlightKeywords").addEventListener("click", async function () {
+		remoteSaveList("general.highlightKeywords");
+	});
+	document.getElementById("saveHiddenKeywords").addEventListener("click", async function () {
+		remoteSaveList("general.hideKeywords");
+	});
+	document.getElementById("saveBlurKeywords").addEventListener("click", async function () {
+		remoteSaveList("general.blurKeywords");
+	});
+	document.getElementById("loadHighlightKeywords").addEventListener("click", async function () {
+		remoteLoadList("highlight");
+	});
+	document.getElementById("loadHiddenKeywords").addEventListener("click", async function () {
+		remoteLoadList("hidden");
+	});
+	document.getElementById("loadBlurKeywords").addEventListener("click", async function () {
+		remoteLoadList("blur");
+	});
+
 	//##TAB - KEYBINDINGS
 
 	manageCheckboxSetting("keyBindings.active");
@@ -393,6 +412,99 @@ async function initiateSettings() {
 		//"&scope=pledges-to-me" +
 		"&state=" +
 		Settings.get("general.uuid", false);
+}
+
+function remoteSaveList(settingName) {
+	const keyE = CSS.escape(settingName);
+	const btnSave = document.querySelector(`#${keyE} input[name="save"]`);
+	if (btnSave && confirm("Save highlight keywords first?")) {
+		btnSave.click();
+	}
+	if (confirm("Overwrite remote stored keywords with the saved list?")) {
+		const content = {
+			api_version: 5,
+			country: "loremipsum",
+			uuid: Settings.get("general.uuid", false),
+			action: "save_keywords",
+			keywords_type: settingName,
+			keywords: Settings.get(settingName),
+		};
+		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
+		fetch(VINE_HELPER_API_V5_URL, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(content),
+		}).then(async function (response) {
+			alert("List saved remotely");
+		});
+	}
+}
+function remoteLoadList(keywordsType) {
+	if (confirm("Load remote list and overwrite local list?")) {
+		const content = {
+			api_version: 5,
+			country: "loremipsum",
+			uuid: Settings.get("general.uuid", false),
+			action: "get_keywords",
+			keywords: keywordsType,
+		};
+		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
+		fetch(VINE_HELPER_API_V5_URL, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(content),
+		})
+			.then((response) => response.json())
+			.then(async function (data) {
+				let key;
+				let textList = false;
+				switch (data.keywords_type) {
+					case "highlight":
+						key = "general.highlightKeywords";
+						textList = false;
+						break;
+					case "hidden":
+						key = "general.hideKeywords";
+						textList = false;
+						break;
+					case "blur":
+						key = "general.blurKeywords";
+						textList = true;
+						break;
+				}
+
+				let keyE = CSS.escape(key);
+				if (textList) {
+					const obj = document.querySelector(`textarea[name='${keyE}']`);
+					obj.value = data.keywords.join(", ");
+
+					//Save the new content
+					const event = new Event("change");
+					obj.dispatchEvent(event);
+				} else {
+					//Remove all the existing lines
+					const rows = document.querySelectorAll(`#${keyE} table>tr`);
+					rows.forEach((row) => row.remove());
+
+					//Add new lines for the remote content
+					for (let i = 0; i < data.keywords.length; i++) {
+						if (typeof data.keywords[i] == "string") {
+							//Load the old data format
+							manageKeywordsAddLine(key, data.keywords[i], "", "", "");
+						} else if (typeof data.keywords[i] == "object") {
+							//Load the new data format
+							manageKeywordsAddLine(
+								key,
+								data.keywords[i].contains,
+								data.keywords[i].without,
+								data.keywords[i].etv_min,
+								data.keywords[i].etv_max
+							);
+						}
+					}
+				}
+			});
+	}
 }
 
 //CSK: Comma Separated Keywords
