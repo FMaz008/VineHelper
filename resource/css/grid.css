@@ -44,18 +44,6 @@ div.vh-grid .vvp-item-tile .vvp-item-tile-content > * {
 	margin-bottom: 20px;
 }
 
-#vh-tabs .bookmark-highlight {
-	border: 3px solid var(--item-highlight-border) !important;
-	background-color: var(--item-highlight-background);
-}
-
-#vh-tabs #vvp-items-grid .keyword-highlight,
-#vh-tabs #tab-unavailable .keyword-highlight,
-#vh-tabs #tab-hidden .keyword-highlight,
-#vh-tabs #tab-pinned .keyword-highlight {
-	border: 3px solid var(--alert) !important;
-}
-
 #vvp-items-grid-container .vvp-item-tile a,
 #vvp-items-grid-container .vvp-item-tile a:visited,
 #vvp-items-grid-container .vvp-item-tile a:active {
@@ -68,21 +56,6 @@ body.darktheme #vvp-items-grid-container .vvp-item-tile a:active {
 	color: var(--item-link-dark);
 }
 
-body.darktheme #vvp-items-grid-container div.bookmark-highlight a,
-body.darktheme #vvp-items-grid-container div.bookmark-highlight a:visited,
-body.darktheme #vvp-items-grid-container div.bookmark-highlight a:active {
-	color: var(--item-link-light);
-}
-
-/*
-body.darktheme #vvp-items-grid-container div.keyword-highlight a,
-body.darktheme #vvp-items-grid-container div.keyword-highlight a:visited,
-body.darktheme #vvp-items-grid-container div.keyword-highlight a:active {
-}
-*/
-
-/* The Pinned items are always using a list view */
 #tab-pinned.tab-grid {
-	/*grid-template-columns: auto !important;*/
 	grid-template-columns: repeat(auto-fill, minmax(236px, auto)) !important;
 }

@@ -123,6 +123,8 @@ async function initiateSettings() {
 	manageCheckboxSetting("general.hideRecommendations");
 	manageCheckboxSetting("general.reviewToolbar");
 	manageCheckboxSetting("general.projectedAccountStatistics");
+	manageColorPicker("general.bookmarkColor");
+	manageColorPicker("general.zeroETVHighlightColor");
 
 	//##TAB - NOTIFICATIONS
 
@@ -306,6 +308,7 @@ async function initiateSettings() {
 
 	//##TAB - KEYWORDS
 
+	manageColorPicker("general.keywordHighlightColor");
 	manageKeywords("general.highlightKeywords");
 	manageKeywords("general.hideKeywords");
 	manageTextareaCSK("general.blurKeywords");

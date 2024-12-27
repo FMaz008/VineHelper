@@ -219,6 +219,7 @@ class SettingsMgr {
 				displayFirstSeen: true,
 				bookmark: false, //Highlight recently added items
 				bookmarkDate: 0,
+				bookmarkColor: "#90ee90",
 				hideKeywords: [],
 				highlightKeywords: [],
 				blurKeywords: [],
@@ -233,6 +234,8 @@ class SettingsMgr {
 				projectedAccountStatistics: false,
 				hideRecommendations: false,
 				hideOptOutButton: false,
+				keywordHighlightColor: "#FFE815",
+				zeroETVHighlightColor: "#64af4b",
 			},
 
 			notification: {

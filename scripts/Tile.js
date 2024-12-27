@@ -41,6 +41,9 @@ function Tile(obj, gridInstance) {
 
 	this.setETV = function (etv) {
 		pETV = etv;
+		if (parseFloat(etv) == 0) {
+			pTile.style.backgroundColor = Settings.get("general.zeroETVHighlightColor");
+		}
 	};
 
 	this.getETV = function () {
@@ -134,7 +137,7 @@ function Tile(obj, gridInstance) {
 			Settings.get("general.bookmarkDate") != 0
 		) {
 			showRuntime("TILE: The item is more recent than the time marker, highlight it.");
-			pTile.classList.add("bookmark-highlight");
+			pTile.style.backgroundColor = Settings.get("general.bookmarkColor");
 		}
 	};
 
@@ -147,7 +150,7 @@ function Tile(obj, gridInstance) {
 			if (match) {
 				highligthed = true;
 				showRuntime("TILE: The item match the keyword '" + match + "', highlight it");
-				pTile.classList.add("keyword-highlight");
+				pTile.style.backgroundColor = Settings.get("general.keywordHighlightColor");
 
 				//Move the highlighted item to the top of the grid
 				pGrid.getDOM().insertBefore(obj, pGrid.getDOM().firstChild);
