@@ -328,6 +328,44 @@ async function initiateSettings() {
 	document.getElementById("loadBlurKeywords").addEventListener("click", async function () {
 		remoteLoadList("blur");
 	});
+	document.getElementById("bulkDeleteHighlight").addEventListener("click", async function () {
+		if (confirm("Delete all?")) {
+			//Remove all the existing lines
+			const keyE = CSS.escape("general.highlightKeywords");
+			const rows = document.querySelectorAll(`#${keyE} table>tr`);
+			rows.forEach((row) => row.remove());
+		}
+	});
+	document.getElementById("bulkDeleteHide").addEventListener("click", async function () {
+		if (confirm("Delete all?")) {
+			//Remove all the existing lines
+			const keyE = CSS.escape("general.hideKeywords");
+			const rows = document.querySelectorAll(`#${keyE} table>tr`);
+			rows.forEach((row) => row.remove());
+		}
+	});
+	document.getElementById("bulkImportHighlight").addEventListener("click", async function () {
+		const rawContent = prompt("Paste your comma separated content:");
+		let arr = [];
+		arr = rawContent
+			.split(",")
+			.map((item) => item.trim())
+			.filter((item) => item !== "");
+		for (let i = 0; i < arr.length; i++) {
+			manageKeywordsAddLine("general.highlightKeywords", arr[i], "", "", "");
+		}
+	});
+	document.getElementById("bulkImportHide").addEventListener("click", async function () {
+		const rawContent = prompt("Paste your comma separated content:");
+		let arr = [];
+		arr = rawContent
+			.split(",")
+			.map((item) => item.trim())
+			.filter((item) => item !== "");
+		for (let i = 0; i < arr.length; i++) {
+			manageKeywordsAddLine("general.hideKeywords", arr[i], "", "", "");
+		}
+	});
 
 	//##TAB - KEYBINDINGS
 
