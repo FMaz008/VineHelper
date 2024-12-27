@@ -313,63 +313,6 @@ async function initiateSettings() {
 	manageKeywords("general.hideKeywords");
 	manageTextareaCSK("general.blurKeywords");
 
-	document.getElementById("saveHighlightKeywords").addEventListener("click", async function () {
-		remoteSaveList("general.highlightKeywords");
-	});
-	document.getElementById("saveHiddenKeywords").addEventListener("click", async function () {
-		remoteSaveList("general.hideKeywords");
-	});
-	document.getElementById("saveBlurKeywords").addEventListener("click", async function () {
-		remoteSaveList("general.blurKeywords");
-	});
-	document.getElementById("loadHighlightKeywords").addEventListener("click", async function () {
-		remoteLoadList("highlight");
-	});
-	document.getElementById("loadHiddenKeywords").addEventListener("click", async function () {
-		remoteLoadList("hidden");
-	});
-	document.getElementById("loadBlurKeywords").addEventListener("click", async function () {
-		remoteLoadList("blur");
-	});
-	document.getElementById("bulkDeleteHighlight").addEventListener("click", async function () {
-		if (confirm("Delete all?")) {
-			//Remove all the existing lines
-			const keyE = CSS.escape("general.highlightKeywords");
-			const rows = document.querySelectorAll(`#${keyE} table>tr`);
-			rows.forEach((row) => row.remove());
-		}
-	});
-	document.getElementById("bulkDeleteHide").addEventListener("click", async function () {
-		if (confirm("Delete all?")) {
-			//Remove all the existing lines
-			const keyE = CSS.escape("general.hideKeywords");
-			const rows = document.querySelectorAll(`#${keyE} table>tr`);
-			rows.forEach((row) => row.remove());
-		}
-	});
-	document.getElementById("bulkImportHighlight").addEventListener("click", async function () {
-		const rawContent = prompt("Paste your comma separated content:");
-		let arr = [];
-		arr = rawContent
-			.split(",")
-			.map((item) => item.trim())
-			.filter((item) => item !== "");
-		for (let i = 0; i < arr.length; i++) {
-			manageKeywordsAddLine("general.highlightKeywords", arr[i], "", "", "");
-		}
-	});
-	document.getElementById("bulkImportHide").addEventListener("click", async function () {
-		const rawContent = prompt("Paste your comma separated content:");
-		let arr = [];
-		arr = rawContent
-			.split(",")
-			.map((item) => item.trim())
-			.filter((item) => item !== "");
-		for (let i = 0; i < arr.length; i++) {
-			manageKeywordsAddLine("general.hideKeywords", arr[i], "", "", "");
-		}
-	});
-
 	//##TAB - KEYBINDINGS
 
 	manageCheckboxSetting("keyBindings.active");
@@ -455,8 +398,31 @@ async function initiateSettings() {
 		Settings.get("general.uuid", false);
 }
 
-function remoteSaveList(settingName) {
-	const keyE = CSS.escape(settingName);
+/**
+ * This function convert both ways */
+function keywordsTypeToSettingKey(type) {
+	switch (type) {
+		case "highlight":
+			return "general.highlightKeywords";
+		case "hidden":
+			return "general.hideKeywords";
+		case "blur":
+			return "general.blurKeywords";
+
+		//Reverse
+		case "general.highlightKeywords":
+			return "highlight";
+		case "general.hideKeywords":
+			return "hidden";
+		case "general.blurKeywords":
+			return "blur";
+	}
+	return null;
+}
+
+function remoteSaveList(keywordType) {
+	const settingKey = keywordsTypeToSettingKey(keywordType);
+	const keyE = CSS.escape(settingKey);
 	const btnSave = document.querySelector(`#${keyE} input[name="save"]`);
 	if (btnSave && confirm("Save highlight keywords first?")) {
 		btnSave.click();
@@ -467,8 +433,8 @@ function remoteSaveList(settingName) {
 			country: "loremipsum",
 			uuid: Settings.get("general.uuid", false),
 			action: "save_keywords",
-			keywords_type: settingName,
-			keywords: Settings.get(settingName),
+			keywords_type: keywordType,
+			keywords: Settings.get(settingKey),
 		};
 		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
 		fetch(VINE_HELPER_API_V5_URL, {
@@ -498,21 +464,8 @@ function remoteLoadList(keywordsType) {
 			.then((response) => response.json())
 			.then(async function (data) {
 				let key;
-				let textList = false;
-				switch (data.keywords_type) {
-					case "highlight":
-						key = "general.highlightKeywords";
-						textList = false;
-						break;
-					case "hidden":
-						key = "general.hideKeywords";
-						textList = false;
-						break;
-					case "blur":
-						key = "general.blurKeywords";
-						textList = true;
-						break;
-				}
+				let textList = data.keywords_type == "blur";
+				key = keywordsTypeToSettingKey(data.keywords_type);
 
 				let keyE = CSS.escape(key);
 				if (textList) {
@@ -551,6 +504,7 @@ function remoteLoadList(keywordsType) {
 //CSK: Comma Separated Keywords
 function manageTextareaCSK(key) {
 	const val = Settings.get(key);
+	const keywordType = keywordsTypeToSettingKey(key);
 	const obj = document.querySelector(`textarea[name='${key}']`);
 	if (obj == null) {
 		alert("Textarea name='" + key + "' does not exist");
@@ -569,10 +523,19 @@ function manageTextareaCSK(key) {
 
 		Settings.set(key, arr);
 	});
+
+	//Bind buttons
+	document.getElementById(`save${keywordType}Keywords`).addEventListener("click", async () => {
+		remoteSaveList(keywordType);
+	});
+	document.getElementById(`load${keywordType}Keywords`).addEventListener("click", async () => {
+		remoteLoadList(keywordType);
+	});
 }
 
 function manageKeywords(key) {
 	const val = Settings.get(key);
+	const keywordType = keywordsTypeToSettingKey(key);
 	const keyE = CSS.escape(key);
 
 	//Build the keywords GUI
@@ -618,6 +581,34 @@ function manageKeywords(key) {
 			manageKeywordsAddLine(key, val[i].contains, val[i].without, val[i].etv_min, val[i].etv_max);
 		}
 	}
+
+	//Bind buttons
+	document.getElementById(`save${keywordType}Keywords`).addEventListener("click", async () => {
+		remoteSaveList(keywordType);
+	});
+	document.getElementById(`load${keywordType}Keywords`).addEventListener("click", async () => {
+		remoteLoadList(keywordType);
+	});
+
+	document.getElementById(`bulkDelete${keywordType}`).addEventListener("click", async () => {
+		if (confirm("Delete all?")) {
+			//Remove all the existing lines
+			const rows = document.querySelectorAll(`#${keyE} table>tr`);
+			rows.forEach((row) => row.remove());
+		}
+	});
+
+	document.getElementById(`bulkImport${keywordType}`).addEventListener("click", async () => {
+		const rawContent = prompt("Paste your comma separated content:");
+		let arr = [];
+		arr = rawContent
+			.split(",")
+			.map((item) => item.trim())
+			.filter((item) => item !== "");
+		for (let i = 0; i < arr.length; i++) {
+			manageKeywordsAddLine(key, arr[i], "", "", "");
+		}
+	});
 }
 function manageKeywordsAddLine(key, contains, without, etv_min, etv_max) {
 	const keyE = CSS.escape(key);
