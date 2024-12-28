@@ -82,8 +82,6 @@ async function getSettings() {
 
 	if (Settings.get("thorvarium.smallItems")) loadStyleSheet("node_modules/vine-styling/desktop/small-items.css");
 
-	if (Settings.get("thorvarium.mediumItems")) loadStyleSheet("node_modules/vine-styling/desktop/medium-items.css");
-
 	if (Settings.get("thorvarium.removeHeader")) loadStyleSheet("node_modules/vine-styling/desktop/remove-header.css");
 
 	if (Settings.get("thorvarium.removeFooter")) loadStyleSheet("node_modules/vine-styling/desktop/remove-footer.css");
