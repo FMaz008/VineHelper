@@ -122,6 +122,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("general.hideOptOutButton");
 	manageCheckboxSetting("general.hideRecommendations");
 	manageCheckboxSetting("general.reviewToolbar");
+	manageCheckboxSetting("general.tileSize.active");
 	manageCheckboxSetting("general.projectedAccountStatistics");
 	manageColorPicker("general.bookmarkColor");
 	manageColorPicker("general.zeroETVHighlightColor");

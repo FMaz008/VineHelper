@@ -177,6 +177,10 @@ class NotificationMonitor {
 		const container = document.querySelector("#vvp-items-grid");
 		container.insertBefore(tileDOM, container.firstChild);
 
+		//Set the width according to the tileSize
+		tileDOM.querySelector(".vvp-item-tile-content").style.width =
+			parseInt(Settings.get("general.tileSize.width")) - 8 + "px";
+
 		//If the feed is paused, up the counter and rename the Resume button
 		if (this.#feedPaused) {
 			this.#feedPausedAmountStored++;

@@ -124,3 +124,7 @@ a.vh-showall span::first-letter {
 #vh-tabs.smallitems #tab-pinned {
 	grid-template-columns: repeat(auto-fill, minmax(var(--grid-column-width, 110px), auto)) !important;
 }
+
+div#vh-tabs {
+	clear: both;
+}

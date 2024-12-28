@@ -55,7 +55,3 @@ body.darktheme #vvp-items-grid-container .vvp-item-tile a:visited,
 body.darktheme #vvp-items-grid-container .vvp-item-tile a:active {
 	color: var(--item-link-dark);
 }
-
-#tab-pinned.tab-grid {
-	grid-template-columns: repeat(auto-fill, minmax(236px, auto)) !important;
-}

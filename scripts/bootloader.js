@@ -76,6 +76,7 @@ async function init() {
 	showGDPRPopup();
 	await initFlushTplCache(); //And display the version changelog popup
 	initInjectScript();
+	initTileSize();
 
 	//Check if we want to display the notification monitor
 	const currentUrl = window.location.href;
@@ -84,8 +85,9 @@ async function init() {
 	if (arrMatches != null) {
 		//Initate the notification monitor
 		notificationMonitorActive = true;
-		NotificationMonitor.initialize();
+		await NotificationMonitor.initialize();
 
+		hookExecute("EndOfBootloader", null);
 		return; //Do not initialize the page as normal
 	}
 
@@ -109,6 +111,46 @@ async function init() {
 	hookExecute("EndOfBootloader", null);
 
 	HiddenList.garbageCollection();
+}
+
+async function initTileSize() {
+	if (Settings.get("general.tileSize.active")) {
+		prom = await Tpl.loadFile("view/widget_tilesize.html");
+		let content = Tpl.render(prom, true);
+
+		const container = document.querySelector("#vvp-items-grid-container");
+		if (container) {
+			container.insertBefore(content, container.firstChild);
+
+			const slider = document.querySelector("input[name='general.tileSize']");
+			slider.value = Settings.get("general.tileSize.width");
+
+			//Bind the slider
+			slider.addEventListener("change", () => {
+				const sliderValue = parseInt(slider.value);
+				adjustTileSize(sliderValue);
+				Settings.set("general.tileSize.width", sliderValue);
+			});
+		}
+	}
+
+	//Set the slider default value
+	//Wait until the items are loaded.
+	hookBind("EndOfBootloader", () => {
+		const width = Settings.get("general.tileSize.width");
+		console.log(width);
+		adjustTileSize(width);
+	});
+}
+
+function adjustTileSize(width) {
+	const grids = document.querySelectorAll("div#vh-tabs .tab-grid");
+	grids.forEach((elem) => {
+		elem.style.gridTemplateColumns = `repeat(auto-fill,minmax(${width}px,auto))`;
+		elem.querySelectorAll(".vvp-item-tile .vvp-item-tile-content").forEach((tile) => {
+			tile.style.width = parseInt(width - 8) + "px";
+		});
+	});
 }
 
 //If we are on the Account page, display additional info
