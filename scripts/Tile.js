@@ -180,7 +180,7 @@ function Tile(obj, gridInstance) {
 
 		//Unescape titles
 		const fullText = this.getDOM().querySelector(".a-truncate-full").innerText;
-		this.getDOM().querySelector(".a-truncate-full").innerText = unescapeHTML(fullText);
+		this.getDOM().querySelector(".a-truncate-full").innerText = unescapeHTML(unescapeHTML(fullText));
 	};
 
 	this.matchKeywords = function (arrWords) {
