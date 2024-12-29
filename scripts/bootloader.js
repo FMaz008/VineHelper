@@ -87,7 +87,7 @@ async function init() {
 		notificationMonitorActive = true;
 		await NotificationMonitor.initialize();
 
-		hookExecute("EndOfBootloader", null);
+		hookExecute("productsUpdated", null);
 		return; //Do not initialize the page as normal
 	}
 
@@ -136,7 +136,7 @@ async function initTileSize() {
 
 	//Set the slider default value
 	//Wait until the items are loaded.
-	hookBind("EndOfBootloader", () => {
+	hookBind("productsUpdated", () => {
 		const width = Settings.get("general.tileSize.width");
 		console.log(width);
 		adjustTileSize(width);
@@ -878,6 +878,7 @@ async function serverProductsResponse(data) {
 	updateTileCounts();
 	showRuntime("Done updating products");
 	productUpdated = true;
+	hookExecute("productsUpdated", null);
 }
 
 //#########################
