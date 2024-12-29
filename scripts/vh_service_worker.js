@@ -12,8 +12,9 @@ import "../node_modules/socket.io/client-dist/socket.io.min.js";
 const myStream = new Streamy();
 const filterHideitem = myStream.filter(function (data) {
 	if (Settings.get("notification.hideList")) {
-		const hideKWMatch = keywordMatch(Settings.get("general.hideKeywords"), data.title);
+		const hideKWMatch = keywordMatch(Settings.get("general.hideKeywords"), data.title, data.etv_min, data.etv_max);
 		if (hideKWMatch !== false) {
+			console.log(hideKWMatch);
 			console.log("Item " + data.title + " matched hide keyword " + hideKWMatch + " hide it.");
 			return false; //Do not display the notification as it matches the hide list.
 		}
@@ -21,7 +22,12 @@ const filterHideitem = myStream.filter(function (data) {
 	return true;
 });
 const transformIsHighlight = myStream.transformer(function (data) {
-	const highlightKWMatch = keywordMatch(Settings.get("general.highlightKeywords"), data.title);
+	const highlightKWMatch = keywordMatch(
+		Settings.get("general.highlightKeywords"),
+		data.title,
+		data.etv_min,
+		data.etv_max
+	);
 	data.KWsMatch = highlightKWMatch !== false;
 	data.KW = highlightKWMatch;
 
@@ -137,6 +143,14 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 		} else {
 			sendMessageToAllTabs({ type: "wsClosed" }, "Websocket server disconnected.");
 		}
+	}
+
+	//When a new ETV is received, we match it against the keywords
+	if (data.type == "matchKeywords") {
+		sendResponse({
+			success: true,
+			KWMatch: keywordMatch(data.keywords, data.title, data.etv_min, data.etv_max),
+		});
 	}
 });
 
@@ -373,8 +387,8 @@ function pushNotification(asin, queue, is_parent_asin, enrollment_guid, search_s
 		}
 	);
 }
-function keywordMatch(keywords, title) {
-	const found = keywords.find((word) => {
+function keywordMatch(keywords, title, etv_min = null, etv_max = null) {
+	let found = keywords.find((word) => {
 		let regex;
 		let regex2;
 		if (typeof word == "string") {
@@ -388,7 +402,7 @@ function keywordMatch(keywords, title) {
 			}
 
 			if (regex.test(title)) {
-				return word; // Return the matched word
+				return true;
 			}
 		} else if (typeof word == "object") {
 			//New data format where keywords are objects
@@ -400,17 +414,29 @@ function keywordMatch(keywords, title) {
 					return false;
 				}
 			}
+
 			if (regex.test(title)) {
-				//Match the contains part
 				if (word.without == "" || !regex2.test(title)) {
-					//Does not match the without part
-					return word.contains;
+					if (word.etv_min == "" && word.etv_max == "") {
+						//There is ETV filtering defined, we have a match.
+						return true;
+					} else {
+						//There is an ETV filtering defined, we need to satisfy it
+						if (word.etv_min == "" || (etv_min !== null && etv_min >= parseFloat(word.etv_min))) {
+							if (word.etv_max == "" || (etv_max !== null && etv_max <= parseFloat(word.etv_max))) {
+								return true;
+							}
+						}
+					}
 				}
 			}
 		}
 
 		return false; // Continue searching
 	});
+	if (typeof found === "object") {
+		found = found.contains;
+	}
 	return found === undefined ? false : found;
 }
 

@@ -1400,7 +1400,7 @@ function escapeHTML(value) {
 
 /**
  * Only unescape characters which are frequent in vine title and pause no risk of code injection
- * Used by tile.js
+ * Used by tile.js:initiateTile
  * @param {string} value
  */
 function unescapeHTML(encodedString) {

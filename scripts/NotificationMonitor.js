@@ -259,7 +259,7 @@ class NotificationMonitor {
 		return tileDOM; //Return the DOM element for the tile.
 	}
 
-	setETV(asin, etv, processAsZeroETVFound = true) {
+	async setETV(asin, etv, processAsZeroETVFound = true) {
 		const notif = this.#getNotificationByASIN(asin);
 
 		if (!notif) {
@@ -300,9 +300,44 @@ class NotificationMonitor {
 			}
 		}
 
+		//Check if the item is highlighted
+		let highlighted = notif.dataset.type == TYPE_HIGHLIGHT; //If the item is already highlighted, we don't want to mark it 0ETV after.
+		if (!highlighted && processAsZeroETVFound) {
+			//No need to re-highlight if the item is already highlighted.
+
+			const title = notif.querySelector(".a-truncate-full").innerText;
+			if (title) {
+				const val = await new Promise((resolve, reject) => {
+					browser.runtime.sendMessage(
+						{
+							type: "matchKeywords",
+							keywords: Settings.get("general.highlightKeywords"),
+							title: title,
+							etv_min: etvObj.dataset.etvMin,
+							etv_max: etvObj.dataset.etvMax,
+						},
+						(response) => {
+							if (response.KWMatch !== false) {
+								resolve(response.KWMatch); // Resolve the promise with the KWMatch value
+							} else {
+								resolve(false);
+							}
+						}
+					);
+				});
+				if (val !== false) {
+					highlighted = true;
+					this.#highlightedItemFound(asin, true);
+					this.#moveNotifToTop(notif);
+				}
+			}
+		}
+
 		//Check if the item is a 0ETV
-		if (processAsZeroETVFound && oldMaxValue == "" && parseFloat(etvObj.dataset.etvMin) == 0) {
-			this.#zeroETVItemFound(asin);
+		if (highlighted === false) {
+			if (processAsZeroETVFound && oldMaxValue == "" && parseFloat(etvObj.dataset.etvMin) == 0) {
+				this.#zeroETVItemFound(asin, true);
+			}
 		}
 	}
 
@@ -377,8 +412,7 @@ class NotificationMonitor {
 		}
 
 		//Move the notification to the top
-		const container = document.getElementById("vvp-items-grid");
-		container.insertBefore(notif, container.firstChild);
+		this.#moveNotifToTop(notif);
 	}
 
 	#highlightedItemFound(asin, playSoundEffect = true) {
@@ -393,10 +427,11 @@ class NotificationMonitor {
 			SoundPlayer.play(TYPE_HIGHLIGHT);
 
 			//Kind of sketch, but if the sound effect is on, we know the type was determined.
-			notif.dataset.type = TYPE_HIGHLIGHT;
+			//notif.dataset.type = TYPE_HIGHLIGHT;
 		}
 
 		//Highlight for Highlighted item
+		notif.dataset.type = TYPE_HIGHLIGHT;
 		notif.style.backgroundColor = Settings.get("notification.monitor.highlight.color");
 	}
 
@@ -556,6 +591,11 @@ class NotificationMonitor {
 
 	//#######################################################
 	//## UTILITY METHODS
+
+	#moveNotifToTop(notif) {
+		const container = document.getElementById("vvp-items-grid");
+		container.insertBefore(notif, container.firstChild);
+	}
 
 	#getNotificationByASIN(asin) {
 		return document.querySelector("#vh-notification-" + asin);
