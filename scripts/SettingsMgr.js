@@ -235,7 +235,10 @@ class SettingsMgr {
 				hideRecommendations: false,
 				hideOptOutButton: false,
 				keywordHighlightColor: "#FFE815",
-				zeroETVHighlightColor: "#64af4b",
+				zeroETVHighlight: {
+					active: true,
+					color: "#64af4b",
+				},
 				tileSize: {
 					active: true,
 					width: 236,

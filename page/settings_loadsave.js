@@ -125,7 +125,8 @@ async function initiateSettings() {
 	manageCheckboxSetting("general.tileSize.active");
 	manageCheckboxSetting("general.projectedAccountStatistics");
 	manageColorPicker("general.bookmarkColor");
-	manageColorPicker("general.zeroETVHighlightColor");
+	manageCheckboxSetting("general.zeroETVHighlight.active");
+	manageColorPicker("general.zeroETVHighlight.color");
 
 	//##TAB - NOTIFICATIONS
 
@@ -694,7 +695,8 @@ function manageInputText(key) {
 
 function manageColorPicker(key) {
 	const val = Settings.get(key);
-	const obj = document.querySelector(`label[for='${key}'] input[type='color']`);
+	const keyE = CSS.escape(key);
+	const obj = document.querySelector(`input[name='${keyE}']`);
 	if (obj == null) {
 		throw new Error("Color picker input name='" + key + "' does not exist");
 	}

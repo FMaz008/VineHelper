@@ -39,10 +39,11 @@ function Tile(obj, gridInstance) {
 		return pToolbar;
 	};
 
+	//Generally called by Toolbar().setETV(min, max)
 	this.setETV = function (etv) {
 		pETV = etv;
-		if (parseFloat(etv) == 0) {
-			pTile.style.backgroundColor = Settings.get("general.zeroETVHighlightColor");
+		if (parseFloat(etv) == 0 && Settings.get("general.zeroETVHighlight.active")) {
+			pTile.style.backgroundColor = Settings.get("general.zeroETVHighlight.color");
 		}
 	};
 
