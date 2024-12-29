@@ -195,6 +195,7 @@ function Tile(obj, gridInstance) {
 							"TILE: The highlight keyword '" + word + "' is not a valid regular expression, skipping it."
 						);
 					}
+					return false;
 				}
 				return word && regex.test(this.getTitle()); //This seems odd as a return value
 			} else if (typeof word == "object") {
@@ -209,6 +210,7 @@ function Tile(obj, gridInstance) {
 								"' is not a valid regular expression, skipping it."
 						);
 					}
+					return false;
 				}
 				if (regex.test(this.getTitle())) {
 					if (word.without == "" || !regex2.test(this.getTitle())) {
