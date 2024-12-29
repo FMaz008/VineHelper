@@ -197,7 +197,7 @@ function Tile(obj, gridInstance) {
 					}
 					return false;
 				}
-				return word && regex.test(this.getTitle()); //This seems odd as a return value
+				return regex.test(this.getTitle()) ? word : false;
 			} else if (typeof word == "object") {
 				try {
 					regex = new RegExp(`\\b${word.contains}\\b`, "i");
