@@ -33,10 +33,9 @@ class Toolbar {
 
 		// Activate the announce button when the ETV is set (changed)
 		const etvElements = container.querySelectorAll(".etv");
-
 		etvElements.forEach((etv) => {
 			etv.addEventListener("change", (event) => {
-				if (event.currentTarget.innerText === "") return false;
+				if (event.currentTarget.textContent === "") return false;
 				if (vineSearch) return false;
 
 				let tile = getTileByAsin(this.pTile.getAsin());

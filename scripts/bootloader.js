@@ -138,7 +138,6 @@ async function initTileSize() {
 	//Wait until the items are loaded.
 	hookBind("productsUpdated", () => {
 		const width = Settings.get("general.tileSize.width");
-		console.log(width);
 		adjustTileSize(width);
 	});
 }
