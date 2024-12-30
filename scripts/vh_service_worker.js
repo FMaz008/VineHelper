@@ -129,11 +129,13 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 		//Get the last 100 most recent items
 		fetchLast100Items();
 		sendResponse({ success: true });
+		return true;
 	}
 
 	if (data.type == "setCountryCode") {
 		I13n.setCountryCode(data.countryCode);
 		sendResponse({ success: true });
+		return true;
 	}
 
 	if (data.type == "wsStatus") {
@@ -143,6 +145,7 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 		} else {
 			sendMessageToAllTabs({ type: "wsClosed" }, "Websocket server disconnected.");
 		}
+		return true;
 	}
 
 	//When a new ETV is received, we match it against the keywords
@@ -151,6 +154,7 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 			success: true,
 			KWMatch: keywordMatch(data.keywords, data.title, data.etv_min, data.etv_max),
 		});
+		return true; // Keep the channel open until the response is sent
 	}
 });
 

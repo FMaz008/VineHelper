@@ -300,45 +300,77 @@ class NotificationMonitor {
 			}
 		}
 
+		//If a new ETV came in, we want to check if the item now match a keywords with an ETV condition.
 		//Check if the item is highlighted
-		let highlighted = notif.dataset.type == TYPE_HIGHLIGHT; //If the item is already highlighted, we don't want to mark it 0ETV after.
-		if (!highlighted && processAsZeroETVFound) {
+		//If the item is already highlighted, we don't need to check if we need to highlight it or hide it.
+		//Skip the 0 ETV processing too.
+		let skip0ETV = notif.dataset.type == TYPE_HIGHLIGHT;
+		if (!skip0ETV && processAsZeroETVFound) {
 			//No need to re-highlight if the item is already highlighted.
-
+			//We don't want to highlight an item that is getting its ETV set initially (processAsZeroETVFound==false) before another pass of highlighting will be done shortly after.
 			const title = notif.querySelector(".a-truncate-full").innerText;
 			if (title) {
-				const val = await new Promise((resolve, reject) => {
-					browser.runtime.sendMessage(
-						{
-							type: "matchKeywords",
-							keywords: Settings.get("general.highlightKeywords"),
-							title: title,
-							etv_min: etvObj.dataset.etvMin,
-							etv_max: etvObj.dataset.etvMax,
-						},
-						(response) => {
-							if (response.KWMatch !== false) {
-								resolve(response.KWMatch); // Resolve the promise with the KWMatch value
-							} else {
-								resolve(false);
-							}
-						}
-					);
-				});
+				//Check if we need to highlight the item
+				const val = await this.#matchKeywords(
+					Settings.get("general.highlightKeywords"),
+					title,
+					etvObj.dataset.etvMin,
+					etvObj.dataset.etvMax
+				);
+
 				if (val !== false) {
-					highlighted = true;
+					//We got a keyword match, highlight the item
+					skip0ETV = true;
 					this.#highlightedItemFound(asin, true);
-					this.#moveNotifToTop(notif);
+				} else {
+					//Check if we need to hide the item
+					const val2 = await this.#matchKeywords(
+						Settings.get("general.hideKeywords"),
+						title,
+						etvObj.dataset.etvMin,
+						etvObj.dataset.etvMax
+					);
+					if (val2 !== false) {
+						//Remove (permanently "hide") the tile
+						notif.remove();
+						this.#updateTabTitle(); //Update the tab counter
+						skip0ETV = true;
+					}
 				}
 			}
 		}
 
 		//Check if the item is a 0ETV
-		if (highlighted === false) {
+		if (skip0ETV === false) {
 			if (processAsZeroETVFound && oldMaxValue == "" && parseFloat(etvObj.dataset.etvMin) == 0) {
 				this.#zeroETVItemFound(asin, true);
 			}
 		}
+	}
+
+	/**
+	 * Contact the ServiceWorker to process the list of keywords.
+	 * @param {*} arrKeywords
+	 * @param {*} title
+	 * @param {*} etv_min
+	 * @param {*} etv_max
+	 * @returns false||string of the matched keyword (both as a promise).
+	 */
+	#matchKeywords(arrKeywords, title, etv_min, etv_max) {
+		return new Promise((resolve, reject) => {
+			browser.runtime.sendMessage(
+				{
+					type: "matchKeywords",
+					keywords: arrKeywords,
+					title: title,
+					etv_min: etv_min,
+					etv_max: etv_max,
+				},
+				(response) => {
+					resolve(response.KWMatch); //false or the matching keyword.
+				}
+			);
+		});
 	}
 
 	setWebSocketStatus(status) {
@@ -433,6 +465,9 @@ class NotificationMonitor {
 		//Highlight for Highlighted item
 		notif.dataset.type = TYPE_HIGHLIGHT;
 		notif.style.backgroundColor = Settings.get("notification.monitor.highlight.color");
+
+		//Move the notification to the top
+		this.#moveNotifToTop(notif);
 	}
 
 	#regularItemFound(asin, playSoundEffect = true) {

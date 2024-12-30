@@ -1120,18 +1120,26 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 	//If we received a request for a hook execution
 	if (data.type == "hookExecute") {
 		hookExecute(data.hookname, data);
+		return true;
 	}
 
 	if (data.type == "newETV") {
 		if (notificationMonitorActive) {
 			NotificationMonitor.setETV(data.asin, data.etv);
 		}
+		return true;
 	}
 	if (data.type == "wsOpen") {
-		NotificationMonitor.setWebSocketStatus(true);
+		if (notificationMonitorActive) {
+			NotificationMonitor.setWebSocketStatus(true);
+		}
+		return true;
 	}
 	if (data.type == "wsClosed") {
-		NotificationMonitor.setWebSocketStatus(false);
+		if (notificationMonitorActive) {
+			NotificationMonitor.setWebSocketStatus(false);
+		}
+		return true;
 	}
 
 	if (data.type == "newItem") {
@@ -1216,6 +1224,7 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 			note2.content = Tpl.render(prom);
 			Notifications.pushNotification(note2);
 		}
+		return true;
 	}
 });
 

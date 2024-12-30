@@ -66,7 +66,11 @@ class NotificationsSoundPlayer {
 		if (volume >= 0 && volume <= 1) {
 			audioElement.volume = Number(volume);
 		}
-		audioElement.play();
+		try {
+			audioElement.play();
+		} catch (error) {
+			//Do nothing
+		}
 
 		//Set the cooldown
 		this.#notificationType = -1;
