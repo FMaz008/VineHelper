@@ -262,6 +262,7 @@ class SettingsMgr {
 				},
 				monitor: {
 					hideDuplicateThumbnail: false,
+					openLinksInNewTab: "1",
 					regular: {
 						sound: "0",
 						volume: 1,

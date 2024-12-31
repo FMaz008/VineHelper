@@ -256,13 +256,20 @@ class NotificationMonitor {
 		hideIcon.addEventListener("click", this.#handleHideClick);
 
 		//Add the click listener for the See Details button
-		const seeDetailsBtn = document.querySelector(`#vh-notification-${asin} .vvp-details-btn-vh input`);
-		seeDetailsBtn.addEventListener("click", () => {
-			window.open(
-				`https://www.amazon.${I13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`,
-				"_blank"
-			);
-		});
+		if (Settings.get("notification.monitor.openLinksInNewTab") == "1") {
+			//Deactivate Vine click handling
+			const btnContainer = document.querySelector(`#vh-notification-${asin} .vvp-details-btn`);
+			btnContainer.classList.remove("vvp-details-btn");
+
+			//Bind the button's click
+			const seeDetailsBtn = document.querySelector(`#vh-notification-${asin} .a-button-primary input`);
+			seeDetailsBtn.addEventListener("click", () => {
+				window.open(
+					`https://www.amazon.${I13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`,
+					"_blank"
+				);
+			});
+		}
 
 		//Autotruncate the items if there are too many
 		this.#autoTruncate();

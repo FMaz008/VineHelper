@@ -138,6 +138,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("notification.hideList");
 	manageCheckboxSetting("notification.monitor.hideDuplicateThumbnail");
 	manageCheckboxSetting("notification.reduce");
+	manageRadio("notification.monitor.openLinksInNewTab");
 
 	//Sliders
 	manageSlider("notification.screen.regular.volume");
@@ -609,6 +610,20 @@ function manageKeywords(key) {
 		for (let i = 0; i < arr.length; i++) {
 			manageKeywordsAddLine(key, arr[i], "", "", "");
 		}
+	});
+}
+
+function manageRadio(key) {
+	const keyE = CSS.escape(key);
+
+	document.querySelectorAll(`input[name="${keyE}"]`).forEach((elem) => {
+		if (elem.value == Settings.get(key)) {
+			elem.checked = true;
+		}
+
+		elem.addEventListener("click", () => {
+			Settings.set(key, elem.value);
+		});
 	});
 }
 function manageKeywordsAddLine(key, contains, without, etv_min, etv_max) {
