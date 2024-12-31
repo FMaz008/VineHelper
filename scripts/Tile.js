@@ -176,7 +176,7 @@ class Tile {
 				this.#tileDOM.style.backgroundColor = Settings.get("general.keywordHighlightColor");
 
 				//Move the highlighted item to the top of the grid
-				this.#grid.getDOM().insertBefore(obj, this.#grid.getDOM().firstChild);
+				this.#grid.getDOM().insertBefore(this.#tileDOM, this.#grid.getDOM().firstChild);
 			}
 		}
 
@@ -203,6 +203,7 @@ class Tile {
 		//Unescape titles
 		const fullText = this.getDOM().querySelector(".a-truncate-full").innerText;
 		this.getDOM().querySelector(".a-truncate-full").innerText = unescapeHTML(unescapeHTML(fullText));
+		showRuntime("Done initializing tile");
 	}
 
 	async moveToGrid(g, animate = false) {
