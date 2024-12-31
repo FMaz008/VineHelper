@@ -44,7 +44,7 @@ var Toolbar = null;
 
 		//Load the Notification Monitor
 		module = await import(chrome.runtime.getURL("../scripts/NotificationMonitor.js"));
-		NotificationMonitor = new module.NotificationMonitor();
+		NotificationMonitor = module.NotificationMonitor;
 
 		//Tile
 		module = await import(chrome.runtime.getURL("../scripts/Tile.js"));

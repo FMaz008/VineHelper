@@ -37,7 +37,7 @@ var vvpContext = null;
 var marketplaceId = null;
 var customerId = null;
 
-var notificationMonitorActive = false; //If true, the page is being displayed as a notification monitor.
+var notificationMonitor = null;
 
 //Do not run the extension if ultraviner is running
 if (!ultraviner) {
@@ -84,8 +84,8 @@ async function init() {
 	arrMatches = currentUrl.match(regex);
 	if (arrMatches != null) {
 		//Initate the notification monitor
-		notificationMonitorActive = true;
-		await NotificationMonitor.initialize();
+		notificationMonitor = new NotificationMonitor();
+		await notificationMonitor.initialize();
 
 		hookExecute("productsUpdated", null);
 		return; //Do not initialize the page as normal
@@ -969,7 +969,7 @@ window.addEventListener("message", async function (event) {
 
 		//The notification monitor does not instanciate a grid as there is no tabs.
 		//But the ETV will be received from the server
-		if (!notificationMonitorActive) {
+		if (!notificationMonitor) {
 			//Update the product tile ETV in the Toolbar
 			const tile = getTileByAsin(tileASIN);
 			if (tile) {
@@ -1037,7 +1037,7 @@ window.addEventListener("message", async function (event) {
 			});
 
 			//The notification monitor does not implement the regularGrid
-			if (!notificationMonitorActive) {
+			if (!notificationMonitor) {
 				//Update the product tile ETV in the Toolbar
 				let tile = getTileByAsin(tileASIN);
 				if (tile) {
@@ -1124,23 +1124,23 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 	}
 
 	if (data.type == "newETV") {
-		if (notificationMonitorActive) {
-			NotificationMonitor.setETV(data.asin, data.etv);
+		if (notificationMonitor) {
+			notificationMonitor.setETV(data.asin, data.etv);
 		}
 	}
 	if (data.type == "wsOpen") {
-		if (notificationMonitorActive) {
-			NotificationMonitor.setWebSocketStatus(true);
+		if (notificationMonitor) {
+			notificationMonitor.setWebSocketStatus(true);
 		}
 	}
 	if (data.type == "wsClosed") {
-		if (notificationMonitorActive) {
-			NotificationMonitor.setWebSocketStatus(false);
+		if (notificationMonitor) {
+			notificationMonitor.setWebSocketStatus(false);
 		}
 	}
 
 	if (data.type == "newItem") {
-		if (notificationMonitorActive) {
+		if (notificationMonitor) {
 			let {
 				date,
 				asin,
@@ -1156,7 +1156,7 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 				enrollment_guid,
 			} = data;
 
-			NotificationMonitor.addTileInGrid(
+			notificationMonitor.addTileInGrid(
 				asin,
 				queue,
 				date,
