@@ -1,18 +1,20 @@
 var currentTab = "vvp-items-grid";
 
 class Grid {
+	gridDOM;
+	pArrTile;
+
 	constructor(obj) {
-		this.pGrid = null;
 		this.pArrTile = [];
-		this.pGrid = obj;
+		this.gridDOM = obj;
 	}
 
 	getId() {
-		return this.pGrid.id;
+		return this.gridDOM.id;
 	}
 
 	getDOM() {
-		return this.pGrid;
+		return this.gridDOM;
 	}
 
 	async addTile(t) {
@@ -51,7 +53,7 @@ class Grid {
 
 	getTileCount(trueCount = false) {
 		if (trueCount) {
-			return this.pGrid?.children.length;
+			return this.gridDOM?.children.length;
 		} else {
 			return this.pArrTile.length;
 		}
@@ -291,6 +293,7 @@ function getRecommendationTypeFromQueue(queue) {
 
 	return recommendationTypes[queue] || null;
 }
+
 function generateRecommendationString(recommendationType, asin, enrollment_guid) {
 	//marketplaceId is global from bootload.js
 	//customerId is global from bootloader.js
@@ -383,3 +386,16 @@ function selectCurrentTab(firstRun = false) {
 	//Display the current tab
 	document.querySelector("#" + currentTab).style.display = "grid";
 }
+
+export {
+	Grid,
+	updateTileCounts,
+	createGridInterface,
+	addPinnedTile,
+	getRecommendationTypeFromQueue,
+	generateRecommendationString,
+	hideAllItems,
+	hideAllItemsNext,
+	showAllItems,
+	selectCurrentTab,
+};

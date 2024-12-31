@@ -30,6 +30,7 @@ var I13n = null;
 var Settings = null;
 var NotificationMonitor = null;
 var Tile = null;
+var Grid = null;
 
 // Factory function to load a module
 (async () => {
@@ -51,6 +52,19 @@ var Tile = null;
 		window.getAsinFromDom = module.getAsinFromDom;
 		window.getTitleFromDom = module.getTitleFromDom;
 		window.getThumbnailURLFromDom = module.getThumbnailURLFromDom;
+
+		//Grid
+		module = await import(chrome.runtime.getURL("../scripts/Grid.js"));
+		Grid = module.Grid;
+		window.updateTileCounts = module.updateTileCounts;
+		window.createGridInterface = module.createGridInterface;
+		window.addPinnedTile = module.addPinnedTile;
+		window.getRecommendationTypeFromQueue = module.getRecommendationTypeFromQueue;
+		window.generateRecommendationString = module.generateRecommendationString;
+		window.hideAllItems = module.hideAllItems;
+		window.hideAllItemsNext = module.hideAllItemsNext;
+		window.showAllItems = module.showAllItems;
+		window.selectCurrentTab = module.selectCurrentTab;
 
 		//Load the SettingMgr.
 		module = await import(chrome.runtime.getURL("../scripts/SettingsMgr.js"));

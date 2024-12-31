@@ -79,7 +79,7 @@
 				"resource/css/toolbar.css",
 				"resource/css/vinehelper.css"
 			],
-			"js": ["scripts/Grid.js", "scripts/Toolbar.js", "scripts/pagination.js", "scripts/bootloader.js"],
+			"js": ["scripts/Toolbar.js", "scripts/pagination.js", "scripts/bootloader.js"],
 			"matches": [
 				"*://*.amazon.ca/vine/*",
 				"*://*.amazon.it/vine/*",
