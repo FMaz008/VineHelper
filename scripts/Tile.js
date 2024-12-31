@@ -1,106 +1,123 @@
 var timeoutHandle;
 
-function Tile(obj, gridInstance) {
-	//private properties
-	var pTile = obj;
-	var pAsin = findasin();
-	var pGrid = gridInstance;
-	pGrid.addTile(this);
-	var pToolbar = null;
+import { keywordMatch } from "./service_worker/keywordMatch.js";
 
-	var pETV = null;
+class Tile {
+	#tileDOM;
+	#grid;
+	#toolbar;
 
-	var pOrderSuccess = 0;
-	var pOrderFailed = 0;
+	#asin;
+	#etv;
+	#orderSuccess;
+	#orderFailed;
+
+	constructor(obj, gridInstance) {
+		this.#tileDOM = obj;
+		this.#grid = gridInstance;
+		this.#toolbar = null;
+		this.#asin = this.#findasin();
+		this.#etv = null;
+		this.#orderSuccess = 0;
+		this.#orderFailed = 0;
+
+		//Add the tile to the grid
+		if (gridInstance !== null) {
+			this.#grid.addTile(this);
+		}
+	}
 
 	//#################
 	//## Private method
-	function findasin() {
-		return getAsinFromDom(pTile);
+	#findasin() {
+		return getAsinFromDom(this.#tileDOM);
 	}
-
-	this.animateVanish = async function () {
-		const defaultOpacity = window.getComputedStyle(pTile).opacity;
-
-		// Animate opacity to 0 (hide)
-		await animateOpacity(pTile, 0, 150);
-
-		// Reset styles
-		pTile.style.opacity = defaultOpacity;
-		pTile.style.height = "100%";
-	};
 
 	//#################
 	//## Public methods
-	this.setToolbar = function (toolbarInstance) {
-		pToolbar = toolbarInstance;
+
+	async animateVanish() {
+		const defaultOpacity = window.getComputedStyle(this.#tileDOM).opacity;
+
+		// Animate opacity to 0 (hide)
+		await animateOpacity(this.#tileDOM, 0, 150);
+
+		// Reset styles
+		this.#tileDOM.style.opacity = defaultOpacity;
+		this.#tileDOM.style.height = "100%";
+	}
+
+	setToolbar = function (toolbarInstance) {
+		this.#toolbar = toolbarInstance;
 	};
-	this.getToolbar = function () {
-		return pToolbar;
-	};
+	getToolbar() {
+		return this.#toolbar;
+	}
 
 	//Generally called by Toolbar().setETV(min, max)
-	this.setETV = function (etv) {
-		pETV = etv;
+	setETV(etv) {
+		this.#etv = etv;
 		if (parseFloat(etv) == 0 && Settings.get("general.zeroETVHighlight.active")) {
-			pTile.style.backgroundColor = Settings.get("general.zeroETVHighlight.color");
+			this.#tileDOM.style.backgroundColor = Settings.get("general.zeroETVHighlight.color");
 		}
-	};
+	}
 
-	this.getETV = function () {
-		return pETV;
-	};
+	getETV() {
+		return this.#etv;
+	}
 
-	this.setOrders = function (success, failed) {
-		pOrderSuccess = success;
-		pOrderFailed = failed;
-	};
+	setOrders(success, failed) {
+		this.#orderSuccess = success;
+		this.#orderFailed = failed;
+	}
 
-	this.getOrderSuccess = function () {
-		return pOrderSuccess;
-	};
-	this.getOrderFailed = function () {
-		return pOrderFailed;
-	};
+	getOrderSuccess() {
+		return this.#orderSuccess;
+	}
+	getOrderFailed() {
+		return this.#orderFailed;
+	}
 
-	this.wasOrdered = function () {
-		return pOrderSuccess > 0 || pOrderFailed > 0;
-	};
+	wasOrdered() {
+		return this.#orderSuccess > 0 || this.#orderFailed > 0;
+	}
 
-	this.getStatus = function () {
+	getStatus() {
 		if (Settings.get("unavailableTab.active")) {
-			if (pOrderSuccess > 0 && pOrderSuccess > pOrderFailed) return NOT_DISCARDED_ORDER_SUCCESS;
+			if (this.#orderSuccess > 0 && this.#orderSuccess > this.#orderFailed) return NOT_DISCARDED_ORDER_SUCCESS;
 
-			if (pOrderFailed > 0 && pOrderFailed > pOrderSuccess) return DISCARDED_ORDER_FAILED;
+			if (this.#orderFailed > 0 && this.#orderFailed > this.#orderSuccess) return DISCARDED_ORDER_FAILED;
 		}
 		return NOT_DISCARDED;
-	};
+	}
 
-	this.getAsin = function () {
-		return pAsin;
-	};
+	getAsin() {
+		return this.#asin;
+	}
 
-	this.getDOM = function () {
-		return pTile;
-	};
+	getDOM() {
+		return this.#tileDOM;
+	}
 
-	this.getGrid = function () {
-		return pGrid;
-	};
+	getGrid() {
+		return this.#grid;
+	}
 
-	this.getGridId = function () {
-		return pGrid.getId();
-	};
-	this.getTitle = function () {
-		return getTitleFromDom(pTile);
-	};
+	getGridId() {
+		return this.#grid.getId();
+	}
+	getTitle() {
+		return getTitleFromDom(this.#tileDOM);
+	}
 
-	this.getThumbnail = function () {
-		return getThumbnailURLFromDom(pTile);
-	};
+	getThumbnail() {
+		return getThumbnailURLFromDom(this.#tileDOM);
+	}
 
-	this.setDateAdded = function (timenow, mysqlDate) {
-		if (mysqlDate == undefined || !Settings.get("general.displayFirstSeen")) return false;
+	setDateAdded(timenow, mysqlDate) {
+		if (mysqlDate == undefined || !Settings.get("general.displayFirstSeen")) {
+			return false;
+		}
 
 		let serverCurrentDate = YMDHiStoISODate(timenow);
 		let itemDateAdded = YMDHiStoISODate(mysqlDate);
@@ -118,17 +135,16 @@ function Tile(obj, gridInstance) {
 			);
 			return;
 		}
+
 		let textDate = timeSince(serverCurrentDate, itemDateAdded);
-		dateAddedMessage = Settings.get("unavailableTab.compactToolbar")
-			? `${textDate} ago`
-			: `First seen: ${textDate} ago`;
+		const dateAddedMessage = `${textDate} ago`;
 
 		let dateAddedDiv = document.createElement("div");
 		dateAddedDiv.classList.add("vh-date-added"); // Add the class
 		dateAddedDiv.textContent = dateAddedMessage;
 
 		// Find the container and append the new div
-		const container = pTile.querySelector(".vh-img-container");
+		const container = this.#tileDOM.querySelector(".vh-img-container");
 		container.appendChild(dateAddedDiv);
 
 		//Highlight the tile background if the bookmark date is in the past
@@ -138,29 +154,35 @@ function Tile(obj, gridInstance) {
 			Settings.get("general.bookmarkDate") != 0
 		) {
 			showRuntime("TILE: The item is more recent than the time marker, highlight it.");
-			pTile.style.backgroundColor = Settings.get("general.bookmarkColor");
+			this.#tileDOM.style.backgroundColor = Settings.get("general.bookmarkColor");
 		}
-	};
+	}
 
-	this.initiateTile = async function () {
+	async initiateTile() {
 		//Highlight the tile border if the title match highlight keywords
 		let highligthed = false;
 		let match;
 		if (Settings.get("general.highlightKeywords")?.length > 0) {
-			match = await this.matchKeywords(Settings.get("general.highlightKeywords"));
+			match = keywordMatch(
+				Settings.get("general.highlightKeywords"),
+				this.getTitle(),
+				this.getETV(),
+				this.getETV()
+			);
+
 			if (match) {
 				highligthed = true;
 				showRuntime("TILE: The item match the keyword '" + match + "', highlight it");
-				pTile.style.backgroundColor = Settings.get("general.keywordHighlightColor");
+				this.#tileDOM.style.backgroundColor = Settings.get("general.keywordHighlightColor");
 
 				//Move the highlighted item to the top of the grid
-				pGrid.getDOM().insertBefore(obj, pGrid.getDOM().firstChild);
+				this.#grid.getDOM().insertBefore(obj, this.#grid.getDOM().firstChild);
 			}
 		}
 
 		//Match with hide keywords. Only hide if not highlighed.
 		if (!highligthed && Settings.get("hiddenTab.active") && Settings.get("general.hideKeywords")?.length > 0) {
-			match = await this.matchKeywords(Settings.get("general.hideKeywords"));
+			match = keywordMatch(Settings.get("general.hideKeywords"), this.getTitle(), this.getETV(), this.getETV());
 			if (match) {
 				showRuntime("TILE: The item match the keyword '" + match + "', hide it");
 				this.hideTile(false, false, true); //Do not save, skip the hidden manager: just move the tile.
@@ -170,95 +192,73 @@ function Tile(obj, gridInstance) {
 
 		//Match with blur keywords.
 		if (Settings.isPremiumUser() && Settings.get("general.blurKeywords")?.length > 0) {
-			match = await this.matchKeywords(Settings.get("general.blurKeywords"));
+			match = keywordMatch(Settings.get("general.blurKeywords"), this.getTitle(), this.getETV(), this.getETV());
 			if (match) {
 				showRuntime("TILE: The item match the keyword '" + match + "', blur it");
-				pTile.querySelector("img")?.classList.add("blur");
-				pTile.querySelector(".vvp-item-product-title-container")?.classList.add("dynamic-blur");
+				this.#tileDOM.querySelector("img")?.classList.add("blur");
+				this.#tileDOM.querySelector(".vvp-item-product-title-container")?.classList.add("dynamic-blur");
 			}
 		}
 
 		//Unescape titles
 		const fullText = this.getDOM().querySelector(".a-truncate-full").innerText;
 		this.getDOM().querySelector(".a-truncate-full").innerText = unescapeHTML(unescapeHTML(fullText));
-	};
+	}
 
-	this.matchKeywords = async function (arrWords) {
-		const val = await new Promise((resolve, reject) => {
-			browser.runtime.sendMessage(
-				{
-					type: "matchKeywords",
-					keywords: arrWords,
-					title: this.getTitle(),
-					etv_min: this.getETV(),
-					etv_max: this.getETV(),
-				},
-				(response) => {
-					if (response.KWMatch !== false) {
-						resolve(response.KWMatch); // Resolve the promise with the KWMatch value
-					} else {
-						resolve(false);
-					}
-				}
-			);
-		});
-		return val;
-	};
-
-	this.moveToGrid = async function (g, animate = false) {
+	async moveToGrid(g, animate = false) {
 		if (g === null) {
 			return false;
 		}
 
 		//If we are asking to move the tile to the same grid, don't do anything
-		if (g.getId() == pGrid.getId()) return false;
+		if (g.getId() == this.#grid.getId()) return false;
 
 		if (animate) {
-			await pGrid.removeTileAnimate(this);
+			await this.#grid.removeTileAnimate(this);
 		} else {
-			await pGrid.removeTile(this); //Avoiding the await keep the method synchronous
+			await this.#grid.removeTile(this); //Avoiding the await keep the method synchronous
 		}
 
-		pGrid = g; //Update the new grid as the current one
-		await pGrid.addTile(this);
+		this.#grid = g; //Update the new grid as the current one
+		await this.#grid.addTile(this);
 
 		return true;
-	};
+	}
 
-	this.isHidden = function () {
+	isHidden() {
 		if (!Settings.get("hiddenTab.active")) return false;
 
-		return HiddenList.isHidden(pAsin);
-	};
+		return HiddenList.isHidden(this.#asin);
+	}
 
-	this.hideTile = async function (animate = true, updateLocalStorage = true, skipHiddenListMgr = false) {
+	async hideTile(animate = true, updateLocalStorage = true, skipHiddenListMgr = false) {
 		//Add the item to the list of hidden items
 
 		if (!skipHiddenListMgr) {
-			HiddenList.addItem(pAsin, updateLocalStorage);
+			HiddenList.addItem(this.#asin, updateLocalStorage);
 		}
 
 		//Move the tile
 		await this.moveToGrid(gridHidden, animate);
 
-		pToolbar.updateVisibilityIcon();
+		this.#toolbar.updateVisibilityIcon();
 
 		//Refresh grid counts
 		updateTileCounts();
-	};
+	}
 
-	this.showTile = async function (animate = true, updateLocalStorage = true) {
+	async showTile(animate = true, updateLocalStorage = true) {
 		//Remove the item from the array of hidden items
-		HiddenList.removeItem(pAsin, updateLocalStorage);
+		HiddenList.removeItem(this.#asin, updateLocalStorage);
 
 		//Move the tile
 		await this.moveToGrid(gridRegular, animate);
 
-		pToolbar.updateVisibilityIcon();
+		this.#toolbar.updateVisibilityIcon();
 
 		//Refresh grid counts
 		updateTileCounts();
-	};
+	}
 }
 
 function timeSince(timenow, date) {
@@ -349,3 +349,5 @@ function animateOpacity(element, targetOpacity, duration) {
 		requestAnimationFrame(animate);
 	});
 }
+
+export { Tile, getTileByAsin, getAsinFromDom, getTitleFromDom, getThumbnailURLFromDom };

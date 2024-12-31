@@ -802,9 +802,7 @@ async function serverProductsResponse(data) {
 	//For each product provided by the server, modify the local listings
 	for (const [key, values] of Object.entries(data["products"])) {
 		showRuntime("DRAW: Processing ASIN #" + key);
-		//console.log(values);
 		let tile = getTileByAsin(key);
-		//console.log(tile);
 
 		if (tile == null) {
 			showRuntime("No tile matching " + key);
@@ -821,6 +819,7 @@ async function serverProductsResponse(data) {
 			showRuntime("DRAW: Setting Date");
 			tile.setDateAdded(timenow, values.date_added);
 		}
+
 		//If there is a remote value for the hidden item, ensure it is sync'ed up with the local list
 		if (Settings.isPremiumUser() && Settings.get("hiddenTab.remote") && values.hidden != null) {
 			if (values.hidden == true && !tile.isHidden()) {
@@ -848,6 +847,7 @@ async function serverProductsResponse(data) {
 			tile.getToolbar().updateToolbar();
 			showRuntime("DRAW: Done updating the toolbar");
 		}
+
 		await tile.initiateTile();
 	}
 

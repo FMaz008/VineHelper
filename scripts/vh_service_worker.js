@@ -143,14 +143,6 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 			sendMessageToAllTabs({ type: "wsClosed" }, "Websocket server disconnected.");
 		}
 	}
-
-	//When a new ETV is received, we match it against the keywords
-	if (data.type == "matchKeywords") {
-		sendResponse({
-			success: true,
-			KWMatch: keywordMatch(data.keywords, data.title, data.etv_min, data.etv_max),
-		});
-	}
 });
 
 browser.alarms.onAlarm.addListener(async (alarm) => {

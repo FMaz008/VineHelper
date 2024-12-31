@@ -87,7 +87,6 @@
 			],
 			"js": [
 				"scripts/Grid.js",
-				"scripts/Tile.js",
 				"scripts/Toolbar.js",
 				"scripts/pagination.js",
 				"scripts/bootloader.js"
