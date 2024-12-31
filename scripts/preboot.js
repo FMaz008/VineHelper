@@ -71,6 +71,10 @@ var Toolbar = null;
 		module = await import(chrome.runtime.getURL("../scripts/Toolbar.js"));
 		Toolbar = module.Toolbar;
 
+		//Pagination
+		module = await import(chrome.runtime.getURL("../scripts/Pagination.js"));
+		window.generatePagination = module.generatePagination;
+
 		//Load the SettingMgr.
 		module = await import(chrome.runtime.getURL("../scripts/SettingsMgr.js"));
 		Settings = new module.SettingsMgr();

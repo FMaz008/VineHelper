@@ -16,8 +16,8 @@ function generatePagination(url, totalItems, itemsPerPage, currentPage) {
 	}
 
 	//Generate the current page padding links
-	start = Math.max(START_PAGE_PADDING + 1, currentPage - CURRENT_PAGE_PADDING);
-	end = Math.min(LAST_PAGE - END_PAGE_PADDING - 1, currentPage + CURRENT_PAGE_PADDING);
+	const start = Math.max(START_PAGE_PADDING + 1, currentPage - CURRENT_PAGE_PADDING);
+	const end = Math.min(LAST_PAGE - END_PAGE_PADDING - 1, currentPage + CURRENT_PAGE_PADDING);
 
 	//Add a ... separator if there is a gap between the beginning of the current range and
 	//the end of the start page padding.
@@ -89,3 +89,5 @@ function generatePaginationContainer() {
 
 	return div;
 }
+
+export { generatePagination };

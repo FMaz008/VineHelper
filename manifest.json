@@ -89,7 +89,6 @@
 				"resource/css/vinehelper.css"
 			],
 			"js": [
-				"scripts/pagination.js",
 				"scripts/bootloader.js"
 			],
 			"matches": [

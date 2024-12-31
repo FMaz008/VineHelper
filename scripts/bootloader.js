@@ -873,7 +873,7 @@ async function serverProductsResponse(data) {
 		Settings.set("general.patreon.tier", data["patreon_membership_tier"]);
 	}
 
-	updateTileCounts();
+	updateTileCounts(); //Grid.js
 	showRuntime("Done updating products");
 	productUpdated = true;
 	hookExecute("productsUpdated", null);
