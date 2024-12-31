@@ -35,6 +35,10 @@
 	text-align: center;
 }
 
+body {
+	font-family: "Segoe UI", Tahoma, sans-serif;
+	font-size: 75%;
+}
 /* #################################### */
 /* TABS */
 /* #################################### */

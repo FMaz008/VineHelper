@@ -1586,11 +1586,13 @@ function openDynamicModal(asin, queue, isParent, enrollmentGUID, autoClick = tru
 
 	//Generate the dynamic modal button
 	const container1 = document.createElement("span");
+	document.getElementById("vvp-items-grid").appendChild(container1);
 	container1.id = "dynamicModalBtn-" + asin;
 	container1.classList.add("vvp-details-btn");
 	const container2 = document.createElement("span");
 	container1.appendChild(container2);
 	const btn = document.createElement("input");
+	container2.appendChild(btn);
 	btn.type = "submit";
 	btn.dataset.asin = asin;
 	btn.dataset.isParentAsin = isParent;
@@ -1603,8 +1605,6 @@ function openDynamicModal(asin, queue, isParent, enrollmentGUID, autoClick = tru
 		btn.dataset.recommendationType = recommendationType;
 		btn.dataset.recommendationId = marketplaceId + "#" + asin + "#vine.enrollment." + enrollmentGUID;
 	}
-	container2.appendChild(btn);
-	document.getElementById("vvp-items-grid").appendChild(container1);
 
 	//Dispatch a click event on the button
 	if (autoClick) {
