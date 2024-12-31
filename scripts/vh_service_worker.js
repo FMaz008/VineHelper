@@ -7,6 +7,7 @@ const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
 import { Internationalization } from "../scripts/Internationalization.js";
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
 import { Streamy } from "./Streamy.js";
+import { keywordMatch } from "./service_worker/keywordMatch.js";
 import "../node_modules/socket.io/client-dist/socket.io.min.js";
 
 const myStream = new Streamy();
@@ -106,12 +107,6 @@ myStream
 		sendMessageToAllTabs(data, "notification");
 	});
 
-/*
-if ("function" == typeof importScripts) {
-	importScripts("../scripts/SettingsMgr.js");
-}
-*/
-
 var I13n = new Internationalization();
 var Settings = new SettingsMgr();
 var notificationsData = {};
@@ -129,13 +124,11 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 		//Get the last 100 most recent items
 		fetchLast100Items();
 		sendResponse({ success: true });
-		return true;
 	}
 
 	if (data.type == "setCountryCode") {
 		I13n.setCountryCode(data.countryCode);
 		sendResponse({ success: true });
-		return true;
 	}
 
 	if (data.type == "wsStatus") {
@@ -145,7 +138,6 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 		} else {
 			sendMessageToAllTabs({ type: "wsClosed" }, "Websocket server disconnected.");
 		}
-		return true;
 	}
 
 	//When a new ETV is received, we match it against the keywords
@@ -154,7 +146,6 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 			success: true,
 			KWMatch: keywordMatch(data.keywords, data.title, data.etv_min, data.etv_max),
 		});
-		return true; // Keep the channel open until the response is sent
 	}
 });
 
@@ -390,58 +381,6 @@ function pushNotification(asin, queue, is_parent_asin, enrollment_guid, search_s
 			}
 		}
 	);
-}
-function keywordMatch(keywords, title, etv_min = null, etv_max = null) {
-	let found = keywords.find((word) => {
-		let regex;
-		let regex2;
-		if (typeof word == "string") {
-			//Old data format where each keyword was a string
-			try {
-				regex = new RegExp(`\\b${word}\\b`, "i");
-			} catch (error) {
-				if (error instanceof SyntaxError) {
-					return false;
-				}
-			}
-
-			if (regex.test(title)) {
-				return true;
-			}
-		} else if (typeof word == "object") {
-			//New data format where keywords are objects
-			try {
-				regex = new RegExp(`\\b${word.contains}\\b`, "i");
-				regex2 = new RegExp(`\\b${word.without}\\b`, "i");
-			} catch (error) {
-				if (error instanceof SyntaxError) {
-					return false;
-				}
-			}
-
-			if (regex.test(title)) {
-				if (word.without == "" || !regex2.test(title)) {
-					if (word.etv_min == "" && word.etv_max == "") {
-						//There is ETV filtering defined, we have a match.
-						return true;
-					} else {
-						//There is an ETV filtering defined, we need to satisfy it
-						if (word.etv_min == "" || (etv_min !== null && etv_min >= parseFloat(word.etv_min))) {
-							if (word.etv_max == "" || (etv_max !== null && etv_max <= parseFloat(word.etv_max))) {
-								return true;
-							}
-						}
-					}
-				}
-			}
-		}
-
-		return false; // Continue searching
-	});
-	if (typeof found === "object") {
-		found = found.contains;
-	}
-	return found === undefined ? false : found;
 }
 
 async function sendMessageToAllTabs(data, debugInfo) {
