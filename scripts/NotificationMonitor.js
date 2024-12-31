@@ -1,6 +1,8 @@
 import { NotificationsSoundPlayer } from "./NotificationsSoundPlayer.js";
 var SoundPlayer = new NotificationsSoundPlayer();
 
+import { keywordMatch } from "./service_worker/keywordMatch.js";
+
 //const TYPE_SHOW_ALL = -1;
 const TYPE_REGULAR = 0;
 const TYPE_ZEROETV = 1;
@@ -253,6 +255,15 @@ class NotificationMonitor {
 		const hideIcon = document.querySelector("#vh-hide-link-" + asin);
 		hideIcon.addEventListener("click", this.#handleHideClick);
 
+		//Add the click listener for the See Details button
+		const seeDetailsBtn = document.querySelector(`#vh-notification-${asin} .vvp-details-btn-vh input`);
+		seeDetailsBtn.addEventListener("click", () => {
+			window.open(
+				`https://www.amazon.${I13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`,
+				"_blank"
+			);
+		});
+
 		//Autotruncate the items if there are too many
 		this.#autoTruncate();
 
@@ -311,7 +322,7 @@ class NotificationMonitor {
 			const title = notif.querySelector(".a-truncate-full").innerText;
 			if (title) {
 				//Check if we need to highlight the item
-				const val = await this.#matchKeywords(
+				const val = await keywordMatch(
 					Settings.get("general.highlightKeywords"),
 					title,
 					etvObj.dataset.etvMin,
@@ -324,7 +335,7 @@ class NotificationMonitor {
 					this.#highlightedItemFound(asin, true);
 				} else {
 					//Check if we need to hide the item
-					const val2 = await this.#matchKeywords(
+					const val2 = await keywordMatch(
 						Settings.get("general.hideKeywords"),
 						title,
 						etvObj.dataset.etvMin,
@@ -346,31 +357,6 @@ class NotificationMonitor {
 				this.#zeroETVItemFound(asin, true);
 			}
 		}
-	}
-
-	/**
-	 * Contact the ServiceWorker to process the list of keywords.
-	 * @param {*} arrKeywords
-	 * @param {*} title
-	 * @param {*} etv_min
-	 * @param {*} etv_max
-	 * @returns false||string of the matched keyword (both as a promise).
-	 */
-	#matchKeywords(arrKeywords, title, etv_min, etv_max) {
-		return new Promise((resolve, reject) => {
-			browser.runtime.sendMessage(
-				{
-					type: "matchKeywords",
-					keywords: arrKeywords,
-					title: title,
-					etv_min: etv_min,
-					etv_max: etv_max,
-				},
-				(response) => {
-					resolve(response.KWMatch); //false or the matching keyword.
-				}
-			);
-		});
 	}
 
 	setWebSocketStatus(status) {
