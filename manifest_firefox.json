@@ -86,7 +86,6 @@
 				"resource/css/vinehelper.css"
 			],
 			"js": [
-				"scripts/Toolbar.js",
 				"scripts/pagination.js",
 				"scripts/bootloader.js"
 			],

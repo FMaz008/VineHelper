@@ -31,6 +31,7 @@ var Settings = null;
 var NotificationMonitor = null;
 var Tile = null;
 var Grid = null;
+var Toolbar = null;
 
 // Factory function to load a module
 (async () => {
@@ -65,6 +66,10 @@ var Grid = null;
 		window.hideAllItemsNext = module.hideAllItemsNext;
 		window.showAllItems = module.showAllItems;
 		window.selectCurrentTab = module.selectCurrentTab;
+
+		//Toolbar
+		module = await import(chrome.runtime.getURL("../scripts/Toolbar.js"));
+		Toolbar = module.Toolbar;
 
 		//Load the SettingMgr.
 		module = await import(chrome.runtime.getURL("../scripts/SettingsMgr.js"));

@@ -1,19 +1,21 @@
 class Toolbar {
+	#tile;
+
 	constructor(tileInstance) {
-		this.pTile = tileInstance;
-		this.pTile.setToolbar(this);
+		this.#tile = tileInstance;
+		this.#tile.setToolbar(this);
 	}
 
 	//Create the bare bone structure of the toolbar
 	async createProductToolbar() {
-		let toolbarId = "vh-toolbar-" + this.pTile.getAsin();
-		let anchorTo = this.pTile.getDOM().querySelector(".vvp-item-tile-content"); //.vvp-item-tile-content should be the first child
+		let toolbarId = "vh-toolbar-" + this.#tile.getAsin();
+		let anchorTo = this.#tile.getDOM().querySelector(".vvp-item-tile-content"); //.vvp-item-tile-content should be the first child
 
 		//Load the toolbar template
 		showRuntime("DRAW: Creating #" + toolbarId);
 		const prom = await Tpl.loadFile("view/toolbar.html");
 		Tpl.setVar("toolbarId", toolbarId);
-		Tpl.setVar("asin", this.pTile.getAsin());
+		Tpl.setVar("asin", this.#tile.getAsin());
 		Tpl.setIf(
 			"announce",
 			Settings.get("discord.active") &&
@@ -38,7 +40,7 @@ class Toolbar {
 				if (event.currentTarget.textContent === "") return false;
 				if (vineSearch) return false;
 
-				let tile = getTileByAsin(this.pTile.getAsin());
+				let tile = getTileByAsin(this.#tile.getAsin());
 				let tileDOM = tile.getDOM();
 				let announcementIcon = tileDOM.querySelector(".vh-icon-announcement");
 
@@ -50,20 +52,20 @@ class Toolbar {
 
 						if (vineQueue == null) throw new Exception("Cannot announce an item in an unknown queue.");
 
-						let tile = getTileByAsin(this.pTile.getAsin());
+						let tile = getTileByAsin(this.#tile.getAsin());
 						let etv = tile.getDOM().querySelector(".etv").textContent;
 
 						// In case of price range, only send the highest value
 						etv = etv.split("-").pop();
 						etv = Number(etv.replace(/[^0-9-.]+/g, ""));
 
-						window.BrendaAnnounceQueue.announce(this.pTile.getAsin(), etv, vineQueue, I13n.getDomainTLD());
+						window.BrendaAnnounceQueue.announce(this.#tile.getAsin(), etv, vineQueue, I13n.getDomainTLD());
 
 						if (!Settings.get("notification.reduce")) {
 							let note = new ScreenNotification();
 							note.title = "Announce to Brenda";
 							note.lifespan = 10;
-							note.content = `Sending this product ${this.pTile.getAsin()} from the ${vineQueueAbbr} queue to Brenda over on discord`;
+							note.content = `Sending this product ${this.#tile.getAsin()} from the ${vineQueueAbbr} queue to Brenda over on discord`;
 							await Notifications.pushNotification(note);
 						}
 
@@ -109,11 +111,11 @@ class Toolbar {
 
 		//Display the hide link
 		if (Settings.get("hiddenTab.active")) {
-			let h = document.getElementById(`vh-hide-link-${this.pTile.getAsin()}`);
+			let h = document.getElementById(`vh-hide-link-${this.#tile.getAsin()}`);
 			if (h) {
 				h.addEventListener("click", async (event) => {
 					// A hide/display item button was pressed
-					let asin = this.pTile.getAsin(); // Directly access ASIN from the context
+					let asin = this.#tile.getAsin(); // Directly access ASIN from the context
 					let tile = getTileByAsin(asin);
 					let gridId = tile.getGridId();
 
@@ -138,14 +140,14 @@ class Toolbar {
 
 		//Pinned items event handler
 		if (Settings.get("pinnedTab.active")) {
-			let h2 = document.getElementById(`vh-pin-link-${this.pTile.getAsin()}`);
+			let h2 = document.getElementById(`vh-pin-link-${this.#tile.getAsin()}`);
 
 			if (h2) {
 				h2.addEventListener("click", async (event) => {
 					h2.style.opacity = 0.3;
 
 					// A hide/display item button was pressed
-					let asin = this.pTile.getAsin(); // Directly access ASIN
+					let asin = this.#tile.getAsin(); // Directly access ASIN
 					let tile = getTileByAsin(asin);
 
 					// Get the item title and thumbnail
@@ -175,8 +177,8 @@ class Toolbar {
 			return false;
 		}
 
-		let icon = document.querySelector(`#vh-hide-link-${this.pTile.getAsin()} div.vh-toolbar-icon`);
-		let gridId = this.pTile.getGridId();
+		let icon = document.querySelector(`#vh-hide-link-${this.#tile.getAsin()} div.vh-toolbar-icon`);
+		let gridId = this.#tile.getGridId();
 
 		if (icon) {
 			// Remove classes
@@ -196,9 +198,9 @@ class Toolbar {
 	}
 
 	setETV(etv1, etv2, onlyIfEmpty = false) {
-		let context = document.getElementById(`vh-toolbar-${this.pTile.getAsin()}`);
+		let context = document.getElementById(`vh-toolbar-${this.#tile.getAsin()}`);
 		let span = context.querySelector(".vh-toolbar-etv .etv");
-		this.pTile.setETV(etv2);
+		this.#tile.setETV(etv2);
 
 		if (onlyIfEmpty && span.textContent !== "") return false;
 
@@ -224,11 +226,11 @@ class Toolbar {
 
 	//This method is called from bootloader.js, serverResponse() when the data has been received, after the tile was moved.
 	async updateToolbar() {
-		showRuntime(`DRAW-UPDATE-TOOLBAR: Updating #vh-toolbar-${this.pTile.getAsin()}`);
-		let context = document.getElementById(`vh-toolbar-${this.pTile.getAsin()}`);
+		showRuntime(`DRAW-UPDATE-TOOLBAR: Updating #vh-toolbar-${this.#tile.getAsin()}`);
+		let context = document.getElementById(`vh-toolbar-${this.#tile.getAsin()}`);
 
 		if (!context) {
-			showRuntime(`! Could not find #vh-toolbar-${this.pTile.getAsin()}`);
+			showRuntime(`! Could not find #vh-toolbar-${this.#tile.getAsin()}`);
 			return;
 		}
 
@@ -241,7 +243,7 @@ class Toolbar {
 
 		// Set the icons
 		showRuntime("DRAW-UPDATE-TOOLBAR: Setting icon status");
-		switch (this.pTile.getStatus()) {
+		switch (this.#tile.getStatus()) {
 			case DISCARDED_ORDER_FAILED:
 				statusColor = "vh-background-fees";
 				break;
@@ -267,12 +269,12 @@ class Toolbar {
 	async createOrderWidget(status = null) {
 		if (status !== null) {
 			// Get the current order info
-			let success = status ? this.pTile.getOrderSuccess() + 1 : this.pTile.getOrderSuccess();
-			let failed = !status ? this.pTile.getOrderFailed() + 1 : this.pTile.getOrderFailed();
-			this.pTile.setOrders(success, failed);
+			let success = status ? this.#tile.getOrderSuccess() + 1 : this.#tile.getOrderSuccess();
+			let failed = !status ? this.#tile.getOrderFailed() + 1 : this.#tile.getOrderFailed();
+			this.#tile.setOrders(success, failed);
 		}
 
-		let context = document.getElementById(`vh-toolbar-${this.pTile.getAsin()}`);
+		let context = document.getElementById(`vh-toolbar-${this.#tile.getAsin()}`);
 		let container = context.querySelector("div.vh-status-container");
 
 		// Remove any previous order widget
@@ -280,8 +282,8 @@ class Toolbar {
 
 		// Generate the HTML for the widget
 		let prom = await Tpl.loadFile("view/widget_order.html");
-		Tpl.setVar("order_success", this.pTile.getOrderSuccess());
-		Tpl.setVar("order_failed", this.pTile.getOrderFailed());
+		Tpl.setVar("order_success", this.#tile.getOrderSuccess());
+		Tpl.setVar("order_failed", this.#tile.getOrderFailed());
 		let content = Tpl.render(prom, true);
 		container.appendChild(content);
 
@@ -292,3 +294,5 @@ class Toolbar {
 		}
 	}
 }
+
+export { Toolbar };
