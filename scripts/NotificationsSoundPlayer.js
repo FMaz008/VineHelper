@@ -66,11 +66,15 @@ class NotificationsSoundPlayer {
 		if (volume >= 0 && volume <= 1) {
 			audioElement.volume = Number(volume);
 		}
-		try {
-			audioElement.play();
-		} catch (error) {
-			//Do nothing
-		}
+
+		audioElement.play().catch((error) => {
+			// Check if the error is a NotAllowedError (in case of autoplay restrictions)
+			if (error.name === "NotAllowedError") {
+				console.error(
+					"VineHelper: A sound effect was blocked by the browser because you did not interact with the page."
+				);
+			}
+		});
 
 		//Set the cooldown
 		this.#notificationType = -1;
