@@ -120,6 +120,10 @@ if (typeof browser === "undefined") {
 //## LISTENERS
 //#####################################################
 browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
+	if (data.type == undefined) {
+		return false;
+	}
+
 	if (data.type == "fetchLast100Items") {
 		//Get the last 100 most recent items
 		fetchLast100Items();

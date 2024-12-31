@@ -835,11 +835,10 @@ async function serverProductsResponse(data) {
 		if (Settings.get("unavailableTab.active")) {
 			showRuntime("DRAW: Setting orders");
 			tile.setOrders(values.order_success, values.order_failed);
-			showRuntime("DRAW: A");
+
 			//Assign the tiles to the proper grid
 			if (Settings.get("hiddenTab.active") && tile.isHidden()) {
 				//The hidden tiles were already moved, keep the there.
-				showRuntime("DRAW: B");
 			} else if (tile.getStatus() >= DISCARDED_ORDER_FAILED) {
 				showRuntime("DRAW: moving the tile to Unavailable (failed order(s))");
 				await tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
@@ -889,16 +888,16 @@ async function serverProductsResponse(data) {
 window.addEventListener("message", async function (event) {
 	//Do not run the extension if ultraviner is running
 	if (ultraviner) {
-		return;
+		return false;
 	}
 
 	// We only accept messages from ourselves
-	if (event.source != window) {
-		return;
+	if (event.source != window || event.data.type == undefined) {
+		return false;
 	}
 
 	//Sometime, mostly for debugging purpose, the Service worker can try to display notifications.
-	if (event.data.type && event.data.type == "rawNotification") {
+	if (event.data.type == "rawNotification") {
 		let note = new ScreenNotification();
 		note.title = "System";
 		note.lifespan = 10;
@@ -907,7 +906,7 @@ window.addEventListener("message", async function (event) {
 	}
 
 	//If we got back a message after we fixed an infinite wheel spin.
-	if (event.data.type && event.data.type == "infiniteWheelFixed") {
+	if (event.data.type == "infiniteWheelFixed") {
 		//console.log("Content script received message: " + event.data.text);
 
 		let prom = await Tpl.loadFile("view/infinite_wheel_fix.html");
@@ -945,7 +944,7 @@ window.addEventListener("message", async function (event) {
 	}
 
 	//If we got back a message after we found an ETV.
-	if (event.data.type && event.data.type == "etv") {
+	if (event.data.type == "etv") {
 		//Send the ETV info to the server
 		let tileASIN = event.data.data.parent_asin;
 		if (tileASIN === null) {
@@ -1006,7 +1005,7 @@ window.addEventListener("message", async function (event) {
 	}
 
 	//If we got back a message after an order was attempted or placed.
-	if (event.data.type && event.data.type == "order") {
+	if (event.data.type == "order") {
 		let tileASIN;
 		if (event.data.data.parent_asin === null) {
 			tileASIN = event.data.data.asin;
@@ -1067,7 +1066,7 @@ window.addEventListener("message", async function (event) {
 		await Notifications.pushNotification(note);
 	}
 
-	if (event.data.type && event.data.type == "error") {
+	if (event.data.type == "error") {
 		//Show a notification
 		let note = new ScreenNotification();
 		note.title = "Product unavailable.";
@@ -1080,7 +1079,7 @@ window.addEventListener("message", async function (event) {
 		await Notifications.pushNotification(note);
 	}
 
-	if (event.data.type && event.data.type == "websiteOpts") {
+	if (event.data.type == "websiteOpts") {
 		websiteOpts = event.data.data;
 		if (!marketplaceId) {
 			marketplaceId = websiteOpts.obfuscatedMarketId;
@@ -1113,33 +1112,31 @@ window.addEventListener("message", async function (event) {
 //In this case, all messages are coming from the service_worker file.
 browser.runtime.onMessage.addListener(async function (message, sender, sendResponse) {
 	let data = message;
-	if (data.type == undefined) return;
+	if (data.type == undefined) {
+		return false;
+	}
 
 	sendResponse({ success: true });
 
 	//If we received a request for a hook execution
 	if (data.type == "hookExecute") {
 		hookExecute(data.hookname, data);
-		return true;
 	}
 
 	if (data.type == "newETV") {
 		if (notificationMonitorActive) {
 			NotificationMonitor.setETV(data.asin, data.etv);
 		}
-		return true;
 	}
 	if (data.type == "wsOpen") {
 		if (notificationMonitorActive) {
 			NotificationMonitor.setWebSocketStatus(true);
 		}
-		return true;
 	}
 	if (data.type == "wsClosed") {
 		if (notificationMonitorActive) {
 			NotificationMonitor.setWebSocketStatus(false);
 		}
-		return true;
 	}
 
 	if (data.type == "newItem") {
@@ -1224,7 +1221,6 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 			note2.content = Tpl.render(prom);
 			Notifications.pushNotification(note2);
 		}
-		return true;
 	}
 });
 
