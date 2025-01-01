@@ -58,13 +58,14 @@ body {
 
 .setting-container {
 	margin-top: 10px;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
 }
 
 label {
-	display: flex;
-	align-items: center;
 	border: 0px solid var(--border-light, #ddd);
-	flex-grow: 0;
+	flex-grow: 1;
 	text-align: left;
 	margin: 1px;
 	padding: 4px;
@@ -96,6 +97,7 @@ legend {
 
 label.right-align input,
 label.right-align select {
+	display: flex;
 	margin-right: 0px;
 	margin-left: auto;
 }
@@ -158,4 +160,8 @@ div.buttons-header .button-inner {
 	padding: 5px;
 	text-align: center;
 	vertical-align: middle;
+}
+
+a.toggle {
+	cursor: pointer;
 }

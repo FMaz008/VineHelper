@@ -105,10 +105,6 @@
 				<input type="range" name="notification.screen.regular.volume" min="0" max="1" step="0.05" />
 				<button id="playScreenNotification">&#9654;</button>
 			</label>
-			<div class="setting-summary">
-				<div class="vh-toolbar-icon vh-icon-question"></div>
-				This plays a notification sound when new items are reported.
-			</div>
 		</div>
 	</fieldset>
 
@@ -121,7 +117,7 @@
 			</div>
 		</div>
 		<div class="setting-container">
-			<fieldset>
+			<fieldset style="display: flex; flex-direction: column; flex-grow: 1">
 				<legend>See Details button behavior</legend>
 				<label>
 					<input type="radio" name="notification.monitor.openLinksInNewTab" value="0" />
@@ -131,11 +127,6 @@
 					><input type="radio" name="notification.monitor.openLinksInNewTab" value="1" />
 					Open in new tab (preserve the Notif. Mon.)
 				</label>
-				<div class="setting-summary">
-					<div class="vh-toolbar-icon vh-icon-question"></div>
-					This hides a notification in the monitor tab when it matches a hide keyword and does not also match
-					a highlight keyword.
-				</div>
 			</fieldset>
 		</div>
 
