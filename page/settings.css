@@ -64,6 +64,7 @@ body {
 }
 
 label {
+	flex: none;
 	border: 0px solid var(--border-light, #ddd);
 	flex-grow: 1;
 	text-align: left;
