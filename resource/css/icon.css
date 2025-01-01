@@ -127,6 +127,11 @@
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/caret-right.png");
 		background-repeat: no-repeat;
 	}
+	.vh-icon-toggler-down {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/caret-down.png");
+		background-repeat: no-repeat;
+	}
 	.vh-icon-cogs {
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/cogs.png");
@@ -280,6 +285,11 @@
 	.vh-icon-toggler-right {
 		background-size: 100%;
 		background-image: url("/resource/image/caret-right.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-toggler-down {
+		background-size: 100%;
+		background-image: url("/resource/image/caret-down.png");
 		background-repeat: no-repeat;
 	}
 	.vh-icon-cogs {

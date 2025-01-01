@@ -315,6 +315,8 @@ async function initiateSettings() {
 	manageKeywords("general.highlightKeywords");
 	manageKeywords("general.hideKeywords");
 	manageTextareaCSK("general.blurKeywords");
+	initiateTogglers();
+	initiateTestKeywords();
 
 	//##TAB - KEYBINDINGS
 
@@ -398,6 +400,67 @@ async function initiateSettings() {
 		//"&scope=pledges-to-me" +
 		"&state=" +
 		Settings.get("general.uuid", false);
+}
+
+/**
+ * Function to handle the collapsible fieldsets
+ */
+function initiateTogglers() {
+	document.querySelectorAll("a.toggle").forEach((link) => {
+		link.addEventListener("click", (event) => {
+			const container = link.parentElement.parentElement.querySelector("div.toggle-container");
+			const toggleIcon = link.querySelector("div");
+			if (toggleIcon.classList.contains("vh-icon-toggler-down")) {
+				toggleIcon.classList.remove("vh-icon-toggler-down");
+				toggleIcon.classList.add("vh-icon-toggler-right");
+
+				container.style.display = "none";
+			} else {
+				toggleIcon.classList.remove("vh-icon-toggler-right");
+				toggleIcon.classList.add("vh-icon-toggler-down");
+
+				container.style.display = "block";
+			}
+		});
+	});
+}
+
+/**
+ * Test a title against all keywords
+ */
+function initiateTestKeywords() {
+	const titleObj = document.querySelector("#testTitle");
+	titleObj.addEventListener("keyup", (event) => {
+		const title = titleObj.value;
+		testKeyword("general.highlightKeywords", title);
+		testKeyword("general.hideKeywords", title);
+	});
+}
+
+function testKeyword(key, title) {
+	const keyE = CSS.escape(key);
+
+	const lines = document.querySelectorAll(`#${keyE} table>tr`);
+	for (let i = 0; i < lines.length; i++) {
+		let regex;
+		const containsObj = lines[i].querySelector(`td input[name="contains"]`);
+		const contains = containsObj.value.trim();
+		regex = new RegExp(`\\b${contains}\\b`, "i");
+		if (regex.test(title)) {
+			containsObj.style.background = "lightgreen";
+		} else {
+			containsObj.style.background = "white";
+		}
+
+		const withoutObj = lines[i].querySelector(`td input[name="without"]`);
+		const without = withoutObj.value.trim();
+		regex = new RegExp(`\\b${without}\\b`, "i");
+		if (regex.test(title) && without != "") {
+			withoutObj.style.background = "lightgreen";
+		} else {
+			withoutObj.style.background = "white";
+		}
+	}
 }
 
 /**

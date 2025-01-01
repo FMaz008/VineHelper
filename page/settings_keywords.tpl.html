@@ -1,69 +1,75 @@
 <fieldset>
-	<legend>Highlight items keywords</legend>
-
-	<div class="setting-container">
-		<label for="general.keywordHighlightColor"
-			>Color:&nbsp;
-			<input type="color" name="general.keywordHighlightColor" size="7" maxlength="7" />
-		</label>
-		<div class="setting-summary">
-			<div class="vh-toolbar-icon vh-icon-question"></div>
-			Defines the background color of items matching highlight keywords.
-		</div>
-	</div>
-
-	<div class="setting-container" id="general.highlightKeywords">
-		<table>
-			<tbody>
-				<tr>
-					<th style="width: 50%">Contains</th>
-					<th style="width: 30%">but without</th>
-					<th style="width: 7%">ETV min</th>
-					<th style="width: 7%">ETV max</th>
-					<th style="width: auto"></th>
-				</tr>
-			</tbody>
-		</table>
-		<div class="toolbar" style="display: flex; margin-top: 10px">
-			<input
-				type="button"
-				class="vh-icon-add"
-				name="add"
-				style="display: flex; width: 30px; background-position: center"
-			/>
-			<p
-				style="
-					display: flex;
-					flex-grow: 1;
-					flex-direction: column;
-					margin: 0;
-					text-align: center;
-					font-size: 8pt;
-				"
-			>
-				ETV cond. won't match unknown ETV.<br />
-				&nbsp;
-			</p>
-			<input type="button" name="save" value="Save" style="display: flex" />
-		</div>
-		<div style="text-align: center; font-weight: bold">Use REGEX syntax.</div>
-		<fieldset>
-			<legend>Bulk actions</legend>
-			<div class="setting-container">
-				<input type="button" id="bulkDeletehighlight" value="Delete All" />
-				<input type="button" id="bulkImporthighlight" value="Batch Import" />
+	<legend>
+		<a class="toggle"
+			><div class="vh-toolbar-icon vh-icon-toggler-down" style="margin-left: 3px"></div>
+			Highlight items keywords
+		</a>
+	</legend>
+	<div class="toggle-container">
+		<div class="setting-container">
+			<label for="general.keywordHighlightColor"
+				>Color:&nbsp;
+				<input type="color" name="general.keywordHighlightColor" size="7" maxlength="7" />
+			</label>
+			<div class="setting-summary">
+				<div class="vh-toolbar-icon vh-icon-question"></div>
+				Defines the background color of items matching highlight keywords.
 			</div>
-		</fieldset>
-		<fieldset>
-			<legend>
-				Remote storage
-				<div class="vh-toolbar-icon vh-icon-premium" style="margin-left: 5px"></div>
-			</legend>
-			<div class="setting-container premium-feature">
-				<input type="button" id="loadhighlightKeywords" value="Load from server" />
-				<input type="button" id="savehighlightKeywords" value="Save to server" />
+		</div>
+
+		<div class="setting-container" id="general.highlightKeywords">
+			<table>
+				<tbody>
+					<tr>
+						<th style="width: 50%">Contains</th>
+						<th style="width: 30%">but without</th>
+						<th style="width: 7%">ETV min</th>
+						<th style="width: 7%">ETV max</th>
+						<th style="width: auto"></th>
+					</tr>
+				</tbody>
+			</table>
+			<div class="toolbar" style="display: flex; margin-top: 10px">
+				<input
+					type="button"
+					class="vh-icon-add"
+					name="add"
+					style="display: flex; width: 30px; background-position: center"
+				/>
+				<p
+					style="
+						display: flex;
+						flex-grow: 1;
+						flex-direction: column;
+						margin: 0;
+						text-align: center;
+						font-size: 8pt;
+					"
+				>
+					ETV cond. won't match unknown ETV.<br />
+					&nbsp;
+				</p>
+				<input type="button" name="save" value="Save" style="display: flex" />
 			</div>
-		</fieldset>
+			<div style="text-align: center; font-weight: bold">Use REGEX syntax.</div>
+			<fieldset>
+				<legend>Bulk actions</legend>
+				<div class="setting-container">
+					<input type="button" id="bulkDeletehighlight" value="Delete All" />
+					<input type="button" id="bulkImporthighlight" value="Batch Import" />
+				</div>
+			</fieldset>
+			<fieldset>
+				<legend>
+					Remote storage
+					<div class="vh-toolbar-icon vh-icon-premium" style="margin-left: 5px"></div>
+				</legend>
+				<div class="setting-container premium-feature">
+					<input type="button" id="loadhighlightKeywords" value="Load from server" />
+					<input type="button" id="savehighlightKeywords" value="Save to server" />
+				</div>
+			</fieldset>
+		</div>
 	</div>
 </fieldset>
 
@@ -72,81 +78,103 @@
 </div>
 
 <fieldset>
-	<legend>Auto-hide items keywords</legend>
-
-	<div class="setting-container" id="general.hideKeywords">
-		<table>
-			<tbody>
-				<tr>
-					<th style="width: 50%">Contains</th>
-					<th style="width: 30%">but without</th>
-					<th style="width: 7%">ETV min</th>
-					<th style="width: 7%">ETV max</th>
-					<th style="width: auto"></th>
-				</tr>
-			</tbody>
-		</table>
-		<div class="toolbar" style="display: flex; margin-top: 10px">
-			<input
-				type="button"
-				class="vh-icon-add"
-				name="add"
-				style="display: flex; width: 30px; background-position: center"
-			/>
-			<p
-				style="
-					display: flex;
-					flex-grow: 1;
-					flex-direction: column;
-					margin: 0;
-					text-align: center;
-					font-size: 8pt;
-				"
-			>
-				ETV cond. won't match unknown ETV.<br />
-				&nbsp;
-			</p>
-			<input type="button" name="save" value="Save" style="display: flex" />
-		</div>
-		<div style="text-align: center; font-weight: bold">Use REGEX syntax.</div>
-		<fieldset>
-			<legend>Bulk actions</legend>
-			<div class="setting-container">
-				<input type="button" id="bulkDeletehidden" value="Delete All" />
-				<input type="button" id="bulkImporthidden" value="Batch Import" />
+	<legend>
+		<a class="toggle"
+			><div class="vh-toolbar-icon vh-icon-toggler-down" style="margin-left: 3px"></div>
+			Auto-hide items keywords
+		</a>
+	</legend>
+	<div class="toggle-container">
+		<div class="setting-container" id="general.hideKeywords">
+			<table>
+				<tbody>
+					<tr>
+						<th style="width: 50%">Contains</th>
+						<th style="width: 30%">but without</th>
+						<th style="width: 7%">ETV min</th>
+						<th style="width: 7%">ETV max</th>
+						<th style="width: auto"></th>
+					</tr>
+				</tbody>
+			</table>
+			<div class="toolbar" style="display: flex; margin-top: 10px">
+				<input
+					type="button"
+					class="vh-icon-add"
+					name="add"
+					style="display: flex; width: 30px; background-position: center"
+				/>
+				<p
+					style="
+						display: flex;
+						flex-grow: 1;
+						flex-direction: column;
+						margin: 0;
+						text-align: center;
+						font-size: 8pt;
+					"
+				>
+					ETV cond. won't match unknown ETV.<br />
+					&nbsp;
+				</p>
+				<input type="button" name="save" value="Save" style="display: flex" />
 			</div>
-		</fieldset>
+			<div style="text-align: center; font-weight: bold">Use REGEX syntax.</div>
+			<fieldset>
+				<legend>Bulk actions</legend>
+				<div class="setting-container">
+					<input type="button" id="bulkDeletehidden" value="Delete All" />
+					<input type="button" id="bulkImporthidden" value="Batch Import" />
+				</div>
+			</fieldset>
+			<fieldset>
+				<legend>
+					Remote storage
+					<div class="vh-toolbar-icon vh-icon-premium" style="margin-left: 5px"></div>
+				</legend>
+				<div class="setting-container premium-feature">
+					<input type="button" id="loadhiddenKeywords" value="Load from server" />
+					<input type="button" id="savehiddenKeywords" value="Save to server" />
+				</div>
+			</fieldset>
+		</div>
+	</div>
+</fieldset>
+
+<fieldset>
+	<legend>
+		<a class="toggle"
+			><div class="vh-toolbar-icon vh-icon-toggler-down" style="margin-left: 3px"></div>
+			Blur items matching the following keywords
+		</a>
+
+		<div class="vh-toolbar-icon vh-icon-premium" style="margin-left: 5px"></div>
+	</legend>
+	<div class="toggle-container">
+		<div class="setting-container premium-feature">
+			<textarea name="general.blurKeywords"></textarea>
+			<div style="text-align: center; font-weight: bold">
+				Separate keywords with a comma (,). Use REGEX syntax.
+			</div>
+		</div>
 		<fieldset>
 			<legend>
 				Remote storage
 				<div class="vh-toolbar-icon vh-icon-premium" style="margin-left: 5px"></div>
 			</legend>
 			<div class="setting-container premium-feature">
-				<input type="button" id="loadhiddenKeywords" value="Load from server" />
-				<input type="button" id="savehiddenKeywords" value="Save to server" />
+				<input type="button" id="loadblurKeywords" value="Load from server" />
+				<input type="button" id="saveblurKeywords" value="Save to server" />
 			</div>
 		</fieldset>
 	</div>
 </fieldset>
 
 <fieldset>
-	<legend>
-		Blur items matching the following keywords
-		<div class="vh-toolbar-icon vh-icon-premium" style="margin-left: 5px"></div>
-	</legend>
-
-	<div class="setting-container premium-feature">
-		<textarea name="general.blurKeywords"></textarea>
-		<div style="text-align: center; font-weight: bold">Separate keywords with a comma (,). Use REGEX syntax.</div>
-	</div>
-	<fieldset>
-		<legend>
-			Remote storage
-			<div class="vh-toolbar-icon vh-icon-premium" style="margin-left: 5px"></div>
-		</legend>
-		<div class="setting-container premium-feature">
-			<input type="button" id="loadblurKeywords" value="Load from server" />
-			<input type="button" id="saveblurKeywords" value="Save to server" />
-		</div>
-	</fieldset>
+	<legend>Keywords Testing</legend>
+	<p>
+		Enter a test title to test which highlight/hidden keywords matches. Matching keywords will get a green
+		background.
+	</p>
+	<textarea id="testTitle" style="height: 30px"></textarea>
 </fieldset>
