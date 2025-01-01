@@ -6,106 +6,16 @@ const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
 
 import { Internationalization } from "../scripts/Internationalization.js";
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
-import { Streamy } from "./Streamy.js";
-import { keywordMatch } from "./service_worker/keywordMatch.js";
+import {
+	dataStream as myStream,
+	broadcastFunction,
+	notificationPushFunction,
+} from "./service_worker/NewItemStreamProcessing.js";
 import "../node_modules/socket.io/client-dist/socket.io.min.js";
 
-const myStream = new Streamy();
-const filterHideitem = myStream.filter(function (data) {
-	if (Settings.get("notification.hideList")) {
-		const hideKWMatch = keywordMatch(Settings.get("general.hideKeywords"), data.title, data.etv_min, data.etv_max);
-		if (hideKWMatch !== false) {
-			console.log(hideKWMatch);
-			console.log("Item " + data.title + " matched hide keyword " + hideKWMatch + " hide it.");
-			return false; //Do not display the notification as it matches the hide list.
-		}
-	}
-	return true;
-});
-const transformIsHighlight = myStream.transformer(function (data) {
-	const highlightKWMatch = keywordMatch(
-		Settings.get("general.highlightKeywords"),
-		data.title,
-		data.etv_min,
-		data.etv_max
-	);
-	data.KWsMatch = highlightKWMatch !== false;
-	data.KW = highlightKWMatch;
-
-	return data;
-});
-const transformIsBlur = myStream.transformer(function (data) {
-	const blurKWMatch = keywordMatch(Settings.get("general.blurKeywords"), data.title);
-	data.BlurKWsMatch = blurKWMatch !== false;
-	data.BlurKW = blurKWMatch;
-
-	return data;
-});
-const transformSearchPhrase = myStream.transformer(function (data) {
-	const search = data.title.replace(/^([a-zA-Z0-9\s'".,]{0,40})[\s]+.*$/, "$1");
-	data.search = search;
-	return data;
-});
-const transformUnixTimestamp = myStream.transformer(function (data) {
-	data.timestamp = dateToUnixTimestamp(data.date);
-	return data;
-});
-const transformPostNotification = myStream.transformer(function (data) {
-	//If the new item match a highlight keyword, push a real notification.
-	if (Settings.get("notification.pushNotifications") && data.KWsMatch) {
-		pushNotification(
-			data.asin,
-			data.queue,
-			data.is_parent_asin,
-			data.enrollment_guid,
-			data.search,
-			"Vine Helper - New item match KW!",
-			data.title,
-			data.img_url
-		);
-	}
-	//If the new item match in AFA queue, push a real notification.
-	else if (Settings.get("notification.pushNotificationsAFA") && data.queue == "last_chance") {
-		pushNotification(
-			data.asin,
-			data.queue,
-			data.is_parent_asin,
-			data.enrollment_guid,
-			data.search,
-			"Vine Helper - New AFA item",
-			data.title,
-			data.img_url
-		);
-	}
-	return data;
-});
-const transformExecuteHooks = myStream.transformer(function (data) {
-	let data2 = { ...data };
-
-	if (data.KWsMatch) {
-		data2.type = "hookExecute";
-		data2.hookname = "newItemKWMatch";
-		sendMessageToAllTabs(data2, "newItemKWMatch");
-	} else {
-		data2.type = "hookExecute";
-		data2.hookname = "newItemNoKWMatch";
-		sendMessageToAllTabs(data2, "newItemNoKWMatch");
-	}
-
-	return data;
-});
-myStream
-	.pipe(filterHideitem)
-	.pipe(transformIsHighlight)
-	.pipe(transformIsBlur)
-	.pipe(transformSearchPhrase)
-	.pipe(transformUnixTimestamp)
-	.pipe(transformPostNotification)
-	.pipe(transformExecuteHooks)
-	.output((data) => {
-		//Broadcast the notification
-		sendMessageToAllTabs(data, "notification");
-	});
+//Bind/Inject the service worker's functions to the dataStream.
+broadcastFunction(sendMessageToAllTabs);
+notificationPushFunction(pushNotification);
 
 var I13n = new Internationalization();
 var Settings = new SettingsMgr();
@@ -182,14 +92,14 @@ function connectWebSocket() {
 		return;
 	}
 
-	if (Settings.get("general.country") === null) {
-		console.log("Country not known");
+	if (I13n.getCountryCode() === null) {
+		console.error("Country not known, refresh/load a vine page.");
 		return; //If the country is not known, do not connect
 	}
 
 	socket = io.connect(VINE_HELPER_API_V5_WS_URL, {
 		query: {
-			countryCode: DEBUG_MODE ? "com" : Settings.get("general.country"),
+			countryCode: DEBUG_MODE ? "com" : I13n.getCountryCode(),
 			uuid: Settings.get("general.uuid", false),
 		}, // Pass the country code as a query parameter
 		transports: ["websocket"],
@@ -287,7 +197,7 @@ async function retrieveSettings() {
 }
 
 async function fetchLast100Items() {
-	if (Settings.get("general.country") === null) {
+	if (I13n.getCountryCode() === null) {
 		return false; //If the country is not known, do not query
 	}
 
@@ -413,11 +323,4 @@ async function sendMessageToAllTabs(data, debugInfo) {
 			console.error("Error querying tabs:", error);
 		}
 	}
-}
-
-function dateToUnixTimestamp(dateString) {
-	const date = new Date(dateString + " UTC");
-
-	// Get the Unix timestamp in seconds
-	return Math.floor(date.getTime() / 1000);
 }

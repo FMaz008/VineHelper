@@ -5,6 +5,11 @@ class Internationalization {
 	#currency;
 
 	constructor() {
+		this.#domainTLD = null;
+		this.#countryCode = null;
+		this.#locale = null;
+		this.#currency = null;
+
 		//Try to set the locale if the context allows for it.
 		//ie.: extensions pages won't work.
 		if (typeof window !== "undefined") {
@@ -44,7 +49,7 @@ class Internationalization {
 
 	#doesCountryCodeExist(countryCode) {
 		const locales = this.#getLocales();
-		return locales.hasOwnProperty(countryCode);
+		return Object.prototype.hasOwnProperty.call(locales, countryCode);
 	}
 
 	#doesDomainTLDExist(domainTLD) {
