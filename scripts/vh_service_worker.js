@@ -121,10 +121,11 @@ function connectWebSocket() {
 			date: data.item.date,
 			asin: data.item.asin,
 			title: data.item.title,
-			search: data.item.search,
+			//search: data.item.search,
 			img_url: data.item.img_url,
 			etv_min: data.item.etv_min, //null
 			etv_max: data.item.etv_max, //null
+			reason: data.item.reason,
 			queue: data.item.queue,
 			is_parent_asin: data.item.is_parent_asin,
 			enrollment_guid: data.item.enrollment_guid,
@@ -254,6 +255,7 @@ async function fetchLast100Items() {
 					etv_min: etv_min,
 					etv_max: etv_max,
 					queue: queue,
+					reason: "Fetch last 100 new items",
 					is_parent_asin: is_parent_asin,
 					enrollment_guid: enrollment_guid,
 				});

@@ -40,6 +40,7 @@ const transformIsBlur = dataStream.transformer(function (data) {
 	return data;
 });
 const transformSearchPhrase = dataStream.transformer(function (data) {
+	//Method no longer useful.
 	const search = data.title.replace(/^([a-zA-Z0-9\s'".,]{0,40})[\s]+.*$/, "$1");
 	data.search = search;
 	return data;

@@ -1145,11 +1145,13 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 				date,
 				asin,
 				title,
-				search,
+				reason,
 				img_url,
 				etv_min,
 				etv_max,
 				queue,
+				KW,
+				BlurKW,
 				KWsMatch,
 				BlurKWsMatch,
 				is_parent_asin,
@@ -1166,12 +1168,12 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 				enrollment_guid,
 				etv_min,
 				etv_max,
+				reason,
+				KW,
 				KWsMatch,
+				BlurKW,
 				BlurKWsMatch
 			);
-			if (data.reason) {
-				console.log(data);
-			}
 		} else if (
 			data.index < 10 && //Limit the notification to the top 10 most recents
 			vineBrowsingListing && //Only show notification on listing pages

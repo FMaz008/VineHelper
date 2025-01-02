@@ -136,7 +136,10 @@ class NotificationMonitor {
 		enrollment_guid,
 		etv_min,
 		etv_max,
+		reason,
+		highlightKW,
 		KWsMatch,
+		blurKW,
 		BlurKWsMatch
 	) {
 		if (!asin) {
@@ -176,6 +179,9 @@ class NotificationMonitor {
 		Tpl.setVar("feedPaused", this.#feedPaused);
 		Tpl.setVar("queue", queue);
 		Tpl.setVar("description", title);
+		Tpl.setVar("reason", reason);
+		Tpl.setVar("highlightKW", highlightKW);
+		Tpl.setVar("blurKW", blurKW);
 		Tpl.setVar("is_parent_asin", is_parent_asin);
 		Tpl.setVar("enrollment_guid", enrollment_guid);
 		Tpl.setVar("recommendationType", recommendationType);
@@ -263,6 +269,10 @@ class NotificationMonitor {
 		//Add new click listener for the hide button
 		const hideIcon = document.querySelector("#vh-hide-link-" + asin);
 		hideIcon.addEventListener("click", this.#handleHideClick);
+
+		//Add new click listener for the technical details button
+		const detailsIcon = document.querySelector("#vh-reason-link-" + asin);
+		detailsIcon.addEventListener("click", this.#handleDetailsClick);
 
 		//Add the click listener for the See Details button
 		if (Settings.get("notification.monitor.openLinksInNewTab") == "1") {
@@ -582,6 +592,34 @@ class NotificationMonitor {
 				content: title,
 			})
 		);
+	}
+
+	#handleDetailsClick(e) {
+		e.preventDefault();
+
+		const asin = e.target.dataset.asin;
+		const date = e.target.dataset.date;
+		const reason = e.target.dataset.reason;
+		const highlightKW = e.target.dataset.highlightkw;
+		const blurKW = e.target.dataset.blurkw;
+
+		let m = DialogMgr.newModal("item-details-" + asin);
+		m.title = "Item " + asin;
+		m.content =
+			"<ul>" +
+			"<li>Broadcast date/time: " +
+			date +
+			"</li>" +
+			"<li>Broadcast reason: " +
+			reason +
+			"</li>" +
+			"<li>Highlight Keyword: " +
+			highlightKW +
+			"</li>" +
+			"<li>Blur Keyword: " +
+			blurKW +
+			"</li></ul>";
+		m.show();
 	}
 
 	#handleReportClick(e) {
