@@ -22,22 +22,22 @@ class NotificationMonitor {
 		document.getElementById("vvp-items-grid").innerHTML = "";
 
 		//Remove the item count
-		document.querySelector("#vvp-items-grid-container>p").remove();
+		document.querySelector("#vvp-items-grid-container>p")?.remove();
 
 		//Remove the navigation
-		document.querySelector("#vvp-items-grid-container > div[role=navigation]").remove();
+		document.querySelector("#vvp-items-grid-container > div[role=navigation]")?.remove();
 
 		//Remove the categories
-		document.querySelector("#vvp-browse-nodes-container").remove();
+		document.querySelector("#vvp-browse-nodes-container")?.remove();
 
 		//Remove the header
-		document.querySelector("#vvp-header").remove();
+		document.querySelector("#vvp-header")?.remove();
 
 		//Remove the search bar
-		document.querySelector(".vvp-items-button-and-search-container").remove();
+		document.querySelector(".vvp-items-button-and-search-container")?.remove();
 
 		//Remove the nagivation tabs:
-		document.querySelector("ul.a-tabs").remove();
+		document.querySelector("ul.a-tabs")?.remove();
 
 		this.#updateTabTitle();
 

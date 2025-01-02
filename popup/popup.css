@@ -6,6 +6,9 @@
 .setting-container {
 	margin: 0;
 }
+.buttons-header {
+	display: flex !important;
+}
 
 label {
 	padding: 0;
