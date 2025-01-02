@@ -1,4 +1,8 @@
-//No JQuery
+import { SettingsMgr } from "./SettingsMgr.js";
+const Settings = new SettingsMgr();
+
+import { Internationalization } from "./Internationalization.js";
+const I13n = new Internationalization();
 
 class HiddenListMgr {
 	constructor() {
@@ -26,7 +30,7 @@ class HiddenListMgr {
 	}
 
 	async loadFromLocalStorage() {
-		const data = await browser.storage.local.get("hiddenItems");
+		const data = await chrome.storage.local.get("hiddenItems");
 
 		if (data.hiddenItems) {
 			try {
@@ -86,11 +90,11 @@ class HiddenListMgr {
 		}
 	}
 
-	async saveList() {
+	async saveList(remoteSave = true) {
 		let storableVal = this.serialize(this.mapHidden);
-		await browser.storage.local.set({ hiddenItems: storableVal }, () => {
-			if (browser.runtime.lastError) {
-				const error = browser.runtime.lastError;
+		await chrome.storage.local.set({ hiddenItems: storableVal }, () => {
+			if (chrome.runtime.lastError) {
+				const error = chrome.runtime.lastError;
 				if (error.message === "QUOTA_BYTES quota exceeded") {
 					alert(`Vine Helper local storage quota exceeded! Hidden items will be trimmed to make space.`);
 					this.garbageCollection();
@@ -103,15 +107,16 @@ class HiddenListMgr {
 			}
 		});
 
-		if (Settings.get("hiddenTab.remote")) {
+		if (remoteSave && Settings.get("hiddenTab.remote")) {
 			this.notifyServerOfHiddenItem();
 			this.arrChanges = [];
 		}
 	}
 
 	isHidden(asin) {
-		if (asin == undefined) throw new Exception("Asin not defined");
-
+		if (asin == undefined) {
+			throw new Error("Asin not defined");
+		}
 		return this.mapHidden.has(asin);
 	}
 
@@ -230,7 +235,7 @@ class HiddenListMgr {
 				}
 
 				let storableVal = this.serialize(this.mapHidden);
-				await browser.storage.local.set({
+				await chrome.storage.local.set({
 					hiddenItems: storableVal,
 				});
 				bytes = await getStorageSizeFull();
@@ -257,3 +262,5 @@ class HiddenListMgr {
 		return new Map(Object.entries(retrievedObj).map(([key, value]) => [key, new Date(value * 1000)]));
 	}
 }
+
+export { HiddenListMgr };

@@ -1,8 +1,8 @@
-//No JQuery
+import { SettingsMgr } from "./SettingsMgr.js";
+const Settings = new SettingsMgr();
 
-if (typeof browser === "undefined") {
-	var browser = chrome;
-}
+import { Internationalization } from "./Internationalization.js";
+const I13n = new Internationalization();
 
 class PinnedListMgr {
 	constructor() {
@@ -38,7 +38,7 @@ class PinnedListMgr {
 	}
 
 	async loadFromLocalStorage() {
-		const data = await browser.storage.local.get("pinnedItems");
+		const data = await chrome.storage.local.get("pinnedItems");
 
 		if (data.pinnedItems) {
 			try {
@@ -135,9 +135,9 @@ class PinnedListMgr {
 
 	async saveList() {
 		let storableVal = JSON.stringify(Array.from(this.mapPin.entries()));
-		await browser.storage.local.set({ pinnedItems: storableVal }, () => {
-			if (browser.runtime.lastError) {
-				const error = browser.runtime.lastError;
+		await chrome.storage.local.set({ pinnedItems: storableVal }, () => {
+			if (chrome.runtime.lastError) {
+				const error = chrome.runtime.lastError;
 				if (error.message === "QUOTA_BYTES quota exceeded") {
 					alert(`Vine Helper local storage quota exceeded! Hidden items will be trimmed to make space.`);
 					HiddenList.garbageCollection();
@@ -158,7 +158,7 @@ class PinnedListMgr {
 
 	async wipe() {
 		let storableVal = JSON.stringify([]);
-		await browser.storage.local.set({ pinnedItems: storableVal });
+		await chrome.storage.local.set({ pinnedItems: storableVal });
 	}
 	/**
 	 * Send new items on the server to be added or removed from the changed list.
@@ -218,3 +218,5 @@ class PinnedListMgr {
 		return new Map(Object.entries(retrievedObj).map(([key, value]) => [key, value]));
 	}
 }
+
+export { PinnedListMgr };

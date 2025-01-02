@@ -103,8 +103,6 @@
 				"node_modules/jquery/dist/jquery.min.js",
 				"scripts/Template.js",
 				"scripts/ScreenNotifier.js",
-				"scripts/HiddenListMgr.js",
-				"scripts/PinnedListMgr.js",
 				"scripts/ModalMgr.js",
 				"scripts/BrendaAnnounce.js",
 				"scripts/preboot.js"

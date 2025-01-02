@@ -32,6 +32,8 @@ var NotificationMonitor = null;
 var Tile = null;
 var Grid = null;
 var Toolbar = null;
+var HiddenList = null;
+var PinnedList = null;
 
 // Factory function to load a module
 (async () => {
@@ -75,6 +77,14 @@ var Toolbar = null;
 		module = await import(chrome.runtime.getURL("../scripts/Pagination.js"));
 		window.generatePagination = module.generatePagination;
 
+		//Load HiddenListMgr
+		module = await import(chrome.runtime.getURL("../scripts/HiddenListMgr.js"));
+		window.HiddenList = new module.HiddenListMgr();
+
+		//Load PinnedListMgr
+		module = await import(chrome.runtime.getURL("../scripts/PinnedListMgr.js"));
+		window.PinnedList = new module.PinnedListMgr();
+
 		//Load the SettingMgr.
 		module = await import(chrome.runtime.getURL("../scripts/SettingsMgr.js"));
 		Settings = new module.SettingsMgr();
@@ -87,8 +97,6 @@ var Tpl = new Template();
 var TplMgr = new TemplateMgr();
 var DialogMgr = new ModalMgr();
 var Notifications = new ScreenNotifier();
-var HiddenList = new HiddenListMgr();
-var PinnedList = new PinnedListMgr();
 
 //Do not run the extension if ultraviner is running
 regex = /^.+?amazon\..+\/vine\/.*ultraviner.*?$/;
