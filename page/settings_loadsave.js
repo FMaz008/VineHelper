@@ -1,10 +1,13 @@
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
 const Settings = new SettingsMgr();
 
+import { HiddenListMgr } from "../scripts/HiddenListMgr.js";
+var HiddenList = new HiddenListMgr();
+
 //Reminder: This script is executed from the extension popup.
 //          The console used is the browser console, not the inspector console.
-const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
-//const VINE_HELPER_API_V5_URL = "http://127.0.0.1:3000";
+//const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
+const VINE_HELPER_API_V5_URL = "http://127.0.0.1:3000";
 const arrSounds = ["notification", "upgrade", "vintage-horn"];
 
 async function drawDiscord() {
@@ -221,6 +224,30 @@ async function initiateSettings() {
 				alert("Hidden items in remote storage emptied.");
 			});
 		}
+	});
+	document.getElementById("fetchHiddenItems").addEventListener("click", async function () {
+		const content = {
+			api_version: 5,
+			country: "loremipsum",
+			action: "load_hidden_list",
+			uuid: Settings.get("general.uuid", false),
+		};
+		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
+		fetch(VINE_HELPER_API_V5_URL, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(content),
+		})
+			.then((data) => data.json())
+			.then(async function (data) {
+				console.log(data);
+				for (let i = 0; i < data.items.length; i++) {
+					const asin = data.items[i];
+					await HiddenList.addItem(asin, false, false);
+				}
+				await HiddenList.saveList(false); //Do not remote save
+				alert(data.items.length + " hidden item(s) have been imported.");
+			});
 	});
 
 	//UUID:
