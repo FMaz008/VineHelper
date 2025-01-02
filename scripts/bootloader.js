@@ -286,7 +286,7 @@ async function showGDPRPopup() {
 		prom = await Tpl.loadFile("view/popup_gdpr.html");
 		let content = Tpl.render(prom);
 
-		let m = DialogMgr.newModal("info");
+		let m = DialogMgr.newModal("gdpr");
 		m.title = GDPR_TITLE;
 		m.content = content;
 		m.show();
@@ -309,7 +309,7 @@ async function initFlushTplCache() {
 			Tpl.setVar("appVersion", appVersion);
 			let content = Tpl.render(prom);
 
-			let m = DialogMgr.newModal("info");
+			let m = DialogMgr.newModal("changelog");
 			m.title = VINE_INFO_TITLE;
 			m.content = content;
 			m.show();
