@@ -133,7 +133,7 @@ class PinnedListMgr {
 		}
 	}
 
-	async saveList() {
+	async saveList(remoteSave = true) {
 		let storableVal = JSON.stringify(Array.from(this.mapPin.entries()));
 		await chrome.storage.local.set({ pinnedItems: storableVal }, () => {
 			if (chrome.runtime.lastError) {
@@ -150,7 +150,7 @@ class PinnedListMgr {
 			}
 		});
 
-		if (Settings.get("hiddenTab.remote")) {
+		if (remoteSave && Settings.get("hiddenTab.remote")) {
 			this.notifyServerOfChangedItem();
 			this.arrChanges = [];
 		}

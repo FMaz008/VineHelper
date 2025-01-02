@@ -240,10 +240,15 @@ async function initiateSettings() {
 		})
 			.then((data) => data.json())
 			.then(async function (data) {
-				console.log(data);
 				for (let i = 0; i < data.items.length; i++) {
 					const asin = data.items[i];
 					await HiddenList.addItem(asin, false, false);
+
+					//Save at every chunk of ~1000 items to avoid storage space overflow
+					//That way the garbage collector can work if needed.
+					if (i % 1000 == 0) {
+						await HiddenList.saveList(false); //Do not remote save
+					}
 				}
 				await HiddenList.saveList(false); //Do not remote save
 				alert(data.items.length + " hidden item(s) have been imported.");
