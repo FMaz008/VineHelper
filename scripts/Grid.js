@@ -187,15 +187,15 @@ async function createGridInterface() {
 
 			// Add event listeners to .vh-hideall and .vh-showall elements AND vh-hideallnext
 			document.querySelectorAll(".vh-hideall").forEach((element) => {
-				element.addEventListener("click", () => this.hideAllItems());
+				element.addEventListener("click", () => hideAllItems());
 			});
 
 			document.querySelectorAll(".vh-hideallnext").forEach((element) => {
-				element.addEventListener("click", () => this.hideAllItemsNext());
+				element.addEventListener("click", () => hideAllItemsNext());
 			});
 
 			document.querySelectorAll(".vh-showall").forEach((element) => {
-				element.addEventListener("click", () => this.showAllItems());
+				element.addEventListener("click", () => showAllItems());
 			});
 		}
 	}
