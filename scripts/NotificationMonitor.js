@@ -30,6 +30,15 @@ class NotificationMonitor {
 		//Remove the categories
 		document.querySelector("#vvp-browse-nodes-container").remove();
 
+		//Remove the header
+		document.querySelector("#vvp-header").remove();
+
+		//Remove the search bar
+		document.querySelector(".vvp-items-button-and-search-container").remove();
+
+		//Remove the nagivation tabs:
+		document.querySelector("ul.a-tabs").remove();
+
 		this.#updateTabTitle();
 
 		//Insert the header
