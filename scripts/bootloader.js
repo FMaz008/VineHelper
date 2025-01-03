@@ -122,14 +122,55 @@ async function initTileSize() {
 		if (container) {
 			container.insertBefore(content, container.firstChild);
 
-			const slider = document.querySelector("input[name='general.tileSize']");
-			slider.value = Settings.get("general.tileSize.width");
+			//Display full descriptions
+			//Not all of them are loaded at this stage and some get skipped.
+			//container.querySelector(".a-truncate-full").classList.remove("a-offscreen");
+			//container.querySelector(".a-truncate-cut").style.display = "none";
 
-			//Bind the slider
-			slider.addEventListener("change", () => {
-				const sliderValue = parseInt(slider.value);
-				adjustTileSize(sliderValue);
+			//Tile size
+			const sliderTile = document.querySelector("input[name='general.tileSize.width']");
+			sliderTile.value = Settings.get("general.tileSize.width");
+
+			sliderTile.addEventListener("change", () => {
+				const sliderValue = parseInt(sliderTile.value);
 				Settings.set("general.tileSize.width", sliderValue);
+				adjustTileSize();
+			});
+
+			//Icons size
+			const sliderIcons = document.querySelector("input[name='general.tileSize.iconSize']");
+			sliderIcons.value = Settings.get("general.tileSize.iconSize");
+
+			sliderIcons.addEventListener("change", () => {
+				const sliderValue = parseInt(sliderIcons.value);
+				Settings.set("general.tileSize.iconSize", sliderValue);
+				adjustIconsSize();
+			});
+
+			//Icons size
+			const sliderVertSpacing = document.querySelector("input[name='general.tileSize.verticalSpacing']");
+			sliderVertSpacing.value = Settings.get("general.tileSize.verticalSpacing");
+
+			sliderVertSpacing.addEventListener("change", () => {
+				const sliderValue = parseInt(sliderVertSpacing.value);
+				Settings.set("general.tileSize.verticalSpacing", sliderValue);
+				adjustVerticalSpacing();
+			});
+
+			//Bind the open link
+			const openContainer = container.querySelector("#openTileSizeTool");
+			const openLink = container.querySelector("#openTileSizeTool>a");
+			const sizeContainer = container.querySelector("#tileSizeTool");
+			const closeLink = container.querySelector("#tileSizeTool>a");
+			openLink.addEventListener("click", (e) => {
+				e.preventDefault();
+				openContainer.style.display = "none";
+				sizeContainer.style.display = "block";
+			});
+			closeLink.addEventListener("click", (e) => {
+				e.preventDefault();
+				openContainer.style.display = "block";
+				sizeContainer.style.display = "none";
 			});
 		}
 	}
@@ -137,19 +178,67 @@ async function initTileSize() {
 	//Set the slider default value
 	//Wait until the items are loaded.
 	hookBind("productsUpdated", () => {
-		const width = Settings.get("general.tileSize.width");
-		adjustTileSize(width);
+		adjustTileSize();
+		adjustIconsSize();
+		adjustVerticalSpacing();
 	});
 }
 
-function adjustTileSize(width) {
-	const grids = document.querySelectorAll("div#vh-tabs .tab-grid");
-	grids.forEach((elem) => {
-		elem.style.gridTemplateColumns = `repeat(auto-fill,minmax(${width}px,auto))`;
-		elem.querySelectorAll(".vvp-item-tile .vvp-item-tile-content").forEach((tile) => {
-			tile.style.width = parseInt(width - 8) + "px";
+function adjustTileSize(DOMElem = null) {
+	const width = parseInt(Settings.get("general.tileSize.width"));
+	if (DOMElem == null) {
+		//Adjust all elements on the page
+		const grids = document.querySelectorAll("div#vh-tabs .tab-grid");
+		grids.forEach((elem) => {
+			elem.style.gridTemplateColumns = `repeat(auto-fill,minmax(${width}px,auto))`;
+			elem.querySelectorAll(".vvp-item-tile .vvp-item-tile-content").forEach((tile) => {
+				tile.style.width = parseInt(width - 8) + "px";
+			});
 		});
-	});
+	} else {
+		//Target 1 specific element
+		DOMElem.querySelector(".vvp-item-tile-content").style.width = width - 8 + "px";
+	}
+}
+
+function adjustIconsSize(DOMElem = null) {
+	const size = parseInt(Settings.get("general.tileSize.iconSize"));
+	if (DOMElem == null) {
+		//Adjust all elements on the page
+		const grids = document.querySelectorAll("div#vh-tabs .tab-grid .vh-status-container2 a>.vh-toolbar-icon");
+		grids.forEach((elem) => {
+			elem.style.width = size + "px";
+			elem.style.height = size + "px";
+		});
+	} else {
+		//Target 1 specific element
+		const tile = DOMElem.querySelectorAll(".vh-status-container2 a>.vh-toolbar-icon");
+		tile.forEach((elem) => {
+			elem.style.width = size + "px";
+			elem.style.height = size + "px";
+		});
+	}
+}
+
+function adjustVerticalSpacing(DOMElem = null) {
+	const size = parseInt(Settings.get("general.tileSize.verticalSpacing"));
+	if (DOMElem == null) {
+		//Adjust all elements on the page
+		const grids = document.querySelectorAll(
+			".vvp-item-tile-content .vvp-item-product-title-container, .vvp-item-tile-content .vvp-details-btn"
+		);
+		grids.forEach((elem) => {
+			elem.style.margin = size + "px 0";
+		});
+	} else {
+		//Target 1 specific element
+		const tile = DOMElem.querySelectorAll(
+			".vvp-item-tile-content .vvp-item-product-title-container, .vvp-item-tile-content .vvp-details-btn"
+		);
+		tile.forEach((elem) => {
+			elem.style.margin = size + "px 0";
+		});
+	}
 }
 
 //If we are on the Account page, display additional info

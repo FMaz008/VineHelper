@@ -242,6 +242,8 @@ class SettingsMgr {
 				tileSize: {
 					active: true,
 					width: 236,
+					iconSize: 14,
+					verticalSpacing: 20,
 				},
 			},
 

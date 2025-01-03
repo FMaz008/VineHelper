@@ -1,6 +1,31 @@
-<div style="width: 200px; text-align: right; float: right">
-	<label for="general.tileSize">
-		Tile size:&nbsp;
-		<input type="range" name="general.tileSize" min="120" max="236" step="1" />
-	</label>
+<div style="width: 230px; text-align: right; float: right">
+	<div
+		id="openTileSizeTool"
+		style="
+			display: block;
+			border: 1px solid rgb(204, 204, 204);
+			padding: 3px;
+			width: 150px;
+			margin-right: 0px;
+			margin-left: auto;
+			text-align: center;
+		"
+	>
+		<a href="#">Adjust items sizes</a>
+	</div>
+	<div id="tileSizeTool" style="display: none; border: 1px solid rgb(204, 204, 204); padding: 3px">
+		<label for="general.tileSize.width">
+			Tile size:&nbsp;
+			<input type="range" name="general.tileSize.width" min="120" max="236" step="1" />
+		</label>
+		<label for="general.tileSize.iconSize">
+			Icon size:&nbsp;
+			<input type="range" name="general.tileSize.iconSize" min="10" max="25" step="1" />
+		</label>
+		<label for="general.tileSize.verticalSpacing">
+			Vert. Space:&nbsp;
+			<input type="range" name="general.tileSize.verticalSpacing" min="0" max="20" step="1" />
+		</label>
+		<a href="#">Close</a>
+	</div>
 </div>

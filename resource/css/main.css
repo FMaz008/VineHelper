@@ -128,3 +128,7 @@ a.vh-showall span::first-letter {
 div#vh-tabs {
 	clear: both;
 }
+
+.vvp-item-tile .vvp-item-tile-content > .vvp-item-product-title-container {
+	height: auto !important;
+}
