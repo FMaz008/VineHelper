@@ -293,7 +293,7 @@ function pushNotification(asin, queue, is_parent_asin, enrollment_guid, search_s
 
 async function sendMessageToAllTabs(data, debugInfo) {
 	try {
-		const tabs = await browser.tabs.query({ currentWindow: true });
+		const tabs = await browser.tabs.query({});
 		const regex = /^.+?amazon\.([a-z.]+).*\/vine\/.*$/;
 		tabs.forEach((tab) => {
 			if (tab) {
