@@ -13,8 +13,7 @@ const filterHideitem = dataStream.filter(function (data) {
 	if (Settings.get("notification.hideList")) {
 		const hideKWMatch = keywordMatch(Settings.get("general.hideKeywords"), data.title, data.etv_min, data.etv_max);
 		if (hideKWMatch !== false) {
-			console.log(hideKWMatch);
-			console.log("Item " + data.title + " matched hide keyword " + hideKWMatch + " hide it.");
+			//console.log("Item " + data.title + " matched hide keyword " + hideKWMatch + " hide it.");
 			return false; //Do not display the notification as it matches the hide list.
 		}
 	}
