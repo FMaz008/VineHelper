@@ -75,7 +75,7 @@
 	"background": {
 		"service_worker": "scripts/vh_service_worker_with_plugins.js",
 		"type": "module",
-		"scripts": ["node_modules/socket.io/client-dist/socket.io.min.js", "scripts/vh_service_worker.js"]
+		"scripts": ["scripts/vh_service_worker.js"]
 	},
 	"content_scripts": [
 		{

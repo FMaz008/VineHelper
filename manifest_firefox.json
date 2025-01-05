@@ -72,7 +72,7 @@
 	],
 	"background": {
 		"type": "module",
-		"scripts": ["node_modules/socket.io/client-dist/socket.io.min.js", "scripts/vh_service_worker.js"]
+		"scripts": ["scripts/vh_service_worker.js"]
 	},
 	"content_scripts": [
 		{
@@ -85,9 +85,7 @@
 				"resource/css/toolbar.css",
 				"resource/css/vinehelper.css"
 			],
-			"js": [
-				"scripts/bootloader.js"
-			],
+			"js": ["scripts/bootloader.js"],
 			"matches": [
 				"*://*.amazon.ca/vine/*",
 				"*://*.amazon.it/vine/*",
