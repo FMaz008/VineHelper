@@ -12,10 +12,10 @@ var reviewTemplates = [];
 
 async function loadSettings() {
 	try {
-		let templateSet = await browser.storage.local.get("reviews_templates");
+		let templateSet = await chrome.storage.local.get("reviews_templates");
 		let reviews_templates = templateSet?.reviews_templates ?? [];
 		if (Object.keys(reviews_templates).length === 0) {
-			await browser.storage.local.set({ reviews_templates: [] });
+			await chrome.storage.local.set({ reviews_templates: [] });
 		}
 		reviewTemplates = reviews_templates;
 		if (reviewTemplates.length) {
@@ -139,7 +139,7 @@ async function deleteTemplate(id) {
 	try {
 		const index = reviewTemplates.findIndex((template) => template.id === id);
 		const filteredTemplates = reviewTemplates.filter((template, i) => i !== index);
-		await browser.storage.local.set({ reviews_templates: filteredTemplates });
+		await chrome.storage.local.set({ reviews_templates: filteredTemplates });
 		location.reload();
 	} catch (e) {
 		logError(["deleteTemplate", scriptName, e.message]);
@@ -153,7 +153,7 @@ async function newTemplate(title, content) {
 			title: JSON.stringify(title),
 			content: JSON.stringify(content),
 		});
-		await browser.storage.local.set({ reviews_templates: reviewTemplates });
+		await chrome.storage.local.set({ reviews_templates: reviewTemplates });
 		location.reload();
 	} catch (e) {
 		logError(["createNewTemplate", scriptName, e.message]);
@@ -164,7 +164,7 @@ async function updateTemplate(id, title, content) {
 	try {
 		const index = reviewTemplates.findIndex((template) => template.id === id);
 		reviewTemplates[index] = { id: id, title: JSON.stringify(title), content: JSON.stringify(content) };
-		await browser.storage.local.set({ reviews_templates: reviewTemplates });
+		await chrome.storage.local.set({ reviews_templates: reviewTemplates });
 		location.reload();
 	} catch (e) {
 		logError(["editNewTemplate", scriptName, e.message]);
@@ -186,9 +186,9 @@ function bytesToSize(bytes, decimals = 2) {
 }
 function getStorageKeySizeinBytes(key) {
 	return new Promise((resolve, reject) => {
-		browser.storage.local.get(key, function (items) {
-			if (browser.runtime.lastError) {
-				reject(new Error(browser.runtime.lastError.message));
+		chrome.storage.local.get(key, function (items) {
+			if (chrome.runtime.lastError) {
+				reject(new Error(chrome.runtime.lastError.message));
 			} else {
 				const storageSize = JSON.stringify(items[key]).length;
 				resolve(bytesToSize(storageSize));

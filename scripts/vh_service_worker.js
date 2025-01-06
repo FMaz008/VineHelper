@@ -29,7 +29,7 @@ if (typeof browser === "undefined") {
 //#####################################################
 //## LISTENERS
 //#####################################################
-browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((data, sender, sendResponse) => {
 	if (data.type == undefined) {
 		return false;
 	}
@@ -55,7 +55,7 @@ browser.runtime.onMessage.addListener((data, sender, sendResponse) => {
 	}
 });
 
-browser.alarms.onAlarm.addListener(async (alarm) => {
+chrome.alarms.onAlarm.addListener(async (alarm) => {
 	//Reload the settings as a change to the keyword list would require the SW to be reloaded to
 	//be taken into consideration
 	await Settings.refresh();
@@ -181,7 +181,7 @@ async function init() {
 	await retrieveSettings();
 
 	//Check for new items (if the option is disabled the method will return)
-	browser.alarms.create("websocketReconnect", { periodInMinutes: WSReconnectInterval });
+	chrome.alarms.create("websocketReconnect", { periodInMinutes: WSReconnectInterval });
 
 	if (Settings.get("notification.active")) {
 		//Firefox sometimes re-initialize the background script.
@@ -304,7 +304,7 @@ function pushNotification(asin, queue, is_parent_asin, enrollment_guid, search_s
 
 async function sendMessageToAllTabs(data, debugInfo) {
 	try {
-		const tabs = await browser.tabs.query({});
+		const tabs = await chrome.tabs.query({});
 		const regex = /^.+?amazon\.([a-z.]+).*\/vine\/.*$/;
 		tabs.forEach((tab) => {
 			if (tab) {
@@ -317,10 +317,10 @@ async function sendMessageToAllTabs(data, debugInfo) {
 					}
 
 					try {
-						browser.tabs.sendMessage(tab.id, data, (response) => {
-							if (browser.runtime.lastError) {
+						chrome.tabs.sendMessage(tab.id, data, (response) => {
+							if (chrome.runtime.lastError) {
 								//console.log(tab);
-								//console.error("Error sending message to tab:", browser.runtime.lastError.message);
+								//console.error("Error sending message to tab:", chrome.runtime.lastError.message);
 							}
 						});
 					} catch (e) {

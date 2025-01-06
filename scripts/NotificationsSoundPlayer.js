@@ -1,3 +1,7 @@
+import { SettingsMgr } from "./SettingsMgr.js";
+
+const Settings = new SettingsMgr();
+
 const STATE_READY = 0;
 const STATE_WAIT = 1;
 const STATE_PLAY = 2;

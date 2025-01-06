@@ -1,3 +1,5 @@
+var Tpl = new Template();
+
 /** Notification, use to configure a notification
  *  will be fed to ScreenNotifier
  * */

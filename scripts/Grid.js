@@ -1,3 +1,6 @@
+import { Logger } from "./Logger.js";
+var logger = new Logger();
+
 var currentTab = "vvp-items-grid";
 
 class Grid {
@@ -161,7 +164,7 @@ async function createGridInterface() {
 	if (Settings.get("hiddenTab.active")) {
 		//Add the toolbar for Hide All & Show All
 		//Delete the previous one if any exist:
-		removeElements("#vh-tabs .hidden-toolbar"); //bootloader.js
+		removeElements("#vh-tabs .hidden-toolbar");
 
 		//Generate the html for the hide all and show all widget
 		let prom = await Tpl.loadFile("view/widget_hideall.html");
@@ -175,7 +178,7 @@ async function createGridInterface() {
 		}
 		let content = Tpl.render(prom, true);
 		if (content == null) {
-			showRuntime("!!ERROR: Unable to fetch view/widget_hideall.html. Skipping.");
+			logger.add("!!ERROR: Unable to fetch view/widget_hideall.html. Skipping.");
 		} else {
 			let clonedContent = content.cloneNode(true);
 
@@ -385,6 +388,17 @@ function selectCurrentTab(firstRun = false) {
 
 	//Display the current tab
 	document.querySelector("#" + currentTab).style.display = "grid";
+}
+
+/** Remove an element from the DOM, ignore if it does not exist
+ * @param selector CSS style selector of the element to remove
+ */
+function removeElements(selector) {
+	let elementsToRemove = document.querySelectorAll(selector);
+
+	elementsToRemove.forEach(function (element) {
+		element.remove();
+	});
 }
 
 export {

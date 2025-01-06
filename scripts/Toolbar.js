@@ -1,3 +1,6 @@
+import { Logger } from "./Logger.js";
+var logger = new Logger();
+
 class Toolbar {
 	#tile;
 
@@ -12,7 +15,7 @@ class Toolbar {
 		let anchorTo = this.#tile.getDOM().querySelector(".vvp-item-tile-content"); //.vvp-item-tile-content should be the first child
 
 		//Load the toolbar template
-		showRuntime("DRAW: Creating #" + toolbarId);
+		logger.add("DRAW: Creating #" + toolbarId);
 		const prom = await Tpl.loadFile("view/toolbar.html");
 		Tpl.setVar("toolbarId", toolbarId);
 		Tpl.setVar("asin", this.#tile.getAsin());
@@ -226,11 +229,11 @@ class Toolbar {
 
 	//This method is called from bootloader.js, serverResponse() when the data has been received, after the tile was moved.
 	async updateToolbar() {
-		showRuntime(`DRAW-UPDATE-TOOLBAR: Updating #vh-toolbar-${this.#tile.getAsin()}`);
+		logger.add(`DRAW-UPDATE-TOOLBAR: Updating #vh-toolbar-${this.#tile.getAsin()}`);
 		let context = document.getElementById(`vh-toolbar-${this.#tile.getAsin()}`);
 
 		if (!context) {
-			showRuntime(`! Could not find #vh-toolbar-${this.#tile.getAsin()}`);
+			logger.add(`! Could not find #vh-toolbar-${this.#tile.getAsin()}`);
 			return;
 		}
 
@@ -242,7 +245,7 @@ class Toolbar {
 		}
 
 		// Set the icons
-		showRuntime("DRAW-UPDATE-TOOLBAR: Setting icon status");
+		logger.add("DRAW-UPDATE-TOOLBAR: Setting icon status");
 		switch (this.#tile.getStatus()) {
 			case DISCARDED_ORDER_FAILED:
 				statusColor = "vh-background-fees";
@@ -259,7 +262,7 @@ class Toolbar {
 
 		// Display voting system if active
 		if (Settings.get("unavailableTab.active")) {
-			showRuntime("DRAW-UPDATE-TOOLBAR: Create order widget");
+			logger.add("DRAW-UPDATE-TOOLBAR: Create order widget");
 			await this.createOrderWidget();
 		}
 	}

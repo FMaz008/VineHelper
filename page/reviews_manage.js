@@ -12,10 +12,10 @@ var arrReview = [];
 
 async function loadSettings() {
 	try {
-		let reviewSet = await browser.storage.local.get("reviews");
+		let reviewSet = await chrome.storage.local.get("reviews");
 		let reviews = reviewSet?.reviews ?? []; //Nullish coalescing & Optional chaining prevents undefined without extra code
 		if (Object.keys(reviews).length === 0) {
-			await browser.storage.local.set({ reviews: [] });
+			await chrome.storage.local.set({ reviews: [] });
 		}
 		arrReview = reviews;
 		if (arrReview.length) {
@@ -42,7 +42,7 @@ async function handleSaveClick() {
 	const index = arrReview.findIndex((review) => review.asin === asin);
 	arrReview[index].title = JSON.stringify(document.getElementById("title").value);
 	arrReview[index].content = JSON.stringify(document.getElementById("content").value);
-	await browser.storage.local.set({ reviews: arrReview });
+	await chrome.storage.local.set({ reviews: arrReview });
 }
 
 function updateReviewTable() {
@@ -118,7 +118,7 @@ async function deleteReview(asin) {
 	try {
 		const index = arrReview.findIndex((review) => review.asin === asin);
 		const filteredReviews = arrReview.filter((review, i) => i !== index);
-		await browser.storage.local.set({ reviews: filteredReviews });
+		await chrome.storage.local.set({ reviews: filteredReviews });
 		location.reload();
 	} catch (e) {
 		logError([scriptName, "deleteReview", e.message]);
@@ -140,9 +140,9 @@ function bytesToSize(bytes, decimals = 2) {
 }
 function getStorageKeySizeinBytes(key) {
 	return new Promise((resolve, reject) => {
-		browser.storage.local.get(key, function (items) {
-			if (browser.runtime.lastError) {
-				reject(new Error(browser.runtime.lastError.message));
+		chrome.storage.local.get(key, function (items) {
+			if (chrome.runtime.lastError) {
+				reject(new Error(chrome.runtime.lastError.message));
 			} else {
 				const storageSize = JSON.stringify(items[key]).length;
 				resolve(bytesToSize(storageSize));

@@ -50,11 +50,11 @@ window.addEventListener("load", function () {
 
 async function initializeLocalStorageKeys(key, object, value, loadOnly) {
 	try {
-		const data = await browser.storage.local.get(key);
+		const data = await chrome.storage.local.get(key);
 		if (loadOnly || Object.keys(data).length > 0) {
 			Object.assign(object, data[key]);
 		} else {
-			await browser.storage.local.set({ [key]: value });
+			await chrome.storage.local.set({ [key]: value });
 		}
 	} catch (e) {
 		showRuntime("Error in initializeLocalStorageKeys" + e.message);
@@ -82,8 +82,8 @@ function init_review() {
 async function boot_review() {
 	//Load the toolbar template
 	const prom = await Tpl.loadFile("/view/review_toolbar.html");
-	Tpl.setVar("tpl_manage_url", browser.runtime.getURL("page/reviews_templates.html"));
-	Tpl.setVar("review_manage_url", browser.runtime.getURL("page/reviews_manage.html"));
+	Tpl.setVar("tpl_manage_url", chrome.runtime.getURL("page/reviews_templates.html"));
+	Tpl.setVar("review_manage_url", chrome.runtime.getURL("page/reviews_manage.html"));
 	Tpl.setVar("asin", asin);
 	let content = Tpl.render(prom);
 
@@ -178,7 +178,7 @@ async function boot_review() {
 			}
 		}
 		try {
-			await browser.storage.local.set({ reviews: arrReview });
+			await chrome.storage.local.set({ reviews: arrReview });
 			const messageDiv = document.getElementById("save-message");
 			messageDiv.style.display = "block";
 			setTimeout(() => {

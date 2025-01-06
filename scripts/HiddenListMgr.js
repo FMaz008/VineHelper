@@ -263,4 +263,17 @@ class HiddenListMgr {
 	}
 }
 
+function getStorageSizeFull() {
+	return new Promise((resolve, reject) => {
+		chrome.storage.local.get(function (items) {
+			if (chrome.runtime.lastError) {
+				reject(new Error(chrome.runtime.lastError.message));
+			} else {
+				const storageSize = JSON.stringify(items).length;
+				resolve(storageSize);
+			}
+		});
+	});
+}
+
 export { HiddenListMgr };

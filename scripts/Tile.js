@@ -1,4 +1,5 @@
-var timeoutHandle;
+import { Logger } from "./Logger.js";
+var logger = new Logger();
 
 import { keywordMatch } from "./service_worker/keywordMatch.js";
 
@@ -123,7 +124,7 @@ class Tile {
 		let itemDateAdded = YMDHiStoISODate(mysqlDate);
 		let bookmarkDate = new Date(Settings.get("general.bookmarkDate"));
 		if (isNaN(serverCurrentDate.getTime()) || isNaN(itemDateAdded.getTime())) {
-			showRuntime(
+			logger.add(
 				"! Time firstseen wrong: serverCurrentDate:" +
 					serverCurrentDate +
 					" itemDateAdded:" +
@@ -153,7 +154,7 @@ class Tile {
 			itemDateAdded > bookmarkDate &&
 			Settings.get("general.bookmarkDate") != 0
 		) {
-			showRuntime("TILE: The item is more recent than the time marker, highlight it.");
+			logger.add("TILE: The item is more recent than the time marker, highlight it.");
 			this.#tileDOM.style.backgroundColor = Settings.get("general.bookmarkColor");
 		}
 	}
@@ -172,7 +173,7 @@ class Tile {
 
 			if (match) {
 				highligthed = true;
-				showRuntime("TILE: The item match the keyword '" + match + "', highlight it");
+				logger.add("TILE: The item match the keyword '" + match + "', highlight it");
 				this.#tileDOM.style.backgroundColor = Settings.get("general.keywordHighlightColor");
 
 				//Move the highlighted item to the top of the grid
@@ -184,8 +185,9 @@ class Tile {
 		if (!highligthed && Settings.get("hiddenTab.active") && Settings.get("general.hideKeywords")?.length > 0) {
 			match = keywordMatch(Settings.get("general.hideKeywords"), this.getTitle(), this.getETV(), this.getETV());
 			if (match) {
-				showRuntime("TILE: The item match the keyword '" + match + "', hide it");
+				logger.add("TILE: The item match the keyword '" + match + "', hide it");
 				this.hideTile(false, false, true); //Do not save, skip the hidden manager: just move the tile.
+
 				document.getElementById("vh-hide-link-" + this.getAsin()).style.display = "none";
 			}
 		}
@@ -194,7 +196,7 @@ class Tile {
 		if (Settings.isPremiumUser() && Settings.get("general.blurKeywords")?.length > 0) {
 			match = keywordMatch(Settings.get("general.blurKeywords"), this.getTitle(), this.getETV(), this.getETV());
 			if (match) {
-				showRuntime("TILE: The item match the keyword '" + match + "', blur it");
+				logger.add("TILE: The item match the keyword '" + match + "', blur it");
 				this.#tileDOM.querySelector("img")?.classList.add("blur");
 				this.#tileDOM.querySelector(".vvp-item-product-title-container")?.classList.add("dynamic-blur");
 			}
@@ -203,7 +205,7 @@ class Tile {
 		//Unescape titles
 		const fullText = this.getDOM().querySelector(".a-truncate-full").innerText;
 		this.getDOM().querySelector(".a-truncate-full").innerText = unescapeHTML(unescapeHTML(fullText));
-		showRuntime("Done initializing tile");
+		logger.add("Done initializing tile");
 	}
 
 	async moveToGrid(g, animate = false) {
@@ -227,8 +229,9 @@ class Tile {
 	}
 
 	isHidden() {
-		if (!Settings.get("hiddenTab.active")) return false;
-
+		if (!Settings.get("hiddenTab.active")) {
+			return false;
+		}
 		return HiddenList.isHidden(this.#asin);
 	}
 

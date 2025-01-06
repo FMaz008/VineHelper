@@ -1,23 +1,24 @@
-timeMarker["document_end"] = Date.now();
-showRuntime(
-	"BOOT: Booterloader starting. DOM load time from Amazon: " +
-		(timeMarker["document_end"] - timeMarker["document_start"]) +
-		"ms"
-);
+import { Logger } from "./Logger.js";
+var logger = new Logger();
+
+import { HookMgr } from "./HookMgr.js";
+var hookMgr = new HookMgr();
+
+logger.add("BOOT: Booterloader starting. DOM load time from Amazon: ");
 
 //Create the 4 grids/tabs:
-var gridRegular = null;
-var gridUnavailable = null; //Will be populated after the grid will be created.
-var gridHidden = null; //Will be populated after the grid will be created.
-var gridPinned = null; //Will be populated after the grid will be created.
+window.gridRegular = null;
+window.gridUnavailable = null; //Will be populated after the grid will be created.
+window.gridHidden = null; //Will be populated after the grid will be created.
+window.gridPinned = null; //Will be populated after the grid will be created.
 
 //Tooltip used to display full titles/description. Same tooltip will get reused for all uses.
 const tooltip = document.createElement("div");
 
 //Constants
-const NOT_DISCARDED_ORDER_SUCCESS = -4;
-const NOT_DISCARDED = 0;
-const DISCARDED_ORDER_FAILED = 4;
+window.NOT_DISCARDED_ORDER_SUCCESS = -4;
+window.NOT_DISCARDED = 0;
+window.DISCARDED_ORDER_FAILED = 4;
 
 const VERSION_MAJOR_CHANGE = 3;
 const VERSION_MINOR_CHANGE = 2;
@@ -32,10 +33,9 @@ const DEBUGGER_TITLE = "Vine Helper - Debugger";
 const VINE_INFO_TITLE = "Vine Helper update info";
 const GDPR_TITLE = "Vine Helper - GDPR";
 
-var websiteOpts = null;
 var vvpContext = null;
-var marketplaceId = null;
-var customerId = null;
+window.marketplaceId = null;
+window.customerId = null;
 
 var notificationMonitor = null;
 
@@ -53,18 +53,18 @@ async function init() {
 	try {
 		vvpContext = JSON.parse(document.querySelector('script[data-a-state=\'{"key":"vvp-context"}\'').innerHTML);
 
-		marketplaceId = vvpContext.marketplaceId;
-		customerId = vvpContext.customerId;
+		window.marketplaceId = vvpContext.marketplaceId;
+		window.customerId = vvpContext.customerId;
 	} catch (err) {
 		//Do nothing
 	}
 
 	//Wait for the config to be loaded before running this script
-	showRuntime("BOOT: Waiting on preboot to complete...");
+	logger.add("BOOT: Waiting on preboot to complete...");
 	while (!Settings || !Settings.isLoaded() || !prebootCompleted) {
 		await new Promise((r) => setTimeout(r, 10));
 	}
-	showRuntime("BOOT: Config available. Begining init() function");
+	logger.add("BOOT: Config available. Begining init() function");
 
 	if (Settings.get("thorvarium.darktheme")) {
 		document.getElementsByTagName("body")[0].classList.add("darktheme");
@@ -80,14 +80,14 @@ async function init() {
 
 	//Check if we want to display the notification monitor
 	const currentUrl = window.location.href;
-	regex = /^[^#]+#monitor$/;
-	arrMatches = currentUrl.match(regex);
+	let regex = /^[^#]+#monitor$/;
+	let arrMatches = currentUrl.match(regex);
 	if (arrMatches != null) {
 		//Initate the notification monitor
 		notificationMonitor = new NotificationMonitor();
 		await notificationMonitor.initialize();
 
-		hookExecute("productsUpdated", null);
+		hookMgr.hookExecute("productsUpdated", null);
 		return; //Do not initialize the page as normal
 	}
 
@@ -108,14 +108,14 @@ async function init() {
 
 	updateTileCounts();
 
-	hookExecute("EndOfBootloader", null);
+	hookMgr.hookExecute("EndOfBootloader", null);
 
 	HiddenList.garbageCollection();
 }
 
 async function initTileSize() {
 	if (Settings.get("general.tileSize.active")) {
-		prom = await Tpl.loadFile("view/widget_tilesize.html");
+		const prom = await Tpl.loadFile("view/widget_tilesize.html");
 		let content = Tpl.render(prom, true);
 
 		const container = document.querySelector("#vvp-items-grid-container");
@@ -177,14 +177,14 @@ async function initTileSize() {
 
 	//Set the slider default value
 	//Wait until the items are loaded.
-	hookBind("productsUpdated", () => {
+	hookMgr.hookBind("productsUpdated", () => {
 		adjustTileSize();
 		adjustIconsSize();
 		adjustVerticalSpacing();
 	});
 }
 
-function adjustTileSize(DOMElem = null) {
+window.adjustTileSize = function (DOMElem = null) {
 	const width = parseInt(Settings.get("general.tileSize.width"));
 	if (DOMElem == null) {
 		//Adjust all elements on the page
@@ -199,9 +199,9 @@ function adjustTileSize(DOMElem = null) {
 		//Target 1 specific element
 		DOMElem.querySelector(".vvp-item-tile-content").style.width = width - 8 + "px";
 	}
-}
+};
 
-function adjustIconsSize(DOMElem = null) {
+window.adjustIconsSize = function (DOMElem = null) {
 	const size = parseInt(Settings.get("general.tileSize.iconSize"));
 	if (DOMElem == null) {
 		//Adjust all elements on the page
@@ -218,9 +218,9 @@ function adjustIconsSize(DOMElem = null) {
 			elem.style.height = size + "px";
 		});
 	}
-}
+};
 
-function adjustVerticalSpacing(DOMElem = null) {
+window.adjustVerticalSpacing = function (DOMElem = null) {
 	const size = parseInt(Settings.get("general.tileSize.verticalSpacing"));
 	if (DOMElem == null) {
 		//Adjust all elements on the page
@@ -239,12 +239,12 @@ function adjustVerticalSpacing(DOMElem = null) {
 			elem.style.margin = size + "px 0";
 		});
 	}
-}
+};
 
 //If we are on the Account page, display additional info
 function displayAccountData() {
-	regex = /^.+?amazon\..+\/vine\/account?$/;
-	arrMatches = window.location.href.match(regex);
+	let regex = /^.+?amazon\..+\/vine\/account?$/;
+	let arrMatches = window.location.href.match(regex);
 	if (arrMatches == null) return;
 
 	//Add the Evaluation Metric styling:
@@ -390,7 +390,7 @@ async function initFlushTplCache() {
 
 	//Show version info popup : new version
 	if (appVersion != Settings.get("general.versionInfoPopup", false)) {
-		showRuntime("BOOT: Flushing template cache");
+		logger.add("BOOT: Flushing template cache");
 		await TplMgr.flushLocalStorage(new ScreenNotification()); //Delete all template from cache
 
 		if (compareVersion(Settings.get("general.versionInfoPopup", false), appVersion) > VERSION_REVISION_CHANGE) {
@@ -413,20 +413,20 @@ function initInjectScript() {
 	const scriptTag = document.createElement("script");
 
 	//Inject the infinite loading wheel fix to the "main world"
-	scriptTag.src = browser.runtime.getURL("scripts/inj.js");
+	scriptTag.src = chrome.runtime.getURL("scripts/inj.js");
 	scriptTag.onload = function () {
 		this.remove();
 	};
 	// see also "Dynamic values in the injected code" section in this answer
 	(document.head || document.documentElement).appendChild(scriptTag);
-	showRuntime("BOOT: Script injected");
+	logger.add("BOOT: Script injected");
 }
 
 function initSetPageTitle() {
 	//Update the page title
 	let currentUrl = window.location.href;
-	regex = /^.+?amazon\..+\/vine\/.*[?&]search=(.*?)(?:[&].*)?$/;
-	arrMatches = currentUrl.match(regex);
+	let regex = /^.+?amazon\..+\/vine\/.*[?&]search=(.*?)(?:[&].*)?$/;
+	let arrMatches = currentUrl.match(regex);
 	if (arrMatches?.length) {
 		document.title = "Vine - S: " + arrMatches[1];
 	} else if (vineQueue != null) {
@@ -467,27 +467,27 @@ function initAddNotificationMonitorLink() {
 
 async function initCreateTabs() {
 	//Create the Discard grid
-	showRuntime("BOOT: Creating tabs system");
+	logger.add("BOOT: Creating tabs system");
 	var tabSystem = Settings.get("unavailableTab.active") || Settings.get("hiddenTab.active");
 	if (tabSystem) {
 		await createGridInterface();
 	}
 
-	gridRegular = new Grid(document.getElementById("vvp-items-grid"));
+	window.gridRegular = new Grid(document.getElementById("vvp-items-grid"));
 
 	if (Settings.get("hiddenTab.active")) {
-		gridHidden = new Grid(document.getElementById("tab-hidden"));
+		window.gridHidden = new Grid(document.getElementById("tab-hidden"));
 	}
 
 	if (Settings.get("unavailableTab.active")) {
-		gridUnavailable = new Grid(document.getElementById("tab-unavailable"));
+		window.gridUnavailable = new Grid(document.getElementById("tab-unavailable"));
 	}
 
 	if (Settings.get("pinnedTab.active")) {
-		gridPinned = new Grid(document.getElementById("tab-pinned"));
+		window.gridPinned = new Grid(document.getElementById("tab-pinned"));
 	}
 
-	showRuntime("BOOT: Grid system completed");
+	logger.add("BOOT: Grid system completed");
 }
 
 function initInsertTopPagination() {
@@ -566,7 +566,7 @@ async function initInsertBookmarkButton() {
 	//Insert bookmark button
 	if (Settings.get("general.displayFirstSeen") && Settings.get("general.bookmark")) {
 		removeElements("button.bookmark");
-		prom = await Tpl.loadFile("view/bookmark.html");
+		const prom = await Tpl.loadFile("view/bookmark.html");
 		Tpl.setVar("date", Settings.get("general.bookmarkDate"));
 		let bookmarkContent = Tpl.render(prom);
 		document.querySelector("#vvp-items-button-container").insertAdjacentHTML("beforeend", bookmarkContent);
@@ -638,7 +638,7 @@ async function initTilesAndDrawToolbars() {
 	let a = null;
 	for (let i = 0; i < arrObj.length; i++) {
 		tile = await generateTile(arrObj[i]);
-		t = new Toolbar(tile);
+		let t = new Toolbar(tile);
 
 		//Add tool tip to the truncated item title link
 		if (Settings.get("general.displayFullTitleTooltip")) {
@@ -663,7 +663,7 @@ async function initTilesAndDrawToolbars() {
 		await t.createProductToolbar();
 	}
 
-	showRuntime("done creating toolbars.");
+	logger.add("done creating toolbars.");
 
 	// Scoll to the RFY/AFA/AI header
 	if (Settings.get("general.scrollToRFY")) {
@@ -731,7 +731,7 @@ function getAllProductsData() {
 //Convert the regular tile to the Vine Helper version.
 async function generateTile(obj) {
 	let tile;
-	tile = new Tile(obj, gridRegular);
+	tile = new Tile(obj, window.gridRegular);
 
 	//Add a container for the image and place the image in it.
 	let img = obj.querySelector(".vvp-item-tile-content img"); // Get the img element
@@ -771,8 +771,8 @@ async function generateTile(obj) {
 
 	//Move the hidden item to the hidden tab
 	if (Settings.get("hiddenTab.active") && tile.isHidden()) {
-		showRuntime("BOOT: The item is locally hidden, move it to the hidden grid.");
-		await tile.moveToGrid(gridHidden, false); //This is the main sort, do not animate it
+		logger.add("BOOT: The item is locally hidden, move it to the hidden grid.");
+		await tile.moveToGrid(window.gridHidden, false); //This is the main sort, do not animate it
 	}
 
 	if (Settings.get("general.displayVariantIcon")) {
@@ -810,8 +810,7 @@ function fetchProductsDatav5() {
 		return false; //No product on this page
 	}
 
-	timeMarker["fetch_start"] = Date.now();
-	showRuntime("FETCH: Fetching data from VineHelper's server...");
+	logger.add("FETCH: Fetching data from VineHelper's server...");
 
 	const content = {
 		api_version: 5,
@@ -843,12 +842,7 @@ function fetchProductsDatav5() {
 //Process the results obtained from the server
 //Update each tile with the data pertaining to it.
 async function serverProductsResponse(data) {
-	timeMarker["fetch_end"] = Date.now();
-	showRuntime(
-		"FETCH: Response received from VineHelper's server..." +
-			(timeMarker["fetch_end"] - timeMarker["fetch_start"]) +
-			"ms"
-	);
+	logger.add("FETCH: Response received from VineHelper's server...");
 	if (data["invalid_uuid"] == true) {
 		await obtainNewUUID();
 
@@ -860,14 +854,14 @@ async function serverProductsResponse(data) {
 	}
 
 	if (Settings.get("hiddenTab.active")) {
-		showRuntime("FETCH: Waiting on hidden items list to be loaded...");
+		logger.add("FETCH: Waiting on hidden items list to be loaded...");
 		while (!HiddenList.listLoaded) {
 			await new Promise((r) => setTimeout(r, 10));
 		}
-		showRuntime("FETCH: Hidden items list loaded...");
+		logger.add("FETCH: Hidden items list loaded...");
 	}
 
-	timenow = data["current_time"];
+	const timenow = data["current_time"];
 
 	//Display notification from the server
 	if (Array.isArray(data["notification"])) {
@@ -882,59 +876,59 @@ async function serverProductsResponse(data) {
 		}
 	}
 
-	showRuntime("FETCH: Waiting toolbars to be drawn...");
+	logger.add("FETCH: Waiting toolbars to be drawn...");
 	while (toolbarsDrawn == false) {
 		await new Promise((r) => setTimeout(r, 10));
 	}
-	showRuntime("FETCH: Interface loaded, processing fetch data...");
+	logger.add("FETCH: Interface loaded, processing fetch data...");
 
 	//For each product provided by the server, modify the local listings
 	for (const [key, values] of Object.entries(data["products"])) {
-		showRuntime("DRAW: Processing ASIN #" + key);
+		logger.add("DRAW: Processing ASIN #" + key);
 		let tile = getTileByAsin(key);
 
 		if (tile == null) {
-			showRuntime("No tile matching " + key);
+			logger.add("No tile matching " + key);
 			return; //Continue the loop with the next item
 		}
 
 		//Load the ETV value
 		if (values.etv_min != null) {
-			showRuntime("DRAW: Setting ETV");
+			logger.add("DRAW: Setting ETV");
 			tile.getToolbar().setETV(values.etv_min, values.etv_max);
 		}
 
 		if (values.date_added != null) {
-			showRuntime("DRAW: Setting Date");
+			logger.add("DRAW: Setting Date");
 			tile.setDateAdded(timenow, values.date_added);
 		}
 
 		//If there is a remote value for the hidden item, ensure it is sync'ed up with the local list
 		if (Settings.isPremiumUser() && Settings.get("hiddenTab.remote") && values.hidden != null) {
 			if (values.hidden == true && !tile.isHidden()) {
-				showRuntime("DRAW: Remote is ordering to hide item");
+				logger.add("DRAW: Remote is ordering to hide item");
 				await tile.hideTile(false); //Will update the placement and list
 			} else if (values.hidden == false && tile.isHidden()) {
-				showRuntime("DRAW: Remote is ordering to show item");
+				logger.add("DRAW: Remote is ordering to show item");
 				await tile.showTile(false); //Will update the placement and list
 			}
 		}
 
 		if (Settings.get("unavailableTab.active")) {
-			showRuntime("DRAW: Setting orders");
+			logger.add("DRAW: Setting orders");
 			tile.setOrders(values.order_success, values.order_failed);
 
 			//Assign the tiles to the proper grid
 			if (Settings.get("hiddenTab.active") && tile.isHidden()) {
 				//The hidden tiles were already moved, keep the there.
-			} else if (tile.getStatus() >= DISCARDED_ORDER_FAILED) {
-				showRuntime("DRAW: moving the tile to Unavailable (failed order(s))");
-				await tile.moveToGrid(gridUnavailable, false); //This is the main sort, do not animate it
+			} else if (tile.getStatus() >= window.DISCARDED_ORDER_FAILED) {
+				logger.add("DRAW: moving the tile to Unavailable (failed order(s))");
+				await tile.moveToGrid(window.gridUnavailable, false); //This is the main sort, do not animate it
 			}
 
-			showRuntime("DRAW: Updating the toolbar");
+			logger.add("DRAW: Updating the toolbar");
 			tile.getToolbar().updateToolbar();
-			showRuntime("DRAW: Done updating the toolbar");
+			logger.add("DRAW: Done updating the toolbar");
 		}
 
 		await tile.initiateTile();
@@ -943,7 +937,7 @@ async function serverProductsResponse(data) {
 	//Loading remote stored pinned items
 	if (Settings.isPremiumUser() && Settings.get("pinnedTab.active") && Settings.get("hiddenTab.remote")) {
 		if (data["pinned_products"] != undefined) {
-			showRuntime("DRAW: Loading remote pinned products");
+			logger.add("DRAW: Loading remote pinned products");
 			for (let i = 0; i < data["pinned_products"].length; i++) {
 				await addPinnedTile(
 					data["pinned_products"][i]["asin"],
@@ -963,9 +957,9 @@ async function serverProductsResponse(data) {
 	}
 
 	updateTileCounts(); //Grid.js
-	showRuntime("Done updating products");
+	logger.add("Done updating products");
 	productUpdated = true;
-	hookExecute("productsUpdated", null);
+	hookMgr.hookExecute("productsUpdated", null);
 }
 
 //#########################
@@ -1043,7 +1037,7 @@ window.addEventListener("message", async function (event) {
 			api_version: 5,
 			action: "record_etv",
 			country: I13n.getCountryCode(),
-			uuid: uuid,
+			uuid: Settings.get("general.uuid", false),
 			asin: event.data.data.asin,
 			parent_asin: event.data.data.parent_asin,
 			queue: vineQueue,
@@ -1112,7 +1106,7 @@ window.addEventListener("message", async function (event) {
 				api_version: 5,
 				action: "record_order",
 				country: I13n.getCountryCode(),
-				uuid: uuid,
+				uuid: Settings.get("general.uuid", false),
 				asin: event.data.data.asin,
 				parent_asin: event.data.data.parent_asin,
 				order_status: event.data.data.status,
@@ -1174,22 +1168,22 @@ window.addEventListener("message", async function (event) {
 	}
 
 	if (event.data.type == "websiteOpts") {
-		websiteOpts = event.data.data;
-		if (!marketplaceId) {
-			marketplaceId = websiteOpts.obfuscatedMarketId;
+		const websiteOpts = event.data.data;
+		if (!window.marketplaceId) {
+			window.marketplaceId = websiteOpts.obfuscatedMarketId;
 		}
-		if (!customerId) {
-			customerId = websiteOpts.customerId;
+		if (!window.customerId) {
+			window.customerId = websiteOpts.customerId;
 		}
-		showRuntime("BOOT: Opts data obtained from inj.js.");
+		logger.add("BOOT: Opts data obtained from inj.js.");
 
 		//Check the current URL for the following pattern:
 		///vine/vine-items#openModal;${asin};${is_parent_asin};${enrollment_guid}
 		const currentUrl = window.location.href;
-		regex = /^[^#]+#openModal;(.+);(.+);(.+);(.+)$/;
-		arrMatches = currentUrl.match(regex);
+		let regex = /^[^#]+#openModal;(.+);(.+);(.+);(.+)$/;
+		let arrMatches = currentUrl.match(regex);
 		if (arrMatches != null) {
-			showRuntime("BOOT: Open modal URL detected.");
+			logger.add("BOOT: Open modal URL detected.");
 			//We have an open modal URL
 			const asin = arrMatches[1];
 			const queue = arrMatches[2];
@@ -1206,7 +1200,7 @@ async function recordUnavailableProduct(asin, reason) {
 		api_version: 5,
 		action: "record_unavailable",
 		country: I13n.getCountryCode(),
-		uuid: uuid,
+		uuid: Settings.get("general.uuid", false),
 		asin: asin,
 		reason: reason,
 	};
@@ -1220,9 +1214,9 @@ async function recordUnavailableProduct(asin, reason) {
 }
 
 //Message from within the context of the extension
-//Messages sent via: browser.tabs.sendMessage(tab.id, data);
+//Messages sent via: chrome.tabs.sendMessage(tab.id, data);
 //In this case, all messages are coming from the service_worker file.
-browser.runtime.onMessage.addListener(async function (message, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(async function (message, sender, sendResponse) {
 	let data = message;
 	if (data.type == undefined) {
 		return false;
@@ -1232,7 +1226,7 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 
 	//If we received a request for a hook execution
 	if (data.type == "hookExecute") {
-		hookExecute(data.hookname, data);
+		hookMgr.hookExecute(data.hookname, data);
 	}
 
 	if (data.type == "newETV") {
@@ -1385,7 +1379,7 @@ window.addEventListener("keyup", async function (e) {
 	}
 
 	if (Settings.get("general.modalNavigation") && (e.key == "ArrowRight" || e.key == "ArrowLeft")) {
-		showRuntime("Arrow key detected.");
+		logger.add("Arrow key detected.");
 		handleModalNavigation(e);
 	}
 
@@ -1397,7 +1391,16 @@ window.addEventListener("keyup", async function (e) {
 			)
 		) {
 			for (i = 0; i < 10000; i++) {
-				fakeAsin = generateString(10);
+				fakeAsin = (()=>{
+					let result = "";
+					const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+					const charactersLength = characters.length;
+					for (let i = 0; i < length; i++) {
+						result += characters.charAt(Math.floor(Math.random() * charactersLength));
+					}
+
+					return result;
+				})();
 				HiddenList.addItem(fakeAsin, false);
 			}
 			HiddenList.saveList();
@@ -1415,8 +1418,8 @@ window.addEventListener("keyup", async function (e) {
 		[Settings.get("keyBindings.previousPage")]: () =>
 			document.querySelector("#vvp-items-grid-container>div>ul.a-pagination li:first-child a")?.click(),
 		[Settings.get("keyBindings.debug")]: async () => {
-			let content = await getRunTimeJSON();
-			regex = /\s*{<br\/>\n\s*"time": ([0-9]+),<br\/>\n\s*"event": "(.+?)"<br\/>\n\s*}(?:,<br\/>\n)?/gm;
+			let content = await logger.getContent();
+			let regex = /\s*{<br\/>\n\s*"time": ([0-9]+),<br\/>\n\s*"event": "(.+?)"<br\/>\n\s*}(?:,<br\/>\n)?/gm;
 			const content2 = content.replace(regex, `<strong>$1ms:</strong> $2<br/>\n`);
 			let m = DialogMgr.newModal("debug");
 			m.title = DEBUGGER_TITLE;
@@ -1528,7 +1531,7 @@ function escapeHTML(value) {
  * Used by tile.js:initiateTile
  * @param {string} value
  */
-function unescapeHTML(encodedString) {
+window.unescapeHTML = function (encodedString) {
 	const entityMap = {
 		"&amp;": "&",
 		"&#34;": '"',
@@ -1542,7 +1545,7 @@ function unescapeHTML(encodedString) {
 	}
 
 	return encodedString;
-}
+};
 
 /** Remove an element from the DOM, ignore if it does not exist
  * @param selector CSS style selector of the element to remove
@@ -1589,7 +1592,7 @@ let modalNavigatorNextIndex = 0;
  */
 function modalNavigatorHandleTileButtonClick(index, asin) {
 	modalNavigatorCurrentIndex = index;
-	showRuntime("[DEBUG] Tile clicked, current index: " + modalNavigatorCurrentIndex + " with ASIN: " + asin);
+	logger.add("[DEBUG] Tile clicked, current index: " + modalNavigatorCurrentIndex + " with ASIN: " + asin);
 }
 
 /**
@@ -1600,10 +1603,10 @@ function modalNavigatorHandleTileButtonClick(index, asin) {
  */
 function modalNavigatorCloseModal(modal) {
 	return new Promise((resolve) => {
-		showRuntime("[DEBUG] Closing modal...");
+		logger.add("[DEBUG] Closing modal...");
 		modal.querySelector('button[data-action="a-popover-close"]').click();
 		setTimeout(() => {
-			showRuntime("[DEBUG] Modal closed!");
+			logger.add("[DEBUG] Modal closed!");
 			resolve();
 		}, 300);
 	});
@@ -1640,12 +1643,12 @@ async function handleModalNavigation(event) {
 	let modalNavigatorModal = document.querySelector('.a-popover-modal[aria-hidden="false"]');
 	const itemCount = document.querySelectorAll("#vvp-items-grid .vvp-item-tile").length;
 	if (!modalNavigatorModal) {
-		showRuntime("[DEBUG] Modal not open, nothing to navigate through; ignoring!");
+		logger.add("[DEBUG] Modal not open, nothing to navigate through; ignoring!");
 		return;
 	}
 
 	if (modalNavigatorCurrentIndex === -1) {
-		showRuntime("[DEBUG] There is no active tile; exiting");
+		logger.add("[DEBUG] There is no active tile; exiting");
 		return; // Exit if there's no current tile tracked
 	}
 
@@ -1658,11 +1661,11 @@ async function handleModalNavigation(event) {
 	} else if (event.key === "ArrowLeft") {
 		modalNavigatorNextIndex = (modalNavigatorCurrentIndex - 1 + itemCount) % itemCount;
 	} else {
-		showRuntime("[DEBUG] No left/right arrowkey pressed; exiting");
+		logger.add("[DEBUG] No left/right arrowkey pressed; exiting");
 		return;
 	}
 
-	showRuntime("[DEBUG] Next index in the grid: " + modalNavigatorNextIndex);
+	logger.add("[DEBUG] Next index in the grid: " + modalNavigatorNextIndex);
 
 	// Close the modalNavigatorModal, await it, then continue
 	await modalNavigatorCloseModal(modalNavigatorModal);
@@ -1679,20 +1682,20 @@ async function handleModalNavigation(event) {
 		const modalNavigatorNextAsin = modalNavigatorNextButton.getAttribute("data-asin");
 
 		if (modalNavigatorNextButton) {
-			showRuntime("[DEBUG] Trying to open modal with ASIN: " + modalNavigatorNextAsin);
+			logger.add("[DEBUG] Trying to open modal with ASIN: " + modalNavigatorNextAsin);
 			modalNavigatorNextButton.click();
 		} else {
-			showRuntime("[DEBUG] There is no such button, broken? ASIN: " + modalNavigatorNextAsin);
+			logger.add("[DEBUG] There is no such button, broken? ASIN: " + modalNavigatorNextAsin);
 		}
 	}, 600);
 
 	// Finally update the current index
 	modalNavigatorCurrentIndex = modalNavigatorNextIndex;
-	showRuntime("[DEBUG] Updated the current index to: " + modalNavigatorCurrentIndex);
+	logger.add("[DEBUG] Updated the current index to: " + modalNavigatorCurrentIndex);
 }
 
 function openDynamicModal(asin, queue, isParent, enrollmentGUID, autoClick = true) {
-	if (!marketplaceId || !customerId) {
+	if (!window.marketplaceId || !window.customerId) {
 		console.error("Failed to fetch opts/vvp-context data");
 	}
 
@@ -1720,10 +1723,10 @@ function openDynamicModal(asin, queue, isParent, enrollmentGUID, autoClick = tru
 	if (recommendationType == "VENDOR_TARGETED") {
 		btn.dataset.recommendationType = recommendationType;
 		btn.dataset.recommendationId =
-			marketplaceId + "#" + asin + "#" + customerId + "#vine.enrollment." + enrollmentGUID;
+			window.marketplaceId + "#" + asin + "#" + window.customerId + "#vine.enrollment." + enrollmentGUID;
 	} else {
 		btn.dataset.recommendationType = recommendationType;
-		btn.dataset.recommendationId = marketplaceId + "#" + asin + "#vine.enrollment." + enrollmentGUID;
+		btn.dataset.recommendationId = window.marketplaceId + "#" + asin + "#vine.enrollment." + enrollmentGUID;
 	}
 
 	//Dispatch a click event on the button

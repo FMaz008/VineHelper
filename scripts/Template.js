@@ -5,17 +5,20 @@ if (typeof showRuntime === "undefined") {
 }
 
 class Template {
+	#tplMgr;
+
 	constructor() {
 		this.arrCache = [];
 		this.arrVar = [];
 		this.arrIf = [];
 		this.currentURL = null;
+		this.#tplMgr = new TemplateMgr(); //Singleton
 	}
 
 	async loadFile(url) {
 		this.currentURL = url;
 
-		return TplMgr.getTemplate(url);
+		return this.#tplMgr.getTemplate(url);
 	}
 
 	setVar(name, value) {
@@ -67,7 +70,17 @@ class Template {
 }
 
 class TemplateMgr {
+	static #instance = null;
+
 	constructor() {
+		//Singleton
+		if (TemplateMgr.#instance) {
+			// Return the existing instance if it already exists
+			return TemplateMgr.#instance;
+		}
+		// Initialize the instance if it doesn't exist
+		TemplateMgr.#instance = this;
+
 		this.arrTemplate = [];
 		this.loadTempateFromLocalStorage();
 	}

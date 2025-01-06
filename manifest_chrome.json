@@ -100,7 +100,6 @@
 		},
 		{
 			"js": [
-				"node_modules/jquery/dist/jquery.min.js",
 				"scripts/Template.js",
 				"scripts/ScreenNotifier.js",
 				"scripts/ModalMgr.js",

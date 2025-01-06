@@ -74,7 +74,7 @@ class NotificationMonitor {
 		this.#updateServiceWorkerStatus();
 
 		//Obtain the status of the WebSocket connection.
-		browser.runtime.sendMessage({
+		chrome.runtime.sendMessage({
 			type: "wsStatus",
 		});
 
@@ -83,7 +83,7 @@ class NotificationMonitor {
 		//Bind fetch-last-100 button
 		const btnLast100 = document.getElementById("fetch-last-100");
 		btnLast100.addEventListener("click", (event) => {
-			browser.runtime.sendMessage({
+			chrome.runtime.sendMessage({
 				type: "fetchLast100Items",
 			});
 		});
