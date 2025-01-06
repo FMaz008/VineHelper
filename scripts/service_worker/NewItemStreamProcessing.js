@@ -77,21 +77,6 @@ const transformPostNotification = dataStream.transformer(function (data) {
 	}
 	return data;
 });
-const transformExecuteHooks = dataStream.transformer(function (data) {
-	let data2 = { ...data };
-
-	if (data.KWsMatch) {
-		data2.type = "hookExecute";
-		data2.hookname = "newItemKWMatch";
-		outputFunctions.broadcast(data2, "newItemKWMatch");
-	} else {
-		data2.type = "hookExecute";
-		data2.hookname = "newItemNoKWMatch";
-		outputFunctions.broadcast(data2, "newItemNoKWMatch");
-	}
-
-	return data;
-});
 dataStream
 	.pipe(filterHideitem)
 	.pipe(transformIsHighlight)
@@ -99,7 +84,6 @@ dataStream
 	.pipe(transformSearchPhrase)
 	.pipe(transformUnixTimestamp)
 	.pipe(transformPostNotification)
-	.pipe(transformExecuteHooks)
 	.output((data) => {
 		//Broadcast the notification
 		outputFunctions.broadcast(data, "notification");
