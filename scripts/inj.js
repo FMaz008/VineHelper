@@ -63,12 +63,16 @@ window.fetch = async (...args) => {
 		let { result, error } = extHelper_responseData;
 
 		if (result === null) {
+			const regex = new RegExp(`.*/item/([^?]+)`);
+			const arrMatch = url.match(regex);
+			const asin = arrMatch[1];
 			window.postMessage(
 				{
 					type: "error",
 					data: {
 						errorType: error.exceptionType,
 						error: error.message,
+						asin: asin,
 					},
 				},
 				"/" //message should be sent to the same origin as the current document.

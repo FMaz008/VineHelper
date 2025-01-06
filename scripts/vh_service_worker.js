@@ -149,6 +149,15 @@ function connectWebSocket() {
 		sendMessageToAllTabs(data1, "newItemETV");
 	});
 
+	socket.on("unavailableItem", (data) => {
+		sendMessageToAllTabs({
+			type: "unavailableItem",
+			domain: Settings.get("general.country"),
+			asin: data.item.asin,
+			reason: data.item.reason,
+		});
+	});
+
 	// On disconnection
 	socket.on("disconnect", () => {
 		console.log("WS Disconnected");
@@ -235,6 +244,7 @@ async function fetchLast100Items() {
 					queue,
 					is_parent_asin,
 					enrollment_guid,
+					unavailable,
 				} = response.products[i];
 
 				//Only display notification for products with a title and image url
@@ -258,6 +268,7 @@ async function fetchLast100Items() {
 					reason: "Fetch last 100 new items",
 					is_parent_asin: is_parent_asin,
 					enrollment_guid: enrollment_guid,
+					unavailable: unavailable,
 				});
 			}
 		})

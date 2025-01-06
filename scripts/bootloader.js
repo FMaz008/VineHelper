@@ -1166,6 +1166,11 @@ window.addEventListener("message", async function (event) {
 			"<br/><strong>Details:</strong> " +
 			event.data.data.error;
 		await Notifications.pushNotification(note);
+
+		//regex = new RegExp(`No recommendation found for recommendation id.*`, 'i');
+		if (event.data.data.errorType == "ITEM_NOT_IN_ENROLLMENT") {
+			recordUnavailableProduct(event.data.data.asin, "ITEM_NOT_IN_ENROLLMENT");
+		}
 	}
 
 	if (event.data.type == "websiteOpts") {
@@ -1195,6 +1200,24 @@ window.addEventListener("message", async function (event) {
 		}
 	}
 });
+
+async function recordUnavailableProduct(asin, reason) {
+	const content = {
+		api_version: 5,
+		action: "record_unavailable",
+		country: I13n.getCountryCode(),
+		uuid: uuid,
+		asin: asin,
+		reason: reason,
+	};
+
+	//Form the full URL
+	await fetch(VINE_HELPER_API_V5_URL, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(content),
+	});
+}
 
 //Message from within the context of the extension
 //Messages sent via: browser.tabs.sendMessage(tab.id, data);
@@ -1228,6 +1251,11 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 		}
 	}
 
+	if (data.type == "unavailableItem") {
+		if (notificationMonitor) {
+			notificationMonitor.disableItem(data.asin);
+		}
+	}
 	if (data.type == "newItem") {
 		if (notificationMonitor) {
 			let {
@@ -1245,8 +1273,8 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 				BlurKWsMatch,
 				is_parent_asin,
 				enrollment_guid,
+				unavailable,
 			} = data;
-
 			notificationMonitor.addTileInGrid(
 				asin,
 				queue,
@@ -1261,7 +1289,8 @@ browser.runtime.onMessage.addListener(async function (message, sender, sendRespo
 				KW,
 				KWsMatch,
 				BlurKW,
-				BlurKWsMatch
+				BlurKWsMatch,
+				unavailable
 			);
 		} else if (
 			data.index < 10 && //Limit the notification to the top 10 most recents

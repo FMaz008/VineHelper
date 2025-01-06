@@ -126,6 +126,15 @@ class NotificationMonitor {
 		});
 	}
 
+	async disableItem(asin) {
+		const notif = this.#getNotificationByASIN(asin);
+
+		if (!notif) {
+			return false;
+		}
+
+		notif.style.opacity = "0.5";
+	}
 	async addTileInGrid(
 		asin,
 		queue,
@@ -140,7 +149,8 @@ class NotificationMonitor {
 		highlightKW,
 		KWsMatch,
 		blurKW,
-		BlurKWsMatch
+		BlurKWsMatch,
+		unavailable
 	) {
 		if (!asin) {
 			return false;
@@ -236,6 +246,11 @@ class NotificationMonitor {
 		//Process the bluring
 		if (BlurKWsMatch) {
 			this.#blurItemFound(asin);
+		}
+
+		//If unavailable, change opacity
+		if (unavailable == 1) {
+			this.disableItem(asin);
 		}
 
 		//Update the most recent date
