@@ -17,7 +17,7 @@ import "../node_modules/socket.io/client-dist/socket.io.min.js";
 broadcastFunction(sendMessageToAllTabs);
 notificationPushFunction(pushNotification);
 
-var I13n = new Internationalization();
+var i13n = new Internationalization();
 var Settings = new SettingsMgr();
 var notificationsData = {};
 var WSReconnectInterval = 0.3; //Firefox shutdown the background script after 30seconds.
@@ -41,7 +41,7 @@ chrome.runtime.onMessage.addListener((data, sender, sendResponse) => {
 	}
 
 	if (data.type == "setCountryCode") {
-		I13n.setCountryCode(data.countryCode);
+		i13n.setCountryCode(data.countryCode);
 		sendResponse({ success: true });
 	}
 
@@ -74,11 +74,11 @@ chrome.notifications.onClicked.addListener((notificationId) => {
 	const { asin, queue, is_parent_asin, enrollment_guid, search } = notificationsData[notificationId];
 	if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
 		chrome.tabs.create({
-			url: `https://www.amazon.${I13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`,
+			url: `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`,
 		});
 	} else {
 		chrome.tabs.create({
-			url: `https://www.amazon.${I13n.getDomainTLD()}/vine/vine-items?search=${search}`,
+			url: `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search}`,
 		});
 	}
 });
@@ -92,14 +92,14 @@ function connectWebSocket() {
 		return;
 	}
 
-	if (I13n.getCountryCode() === null) {
+	if (i13n.getCountryCode() === null) {
 		console.error("Country not known, refresh/load a vine page.");
 		return; //If the country is not known, do not connect
 	}
 
 	socket = io.connect(VINE_HELPER_API_V5_WS_URL, {
 		query: {
-			countryCode: DEBUG_MODE ? "com" : I13n.getCountryCode(),
+			countryCode: DEBUG_MODE ? "com" : i13n.getCountryCode(),
 			uuid: Settings.get("general.uuid", false),
 		}, // Pass the country code as a query parameter
 		transports: ["websocket"],
@@ -202,12 +202,12 @@ async function retrieveSettings() {
 	//Set the locale
 	const countryCode = Settings.get("general.country");
 	if (countryCode != null) {
-		I13n.setCountryCode(countryCode);
+		i13n.setCountryCode(countryCode);
 	}
 }
 
 async function fetchLast100Items() {
-	if (I13n.getCountryCode() === null) {
+	if (i13n.getCountryCode() === null) {
 		return false; //If the country is not known, do not query
 	}
 

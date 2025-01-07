@@ -1,7 +1,18 @@
 import { Logger } from "./Logger.js";
 var logger = new Logger();
 
+import { SettingsMgr } from "./SettingsMgr.js";
+var Settings = new SettingsMgr();
+
+import { Env } from "./Env.js";
+var env = new Env();
+
+import { HiddenListMgr } from "./HiddenListMgr.js";
+var HiddenList = new HiddenListMgr();
+
 import { keywordMatch } from "./service_worker/keywordMatch.js";
+import { YMDHiStoISODate } from "./DateHelper.js";
+import { updateTileCounts } from "./Grid.js";
 
 class Tile {
 	#tileDOM;
@@ -85,11 +96,12 @@ class Tile {
 
 	getStatus() {
 		if (Settings.get("unavailableTab.active")) {
-			if (this.#orderSuccess > 0 && this.#orderSuccess > this.#orderFailed) return NOT_DISCARDED_ORDER_SUCCESS;
+			if (this.#orderSuccess > 0 && this.#orderSuccess > this.#orderFailed)
+				return env.data.NOT_DISCARDED_ORDER_SUCCESS;
 
-			if (this.#orderFailed > 0 && this.#orderFailed > this.#orderSuccess) return DISCARDED_ORDER_FAILED;
+			if (this.#orderFailed > 0 && this.#orderFailed > this.#orderSuccess) return env.data.DISCARDED_ORDER_FAILED;
 		}
-		return NOT_DISCARDED;
+		return env.data.NOT_DISCARDED;
 	}
 
 	getAsin() {
@@ -228,11 +240,11 @@ class Tile {
 		return true;
 	}
 
-	isHidden() {
+	async isHidden() {
 		if (!Settings.get("hiddenTab.active")) {
 			return false;
 		}
-		return HiddenList.isHidden(this.#asin);
+		return await HiddenList.isHidden(this.#asin);
 	}
 
 	async hideTile(animate = true, updateLocalStorage = true, skipHiddenListMgr = false) {
@@ -243,7 +255,7 @@ class Tile {
 		}
 
 		//Move the tile
-		await this.moveToGrid(gridHidden, animate);
+		await this.moveToGrid(env.data.grid.gridHidden, animate);
 
 		this.#toolbar.updateVisibilityIcon();
 
@@ -256,7 +268,7 @@ class Tile {
 		HiddenList.removeItem(this.#asin, updateLocalStorage);
 
 		//Move the tile
-		await this.moveToGrid(gridRegular, animate);
+		await this.moveToGrid(env.data.grid.gridRegular, animate);
 
 		this.#toolbar.updateVisibilityIcon();
 
@@ -288,15 +300,15 @@ function timeSince(timenow, date) {
 
 function getTileByAsin(asin) {
 	let tile = null;
-	tile = gridRegular.getTileByASIN(asin);
+	tile = env.data.grid.gridRegular.getTileByASIN(asin);
 	if (tile != null) return tile;
 
-	if (gridUnavailable != null) {
-		tile = gridUnavailable.getTileByASIN(asin);
+	if (env.data.grid.gridUnavailable != null) {
+		tile = env.data.grid.gridUnavailable.getTileByASIN(asin);
 		if (tile != null) return tile;
 	}
 
-	tile = gridHidden.getTileByASIN(asin);
+	tile = env.data.grid.gridHidden.getTileByASIN(asin);
 	return tile;
 }
 

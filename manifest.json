@@ -108,13 +108,7 @@
 			"run_at": "document_end"
 		},
 		{
-			"js": [
-				"scripts/Template.js",
-				"scripts/ScreenNotifier.js",
-				"scripts/ModalMgr.js",
-				"scripts/BrendaAnnounce.js",
-				"scripts/prebootLoader.js"
-			],
+			"js": ["scripts/prebootLoader.js"],
 			"matches": [
 				"*://*.amazon.ca/vine/*",
 				"*://*.amazon.it/vine/*",
@@ -135,7 +129,7 @@
 		},
 		{
 			"css": ["resource/css/vinehelper.css", "resource/css/main.css"],
-			"js": ["scripts/Template.js", "scripts/review.js"],
+			"js": ["scripts/review.js"],
 			"matches": [
 				"*://*.amazon.ca/review/*",
 				"*://*.amazon.it/review/*",

@@ -1,6 +1,27 @@
 import { Logger } from "./Logger.js";
 var logger = new Logger();
 
+import { SettingsMgr } from "./SettingsMgr.js";
+var Settings = new SettingsMgr();
+
+import { Env } from "./Env.js";
+var env = new Env();
+
+import { Internationalization } from "./Internationalization.js";
+var i13n = new Internationalization();
+
+import { PinnedListMgr } from "./PinnedListMgr.js";
+var PinnedList = new PinnedListMgr();
+
+import { getTileByAsin } from "./Tile.js";
+import { addPinnedTile, updateTileCounts } from "./Grid.js";
+
+import { Template } from "./Template.js";
+var Tpl = new Template();
+
+import { BrendaAnnounceQueue } from "./BrendaAnnounce.js";
+var brendaAnnounceQueue = new BrendaAnnounceQueue();
+
 class Toolbar {
 	#tile;
 
@@ -23,8 +44,8 @@ class Toolbar {
 			"announce",
 			Settings.get("discord.active") &&
 				Settings.get("discord.guid", false) != null &&
-				vineQueue != null &&
-				vineSearch == false
+				env.data.vineQueue != null &&
+				env.data.vineSearch == false
 		);
 		Tpl.setIf("pinned", Settings.get("pinnedTab.active"));
 		Tpl.setIf("toggleview", Settings.get("hiddenTab.active"));
@@ -41,7 +62,7 @@ class Toolbar {
 		etvElements.forEach((etv) => {
 			etv.addEventListener("change", (event) => {
 				if (event.currentTarget.textContent === "") return false;
-				if (vineSearch) return false;
+				if (env.data.vineSearch) return false;
 
 				let tile = getTileByAsin(this.#tile.getAsin());
 				let tileDOM = tile.getDOM();
@@ -53,7 +74,8 @@ class Toolbar {
 					const announceClickHandler = async (e) => {
 						e.preventDefault();
 
-						if (vineQueue == null) throw new Exception("Cannot announce an item in an unknown queue.");
+						if (env.data.vineQueue == null)
+							throw new Exception("Cannot announce an item in an unknown queue.");
 
 						let tile = getTileByAsin(this.#tile.getAsin());
 						let etv = tile.getDOM().querySelector(".etv").textContent;
@@ -62,13 +84,18 @@ class Toolbar {
 						etv = etv.split("-").pop();
 						etv = Number(etv.replace(/[^0-9-.]+/g, ""));
 
-						window.BrendaAnnounceQueue.announce(this.#tile.getAsin(), etv, vineQueue, I13n.getDomainTLD());
+						brendaAnnounceQueue.announce(
+							this.#tile.getAsin(),
+							etv,
+							env.data.vineQueue,
+							i13n.getDomainTLD()
+						);
 
 						if (!Settings.get("notification.reduce")) {
 							let note = new ScreenNotification();
 							note.title = "Announce to Brenda";
 							note.lifespan = 10;
-							note.content = `Sending this product ${this.#tile.getAsin()} from the ${vineQueueAbbr} queue to Brenda over on discord`;
+							note.content = `Sending this product ${this.#tile.getAsin()} from the ${env.data.vineQueueAbbr} queue to Brenda over on discord`;
 							await Notifications.pushNotification(note);
 						}
 
@@ -165,8 +192,8 @@ class Toolbar {
 							/#vine\.enrollment\.([a-f0-9-]+)/i
 						)[1];
 
-						PinnedList.addItem(asin, vineQueue, title, thumbnail, isParentAsin, enrollmentGUID);
-						await addPinnedTile(asin, vineQueue, title, thumbnail, isParentAsin, enrollmentGUID); // grid.js
+						PinnedList.addItem(asin, env.data.vineQueue, title, thumbnail, isParentAsin, enrollmentGUID);
+						await addPinnedTile(asin, env.data.vineQueue, title, thumbnail, isParentAsin, enrollmentGUID); // grid.js
 
 						updateTileCounts();
 					}
@@ -207,13 +234,13 @@ class Toolbar {
 
 		if (onlyIfEmpty && span.textContent !== "") return false;
 
-		etv1 = new Intl.NumberFormat(I13n.getLocale(), {
+		etv1 = new Intl.NumberFormat(i13n.getLocale(), {
 			style: "currency",
-			currency: I13n.getCurrency(),
+			currency: i13n.getCurrency(),
 		}).format(etv1);
-		etv2 = new Intl.NumberFormat(I13n.getLocale(), {
+		etv2 = new Intl.NumberFormat(i13n.getLocale(), {
 			style: "currency",
-			currency: I13n.getCurrency(),
+			currency: i13n.getCurrency(),
 		}).format(etv2);
 
 		span.textContent = etv1 === etv2 ? etv2 : `${etv1}-${etv2}`;
@@ -247,13 +274,13 @@ class Toolbar {
 		// Set the icons
 		logger.add("DRAW-UPDATE-TOOLBAR: Setting icon status");
 		switch (this.#tile.getStatus()) {
-			case DISCARDED_ORDER_FAILED:
+			case env.data.DISCARDED_ORDER_FAILED:
 				statusColor = "vh-background-fees";
 				break;
-			case NOT_DISCARDED_ORDER_SUCCESS:
+			case env.data.NOT_DISCARDED_ORDER_SUCCESS:
 				statusColor = "vh-background-nofees";
 				break;
-			case NOT_DISCARDED:
+			case env.data.NOT_DISCARDED:
 				statusColor = "vh-background-neutral";
 				break;
 		}

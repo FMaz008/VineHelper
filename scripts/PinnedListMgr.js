@@ -1,17 +1,31 @@
+import { Logger } from "./Logger.js";
+var logger = new Logger();
+
 import { SettingsMgr } from "./SettingsMgr.js";
 const Settings = new SettingsMgr();
 
 import { Internationalization } from "./Internationalization.js";
-const I13n = new Internationalization();
+const i13n = new Internationalization();
 
 class PinnedListMgr {
+	static #instance = null;
+
+	listLoaded;
+
 	constructor() {
+		if (PinnedListMgr.#instance) {
+			// Return the existing instance if it already exists
+			return PinnedListMgr.#instance;
+		}
+		// Initialize the instance if it doesn't exist
+		PinnedListMgr.#instance = this;
+
 		this.mapPin = new Map();
 		this.listLoaded = false;
 		this.arrChanges = [];
 		this.broadcast = new BroadcastChannel("vine_helper");
 
-		showRuntime("PINNEDMGR: Loading list");
+		logger.add("PINNEDMGR: Loading list");
 		this.loadFromLocalStorage(); //Can't be awaited
 
 		//Handle the reception of broadcasts:
@@ -19,7 +33,7 @@ class PinnedListMgr {
 			if (ev.data.type == undefined) return;
 
 			if (ev.data.type == "pinnedItem") {
-				showRuntime("Broadcast received: pinned item " + ev.data.asin);
+				logger.add("Broadcast received: pinned item " + ev.data.asin);
 				this.addItem(
 					ev.data.asin,
 					ev.data.title,
@@ -31,7 +45,7 @@ class PinnedListMgr {
 				);
 			}
 			if (ev.data.type == "unpinnedItem") {
-				showRuntime("Broadcast received: unpinned item " + ev.data.asin);
+				logger.add("Broadcast received: unpinned item " + ev.data.asin);
 				this.removeItem(ev.data.asin, false, false);
 			}
 		};
@@ -39,7 +53,6 @@ class PinnedListMgr {
 
 	async loadFromLocalStorage() {
 		const data = await chrome.storage.local.get("pinnedItems");
-
 		if (data.pinnedItems) {
 			try {
 				// Try parsing the stored string as JSON
@@ -47,7 +60,7 @@ class PinnedListMgr {
 			} catch (error) {
 				// If JSON parsing fails assume legacy format and convert to new format
 				// Once the migration period is over delete this section of code
-				showRuntime("Failed to parse pinnedItems as JSON, treating as array:");
+				logger.add("Failed to parse pinnedItems as JSON, treating as array:");
 				if (Array.isArray(data.pinnedItems)) {
 					this.mapPin = data.pinnedItems.reduce((map, product) => {
 						map.set(product.asin, {
@@ -59,7 +72,7 @@ class PinnedListMgr {
 						return map;
 					}, new Map());
 				} else {
-					showRuntime("Invalid data format for pinned items.  Creating new map.");
+					logger.add("Invalid data format for pinned items.  Creating new map.");
 					this.mapPin = new Map(); // Initialize with an empty map if data is malformed
 				}
 			}
@@ -69,7 +82,7 @@ class PinnedListMgr {
 		}
 
 		this.listLoaded = true;
-		showRuntime("PINNEDMGR: List loaded.");
+		logger.add("PINNEDMGR: List loaded.");
 	}
 
 	async removeItem(asin, save = true, broadcast = true) {
@@ -166,7 +179,7 @@ class PinnedListMgr {
 	notifyServerOfChangedItem() {
 		const content = {
 			api_version: 5,
-			country: I13n.getCountryCode(),
+			country: i13n.getCountryCode(),
 			action: "save_pinned_list",
 			uuid: Settings.get("general.uuid", false),
 			items: this.arrChanges,
@@ -200,7 +213,10 @@ class PinnedListMgr {
 		else this.arrChanges[itemId] = obj;
 	}
 
-	getList() {
+	async getList() {
+		while (!this.listLoaded) {
+			await new Promise((r) => setTimeout(r, 50));
+		}
 		return this.mapPin;
 	}
 

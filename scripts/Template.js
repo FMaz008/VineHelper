@@ -1,13 +1,18 @@
-//No JQuery
-
-if (typeof showRuntime === "undefined") {
-	showRuntime = function () {};
-}
+import { Logger } from "./Logger.js";
+var logger = new Logger();
 
 class Template {
+	static #instance = null;
 	#tplMgr;
 
 	constructor() {
+		if (Template.#instance) {
+			// Return the existing instance if it already exists
+			return Template.#instance;
+		}
+		// Initialize the instance if it doesn't exist
+		Template.#instance = this;
+
 		this.arrCache = [];
 		this.arrVar = [];
 		this.arrIf = [];
@@ -37,7 +42,7 @@ class Template {
 
 	render(html, convertToDOMObject = false) {
 		if (html == null) {
-			showRuntime("No content for " + this.currentURL + ", did you await loadFile()) ?");
+			logger.add("No content for " + this.currentURL + ", did you await loadFile()) ?");
 			return "";
 		}
 		var output = html;
@@ -67,6 +72,12 @@ class Template {
 		let element = doc.body.firstChild; // Use firstChild to get the top-level element
 		return element;
 	}
+
+	async flushLocalStorage() {
+		await chrome.storage.local.set({ arrTemplate: [] });
+		this.arrTemplate = [];
+		logger.add("TEMPLATE: Flushed template cache.");
+	}
 }
 
 class TemplateMgr {
@@ -88,7 +99,7 @@ class TemplateMgr {
 	async loadTempateFromLocalStorage() {
 		const data = await chrome.storage.local.get("arrTemplate");
 		if (Object.keys(data).length === 0) {
-			showRuntime("TEMPLATE: No template in localstorage, will load them from files as needed...");
+			logger.add("TEMPLATE: No template in localstorage, will load them from files as needed...");
 			return;
 		}
 		this.arrTemplate = data.arrTemplate;
@@ -97,7 +108,7 @@ class TemplateMgr {
 	async getTemplate(url) {
 		let content = this.arrTemplate.find((e) => e.url === url);
 		if (content != null) {
-			showRuntime("TEMPLATE: Loaded template " + url + " from memory.");
+			logger.add("TEMPLATE: Loaded template " + url + " from memory.");
 			return content.prom;
 		}
 
@@ -112,7 +123,7 @@ class TemplateMgr {
 	}
 
 	async loadTemplateFromFile(url) {
-		showRuntime("TEMPLATE: Loading template " + url + " from file.");
+		logger.add("TEMPLATE: Loading template " + url + " from file.");
 
 		const promise = fetch(chrome.runtime.getURL(url))
 			.then((response) => {
@@ -128,18 +139,6 @@ class TemplateMgr {
 
 		return promise;
 	}
-
-	async flushLocalStorage(notification = null) {
-		await chrome.storage.local.set({ arrTemplate: [] });
-		this.arrTemplate = [];
-		showRuntime("TEMPLATE: Flushed template cache.");
-
-		if (notification !== null && notification instanceof ScreenNotification) {
-			notification.title = "Template cache flushed.";
-			notification.lifespan = 3;
-			notification.content = "";
-			notification.title_only = true;
-			Notifications.pushNotification(notification);
-		}
-	}
 }
+
+export { Template };

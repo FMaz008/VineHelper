@@ -1,7 +1,30 @@
+import { Logger } from "./Logger.js";
+var logger = new Logger();
+
+import { SettingsMgr } from "./SettingsMgr.js";
+const Settings = new SettingsMgr();
+
+import { Internationalization } from "./Internationalization.js";
+const i13n = new Internationalization();
+
+import { Template } from "./Template.js";
+var Tpl = new Template();
+
+import { getRecommendationTypeFromQueue, generateRecommendationString } from "./Grid.js";
+
+import { PinnedListMgr } from "./PinnedListMgr.js";
+var PinnedList = new PinnedListMgr();
+
 import { NotificationsSoundPlayer } from "./NotificationsSoundPlayer.js";
-var SoundPlayer = new NotificationsSoundPlayer();
+const SoundPlayer = new NotificationsSoundPlayer();
+
+import { ScreenNotifier, ScreenNotification } from "./ScreenNotifier.js";
+var Notifications = new ScreenNotifier();
 
 import { keywordMatch } from "./service_worker/keywordMatch.js";
+
+import { BrendaAnnounceQueue } from "./BrendaAnnounce.js";
+var brendaAnnounceQueue = new BrendaAnnounceQueue();
 
 //const TYPE_SHOW_ALL = -1;
 const TYPE_REGULAR = 0;
@@ -78,7 +101,7 @@ class NotificationMonitor {
 			type: "wsStatus",
 		});
 
-		document.getElementById("date_loaded").innerText = new Date().toLocaleString(I13n.getLocale());
+		document.getElementById("date_loaded").innerText = new Date().toLocaleString(i13n.getLocale());
 
 		//Bind fetch-last-100 button
 		const btnLast100 = document.getElementById("fetch-last-100");
@@ -182,7 +205,7 @@ class NotificationMonitor {
 
 		let prom2 = await Tpl.loadFile("view/" + templateFile);
 		Tpl.setVar("id", asin);
-		Tpl.setVar("domain", I13n.getDomainTLD());
+		Tpl.setVar("domain", i13n.getDomainTLD());
 		Tpl.setVar("img_url", img_url);
 		Tpl.setVar("asin", asin);
 		Tpl.setVar("date", this.#formatDate(date));
@@ -300,7 +323,7 @@ class NotificationMonitor {
 			const seeDetailsBtn = document.querySelector(`#vh-notification-${asin} .a-button-primary input`);
 			seeDetailsBtn.addEventListener("click", () => {
 				window.open(
-					`https://www.amazon.${I13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`,
+					`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`,
 					"_blank"
 				);
 			});
@@ -418,16 +441,16 @@ class NotificationMonitor {
 	#updateServiceWorkerStatus() {
 		if (!Settings.get("notification.active")) {
 			this.#setServiceWorkerStatus(false, "You need to enable the notifications in the settings.");
-		} else if (I13n.getCountryCode() === null) {
+		} else if (i13n.getCountryCode() === null) {
 			this.#setServiceWorkerStatus(
 				false,
 				"Your country has not been detected, ensure to load a vine page first."
 			);
-		} else if (I13n.getDomainTLD() === null) {
+		} else if (i13n.getDomainTLD() === null) {
 			this.#setServiceWorkerStatus(
 				false,
 				"No valid country found. You current country is detected as: '" +
-					I13n.getCountryCode() +
+					i13n.getCountryCode() +
 					"', which is not currently supported by Vine Helper. Reach out so we can add it!"
 			);
 		} else if (Settings.get("notification.active")) {
@@ -585,7 +608,7 @@ class NotificationMonitor {
 
 		let etv = document.querySelector("#vh-notification-" + asin + " .etv").dataset.etvMax;
 
-		window.BrendaAnnounceQueue.announce(asin, etv, queue, I13n.getDomainTLD());
+		brendaAnnounceQueue.announce(asin, etv, queue, i13n.getDomainTLD());
 	}
 
 	#handlePinClick(e) {
@@ -661,7 +684,7 @@ class NotificationMonitor {
 		const content = {
 			api_version: 5,
 			app_version: manifest.version,
-			country: I13n.getCountryCode(),
+			country: i13n.getCountryCode(),
 			action: "report_asin",
 			uuid: Settings.get("general.uuid", false),
 			asin: asin,
@@ -695,16 +718,16 @@ class NotificationMonitor {
 	#formatETV(etv) {
 		let formattedETV = "";
 		if (etv != null) {
-			formattedETV = new Intl.NumberFormat(I13n.getLocale(), {
+			formattedETV = new Intl.NumberFormat(i13n.getLocale(), {
 				style: "currency",
-				currency: I13n.getCurrency(),
+				currency: i13n.getCurrency(),
 			}).format(etv);
 		}
 		return formattedETV;
 	}
 
 	#formatDate(date) {
-		return new Date(date.replace(" ", "T") + "Z").toLocaleString(I13n.getLocale(), {
+		return new Date(date.replace(" ", "T") + "Z").toLocaleString(i13n.getLocale(), {
 			month: "2-digit",
 			day: "2-digit",
 			hour: "2-digit",

@@ -3,7 +3,7 @@ if (typeof browser === "undefined") {
 }
 
 var Settings = null;
-
+var Tpl = null;
 // Factory function to load a module
 (async () => {
 	try {
@@ -11,6 +11,10 @@ var Settings = null;
 		//Load the SettingMgr.
 		module = await import(chrome.runtime.getURL("../scripts/SettingsMgr.js"));
 		Settings = new module.SettingsMgr();
+
+		//Load the Template manager
+		module = await import(chrome.runtime.getURL("../scripts/Template.js"));
+		Tpl = new module.Template();
 	} catch (error) {
 		console.error("Error loading module:", error);
 	}
@@ -19,12 +23,6 @@ var Settings = null;
 var arrReview = [];
 var arrTemplate = [];
 var asin = null;
-var Tpl = new Template();
-var TplMgr = new TemplateMgr();
-
-function showRuntime() {
-	//Function must exist for the Template system, but not needed for this page
-}
 
 async function loadSettings() {
 	while (!Settings || !Settings.isLoaded()) {

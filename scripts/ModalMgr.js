@@ -1,3 +1,6 @@
+import { Template } from "./Template.js";
+var Tpl = new Template();
+
 class ModalElement {
 	constructor(id) {
 		this.id = id;
@@ -7,8 +10,7 @@ class ModalElement {
 	}
 
 	async show(template = "view/modal.html") {
-		const modalId = `modal-${this.id}`;
-		const modal = document.getElementById(modalId);
+		const modal = document.getElementById(`modal-${this.id}`);
 		if (modal && modal.style.display !== "none") {
 			this.close();
 			return;
@@ -23,7 +25,7 @@ class ModalElement {
 			}
 		};
 
-		const modalButtons = document.getElementsByClassName(`modal-ok`);
+		const modalButtons = document.querySelectorAll(`#modal-${this.id} .modal-ok`);
 
 		for (let i = 0; i < modalButtons.length; i++) {
 			modalButtons[i].addEventListener("click", closeModal);
@@ -44,8 +46,7 @@ class ModalElement {
 
 	close() {
 		const body = document.querySelector("body");
-		const modalId = `modal-${this.id}`;
-		const modal = document.getElementById(modalId);
+		const modal = document.getElementById(`modal-${this.id}`);
 		const overlay = document.getElementById(`overlay-${this.id}`);
 
 		body.removeChild(modal);
@@ -54,7 +55,16 @@ class ModalElement {
 }
 
 class ModalMgr {
+	static #instance = null;
+
 	constructor() {
+		if (ModalMgr.#instance) {
+			// Return the existing instance if it already exists
+			return ModalMgr.#instance;
+		}
+		// Initialize the instance if it doesn't exist
+		ModalMgr.#instance = this;
+
 		this.arrModal = [];
 	}
 
@@ -64,3 +74,5 @@ class ModalMgr {
 		return m;
 	}
 }
+
+export { ModalMgr };

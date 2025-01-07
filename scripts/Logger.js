@@ -98,13 +98,13 @@ class Logger {
 
 	#getStorageKeyLength(key) {
 		return new Promise((resolve, reject) => {
-			chrome.storage.local.get(key, function (items) {
+			chrome.storage.local.get(key, (items) => {
 				if (chrome.runtime.lastError) {
 					reject(new Error(chrome.runtime.lastError.message));
 				} else {
 					let itemSize;
 					if (key == "hiddenItems" || key == "pinnedItems") {
-						itemSize = HiddenList.deserialize(items[key]).size;
+						itemSize = this.#deserialize(items[key]).size;
 					} else if (Array.isArray(items[key])) {
 						itemSize = items[key].length;
 					} else {
@@ -115,6 +115,15 @@ class Logger {
 				}
 			});
 		});
+	}
+	#deserialize(jsonString) {
+		try {
+			const retrievedObj = JSON.parse(jsonString);
+			//multiply by 1000 to convert from unix timestamp to js Date
+		} catch (error) {
+			return new Map();
+		}
+		return new Map(Object.entries(retrievedObj).map(([key, value]) => [key, new Date(value * 1000)]));
 	}
 }
 

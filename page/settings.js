@@ -1,14 +1,10 @@
 import { initiateSettings } from "../page/settings_loadsave.js";
 
+import { Template } from "../scripts/Template.js";
 var Tpl = new Template();
-var TplMgr = new TemplateMgr();
-window.Tpl = Tpl;
-window.TplMgr = TplMgr;
 
 //Render the main layout
 (async () => {
-	await TplMgr.flushLocalStorage(); //Delete all template from cache
-
 	const promMainTpl = await Tpl.loadFile("/page/settings_main.tpl.html");
 	const promTab1 = await Tpl.loadFile("/page/settings_general.tpl.html");
 	const promTab2 = await Tpl.loadFile("/page/settings_notifications.tpl.html");

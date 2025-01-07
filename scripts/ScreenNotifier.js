@@ -1,3 +1,4 @@
+import { Template } from "./Template.js";
 var Tpl = new Template();
 
 /** Notification, use to configure a notification
@@ -60,15 +61,22 @@ class ScreenNotifier {
 	 */
 	async #init() {
 		//If the container does not exist, create it and append it to the body.
-		document.addEventListener("DOMContentLoaded", async function () {
-			if (document.getElementById("vh-notifications-container") === null) {
-				// Load the container
-				const prom = await Tpl.loadFile("view/notification_container.html");
-				document.body.append(Tpl.render(prom, true));
-			}
-		});
+		if (document.readyState === "loading") {
+			document.addEventListener("DOMContentLoaded", async () => {
+				if (document.getElementById("vh-notifications-container") === null) {
+					// Load the container
+					this.#injectContainer();
+				}
+			});
+		} else {
+			this.#injectContainer();
+		}
 	}
 
+	async #injectContainer() {
+		const prom = await Tpl.loadFile("view/notification_container.html");
+		document.body.append(Tpl.render(prom, true));
+	}
 	async pushNotification(note) {
 		note.id = this.#noteCounter++;
 
@@ -82,10 +90,10 @@ class ScreenNotifier {
 		// Bind the "close" link
 		const closeLink = document.querySelector(`#vh-notification-${note.id} .vh-notification-close a`);
 		if (closeLink) {
-			closeLink.addEventListener("click", function (event) {
+			closeLink.addEventListener("click", (event) => {
 				const notificationElement = document.getElementById(`vh-notification-${note.id}`);
 				if (notificationElement) {
-					Notifications.removeNote(notificationElement);
+					this.removeNote(notificationElement);
 				}
 			});
 		}
@@ -112,8 +120,8 @@ class ScreenNotifier {
 		}
 		//Activate the self dismissal
 		if (note.lifespan > 0) {
-			setTimeout(function () {
-				Notifications.removeNote(document.getElementById("vh-notification-" + note.id));
+			setTimeout(() => {
+				this.removeNote(document.getElementById("vh-notification-" + note.id));
 			}, note.lifespan * 1000);
 		}
 
@@ -168,3 +176,5 @@ class ScreenNotifier {
 		});
 	}
 }
+
+export { ScreenNotification, ScreenNotifier };

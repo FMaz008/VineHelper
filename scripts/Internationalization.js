@@ -1,10 +1,19 @@
 class Internationalization {
+	static #instance = null;
+
 	#domainTLD;
 	#countryCode;
 	#locale;
 	#currency;
 
 	constructor() {
+		if (Internationalization.#instance) {
+			// Return the existing instance if it already exists
+			return Internationalization.#instance;
+		}
+		// Initialize the instance if it doesn't exist
+		Internationalization.#instance = this;
+
 		this.#domainTLD = null;
 		this.#countryCode = null;
 		this.#locale = null;

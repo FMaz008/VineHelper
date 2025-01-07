@@ -217,6 +217,7 @@ class SettingsMgr {
 				uuid: null,
 				topPagination: true,
 				displayFirstSeen: true,
+				displayETV: true,
 				bookmark: false, //Highlight recently added items
 				bookmarkDate: 0,
 				bookmarkColor: "#90ee90",
@@ -299,7 +300,7 @@ class SettingsMgr {
 				remote: false,
 			},
 
-			PinnedTab: {
+			pinnedTab: {
 				active: true,
 			},
 

@@ -1,17 +1,30 @@
+import { Logger } from "./Logger.js";
+var logger = new Logger();
+
 import { SettingsMgr } from "./SettingsMgr.js";
 const Settings = new SettingsMgr();
 
 import { Internationalization } from "./Internationalization.js";
-const I13n = new Internationalization();
+const i13n = new Internationalization();
 
 class HiddenListMgr {
+	static #instance = null;
+	listLoaded;
+
 	constructor() {
+		if (HiddenListMgr.#instance) {
+			// Return the existing instance if it already exists
+			return HiddenListMgr.#instance;
+		}
+		// Initialize the instance if it doesn't exist
+		HiddenListMgr.#instance = this;
+
 		this.mapHidden = new Map();
 		this.arrChanges = [];
 		this.listLoaded = false;
 		this.broadcast = new BroadcastChannel("vine_helper");
 
-		showRuntime("HIDDENMGR: Loading list");
+		logger.add("HIDDENMGR: Loading list");
 		this.loadFromLocalStorage(); //Can't be awaited
 
 		//Handle the reception of broadcasts:
@@ -19,11 +32,11 @@ class HiddenListMgr {
 			if (ev.data.type == undefined) return;
 
 			if (ev.data.type == "hideItem") {
-				showRuntime("Broadcast received: hide item " + ev.data.asin);
+				logger.add("Broadcast received: hide item " + ev.data.asin);
 				this.addItem(ev.data.asin, false, false);
 			}
 			if (ev.data.type == "showItem") {
-				showRuntime("Broadcast received: show item " + ev.data.asin);
+				logger.add("Broadcast received: show item " + ev.data.asin);
 				this.removeItem(ev.data.asin, false, false);
 			}
 		};
@@ -39,14 +52,14 @@ class HiddenListMgr {
 			} catch (error) {
 				// If JSON parsing fails assume legacy format and convert to new format
 				// Once the migration period is over delete this section of code
-				showRuntime("Failed to parse hiddenItems as JSON, treating as array:");
+				logger.add("Failed to parse hiddenItems as JSON, treating as array:");
 				if (Array.isArray(data.hiddenItems)) {
 					this.mapHidden = data.hiddenItems.reduce((map, product) => {
 						map.set(product.asin, new Date(product.date));
 						return map;
 					}, new Map());
 				} else {
-					showRuntime("Invalid data format for hidden items.  Creating new map.");
+					logger.add("Invalid data format for hidden items.  Creating new map.");
 					this.mapHidden = new Map(); // Initialize with an empty map if data is malformed
 				}
 			}
@@ -55,7 +68,7 @@ class HiddenListMgr {
 			this.mapHidden = new Map();
 		}
 		this.listLoaded = true;
-		showRuntime("HIDDENMGR: List loaded.");
+		logger.add("HIDDENMGR: List loaded.");
 	}
 
 	async removeItem(asin, save = true, broadcast = true) {
@@ -77,7 +90,7 @@ class HiddenListMgr {
 	async addItem(asin, save = true, broadcast = true) {
 		if (save) await this.loadFromLocalStorage(); //Load the list in case it was altered in a different tab
 
-		if (!this.isHidden(asin)) this.mapHidden.set(asin, new Date());
+		if (!(await this.isHidden(asin))) this.mapHidden.set(asin, new Date());
 
 		//The server may not be in sync with the local list, and will deal with duplicate.
 		this.updateArrChange({ asin: asin, hidden: true });
@@ -113,7 +126,11 @@ class HiddenListMgr {
 		}
 	}
 
-	isHidden(asin) {
+	async isHidden(asin) {
+		while (!this.listLoaded) {
+			await new Promise((r) => setTimeout(r, 50));
+		}
+
 		if (asin == undefined) {
 			throw new Error("Asin not defined");
 		}
@@ -139,11 +156,11 @@ class HiddenListMgr {
 	 * Send new items on the server to be added or removed from the hidden list.
 	 */
 	notifyServerOfHiddenItem() {
-		showRuntime("Saving hidden item(s) remotely...");
+		logger.add("Saving hidden item(s) remotely...");
 
 		const content = {
 			api_version: 5,
-			country: I13n.getCountryCode(),
+			country: i13n.getCountryCode(),
 			action: "save_hidden_list",
 			uuid: Settings.get("general.uuid", false),
 			items: this.arrChanges,

@@ -1,24 +1,72 @@
 import { Logger } from "./Logger.js";
 var logger = new Logger();
 
+import { SettingsMgr } from "./SettingsMgr.js";
+var Settings = new SettingsMgr();
+
+import { Env } from "./Env.js";
+var env = new Env();
+
+import { Internationalization } from "./Internationalization.js";
+var i13n = new Internationalization();
+
 import { HookMgr } from "./HookMgr.js";
 var hookMgr = new HookMgr();
+
+import { NotificationMonitor } from "./NotificationMonitor.js";
+
+import { Tile, getTileByAsin, getAsinFromDom, getTitleFromDom, getThumbnailURLFromDom } from "./Tile.js";
+
+//Grid
+import {
+	Grid,
+	updateTileCounts,
+	createGridInterface,
+	addPinnedTile,
+	getRecommendationTypeFromQueue,
+	generateRecommendationString,
+	hideAllItems,
+	hideAllItemsNext,
+	showAllItems,
+	selectCurrentTab,
+} from "./Grid.js";
+
+import { Toolbar } from "./Toolbar.js";
+
+import { generatePagination } from "./Pagination.js";
+
+import { HiddenListMgr } from "./HiddenListMgr.js";
+var HiddenList = new HiddenListMgr();
+
+import { ScreenNotifier, ScreenNotification } from "./ScreenNotifier.js";
+var Notifications = new ScreenNotifier();
+
+import { ModalMgr } from "./ModalMgr.js";
+var DialogMgr = new ModalMgr();
+
+import { Template } from "./Template.js";
+var Tpl = new Template();
+
+const ultraviner = env.data.ultraviner; //If Ultravine is detected, Vine Helper will deactivate itself to avoid conflicts.
+const VINE_HELPER_API_V5_URL = env.data.VINE_HELPER_API_V5_URL;
 
 logger.add("BOOT: Booterloader starting. DOM load time from Amazon: ");
 
 //Create the 4 grids/tabs:
-window.gridRegular = null;
-window.gridUnavailable = null; //Will be populated after the grid will be created.
-window.gridHidden = null; //Will be populated after the grid will be created.
-window.gridPinned = null; //Will be populated after the grid will be created.
+env.data.grid = {
+	gridRegular: null,
+	gridUnavailable: null, //Will be populated after the grid will be created.
+	gridHidden: null, //Will be populated after the grid will be created.
+	gridPinned: null, //Will be populated after the grid will be created.
+};
 
 //Tooltip used to display full titles/description. Same tooltip will get reused for all uses.
 const tooltip = document.createElement("div");
 
 //Constants
-window.NOT_DISCARDED_ORDER_SUCCESS = -4;
-window.NOT_DISCARDED = 0;
-window.DISCARDED_ORDER_FAILED = 4;
+env.data.NOT_DISCARDED_ORDER_SUCCESS = -4;
+env.data.NOT_DISCARDED = 0;
+env.data.DISCARDED_ORDER_FAILED = 4;
 
 const VERSION_MAJOR_CHANGE = 3;
 const VERSION_MINOR_CHANGE = 2;
@@ -34,8 +82,8 @@ const VINE_INFO_TITLE = "Vine Helper update info";
 const GDPR_TITLE = "Vine Helper - GDPR";
 
 var vvpContext = null;
-window.marketplaceId = null;
-window.customerId = null;
+env.data.marketplaceId = null;
+env.data.customerId = null;
 
 var notificationMonitor = null;
 
@@ -53,15 +101,15 @@ async function init() {
 	try {
 		vvpContext = JSON.parse(document.querySelector('script[data-a-state=\'{"key":"vvp-context"}\'').innerHTML);
 
-		window.marketplaceId = vvpContext.marketplaceId;
-		window.customerId = vvpContext.customerId;
+		env.data.marketplaceId = vvpContext.marketplaceId;
+		env.data.customerId = vvpContext.customerId;
 	} catch (err) {
 		//Do nothing
 	}
 
 	//Wait for the config to be loaded before running this script
 	logger.add("BOOT: Waiting on preboot to complete...");
-	while (!Settings || !Settings.isLoaded() || !prebootCompleted) {
+	while (!Settings || !Settings.isLoaded() || !env.data.loadContextCompleted) {
 		await new Promise((r) => setTimeout(r, 10));
 	}
 	logger.add("BOOT: Config available. Begining init() function");
@@ -134,7 +182,7 @@ async function initTileSize() {
 			sliderTile.addEventListener("change", () => {
 				const sliderValue = parseInt(sliderTile.value);
 				Settings.set("general.tileSize.width", sliderValue);
-				adjustTileSize();
+				window.adjustTileSize();
 			});
 
 			//Icons size
@@ -144,7 +192,7 @@ async function initTileSize() {
 			sliderIcons.addEventListener("change", () => {
 				const sliderValue = parseInt(sliderIcons.value);
 				Settings.set("general.tileSize.iconSize", sliderValue);
-				adjustIconsSize();
+				window.adjustIconsSize();
 			});
 
 			//Icons size
@@ -154,7 +202,7 @@ async function initTileSize() {
 			sliderVertSpacing.addEventListener("change", () => {
 				const sliderValue = parseInt(sliderVertSpacing.value);
 				Settings.set("general.tileSize.verticalSpacing", sliderValue);
-				adjustVerticalSpacing();
+				window.adjustVerticalSpacing();
 			});
 
 			//Bind the open link
@@ -283,7 +331,7 @@ function displayAccountData() {
 	};
 
 	for (const [key, value] of Object.entries(additionalStats)) {
-		date = new Date(vvpContext.voiceDetails[key]).toLocaleString(I13n.getLocale());
+		date = new Date(vvpContext.voiceDetails[key]).toLocaleString(i13n.getLocale());
 		div = document.createElement("div");
 		div.innerHTML = `<strong>${value}:</strong><br /> ${date}<br/><br />`;
 		container.appendChild(div);
@@ -372,7 +420,7 @@ function displayAccountDataEvaluationMetrics() {
 
 async function showGDPRPopup() {
 	if (Settings.get("general.GDPRPopup", false) == true || Settings.get("general.GDPRPopup", false) == undefined) {
-		prom = await Tpl.loadFile("view/popup_gdpr.html");
+		const prom = await Tpl.loadFile("view/popup_gdpr.html");
 		let content = Tpl.render(prom);
 
 		let m = DialogMgr.newModal("gdpr");
@@ -384,18 +432,28 @@ async function showGDPRPopup() {
 	}
 }
 async function initFlushTplCache() {
-	if (appVersion == null) {
+	if (env.data.appVersion == null) {
 		return false;
 	}
 
 	//Show version info popup : new version
-	if (appVersion != Settings.get("general.versionInfoPopup", false)) {
+	if (env.data.appVersion != Settings.get("general.versionInfoPopup", false)) {
 		logger.add("BOOT: Flushing template cache");
-		await TplMgr.flushLocalStorage(new ScreenNotification()); //Delete all template from cache
+		await Tpl.flushLocalStorage(); //Delete all template from cache
 
-		if (compareVersion(Settings.get("general.versionInfoPopup", false), appVersion) > VERSION_REVISION_CHANGE) {
-			prom = await Tpl.loadFile("view/popup_changelog.html");
-			Tpl.setVar("appVersion", appVersion);
+		let notification = new ScreenNotification();
+		notification.title = "Template cache flushed.";
+		notification.lifespan = 3;
+		notification.content = "";
+		notification.title_only = true;
+		Notifications.pushNotification(notification);
+
+		if (
+			compareVersion(Settings.get("general.versionInfoPopup", false), env.data.appVersion) >
+			VERSION_REVISION_CHANGE
+		) {
+			const prom = await Tpl.loadFile("view/popup_changelog.html");
+			Tpl.setVar("appVersion", env.data.appVersion);
 			let content = Tpl.render(prom);
 
 			let m = DialogMgr.newModal("changelog");
@@ -404,7 +462,7 @@ async function initFlushTplCache() {
 			m.show();
 		}
 
-		Settings.set("general.versionInfoPopup", appVersion);
+		Settings.set("general.versionInfoPopup", env.data.appVersion);
 	}
 }
 
@@ -429,8 +487,8 @@ function initSetPageTitle() {
 	let arrMatches = currentUrl.match(regex);
 	if (arrMatches?.length) {
 		document.title = "Vine - S: " + arrMatches[1];
-	} else if (vineQueue != null) {
-		document.title = "Vine - " + vineQueueAbbr;
+	} else if (env.data.vineQueue != null) {
+		document.title = "Vine - " + env.data.vineQueueAbbr;
 	}
 
 	//Add the category, is any, that is currently being browsed to the title of the page.
@@ -473,18 +531,18 @@ async function initCreateTabs() {
 		await createGridInterface();
 	}
 
-	window.gridRegular = new Grid(document.getElementById("vvp-items-grid"));
+	env.data.grid.gridRegular = new Grid(document.getElementById("vvp-items-grid"));
 
 	if (Settings.get("hiddenTab.active")) {
-		window.gridHidden = new Grid(document.getElementById("tab-hidden"));
+		env.data.grid.gridHidden = new Grid(document.getElementById("tab-hidden"));
 	}
 
 	if (Settings.get("unavailableTab.active")) {
-		window.gridUnavailable = new Grid(document.getElementById("tab-unavailable"));
+		env.data.grid.gridUnavailable = new Grid(document.getElementById("tab-unavailable"));
 	}
 
 	if (Settings.get("pinnedTab.active")) {
-		window.gridPinned = new Grid(document.getElementById("tab-pinned"));
+		env.data.grid.gridPinned = new Grid(document.getElementById("tab-pinned"));
 	}
 
 	logger.add("BOOT: Grid system completed");
@@ -500,7 +558,7 @@ function initInsertTopPagination() {
 		if (
 			Settings.isPremiumUser() &&
 			Settings.get("general.verbosePagination") &&
-			vineQueueAbbr == "AI" &&
+			env.data.vineQueueAbbr == "AI" &&
 			currentPageDOM != undefined
 		) {
 			//Fetch total items from the page
@@ -534,7 +592,7 @@ async function setBookmarkDate(timeOffset) {
 	//Fetch the current date/time from the server
 	let arrJSON = {
 		api_version: 5,
-		country: I13n.getCountryCode(),
+		country: i13n.getCountryCode(),
 		action: "date",
 	};
 	const options = {
@@ -731,7 +789,7 @@ function getAllProductsData() {
 //Convert the regular tile to the Vine Helper version.
 async function generateTile(obj) {
 	let tile;
-	tile = new Tile(obj, window.gridRegular);
+	tile = new Tile(obj, env.data.grid.gridRegular);
 
 	//Add a container for the image and place the image in it.
 	let img = obj.querySelector(".vvp-item-tile-content img"); // Get the img element
@@ -770,9 +828,9 @@ async function generateTile(obj) {
 	}
 
 	//Move the hidden item to the hidden tab
-	if (Settings.get("hiddenTab.active") && tile.isHidden()) {
+	if (Settings.get("hiddenTab.active") && (await tile.isHidden())) {
 		logger.add("BOOT: The item is locally hidden, move it to the hidden grid.");
-		await tile.moveToGrid(window.gridHidden, false); //This is the main sort, do not animate it
+		await tile.moveToGrid(env.data.grid.gridHidden, false); //This is the main sort, do not animate it
 	}
 
 	if (Settings.get("general.displayVariantIcon")) {
@@ -804,21 +862,26 @@ async function generateTile(obj) {
 }
 
 //Get data from the server about the products listed on this page
-function fetchProductsDatav5() {
+async function fetchProductsDatav5() {
 	const arrProductsData = getAllProductsData();
 	if (arrProductsData.length == 0) {
 		return false; //No product on this page
+	}
+
+	const uuid = Settings.get("general.uuid", false);
+	if (uuid == null) {
+		await requestNewUUID();
 	}
 
 	logger.add("FETCH: Fetching data from VineHelper's server...");
 
 	const content = {
 		api_version: 5,
-		app_version: appVersion,
+		app_version: env.data.appVersion,
 		action: "get_info",
-		country: I13n.getCountryCode(),
+		country: i13n.getCountryCode(),
 		uuid: Settings.get("general.uuid", false),
-		queue: vineQueue,
+		queue: env.data.vineQueue,
 		items: arrProductsData,
 	};
 
@@ -844,7 +907,7 @@ function fetchProductsDatav5() {
 async function serverProductsResponse(data) {
 	logger.add("FETCH: Response received from VineHelper's server...");
 	if (data["invalid_uuid"] == true) {
-		await obtainNewUUID();
+		await requestNewUUID();
 
 		//Reattempt to obtain product data
 		fetchProductsDatav5();
@@ -905,10 +968,10 @@ async function serverProductsResponse(data) {
 
 		//If there is a remote value for the hidden item, ensure it is sync'ed up with the local list
 		if (Settings.isPremiumUser() && Settings.get("hiddenTab.remote") && values.hidden != null) {
-			if (values.hidden == true && !tile.isHidden()) {
+			if (values.hidden == true && !(await tile.isHidden())) {
 				logger.add("DRAW: Remote is ordering to hide item");
 				await tile.hideTile(false); //Will update the placement and list
-			} else if (values.hidden == false && tile.isHidden()) {
+			} else if (values.hidden == false && (await tile.isHidden())) {
 				logger.add("DRAW: Remote is ordering to show item");
 				await tile.showTile(false); //Will update the placement and list
 			}
@@ -919,11 +982,11 @@ async function serverProductsResponse(data) {
 			tile.setOrders(values.order_success, values.order_failed);
 
 			//Assign the tiles to the proper grid
-			if (Settings.get("hiddenTab.active") && tile.isHidden()) {
+			if (Settings.get("hiddenTab.active") && (await tile.isHidden())) {
 				//The hidden tiles were already moved, keep the there.
-			} else if (tile.getStatus() >= window.DISCARDED_ORDER_FAILED) {
+			} else if (tile.getStatus() >= env.data.DISCARDED_ORDER_FAILED) {
 				logger.add("DRAW: moving the tile to Unavailable (failed order(s))");
-				await tile.moveToGrid(window.gridUnavailable, false); //This is the main sort, do not animate it
+				await tile.moveToGrid(env.data.grid.gridUnavailable, false); //This is the main sort, do not animate it
 			}
 
 			logger.add("DRAW: Updating the toolbar");
@@ -1036,11 +1099,11 @@ window.addEventListener("message", async function (event) {
 		const content = {
 			api_version: 5,
 			action: "record_etv",
-			country: I13n.getCountryCode(),
+			country: i13n.getCountryCode(),
 			uuid: Settings.get("general.uuid", false),
 			asin: event.data.data.asin,
 			parent_asin: event.data.data.parent_asin,
-			queue: vineQueue,
+			queue: env.data.vineQueue,
 			etv: event.data.data.etv,
 		};
 
@@ -1105,7 +1168,7 @@ window.addEventListener("message", async function (event) {
 			const content = {
 				api_version: 5,
 				action: "record_order",
-				country: I13n.getCountryCode(),
+				country: i13n.getCountryCode(),
 				uuid: Settings.get("general.uuid", false),
 				asin: event.data.data.asin,
 				parent_asin: event.data.data.parent_asin,
@@ -1169,11 +1232,11 @@ window.addEventListener("message", async function (event) {
 
 	if (event.data.type == "websiteOpts") {
 		const websiteOpts = event.data.data;
-		if (!window.marketplaceId) {
-			window.marketplaceId = websiteOpts.obfuscatedMarketId;
+		if (!env.data.marketplaceId) {
+			env.data.marketplaceId = websiteOpts.obfuscatedMarketId;
 		}
-		if (!window.customerId) {
-			window.customerId = websiteOpts.customerId;
+		if (!env.data.customerId) {
+			env.data.customerId = websiteOpts.customerId;
 		}
 		logger.add("BOOT: Opts data obtained from inj.js.");
 
@@ -1199,7 +1262,7 @@ async function recordUnavailableProduct(asin, reason) {
 	const content = {
 		api_version: 5,
 		action: "record_unavailable",
-		country: I13n.getCountryCode(),
+		country: i13n.getCountryCode(),
 		uuid: Settings.get("general.uuid", false),
 		asin: asin,
 		reason: reason,
@@ -1288,7 +1351,7 @@ chrome.runtime.onMessage.addListener(async function (message, sender, sendRespon
 			);
 		} else if (
 			data.index < 10 && //Limit the notification to the top 10 most recents
-			vineBrowsingListing && //Only show notification on listing pages
+			env.data.vineBrowsingListing && //Only show notification on listing pages
 			Settings.get("notification.screen.active")
 		) {
 			let { date, asin, queue, title, search, img_url, domain, etv, is_parent_asin, enrollment_guid } = data;
@@ -1304,10 +1367,10 @@ chrome.runtime.onMessage.addListener(async function (message, sender, sendRespon
 			) {
 				Tpl.setVar(
 					"url",
-					`https://www.amazon.${I13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`
+					`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`
 				);
 			} else {
-				Tpl.setVar("url", `https://www.amazon.${I13n.getDomainTLD()}/vine/vine-items?search=${search}`);
+				Tpl.setVar("url", `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search}`);
 			}
 			Tpl.setIf("show_image", Settings.get("notification.screen.thumbnail"));
 			Tpl.setVar("date", date);
@@ -1493,8 +1556,9 @@ function compareVersion(oldVer, newVer) {
 	//Sometimes newVer is not populated for some odd reason. Assume no version change.
 	if (newVer == null) return VERSION_NO_CHANGE;
 
-	if (oldVer == null || oldVer == undefined || oldVer == true) return VERSION_MAJOR_CHANGE;
-
+	if (oldVer == null || oldVer == undefined || oldVer === 0) {
+		return VERSION_MAJOR_CHANGE;
+	}
 	if (oldVer == false || oldVer == newVer) return VERSION_NO_CHANGE;
 
 	const regex = /^([0-9]+)\.([0-9]+)(?:\.([0-9]+))?$/;
@@ -1504,9 +1568,14 @@ function compareVersion(oldVer, newVer) {
 	if (arrOldVer[1] != arrNewVer[1]) return VERSION_MAJOR_CHANGE;
 	if (arrOldVer[2] != arrNewVer[2]) return VERSION_MINOR_CHANGE;
 	if (arrOldVer.length == 4 && arrNewVer.length == 4) {
-		if (arrOldVer[3] != arrNewVer[3]) return VERSION_REVISION_CHANGE;
-		else return VERSION_NO_CHANGE;
-	} else return VERSION_REVISION_CHANGE;
+		if (arrOldVer[3] != arrNewVer[3]) {
+			return VERSION_REVISION_CHANGE;
+		} else {
+			return VERSION_NO_CHANGE;
+		}
+	} else {
+		return VERSION_REVISION_CHANGE;
+	}
 }
 
 function escapeHTML(value) {
@@ -1695,7 +1764,7 @@ async function handleModalNavigation(event) {
 }
 
 function openDynamicModal(asin, queue, isParent, enrollmentGUID, autoClick = true) {
-	if (!window.marketplaceId || !window.customerId) {
+	if (!env.data.marketplaceId || !env.data.customerId) {
 		console.error("Failed to fetch opts/vvp-context data");
 	}
 
@@ -1723,20 +1792,59 @@ function openDynamicModal(asin, queue, isParent, enrollmentGUID, autoClick = tru
 	if (recommendationType == "VENDOR_TARGETED") {
 		btn.dataset.recommendationType = recommendationType;
 		btn.dataset.recommendationId =
-			window.marketplaceId + "#" + asin + "#" + window.customerId + "#vine.enrollment." + enrollmentGUID;
+			env.data.marketplaceId + "#" + asin + "#" + env.data.customerId + "#vine.enrollment." + enrollmentGUID;
 	} else {
 		btn.dataset.recommendationType = recommendationType;
-		btn.dataset.recommendationId = window.marketplaceId + "#" + asin + "#vine.enrollment." + enrollmentGUID;
+		btn.dataset.recommendationId = env.data.marketplaceId + "#" + asin + "#vine.enrollment." + enrollmentGUID;
 	}
 
 	//Dispatch a click event on the button
 	if (autoClick) {
-		btn.click();
-
+		//If the click happens too fast, it won't work.
 		setTimeout(function () {
-			container1.remove(); // Removes container1 from the DOM
-		}, 1000);
+			btn.click();
+			setTimeout(function () {
+				container1.remove(); // Removes container1 from the DOM
+			}, 500);
+		}, 500);
 	}
 
 	return btn;
+}
+
+/** Request a new UUID from the server.
+ * @return string UUID
+ */
+async function requestNewUUID() {
+	logger.add("BOOT: Generating new UUID.");
+
+	//Request a new UUID from the server
+	const content = {
+		api_version: 5,
+		app_version: env.data.appVersion,
+		action: "get_uuid",
+		country: i13n.getCountryCode(),
+	};
+	const options = {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(content),
+	};
+
+	let response = await fetch(VINE_HELPER_API_V5_URL, options);
+
+	if (!response.ok) {
+		throw new Error("Network response was not ok BOOT:requestNewUUID");
+	}
+
+	// Parse the JSON response
+	let serverResponse = await response.json();
+
+	if (serverResponse["ok"] !== "ok") {
+		throw new Error("Content response was not ok BOOT:requestNewUUID");
+	}
+
+	Settings.set("general.uuid", serverResponse["uuid"]);
+	// Return the obtained UUID
+	return serverResponse["uuid"];
 }

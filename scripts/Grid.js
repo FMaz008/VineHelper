@@ -1,7 +1,27 @@
 import { Logger } from "./Logger.js";
 var logger = new Logger();
 
+import { SettingsMgr } from "./SettingsMgr.js";
+var Settings = new SettingsMgr();
+
+import { Env } from "./Env.js";
+var env = new Env();
+
+import { Internationalization } from "./Internationalization.js";
+var i13n = new Internationalization();
+
+import { PinnedListMgr } from "./PinnedListMgr.js";
+var PinnedList = new PinnedListMgr();
+
+import { HiddenListMgr } from "./HiddenListMgr.js";
+var HiddenList = new HiddenListMgr();
+
+import { getTileByAsin, getAsinFromDom } from "./Tile.js";
+
 var currentTab = "vvp-items-grid";
+
+import { Template } from "./Template.js";
+var Tpl = new Template();
 
 class Grid {
 	gridDOM;
@@ -81,25 +101,25 @@ function updateTileCounts() {
 	if (Settings.get("unavailableTab.active") || Settings.get("hiddenTab.active")) {
 		const tab1 = document.getElementById("vh-available-count");
 		if (tab1) {
-			tab1.innerText = gridRegular.getTileCount(true);
+			tab1.innerText = env.data.grid.gridRegular.getTileCount(true);
 		}
 	}
 	if (Settings.get("unavailableTab.active")) {
 		const tab2 = document.getElementById("vh-unavailable-count");
 		if (tab2) {
-			tab2.innerText = gridUnavailable.getTileCount(true);
+			tab2.innerText = env.data.grid.gridUnavailable.getTileCount(true);
 		}
 	}
 	if (Settings.get("hiddenTab.active")) {
 		const tab3 = document.getElementById("vh-hidden-count");
 		if (tab3) {
-			tab3.innerText = gridHidden.getTileCount(true);
+			tab3.innerText = env.data.grid.gridHidden.getTileCount(true);
 		}
 	}
 	if (Settings.get("pinnedTab.active")) {
 		const tab4 = document.getElementById("vh-pinned-count");
 		if (tab4) {
-			tab4.innerText = gridPinned.getTileCount(true);
+			tab4.innerText = env.data.grid.gridPinned.getTileCount(true);
 		}
 	}
 }
@@ -205,8 +225,9 @@ async function createGridInterface() {
 
 	//Populate the Pinned tab
 	if (Settings.get("pinnedTab.active")) {
+		logger.add("GRID: Loading locally stored pinned list");
 		let mapPin = new Map();
-		mapPin = PinnedList.getList();
+		mapPin = await PinnedList.getList();
 		mapPin.forEach(async (value, key) => {
 			addPinnedTile(key, value.queue, value.title, value.thumbnail, value.is_parent_asin, value.enrollment_guid);
 		});
@@ -258,13 +279,13 @@ async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enro
 	) {
 		Tpl.setVar(
 			"url",
-			`https://www.amazon.${I13n.getDomainTLD()}/vine/vine-items?queue=last_chance#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`
+			`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=last_chance#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`
 		);
 	} else {
-		Tpl.setVar("url", `https://www.amazon.${I13n.getDomainTLD()}/vine/vine-items?search=${search}`);
+		Tpl.setVar("url", `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search}`);
 	}
 	Tpl.setVar("id", asin);
-	Tpl.setVar("domain", I13n.getDomainTLD());
+	Tpl.setVar("domain", i13n.getDomainTLD());
 	Tpl.setVar("search", search);
 	Tpl.setVar("img_url", thumbnail);
 	Tpl.setVar("asin", asin);
@@ -302,9 +323,9 @@ function generateRecommendationString(recommendationType, asin, enrollment_guid)
 	//customerId is global from bootloader.js
 
 	if (recommendationType == "VENDOR_TARGETED") {
-		return marketplaceId + "#" + asin + "#" + customerId + "#vine.enrollment." + enrollment_guid;
+		return env.data.marketplaceId + "#" + asin + "#" + env.data.customerId + "#vine.enrollment." + enrollment_guid;
 	}
-	return marketplaceId + "#" + asin + "#vine.enrollment." + enrollment_guid;
+	return env.data.marketplaceId + "#" + asin + "#vine.enrollment." + enrollment_guid;
 }
 
 async function hideAllItems() {
