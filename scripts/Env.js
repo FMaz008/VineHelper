@@ -33,6 +33,7 @@ class Env {
 		this.#loadAppVersion();
 		this.#loadBrowingContext();
 		this.#loadDiscordActive();
+		this.#loadCountryCode();
 		this.#loadUUID();
 
 		this.data.loadContextCompleted = true;
@@ -49,6 +50,15 @@ class Env {
 	#loadAppVersion() {
 		let manifest = chrome.runtime.getManifest();
 		this.data.appVersion = manifest.version;
+	}
+
+	#loadCountryCode() {
+		if (Settings.get("general.country", false) === null) {
+			const code = i13n.getCountryCode();
+			if (code) {
+				Settings.set("general.country", code);
+			}
+		}
 	}
 
 	#loadDiscordActive() {
