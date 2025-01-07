@@ -99,6 +99,7 @@ class Env {
 		if (!uuid) {
 			uuid = await this.#requestNewUUID();
 			Settings.set("general.uuid", uuid);
+			logger.add("ENV: Obtained new UUID");
 		}
 	}
 

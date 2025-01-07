@@ -868,9 +868,8 @@ async function fetchProductsDatav5() {
 		return false; //No product on this page
 	}
 
-	const uuid = Settings.get("general.uuid", false);
-	if (uuid == null) {
-		await requestNewUUID();
+	while (Settings.get("general.uuid", false) == null) {
+		await new Promise((r) => setTimeout(r, 100));
 	}
 
 	logger.add("FETCH: Fetching data from VineHelper's server...");
@@ -907,11 +906,7 @@ async function fetchProductsDatav5() {
 async function serverProductsResponse(data) {
 	logger.add("FETCH: Response received from VineHelper's server...");
 	if (data["invalid_uuid"] == true) {
-		await requestNewUUID();
-
-		//Reattempt to obtain product data
-		fetchProductsDatav5();
-
+		console.error("Invalid UUID");
 		//Do no complete this execution
 		return false;
 	}
@@ -1810,41 +1805,4 @@ function openDynamicModal(asin, queue, isParent, enrollmentGUID, autoClick = tru
 	}
 
 	return btn;
-}
-
-/** Request a new UUID from the server.
- * @return string UUID
- */
-async function requestNewUUID() {
-	logger.add("BOOT: Generating new UUID.");
-
-	//Request a new UUID from the server
-	const content = {
-		api_version: 5,
-		app_version: env.data.appVersion,
-		action: "get_uuid",
-		country: i13n.getCountryCode(),
-	};
-	const options = {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify(content),
-	};
-
-	let response = await fetch(VINE_HELPER_API_V5_URL, options);
-
-	if (!response.ok) {
-		throw new Error("Network response was not ok BOOT:requestNewUUID");
-	}
-
-	// Parse the JSON response
-	let serverResponse = await response.json();
-
-	if (serverResponse["ok"] !== "ok") {
-		throw new Error("Content response was not ok BOOT:requestNewUUID");
-	}
-
-	Settings.set("general.uuid", serverResponse["uuid"]);
-	// Return the obtained UUID
-	return serverResponse["uuid"];
 }
