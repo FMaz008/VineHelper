@@ -34,19 +34,18 @@ chrome.runtime.onMessage.addListener((data, sender, sendResponse) => {
 		return false;
 	}
 
+	sendResponse({ success: true });
+
 	if (data.type == "fetchLast100Items") {
 		//Get the last 100 most recent items
 		fetchLast100Items();
-		sendResponse({ success: true });
 	}
 
 	if (data.type == "setCountryCode") {
 		i13n.setCountryCode(data.countryCode);
-		sendResponse({ success: true });
 	}
 
 	if (data.type == "wsStatus") {
-		sendResponse({ success: true });
 		if (socket?.connected) {
 			sendMessageToAllTabs({ type: "wsOpen" }, "Websocket server connected.");
 		} else {
