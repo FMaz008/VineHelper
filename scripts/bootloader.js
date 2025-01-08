@@ -4,18 +4,16 @@ var logger = new Logger();
 import { SettingsMgr } from "./SettingsMgr.js";
 var Settings = new SettingsMgr();
 
-import { Env } from "./Env.js";
-var env = new Env();
-
 import { Internationalization } from "./Internationalization.js";
 var i13n = new Internationalization();
 
-import { HookMgr } from "./HookMgr.js";
-var hookMgr = new HookMgr();
+import { Env } from "./Env.js";
+var env = new Env();
 
-import { NotificationMonitor } from "./NotificationMonitor.js";
+import { Template } from "./Template.js";
+var Tpl = new Template();
 
-import { Tile, getTileByAsin, getAsinFromDom, getTitleFromDom, getThumbnailURLFromDom } from "./Tile.js";
+import { YMDHiStoISODate } from "./DateHelper.js";
 
 //Grid
 import {
@@ -31,23 +29,25 @@ import {
 	selectCurrentTab,
 } from "./Grid.js";
 
-import { Toolbar } from "./Toolbar.js";
-
-import { generatePagination } from "./Pagination.js";
-
 import { HiddenListMgr } from "./HiddenListMgr.js";
 var HiddenList = new HiddenListMgr();
 
-import { ScreenNotifier, ScreenNotification } from "./ScreenNotifier.js";
-var Notifications = new ScreenNotifier();
+import { HookMgr } from "./HookMgr.js";
+var hookMgr = new HookMgr();
 
 import { ModalMgr } from "./ModalMgr.js";
 var DialogMgr = new ModalMgr();
 
-import { Template } from "./Template.js";
-var Tpl = new Template();
+import { NotificationMonitor } from "./NotificationMonitor.js";
 
-import { YMDHiStoISODate } from "./DateHelper.js";
+import { generatePagination } from "./Pagination.js";
+
+import { ScreenNotifier, ScreenNotification } from "./ScreenNotifier.js";
+var Notifications = new ScreenNotifier();
+
+import { Tile, getTileByAsin, getAsinFromDom, getTitleFromDom, getThumbnailURLFromDom } from "./Tile.js";
+
+import { Toolbar } from "./Toolbar.js";
 
 const ultraviner = env.data.ultraviner; //If Ultravine is detected, Vine Helper will deactivate itself to avoid conflicts.
 const VINE_HELPER_API_V5_URL = env.data.VINE_HELPER_API_V5_URL;

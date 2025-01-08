@@ -40,12 +40,14 @@ class NotificationMonitor {
 	#feedPausedAmountStored;
 	#waitTimer; //Timer which wait a short delay to see if anything new is about to happen
 	#imageUrls;
+	#gridContainer = null;
 	async initialize() {
 		this.#imageUrls = new Set();
 		this.#feedPausedAmountStored = 0;
 
 		//Remove the existing items.
-		document.getElementById("vvp-items-grid").innerHTML = "";
+		this.#gridContainer = document.querySelector("#vvp-items-grid");
+		this.#gridContainer.innerHTML = "";
 
 		//Remove the item count
 		document.querySelector("#vvp-items-grid-container>p")?.remove();
@@ -240,8 +242,7 @@ class NotificationMonitor {
 		Tpl.setIf("variant", Settings.isPremiumUser() && Settings.get("general.displayVariantIcon") && is_parent_asin);
 
 		let tileDOM = Tpl.render(prom2, true);
-		const container = document.querySelector("#vvp-items-grid");
-		container.insertBefore(tileDOM, container.firstChild);
+		this.#gridContainer.insertBefore(tileDOM, this.#gridContainer.firstChild);
 
 		//Set the tile custom dimension according to the settings.
 		adjustTileSize(tileDOM);
@@ -303,7 +304,7 @@ class NotificationMonitor {
 		window.clearTimeout(this.#waitTimer);
 		this.#waitTimer = window.setTimeout(() => {
 			this.#updateTabTitle();
-		}, 100);
+		}, 250);
 
 		// Add new click listener for the report button
 		document.querySelector("#vh-report-link-" + asin).addEventListener("click", this.#handleReportClick);

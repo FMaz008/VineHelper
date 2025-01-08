@@ -1,11 +1,11 @@
 import { Logger } from "./Logger.js";
 var logger = new Logger();
 
-import { Internationalization } from "./Internationalization.js";
-var i13n = new Internationalization();
-
 import { SettingsMgr } from "./SettingsMgr.js";
 var Settings = new SettingsMgr();
+
+import { Internationalization } from "./Internationalization.js";
+var i13n = new Internationalization();
 
 import { Template } from "./Template.js";
 const Tpl = new Template();

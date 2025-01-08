@@ -15,7 +15,7 @@ class NotificationsSoundPlayer {
 
 	constructor() {
 		this.#state = STATE_READY;
-		this.#waitDelay = 100;
+		this.#waitDelay = 250;
 		this.#notificationType = -1; //-1 = no sound to play
 		this.#loadSettings();
 	}
