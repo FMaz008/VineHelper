@@ -290,9 +290,8 @@ class NotificationMonitor {
 
 		//Update the tab title:
 		//User a timer to avoid the Fetch Last 100 to call this 100 times, which slow things down.
-		clearTimeout(this.#waitTimer);
-		this.#waitTimer = null;
-		this.#waitTimer = setTimeout(() => {
+		window.clearTimeout(this.#waitTimer);
+		this.#waitTimer = window.setTimeout(() => {
 			this.#updateTabTitle();
 		}, 100);
 
