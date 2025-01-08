@@ -573,6 +573,12 @@ function remoteLoadList(keywordsType) {
 					const event = new Event("change");
 					obj.dispatchEvent(event);
 				} else {
+					data.keywords.sort((a, b) => {
+						if (a.contains.toLowerCase() < b.contains.toLowerCase()) return -1;
+						if (a.contains.toLowerCase() > b.contains.toLowerCase()) return 1;
+						return 0;
+					});
+
 					//Remove all the existing lines
 					const rows = document.querySelectorAll(`#${keyE} table>tr`);
 					rows.forEach((row) => row.remove());
@@ -667,8 +673,16 @@ function manageKeywords(key) {
 		btnSave.disabled = false;
 	});
 
-	//Populate the list
+	//Sort the list
+	if (typeof val[0] == "object") {
+		val.sort((a, b) => {
+			if (a.contains.toLowerCase() < b.contains.toLowerCase()) return -1;
+			if (a.contains.toLowerCase() > b.contains.toLowerCase()) return 1;
+			return 0;
+		});
+	}
 
+	//Populate the list
 	for (let i = 0; i < val.length; i++) {
 		if (typeof val[i] == "string") {
 			//Load the old data format
