@@ -47,10 +47,17 @@ class ScreenNotification {
 
 /** Handle the display of notification */
 class ScreenNotifier {
+	static #instance = null;
+
 	#noteCounter;
 	#lastSoundPlayedAt;
 
 	constructor() {
+		if (ScreenNotifier.#instance) {
+			return ScreenNotifier.#instance;
+		}
+		ScreenNotifier.#instance = this;
+
 		this.#noteCounter = 0;
 		this.#lastSoundPlayedAt = Date.now();
 		this.#init();
