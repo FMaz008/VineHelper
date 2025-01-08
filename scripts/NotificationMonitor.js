@@ -26,6 +26,9 @@ import { keywordMatch } from "./service_worker/keywordMatch.js";
 import { BrendaAnnounceQueue } from "./BrendaAnnounce.js";
 var brendaAnnounceQueue = new BrendaAnnounceQueue();
 
+import { ModalMgr } from "./ModalMgr.js";
+var DialogMgr = new ModalMgr();
+
 //const TYPE_SHOW_ALL = -1;
 const TYPE_REGULAR = 0;
 const TYPE_ZEROETV = 1;
