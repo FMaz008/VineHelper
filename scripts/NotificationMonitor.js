@@ -197,7 +197,8 @@ class NotificationMonitor {
 		//If the notification already exist, ignore this request.
 		const element = document.getElementById("vh-notification-" + asin);
 		if (element) {
-			return false;
+			element.remove(); //Better to remove an element an insert it new than skip it.
+			//For example, if the item is unavailable, we want to remove the flagged item and insert a new one.
 		}
 
 		//Check if the de-duplicate image setting is on, if so, do not add items
