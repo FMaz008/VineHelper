@@ -1,3 +1,6 @@
+import { SettingsMgr } from "./SettingsMgr.js";
+const Settings = new SettingsMgr();
+
 function generatePagination(url, totalItems, itemsPerPage, currentPage) {
 	const LAST_PAGE = Math.ceil(totalItems / itemsPerPage);
 	const START_PAGE_PADDING =
