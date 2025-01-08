@@ -1197,6 +1197,10 @@ window.addEventListener("message", async function (event) {
 				body: JSON.stringify(content),
 			});
 
+			if (event.data.data.error == "ITEM_NOT_IN_ENROLLMENT") {
+				recordUnavailableProduct(event.data.data.asin, "ITEM_NOT_IN_ENROLLMENT");
+			}
+
 			//The notification monitor does not implement the regularGrid
 			if (!notificationMonitor) {
 				//Update the product tile ETV in the Toolbar
@@ -1239,7 +1243,6 @@ window.addEventListener("message", async function (event) {
 			event.data.data.error;
 		await Notifications.pushNotification(note);
 
-		//regex = new RegExp(`No recommendation found for recommendation id.*`, 'i');
 		if (event.data.data.errorType == "ITEM_NOT_IN_ENROLLMENT") {
 			recordUnavailableProduct(event.data.data.asin, "ITEM_NOT_IN_ENROLLMENT");
 		}
