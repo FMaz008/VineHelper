@@ -97,6 +97,7 @@ class Env {
 		//Determine if we are currently searching for an item
 		regex = /^.+?amazon\..+\/vine\/vine-items(?:.*?)(?:[?&]search=(.+?))(?:[#&].*?)?$/;
 		arrMatches = currentUrl.match(regex);
+		this.data.vineSearch = false;
 		if (arrMatches != null) {
 			if (arrMatches[1] == undefined) {
 				this.data.vineSearch = false;

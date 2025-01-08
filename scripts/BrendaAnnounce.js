@@ -1,3 +1,9 @@
+import { SettingsMgr } from "./SettingsMgr.js";
+var Settings = new SettingsMgr();
+
+import { ScreenNotifier, ScreenNotification } from "./ScreenNotifier.js";
+var Notifications = new ScreenNotifier();
+
 class BrendaAnnounceQueue {
 	constructor() {
 		this.MAX_QUEUE_LENGTH = 5;

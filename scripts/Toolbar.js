@@ -22,6 +22,9 @@ var Tpl = new Template();
 import { BrendaAnnounceQueue } from "./BrendaAnnounce.js";
 var brendaAnnounceQueue = new BrendaAnnounceQueue();
 
+import { ScreenNotifier, ScreenNotification } from "./ScreenNotifier.js";
+var Notifications = new ScreenNotifier();
+
 class Toolbar {
 	#tile;
 
