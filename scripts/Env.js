@@ -29,18 +29,27 @@ class Env {
 
 		this.data = {};
 		this.data.VINE_HELPER_API_V5_URL = VINE_HELPER_API_V5_URL;
+
+		this.#init();
+
+		// Request the _pluginInit script to inject the plugin scripts, if any
+		chrome.runtime.sendMessage({ action: "injectPluginsContentScripts" });
+	}
+
+	async #init() {
 		this.#isUltraVinerRunning();
 		this.#loadAppVersion();
 		this.#loadBrowingContext();
+
+		if (!Settings.isLoaded()) {
+			await new Promise((r) => setTimeout(r, 10));
+		}
 		this.#loadDiscordActive();
 		this.#loadCountryCode();
 		this.#loadUUID();
 
 		this.data.loadContextCompleted = true;
 		logger.add("ENV: Loading context data completed.");
-
-		// Request the _pluginInit script to inject the plugin scripts, if any
-		chrome.runtime.sendMessage({ action: "injectPluginsContentScripts" });
 	}
 
 	#isUltraVinerRunning() {
