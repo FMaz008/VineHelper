@@ -168,10 +168,12 @@ class NotificationMonitor {
 		const banner = document.createElement("div");
 		banner.classList.add("unavailable-banner");
 		banner.innerText = "Unavailable";
+		banner.style.isolation = "isolate"; // This prevents the banner from inheriting the filter effects
 		const imgContainer = notif.querySelector(".vh-img-container");
 		imgContainer.insertBefore(banner, imgContainer.firstChild);
 
 		notif.style.opacity = "0.5";
+		notif.style.filter = "brightness(0.7)";
 	}
 	async addTileInGrid(
 		asin,

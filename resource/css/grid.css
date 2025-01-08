@@ -60,8 +60,9 @@ body.darktheme #vvp-items-grid-container .vvp-item-tile a:active {
 	position: absolute;
 	top: 50%;
 	bottom: 50%;
+	left: -10px;
+	right: -10px;
 	height: 25px;
-	width: 100%;
 	padding: 3px;
 	background-color: red;
 	text-align: center;
