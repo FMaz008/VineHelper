@@ -215,6 +215,26 @@ async function initTileSize() {
 				window.adjustVerticalSpacing();
 			});
 
+			//Title spacing
+			const sliderTitleSpacing = document.querySelector("input[name='general.tileSize.titleSpacing']");
+			sliderTitleSpacing.value = Settings.get("general.tileSize.titleSpacing");
+
+			sliderTitleSpacing.addEventListener("change", () => {
+				const sliderValue = parseInt(sliderTitleSpacing.value);
+				Settings.set("general.tileSize.titleSpacing", sliderValue);
+				window.adjustTitleSpacing();
+			});
+
+			//Font size
+			const sliderFontSize = document.querySelector("input[name='general.tileSize.fontSize']");
+			sliderFontSize.value = Settings.get("general.tileSize.fontSize");
+
+			sliderFontSize.addEventListener("change", () => {
+				const sliderValue = parseInt(sliderFontSize.value);
+				Settings.set("general.tileSize.fontSize", sliderValue);
+				window.adjustFontSize();
+			});
+
 			//Bind the open link
 			const openContainer = container.querySelector("#openTileSizeTool");
 			const openLink = container.querySelector("#openTileSizeTool>a");
@@ -239,6 +259,8 @@ async function initTileSize() {
 		adjustTileSize();
 		adjustIconsSize();
 		adjustVerticalSpacing();
+		adjustTitleSpacing();
+		adjustFontSize();
 	});
 }
 
@@ -261,42 +283,49 @@ window.adjustTileSize = function (DOMElem = null) {
 
 window.adjustIconsSize = function (DOMElem = null) {
 	const size = parseInt(Settings.get("general.tileSize.iconSize"));
-	if (DOMElem == null) {
-		//Adjust all elements on the page
-		const grids = document.querySelectorAll("div#vh-tabs .tab-grid .vh-status-container2 a>.vh-toolbar-icon");
-		grids.forEach((elem) => {
-			elem.style.width = size + "px";
-			elem.style.height = size + "px";
-		});
-	} else {
-		//Target 1 specific element
-		const tile = DOMElem.querySelectorAll(".vh-status-container2 a>.vh-toolbar-icon");
-		tile.forEach((elem) => {
-			elem.style.width = size + "px";
-			elem.style.height = size + "px";
-		});
-	}
+	const selector = ".vh-status-container2 a>.vh-toolbar-icon";
+	const elements = (DOMElem || document).querySelectorAll(DOMElem ? selector : `div#vh-tabs .tab-grid ${selector}`);
+	elements.forEach((elem) => {
+		elem.style.width = size + "px";
+		elem.style.height = size + "px";
+	});
 };
 
 window.adjustVerticalSpacing = function (DOMElem = null) {
 	const size = parseInt(Settings.get("general.tileSize.verticalSpacing"));
-	if (DOMElem == null) {
-		//Adjust all elements on the page
-		const grids = document.querySelectorAll(
-			".vvp-item-tile-content .vvp-item-product-title-container, .vvp-item-tile-content .vvp-details-btn"
-		);
-		grids.forEach((elem) => {
-			elem.style.margin = size + "px 0";
-		});
-	} else {
-		//Target 1 specific element
-		const tile = DOMElem.querySelectorAll(
-			".vvp-item-tile-content .vvp-item-product-title-container, .vvp-item-tile-content .vvp-details-btn"
-		);
-		tile.forEach((elem) => {
-			elem.style.margin = size + "px 0";
-		});
-	}
+	const selector =
+		".vvp-item-tile-content .vvp-item-product-title-container, .vvp-item-tile-content .vvp-details-btn";
+	const elements = (DOMElem || document).querySelectorAll(selector);
+	elements.forEach((elem) => {
+		elem.style.margin = size + "px 0";
+	});
+};
+
+window.adjustTitleSpacing = function (DOMElem = null) {
+	const size = parseFloat(Settings.get("general.tileSize.titleSpacing"));
+	//Adjust all elements on the page
+	const box1 = (DOMElem || document).querySelectorAll(
+		".vvp-item-tile-content .vvp-item-product-title-container .a-truncate"
+	);
+	box1.forEach((elem) => {
+		elem.style.maxHeight = size + "em";
+	});
+
+	const box2 = (DOMElem || document).querySelectorAll(
+		".vvp-item-tile-content .vvp-item-product-title-container .a-truncate-cut"
+	);
+	box2.forEach((elem) => {
+		elem.style.height = size + "em";
+	});
+};
+
+window.adjustFontSize = function (DOMElem = null) {
+	const size = parseInt(Settings.get("general.tileSize.fontSize"));
+	const selector = ".vvp-item-tile-content .vvp-item-product-title-container .a-truncate";
+	const elements = (DOMElem || document).querySelectorAll(selector);
+	elements.forEach((elem) => {
+		elem.style.fontSize = size + "px";
+	});
 };
 
 //If we are on the Account page, display additional info
@@ -1574,7 +1603,7 @@ function compareVersion(oldVer, newVer) {
 	//Sometimes newVer is not populated for some odd reason. Assume no version change.
 	if (newVer == null) return VERSION_NO_CHANGE;
 
-	if (oldVer == null || oldVer == undefined || oldVer === 0) {
+	if (oldVer == null || oldVer == undefined || oldVer === 0 || oldVer === true) {
 		return VERSION_MAJOR_CHANGE;
 	}
 	if (oldVer == false || oldVer == newVer) return VERSION_NO_CHANGE;

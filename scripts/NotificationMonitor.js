@@ -251,6 +251,8 @@ class NotificationMonitor {
 		adjustTileSize(tileDOM);
 		adjustIconsSize(tileDOM);
 		adjustVerticalSpacing(tileDOM);
+		adjustTitleSpacing(tileDOM);
+		adjustFontSize(tileDOM);
 
 		//If the feed is paused, up the counter and rename the Resume button
 		if (this.#feedPaused) {

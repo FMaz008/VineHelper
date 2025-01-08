@@ -274,6 +274,8 @@ class SettingsMgr {
 					width: 236,
 					iconSize: 14,
 					verticalSpacing: 20,
+					titleSpacing: 2.6,
+					fontSize: 14,
 				},
 			},
 
