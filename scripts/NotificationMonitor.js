@@ -182,6 +182,12 @@ class NotificationMonitor {
 			return false;
 		}
 
+		//If the notification already exist, ignore this request.
+		const element = document.getElementById("vh-notification-" + asin);
+		if (element) {
+			return false;
+		}
+
 		//Check if the de-duplicate image setting is on, if so, do not add items
 		//for which an item with the same thumbnail already exist.
 		if (Settings.get("notification.monitor.hideDuplicateThumbnail")) {
@@ -194,9 +200,6 @@ class NotificationMonitor {
 
 		const recommendationType = getRecommendationTypeFromQueue(queue); //grid.js
 		const recommendationId = generateRecommendationString(recommendationType, asin, enrollment_guid); //grid.js
-
-		//If the notification already exist, remove it to avoid duplicates
-		document.getElementById("vh-notification-" + asin)?.remove();
 
 		//Add the notification
 		let templateFile;
