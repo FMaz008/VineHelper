@@ -1,6 +1,8 @@
 import { Logger } from "./Logger.js";
 var logger = new Logger();
 
+logger.add("BOOT: Bootloader starting.");
+
 import { SettingsMgr } from "./SettingsMgr.js";
 var Settings = new SettingsMgr();
 
@@ -51,8 +53,6 @@ import { Toolbar } from "./Toolbar.js";
 
 const ultraviner = env.data.ultraviner; //If Ultravine is detected, Vine Helper will deactivate itself to avoid conflicts.
 const VINE_HELPER_API_V5_URL = env.data.VINE_HELPER_API_V5_URL;
-
-logger.add("BOOT: Booterloader starting. DOM load time from Amazon: ");
 
 //Create the 4 grids/tabs instance of Grid:
 env.data.grid = {
@@ -121,9 +121,7 @@ async function init() {
 
 	//Wait for the config to be loaded before running this script
 	logger.add("BOOT: Waiting on preboot to complete...");
-	while (!Settings || !Settings.isLoaded() || !env.data.loadContextCompleted) {
-		await new Promise((r) => setTimeout(r, 10));
-	}
+	await Settings.waitForLoad();
 	logger.add("BOOT: Config available. Begining init() function");
 
 	if (Settings.get("thorvarium.darktheme")) {

@@ -27,6 +27,8 @@ class Env {
 		// Initialize the instance if it doesn't exist
 		Env.#instance = this;
 
+		logger.add("ENV: Initializing environment...");
+
 		this.data = {};
 		this.data.VINE_HELPER_API_V5_URL = VINE_HELPER_API_V5_URL;
 
@@ -41,9 +43,10 @@ class Env {
 		this.#loadAppVersion();
 		this.#loadBrowingContext();
 
-		if (!Settings.isLoaded()) {
-			await new Promise((r) => setTimeout(r, 10));
-		}
+		logger.add("ENV: Waiting for settings to load...");
+		await Settings.waitForLoad();
+		logger.add("ENV: Settings loaded.");
+
 		this.#loadDiscordActive();
 		this.#loadCountryCode();
 		this.#loadUUID();

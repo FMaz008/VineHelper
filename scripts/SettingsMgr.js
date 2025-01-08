@@ -1,7 +1,13 @@
+import { Logger } from "./Logger.js";
+var logger = new Logger();
+
 class SettingsMgr {
 	static #instance = null;
 	#defaultSettings;
 	#settings;
+
+	#isLoaded = false;
+	#loadPromise;
 
 	constructor() {
 		if (SettingsMgr.#instance) {
@@ -11,9 +17,26 @@ class SettingsMgr {
 		// Initialize the instance if it doesn't exist
 		SettingsMgr.#instance = this;
 
+		logger.add("SettingsMgr: Initializing settings...");
+
 		this.#settings = {};
 		this.#getDefaultSettings();
-		this.#loadSettingsFromStorage();
+
+		//Implicit promise created
+		this.#loadPromise = this.#initializeSettings();
+	}
+
+	async #initializeSettings() {
+		try {
+			await this.#loadSettingsFromStorage();
+
+			this.#isLoaded = true;
+			logger.add("SettingsMgr: Settings loaded.");
+			return true;
+		} catch (error) {
+			console.error("Failed to load settings:", error);
+			throw error;
+		}
 	}
 
 	//Return true if the user has a valid premium membership on Patreon
@@ -21,8 +44,14 @@ class SettingsMgr {
 		return parseInt(this.get("general.patreon.tier")) > 1;
 	}
 
+	// Replace the old isLoaded() method
+	async waitForLoad() {
+		return this.#loadPromise;
+	}
+
+	// Keep the sync check if needed, but prefer waitForLoad()
 	isLoaded() {
-		return Object.keys(this.#settings).length > 0;
+		return this.#isLoaded;
 	}
 
 	async refresh() {

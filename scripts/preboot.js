@@ -24,9 +24,7 @@ if (!regex.test(window.location.href)) {
 //Loading the settings from the local storage
 async function loadStyleSheets() {
 	logger.add("PREBOOT: Waiting on config to be loaded...");
-	while (!Settings || !Settings.isLoaded()) {
-		await new Promise((r) => setTimeout(r, 10));
-	}
+	await Settings.waitForLoad();
 	logger.add("PREBOOT: config loaded!");
 
 	//Load Thorvarium stylesheets

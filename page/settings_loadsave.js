@@ -40,9 +40,7 @@ function selectCurrentTab(firstRun = false) {
 }
 async function initiateSettings() {
 	//Wait for the settings to be loaded.
-	while (!Settings.isLoaded()) {
-		await new Promise((r) => setTimeout(r, 10));
-	}
+	await Settings.waitForLoad();
 
 	//Disable the premium options for non-premium users.
 	if (!Settings.isPremiumUser()) {
