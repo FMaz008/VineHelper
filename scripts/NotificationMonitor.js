@@ -159,6 +159,16 @@ class NotificationMonitor {
 			return false;
 		}
 
+		//Remove the banner if it already existed
+		notif.querySelector(".unavailable-banner")?.remove();
+
+		//Add a new banner
+		const banner = document.createElement("div");
+		banner.classList.add("unavailable-banner");
+		banner.innerText = "Unavailable";
+		const imgContainer = notif.querySelector(".vh-img-container");
+		imgContainer.insertBefore(banner, imgContainer.firstChild);
+
 		notif.style.opacity = "0.5";
 	}
 	async addTileInGrid(

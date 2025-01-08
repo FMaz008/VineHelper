@@ -55,3 +55,16 @@ body.darktheme #vvp-items-grid-container .vvp-item-tile a:visited,
 body.darktheme #vvp-items-grid-container .vvp-item-tile a:active {
 	color: var(--item-link-dark);
 }
+
+.unavailable-banner {
+	position: absolute;
+	top: 50%;
+	bottom: 50%;
+	height: 25px;
+	width: 100%;
+	padding: 3px;
+	background-color: red;
+	text-align: center;
+	color: white;
+	font-weight: bold;
+}
