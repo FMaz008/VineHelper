@@ -117,12 +117,13 @@ class Logger {
 		});
 	}
 	#deserialize(jsonString) {
+		let retrievedObj = [];
 		try {
-			const retrievedObj = JSON.parse(jsonString);
-			//multiply by 1000 to convert from unix timestamp to js Date
+			retrievedObj = JSON.parse(jsonString);
 		} catch (error) {
 			return new Map();
 		}
+		//multiply by 1000 to convert from unix timestamp to js Date
 		return new Map(Object.entries(retrievedObj).map(([key, value]) => [key, new Date(value * 1000)]));
 	}
 }
