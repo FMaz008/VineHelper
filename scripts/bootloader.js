@@ -322,7 +322,7 @@ function displayAccountData() {
 	div = document.createElement("div");
 	div.innerHTML =
 		"<h4>Vine Helper extra stats:</h4><strong>Customer Id: </strong><span class='masked-text'>" +
-		escapeHTML(customerId) +
+		escapeHTML(env.data.customerId) +
 		"</span><br /><br />";
 	container.appendChild(div);
 
