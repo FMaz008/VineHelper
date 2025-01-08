@@ -139,7 +139,7 @@ async function createGridInterface() {
 		toolbar.remove();
 	});
 
-	if (document.getElementById("vvp-items-grid") == undefined) {
+	if (env.data.gridDOM.regular == undefined) {
 		console.log("No listing on this page, not drawing tabs.");
 		return false; // No listing on this page
 	}
@@ -149,7 +149,7 @@ async function createGridInterface() {
 	tabs.setAttribute("id", "vh-tabs");
 	tabs.classList.add("theme-default");
 
-	let itemsGrid = document.querySelector("#vvp-items-grid");
+	let itemsGrid = env.data.gridDOM.regular;
 	itemsGrid.parentNode.insertBefore(tabs, itemsGrid);
 	itemsGrid.parentNode.removeChild(itemsGrid);
 	itemsGrid.classList.add("tab-grid");
@@ -333,15 +333,15 @@ async function hideAllItems() {
 	HiddenList.loadFromLocalStorage(); //Refresh the list in case it was altered in a different tab
 
 	//Find out what the current active tab is
-	let currentTab = "#vvp-items-grid";
+	let currentTab2 = "#vvp-items-grid";
 	if (
 		document.querySelector("#tab-unavailable") &&
 		document.querySelector("#tab-unavailable").style.display !== "none"
 	) {
-		currentTab = "#tab-unavailable";
+		currentTab2 = "#tab-unavailable";
 	}
 
-	const vvpItemTiles = document.querySelectorAll(currentTab + " .vvp-item-tile");
+	const vvpItemTiles = document.querySelectorAll(currentTab2 + " .vvp-item-tile");
 	for (const vvpItemTile of vvpItemTiles) {
 		let asin = getAsinFromDom(vvpItemTile);
 		arrTile.push({ asin: asin, hidden: true });

@@ -54,12 +54,22 @@ const VINE_HELPER_API_V5_URL = env.data.VINE_HELPER_API_V5_URL;
 
 logger.add("BOOT: Booterloader starting. DOM load time from Amazon: ");
 
-//Create the 4 grids/tabs:
+//Create the 4 grids/tabs instance of Grid:
 env.data.grid = {
 	gridRegular: null,
 	gridUnavailable: null, //Will be populated after the grid will be created.
 	gridHidden: null, //Will be populated after the grid will be created.
 	gridPinned: null, //Will be populated after the grid will be created.
+};
+
+//Store the DOM objects of the grids/tabs:
+//Populated after the grids/tabs are created in initCreateTabs()
+env.data.gridDOM = {
+	container: null,
+	regular: null,
+	unavailable: null,
+	hidden: null,
+	pinned: null,
 };
 
 //Tooltip used to display full titles/description. Same tooltip will get reused for all uses.
@@ -528,23 +538,33 @@ function initAddNotificationMonitorLink() {
 async function initCreateTabs() {
 	//Create the Discard grid
 	logger.add("BOOT: Creating tabs system");
+
+	env.data.gridDOM.container = document.getElementById("vvp-items-grid-container");
+	env.data.gridDOM.regular = document.getElementById("vvp-items-grid");
+
 	var tabSystem = Settings.get("unavailableTab.active") || Settings.get("hiddenTab.active");
 	if (tabSystem) {
 		await createGridInterface();
 	}
 
-	env.data.grid.gridRegular = new Grid(document.getElementById("vvp-items-grid"));
+	//Assign the DOM elements to the gridDOM object
+	env.data.gridDOM.unavailable = document.getElementById("tab-unavailable");
+	env.data.gridDOM.hidden = document.getElementById("tab-hidden");
+	env.data.gridDOM.pinned = document.getElementById("tab-pinned");
+
+	//Create the grid instances
+	env.data.grid.gridRegular = new Grid(env.data.gridDOM.regular);
 
 	if (Settings.get("hiddenTab.active")) {
-		env.data.grid.gridHidden = new Grid(document.getElementById("tab-hidden"));
+		env.data.grid.gridHidden = new Grid(env.data.gridDOM.hidden);
 	}
 
 	if (Settings.get("unavailableTab.active")) {
-		env.data.grid.gridUnavailable = new Grid(document.getElementById("tab-unavailable"));
+		env.data.grid.gridUnavailable = new Grid(env.data.gridDOM.unavailable);
 	}
 
 	if (Settings.get("pinnedTab.active")) {
-		env.data.grid.gridPinned = new Grid(document.getElementById("tab-pinned"));
+		env.data.grid.gridPinned = new Grid(env.data.gridDOM.pinned);
 	}
 
 	logger.add("BOOT: Grid system completed");
@@ -553,8 +573,8 @@ async function initCreateTabs() {
 function initInsertTopPagination() {
 	//Top pagination
 	if (Settings.get("general.topPagination")) {
-		removeElements("#vvp-items-grid-container .topPagination");
-		removeElements("#vvp-items-grid-container .topPaginationVerbose");
+		env.data.gridDOM.container.querySelector(".topPagination")?.remove();
+		env.data.gridDOM.container.querySelector(".topPaginationVerbose")?.remove();
 
 		let currentPageDOM = document.querySelector("ul.a-pagination li.a-selected"); //If Null there is no pagination on the page
 		if (
@@ -565,7 +585,7 @@ function initInsertTopPagination() {
 		) {
 			//Fetch total items from the page
 			const TOTAL_ITEMS = parseInt(
-				document.querySelector("#vvp-items-grid-container p strong:last-child").innerText.replace(/,/g, "")
+				env.data.gridDOM.container.querySelector("p strong:last-child").innerText.replace(/,/g, "")
 			);
 			const ITEM_PER_PAGE = 36;
 			const CURRENT_PAGE = parseInt(currentPageDOM.innerText.replace(/,/g, ""));
@@ -573,7 +593,7 @@ function initInsertTopPagination() {
 			const URL = window.location.pathname + window.location.search; //Sample URL to be modified
 			let pagination = generatePagination(URL, TOTAL_ITEMS, ITEM_PER_PAGE, CURRENT_PAGE);
 
-			document.querySelector("#vvp-items-grid-container p").appendChild(pagination);
+			env.data.gridDOM.container.querySelector("p").appendChild(pagination);
 		} else {
 			// Clone the bottom pagination to the top of the listing
 			let paginationElement = document.querySelector(".a-pagination");
@@ -584,7 +604,7 @@ function initInsertTopPagination() {
 				// Clone the parent element
 				let clonedElement = parentElement.cloneNode(true);
 				clonedElement.classList.add("topPagination");
-				document.querySelector("#vvp-items-grid-container p").appendChild(clonedElement);
+				env.data.gridDOM.container.querySelector("p").appendChild(clonedElement);
 			}
 		}
 	}
@@ -1691,7 +1711,7 @@ async function initModalNagivation() {
 	/**
 	 * Attach the 'click' eventListener to each yellow "See Details" button in the grid
 	 */
-	document.querySelectorAll("#vvp-items-grid .vvp-item-tile").forEach((tile, index) => {
+	env.data.gridDOM.regular.querySelectorAll(".vvp-item-tile").forEach((tile, index) => {
 		const modalNavigatorButton = tile.querySelector(".vvp-details-btn input");
 		const modalNavigatorAsin = modalNavigatorButton.getAttribute("data-modalNavigatorAsin");
 
@@ -1707,7 +1727,7 @@ async function handleModalNavigation(event) {
 	 * If not, let's exit since there is nothing to click
 	 */
 	let modalNavigatorModal = document.querySelector('.a-popover-modal[aria-hidden="false"]');
-	const itemCount = document.querySelectorAll("#vvp-items-grid .vvp-item-tile").length;
+	const itemCount = env.data.gridDOM.regular.querySelectorAll(".vvp-item-tile").length;
 	if (!modalNavigatorModal) {
 		logger.add("[DEBUG] Modal not open, nothing to navigate through; ignoring!");
 		return;
@@ -1741,9 +1761,8 @@ async function handleModalNavigation(event) {
 	 * HOWEVER, we require a delay of 600ms right now, perhaps fixable in a later release
 	 */
 	setTimeout(() => {
-		const modalNavigatorNextTile = document.querySelectorAll("#vvp-items-grid .vvp-item-tile")[
-			modalNavigatorNextIndex
-		];
+		const modalNavigatorNextTile =
+			env.data.gridDOM.regular.querySelectorAll(".vvp-item-tile")[modalNavigatorNextIndex];
 		const modalNavigatorNextButton = modalNavigatorNextTile.querySelector(".vvp-details-btn input");
 		const modalNavigatorNextAsin = modalNavigatorNextButton.getAttribute("data-asin");
 
@@ -1775,7 +1794,7 @@ function openDynamicModal(asin, queue, isParent, enrollmentGUID, autoClick = tru
 
 	//Generate the dynamic modal button
 	const container1 = document.createElement("span");
-	document.getElementById("vvp-items-grid").appendChild(container1);
+	env.data.gridDOM.regular.appendChild(container1);
 	container1.id = "dynamicModalBtn-" + asin;
 	container1.classList.add("vvp-details-btn");
 	const container2 = document.createElement("span");
