@@ -254,12 +254,12 @@ async function initTileSize() {
 
 	//Set the slider default value
 	//Wait until the items are loaded.
-	hookMgr.hookBind("productsUpdated", () => {
+	hookMgr.hookBind("tilesUpdated", () => {
 		adjustTileSize();
 		adjustIconsSize();
 		adjustVerticalSpacing();
-		adjustTitleSpacing();
 		adjustFontSize();
+		adjustTitleSpacing();
 	});
 }
 
@@ -794,6 +794,7 @@ async function initTilesAndDrawToolbars() {
 	}
 
 	toolbarsDrawn = true;
+	hookMgr.hookExecute("tilesUpdated", null);
 }
 
 // Function to position the tooltip
