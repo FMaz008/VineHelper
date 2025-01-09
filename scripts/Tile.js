@@ -73,8 +73,9 @@ class Tile {
 	//Generally called by Toolbar().setETV(min, max)
 	setETV(etv) {
 		this.#etv = etv;
-		if (parseFloat(etv) == 0 && Settings.get("general.zeroETVHighlight.active")) {
-			this.#tileDOM.style.backgroundColor = Settings.get("general.zeroETVHighlight.color");
+		if (parseFloat(etv) == 0) {
+			this.#tileDOM.dataset.zeroETV = true;
+			this.#colorizeHighlight();
 		}
 	}
 
@@ -176,8 +177,9 @@ class Tile {
 			itemDateAdded > bookmarkDate &&
 			Settings.get("general.bookmarkDate") != 0
 		) {
-			logger.add("TILE: The item is more recent than the time marker, highlight it.");
-			this.#tileDOM.style.backgroundColor = Settings.get("general.bookmarkColor");
+			logger.add("TILE: The item is more recent than the time marker, highlight its toolbar.");
+			this.#tileDOM.querySelector(".vh-status-container").style.backgroundColor =
+				Settings.get("general.bookmarkColor");
 		}
 	}
 
@@ -196,7 +198,9 @@ class Tile {
 			if (match) {
 				highligthed = true;
 				logger.add("TILE: The item match the keyword '" + match + "', highlight it");
-				this.#tileDOM.style.backgroundColor = Settings.get("general.keywordHighlightColor");
+				this.#tileDOM.dataset.keywordHighlight = true;
+
+				this.#colorizeHighlight();
 
 				//Move the highlighted item to the top of the grid
 				this.#grid.getDOM().insertBefore(this.#tileDOM, this.#grid.getDOM().firstChild);
@@ -227,6 +231,22 @@ class Tile {
 		//Unescape titles
 		const fullText = this.getDOM().querySelector(".a-truncate-full").innerText;
 		this.getDOM().querySelector(".a-truncate-full").innerText = unescapeHTML(unescapeHTML(fullText));
+	}
+
+	#colorizeHighlight() {
+		const zeroETV = this.#tileDOM.dataset.zeroETV === "true" && Settings.get("general.zeroETVHighlight.active");
+		const highlight = this.#tileDOM.dataset.keywordHighlight === "true";
+
+		if (zeroETV && highlight) {
+			const color1 = Settings.get("general.zeroETVHighlight.color");
+			const color2 = Settings.get("general.keywordHighlightColor");
+			this.#tileDOM.style.backgroundColor = "unset";
+			this.#tileDOM.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;
+		} else if (highlight) {
+			this.#tileDOM.style.backgroundColor = Settings.get("general.keywordHighlightColor");
+		} else if (zeroETV) {
+			this.#tileDOM.style.backgroundColor = Settings.get("general.zeroETVHighlight.color");
+		}
 	}
 
 	async moveToGrid(g, animate = false) {

@@ -137,11 +137,6 @@ class Toolbar {
 			}
 		}
 
-		//If the ordering system is off, only the icons have to be shown
-		if (!Settings.get("unavailableTab.active")) {
-			pToolbar.classList.add("vh-background-neutral");
-		}
-
 		//Display the hide link
 		if (Settings.get("hiddenTab.active")) {
 			let h = document.getElementById(`vh-hide-link-${this.#tile.getAsin()}`);
@@ -273,22 +268,6 @@ class Toolbar {
 		if (Settings.get("hiddenTab.active")) {
 			this.updateVisibilityIcon();
 		}
-
-		// Set the icons
-		logger.add("DRAW-UPDATE-TOOLBAR: Setting icon status");
-		switch (this.#tile.getStatus()) {
-			case env.data.DISCARDED_ORDER_FAILED:
-				statusColor = "vh-background-fees";
-				break;
-			case env.data.NOT_DISCARDED_ORDER_SUCCESS:
-				statusColor = "vh-background-nofees";
-				break;
-			case env.data.NOT_DISCARDED:
-				statusColor = "vh-background-neutral";
-				break;
-		}
-
-		context.classList.add(statusColor);
 
 		// Display voting system if active
 		if (Settings.get("unavailableTab.active")) {

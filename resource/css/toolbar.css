@@ -25,7 +25,7 @@ div.vh-status-container {
 	padding: 0px;
 	z-index: 1;
 	width: 100%;
-	background-color: rgba(255, 255, 255, 0.7);
+	background-color: rgba(255, 255, 255);
 	border: 1px solid #000;
 	border-radius: 8px;
 	color: #0f1111;
@@ -87,13 +87,6 @@ a.vh-report-link {
 
 div.vh-icon-announcement {
 	opacity: 0.3;
-}
-
-div.vh-background-nofees div.vh-status-container {
-	background-color: #99ff99;
-}
-div.vh-background-fees div.vh-status-container {
-	background-color: #ff9999;
 }
 
 div.vh-toolbar-icon {
