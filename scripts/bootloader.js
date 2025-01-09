@@ -600,6 +600,10 @@ async function initCreateTabs() {
 function initInsertTopPagination() {
 	//Top pagination
 	if (Settings.get("general.topPagination")) {
+		if (env.data.gridDOM.container == null) {
+			//There is no listing on this page
+			return;
+		}
 		env.data.gridDOM.container.querySelector(".topPagination")?.remove();
 		env.data.gridDOM.container.querySelector(".topPaginationVerbose")?.remove();
 
