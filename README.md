@@ -5,6 +5,7 @@ Browser Extension to improve the experience of Amazon Vine members.
 ## Official Releases:
 
 **Chrome webstore**: https://chromewebstore.google.com/detail/jlglbhebbkfjcofdplbkanckkipkgfle
+
 **Mozilla Add-ons**: https://addons.mozilla.org/en-CA/firefox/addon/amazon-vine-helper/
 
 ## Contributing
@@ -20,7 +21,7 @@ npm install -g yarn
 ### Getting Started
 
 ```
-git clone git@github.com:FMaz008/VineHelper.git
+git clone https://github.com/FMaz008/VineHelper.git
 cd VineHelper
 yarn
 ```
