@@ -260,24 +260,6 @@ class NotificationMonitor {
 			document.getElementById("pauseFeed").value = `Resume Feed (${this.#feedPausedAmountStored})`;
 		}
 
-		//If we received ETV data (ie: Fetch last 100), process them
-		if (etv_min != null && etv_max != null) {
-			//Set the ETV but take no action on it
-			this.setETV(asin, etv_min, false); //Don't process potential 0etv, just set the ETV
-			this.setETV(asin, etv_max, false); //Don't process potential 0etv, just set the ETV
-
-			//We found a zero ETV item, but we don't want to play a sound just yet
-			if (parseFloat(etv_min) == 0) {
-				this.#zeroETVItemFound(asin, false); //Ok now process 0etv, but no sound
-			}
-		} else {
-			//The ETV is not known
-			const brendaAnnounce = tileDOM.querySelector("#vh-announce-link-" + asin);
-			if (brendaAnnounce) {
-				brendaAnnounce.style.visibility = "hidden";
-			}
-		}
-
 		//Process the item according to the notification type (highlight > 0etv > regular)
 		//This is what determine & trigger what sound effect to play
 		if (KWsMatch) {
@@ -291,6 +273,24 @@ class NotificationMonitor {
 		//Process the bluring
 		if (BlurKWsMatch) {
 			this.#blurItemFound(asin);
+		}
+
+		//If we received ETV data (ie: Fetch last 100), process them
+		if (etv_min != null && etv_max != null) {
+			//Set the ETV but take no action on it
+			this.setETV(asin, etv_min);
+			this.setETV(asin, etv_max);
+
+			//We found a zero ETV item, but we don't want to play a sound just yet
+			if (parseFloat(etv_min) == 0) {
+				this.#zeroETVItemFound(asin, false); //Ok now process 0etv, but no sound
+			}
+		} else {
+			//The ETV is not known
+			const brendaAnnounce = tileDOM.querySelector("#vh-announce-link-" + asin);
+			if (brendaAnnounce) {
+				brendaAnnounce.style.visibility = "hidden";
+			}
 		}
 
 		//If unavailable, change opacity
@@ -356,7 +356,7 @@ class NotificationMonitor {
 		return tileDOM; //Return the DOM element for the tile.
 	}
 
-	async setETV(asin, etv, processAsZeroETVFound = true) {
+	async setETV(asin, etv) {
 		const notif = this.#getNotificationByASIN(asin);
 
 		if (!notif) {
@@ -398,11 +398,9 @@ class NotificationMonitor {
 		}
 
 		//If a new ETV came in, we want to check if the item now match a keywords with an ETV condition.
-		//Check if the item is highlighted
 		//If the item is already highlighted, we don't need to check if we need to highlight it or hide it.
-		//Skip the 0 ETV processing too.
-		let skip0ETV = notif.dataset.type == TYPE_HIGHLIGHT;
-		if (!skip0ETV && processAsZeroETVFound) {
+		let skipHighlightCheck = notif.dataset.typeHighlight == 1;
+		if (!skipHighlightCheck) {
 			//No need to re-highlight if the item is already highlighted.
 			//We don't want to highlight an item that is getting its ETV set initially (processAsZeroETVFound==false) before another pass of highlighting will be done shortly after.
 			const title = notif.querySelector(".a-truncate-full").innerText;
@@ -417,7 +415,6 @@ class NotificationMonitor {
 
 				if (val !== false) {
 					//We got a keyword match, highlight the item
-					skip0ETV = true;
 					this.#highlightedItemFound(asin, true);
 				} else {
 					//Check if we need to hide the item
@@ -431,17 +428,14 @@ class NotificationMonitor {
 						//Remove (permanently "hide") the tile
 						notif.remove();
 						this.#updateTabTitle(); //Update the tab counter
-						skip0ETV = true;
 					}
 				}
 			}
 		}
 
-		//Check if the item is a 0ETV
-		if (skip0ETV === false) {
-			if (processAsZeroETVFound && oldMaxValue == "" && parseFloat(etvObj.dataset.etvMin) == 0) {
-				this.#zeroETVItemFound(asin, true);
-			}
+		//zero ETV found, highlight the item accordingly
+		if (oldMaxValue == "" && parseFloat(etvObj.dataset.etvMin) == 0) {
+			this.#zeroETVItemFound(asin, true);
 		}
 	}
 
@@ -504,17 +498,18 @@ class NotificationMonitor {
 		//Play the zero ETV sound effect
 		if (playSoundEffect) {
 			SoundPlayer.play(TYPE_ZEROETV);
-
-			//Kind of sketch, but if the sound effect is on, we know the type was determined.
-			notif.dataset.type = TYPE_ZEROETV;
 		}
 
 		//Highlight for ETV
-		notif.style.backgroundColor = Settings.get("notification.monitor.zeroETV.color");
-		if (notif.getAttribute("data-notification-type") != TYPE_HIGHLIGHT) {
-			notif.setAttribute("data-notification-type", TYPE_ZEROETV);
+		console.log(notif.querySelector(".a-truncate-full").innerText, notif.getAttribute("data-notification-type"));
+		if (notif.dataset.typeHighlight == 1) {
+			const color1 = Settings.get("notification.monitor.zeroETV.color");
+			const color2 = Settings.get("notification.monitor.highlight.color");
+			notif.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;
+		} else {
+			notif.style.backgroundColor = Settings.get("notification.monitor.zeroETV.color");
 		}
-
+		notif.dataset.typeZeroETV = 1;
 		//Move the notification to the top
 		this.#moveNotifToTop(notif);
 	}
@@ -529,13 +524,10 @@ class NotificationMonitor {
 		//Play the highlight sound effect
 		if (playSoundEffect) {
 			SoundPlayer.play(TYPE_HIGHLIGHT);
-
-			//Kind of sketch, but if the sound effect is on, we know the type was determined.
-			//notif.dataset.type = TYPE_HIGHLIGHT;
 		}
 
 		//Highlight for Highlighted item
-		notif.dataset.type = TYPE_HIGHLIGHT;
+		notif.dataset.typeHighlight = 1;
 		notif.style.backgroundColor = Settings.get("notification.monitor.highlight.color");
 
 		//Move the notification to the top
@@ -552,9 +544,6 @@ class NotificationMonitor {
 		//Play the regular notification sound effect.
 		if (playSoundEffect) {
 			SoundPlayer.play(TYPE_REGULAR);
-
-			//Kind of sketch, but if the sound effect is on, we know the type was determined.
-			notif.dataset.type = TYPE_REGULAR;
 		}
 	}
 
@@ -578,7 +567,8 @@ class NotificationMonitor {
 		const filterType = document.querySelector("select[name='filter-type']");
 		const filterQueue = document.querySelector("select[name='filter-queue']");
 
-		const notificationType = parseInt(node.dataset.type);
+		const notificationTypeZeroETV = parseInt(node.dataset.typeZeroETV) === 1;
+		const notificationTypeHighlight = parseInt(node.dataset.typeHighlight) === 1;
 		const queueType = node.dataset.queue;
 
 		//Feed Paused
@@ -590,14 +580,16 @@ class NotificationMonitor {
 		if (filterType.value == -1) {
 			node.style.display = "flex";
 		} else if (filterType.value == TYPE_HIGHLIGHT_OR_ZEROETV) {
-			const typesToShow = [TYPE_HIGHLIGHT, TYPE_ZEROETV];
-			node.style.display = typesToShow.includes(notificationType) ? "flex" : "none";
-			typesToShow.includes(notificationType);
-		} else {
-			node.style.display = notificationType == filterType.value ? "flex" : "none";
-			notificationType == filterType.value;
+			node.style.display = notificationTypeZeroETV || notificationTypeHighlight ? "flex" : "none";
+		} else if (filterType.value == TYPE_HIGHLIGHT) {
+			node.style.display = notificationTypeHighlight ? "flex" : "none";
+		} else if (filterType.value == TYPE_ZEROETV) {
+			node.style.display = notificationTypeZeroETV ? "flex" : "none";
+		} else if (filterType.value == TYPE_REGULAR) {
+			node.style.display = !notificationTypeZeroETV && !notificationTypeHighlight ? "flex" : "none";
 		}
 
+		//Queue filter
 		if (node.style.display == "flex") {
 			if (filterQueue.value == "-1") {
 				return true;
