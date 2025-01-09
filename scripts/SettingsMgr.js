@@ -77,10 +77,14 @@ class SettingsMgr {
 		return pathArray.reduce((prev, curr) => prev && prev[curr], obj);
 	}
 
-	async set(settingPath, value) {
+	async set(settingPath, value, reloadSettings = true) {
 		//Don't go through the hassle of updating the value if it did not change
 		if (this.get(settingPath, false) == value) {
 			return false; //No value updated
+		}
+
+		if (reloadSettings) {
+			await this.#loadSettingsFromStorage(true);
 		}
 
 		const pathArray = settingPath.split(".");
@@ -102,18 +106,15 @@ class SettingsMgr {
 		return true;
 	}
 
-	async #save(reloadSettings = true) {
+	async #save() {
 		try {
-			if (reloadSettings) {
-				await this.#loadSettingsFromStorage(true);
-			}
 			chrome.storage.local.set({ settings: this.#settings });
 		} catch (e) {
 			if (e.name === "QuotaExceededError") {
 				// The local storage space has been exceeded
 				alert("Local storage quota exceeded! Hidden items will be cleared to make space.");
 				await chrome.storage.local.set({ hiddenItems: [] });
-				this.#save(false);
+				this.#save();
 			} else {
 				// Some other error occurred
 				alert("Error:", e.name, e.message);
@@ -130,7 +131,7 @@ class SettingsMgr {
 			//Will generate default settings
 			await chrome.storage.local.clear(); //Delete all local storage
 			this.#settings = this.#defaultSettings;
-			await this.#save(false);
+			await this.#save();
 		} else {
 			Object.assign(this.#settings, data.settings);
 		}
