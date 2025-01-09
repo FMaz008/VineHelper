@@ -23,6 +23,8 @@ class Tile {
 	#etv;
 	#orderSuccess;
 	#orderFailed;
+	#title = null;
+	#thumbnailUrl = null;
 
 	constructor(obj, gridInstance) {
 		this.#tileDOM = obj;
@@ -32,6 +34,8 @@ class Tile {
 		this.#etv = null;
 		this.#orderSuccess = 0;
 		this.#orderFailed = 0;
+
+		logger.add("Creating Tile: " + this.#asin + " to grid: " + gridInstance.getId());
 
 		//Add the tile to the grid
 		if (gridInstance !== null) {
@@ -120,11 +124,17 @@ class Tile {
 		return this.#grid.getId();
 	}
 	getTitle() {
-		return getTitleFromDom(this.#tileDOM);
+		if (this.#title == null) {
+			this.#title = getTitleFromDom(this.#tileDOM);
+		}
+		return this.#title;
 	}
 
 	getThumbnail() {
-		return getThumbnailURLFromDom(this.#tileDOM);
+		if (this.#thumbnailUrl == null) {
+			this.#thumbnailUrl = getThumbnailURLFromDom(this.#tileDOM);
+		}
+		return this.#thumbnailUrl;
 	}
 
 	setDateAdded(timenow, mysqlDate) {
@@ -217,7 +227,6 @@ class Tile {
 		//Unescape titles
 		const fullText = this.getDOM().querySelector(".a-truncate-full").innerText;
 		this.getDOM().querySelector(".a-truncate-full").innerText = unescapeHTML(unescapeHTML(fullText));
-		logger.add("Done initializing tile");
 	}
 
 	async moveToGrid(g, animate = false) {
@@ -299,6 +308,10 @@ function timeSince(timenow, date) {
 }
 
 function getTileByAsin(asin) {
+	if (env.data.grid.gridRegular == null) {
+		throw Error("Grid(s) not instanciated yet.");
+	}
+
 	let tile = null;
 	tile = env.data.grid.gridRegular.getTileByASIN(asin);
 	if (tile != null) return tile;
@@ -321,6 +334,11 @@ function getAsinFromDom(tileDom) {
 	}
 	let arrasin = url.match(regex);
 	return arrasin[1];
+}
+
+function getTileFromDom(tileDom) {
+	const asin = getAsinFromDom(tileDom);
+	return getTileByAsin(asin);
 }
 
 function getTitleFromDom(tileDom) {
@@ -366,4 +384,4 @@ function animateOpacity(element, targetOpacity, duration) {
 	});
 }
 
-export { Tile, getTileByAsin, getAsinFromDom, getTitleFromDom, getThumbnailURLFromDom };
+export { Tile, getTileByAsin, getTileFromDom, getAsinFromDom };

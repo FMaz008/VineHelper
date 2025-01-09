@@ -44,10 +44,13 @@ import { NotificationMonitor } from "./NotificationMonitor.js";
 
 import { generatePagination } from "./Pagination.js";
 
+import { PinnedListMgr } from "./PinnedListMgr.js";
+var PinnedList = new PinnedListMgr();
+
 import { ScreenNotifier, ScreenNotification } from "./ScreenNotifier.js";
 var Notifications = new ScreenNotifier();
 
-import { Tile, getTileByAsin, getAsinFromDom, getTitleFromDom, getThumbnailURLFromDom } from "./Tile.js";
+import { Tile, getTileFromDom, getTileByAsin } from "./Tile.js";
 
 import { Toolbar } from "./Toolbar.js";
 
@@ -149,19 +152,16 @@ async function init() {
 		return; //Do not initialize the page as normal
 	}
 
-	//The following method is called early as it does a XHR request to the server, which takes a while
-	//Upon receiving the results, it will loop&wait for initTilesAndDrawToolbars() to have completed.
-	//This allow the page to be rendered while we wait for the server's response.
-
+	await initCreateTabs(); //Create the 4 grids/tabs
+	await initTilesAndDrawToolbars(); //Create the tiles, and move the locally hidden tiles to the hidden tab
 	fetchProductsDatav5(); //Obtain the data to fill the toolbars with it.
 
 	displayAccountData();
+	loadPinnedList();
 	initSetPageTitle();
-	await initCreateTabs();
 	initInsertTopPagination();
 	await initInsertBookmarkButton();
 	initFixPreviousButton();
-	await initTilesAndDrawToolbars(); //Create the tiles, and move the locally hidden tiles to the hidden tab
 	initModalNagivation();
 
 	updateTileCounts();
@@ -562,6 +562,18 @@ function initAddNotificationMonitorLink() {
 	}
 }
 
+async function loadPinnedList() {
+	//Populate the Pinned tab
+	if (Settings.get("pinnedTab.active")) {
+		logger.add("GRID: Loading locally stored pinned list");
+		let mapPin = new Map();
+		mapPin = await PinnedList.getList();
+		mapPin.forEach(async (value, key) => {
+			addPinnedTile(key, value.queue, value.title, value.thumbnail, value.is_parent_asin, value.enrollment_guid);
+		});
+	}
+}
+
 async function initCreateTabs() {
 	//Create the Discard grid
 	logger.add("BOOT: Creating tabs system");
@@ -811,20 +823,23 @@ function positionTooltip(event) {
 //This function will return an array of all the product on the page, with their description and thumbnail url
 function getAllProductsData() {
 	let arrUrl = []; //Will be use to store the URL identifier of the listed products.
-	const arrObj = document.querySelectorAll(".vvp-item-tile");
+	const arrObj = document.querySelectorAll(".vvp-item-tile:not(.pinned)");
 
 	if (arrObj.length == 0) {
 		return [];
 	}
 
 	for (let i = 0; i < arrObj.length; i++) {
-		const obj = arrObj[i];
-		const asin = getAsinFromDom(obj);
-		const btn = document.querySelector(`input[data-asin="${asin}"]`);
+		let tile = getTileFromDom(arrObj[i]);
+		tile.initiateTile(); //Do not await this.
+
+		const asin = tile.getAsin();
+		const btn = arrObj[i].querySelector(`input[data-asin="${asin}"]`);
 		const isParent = btn.dataset.isParentAsin == "true";
 		const enrollmentGUID = btn.dataset.recommendationId.match(/#vine\.enrollment\.([a-f0-9-]+)/i)[1];
-		const title = getTitleFromDom(obj);
-		const thumbnail = getThumbnailURLFromDom(obj);
+		const title = tile.getTitle();
+		const thumbnail = tile.getThumbnail();
+
 		//Do not query product info for product without a title or a thumbnail.
 		if (title && thumbnail) {
 			arrUrl.push({
@@ -1041,8 +1056,6 @@ async function serverProductsResponse(data) {
 			tile.getToolbar().updateToolbar();
 			logger.add("DRAW: Done updating the toolbar");
 		}
-
-		await tile.initiateTile();
 	}
 
 	//Loading remote stored pinned items

@@ -223,16 +223,6 @@ async function createGridInterface() {
 		}
 	}
 
-	//Populate the Pinned tab
-	if (Settings.get("pinnedTab.active")) {
-		logger.add("GRID: Loading locally stored pinned list");
-		let mapPin = new Map();
-		mapPin = await PinnedList.getList();
-		mapPin.forEach(async (value, key) => {
-			addPinnedTile(key, value.queue, value.title, value.thumbnail, value.is_parent_asin, value.enrollment_guid);
-		});
-	}
-
 	//Actiate the tab system
 	//Bind the click event for the tabs
 	document.querySelectorAll("#tabs > ul li").forEach(function (item) {
