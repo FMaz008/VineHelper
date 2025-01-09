@@ -189,9 +189,9 @@ async function initTileSize() {
 			const sliderTile = document.querySelector("input[name='general.tileSize.width']");
 			sliderTile.value = Settings.get("general.tileSize.width");
 
-			sliderTile.addEventListener("change", () => {
+			sliderTile.addEventListener("change", async () => {
 				const sliderValue = parseInt(sliderTile.value);
-				Settings.set("general.tileSize.width", sliderValue);
+				await Settings.set("general.tileSize.width", sliderValue);
 				window.adjustTileSize();
 			});
 
@@ -199,9 +199,9 @@ async function initTileSize() {
 			const sliderIcons = document.querySelector("input[name='general.tileSize.iconSize']");
 			sliderIcons.value = Settings.get("general.tileSize.iconSize");
 
-			sliderIcons.addEventListener("change", () => {
+			sliderIcons.addEventListener("change", async () => {
 				const sliderValue = parseInt(sliderIcons.value);
-				Settings.set("general.tileSize.iconSize", sliderValue);
+				await Settings.set("general.tileSize.iconSize", sliderValue);
 				window.adjustIconsSize();
 			});
 
@@ -209,9 +209,9 @@ async function initTileSize() {
 			const sliderVertSpacing = document.querySelector("input[name='general.tileSize.verticalSpacing']");
 			sliderVertSpacing.value = Settings.get("general.tileSize.verticalSpacing");
 
-			sliderVertSpacing.addEventListener("change", () => {
+			sliderVertSpacing.addEventListener("change", async () => {
 				const sliderValue = parseInt(sliderVertSpacing.value);
-				Settings.set("general.tileSize.verticalSpacing", sliderValue);
+				await Settings.set("general.tileSize.verticalSpacing", sliderValue);
 				window.adjustVerticalSpacing();
 			});
 
@@ -219,9 +219,9 @@ async function initTileSize() {
 			const sliderTitleSpacing = document.querySelector("input[name='general.tileSize.titleSpacing']");
 			sliderTitleSpacing.value = Settings.get("general.tileSize.titleSpacing");
 
-			sliderTitleSpacing.addEventListener("change", () => {
+			sliderTitleSpacing.addEventListener("change", async () => {
 				const sliderValue = parseInt(sliderTitleSpacing.value);
-				Settings.set("general.tileSize.titleSpacing", sliderValue);
+				await Settings.set("general.tileSize.titleSpacing", sliderValue);
 				window.adjustTitleSpacing();
 			});
 
@@ -229,9 +229,9 @@ async function initTileSize() {
 			const sliderFontSize = document.querySelector("input[name='general.tileSize.fontSize']");
 			sliderFontSize.value = Settings.get("general.tileSize.fontSize");
 
-			sliderFontSize.addEventListener("change", () => {
+			sliderFontSize.addEventListener("change", async () => {
 				const sliderValue = parseInt(sliderFontSize.value);
-				Settings.set("general.tileSize.fontSize", sliderValue);
+				await Settings.set("general.tileSize.fontSize", sliderValue);
 				window.adjustFontSize();
 			});
 
