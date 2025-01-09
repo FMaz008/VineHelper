@@ -501,7 +501,6 @@ class NotificationMonitor {
 		}
 
 		//Highlight for ETV
-		console.log(notif.querySelector(".a-truncate-full").innerText, notif.getAttribute("data-notification-type"));
 		if (notif.dataset.typeHighlight == 1) {
 			const color1 = Settings.get("notification.monitor.zeroETV.color");
 			const color2 = Settings.get("notification.monitor.highlight.color");

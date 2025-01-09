@@ -36,6 +36,7 @@ class PinnedListMgr {
 				logger.add("Broadcast received: pinned item " + ev.data.asin);
 				this.addItem(
 					ev.data.asin,
+					ev.data.queue,
 					ev.data.title,
 					ev.data.thumbnail,
 					ev.data.is_parent_asin,
