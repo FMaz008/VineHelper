@@ -75,7 +75,7 @@ class Template {
 
 	async flushLocalStorage() {
 		await chrome.storage.local.set({ arrTemplate: [] });
-		this.arrTemplate = [];
+		this.#tplMgr.arrTemplate = [];
 		logger.add("TEMPLATE: Flushed template cache.");
 	}
 }
