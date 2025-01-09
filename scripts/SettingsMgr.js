@@ -102,15 +102,18 @@ class SettingsMgr {
 		return true;
 	}
 
-	async #save() {
+	async #save(reloadSettings = true) {
 		try {
+			if (reloadSettings) {
+				await this.#loadSettingsFromStorage(true);
+			}
 			chrome.storage.local.set({ settings: this.#settings });
 		} catch (e) {
 			if (e.name === "QuotaExceededError") {
 				// The local storage space has been exceeded
 				alert("Local storage quota exceeded! Hidden items will be cleared to make space.");
 				await chrome.storage.local.set({ hiddenItems: [] });
-				this.#save();
+				this.#save(false);
 			} else {
 				// Some other error occurred
 				alert("Error:", e.name, e.message);
@@ -119,7 +122,7 @@ class SettingsMgr {
 		}
 	}
 
-	async #loadSettingsFromStorage() {
+	async #loadSettingsFromStorage(skipMigration = false) {
 		const data = await chrome.storage.local.get("settings");
 
 		//If no settings exist already, create the default ones
@@ -131,7 +134,9 @@ class SettingsMgr {
 		} else {
 			Object.assign(this.#settings, data.settings);
 		}
-		await this.#migrate();
+		if (!skipMigration) {
+			await this.#migrate();
+		}
 	}
 
 	async #migrate() {
