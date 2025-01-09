@@ -1233,6 +1233,7 @@ window.addEventListener("message", async function (event) {
 				asin: event.data.data.asin,
 				parent_asin: event.data.data.parent_asin,
 				order_status: event.data.data.status,
+				order_error: event.data.data.error,
 			};
 
 			//Form the full URL
@@ -1241,10 +1242,6 @@ window.addEventListener("message", async function (event) {
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(content),
 			});
-
-			if (event.data.data.error == "ITEM_NOT_IN_ENROLLMENT") {
-				recordUnavailableProduct(event.data.data.asin, "ITEM_NOT_IN_ENROLLMENT");
-			}
 
 			//The notification monitor does not implement the regularGrid
 			if (!notificationMonitor) {
