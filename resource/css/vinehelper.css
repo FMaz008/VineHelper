@@ -563,6 +563,8 @@ input[type="checkbox"] {
 .blur {
 	filter: blur(10px);
 	-webkit-filter: blur(10px);
+	position: relative;
+	z-index: -1;
 }
 
 .dynamic-blur {
