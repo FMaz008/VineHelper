@@ -130,7 +130,7 @@ class SettingsMgr {
 			//Will generate default settings
 			await chrome.storage.local.clear(); //Delete all local storage
 			this.#settings = this.#defaultSettings;
-			await this.#save();
+			await this.#save(false);
 		} else {
 			Object.assign(this.#settings, data.settings);
 		}
