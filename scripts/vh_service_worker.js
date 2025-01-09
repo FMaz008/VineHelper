@@ -252,7 +252,6 @@ async function fetchLast100Items() {
 					continue;
 				}
 
-				Settings.set("notification.lastProduct", timestamp);
 				myStream.input({
 					index: i,
 					type: "newItem",
