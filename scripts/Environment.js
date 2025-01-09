@@ -14,23 +14,23 @@ const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
  * Environment file, used to load and store global variables
  */
 
-class Env {
+class Environment {
 	static #instance = null;
 
 	data;
+	#manifestEnv;
 
 	constructor() {
-		if (Env.#instance) {
+		if (Environment.#instance) {
 			// Return the existing instance if it already exists
-			return Env.#instance;
+			return Environment.#instance;
 		}
 		// Initialize the instance if it doesn't exist
-		Env.#instance = this;
+		Environment.#instance = this;
 
 		logger.add("ENV: Initializing environment...");
 
 		this.data = {};
-		this.data.VINE_HELPER_API_V5_URL = VINE_HELPER_API_V5_URL;
 
 		this.#init();
 
@@ -39,6 +39,8 @@ class Env {
 	}
 
 	async #init() {
+		this.#manifestEnv = chrome.runtime.getManifest().env;
+
 		this.#isUltraVinerRunning();
 		this.#loadAppVersion();
 		this.#loadBrowingContext();
@@ -161,6 +163,18 @@ class Env {
 		// Return the obtained UUID
 		return serverResponse["uuid"];
 	}
+
+	isProduction() {
+		return this.#manifestEnv === "production";
+	}
+
+	getAPIUrl() {
+		return VINE_HELPER_API_V5_URL;
+	}
+
+	//getWSSUrl() {
+	//	return "wss://api.vinehelper.ovh";
+	//}
 }
 
-export { Env };
+export { Environment };

@@ -9,8 +9,8 @@ var Settings = new SettingsMgr();
 import { Internationalization } from "./Internationalization.js";
 var i13n = new Internationalization();
 
-import { Env } from "./Env.js";
-var env = new Env();
+import { Environment } from "./Environment.js";
+var env = new Environment();
 
 import { Template } from "./Template.js";
 var Tpl = new Template();
@@ -55,7 +55,6 @@ import { Tile, getTileFromDom, getTileByAsin } from "./Tile.js";
 import { Toolbar } from "./Toolbar.js";
 
 const ultraviner = env.data.ultraviner; //If Ultravine is detected, Vine Helper will deactivate itself to avoid conflicts.
-const VINE_HELPER_API_V5_URL = env.data.VINE_HELPER_API_V5_URL;
 
 //Create the 4 grids/tabs instance of Grid:
 env.data.grid = {
@@ -665,7 +664,7 @@ async function setBookmarkDate(timeOffset) {
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(arrJSON),
 	};
-	fetch(VINE_HELPER_API_V5_URL, options)
+	fetch(env.getAPIUrl(), options)
 		.then((response) => response.json())
 		.then(async function (response) {
 			Settings.set(
@@ -952,7 +951,7 @@ async function fetchProductsDatav5() {
 		items: arrProductsData,
 	};
 
-	fetch(VINE_HELPER_API_V5_URL, {
+	fetch(env.getAPIUrl(), {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(content),
@@ -1168,7 +1167,7 @@ window.addEventListener("message", async function (event) {
 			etv: event.data.data.etv,
 		};
 
-		await fetch(VINE_HELPER_API_V5_URL, {
+		await fetch(env.getAPIUrl(), {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(content),
@@ -1237,7 +1236,7 @@ window.addEventListener("message", async function (event) {
 			};
 
 			//Form the full URL
-			await fetch(VINE_HELPER_API_V5_URL, {
+			await fetch(env.getAPIUrl(), {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(content),
@@ -1333,7 +1332,7 @@ async function recordUnavailableProduct(asin, reason) {
 	};
 
 	//Form the full URL
-	await fetch(VINE_HELPER_API_V5_URL, {
+	await fetch(env.getAPIUrl(), {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(content),

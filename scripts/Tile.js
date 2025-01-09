@@ -4,8 +4,8 @@ var logger = new Logger();
 import { SettingsMgr } from "./SettingsMgr.js";
 var Settings = new SettingsMgr();
 
-import { Env } from "./Env.js";
-var env = new Env();
+import { Environment } from "./Environment.js";
+var env = new Environment();
 
 import { HiddenListMgr } from "./HiddenListMgr.js";
 var HiddenList = new HiddenListMgr();

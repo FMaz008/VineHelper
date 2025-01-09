@@ -7,6 +7,9 @@ const Settings = new SettingsMgr();
 import { Internationalization } from "./Internationalization.js";
 const i13n = new Internationalization();
 
+import { Environment } from "./Environment.js";
+var env = new Environment();
+
 class HiddenListMgr {
 	static #instance = null;
 	listLoaded;
@@ -166,7 +169,7 @@ class HiddenListMgr {
 			items: this.arrChanges,
 		};
 		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-		fetch(VINE_HELPER_API_V5_URL, {
+		fetch(env.getAPIUrl(), {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(content),
