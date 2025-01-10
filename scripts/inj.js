@@ -63,10 +63,24 @@ window.fetch = async (...args) => {
 		let { result, error } = extHelper_responseData;
 
 		if (result === null) {
-			const regex = new RegExp(`.*/item/([^?]+)`);
-			const arrMatch = url.match(regex);
+			let regex;
+			let arrMatch;
+			let asin = null;
+
+			regex = new RegExp(`.*/item/([^?]+)`);
+			arrMatch = url.match(regex);
+
 			if (arrMatch) {
-				const asin = arrMatch[1];
+				asin = arrMatch[1];
+			} else {
+				//Alternative method when the asin is not in the url
+				regex = new RegExp(`.+#([^#]+)#.+`);
+				arrMatch = error.message.match(regex);
+				if (arrMatch) {
+					asin = arrMatch[1];
+				}
+			}
+			if (asin) {
 				window.postMessage(
 					{
 						type: "error",
