@@ -67,6 +67,9 @@ class NotificationMonitor {
 		//Remove the nagivation tabs:
 		document.querySelector("ul.a-tabs")?.remove();
 
+		//Remove the page width limitation
+		document.querySelector(".vvp-body").style.maxWidth = "unset";
+
 		this.#updateTabTitle();
 
 		//Insert the header
