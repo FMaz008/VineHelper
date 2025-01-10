@@ -688,11 +688,16 @@ async function setBookmarkDate(timeOffset) {
 	fetch(env.getAPIUrl(), options)
 		.then((response) => response.json())
 		.then(async function (response) {
-			Settings.set(
+			await Settings.set(
 				"general.bookmarkDate",
 
 				new Date(YMDHiStoISODate(response.date).getTime() - timeOffset).toString()
 			);
+
+			//Update the tooltip
+			document.querySelectorAll("#bookmark button").forEach((button) => {
+				button.title = "Currently set to: " + Settings.get("general.bookmarkDate");
+			});
 
 			let note = new ScreenNotification();
 			note.title = "Marker set !";
