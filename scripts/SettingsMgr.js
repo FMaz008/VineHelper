@@ -239,6 +239,13 @@ class SettingsMgr {
 
 			await this.#save();
 		}
+
+		//V3 beta
+		if (this.#settings.tileSize?.titleSpacing < 19) {
+			this.#settings.tileSize.titleSpacing = 50;
+			await chrome.storage.local.set({ arrTemplate: [] });
+			await this.#save();
+		}
 	}
 
 	#getDefaultSettings() {
@@ -280,7 +287,7 @@ class SettingsMgr {
 					width: 236,
 					iconSize: 14,
 					verticalSpacing: 20,
-					titleSpacing: 2.6,
+					titleSpacing: 50,
 					fontSize: 14,
 				},
 			},

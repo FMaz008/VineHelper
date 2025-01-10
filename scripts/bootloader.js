@@ -193,6 +193,11 @@ async function initTileSize() {
 				await Settings.set("general.tileSize.width", sliderValue);
 				window.adjustTileSize();
 			});
+			sliderTile.addEventListener("input", () => {
+				// This will fire continuously while sliding
+				const sliderValue = parseInt(sliderTile.value);
+				window.adjustTileSize(null, sliderValue);
+			});
 
 			//Icons size
 			const sliderIcons = document.querySelector("input[name='general.tileSize.iconSize']");
@@ -202,6 +207,10 @@ async function initTileSize() {
 				const sliderValue = parseInt(sliderIcons.value);
 				await Settings.set("general.tileSize.iconSize", sliderValue);
 				window.adjustIconsSize();
+			});
+			sliderIcons.addEventListener("input", () => {
+				const sliderValue = parseInt(sliderIcons.value);
+				window.adjustIconsSize(null, sliderValue);
 			});
 
 			//Icons size
@@ -213,6 +222,10 @@ async function initTileSize() {
 				await Settings.set("general.tileSize.verticalSpacing", sliderValue);
 				window.adjustVerticalSpacing();
 			});
+			sliderVertSpacing.addEventListener("input", () => {
+				const sliderValue = parseInt(sliderVertSpacing.value);
+				window.adjustVerticalSpacing(null, sliderValue);
+			});
 
 			//Title spacing
 			const sliderTitleSpacing = document.querySelector("input[name='general.tileSize.titleSpacing']");
@@ -223,6 +236,10 @@ async function initTileSize() {
 				await Settings.set("general.tileSize.titleSpacing", sliderValue);
 				window.adjustTitleSpacing();
 			});
+			sliderTitleSpacing.addEventListener("input", () => {
+				const sliderValue = parseInt(sliderTitleSpacing.value);
+				window.adjustTitleSpacing(null, sliderValue);
+			});
 
 			//Font size
 			const sliderFontSize = document.querySelector("input[name='general.tileSize.fontSize']");
@@ -232,6 +249,10 @@ async function initTileSize() {
 				const sliderValue = parseInt(sliderFontSize.value);
 				await Settings.set("general.tileSize.fontSize", sliderValue);
 				window.adjustFontSize();
+			});
+			sliderFontSize.addEventListener("input", () => {
+				const sliderValue = parseInt(sliderFontSize.value);
+				window.adjustFontSize(null, sliderValue);
 			});
 
 			//Bind the open link
@@ -263,8 +284,8 @@ async function initTileSize() {
 	});
 }
 
-window.adjustTileSize = function (DOMElem = null) {
-	const width = parseInt(Settings.get("general.tileSize.width"));
+window.adjustTileSize = function (DOMElem = null, sliderValue = null) {
+	const width = parseInt(sliderValue || Settings.get("general.tileSize.width"));
 	if (DOMElem == null) {
 		//Adjust all elements on the page
 		const grids = document.querySelectorAll("div#vh-tabs .tab-grid");
@@ -280,8 +301,8 @@ window.adjustTileSize = function (DOMElem = null) {
 	}
 };
 
-window.adjustIconsSize = function (DOMElem = null) {
-	const size = parseInt(Settings.get("general.tileSize.iconSize"));
+window.adjustIconsSize = function (DOMElem = null, sliderValue = null) {
+	const size = parseInt(sliderValue || Settings.get("general.tileSize.iconSize"));
 	const selector = ".vh-status-container2 a>.vh-toolbar-icon";
 	const elements = (DOMElem || document).querySelectorAll(DOMElem ? selector : `div#vh-tabs .tab-grid ${selector}`);
 	elements.forEach((elem) => {
@@ -290,8 +311,8 @@ window.adjustIconsSize = function (DOMElem = null) {
 	});
 };
 
-window.adjustVerticalSpacing = function (DOMElem = null) {
-	const size = parseInt(Settings.get("general.tileSize.verticalSpacing"));
+window.adjustVerticalSpacing = function (DOMElem = null, sliderValue = null) {
+	const size = parseInt(sliderValue || Settings.get("general.tileSize.verticalSpacing"));
 	const selector =
 		".vvp-item-tile-content .vvp-item-product-title-container, .vvp-item-tile-content .vvp-details-btn";
 	const elements = (DOMElem || document).querySelectorAll(selector);
@@ -300,26 +321,26 @@ window.adjustVerticalSpacing = function (DOMElem = null) {
 	});
 };
 
-window.adjustTitleSpacing = function (DOMElem = null) {
-	const size = parseFloat(Settings.get("general.tileSize.titleSpacing"));
+window.adjustTitleSpacing = function (DOMElem = null, sliderValue = null) {
+	const size = parseFloat(sliderValue || Settings.get("general.tileSize.titleSpacing"));
 	//Adjust all elements on the page
 	const box1 = (DOMElem || document).querySelectorAll(
 		".vvp-item-tile-content .vvp-item-product-title-container .a-truncate"
 	);
 	box1.forEach((elem) => {
-		elem.style.maxHeight = size + "em";
+		elem.style.maxHeight = size + "px";
 	});
 
 	const box2 = (DOMElem || document).querySelectorAll(
 		".vvp-item-tile-content .vvp-item-product-title-container .a-truncate-cut"
 	);
 	box2.forEach((elem) => {
-		elem.style.height = size + "em";
+		elem.style.height = size + "px";
 	});
 };
 
-window.adjustFontSize = function (DOMElem = null) {
-	const size = parseInt(Settings.get("general.tileSize.fontSize"));
+window.adjustFontSize = function (DOMElem = null, sliderValue = null) {
+	const size = parseInt(sliderValue || Settings.get("general.tileSize.fontSize"));
 	const selector = ".vvp-item-tile-content .vvp-item-product-title-container .a-truncate";
 	const elements = (DOMElem || document).querySelectorAll(selector);
 	elements.forEach((elem) => {
