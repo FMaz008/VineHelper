@@ -583,6 +583,11 @@ function initAddNotificationMonitorLink() {
 }
 
 async function loadPinnedList() {
+	if (env.data.gridDOM.container == null) {
+		//There is no listing on this page
+		return;
+	}
+
 	//Populate the Pinned tab
 	if (Settings.get("pinnedTab.active")) {
 		logger.add("GRID: Loading locally stored pinned list");
