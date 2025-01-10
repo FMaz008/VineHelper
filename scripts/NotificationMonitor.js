@@ -113,10 +113,13 @@ class NotificationMonitor {
 
 		//Bind fetch-last-100 button
 		const btnLast100 = document.getElementById("fetch-last-100");
-		btnLast100.addEventListener("click", (event) => {
+		btnLast100.addEventListener("click", async (event) => {
+			btnLast100.disabled = true;
 			chrome.runtime.sendMessage({
 				type: "fetchLast100Items",
 			});
+			await new Promise((r) => setTimeout(r, 60 * 1000)); //Prevent abuse
+			btnLast100.disabled = false;
 		});
 
 		//Bind Pause Feed button
