@@ -18,7 +18,6 @@ class Environment {
 	static #instance = null;
 
 	data;
-	#manifestEnv;
 
 	constructor() {
 		if (Environment.#instance) {
@@ -39,8 +38,6 @@ class Environment {
 	}
 
 	async #init() {
-		this.#manifestEnv = chrome.runtime.getManifest().env;
-
 		this.#isUltraVinerRunning();
 		this.#loadAppVersion();
 		this.#loadBrowingContext();
@@ -162,10 +159,6 @@ class Environment {
 
 		// Return the obtained UUID
 		return serverResponse["uuid"];
-	}
-
-	isProduction() {
-		return this.#manifestEnv === "production";
 	}
 
 	getAPIUrl() {
