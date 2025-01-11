@@ -70,6 +70,11 @@ class NotificationMonitor {
 		//Remove the page width limitation
 		document.querySelector(".vvp-body").style.maxWidth = "unset";
 
+		//Set the grid items size
+		const width = Settings.get("general.tileSize.width");
+		const grid = document.querySelector("#vvp-items-grid");
+		grid.style.gridTemplateColumns = `repeat(auto-fill,minmax(${width}px,auto))`;
+
 		this.#updateTabTitle();
 
 		//Insert the header
@@ -250,7 +255,7 @@ class NotificationMonitor {
 		Tpl.setIf("pinned", Settings.get("pinnedTab.active"));
 		Tpl.setIf("variant", Settings.isPremiumUser() && Settings.get("general.displayVariantIcon") && is_parent_asin);
 
-		let tileDOM = Tpl.render(prom2, true);
+		let tileDOM = await Tpl.render(prom2, true);
 		this.#gridContainer.insertBefore(tileDOM, this.#gridContainer.firstChild);
 
 		//Set the tile custom dimension according to the settings.
