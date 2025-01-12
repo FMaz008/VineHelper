@@ -163,6 +163,11 @@
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/logo.png");
 		background-repeat: no-repeat;
 	}
+	.vh-icon-chat {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/chat.png");
+		background-repeat: no-repeat;
+	}
 }
 
 @supports (-moz-appearance: none) {
@@ -327,6 +332,11 @@
 	.vh-logo-vh {
 		background-size: 100%;
 		background-image: url("/resource/image/logo.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-chat {
+		background-size: 100%;
+		background-image: url("/resource/image/chat.png");
 		background-repeat: no-repeat;
 	}
 }

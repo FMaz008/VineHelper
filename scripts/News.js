@@ -49,7 +49,7 @@ export class News {
 		const iconContent = Tpl.render(iconTpl, true);
 		document.body.appendChild(iconContent);
 
-		document.querySelector("#vh-news-icon").addEventListener("click", () => {
+		document.querySelector("#vh-news-icon-container").addEventListener("click", () => {
 			//Toggle the news container display
 			const newsContainer = document.querySelector("#vh-news-container");
 			newsContainer.style.display = newsContainer.style.display == "block" ? "none" : "block";
@@ -60,6 +60,21 @@ export class News {
 		this.#newsContainer.id = "vh-news-container";
 		this.#newsContainer.style.display = "none";
 		document.body.appendChild(this.#newsContainer);
+
+		//Add a close button
+		const closeButton = document.createElement("button");
+		closeButton.innerHTML = "x";
+		closeButton.style.float = "right";
+		closeButton.style.margin = "5px";
+		closeButton.addEventListener("click", () => {
+			this.#newsContainer.style.display = "none";
+		});
+		this.#newsContainer.appendChild(closeButton);
+
+		//Add a title
+		const title = document.createElement("h4");
+		title.innerHTML = "Vine Helper News";
+		this.#newsContainer.appendChild(title);
 	}
 
 	async #loadNewsFeed() {
@@ -80,29 +95,51 @@ export class News {
 			});
 
 			//Click handler to mark the news as read
-			newsContent.querySelector(".vh-news-mark-as-read").addEventListener("click", () => {
+			newsContent.querySelector(".vh-news-mark-as-read").addEventListener("click", async () => {
 				newsContent.querySelector(".vh-news-content").style.display = "none";
 				const unreadIcon = newsContent.querySelector(".vh-news-icon-new");
 				if (unreadIcon) {
 					unreadIcon.style.display = "none";
 				}
-				this.#markNewsAsRead(news.id);
+				await this.#markNewsAsRead(news.id);
+
+				//Check if there is any unread news
+				if (!this.#isUnreadNews()) {
+					//Hide the news icon red dot
+					const newsIcon = document.querySelector("#vh-news-icon-new");
+					if (newsIcon) {
+						newsIcon.style.display = "none";
+					}
+				}
 			});
 		});
 	}
 
+	/**
+	 * Check if the news is already read
+	 * @param {string} newsId - The news ID
+	 * @returns {boolean}
+	 */
 	#isNewsRead(newsId) {
 		return this.#localNewsData.includes(newsId);
 	}
 
-	#markNewsAsRead(newsId) {
+	/**
+	 * Mark the news as read
+	 * @param {string} newsId - The news ID
+	 */
+	async #markNewsAsRead(newsId) {
 		//Check if the news is already in the local news data
 		if (!this.#localNewsData.includes(newsId)) {
 			this.#localNewsData.push(newsId);
-			chrome.storage.local.set({ readnews: this.#localNewsData });
+			await chrome.storage.local.set({ readnews: this.#localNewsData });
 		}
 	}
 
+	/**
+	 * Check if there is any unread news
+	 * @returns {boolean}
+	 */
 	#isUnreadNews() {
 		return this.#data.some((news) => !this.#isNewsRead(news.id));
 	}
