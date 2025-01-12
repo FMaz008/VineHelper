@@ -1,4 +1,4 @@
-function keywordMatch(keywords, title, etv_min = null, etv_max = null) {
+function keywordMatchReturnFullObject(keywords, title, etv_min = null, etv_max = null) {
 	let found = keywords.find((word) => {
 		let regex;
 		let regex2;
@@ -45,10 +45,16 @@ function keywordMatch(keywords, title, etv_min = null, etv_max = null) {
 
 		return false; // Continue searching
 	});
+	return found;
+}
+
+function keywordMatch(keywords, title, etv_min = null, etv_max = null) {
+	let found = keywordMatchReturnFullObject(keywords, title, etv_min, etv_max);
+
 	if (typeof found === "object") {
 		found = found.contains;
 	}
 	return found === undefined ? false : found;
 }
 
-export { keywordMatch };
+export { keywordMatch, keywordMatchReturnFullObject };

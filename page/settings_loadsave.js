@@ -352,7 +352,7 @@ async function initiateSettings() {
 	//##TAB - KEYBINDINGS
 
 	manageCheckboxSetting("keyBindings.active");
-
+	manageInputText("keyBindings.pauseFeed");
 	manageInputText("keyBindings.nextPage");
 	manageInputText("keyBindings.previousPage");
 	manageInputText("keyBindings.RFYPage");

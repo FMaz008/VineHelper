@@ -1573,6 +1573,12 @@ window.addEventListener("keyup", async function (e) {
 	*/
 
 	const keybindingMap = {
+		[Settings.get("keyBindings.pauseFeed")]: () => {
+			const pauseFeedBtn = document.getElementById("pauseFeed-fixed");
+			if (pauseFeedBtn) {
+				pauseFeedBtn.click();
+			}
+		},
 		[Settings.get("keyBindings.hideAll")]: hideAllItems,
 		[Settings.get("keyBindings.showAll")]: showAllItems,
 		[Settings.get("keyBindings.hideAllNext")]: hideAllItemsNext,

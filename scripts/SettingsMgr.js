@@ -329,6 +329,7 @@ class SettingsMgr {
 
 			keyBindings: {
 				active: true,
+				pauseFeed: "f",
 				nextPage: "n",
 				previousPage: "p",
 				RFYPage: "r",

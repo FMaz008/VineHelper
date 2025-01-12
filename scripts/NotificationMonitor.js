@@ -135,8 +135,10 @@ class NotificationMonitor {
 			if (this.#feedPaused) {
 				this.#feedPausedAmountStored = 0;
 				document.getElementById("pauseFeed").value = "Resume Feed (0)";
+				document.getElementById("pauseFeed-fixed").value = "Resume Feed (0)";
 			} else {
 				document.getElementById("pauseFeed").value = "Pause & Buffer Feed";
+				document.getElementById("pauseFeed-fixed").value = "Pause & Buffer Feed";
 				document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
 					if (node.dataset.feedPaused == "true") {
 						node.style.display = "flex";
@@ -162,6 +164,24 @@ class NotificationMonitor {
 				this.#processNotificationFiltering(node);
 			});
 			this.#updateTabTitle();
+		});
+
+		// Add the fix toolbar with the pause button if we scroll past the original pause button
+		const originalPauseBtn = document.getElementById("pauseFeed");
+		const fixedPauseBtn = document.getElementById("pauseFeed-fixed");
+		const originalBtnPosition = originalPauseBtn.getBoundingClientRect().top + window.scrollY;
+
+		// Handle scroll
+		window.addEventListener("scroll", () => {
+			if (window.scrollY > originalBtnPosition) {
+				document.getElementById("fixed-toolbar").style.display = "block";
+			} else {
+				document.getElementById("fixed-toolbar").style.display = "none";
+			}
+		});
+
+		fixedPauseBtn.addEventListener("click", () => {
+			originalPauseBtn.click();
 		});
 	}
 
@@ -269,6 +289,7 @@ class NotificationMonitor {
 		if (this.#feedPaused) {
 			this.#feedPausedAmountStored++;
 			document.getElementById("pauseFeed").value = `Resume Feed (${this.#feedPausedAmountStored})`;
+			document.getElementById("pauseFeed-fixed").value = `Resume Feed (${this.#feedPausedAmountStored})`;
 		}
 
 		//Process the item according to the notification type (highlight > 0etv > regular)
