@@ -7,8 +7,8 @@ var i13n = new Internationalization();
 import { SettingsMgr } from "./SettingsMgr.js";
 var Settings = new SettingsMgr();
 
-const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
-//const VINE_HELPER_API_V5_URL = "http://127.0.0.1:3000";
+//const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
+const VINE_HELPER_API_V5_URL = "http://127.0.0.1:3000";
 
 /**
  * Environment file, used to load and store global variables

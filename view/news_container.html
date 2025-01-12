@@ -1,0 +1,15 @@
+<div class="vh-single-news-container">
+	<div class="vh-news-title">
+		{{if isUnread}}
+		<div class="vh-news-icon-new"></div>
+		{{endif}}
+		<span class="vh-news-title-date">{{$date}}</span>
+		<span class="vh-news-title-separator"> - </span>
+		<span class="vh-news-title-text">{{$title}}</span>
+	</div>
+	<div class="vh-news-content" style="display: none">
+		<div class="vh-news-mark-as-read">Mark as read</div>
+		<span class="vh-news-content-text">{{$content}}</span>
+	</div>
+	<hr />
+</div>

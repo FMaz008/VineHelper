@@ -290,6 +290,7 @@ class SettingsMgr {
 					titleSpacing: 50,
 					fontSize: 14,
 				},
+				hideNoNews: true,
 			},
 
 			notification: {

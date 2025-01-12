@@ -15,7 +15,7 @@ var env = new Environment();
 import { Template } from "./Template.js";
 var Tpl = new Template();
 
-import { YMDHiStoISODate } from "./DateHelper.js";
+import { YMDHiStoISODate, UnixTimeStampToDate } from "./DateHelper.js";
 
 //Grid
 import {
@@ -39,6 +39,8 @@ var hookMgr = new HookMgr();
 
 import { ModalMgr } from "./ModalMgr.js";
 var DialogMgr = new ModalMgr();
+
+import { News } from "./News.js";
 
 import { NotificationMonitor } from "./NotificationMonitor.js";
 
@@ -1031,6 +1033,12 @@ async function serverProductsResponse(data) {
 				Notifications.pushNotification(note);
 			});
 		}
+	}
+
+	//Display news
+	logger.add("FETCH: Displaying news...");
+	if (data["news"] !== undefined) {
+		const newsHandler = new News(data["news"]);
 	}
 
 	logger.add("FETCH: Waiting toolbars to be drawn...");
