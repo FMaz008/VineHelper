@@ -596,11 +596,9 @@ input[type="checkbox"] {
 }
 
 #vh-news-icon-container .vh-news-icon-new {
-	position: relative;
-	margin-bottom: 0px;
-	margin-right: 0px;
-	margin-top: 20px;
-	margin-left: auto;
+	position: absolute;
+	margin-top: 10px;
+	margin-left: 12px;
 	border-radius: 3px;
 	width: 7px;
 	height: 7px;

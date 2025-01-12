@@ -106,7 +106,7 @@ export class News {
 				//Check if there is any unread news
 				if (!this.#isUnreadNews()) {
 					//Hide the news icon red dot
-					const newsIcon = document.querySelector("#vh-news-icon-new");
+					const newsIcon = document.querySelector("#vh-news-icon-container .vh-news-icon-new");
 					if (newsIcon) {
 						newsIcon.style.display = "none";
 					}
