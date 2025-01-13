@@ -192,6 +192,43 @@ class NotificationMonitor {
 		fixedPauseBtn.addEventListener("click", () => {
 			originalPauseBtn.click();
 		});
+
+		//Prevent redirections
+		//This is working but will display a popup in the browser
+		window.addEventListener(
+			"beforeunload",
+			(event) => {
+				event.stopPropagation();
+				event.preventDefault();
+				event.returnValue = "";
+
+				console.log("Page unload prevented");
+				return false;
+			},
+			true
+		);
+
+		// Create a proxy for window.location
+		// Not sure this is working at all.
+		const originalLocation = window.location;
+		const locationProxy = new Proxy(originalLocation, {
+			set: function (obj, prop, value) {
+				console.log(`Prevented changing location.${prop} to ${value}`);
+				return true; // Pretend we succeeded
+			},
+			get: function (obj, prop) {
+				if (prop === "href") {
+					return originalLocation.href;
+				}
+				if (typeof obj[prop] === "function") {
+					return function () {
+						console.log(`Prevented calling location.${prop}`);
+						return false;
+					};
+				}
+				return obj[prop];
+			},
+		});
 	}
 
 	async disableItem(asin) {

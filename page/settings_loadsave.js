@@ -789,6 +789,7 @@ function manageKeywords(key) {
 	});
 }
 
+//Function to display a popup with some content inside a textarea
 function displayPopup(content) {
 	//Display a popup with a textarea containing the CSV
 	const popup = document.createElement("div");
