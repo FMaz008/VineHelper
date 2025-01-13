@@ -349,6 +349,30 @@ async function initiateSettings() {
 	initiateTogglers();
 	initiateTestKeywords();
 
+	const keywordsTesting = document.querySelector("#keywords-testing");
+	const pinKeywordsTesting = document.querySelector("#pin-keywords-testing");
+	if (pinKeywordsTesting) {
+		pinKeywordsTesting.addEventListener("click", function () {
+			if (pinKeywordsTesting.classList.contains("vh-icon-pin")) {
+				pinKeywordsTesting.classList.remove("vh-icon-pin");
+				pinKeywordsTesting.classList.add("vh-icon-unpin");
+				keywordsTesting.style.position = "fixed";
+				keywordsTesting.style.bottom = "10px";
+				keywordsTesting.style.left = "50%";
+				keywordsTesting.style.transform = "translateX(-50%)";
+				keywordsTesting.style.backgroundColor = "white";
+			} else {
+				pinKeywordsTesting.classList.remove("vh-icon-unpin");
+				pinKeywordsTesting.classList.add("vh-icon-pin");
+				keywordsTesting.style.position = "relative";
+				keywordsTesting.style.bottom = "unset";
+				keywordsTesting.style.left = "unset";
+				keywordsTesting.style.transform = "unset";
+				keywordsTesting.style.backgroundColor = "unset";
+			}
+		});
+	}
+
 	//##TAB - KEYBINDINGS
 
 	manageCheckboxSetting("keyBindings.active");
