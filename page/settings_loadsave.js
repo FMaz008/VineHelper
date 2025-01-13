@@ -659,6 +659,42 @@ function manageTextareaCSK(key) {
 	});
 }
 
+function keywordsToJSON(key) {
+	const keyE = CSS.escape(key);
+	let arrContent = [];
+	const lines = document.querySelectorAll(`#${keyE} table>tr`);
+	for (let i = 0; i < lines.length; i++) {
+		const contains = lines[i].querySelector(`td input[name="contains"]`).value.trim();
+		const without = lines[i].querySelector(`td input[name="without"]`).value.trim();
+		const etv_min = lines[i].querySelector(`td input[name="etv_min"]`).value.trim();
+		const etv_max = lines[i].querySelector(`td input[name="etv_max"]`).value.trim();
+
+		//Skip empty lines
+		if (contains == "" && without == "" && etv_min == "" && etv_max == "") {
+			continue;
+		}
+		arrContent.push({
+			contains: contains,
+			without: without,
+			etv_min: etv_min,
+			etv_max: etv_max,
+		});
+	}
+	return arrContent;
+}
+function keywordsToCSV(key) {
+	const keyE = CSS.escape(key);
+	const lines = document.querySelectorAll(`#${keyE} table>tr`);
+
+	//Create a CSV string of all the "contains" entries
+	let csv = "";
+	for (let i = 0; i < lines.length; i++) {
+		const contains = lines[i].querySelector(`td input[name="contains"]`).value.trim();
+		csv += contains + ",";
+	}
+	return csv;
+}
+
 function manageKeywords(key) {
 	const val = Settings.get(key);
 	const keywordType = keywordsTypeToSettingKey(key);
@@ -672,25 +708,7 @@ function manageKeywords(key) {
 	const btnSave = document.querySelector(`#${keyE} input[name="save"]`);
 	btnSave.addEventListener("click", async () => {
 		btnSave.disabled = true;
-		let arrContent = [];
-		const lines = document.querySelectorAll(`#${keyE} table>tr`);
-		for (let i = 0; i < lines.length; i++) {
-			const contains = lines[i].querySelector(`td input[name="contains"]`).value.trim();
-			const without = lines[i].querySelector(`td input[name="without"]`).value.trim();
-			const etv_min = lines[i].querySelector(`td input[name="etv_min"]`).value.trim();
-			const etv_max = lines[i].querySelector(`td input[name="etv_max"]`).value.trim();
-
-			//Skip empty lines
-			if (contains == "" && without == "" && etv_min == "" && etv_max == "") {
-				continue;
-			}
-			arrContent.push({
-				contains: contains,
-				without: without,
-				etv_min: etv_min,
-				etv_max: etv_max,
-			});
-		}
+		const arrContent = keywordsToJSON(key);
 		await Settings.set(key, arrContent);
 		await new Promise((r) => setTimeout(r, 500)); //Wait to give user-feedback.
 		btnSave.disabled = false;
@@ -732,7 +750,8 @@ function manageKeywords(key) {
 		}
 	});
 
-	document.getElementById(`bulkImport${keywordType}`).addEventListener("click", async () => {
+	//Import CSV
+	document.getElementById(`bulkImportCSV${keywordType}`).addEventListener("click", async () => {
 		const rawContent = prompt("Paste your comma separated content:");
 		let arr = [];
 		arr = rawContent
@@ -743,6 +762,59 @@ function manageKeywords(key) {
 			manageKeywordsAddLine(key, arr[i], "", "", "");
 		}
 	});
+
+	//Import JSON
+	document.getElementById(`bulkImportJSON${keywordType}`).addEventListener("click", async () => {
+		try {
+			const json = JSON.parse(prompt("Paste your JSON content:"));
+		} catch (err) {
+			alert("JSON data incomplete or invalid. Ensure it is all a single line.");
+			return;
+		}
+		for (let i = 0; i < json.length; i++) {
+			manageKeywordsAddLine(key, json[i].contains, json[i].without, json[i].etv_min, json[i].etv_max);
+		}
+	});
+
+	//Export CSV
+	document.getElementById(`bulkExportCSV${keywordType}`).addEventListener("click", async () => {
+		const csv = keywordsToCSV(key);
+		displayPopup(csv);
+	});
+
+	//Export JSON
+	document.getElementById(`bulkExportJSON${keywordType}`).addEventListener("click", async () => {
+		const json = keywordsToJSON(key);
+		displayPopup(JSON.stringify(json));
+	});
+}
+
+function displayPopup(content) {
+	//Display a popup with a textarea containing the CSV
+	const popup = document.createElement("div");
+	popup.style.position = "fixed";
+	popup.style.top = "50%";
+	popup.style.left = "50%";
+	popup.style.transform = "translate(-50%, -50%)";
+	popup.style.backgroundColor = "white";
+	popup.style.border = "1px solid black";
+	popup.style.width = "90%";
+	popup.style.height = "200px";
+	popup.style.padding = "20px";
+	popup.style.paddingTop = "40px";
+	popup.innerHTML = `<textarea style="width: 100%; height: 100%;margin-left:0;">${content}</textarea>`;
+	document.body.appendChild(popup);
+
+	//Add a close button to the popup
+	const closeBtn = document.createElement("button");
+	closeBtn.innerHTML = "X";
+	closeBtn.style.position = "absolute";
+	closeBtn.style.top = "5px";
+	closeBtn.style.right = "5px";
+	closeBtn.addEventListener("click", () => {
+		popup.remove();
+	});
+	popup.appendChild(closeBtn);
 }
 
 function manageRadio(key) {
