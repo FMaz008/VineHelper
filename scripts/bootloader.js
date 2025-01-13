@@ -54,6 +54,9 @@ var Notifications = new ScreenNotifier();
 
 import { Tile, getTileFromDom, getTileByAsin } from "./Tile.js";
 
+import { TileSizer } from "./TileSizer.js";
+var tileSizer = new TileSizer();
+
 import { Toolbar } from "./Toolbar.js";
 
 const ultraviner = env.data.ultraviner; //If Ultravine is detected, Vine Helper will deactivate itself to avoid conflicts.
@@ -174,181 +177,24 @@ async function init() {
 
 async function initTileSize() {
 	if (Settings.get("general.tileSize.active")) {
-		const prom = await Tpl.loadFile("view/widget_tilesize.html");
-		let content = Tpl.render(prom, true);
-
 		const container = document.querySelector("#vvp-items-grid-container");
 		if (container) {
-			container.insertBefore(content, container.firstChild);
-
-			//Display full descriptions
-			//Not all of them are loaded at this stage and some get skipped.
-			//container.querySelector(".a-truncate-full").classList.remove("a-offscreen");
-			//container.querySelector(".a-truncate-cut").style.display = "none";
-
-			//Tile size
-			const sliderTile = document.querySelector("input[name='general.tileSize.width']");
-			sliderTile.value = Settings.get("general.tileSize.width");
-
-			sliderTile.addEventListener("change", async () => {
-				const sliderValue = parseInt(sliderTile.value);
-				await Settings.set("general.tileSize.width", sliderValue);
-				window.adjustTileSize();
-			});
-			sliderTile.addEventListener("input", () => {
-				// This will fire continuously while sliding
-				const sliderValue = parseInt(sliderTile.value);
-				window.adjustTileSize(null, sliderValue);
-			});
-
-			//Icons size
-			const sliderIcons = document.querySelector("input[name='general.tileSize.iconSize']");
-			sliderIcons.value = Settings.get("general.tileSize.iconSize");
-
-			sliderIcons.addEventListener("change", async () => {
-				const sliderValue = parseInt(sliderIcons.value);
-				await Settings.set("general.tileSize.iconSize", sliderValue);
-				window.adjustIconsSize();
-			});
-			sliderIcons.addEventListener("input", () => {
-				const sliderValue = parseInt(sliderIcons.value);
-				window.adjustIconsSize(null, sliderValue);
-			});
-
-			//Icons size
-			const sliderVertSpacing = document.querySelector("input[name='general.tileSize.verticalSpacing']");
-			sliderVertSpacing.value = Settings.get("general.tileSize.verticalSpacing");
-
-			sliderVertSpacing.addEventListener("change", async () => {
-				const sliderValue = parseInt(sliderVertSpacing.value);
-				await Settings.set("general.tileSize.verticalSpacing", sliderValue);
-				window.adjustVerticalSpacing();
-			});
-			sliderVertSpacing.addEventListener("input", () => {
-				const sliderValue = parseInt(sliderVertSpacing.value);
-				window.adjustVerticalSpacing(null, sliderValue);
-			});
-
-			//Title spacing
-			const sliderTitleSpacing = document.querySelector("input[name='general.tileSize.titleSpacing']");
-			sliderTitleSpacing.value = Settings.get("general.tileSize.titleSpacing");
-
-			sliderTitleSpacing.addEventListener("change", async () => {
-				const sliderValue = parseInt(sliderTitleSpacing.value);
-				await Settings.set("general.tileSize.titleSpacing", sliderValue);
-				window.adjustTitleSpacing();
-			});
-			sliderTitleSpacing.addEventListener("input", () => {
-				const sliderValue = parseInt(sliderTitleSpacing.value);
-				window.adjustTitleSpacing(null, sliderValue);
-			});
-
-			//Font size
-			const sliderFontSize = document.querySelector("input[name='general.tileSize.fontSize']");
-			sliderFontSize.value = Settings.get("general.tileSize.fontSize");
-
-			sliderFontSize.addEventListener("change", async () => {
-				const sliderValue = parseInt(sliderFontSize.value);
-				await Settings.set("general.tileSize.fontSize", sliderValue);
-				window.adjustFontSize();
-			});
-			sliderFontSize.addEventListener("input", () => {
-				const sliderValue = parseInt(sliderFontSize.value);
-				window.adjustFontSize(null, sliderValue);
-			});
-
-			//Bind the open link
-			const openContainer = container.querySelector("#openTileSizeTool");
-			const openLink = container.querySelector("#openTileSizeTool>a");
-			const sizeContainer = container.querySelector("#tileSizeTool");
-			const closeLink = container.querySelector("#tileSizeTool>a");
-			openLink.addEventListener("click", (e) => {
-				e.preventDefault();
-				openContainer.style.display = "none";
-				sizeContainer.style.display = "block";
-			});
-			closeLink.addEventListener("click", (e) => {
-				e.preventDefault();
-				openContainer.style.display = "block";
-				sizeContainer.style.display = "none";
-			});
+			//Inject the GUI for the tile sizer widget
+			tileSizer.injectGUI(container);
 		}
 	}
+
+	//Display full descriptions
+	//Not all of them are loaded at this stage and some get skipped.
+	//container.querySelector(".a-truncate-full").classList.remove("a-offscreen");
+	//container.querySelector(".a-truncate-cut").style.display = "none";
 
 	//Set the slider default value
 	//Wait until the items are loaded.
 	hookMgr.hookBind("tilesUpdated", () => {
-		adjustTileSize();
-		adjustIconsSize();
-		adjustVerticalSpacing();
-		adjustFontSize();
-		adjustTitleSpacing();
+		tileSizer.adjustAll();
 	});
 }
-
-window.adjustTileSize = function (DOMElem = null, sliderValue = null) {
-	const width = parseInt(sliderValue || Settings.get("general.tileSize.width"));
-	if (DOMElem == null) {
-		//Adjust all elements on the page
-		const grids = document.querySelectorAll("div#vh-tabs .tab-grid");
-		grids.forEach((elem) => {
-			elem.style.gridTemplateColumns = `repeat(auto-fill,minmax(${width}px,auto))`;
-			elem.querySelectorAll(".vvp-item-tile .vvp-item-tile-content").forEach((tile) => {
-				tile.style.width = parseInt(width - 8) + "px";
-			});
-		});
-	} else {
-		//Target 1 specific element
-		DOMElem.querySelector(".vvp-item-tile-content").style.width = width - 8 + "px";
-	}
-};
-
-window.adjustIconsSize = function (DOMElem = null, sliderValue = null) {
-	const size = parseInt(sliderValue || Settings.get("general.tileSize.iconSize"));
-	const selector = ".vh-status-container2 a>.vh-toolbar-icon";
-	const elements = (DOMElem || document).querySelectorAll(DOMElem ? selector : `div#vh-tabs .tab-grid ${selector}`);
-	elements.forEach((elem) => {
-		elem.style.width = size + "px";
-		elem.style.height = size + "px";
-	});
-};
-
-window.adjustVerticalSpacing = function (DOMElem = null, sliderValue = null) {
-	const size = parseInt(sliderValue || Settings.get("general.tileSize.verticalSpacing"));
-	const selector =
-		".vvp-item-tile-content .vvp-item-product-title-container, .vvp-item-tile-content .vvp-details-btn";
-	const elements = (DOMElem || document).querySelectorAll(selector);
-	elements.forEach((elem) => {
-		elem.style.margin = size + "px 0";
-	});
-};
-
-window.adjustTitleSpacing = function (DOMElem = null, sliderValue = null) {
-	const size = parseFloat(sliderValue || Settings.get("general.tileSize.titleSpacing"));
-	//Adjust all elements on the page
-	const box1 = (DOMElem || document).querySelectorAll(
-		".vvp-item-tile-content .vvp-item-product-title-container .a-truncate"
-	);
-	box1.forEach((elem) => {
-		elem.style.maxHeight = size + "px";
-	});
-
-	const box2 = (DOMElem || document).querySelectorAll(
-		".vvp-item-tile-content .vvp-item-product-title-container .a-truncate-cut"
-	);
-	box2.forEach((elem) => {
-		elem.style.height = size + "px";
-	});
-};
-
-window.adjustFontSize = function (DOMElem = null, sliderValue = null) {
-	const size = parseInt(sliderValue || Settings.get("general.tileSize.fontSize"));
-	const selector = ".vvp-item-tile-content .vvp-item-product-title-container .a-truncate";
-	const elements = (DOMElem || document).querySelectorAll(selector);
-	elements.forEach((elem) => {
-		elem.style.fontSize = size + "px";
-	});
-};
 
 //If we are on the Account page, display additional info
 function displayAccountData() {

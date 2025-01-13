@@ -23,6 +23,9 @@ var Notifications = new ScreenNotifier();
 
 import { keywordMatch } from "./service_worker/keywordMatch.js";
 
+import { TileSizer } from "./TileSizer.js";
+var tileSizer = new TileSizer();
+
 import { BrendaAnnounceQueue } from "./BrendaAnnounce.js";
 var brendaAnnounceQueue = new BrendaAnnounceQueue();
 
@@ -279,11 +282,7 @@ class NotificationMonitor {
 		this.#gridContainer.insertBefore(tileDOM, this.#gridContainer.firstChild);
 
 		//Set the tile custom dimension according to the settings.
-		adjustTileSize(tileDOM);
-		adjustIconsSize(tileDOM);
-		adjustVerticalSpacing(tileDOM);
-		adjustTitleSpacing(tileDOM);
-		adjustFontSize(tileDOM);
+		tileSizer.adjustAll(tileDOM);
 
 		//If the feed is paused, up the counter and rename the Resume button
 		if (this.#feedPaused) {
