@@ -70,9 +70,15 @@ class NotificationMonitor {
 		//Remove the nagivation tabs:
 		document.querySelector("ul.a-tabs")?.remove();
 
+		//Remove the footer;
+		document.querySelector("#navFooter")?.remove();
+
+		//Remove the header:
+		document.querySelector("#navbar-main")?.remove();
+
 		//Remove the page width limitation
 		document.querySelector(".vvp-body").style.maxWidth = "unset";
-
+		document.querySelector(".vvp-body").style.minWidth = "unset";
 		//Set the grid items size
 		const width = Settings.get("general.tileSize.width");
 		const grid = document.querySelector("#vvp-items-grid");
