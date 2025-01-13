@@ -194,9 +194,7 @@ async function init() {
 
 async function retrieveSettings() {
 	//Wait for the settings to be loaded.
-	while (!Settings.isLoaded()) {
-		await new Promise((r) => setTimeout(r, 10));
-	}
+	await Settings.waitForLoad();
 
 	//Set the locale
 	const countryCode = Settings.get("general.country");

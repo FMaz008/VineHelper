@@ -58,7 +58,8 @@ class SettingsMgr {
 		await this.#loadSettingsFromStorage();
 	}
 
-	get(settingPath, undefinedReturnDefault = true) {
+	async get(settingPath, undefinedReturnDefault = true) {
+		await this.waitForLoad();
 		let answer = this.#getFromObject(this.#settings, settingPath);
 
 		//If the value is not found in the settings, check if we should return the default value.
