@@ -74,8 +74,10 @@ class Environment {
 
 	#loadDiscordActive() {
 		//If the domain if not from outside the countries supported by the discord API, disable discord
-		if (["ca", "com", "co.uk"].indexOf(i13n.getDomainTLD()) == -1) {
-			Settings.set("discord.active", false);
+		if (i13n.getDomainTLD() != null) {
+			if (["ca", "com", "co.uk"].indexOf(i13n.getDomainTLD()) == -1) {
+				Settings.set("discord.active", false);
+			}
 		}
 	}
 
