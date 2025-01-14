@@ -49,17 +49,54 @@
 					ETV cond. won't match unknown ETV.<br />
 					Don't forget to click Save for any changes.
 				</p>
-				<input type="button" name="save" value="Save" style="display: flex" />
+				<input type="button" name="save" value="Save" class="vh-button-icon vh-icon-save" style="display: flex" />
 			</div>
 			<div style="text-align: center; font-weight: bold">Use REGEX syntax.</div>
 			<fieldset>
 				<legend>Bulk actions</legend>
-				<div class="setting-container" style="flex-wrap: wrap; justify-content: right">
-					<input type="button" id="bulkDeletehighlight" value="Delete All" />
-					<input type="button" id="bulkImportCSVhighlight" value="Import CSV" />
-					<input type="button" id="bulkImportJSONhighlight" value="Import JSON" />
-					<input type="button" id="bulkExportCSVhighlight" value="Export CSV" />
-					<input type="button" id="bulkExportJSONhighlight" value="Export JSON" />
+				<div class="setting-container" style="flex-wrap: wrap; justify-content: space-evenly">
+					<div
+						style="
+							width: 100%;
+							margin-bottom: 8px;
+							display: flex;
+							width: 100%;
+							margin-bottom: 8px;
+							flex-wrap: wrap;
+							justify-content: space-evenly;
+						"
+					>
+						<input
+							type="button"
+							id="bulkDeletehighlight"
+							class="vh-button-icon vh-icon-trash"
+							value="Delete All"
+						/>
+					</div>
+					<input
+						type="button"
+						id="bulkImportCSVhighlight"
+						class="vh-button-icon vh-icon-import"
+						value="Import CSV"
+					/>
+					<input
+						type="button"
+						id="bulkExportCSVhighlight"
+						class="vh-button-icon vh-icon-export"
+						value="Export CSV"
+					/>
+					<input
+						type="button"
+						id="bulkImportJSONhighlight"
+						class="vh-button-icon vh-icon-import"
+						value="Import JSON"
+					/>
+					<input
+						type="button"
+						id="bulkExportJSONhighlight"
+						class="vh-button-icon vh-icon-export"
+						value="Export JSON"
+					/>
 				</div>
 			</fieldset>
 			<fieldset>
@@ -68,8 +105,18 @@
 					<div class="vh-toolbar-icon vh-icon-premium" style="margin-left: 5px"></div>
 				</legend>
 				<div class="setting-container premium-feature">
-					<input type="button" id="loadhighlightKeywords" value="Load from server" />
-					<input type="button" id="savehighlightKeywords" value="Save to server" />
+					<input
+						type="button"
+						id="loadhighlightKeywords"
+						class="vh-button-icon vh-icon-download-server"
+						value="Load from server"
+					/>
+					<input
+						type="button"
+						id="savehighlightKeywords"
+						class="vh-button-icon vh-icon-upload-server"
+						value="Save to server"
+					/>
 				</div>
 			</fieldset>
 		</div>
@@ -120,17 +167,54 @@
 					ETV cond. won't match unknown ETV.<br />
 					Don't forget to click Save for any changes.
 				</p>
-				<input type="button" name="save" value="Save" style="display: flex" />
+				<input type="button" name="save" value="Save" class="vh-button-icon vh-icon-save" style="display: flex" />
 			</div>
 			<div style="text-align: center; font-weight: bold">Use REGEX syntax.</div>
 			<fieldset>
 				<legend>Bulk actions</legend>
-				<div class="setting-container" style="flex-wrap: wrap; justify-content: right">
-					<input type="button" id="bulkDeletehidden" value="Delete All" />
-					<input type="button" id="bulkImportCSVhidden" value="Import CSV" />
-					<input type="button" id="bulkImportJSONhidden" value="Import JSON" />
-					<input type="button" id="bulkExportCSVhidden" value="Export CSV" />
-					<input type="button" id="bulkExportJSONhidden" value="Export JSON" />
+				<div class="setting-container" style="flex-wrap: wrap; justify-content: space-evenly">
+					<div
+						style="
+							width: 100%;
+							margin-bottom: 8px;
+							display: flex;
+							width: 100%;
+							margin-bottom: 8px;
+							flex-wrap: wrap;
+							justify-content: space-evenly;
+						"
+					>
+						<input
+							type="button"
+							id="bulkDeletehidden"
+							class="vh-button-icon vh-icon-trash"
+							value="Delete All"
+						/>
+					</div>
+					<input
+						type="button"
+						id="bulkImportCSVhidden"
+						class="vh-button-icon vh-icon-import"
+						value="Import CSV"
+					/>
+					<input
+						type="button"
+						id="bulkExportCSVhidden"
+						class="vh-button-icon vh-icon-export"
+						value="Export CSV"
+					/>
+					<input
+						type="button"
+						id="bulkImportJSONhidden"
+						class="vh-button-icon vh-icon-import"
+						value="Import JSON"
+					/>
+					<input
+						type="button"
+						id="bulkExportJSONhidden"
+						class="vh-button-icon vh-icon-export"
+						value="Export JSON"
+					/>
 				</div>
 			</fieldset>
 			<fieldset>
@@ -139,8 +223,18 @@
 					<div class="vh-toolbar-icon vh-icon-premium" style="margin-left: 5px"></div>
 				</legend>
 				<div class="setting-container premium-feature">
-					<input type="button" id="loadhiddenKeywords" value="Load from server" />
-					<input type="button" id="savehiddenKeywords" value="Save to server" />
+					<input
+						type="button"
+						id="loadhiddenKeywords"
+						class="vh-button-icon vh-icon-download-server"
+						value="Load from server"
+					/>
+					<input
+						type="button"
+						id="savehiddenKeywords"
+						class="vh-button-icon vh-icon-upload-server"
+						value="Save to server"
+					/>
 				</div>
 			</fieldset>
 		</div>
@@ -181,8 +275,18 @@
 				<div class="vh-toolbar-icon vh-icon-premium" style="margin-left: 5px"></div>
 			</legend>
 			<div class="setting-container premium-feature">
-				<input type="button" id="loadblurKeywords" value="Load from server" />
-				<input type="button" id="saveblurKeywords" value="Save to server" />
+				<input
+					type="button"
+					id="loadblurKeywords"
+					class="vh-button-icon vh-icon-download-server"
+					value="Load from server"
+				/>
+				<input
+					type="button"
+					id="saveblurKeywords"
+					class="vh-button-icon vh-icon-upload-server"
+					value="Save to server"
+				/>
 			</div>
 		</fieldset>
 	</div>

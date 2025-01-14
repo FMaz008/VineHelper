@@ -168,6 +168,31 @@
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/chat.png");
 		background-repeat: no-repeat;
 	}
+	.vh-icon-import {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/import.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-export {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/export.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-upload-server {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/upload-server.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-download-server {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/download-server.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-save {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/save.png");
+		background-repeat: no-repeat;
+	}
 }
 
 @supports (-moz-appearance: none) {
@@ -339,6 +364,31 @@
 		background-image: url("/resource/image/chat.png");
 		background-repeat: no-repeat;
 	}
+	.vh-icon-import {
+		background-size: 100%;
+		background-image: url("/resource/image/import.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-export {
+		background-size: 100%;
+		background-image: url("/resource/image/export.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-upload-server {
+		background-size: 100%;
+		background-image: url("/resource/image/upload-server.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-download-server {
+		background-size: 100%;
+		background-image: url("/resource/image/download-server.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-save {
+		background-size: 100%;
+		background-image: url("/resource/image/save.png");
+		background-repeat: no-repeat;
+	}
 }
 
 .invert {
@@ -374,4 +424,11 @@ div[role="navigation"] > ul > li {
 	width: 32px;
 	height: 18px;
 	background-position-y: -7px;
+}
+
+.vh-button-icon {
+	padding-left: 25px;
+	background-size: 15px;
+	background-position-x: 5px;
+	background-position-y: center;
 }
