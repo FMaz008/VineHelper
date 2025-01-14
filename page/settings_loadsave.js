@@ -319,7 +319,7 @@ async function initiateSettings() {
 		let url = "https://api.llamastories.com/brenda/user/" + document.querySelector("#" + key).value;
 		const response = await fetch(url, { method: "GET" });
 		if (response.status == 200) {
-			Settings.set("discord.guid", document.querySelector(`#${key}`).value);
+			await Settings.set("discord.guid", document.querySelector(`#${key}`).value);
 
 			document.querySelector("#guid-txt").innerText = Settings.get("discord.guid", false);
 			document.querySelector("#discord-guid-link").style.display = "none";
