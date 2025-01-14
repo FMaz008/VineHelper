@@ -44,6 +44,8 @@ class NotificationMonitor {
 	#waitTimer; //Timer which wait a short delay to see if anything new is about to happen
 	#imageUrls;
 	#gridContainer = null;
+	#wsErrorMessage = null;
+
 	async initialize() {
 		this.#imageUrls = new Set();
 		this.#feedPausedAmountStored = 0;
@@ -513,17 +515,23 @@ class NotificationMonitor {
 		}
 	}
 
-	setWebSocketStatus(status) {
+	setWebSocketStatus(status, message = null) {
 		const icon = document.querySelector("#statusWS div.vh-switch-32");
 		const description = document.querySelector("#statusWS .description");
 		if (status) {
 			icon.classList.remove("vh-icon-switch-off");
 			icon.classList.add("vh-icon-switch-on");
 			description.innerText = "Listening for notifications...";
+			this.#wsErrorMessage = null;
 		} else {
 			icon.classList.remove("vh-icon-switch-on");
 			icon.classList.add("vh-icon-switch-off");
-			description.innerText = "Not connected. Retrying in 30 sec...";
+			if (message) {
+				this.#wsErrorMessage = message;
+				description.innerText = message;
+			} else if (this.#wsErrorMessage == null) {
+				description.innerText = "Not connected. Retrying in 30 sec...";
+			}
 		}
 	}
 

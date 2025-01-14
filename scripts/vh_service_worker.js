@@ -157,6 +157,11 @@ function connectWebSocket() {
 		});
 	});
 
+	socket.on("connection_error", (error) => {
+		sendMessageToAllTabs({ type: "wsError", error: error }, "Socket.IO connection error");
+		console.error(`Socket.IO connection error: ${error}`);
+	});
+
 	// On disconnection
 	socket.on("disconnect", () => {
 		console.log("WS Disconnected");

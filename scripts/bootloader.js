@@ -1248,6 +1248,11 @@ chrome.runtime.onMessage.addListener(async function (message, sender, sendRespon
 			notificationMonitor.setWebSocketStatus(true);
 		}
 	}
+	if (data.type == "wsError") {
+		if (notificationMonitor) {
+			notificationMonitor.setWebSocketStatus(false, data.error);
+		}
+	}
 	if (data.type == "wsClosed") {
 		if (notificationMonitor) {
 			notificationMonitor.setWebSocketStatus(false);

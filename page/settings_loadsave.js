@@ -828,16 +828,18 @@ function displayMultiLinePopup(content, placeholder = "", callbackLabel = null, 
 		popup.remove();
 	});
 
-	document.getElementById("import").addEventListener("click", () => {
-		if (callback != null) {
-			const ret = callback(document.getElementById("textInput").value);
-			if (ret) {
+	if (callbackLabel != null) {
+		document.getElementById("import").addEventListener("click", () => {
+			if (callback != null) {
+				const ret = callback(document.getElementById("textInput").value);
+				if (ret) {
+					popup.remove();
+				}
+			} else {
 				popup.remove();
 			}
-		} else {
-			popup.remove();
-		}
-	});
+		});
+	}
 }
 
 function manageRadio(key) {
