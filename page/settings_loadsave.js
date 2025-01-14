@@ -752,46 +752,50 @@ function manageKeywords(key) {
 
 	//Import CSV
 	document.getElementById(`bulkImportCSV${keywordType}`).addEventListener("click", async () => {
-		const rawContent = prompt("Paste your comma separated content:");
-		let arr = [];
-		arr = rawContent
-			.split(",")
-			.map((item) => item.trim())
-			.filter((item) => item !== "");
-		for (let i = 0; i < arr.length; i++) {
-			manageKeywordsAddLine(key, arr[i], "", "", "");
-		}
+		displayMultiLinePopup("", "Paste your CSV content here...", "Import CSV", (data) => {
+			let arr = [];
+			arr = data
+				.split(",")
+				.map((item) => item.trim())
+				.filter((item) => item !== "");
+			for (let i = 0; i < arr.length; i++) {
+				manageKeywordsAddLine(key, arr[i], "", "", "");
+			}
+			return true;
+		});
 	});
 
 	//Import JSON
 	document.getElementById(`bulkImportJSON${keywordType}`).addEventListener("click", async () => {
-		try {
-			const json = JSON.parse(prompt("Paste your JSON content:"));
-		} catch (err) {
-			alert("JSON data incomplete or invalid. Ensure it is all a single line.");
-			return;
-		}
-		for (let i = 0; i < json.length; i++) {
-			manageKeywordsAddLine(key, json[i].contains, json[i].without, json[i].etv_min, json[i].etv_max);
-		}
+		displayMultiLinePopup("", "Paste your JSON content here...", "Import JSON", (data) => {
+			try {
+				const json = JSON.parse(data);
+				for (let i = 0; i < json.length; i++) {
+					manageKeywordsAddLine(key, json[i].contains, json[i].without, json[i].etv_min, json[i].etv_max);
+				}
+				return true; //Hide the popup
+			} catch (err) {
+				alert("JSON data incomplete or invalid.");
+				return false; //Keep the popup visible
+			}
+		});
 	});
 
 	//Export CSV
 	document.getElementById(`bulkExportCSV${keywordType}`).addEventListener("click", async () => {
 		const csv = keywordsToCSV(key);
-		displayPopup(csv);
+		displayMultiLinePopup(csv);
 	});
 
 	//Export JSON
 	document.getElementById(`bulkExportJSON${keywordType}`).addEventListener("click", async () => {
 		const json = keywordsToJSON(key);
-		displayPopup(JSON.stringify(json));
+		displayMultiLinePopup(JSON.stringify(json));
 	});
 }
 
-//Function to display a popup with some content inside a textarea
-function displayPopup(content) {
-	//Display a popup with a textarea containing the CSV
+function displayMultiLinePopup(content, placeholder = "", callbackLabel = null, callback = null) {
+	//Create a popup with a textarea for multi-line input
 	const popup = document.createElement("div");
 	popup.style.position = "fixed";
 	popup.style.top = "50%";
@@ -803,19 +807,37 @@ function displayPopup(content) {
 	popup.style.height = "200px";
 	popup.style.padding = "20px";
 	popup.style.paddingTop = "40px";
-	popup.innerHTML = `<textarea style="width: 100%; height: 100%;margin-left:0;">${content}</textarea>`;
+	popup.style.paddingBottom = "40px";
+	popup.innerHTML =
+		`<textarea id="textInput" style="width: 100%; height: 100%;margin-left:0;" placeholder="` +
+		placeholder +
+		`">` +
+		content +
+		`</textarea>
+		<button id="closePopup" style="position: absolute; top: 5px; right: 5px;">X</button>`;
+	if (callbackLabel != null) {
+		popup.innerHTML =
+			popup.innerHTML +
+			`<button id="import" style="position: absolute; bottom: 10px; right: 10px;">` +
+			callbackLabel +
+			`</button>`;
+	}
 	document.body.appendChild(popup);
 
-	//Add a close button to the popup
-	const closeBtn = document.createElement("button");
-	closeBtn.innerHTML = "X";
-	closeBtn.style.position = "absolute";
-	closeBtn.style.top = "5px";
-	closeBtn.style.right = "5px";
-	closeBtn.addEventListener("click", () => {
+	document.getElementById("closePopup").addEventListener("click", () => {
 		popup.remove();
 	});
-	popup.appendChild(closeBtn);
+
+	document.getElementById("import").addEventListener("click", () => {
+		if (callback != null) {
+			const ret = callback(document.getElementById("textInput").value);
+			if (ret) {
+				popup.remove();
+			}
+		} else {
+			popup.remove();
+		}
+	});
 }
 
 function manageRadio(key) {
