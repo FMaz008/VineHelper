@@ -195,42 +195,44 @@ class NotificationMonitor {
 			originalPauseBtn.click();
 		});
 
-		//Prevent redirections
-		//This is working but will display a popup in the browser
-		window.addEventListener(
-			"beforeunload",
-			(event) => {
-				event.stopPropagation();
-				event.preventDefault();
-				event.returnValue = "";
+		if (Settings.get("notification.monitor.openLinksInNewTab") != "1") {
+			//Prevent redirections
+			//This is working but will display a popup in the browser
+			window.addEventListener(
+				"beforeunload",
+				(event) => {
+					event.stopPropagation();
+					event.preventDefault();
+					event.returnValue = "";
 
-				console.log("Page unload prevented");
-				return false;
-			},
-			true
-		);
+					console.log("Page unload prevented");
+					return false;
+				},
+				true
+			);
 
-		// Create a proxy for window.location
-		// Not sure this is working at all.
-		const originalLocation = window.location;
-		const locationProxy = new Proxy(originalLocation, {
-			set: function (obj, prop, value) {
-				console.log(`Prevented changing location.${prop} to ${value}`);
-				return true; // Pretend we succeeded
-			},
-			get: function (obj, prop) {
-				if (prop === "href") {
-					return originalLocation.href;
-				}
-				if (typeof obj[prop] === "function") {
-					return function () {
-						console.log(`Prevented calling location.${prop}`);
-						return false;
-					};
-				}
-				return obj[prop];
-			},
-		});
+			// Create a proxy for window.location
+			// Not sure this is working at all.
+			const originalLocation = window.location;
+			const locationProxy = new Proxy(originalLocation, {
+				set: function (obj, prop, value) {
+					console.log(`Prevented changing location.${prop} to ${value}`);
+					return true; // Pretend we succeeded
+				},
+				get: function (obj, prop) {
+					if (prop === "href") {
+						return originalLocation.href;
+					}
+					if (typeof obj[prop] === "function") {
+						return function () {
+							console.log(`Prevented calling location.${prop}`);
+							return false;
+						};
+					}
+					return obj[prop];
+				},
+			});
+		}
 	}
 
 	async disableItem(asin) {
@@ -513,6 +515,9 @@ class NotificationMonitor {
 		if (oldMaxValue == "" && parseFloat(etvObj.dataset.etvMin) == 0) {
 			this.#zeroETVItemFound(asin, true);
 		}
+
+		//Apply the filters
+		this.#processNotificationFiltering(notif);
 	}
 
 	setWebSocketStatus(status, message = null) {
