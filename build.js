@@ -10,8 +10,6 @@ const pkg = require("./package.json");
 	fs.cpSync("./resource/", "./dist/resource/", { recursive: true });
 	fs.cpSync("./scripts/", "./dist/scripts/", { recursive: true });
 	fs.cpSync("./view/", "./dist/view/", { recursive: true });
-	fs.mkdirSync("./dist/node_modules/jquery/dist", { recursive: true });
-	fs.cpSync("./node_modules/jquery/dist/jquery.min.js", "./dist/node_modules/jquery/dist/jquery.min.js");
 	fs.mkdirSync("./dist/node_modules/socket.io/client-dist", { recursive: true });
 	fs.cpSync(
 		"./node_modules/socket.io/client-dist/socket.io.min.js",
