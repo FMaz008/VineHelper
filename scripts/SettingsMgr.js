@@ -269,6 +269,7 @@ class SettingsMgr {
 				displayVariantIcon: false,
 				versionInfoPopup: 0,
 				GDPRPopup: true,
+				highlightKWFirst: true,
 				hiddenItemsCacheSize: 9,
 				customCSS: "",
 				modalNavigation: false,

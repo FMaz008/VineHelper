@@ -3,6 +3,8 @@ import { initiateSettings } from "../page/settings_loadsave.js";
 import { Template } from "../scripts/Template.js";
 var Tpl = new Template();
 
+Tpl.flushLocalStorage();
+
 //Render the main layout
 (async () => {
 	const promMainTpl = await Tpl.loadFile("/page/settings_main.tpl.html");

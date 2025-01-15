@@ -202,8 +202,10 @@ class Tile {
 
 				this.#colorizeHighlight();
 
-				//Move the highlighted item to the top of the grid
-				this.#grid.getDOM().insertBefore(this.#tileDOM, this.#grid.getDOM().firstChild);
+				if (Settings.get("general.highlightKWFirst")) {
+					//Move the highlighted item to the top of the grid
+					this.#grid.getDOM().insertBefore(this.#tileDOM, this.#grid.getDOM().firstChild);
+				}
 			}
 		}
 
