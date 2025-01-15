@@ -1719,7 +1719,7 @@ async function handleModalNavigation(event) {
 	logger.add("[DEBUG] Updated the current index to: " + modalNavigatorCurrentIndex);
 }
 
-function openDynamicModal(asin, queue, isParent, enrollmentGUID, autoClick = true) {
+async function openDynamicModal(asin, queue, isParent, enrollmentGUID, autoClick = true) {
 	if (!env.data.marketplaceId || !env.data.customerId) {
 		console.error("Failed to fetch opts/vvp-context data");
 	}
@@ -1742,6 +1742,7 @@ function openDynamicModal(asin, queue, isParent, enrollmentGUID, autoClick = tru
 	const btn = document.createElement("input");
 	container2.appendChild(btn);
 	btn.type = "submit";
+	btn.id = "dynamicModalBtn-" + asin;
 	btn.dataset.asin = asin;
 	btn.dataset.isParentAsin = isParent;
 
@@ -1757,12 +1758,17 @@ function openDynamicModal(asin, queue, isParent, enrollmentGUID, autoClick = tru
 	//Dispatch a click event on the button
 	if (autoClick) {
 		//If the click happens too fast, it won't work.
-		setTimeout(function () {
+		while (!document.querySelector("#dynamicModalBtn-" + asin)) {
+			await new Promise((r) => setTimeout(r, 100));
+		}
+		while (!document.querySelector("#a-popover-3")) {
+			console.log("Waiting for dynamic modal button to be created...");
+			await new Promise((r) => setTimeout(r, 100));
 			btn.click();
 			setTimeout(function () {
 				container1.remove(); // Removes container1 from the DOM
 			}, 500);
-		}, 500);
+		}
 	}
 
 	return btn;

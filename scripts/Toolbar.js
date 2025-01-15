@@ -67,12 +67,16 @@ class Toolbar {
 
 		//Attach the toolbar to the tile's .vvp-item-tile-content container.
 		anchorTo.insertAdjacentElement("afterbegin", pToolbar);
+		const toolbar = document.querySelector(`#${toolbarId}`);
+		const container = toolbar.querySelector(`.vh-status-container`);
+		container.style.backgroundColor = Settings.get("general.toolbarBackgroundColor");
 
-		let container = document.querySelector(`#${toolbarId} .vh-status-container2`);
-		document.querySelector(`#${toolbarId} .vh-toolbar-etv`).style.visibility = "hidden";
+		const container2 = toolbar.querySelector(`.vh-status-container2`);
+
+		toolbar.querySelector(`.vh-toolbar-etv`).style.visibility = "hidden";
 
 		// Activate the announce button when the ETV is set (changed)
-		const etvElements = container.querySelectorAll(".etv");
+		const etvElements = container2.querySelectorAll(".etv");
 		etvElements.forEach((etv) => {
 			etv.addEventListener("change", (event) => {
 				if (event.currentTarget.textContent === "") return false;

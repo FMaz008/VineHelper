@@ -4,6 +4,9 @@ const Settings = new SettingsMgr();
 import { HiddenListMgr } from "../scripts/HiddenListMgr.js";
 var HiddenList = new HiddenListMgr();
 
+import { Template } from "../scripts/Template.js";
+var Tpl = new Template();
+
 //Reminder: This script is executed from the extension popup.
 //          The console used is the browser console, not the inspector console.
 const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
@@ -41,6 +44,9 @@ function selectCurrentTab(firstRun = false) {
 async function initiateSettings() {
 	//Wait for the settings to be loaded.
 	await Settings.waitForLoad();
+
+	//Clear the template cache
+	await Tpl.flushLocalStorage();
 
 	//Disable the premium options for non-premium users.
 	if (!Settings.isPremiumUser()) {
@@ -129,6 +135,7 @@ async function initiateSettings() {
 	manageColorPicker("general.bookmarkColor");
 	manageCheckboxSetting("general.zeroETVHighlight.active");
 	manageColorPicker("general.zeroETVHighlight.color");
+	manageColorPicker("general.toolbarBackgroundColor");
 
 	//##TAB - NOTIFICATIONS
 

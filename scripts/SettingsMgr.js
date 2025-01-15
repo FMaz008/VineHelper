@@ -278,6 +278,7 @@ class SettingsMgr {
 				hideRecommendations: false,
 				hideOptOutButton: false,
 				keywordHighlightColor: "#FFE815",
+				toolbarBackgroundColor: "#FFFFFF",
 				zeroETVHighlight: {
 					active: true,
 					color: "#64af4b",
