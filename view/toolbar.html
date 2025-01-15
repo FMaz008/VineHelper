@@ -22,21 +22,19 @@
 				<div class="vh-toolbar-icon vh-icon-pin"></div>
 			</a>
 			{{endif}}
-			<div style="display: flex; flex-direction: {{$flexDirection}}; align-items: center; width:100%;">
-				<span class="vh-toolbar-etv">
-					<a href="#" class="tooltip" onclick="return false;" title="Estimated Tax Value">
-						<div class="vh-icon-etv"></div>
-					</a>
-					<span class="etv"></span>
-				</span>
-				{{$orderWidget}}
+
+			<div class="vh-toolbar-etv">
+				<a href="#" class="tooltip" onclick="return false;" title="Estimated Tax Value">
+					<div class="vh-icon-etv"></div>
+				</a>
+				<span class="etv"></span>
 			</div>
-			{{if toggleview}}
+			{{$orderWidget}} {{if toggleview}}
 			<a
 				href="#{{$asin}}"
 				id="vh-hide-link-{{$asin}}"
 				class="vh-floating-icon vh-hide-link"
-				style="float: right"
+				style="margin-left: auto"
 				title="Move a product to, or out of, the hidden tab."
 				onclick="return false;"
 			>

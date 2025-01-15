@@ -155,6 +155,11 @@ async function init() {
 		return; //Do not initialize the page as normal
 	}
 
+	if (Settings.get("general.listView")) {
+		logger.add("BOOT: Loading listView stylesheet");
+		loadStyleSheet("resource/css/listView.css");
+	}
+
 	initTileSizeWidget();
 	await initCreateTabs(); //Create the 4 grids/tabs
 	await initTilesAndDrawToolbars(); //Create the tiles, and move the locally hidden tiles to the hidden tab
@@ -451,6 +456,9 @@ async function initCreateTabs() {
 	//Create the Discard grid
 	logger.add("BOOT: Creating tabs system");
 
+	document.querySelector("body").classList.add("vh-listing-view");
+
+	env.data.gridDOM.container = document.getElementById("vvp-items-grid-container");
 	env.data.gridDOM.container = document.getElementById("vvp-items-grid-container");
 	env.data.gridDOM.regular = document.getElementById("vvp-items-grid");
 
@@ -665,6 +673,24 @@ async function initTilesAndDrawToolbars() {
 	}
 
 	logger.add("done creating toolbars.");
+
+	//Assign the toolbar item's CSS order depending on the settings
+	if (Settings.get("general.displayETV") && Settings.get("unavailableTab.active")) {
+		//ETV
+		document.querySelectorAll(".vh-toolbar-etv").forEach((item) => {
+			item.style.order = 2;
+		});
+
+		//Order
+		document.querySelectorAll(".vh-order-widget").forEach((item) => {
+			item.style.order = Settings.get("general.listView") ? 3 : 4;
+		});
+
+		//Hide
+		document.querySelectorAll(".vh-hide-link").forEach((item) => {
+			item.style.order = Settings.get("general.listView") ? 4 : 3;
+		});
+	}
 
 	// Scoll to the RFY/AFA/AI header
 	if (Settings.get("general.scrollToRFY")) {
@@ -1772,4 +1798,22 @@ async function openDynamicModal(asin, queue, isParent, enrollmentGUID, autoClick
 	}
 
 	return btn;
+}
+
+async function loadStyleSheet(path, injected = true) {
+	if (injected) {
+		const prom = await Tpl.loadFile(path);
+		let content = Tpl.render(prom);
+
+		loadStyleSheetContent(content, path); //Put content between <style></style>
+	} else {
+		loadStyleSheetExternal(path); //Insert as an external stylesheet.
+	}
+}
+function loadStyleSheetContent(content, path = "injected") {
+	if (content != "") {
+		const style = document.createElement("style");
+		style.innerHTML = "/*" + path + "*/\n" + content;
+		document.head.appendChild(style);
+	}
 }

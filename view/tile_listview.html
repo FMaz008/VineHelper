@@ -69,17 +69,6 @@
 							data-blurkw="{{$blurKW}}"
 						></div>
 					</a>
-					<div
-						class="etv"
-						data-etv-min=""
-						data-etv-max=""
-						style="display: flex; flex-direction: row; flex-grow: 1; visibility: hidden"
-					>
-						<a href="#" class="tooltip" onclick="return false;" title="Estimated Tax Value">
-							<div class="vh-icon-etv"></div>
-						</a>
-						<span class="etv">&nbsp;</span>
-					</div>
 					<a
 						href="#"
 						id="vh-report-link-{{$asin}}"
@@ -88,6 +77,18 @@
 					>
 						<div class="vh-toolbar-icon vh-icon-report" data-asin="{{$asin}}"></div>
 					</a>
+					<div
+						class="etv vh-toolbar-etv"
+						data-etv-min=""
+						data-etv-max=""
+						style="display: flex; flex-direction: row; flex-grow: 1; display: hidden"
+					>
+						<a href="#" class="tooltip" onclick="return false;" title="Estimated Tax Value">
+							<div class="vh-icon-etv"></div>
+						</a>
+						<span class="etv">&nbsp;</span>
+					</div>
+
 					<a href="#" id="vh-hide-link-{{$asin}}" class="vh-floating-icon vh-hide-link" title="Hide item">
 						<div class="vh-toolbar-icon vh-icon-hide" data-asin="{{$asin}}"></div>
 					</a>

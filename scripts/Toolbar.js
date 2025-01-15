@@ -53,6 +53,8 @@ class Toolbar {
 		if (Settings.get("unavailableTab.active")) {
 			logger.add("DRAW-UPDATE-TOOLBAR: Create order widget");
 			Tpl.setVar("orderWidget", await this.createOrderWidget());
+		} else {
+			Tpl.setVar("orderWidget", "");
 		}
 
 		if (Settings.get("general.listView")) {
@@ -73,7 +75,7 @@ class Toolbar {
 
 		const container2 = toolbar.querySelector(`.vh-status-container2`);
 
-		toolbar.querySelector(`.vh-toolbar-etv`).style.visibility = "hidden";
+		toolbar.querySelector(`.vh-toolbar-etv`).style.display = "none";
 
 		// Activate the announce button when the ETV is set (changed)
 		const etvElements = container2.querySelectorAll(".etv");
@@ -252,7 +254,7 @@ class Toolbar {
 		span.dispatchEvent(changeEvent);
 
 		if (Settings.get("general.displayETV")) {
-			context.querySelector(".vh-toolbar-etv").style.visibility = "visible";
+			context.querySelector(".vh-toolbar-etv").style.display = "flex";
 		}
 	}
 

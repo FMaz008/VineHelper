@@ -66,8 +66,6 @@ async function loadStyleSheets() {
 
 	logger.add("PREBOOT: Thorvarium stylesheets injected");
 
-	if (Settings.get("general.listView")) loadStyleSheet("resource/css/listView.css");
-
 	if (Settings.isPremiumUser() && Settings.get("general.customCSS")) {
 		loadStyleSheetContent(Settings.get("general.customCSS"));
 	}

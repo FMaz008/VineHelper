@@ -84,9 +84,11 @@ class NotificationMonitor {
 		//Remove the page width limitation
 		document.querySelector(".vvp-body").style.maxWidth = "unset";
 		document.querySelector(".vvp-body").style.minWidth = "unset";
+
 		//Set the grid items size
 		const width = Settings.get("general.tileSize.width");
 		const grid = document.querySelector("#vvp-items-grid");
+		grid.classList.add("vh-notification-monitor");
 		grid.style.gridTemplateColumns = `repeat(auto-fill,minmax(${width}px,auto))`;
 
 		this.#updateTabTitle();
@@ -444,7 +446,7 @@ class NotificationMonitor {
 			//The ETV is not known
 			const brendaAnnounce = tileDOM.querySelector("#vh-announce-link-" + asin);
 			if (brendaAnnounce) {
-				brendaAnnounce.style.visibility = "hidden";
+				brendaAnnounce.style.display = "none";
 			}
 		}
 
@@ -534,7 +536,7 @@ class NotificationMonitor {
 
 		//Display for formatted ETV in the toolbar
 		if (etvObj.dataset.etvMin != "" && etvObj.dataset.etvMax != "") {
-			etvObj.style.visibility = "visible";
+			etvObj.style.display = "block";
 			if (etvObj.dataset.etvMin == etvObj.dataset.etvMax) {
 				etvTxt.innerText = this.#formatETV(etvObj.dataset.etvMin);
 			} else {
@@ -546,9 +548,9 @@ class NotificationMonitor {
 		//If Brenda is enabled, toggle the button display according to wether the ETV is known.
 		if (brendaAnnounce) {
 			if (etvObj.dataset.etvMin == "") {
-				brendaAnnounce.style.visibility = "hidden";
+				brendaAnnounce.style.display = "none";
 			} else {
-				brendaAnnounce.style.visibility = "visible";
+				brendaAnnounce.style.display = "block";
 			}
 		}
 

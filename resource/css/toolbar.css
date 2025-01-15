@@ -21,6 +21,8 @@ div.hidden-toolbar.mobile {
 
 div.vh-status-container {
 	position: relative;
+	container-type: inline-size;
+	container-name: toolbar;
 	margin-top: 5px;
 	padding: 0px;
 	z-index: 1;
@@ -39,10 +41,13 @@ div.vh-status-container div.vh-status-container2 {
 	min-height: 20px;
 
 	display: flex;
+	flex-wrap: wrap;
 }
 
-.vh-toolbar-etv {
+.vh-grid div.vh-toolbar-etv,
+.vh-notification-monitor div.vh-toolbar-etv {
 	display: flex;
+	order: 2;
 	flex-direction: row;
 	flex-grow: 1;
 	vertical-align: middle;
@@ -50,6 +55,61 @@ div.vh-status-container div.vh-status-container2 {
 	line-height: 16px;
 	margin-left: 5px;
 	margin-right: 5px;
+
+	min-width: 70px;
+	flex-basis: 70px;
+	justify-content: center;
+}
+
+/* order Widgets */
+div.vh-order-widget {
+	display: flex;
+	order: 3;
+
+	text-align: center;
+	margin: 0 auto;
+	height: 20px;
+	min-width: 70px;
+	flex-basis: 70px;
+	width: 100%;
+	justify-content: center;
+	margin: 0 auto;
+}
+
+.vh-hide-link {
+	order: 4;
+	margin-left: auto;
+}
+
+@container toolbar (max-width: 130px) {
+	/* Adjust pixel value as needed */
+	.vh-listing-view .vh-hide-link {
+		order: 3; /* Moves before order widget when wrapped */
+	}
+
+	.vh-listing-view div.vh-order-widget {
+		order: 4; /* Pushes to next line when wrapped */
+		flex-basis: 100%; /* Takes full width when wrapped */
+	}
+
+	.vh-listing-view div.vh-toolbar-etv {
+		order: 2;
+	}
+
+	.vh-listing-view div.vh-icon-etv {
+		display: none;
+	}
+}
+
+@container toolbar (max-width: 160px) {
+	/* Adjust pixel value as needed */
+	.vh-notification-monitor .vh-hide-link {
+		order: 2;
+	}
+
+	.vh-notification-monitor div.vh-toolbar-etv {
+		order: 3;
+	}
 }
 
 .vh-icon-etv {
@@ -77,16 +137,6 @@ div.borderless div.vh-status-container {
 	display: flex;
 }
 
-a.vh-announce-link,
-a.vh-pin-link {
-	flex-direction: row;
-}
-
-a.vh-hide-link,
-a.vh-report-link {
-	flex-direction: row-reverse;
-}
-
 div.vh-icon-announcement {
 	opacity: 0.3;
 }
@@ -95,6 +145,7 @@ div.vh-toolbar-icon {
 	display: inline-block;
 	width: 14px;
 	height: 14px;
+	order: 1;
 }
 
 div.vh-toolbar-large-icon {
@@ -102,18 +153,6 @@ div.vh-toolbar-large-icon {
 	width: 20px;
 	height: 20px;
 	vertical-align: middle;
-	margin: 0 3px;
-}
-
-/* order Widgets */
-
-div.vh-order-widget {
-	text-align: center;
-	display: block;
-	margin: 0 auto;
-	height: 20px;
-	margin-left: 5px;
-	margin-right: 5px;
 }
 
 .vh-reportlink-bad {
