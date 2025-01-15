@@ -12,6 +12,9 @@ var Tpl = new Template();
 
 import { getRecommendationTypeFromQueue, generateRecommendationString } from "./Grid.js";
 
+import { HookMgr } from "./HookMgr.js";
+var hookMgr = new HookMgr();
+
 import { PinnedListMgr } from "./PinnedListMgr.js";
 var PinnedList = new PinnedListMgr();
 
@@ -126,6 +129,10 @@ class NotificationMonitor {
 			this.#initTileSizeWidget();
 		}
 
+		if (Settings.get("general.listView") && !Settings.get("notification.monitor.listView")) {
+			this.#unloadStyleSheet("resource/css/listView.css");
+		}
+
 		//Service worker status
 		this.#updateServiceWorkerStatus();
 
@@ -216,6 +223,28 @@ class NotificationMonitor {
 		if (Settings.get("notification.monitor.openLinksInNewTab") != "1") {
 			this.#preventRedirections();
 		}
+	}
+
+	#unloadStyleSheet(path) {
+		// For injected stylesheets (style tags)
+		const styles = document.getElementsByTagName("style");
+		for (let style of styles) {
+			if (style.innerHTML.startsWith("/*" + path + "*/")) {
+				style.remove();
+				return true;
+			}
+		}
+
+		// For external stylesheets (link tags)
+		const links = document.getElementsByTagName("link");
+		for (let link of links) {
+			if (link.href === chrome.runtime.getURL(path)) {
+				link.remove();
+				return true;
+			}
+		}
+
+		return false;
 	}
 	async #initTileSizeWidget() {
 		const container = document.querySelector("#vvp-items-grid-container");
