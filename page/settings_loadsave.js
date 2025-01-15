@@ -42,6 +42,13 @@ async function initiateSettings() {
 	//Wait for the settings to be loaded.
 	await Settings.waitForLoad();
 
+	//If the browser is firefox, replace all the input[type="color"] with input[type="text"]
+	if (navigator.userAgent.includes("Firefox") && typeof window.popupView !== "undefined") {
+		document.querySelectorAll("input[type='color']").forEach(function (item) {
+			item.type = "text";
+		});
+	}
+
 	//Disable the premium options for non-premium users.
 	if (!Settings.isPremiumUser()) {
 		document
