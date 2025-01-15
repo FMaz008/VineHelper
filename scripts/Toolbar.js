@@ -50,6 +50,17 @@ class Toolbar {
 				env.data.vineQueue != null &&
 				env.data.vineSearch == false
 		);
+		if (Settings.get("unavailableTab.active")) {
+			logger.add("DRAW-UPDATE-TOOLBAR: Create order widget");
+			Tpl.setVar("orderWidget", await this.createOrderWidget());
+		}
+
+		if (Settings.get("general.listView")) {
+			Tpl.setVar("flexDirection", "row");
+		} else {
+			Tpl.setVar("flexDirection", "column");
+		}
+
 		Tpl.setIf("pinned", Settings.get("pinnedTab.active"));
 		Tpl.setIf("toggleview", Settings.get("hiddenTab.active"));
 		let pToolbar = Tpl.render(prom, true);
@@ -124,17 +135,6 @@ class Toolbar {
 			etvIcons.forEach((icon) => {
 				icon.style.display = "none";
 			});
-		}
-
-		if (Settings.get("unavailableTab.active")) {
-			let loadingDiv = document.createElement("div");
-			loadingDiv.classList.add("vh-icon", "vh-icon-loading");
-
-			// Prepend the div to the specified container
-			let container = document.querySelector(`#${toolbarId} .vh-status-container`);
-			if (container) {
-				container.insertBefore(loadingDiv, container.firstChild);
-			}
 		}
 
 		//Display the hide link
@@ -268,12 +268,6 @@ class Toolbar {
 		if (Settings.get("hiddenTab.active")) {
 			this.updateVisibilityIcon();
 		}
-
-		// Display voting system if active
-		if (Settings.get("unavailableTab.active")) {
-			logger.add("DRAW-UPDATE-TOOLBAR: Create order widget");
-			await this.createOrderWidget();
-		}
 	}
 
 	//Create the order widget part of the toolbar
@@ -286,24 +280,12 @@ class Toolbar {
 			this.#tile.setOrders(success, failed);
 		}
 
-		let context = document.getElementById(`vh-toolbar-${this.#tile.getAsin()}`);
-		let container = context.querySelector("div.vh-status-container");
-
-		// Remove any previous order widget
-		container.querySelectorAll(".vh-order-widget").forEach((widget) => widget.remove());
-
 		// Generate the HTML for the widget
 		let prom = await Tpl.loadFile("view/widget_order.html");
 		Tpl.setVar("order_success", this.#tile.getOrderSuccess());
 		Tpl.setVar("order_failed", this.#tile.getOrderFailed());
-		let content = Tpl.render(prom, true);
-		container.appendChild(content);
-
-		if (Settings.get("thorvarium.smallItems")) {
-			document.querySelectorAll(".vh-status div.vh-order-widget").forEach((widget) => {
-				widget.style.clear = "both";
-			});
-		}
+		let content = Tpl.render(prom, false);
+		return content;
 	}
 }
 

@@ -137,6 +137,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("notification.pushNotificationsAFA");
 	manageCheckboxSetting("notification.screen.active");
 	manageCheckboxSetting("notification.screen.thumbnail");
+	manageCheckboxSetting("notification.monitor.listView");
 	manageCheckboxSetting("notification.hideList");
 	manageCheckboxSetting("notification.monitor.hideDuplicateThumbnail");
 	manageCheckboxSetting("notification.reduce");

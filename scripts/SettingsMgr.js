@@ -309,7 +309,8 @@ class SettingsMgr {
 				},
 				monitor: {
 					hideDuplicateThumbnail: false,
-					openLinksInNewTab: "1",
+					listView: false,
+					openLinksInNewTab: "0",
 					regular: {
 						sound: "0",
 						volume: 1,

@@ -117,6 +117,15 @@ class NotificationMonitor {
 		//Assign the item container to the tab container
 		tabContainer.appendChild(itemContainer);
 
+		if (Settings.get("notification.monitor.listView")) {
+			this.#gridContainer.classList.add("listview");
+		}
+
+		//Display tile size widget if the list view is not active and the tile size is active
+		if (!Settings.get("notification.monitor.listView") && Settings.get("general.tileSize.active")) {
+			this.#initTileSizeWidget();
+		}
+
 		//Service worker status
 		this.#updateServiceWorkerStatus();
 
@@ -126,6 +135,15 @@ class NotificationMonitor {
 		});
 
 		document.getElementById("date_loaded").innerText = new Date().toLocaleString(i13n.getLocale());
+
+		//Bind clear-monitor button
+		const btnClearMonitor = document.getElementById("clear-monitor");
+		btnClearMonitor.addEventListener("click", async (event) => {
+			//Delete all items from the grid
+			if (confirm("Clear all items?")) {
+				this.#gridContainer.innerHTML = "";
+			}
+		});
 
 		//Bind fetch-last-100 button
 		const btnLast100 = document.getElementById("fetch-last-100");
@@ -196,43 +214,67 @@ class NotificationMonitor {
 		});
 
 		if (Settings.get("notification.monitor.openLinksInNewTab") != "1") {
-			//Prevent redirections
-			//This is working but will display a popup in the browser
-			window.addEventListener(
-				"beforeunload",
-				(event) => {
-					event.stopPropagation();
-					event.preventDefault();
-					event.returnValue = "";
-
-					console.log("Page unload prevented");
-					return false;
-				},
-				true
-			);
-
-			// Create a proxy for window.location
-			// Not sure this is working at all.
-			const originalLocation = window.location;
-			const locationProxy = new Proxy(originalLocation, {
-				set: function (obj, prop, value) {
-					console.log(`Prevented changing location.${prop} to ${value}`);
-					return true; // Pretend we succeeded
-				},
-				get: function (obj, prop) {
-					if (prop === "href") {
-						return originalLocation.href;
-					}
-					if (typeof obj[prop] === "function") {
-						return function () {
-							console.log(`Prevented calling location.${prop}`);
-							return false;
-						};
-					}
-					return obj[prop];
-				},
-			});
+			this.#preventRedirections();
 		}
+	}
+	async #initTileSizeWidget() {
+		const container = document.querySelector("#vvp-items-grid-container");
+		if (container) {
+			//Inject the GUI for the tile sizer widget
+			tileSizer.injectGUI(container);
+		}
+
+		//Display full descriptions
+		//Not all of them are loaded at this stage and some get skipped.
+		//container.querySelector(".a-truncate-full").classList.remove("a-offscreen");
+		//container.querySelector(".a-truncate-cut").style.display = "none";
+
+		//Set the slider default value
+		//Wait until the items are loaded.
+		hookMgr.hookBind("tilesUpdated", () => {
+			tileSizer.adjustAll();
+		});
+	}
+
+	#preventRedirections() {
+		//Prevent redirections
+
+		//Prevent redirections
+		//This is working but will display a popup in the browser
+		window.addEventListener(
+			"beforeunload",
+			(event) => {
+				event.stopPropagation();
+				event.preventDefault();
+				event.returnValue = "";
+
+				console.log("Page unload prevented");
+				return false;
+			},
+			true
+		);
+
+		// Create a proxy for window.location
+		// Not sure this is working at all.
+		const originalLocation = window.location;
+		const locationProxy = new Proxy(originalLocation, {
+			set: function (obj, prop, value) {
+				console.log(`Prevented changing location.${prop} to ${value}`);
+				return true; // Pretend we succeeded
+			},
+			get: function (obj, prop) {
+				if (prop === "href") {
+					return originalLocation.href;
+				}
+				if (typeof obj[prop] === "function") {
+					return function () {
+						console.log(`Prevented calling location.${prop}`);
+						return false;
+					};
+				}
+				return obj[prop];
+			},
+		});
 	}
 
 	async disableItem(asin) {
@@ -299,7 +341,7 @@ class NotificationMonitor {
 
 		//Add the notification
 		let templateFile;
-		if (Settings.get("general.listView")) {
+		if (Settings.get("notification.monitor.listView")) {
 			templateFile = "tile_listview.html";
 		} else {
 			templateFile = "tile_gridview.html";
@@ -329,7 +371,9 @@ class NotificationMonitor {
 		this.#gridContainer.insertBefore(tileDOM, this.#gridContainer.firstChild);
 
 		//Set the tile custom dimension according to the settings.
-		tileSizer.adjustAll(tileDOM);
+		if (!Settings.get("notification.monitor.listView")) {
+			tileSizer.adjustAll(tileDOM);
+		}
 
 		//If the feed is paused, up the counter and rename the Resume button
 		if (this.#feedPaused) {

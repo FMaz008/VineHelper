@@ -141,7 +141,6 @@ async function init() {
 	showGDPRPopup();
 	await initFlushTplCache(); //And display the version changelog popup
 	initInjectScript();
-	initTileSize();
 
 	//Check if we want to display the notification monitor
 	const currentUrl = window.location.href;
@@ -156,6 +155,7 @@ async function init() {
 		return; //Do not initialize the page as normal
 	}
 
+	initTileSizeWidget();
 	await initCreateTabs(); //Create the 4 grids/tabs
 	await initTilesAndDrawToolbars(); //Create the tiles, and move the locally hidden tiles to the hidden tab
 	fetchProductsDatav5(); //Obtain the data to fill the toolbars with it.
@@ -175,7 +175,7 @@ async function init() {
 	HiddenList.garbageCollection();
 }
 
-async function initTileSize() {
+async function initTileSizeWidget() {
 	if (Settings.get("general.tileSize.active")) {
 		const container = document.querySelector("#vvp-items-grid-container");
 		if (container) {

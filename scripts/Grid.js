@@ -18,11 +18,13 @@ var HiddenList = new HiddenListMgr();
 
 import { getTileByAsin, getAsinFromDom } from "./Tile.js";
 
-var currentTab = "vvp-items-grid";
+import { TileSizer } from "./TileSizer.js";
+var tileSizer = new TileSizer();
 
 import { Template } from "./Template.js";
 var Tpl = new Template();
 
+var currentTab = "vvp-items-grid";
 class Grid {
 	gridDOM;
 	pArrTile;
@@ -288,6 +290,9 @@ async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enro
 	let content = Tpl.render(prom2, true);
 	document.getElementById("tab-pinned").appendChild(content);
 
+	if (!Settings.get("general.listView")) {
+		tileSizer.adjustAll(content);
+	}
 	//Bind the click event for the unpin button
 	document.querySelector("#vh-pin-" + asin + " .unpin-link").onclick = (e) => {
 		e.preventDefault();
