@@ -560,7 +560,7 @@ class NotificationMonitor {
 			//We don't want to highlight an item that is getting its ETV set initially (processAsZeroETVFound==false) before another pass of highlighting will be done shortly after.
 			const title = notif.querySelector(".a-truncate-full").innerText;
 			if (title) {
-				//Check if we need to highlight the item
+				//Check if we need to highlight the item now what we have an ETV
 				const val = await keywordMatch(
 					Settings.get("general.highlightKeywords"),
 					title,
@@ -592,9 +592,6 @@ class NotificationMonitor {
 		if (oldMaxValue == "" && parseFloat(etvObj.dataset.etvMin) == 0) {
 			this.#zeroETVItemFound(asin, true);
 		}
-
-		//Apply the filters
-		this.#processNotificationFiltering(notif);
 	}
 
 	setWebSocketStatus(status, message = null) {
@@ -659,8 +656,11 @@ class NotificationMonitor {
 			return false;
 		}
 
+		notif.dataset.typeZeroETV = 1;
+		const tileVisible = this.#processNotificationFiltering(notif);
+
 		//Play the zero ETV sound effect
-		if (playSoundEffect) {
+		if (tileVisible && playSoundEffect) {
 			SoundPlayer.play(TYPE_ZEROETV);
 		}
 
@@ -672,7 +672,7 @@ class NotificationMonitor {
 		} else {
 			notif.style.backgroundColor = Settings.get("notification.monitor.zeroETV.color");
 		}
-		notif.dataset.typeZeroETV = 1;
+
 		//Move the notification to the top
 		this.#moveNotifToTop(notif);
 	}
@@ -684,13 +684,15 @@ class NotificationMonitor {
 			return false;
 		}
 
+		notif.dataset.typeHighlight = 1;
+		const tileVisible = this.#processNotificationFiltering(notif);
+
 		//Play the highlight sound effect
-		if (playSoundEffect) {
+		if (tileVisible && playSoundEffect) {
 			SoundPlayer.play(TYPE_HIGHLIGHT);
 		}
 
 		//Highlight for Highlighted item
-		notif.dataset.typeHighlight = 1;
 		notif.style.backgroundColor = Settings.get("notification.monitor.highlight.color");
 
 		//Move the notification to the top
@@ -704,8 +706,10 @@ class NotificationMonitor {
 			return false;
 		}
 
+		const tileVisible = this.#processNotificationFiltering(notif);
+
 		//Play the regular notification sound effect.
-		if (playSoundEffect) {
+		if (tileVisible && playSoundEffect) {
 			SoundPlayer.play(TYPE_REGULAR);
 		}
 	}
