@@ -49,6 +49,8 @@ class NotificationMonitor {
 	#gridContainer = null;
 	#wsErrorMessage = null;
 	#firefox = false;
+	#filterType = -1;
+	#filterQueue = -1;
 
 	async initialize() {
 		this.#imageUrls = new Set();
@@ -197,6 +199,7 @@ class NotificationMonitor {
 		//Bind the event when changing the filter
 		const filterType = document.querySelector("select[name='filter-type']");
 		filterType.addEventListener("change", (event) => {
+			this.#filterType = filterType.value;
 			//Display a specific type of notifications only
 			document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
 				this.#processNotificationFiltering(node);
@@ -205,6 +208,7 @@ class NotificationMonitor {
 		});
 		const filterQueue = document.querySelector("select[name='filter-queue']");
 		filterQueue.addEventListener("change", (event) => {
+			this.#filterQueue = filterQueue.value;
 			//Display a specific type of notifications only
 			document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
 				this.#processNotificationFiltering(node);
@@ -720,9 +724,6 @@ class NotificationMonitor {
 			return false;
 		}
 
-		const filterType = document.querySelector("select[name='filter-type']");
-		const filterQueue = document.querySelector("select[name='filter-queue']");
-
 		const notificationTypeZeroETV = parseInt(node.dataset.typeZeroETV) === 1;
 		const notificationTypeHighlight = parseInt(node.dataset.typeHighlight) === 1;
 		const queueType = node.dataset.queue;
@@ -733,25 +734,25 @@ class NotificationMonitor {
 			return false;
 		}
 
-		if (filterType.value == -1) {
+		if (this.#filterType == -1) {
 			node.style.display = "flex";
-		} else if (filterType.value == TYPE_HIGHLIGHT_OR_ZEROETV) {
+		} else if (this.#filterType == TYPE_HIGHLIGHT_OR_ZEROETV) {
 			node.style.display = notificationTypeZeroETV || notificationTypeHighlight ? "flex" : "none";
-		} else if (filterType.value == TYPE_HIGHLIGHT) {
+		} else if (this.#filterType == TYPE_HIGHLIGHT) {
 			node.style.display = notificationTypeHighlight ? "flex" : "none";
-		} else if (filterType.value == TYPE_ZEROETV) {
+		} else if (this.#filterType == TYPE_ZEROETV) {
 			node.style.display = notificationTypeZeroETV ? "flex" : "none";
-		} else if (filterType.value == TYPE_REGULAR) {
+		} else if (this.#filterType == TYPE_REGULAR) {
 			node.style.display = !notificationTypeZeroETV && !notificationTypeHighlight ? "flex" : "none";
 		}
 
 		//Queue filter
 		if (node.style.display == "flex") {
-			if (filterQueue.value == "-1") {
+			if (this.#filterQueue == "-1") {
 				return true;
 			} else {
-				node.style.display = queueType == filterQueue.value ? "flex" : "none";
-				return queueType == filterQueue.value;
+				node.style.display = queueType == this.#filterQueue ? "flex" : "none";
+				return queueType == this.#filterQueue;
 			}
 		} else {
 			return false;
@@ -914,7 +915,6 @@ class NotificationMonitor {
 			if (itemsCount > max) {
 				for (let i = itemsCount - 1; i >= 2000; i--) {
 					itemsD[i].remove(); //remove the element from the DOM
-					console.log("Truncating " + asin);
 				}
 			}
 		}
