@@ -1,3 +1,9 @@
+import { SettingsMgr } from "../scripts/SettingsMgr.js";
+const Settings = new SettingsMgr();
+
+import { Internationalization } from "../scripts/Internationalization.js";
+const i13n = new Internationalization();
+
 import { initiateSettings } from "../page/settings_loadsave.js";
 
 import { Template } from "../scripts/Template.js";
@@ -26,6 +32,15 @@ Tpl.flushLocalStorage();
 	Tpl.setVar("TAB6", Tpl.render(promTab6));
 	Tpl.setVar("TAB7", Tpl.render(promTab7));
 	Tpl.setVar("TAB8", Tpl.render(promTab8));
+
+	let domainTLD = "";
+	const countryCode = Settings.get("general.country");
+	if (countryCode != null) {
+		i13n.setCountryCode(countryCode);
+		domainTLD = i13n.getDomainTLD();
+	}
+	Tpl.setIf("country_known", countryCode != null);
+	Tpl.setVar("monitor_link", "https://www.amazon." + domainTLD + "/vine/vine-items?queue=encore#monitor");
 
 	document.body.innerHTML = Tpl.render(promMainTpl);
 
