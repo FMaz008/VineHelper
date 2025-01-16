@@ -21,8 +21,8 @@ class Tile {
 
 	#asin;
 	#etv;
-	#orderSuccess;
-	#orderFailed;
+	#orderSuccess = 0;
+	#orderFailed = 0;
 	#title = null;
 	#thumbnailUrl = null;
 
@@ -84,6 +84,8 @@ class Tile {
 	}
 
 	setOrders(success, failed) {
+		this.#tileDOM.querySelector(".vh-order-success").textContent = success;
+		this.#tileDOM.querySelector(".vh-order-failed").textContent = failed;
 		this.#orderSuccess = success;
 		this.#orderFailed = failed;
 	}
