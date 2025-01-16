@@ -182,6 +182,7 @@ class Tile {
 			logger.add("TILE: The item is more recent than the time marker, highlight its toolbar.");
 			this.#tileDOM.querySelector(".vh-status-container").style.backgroundColor =
 				Settings.get("general.bookmarkColor");
+			this.#tileDOM.classList.add("vh-new-item-highlight");
 		}
 	}
 
