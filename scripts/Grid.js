@@ -265,19 +265,6 @@ async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enro
 	const recommendationType = getRecommendationTypeFromQueue(queue);
 	const recommendationId = generateRecommendationString(recommendationType, asin, enrollment_guid);
 
-	if (
-		Settings.isPremiumUser() &&
-		Settings.get("general.searchOpenModal") &&
-		is_parent_asin != null &&
-		enrollment_guid != null
-	) {
-		Tpl.setVar(
-			"url",
-			`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=last_chance#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`
-		);
-	} else {
-		Tpl.setVar("url", `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search}`);
-	}
 	Tpl.setVar("id", asin);
 	Tpl.setVar("domain", i13n.getDomainTLD());
 	Tpl.setVar("search_url_slug", search_url_slug);
