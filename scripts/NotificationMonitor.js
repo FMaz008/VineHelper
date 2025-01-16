@@ -96,10 +96,12 @@ class NotificationMonitor {
 		this.#firefox = navigator.userAgent.includes("Firefox");
 
 		//Set the grid items size
-		const width = Settings.get("general.tileSize.width");
-		const grid = document.querySelector("#vvp-items-grid");
-		grid.classList.add("vh-notification-monitor");
-		grid.style.gridTemplateColumns = `repeat(auto-fill,minmax(${width}px,auto))`;
+		if (Settings.get("general.tileSize.enabled")) {
+			const width = Settings.get("general.tileSize.width");
+			const grid = document.querySelector("#vvp-items-grid");
+			grid.classList.add("vh-notification-monitor");
+			grid.style.gridTemplateColumns = `repeat(auto-fill,minmax(${width}px,auto))`;
+		}
 
 		this.#updateTabTitle();
 
