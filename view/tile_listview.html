@@ -59,6 +59,15 @@
 					</a>
 					{{endif}}
 					<a
+						href="/vine/vine-items?search={{$search_url_slug}}"
+						id="vh-search-link-{{$asin}}"
+						class="vh-floating-icon vh-search-link"
+						title="Search for this item"
+						target="_blank"
+					>
+						<div class="vh-toolbar-icon vh-icon-search"></div>
+					</a>
+					<a
 						href="#{{$asin}}"
 						id="vh-reason-link-{{$asin}}"
 						class="vh-floating-icon vh-pin-link"

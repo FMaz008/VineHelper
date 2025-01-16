@@ -371,6 +371,9 @@ class NotificationMonitor {
 			templateFile = "tile_gridview.html";
 		}
 
+		const truncatedTitle = title.length > 40 ? title.substr(0, 40).split(" ").slice(0, -1).join(" ") : title;
+		const search_url_slug = encodeURIComponent(truncatedTitle);
+
 		let prom2 = await Tpl.loadFile("view/" + templateFile);
 		Tpl.setVar("id", asin);
 		Tpl.setVar("domain", i13n.getDomainTLD());
@@ -387,6 +390,7 @@ class NotificationMonitor {
 		Tpl.setVar("enrollment_guid", enrollment_guid);
 		Tpl.setVar("recommendationType", recommendationType);
 		Tpl.setVar("recommendationId", recommendationId);
+		Tpl.setVar("search_url_slug", search_url_slug);
 		Tpl.setIf("announce", Settings.get("discord.active") && Settings.get("discord.guid", false) != null);
 		Tpl.setIf("pinned", Settings.get("pinnedTab.active"));
 		Tpl.setIf("variant", Settings.isPremiumUser() && Settings.get("general.displayVariantIcon") && is_parent_asin);

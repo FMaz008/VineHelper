@@ -5,9 +5,18 @@
 	<div class="vvp-item-tile-content vh-status compact">
 		<div class="vh-status-container" style="height: 20px">
 			<div class="vh-status-container2">
-				<a href="#" class="vh-floating-icon vh-announce-link unpin-link" onclick="return false;">
+				<a href="#" class="vh-floating-icon unpin-link" onclick="return false;">
 					<div class="vh-toolbar-icon vh-icon-unpin" data-asin="{{$asin}}"></div>
 				</a>
+				<a
+						href="/vine/vine-items?search={{$search_url_slug}}"
+						id="vh-search-link-{{$asin}}"
+						class="vh-floating-icon vh-search-link"
+						title="Search for this item"
+						target="_blank"
+					>
+						<div class="vh-toolbar-icon vh-icon-search"></div>
+					</a>
 			</div>
 		</div>
 		<a href="https://amazon.{{$domain}}/dp/{{$asin}}" class="a-link-normal" target="_blank">{{$description}}</a>

@@ -258,7 +258,9 @@ async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enro
 		templateFile = "pinned_tile_gridview.html";
 	}
 	let prom2 = await Tpl.loadFile("view/" + templateFile);
-	let search = title.replace(/^([a-zA-Z0-9\s',]{0,40})[\s]+.*$/, "$1");
+
+	const truncatedTitle = title.length > 40 ? title.substr(0, 40).split(" ").slice(0, -1).join(" ") : title;
+	const search_url_slug = encodeURIComponent(truncatedTitle);
 
 	const recommendationType = getRecommendationTypeFromQueue(queue);
 	const recommendationId = generateRecommendationString(recommendationType, asin, enrollment_guid);
@@ -278,7 +280,7 @@ async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enro
 	}
 	Tpl.setVar("id", asin);
 	Tpl.setVar("domain", i13n.getDomainTLD());
-	Tpl.setVar("search", search);
+	Tpl.setVar("search_url_slug", search_url_slug);
 	Tpl.setVar("img_url", thumbnail);
 	Tpl.setVar("asin", asin);
 	Tpl.setVar("description", title);
