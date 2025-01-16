@@ -21,8 +21,6 @@ div.hidden-toolbar.mobile {
 
 div.vh-status-container {
 	position: relative;
-	container-type: inline-size;
-	container-name: toolbar;
 	margin-top: 5px;
 	padding: 0px;
 	z-index: 1;
@@ -36,6 +34,7 @@ div.vh-status-container {
 }
 
 div.vh-status-container div.vh-status-container2 {
+	margin-right: 25px;
 	padding-left: 5px;
 	text-align: center;
 	min-height: 20px;
@@ -77,39 +76,7 @@ div.vh-order-widget {
 }
 
 .vh-hide-link {
-	order: 4;
-	margin-left: auto;
-}
-
-@container toolbar (max-width: 130px) {
-	/* Adjust pixel value as needed */
-	.vh-listing-view .vh-hide-link {
-		order: 3; /* Moves before order widget when wrapped */
-	}
-
-	.vh-listing-view div.vh-order-widget {
-		order: 4; /* Pushes to next line when wrapped */
-		flex-basis: 100%; /* Takes full width when wrapped */
-	}
-
-	.vh-listing-view div.vh-toolbar-etv {
-		order: 2;
-	}
-
-	.vh-listing-view div.vh-icon-etv {
-		display: none;
-	}
-}
-
-@container toolbar (max-width: 160px) {
-	/* Adjust pixel value as needed */
-	.vh-notification-monitor .vh-hide-link {
-		order: 2;
-	}
-
-	.vh-notification-monitor div.vh-toolbar-etv {
-		order: 3;
-	}
+	float: right;
 }
 
 .vh-icon-etv {

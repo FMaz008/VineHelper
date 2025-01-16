@@ -136,7 +136,7 @@ class TileSizer {
 
 	#adjustIconsSize = function (DOMElem = null, sliderValue = null) {
 		const size = parseInt(sliderValue || Settings.get("general.tileSize.iconSize"));
-		const selector = ".vh-status-container2 a>.vh-toolbar-icon";
+		const selector = ".vh-status-container a>.vh-toolbar-icon";
 		const elements = (DOMElem || document).querySelectorAll(
 			DOMElem ? selector : `div#vh-tabs .tab-grid ${selector}`
 		);

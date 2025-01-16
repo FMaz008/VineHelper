@@ -137,12 +137,8 @@ class NotificationMonitor {
 		}
 
 		//Display tile size widget if the list view is not active and the tile size is active
-		if (!Settings.get("notification.monitor.listView") && Settings.get("general.tileSize.active")) {
+		if (Settings.get("general.tileSize.active")) {
 			this.#initTileSizeWidget();
-		}
-
-		if (Settings.get("general.listView") && !Settings.get("notification.monitor.listView")) {
-			this.#unloadStyleSheet("resource/css/listView.css");
 		}
 
 		//Service worker status
@@ -237,27 +233,6 @@ class NotificationMonitor {
 		}
 	}
 
-	#unloadStyleSheet(path) {
-		// For injected stylesheets (style tags)
-		const styles = document.getElementsByTagName("style");
-		for (let style of styles) {
-			if (style.innerHTML.startsWith("/*" + path + "*/")) {
-				style.remove();
-				return true;
-			}
-		}
-
-		// For external stylesheets (link tags)
-		const links = document.getElementsByTagName("link");
-		for (let link of links) {
-			if (link.href === chrome.runtime.getURL(path)) {
-				link.remove();
-				return true;
-			}
-		}
-
-		return false;
-	}
 	async #initTileSizeWidget() {
 		const container = document.querySelector("#vvp-items-grid-container");
 		if (container) {
@@ -418,9 +393,7 @@ class NotificationMonitor {
 		toolbar.style.backgroundColor = Settings.get("general.toolbarBackgroundColor");
 
 		//Set the tile custom dimension according to the settings.
-		if (!Settings.get("notification.monitor.listView")) {
-			tileSizer.adjustAll(tileDOM);
-		}
+		tileSizer.adjustAll(tileDOM);
 
 		//If the feed is paused, up the counter and rename the Resume button
 		if (this.#feedPaused) {

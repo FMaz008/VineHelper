@@ -1,5 +1,17 @@
 <div id="{{$toolbarId}}" class="vh-status">
 	<div class="vh-status-container">
+		{{if toggleview}}
+		<a
+			href="#{{$asin}}"
+			id="vh-hide-link-{{$asin}}"
+			class="vh-floating-icon vh-hide-link"
+			style="margin-left: auto"
+			title="Move a product to, or out of, the hidden tab."
+			onclick="return false;"
+		>
+			<div class="vh-toolbar-icon"></div>
+		</a>
+		{{endif}}
 		<div class="vh-status-container2">
 			{{if announce}}
 			<a
@@ -29,18 +41,7 @@
 				</a>
 				<span class="etv"></span>
 			</div>
-			{{$orderWidget}} {{if toggleview}}
-			<a
-				href="#{{$asin}}"
-				id="vh-hide-link-{{$asin}}"
-				class="vh-floating-icon vh-hide-link"
-				style="margin-left: auto"
-				title="Move a product to, or out of, the hidden tab."
-				onclick="return false;"
-			>
-				<div class="vh-toolbar-icon"></div>
-			</a>
-			{{endif}}
+			{{$orderWidget}}
 		</div>
 	</div>
 </div>
