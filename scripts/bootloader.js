@@ -1052,8 +1052,7 @@ window.addEventListener("message", async function (event) {
 			await fadeOut(textContainer);
 		}
 
-		//removeElements("#vh-healing");
-		//removeElements("#vh-healing-text");
+		document.querySelector("#vh-healing")?.remove();
 
 		//Show a notification
 		let note = new ScreenNotification();
