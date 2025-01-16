@@ -94,6 +94,10 @@ class NotificationMonitor {
 		document.querySelector(".vvp-body").style.maxWidth = "unset";
 		document.querySelector(".vvp-body").style.minWidth = "unset";
 
+		//Remove the margins
+		document.querySelector(".vvp-body").style.margin = "0";
+		document.querySelector(".vvp-body").style.padding = "0";
+
 		//Check if the browser is firefox
 		this.#firefox = navigator.userAgent.includes("Firefox");
 
