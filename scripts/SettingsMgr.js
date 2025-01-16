@@ -285,7 +285,8 @@ class SettingsMgr {
 					color: "#64af4b",
 				},
 				tileSize: {
-					active: true,
+					enabled: true, //Will apply the changes to the tile size as configured
+					active: true, //Will show the widget with sliders to adjust the size of various element in listings
 					width: 236,
 					iconSize: 14,
 					verticalSpacing: 20,
@@ -312,7 +313,7 @@ class SettingsMgr {
 				monitor: {
 					hideDuplicateThumbnail: false,
 					listView: false,
-					openLinksInNewTab: "0",
+					openLinksInNewTab: "1",
 					regular: {
 						sound: "0",
 						volume: 1,

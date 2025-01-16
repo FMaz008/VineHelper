@@ -184,8 +184,10 @@ async function initTileSizeWidget() {
 	if (Settings.get("general.tileSize.active")) {
 		const container = document.querySelector("#vvp-items-grid-container");
 		if (container) {
-			//Inject the GUI for the tile sizer widget
-			tileSizer.injectGUI(container);
+			if (Settings.get("general.tileSize.enabled")) {
+				//Inject the GUI for the tile sizer widget
+				tileSizer.injectGUI(container);
+			}
 		}
 	}
 
@@ -1784,17 +1786,18 @@ async function openDynamicModal(asin, queue, isParent, enrollmentGUID, autoClick
 	//Dispatch a click event on the button
 	if (autoClick) {
 		//If the click happens too fast, it won't work.
-		while (!document.querySelector("#dynamicModalBtn-" + asin)) {
+		while (document.readyState !== "complete" || !document.querySelector("#dynamicModalBtn-" + asin)) {
 			await new Promise((r) => setTimeout(r, 100));
 		}
+
+		//If DOM is loaded and ready
 		while (!document.querySelector("#a-popover-3")) {
-			console.log("Waiting for dynamic modal button to be created...");
-			await new Promise((r) => setTimeout(r, 100));
 			btn.click();
-			setTimeout(function () {
-				container1.remove(); // Removes container1 from the DOM
-			}, 500);
+			await new Promise((r) => setTimeout(r, 100));
 		}
+		setTimeout(function () {
+			container1.remove(); // Removes container1 from the DOM
+		}, 500);
 	}
 
 	return btn;

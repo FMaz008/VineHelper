@@ -618,7 +618,7 @@ input[type="checkbox"] {
 	position: fixed;
 	top: 64px;
 	right: 10px;
-	width: 400px;
+	width: 300px;
 	min-height: 200px;
 	padding: 10px;
 	z-index: 1100;

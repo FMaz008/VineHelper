@@ -48,6 +48,7 @@ class NotificationMonitor {
 	#imageUrls;
 	#gridContainer = null;
 	#wsErrorMessage = null;
+	#firefox = false;
 
 	async initialize() {
 		this.#imageUrls = new Set();
@@ -81,9 +82,18 @@ class NotificationMonitor {
 		//Remove the header:
 		document.querySelector("#navbar-main")?.remove();
 
+		//Remove the carousel/suggested items
+		document.querySelector("#rhf")?.remove();
+
+		//Remove the header add-ons
+		document.querySelector(".amzn-ss-wrap")?.remove();
+
 		//Remove the page width limitation
 		document.querySelector(".vvp-body").style.maxWidth = "unset";
 		document.querySelector(".vvp-body").style.minWidth = "unset";
+
+		//Check if the browser is firefox
+		this.#firefox = navigator.userAgent.includes("Firefox");
 
 		//Set the grid items size
 		const width = Settings.get("general.tileSize.width");
@@ -222,7 +232,7 @@ class NotificationMonitor {
 			originalPauseBtn.click();
 		});
 
-		if (Settings.get("notification.monitor.openLinksInNewTab") != "1") {
+		if (!this.#firefox && Settings.get("notification.monitor.openLinksInNewTab") != "1") {
 			this.#preventRedirections();
 		}
 	}
@@ -251,8 +261,10 @@ class NotificationMonitor {
 	async #initTileSizeWidget() {
 		const container = document.querySelector("#vvp-items-grid-container");
 		if (container) {
-			//Inject the GUI for the tile sizer widget
-			tileSizer.injectGUI(container);
+			if (Settings.get("general.tileSize.enabled")) {
+				//Inject the GUI for the tile sizer widget
+				tileSizer.injectGUI(container);
+			}
 		}
 
 		//Display full descriptions
@@ -351,7 +363,7 @@ class NotificationMonitor {
 		}
 
 		//If the notification already exist, ignore this request.
-		const element = document.getElementById("vh-notification-" + asin);
+		const element = this.#gridContainer.querySelector("#vh-notification-" + asin);
 		if (element) {
 			element.remove(); //Better to remove an element an insert it new than skip it.
 			//For example, if the item is unavailable, we want to remove the flagged item and insert a new one.
@@ -492,7 +504,7 @@ class NotificationMonitor {
 		detailsIcon.addEventListener("click", this.#handleDetailsClick);
 
 		//Add the click listener for the See Details button
-		if (Settings.get("notification.monitor.openLinksInNewTab") == "1") {
+		if (this.#firefox || Settings.get("notification.monitor.openLinksInNewTab") == "1") {
 			//Deactivate Vine click handling
 			const btnContainer = document.querySelector(`#vh-notification-${asin} .vvp-details-btn`);
 			btnContainer.classList.remove("vvp-details-btn");

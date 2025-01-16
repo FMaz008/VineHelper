@@ -42,12 +42,12 @@ class TileSizer {
 		sliderTile.addEventListener("change", async () => {
 			const sliderValue = parseInt(sliderTile.value);
 			await Settings.set("general.tileSize.width", sliderValue);
-			this.adjustTileSize();
+			this.#adjustTileSize();
 		});
 		sliderTile.addEventListener("input", () => {
 			// This will fire continuously while sliding
 			const sliderValue = parseInt(sliderTile.value);
-			this.adjustTileSize(null, sliderValue);
+			this.#adjustTileSize(null, sliderValue);
 		});
 
 		//Icons size
@@ -57,11 +57,11 @@ class TileSizer {
 		sliderIcons.addEventListener("change", async () => {
 			const sliderValue = parseInt(sliderIcons.value);
 			await Settings.set("general.tileSize.iconSize", sliderValue);
-			this.adjustIconsSize();
+			this.#adjustIconsSize();
 		});
 		sliderIcons.addEventListener("input", () => {
 			const sliderValue = parseInt(sliderIcons.value);
-			this.adjustIconsSize(null, sliderValue);
+			this.#adjustIconsSize(null, sliderValue);
 		});
 
 		//Icons size
@@ -71,11 +71,11 @@ class TileSizer {
 		sliderVertSpacing.addEventListener("change", async () => {
 			const sliderValue = parseInt(sliderVertSpacing.value);
 			await Settings.set("general.tileSize.verticalSpacing", sliderValue);
-			this.adjustVerticalSpacing();
+			this.#adjustVerticalSpacing();
 		});
 		sliderVertSpacing.addEventListener("input", () => {
 			const sliderValue = parseInt(sliderVertSpacing.value);
-			this.adjustVerticalSpacing(null, sliderValue);
+			this.#adjustVerticalSpacing(null, sliderValue);
 		});
 
 		//Title spacing
@@ -85,11 +85,11 @@ class TileSizer {
 		sliderTitleSpacing.addEventListener("change", async () => {
 			const sliderValue = parseInt(sliderTitleSpacing.value);
 			await Settings.set("general.tileSize.titleSpacing", sliderValue);
-			this.adjustTitleSpacing();
+			this.#adjustTitleSpacing();
 		});
 		sliderTitleSpacing.addEventListener("input", () => {
 			const sliderValue = parseInt(sliderTitleSpacing.value);
-			this.adjustTitleSpacing(null, sliderValue);
+			this.#adjustTitleSpacing(null, sliderValue);
 		});
 
 		//Font size
@@ -99,23 +99,25 @@ class TileSizer {
 		sliderFontSize.addEventListener("change", async () => {
 			const sliderValue = parseInt(sliderFontSize.value);
 			await Settings.set("general.tileSize.fontSize", sliderValue);
-			this.adjustFontSize();
+			this.#adjustFontSize();
 		});
 		sliderFontSize.addEventListener("input", () => {
 			const sliderValue = parseInt(sliderFontSize.value);
-			this.adjustFontSize(null, sliderValue);
+			this.#adjustFontSize(null, sliderValue);
 		});
 	};
 
 	adjustAll = function (DOMElem = null) {
-		this.adjustTileSize(DOMElem);
-		this.adjustIconsSize(DOMElem);
-		this.adjustVerticalSpacing(DOMElem);
-		this.adjustTitleSpacing(DOMElem);
-		this.adjustFontSize(DOMElem);
+		if (Settings.get("general.tileSize.enabled")) {
+			this.#adjustTileSize(DOMElem);
+			this.#adjustIconsSize(DOMElem);
+			this.#adjustVerticalSpacing(DOMElem);
+			this.#adjustTitleSpacing(DOMElem);
+			this.#adjustFontSize(DOMElem);
+		}
 	};
 
-	adjustTileSize = function (DOMElem = null, sliderValue = null) {
+	#adjustTileSize = function (DOMElem = null, sliderValue = null) {
 		const width = parseInt(sliderValue || Settings.get("general.tileSize.width"));
 		if (DOMElem == null) {
 			//Adjust all elements on the page
@@ -132,7 +134,7 @@ class TileSizer {
 		}
 	};
 
-	adjustIconsSize = function (DOMElem = null, sliderValue = null) {
+	#adjustIconsSize = function (DOMElem = null, sliderValue = null) {
 		const size = parseInt(sliderValue || Settings.get("general.tileSize.iconSize"));
 		const selector = ".vh-status-container2 a>.vh-toolbar-icon";
 		const elements = (DOMElem || document).querySelectorAll(
@@ -144,7 +146,7 @@ class TileSizer {
 		});
 	};
 
-	adjustVerticalSpacing = function (DOMElem = null, sliderValue = null) {
+	#adjustVerticalSpacing = function (DOMElem = null, sliderValue = null) {
 		const size = parseInt(sliderValue || Settings.get("general.tileSize.verticalSpacing"));
 		const selector =
 			".vvp-item-tile-content .vvp-item-product-title-container, .vvp-item-tile-content .vvp-details-btn";
@@ -154,7 +156,7 @@ class TileSizer {
 		});
 	};
 
-	adjustTitleSpacing = function (DOMElem = null, sliderValue = null) {
+	#adjustTitleSpacing = function (DOMElem = null, sliderValue = null) {
 		const size = parseFloat(sliderValue || Settings.get("general.tileSize.titleSpacing"));
 		//Adjust all elements on the page
 		const box1 = (DOMElem || document).querySelectorAll(
@@ -172,7 +174,7 @@ class TileSizer {
 		});
 	};
 
-	adjustFontSize = function (DOMElem = null, sliderValue = null) {
+	#adjustFontSize = function (DOMElem = null, sliderValue = null) {
 		const size = parseInt(sliderValue || Settings.get("general.tileSize.fontSize"));
 		const selector = ".vvp-item-tile-content .vvp-item-product-title-container .a-truncate";
 		const elements = (DOMElem || document).querySelectorAll(selector);
