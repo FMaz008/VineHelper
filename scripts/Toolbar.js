@@ -27,6 +27,7 @@ var Notifications = new ScreenNotifier();
 
 class Toolbar {
 	#tile;
+	#toolbarDOM;
 
 	constructor(tileInstance) {
 		this.#tile = tileInstance;
@@ -35,7 +36,7 @@ class Toolbar {
 
 	//Create the bare bone structure of the toolbar
 	async createProductToolbar() {
-		let toolbarId = "vh-toolbar-" + this.#tile.getAsin();
+		const toolbarId = "vh-toolbar-" + this.#tile.getAsin();
 		let anchorTo = this.#tile.getDOM().querySelector(".vvp-item-tile-content"); //.vvp-item-tile-content should be the first child
 
 		//Load the toolbar template
@@ -65,17 +66,16 @@ class Toolbar {
 
 		Tpl.setIf("pinned", Settings.get("pinnedTab.active"));
 		Tpl.setIf("toggleview", Settings.get("hiddenTab.active"));
-		let pToolbar = Tpl.render(prom, true);
+		this.#toolbarDOM = Tpl.render(prom, true);
 
 		//Attach the toolbar to the tile's .vvp-item-tile-content container.
-		anchorTo.insertAdjacentElement("afterbegin", pToolbar);
-		const toolbar = document.querySelector(`#${toolbarId}`);
-		const container = toolbar.querySelector(`.vh-status-container`);
+		anchorTo.insertAdjacentElement("afterbegin", this.#toolbarDOM);
+		const container = this.#toolbarDOM.querySelector(`.vh-status-container`);
 		container.style.backgroundColor = Settings.get("general.toolbarBackgroundColor");
 
-		const container2 = toolbar.querySelector(`.vh-status-container2`);
+		const container2 = this.#toolbarDOM.querySelector(`.vh-status-container2`);
 
-		toolbar.querySelector(`.vh-toolbar-etv`).style.display = "none";
+		this.#toolbarDOM.querySelector(`.vh-toolbar-etv`).style.display = "none";
 
 		// Activate the announce button when the ETV is set (changed)
 		const etvElements = container2.querySelectorAll(".etv");
@@ -84,8 +84,7 @@ class Toolbar {
 				if (event.currentTarget.textContent === "") return false;
 				if (env.data.vineSearch) return false;
 
-				let tile = getTileByAsin(this.#tile.getAsin());
-				let tileDOM = tile.getDOM();
+				let tileDOM = this.#tile.getDOM();
 				let announcementIcon = tileDOM.querySelector(".vh-icon-announcement");
 
 				if (announcementIcon) {
@@ -97,8 +96,7 @@ class Toolbar {
 						if (env.data.vineQueue == null)
 							throw new Exception("Cannot announce an item in an unknown queue.");
 
-						let tile = getTileByAsin(this.#tile.getAsin());
-						let etv = tile.getDOM().querySelector(".etv").textContent;
+						let etv = this.#tile.getDOM().querySelector(".etv").textContent;
 
 						// In case of price range, only send the highest value
 						etv = etv.split("-").pop();
@@ -145,7 +143,7 @@ class Toolbar {
 
 		//Display the hide link
 		if (Settings.get("hiddenTab.active")) {
-			let h = document.getElementById(`vh-hide-link-${this.#tile.getAsin()}`);
+			let h = this.#toolbarDOM.querySelector(`#vh-hide-link-${this.#tile.getAsin()}`);
 			if (h) {
 				h.addEventListener("click", async (event) => {
 					// A hide/display item button was pressed
@@ -211,7 +209,7 @@ class Toolbar {
 			return false;
 		}
 
-		let icon = document.querySelector(`#vh-hide-link-${this.#tile.getAsin()} div.vh-toolbar-icon`);
+		let icon = this.#toolbarDOM.querySelector(`#vh-hide-link-${this.#tile.getAsin()} div.vh-toolbar-icon`);
 		let gridId = this.#tile.getGridId();
 
 		if (icon) {
@@ -232,8 +230,7 @@ class Toolbar {
 	}
 
 	setETV(etv1, etv2, onlyIfEmpty = false) {
-		let context = document.getElementById(`vh-toolbar-${this.#tile.getAsin()}`);
-		let span = context.querySelector(".vh-toolbar-etv .etv");
+		let span = this.#toolbarDOM.querySelector(".vh-toolbar-etv .etv");
 		this.#tile.setETV(etv2);
 
 		if (onlyIfEmpty && span.textContent !== "") return false;
@@ -254,25 +251,7 @@ class Toolbar {
 		span.dispatchEvent(changeEvent);
 
 		if (Settings.get("general.displayETV")) {
-			context.querySelector(".vh-toolbar-etv").style.display = "flex";
-		}
-	}
-
-	//This method is called from bootloader.js, serverResponse() when the data has been received, after the tile was moved.
-	async updateToolbar() {
-		logger.add(`DRAW-UPDATE-TOOLBAR: Updating #vh-toolbar-${this.#tile.getAsin()}`);
-		let context = document.getElementById(`vh-toolbar-${this.#tile.getAsin()}`);
-
-		if (!context) {
-			logger.add(`! Could not find #vh-toolbar-${this.#tile.getAsin()}`);
-			return;
-		}
-
-		let statusColor;
-
-		// If the hidden tab system is activated, update the visibility icon
-		if (Settings.get("hiddenTab.active")) {
-			this.updateVisibilityIcon();
+			this.#toolbarDOM.querySelector(".vh-toolbar-etv").style.display = "flex";
 		}
 	}
 

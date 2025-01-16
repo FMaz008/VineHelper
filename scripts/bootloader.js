@@ -773,13 +773,14 @@ async function generateTile(obj) {
 	img.parentNode.insertBefore(imgContainer, img); // Insert the imgContainer before the img element
 
 	// Remove (detach) the img from its parent node
-	img.parentNode.removeChild(img);
+	//img.parentNode.removeChild(img); //No need to detach the img.
 	imgContainer.appendChild(img); // Move the img into the imgContainer
 
 	//If the listing are set to listview, move the image container before its parent item.
 	if (Settings.get("general.listView")) {
-		imgContainer.parentNode.removeChild(imgContainer);
-		obj.insertBefore(imgContainer, obj.firstChild);
+		//imgContainer.parentNode.removeChild(imgContainer);
+		//obj.insertBefore(imgContainer, obj.firstChild);
+		obj.prepend(imgContainer);
 
 		//Display the full titles
 		/*
@@ -966,7 +967,7 @@ async function serverProductsResponse(data) {
 			}
 
 			logger.add("DRAW: Updating the toolbar");
-			tile.getToolbar().updateToolbar();
+			tile.getToolbar().updateVisibilityIcon();
 			logger.add("DRAW: Done updating the toolbar");
 		}
 	}
