@@ -46,6 +46,7 @@ class NotificationMonitor {
 	#feedPausedAmountStored;
 	#waitTimer; //Timer which wait a short delay to see if anything new is about to happen
 	#imageUrls;
+	#asinsOnPage;
 	#gridContainer = null;
 	#wsErrorMessage = null;
 	#firefox = false;
@@ -56,6 +57,7 @@ class NotificationMonitor {
 
 	async initialize() {
 		this.#imageUrls = new Set();
+		this.#asinsOnPage = new Set();
 		this.#feedPausedAmountStored = 0;
 
 		//Remove the existing items.
@@ -381,11 +383,15 @@ class NotificationMonitor {
 		}
 
 		//If the notification already exist, ignore this request.
-		const element = this.#gridContainer.querySelector("#vh-notification-" + asin);
-		if (element) {
-			logger.add(`NOTIF: Item ${asin} already exist, removing it.`);
-			element.remove(); //Better to remove an element an insert it new than skip it.
-			//For example, if the item is unavailable, we want to remove the flagged item and insert a new one.
+		if (this.#asinsOnPage.has(asin)) {
+			//Remove the old item
+			const element = this.#gridContainer.querySelector("#vh-notification-" + asin);
+			if (element) {
+				element.remove();
+				logger.add(`NOTIF: Item ${asin} already exist, replacing it.`);
+			}
+		} else {
+			this.#asinsOnPage.add(asin);
 		}
 
 		//Check if the de-duplicate image setting is on, if so, do not add items
@@ -454,27 +460,27 @@ class NotificationMonitor {
 		//Process the item according to the notification type (highlight > 0etv > regular)
 		//This is what determine & trigger what sound effect to play
 		if (KWsMatch) {
-			this.#highlightedItemFound(asin, true); //Play the highlight sound
+			this.#highlightedItemFound(tileDOM, true); //Play the highlight sound
 		} else if (parseFloat(etv_min) == 0) {
-			this.#zeroETVItemFound(asin, true); //Play the zeroETV sound
+			this.#zeroETVItemFound(tileDOM, true); //Play the zeroETV sound
 		} else {
-			this.#regularItemFound(asin, true); //Play the regular sound
+			this.#regularItemFound(tileDOM, true); //Play the regular sound
 		}
 
 		//Process the bluring
 		if (BlurKWsMatch) {
-			this.#blurItemFound(asin);
+			this.#blurItemFound(tileDOM);
 		}
 
 		//If we received ETV data (ie: Fetch last 100), process them
 		if (etv_min != null && etv_max != null) {
 			//Set the ETV but take no action on it
-			this.setETV(asin, etv_min);
-			this.setETV(asin, etv_max);
+			this.setETV(tileDOM, etv_min);
+			this.setETV(tileDOM, etv_max);
 
 			//We found a zero ETV item, but we don't want to play a sound just yet
 			if (parseFloat(etv_min) == 0) {
-				this.#zeroETVItemFound(asin, false); //Ok now process 0etv, but no sound
+				this.#zeroETVItemFound(tileDOM, false); //Ok now process 0etv, but no sound
 			}
 		} else {
 			//The ETV is not known
@@ -553,13 +559,11 @@ class NotificationMonitor {
 			.replace("T", " ") // Replace T with space
 			.replace(/\.\d+Z$/, ""); // Remove milliseconds and Z
 	}
-	async setETV(asin, etv) {
-		const notif = this.#getNotificationByASIN(asin);
-
+	async setETV(notif, etv) {
 		if (!notif) {
 			return false;
 		}
-
+		const asin = notif.dataset.asin;
 		const etvObj = notif.querySelector("div.etv");
 		const etvTxt = etvObj.querySelector("span.etv");
 		const brendaAnnounce = notif.querySelector("#vh-announce-link-" + asin);
@@ -612,7 +616,7 @@ class NotificationMonitor {
 
 				if (val !== false) {
 					//We got a keyword match, highlight the item
-					this.#highlightedItemFound(asin, true);
+					this.#highlightedItemFound(notif, true);
 				} else {
 					//Check if we need to hide the item
 					const val2 = await keywordMatch(
@@ -625,6 +629,7 @@ class NotificationMonitor {
 						//Remove (permanently "hide") the tile
 						logger.add(`NOTIF: Item ${asin} matched hide keyword ${val2}. Hidding it.`);
 						notif.remove();
+						this.#asinsOnPage.delete(asin);
 						this.#updateTabTitle(); //Update the tab counter
 					}
 				}
@@ -633,7 +638,7 @@ class NotificationMonitor {
 
 		//zero ETV found, highlight the item accordingly
 		if (oldMaxValue == "" && parseFloat(etvObj.dataset.etvMin) == 0) {
-			this.#zeroETVItemFound(asin, true);
+			this.#zeroETVItemFound(notif, true);
 		}
 
 		//If the user if silver, remove he items which are above the threshold
@@ -719,9 +724,7 @@ class NotificationMonitor {
 		description.textContent = desc;
 	}
 
-	#zeroETVItemFound(asin, playSoundEffect = true) {
-		const notif = this.#getNotificationByASIN(asin);
-
+	#zeroETVItemFound(notif, playSoundEffect = true) {
 		if (!notif) {
 			return false;
 		}
@@ -747,9 +750,7 @@ class NotificationMonitor {
 		this.#moveNotifToTop(notif);
 	}
 
-	#highlightedItemFound(asin, playSoundEffect = true) {
-		const notif = this.#getNotificationByASIN(asin);
-
+	#highlightedItemFound(notif, playSoundEffect = true) {
 		if (!notif) {
 			return false;
 		}
@@ -769,9 +770,7 @@ class NotificationMonitor {
 		this.#moveNotifToTop(notif);
 	}
 
-	#regularItemFound(asin, playSoundEffect = true) {
-		const notif = this.#getNotificationByASIN(asin);
-
+	#regularItemFound(notif, playSoundEffect = true) {
 		if (!notif) {
 			return false;
 		}
@@ -784,9 +783,7 @@ class NotificationMonitor {
 		}
 	}
 
-	#blurItemFound(asin) {
-		const notif = this.#getNotificationByASIN(asin);
-
+	#blurItemFound(notif) {
 		if (!notif) {
 			return false;
 		}
@@ -845,6 +842,7 @@ class NotificationMonitor {
 		const asin = e.target.dataset.asin;
 		logger.add(`NOTIF: Hiding icon clicked for item ${asin}`);
 		document.querySelector("#vh-notification-" + asin).remove();
+		this.#asinsOnPage.delete(asin);
 		this.#updateTabTitle();
 	}
 
@@ -998,6 +996,7 @@ class NotificationMonitor {
 				for (let i = itemsCount - 1; i >= 2000; i--) {
 					logger.add(`NOTIF: Auto truncating item from the page.`);
 					itemsD[i].remove(); //remove the element from the DOM
+					this.#asinsOnPage.delete(itemsD[i].dataset.asin);
 				}
 			}
 		}
