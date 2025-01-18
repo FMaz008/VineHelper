@@ -269,7 +269,7 @@ class NotificationMonitor {
 		if (!this.#goldTier) {
 			//Get the maximum allowed value
 			const rawText = document.querySelector("#vvp-vine-participation-content ul>li").innerText;
-			const regex = new RegExp(".*products valued at .?([0-9.]+).*");
+			const regex = new RegExp("^.+?[0-9]{1}.+?([0-9,.]+).+", "m");
 			const match = rawText.match(regex);
 			if (match) {
 				this.#etvLimit = parseFloat(match[1]);
