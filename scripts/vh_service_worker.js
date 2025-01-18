@@ -1,6 +1,4 @@
 const DEBUG_MODE = false; //Will switch the notification countries to "com"
-const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
-//const VINE_HELPER_API_V5_URL = "http://127.0.0.1:3000";
 const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_WS_URL = "ws://127.0.0.1:3000";
 
@@ -38,7 +36,14 @@ chrome.runtime.onMessage.addListener((data, sender, sendResponse) => {
 
 	if (data.type == "fetchLast100Items") {
 		//Get the last 100 most recent items
-		fetchLast100Items();
+		if (socket?.connected) {
+			socket.emit("getLast100", {
+				uuid: Settings.get("general.uuid", false),
+				countryCode: i13n.getCountryCode(),
+			});
+		} else {
+			console.warn("Socket not connected - cannot fetch last 100 items");
+		}
 	}
 
 	if (data.type == "setCountryCode") {
@@ -130,6 +135,10 @@ function connectWebSocket() {
 			enrollment_guid: data.item.enrollment_guid,
 		});
 	});
+	socket.on("last100", (data) => {
+		// Assuming the server sends the data in the same format as before
+		processLast100Items(data.products);
+	});
 	socket.on("newETV", (data) => {
 		sendMessageToAllTabs(
 			{
@@ -208,74 +217,50 @@ async function retrieveSettings() {
 	}
 }
 
-async function fetchLast100Items() {
-	if (i13n.getCountryCode() === null) {
-		return false; //If the country is not known, do not query
-	}
+function processLast100Items(arrProducts) {
+	arrProducts.sort((a, b) => {
+		const dateA = new Date(a.date);
+		const dateB = new Date(b.date);
+		return dateB - dateA;
+	});
+	for (let i = arrProducts.length - 1; i >= 0; i--) {
+		const {
+			title,
+			date,
+			timestamp,
+			asin,
+			img_url,
+			etv_min,
+			etv_max,
+			queue,
+			is_parent_asin,
+			enrollment_guid,
+			unavailable,
+		} = arrProducts[i];
 
-	const content = {
-		api_version: 5,
-		country: DEBUG_MODE ? "com" : Settings.get("general.country"),
-		action: "get_latest_notifications",
-		uuid: Settings.get("general.uuid", false),
-	};
-	const options = {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify(content),
-	};
+		//Only display notification for products with a title and image url
+		//And that are more recent than the latest notification received.
+		if (img_url == "" || title == "") {
+			continue;
+		}
 
-	fetch(VINE_HELPER_API_V5_URL, options)
-		.then((response) => response.json())
-		.then(async function (response) {
-			//TODO: Client side sort the response.products array in order of response.products[i].date DESC. (most recent at the top)
-			response.products.sort((a, b) => {
-				const dateA = new Date(a.date);
-				const dateB = new Date(b.date);
-				return dateB - dateA;
-			});
-			for (let i = response.products.length - 1; i >= 0; i--) {
-				const {
-					title,
-					date,
-					timestamp,
-					asin,
-					img_url,
-					etv_min,
-					etv_max,
-					queue,
-					is_parent_asin,
-					enrollment_guid,
-					unavailable,
-				} = response.products[i];
-
-				//Only display notification for products with a title and image url
-				//And that are more recent than the latest notification received.
-				if (img_url == "" || title == "") {
-					continue;
-				}
-
-				myStream.input({
-					index: i,
-					type: "newItem",
-					domain: Settings.get("general.country"),
-					date: date,
-					asin: asin,
-					title: title,
-					img_url: img_url,
-					etv_min: etv_min,
-					etv_max: etv_max,
-					queue: queue,
-					reason: "Fetch last 100 new items",
-					is_parent_asin: is_parent_asin,
-					enrollment_guid: enrollment_guid,
-					unavailable: unavailable,
-				});
-			}
-		})
-		.catch(function () {
-			(error) => console.log(error);
+		myStream.input({
+			index: i,
+			type: "newItem",
+			domain: Settings.get("general.country"),
+			date: date,
+			asin: asin,
+			title: title,
+			img_url: img_url,
+			etv_min: etv_min,
+			etv_max: etv_max,
+			queue: queue,
+			reason: "Fetch last 100 new items",
+			is_parent_asin: is_parent_asin,
+			enrollment_guid: enrollment_guid,
+			unavailable: unavailable,
 		});
+	}
 }
 
 function pushNotification(asin, queue, is_parent_asin, enrollment_guid, search_string, title, description, img_url) {
