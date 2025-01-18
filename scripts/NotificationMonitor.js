@@ -644,27 +644,8 @@ class NotificationMonitor {
 		//If the user if silver, remove he items which are above the threshold
 		if (!this.#goldTier) {
 			if (this.#etvLimit != null && parseFloat(etvObj.dataset.etvMax) > this.#etvLimit) {
-				//Add an overlay box over the notification to block the interaction
-				const overlay = document.createElement("div");
-				overlay.classList.add("vh-overlay");
-				overlay.style.cssText = `
-					position: absolute;
-					top: 0;
-					left: 0;
-					width: 100%;
-					height: 100%;
-					background: rgba(0,0,0,0.7);
-					z-index: 100;
-					display: flex;
-					align-items: center;
-					justify-content: center;
-					color: white;
-					text-align: center;
-					padding: 1em;
-				`;
-				overlay.innerHTML = `This item exceeds your ETV limit of ${this.#etvLimit}`;
-				notif.style.position = "relative";
-				notif.appendChild(overlay);
+				//Remove the See Details button for item outside the tier limit.
+				notif.querySelector(".vvp-details-btn").remove();
 			}
 		}
 	}
