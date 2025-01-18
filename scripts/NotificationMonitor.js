@@ -51,6 +51,8 @@ class NotificationMonitor {
 	#firefox = false;
 	#filterType = -1;
 	#filterQueue = -1;
+	#goldTier = true;
+	#etvLimit = null;
 
 	async initialize() {
 		this.#imageUrls = new Set();
@@ -61,34 +63,34 @@ class NotificationMonitor {
 		this.#gridContainer.innerHTML = "";
 
 		//Remove the item count
-		document.querySelector("#vvp-items-grid-container>p")?.remove();
+		this.#hideSelector("#vvp-items-grid-container>p");
 
 		//Remove the navigation
-		document.querySelector("#vvp-items-grid-container > div[role=navigation]")?.remove();
+		this.#hideSelector("#vvp-items-grid-container > div[role=navigation]");
 
 		//Remove the categories
-		document.querySelector("#vvp-browse-nodes-container")?.remove();
+		this.#hideSelector("#vvp-browse-nodes-container");
 
 		//Remove the header
-		document.querySelector("#vvp-header")?.remove();
+		this.#hideSelector("#vvp-header");
 
 		//Remove the search bar
-		document.querySelector(".vvp-items-button-and-search-container")?.remove();
+		this.#hideSelector(".vvp-items-button-and-search-container");
 
 		//Remove the nagivation tabs:
-		document.querySelector("ul.a-tabs")?.remove();
+		this.#hideSelector("ul.a-tabs");
 
 		//Remove the footer;
-		document.querySelector("#navFooter")?.remove();
+		this.#hideSelector("#navFooter");
 
 		//Remove the header:
-		document.querySelector("#navbar-main")?.remove();
+		this.#hideSelector("#navbar-main");
 
 		//Remove the carousel/suggested items
-		document.querySelector("#rhf")?.remove();
+		this.#hideSelector("#rhf");
 
 		//Remove the header add-ons
-		document.querySelector(".amzn-ss-wrap")?.remove();
+		this.#hideSelector(".amzn-ss-wrap");
 
 		//Remove the page width limitation
 		document.querySelector(".vvp-body").style.maxWidth = "unset";
@@ -241,8 +243,39 @@ class NotificationMonitor {
 		if (!this.#firefox && Settings.get("notification.monitor.openLinksInNewTab") != "1") {
 			this.#preventRedirections();
 		}
+
+		//Check if the user is a gold tier user
+		this.#updateGoldStatus();
 	}
 
+	#hideSelector(selector) {
+		try {
+			document.querySelector(selector).style.display = "none";
+		} catch (err) {
+			//Do nothing
+		}
+	}
+	#updateGoldStatus() {
+		let gold = true;
+		try {
+			gold =
+				JSON.parse(document.querySelector(`script[data-a-state='{"key":"vvp-context"}']`).innerHTML)
+					?.voiceDetails.tierStatus == "TIER2";
+		} catch (err) {
+			//Keep gold at true
+		}
+		this.#goldTier = gold;
+
+		if (!this.#goldTier) {
+			//Get the maximum allowed value
+			const rawText = document.querySelector("#vvp-vine-participation-content ul>li").innerText;
+			const regex = new RegExp(".*products valued at .?([0-9.]+).*");
+			const match = rawText.match(regex);
+			if (match) {
+				this.#etvLimit = parseFloat(match[1]);
+			}
+		}
+	}
 	async #initTileSizeWidget() {
 		const container = document.querySelector("#vvp-items-grid-container");
 		if (container) {
@@ -592,6 +625,33 @@ class NotificationMonitor {
 		//zero ETV found, highlight the item accordingly
 		if (oldMaxValue == "" && parseFloat(etvObj.dataset.etvMin) == 0) {
 			this.#zeroETVItemFound(asin, true);
+		}
+
+		//If the user if silver, remove he items which are above the threshold
+		if (!this.#goldTier) {
+			if (this.#etvLimit != null && parseFloat(etvObj.dataset.etvMax) > this.#etvLimit) {
+				//Add an overlay box over the notification to block the interaction
+				const overlay = document.createElement("div");
+				overlay.classList.add("vh-overlay");
+				overlay.style.cssText = `
+					position: absolute;
+					top: 0;
+					left: 0;
+					width: 100%;
+					height: 100%;
+					background: rgba(0,0,0,0.7);
+					z-index: 100;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					color: white;
+					text-align: center;
+					padding: 1em;
+				`;
+				overlay.innerHTML = `This item exceeds your ETV limit of ${this.#etvLimit}`;
+				notif.style.position = "relative";
+				notif.appendChild(overlay);
+			}
 		}
 	}
 
