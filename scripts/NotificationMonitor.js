@@ -416,6 +416,7 @@ class NotificationMonitor {
 		Tpl.setVar("domain", i13n.getDomainTLD());
 		Tpl.setVar("img_url", img_url);
 		Tpl.setVar("asin", asin);
+		Tpl.setVar("dateReceived", this.#formatDate(this.#currentDateTime()));
 		Tpl.setVar("date", this.#formatDate(date));
 		Tpl.setVar("feedPaused", this.#feedPaused);
 		Tpl.setVar("queue", queue);
@@ -545,6 +546,12 @@ class NotificationMonitor {
 		return tileDOM; //Return the DOM element for the tile.
 	}
 
+	#currentDateTime() {
+		return new Date()
+			.toISOString()
+			.replace("T", " ") // Replace T with space
+			.replace(/\.\d+Z$/, ""); // Remove milliseconds and Z
+	}
 	async setETV(asin, etv) {
 		const notif = this.#getNotificationByASIN(asin);
 
@@ -876,6 +883,7 @@ class NotificationMonitor {
 
 		const asin = e.target.dataset.asin;
 		const date = e.target.dataset.date;
+		const dateReceived = e.target.dataset.dateReceived;
 		const reason = e.target.dataset.reason;
 		const highlightKW = e.target.dataset.highlightkw;
 		const blurKW = e.target.dataset.blurkw;
@@ -886,6 +894,9 @@ class NotificationMonitor {
 			"<ul>" +
 			"<li>Broadcast date/time: " +
 			date +
+			"</li>" +
+			"<li>Received date/time: " +
+			dateReceived +
 			"</li>" +
 			"<li>Broadcast reason: " +
 			reason +
