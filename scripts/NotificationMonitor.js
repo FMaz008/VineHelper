@@ -383,6 +383,7 @@ class NotificationMonitor {
 		//If the notification already exist, ignore this request.
 		const element = this.#gridContainer.querySelector("#vh-notification-" + asin);
 		if (element) {
+			logger.add(`NOTIF: Item ${asin} already exist, removing it.`);
 			element.remove(); //Better to remove an element an insert it new than skip it.
 			//For example, if the item is unavailable, we want to remove the flagged item and insert a new one.
 		}
@@ -622,6 +623,7 @@ class NotificationMonitor {
 					);
 					if (val2 !== false) {
 						//Remove (permanently "hide") the tile
+						logger.add(`NOTIF: Item ${asin} matched hide keyword ${val2}. Hidding it.`);
 						notif.remove();
 						this.#updateTabTitle(); //Update the tab counter
 					}
@@ -841,8 +843,9 @@ class NotificationMonitor {
 		e.preventDefault();
 
 		const asin = e.target.dataset.asin;
-
+		logger.add(`NOTIF: Hiding icon clicked for item ${asin}`);
 		document.querySelector("#vh-notification-" + asin).remove();
+		this.#updateTabTitle();
 	}
 
 	#handleBrendaClick(e) {
@@ -993,6 +996,7 @@ class NotificationMonitor {
 			const itemsCount = itemsD.length;
 			if (itemsCount > max) {
 				for (let i = itemsCount - 1; i >= 2000; i--) {
+					logger.add(`NOTIF: Auto truncating item from the page.`);
 					itemsD[i].remove(); //remove the element from the DOM
 				}
 			}
