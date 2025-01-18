@@ -384,6 +384,8 @@ function initInjectScript() {
 	//Inject the script to fix the infinite loading wheel into the main environment.
 	const scriptTag = document.createElement("script");
 
+	scriptTag.setAttribute("data-country-code", i13n.getCountryCode());
+
 	//Inject the infinite loading wheel fix to the "main world"
 	scriptTag.src = chrome.runtime.getURL("scripts/inj.js");
 	scriptTag.onload = function () {

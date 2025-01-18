@@ -3,6 +3,9 @@ var extHelper_LastParentVariant = null;
 var extHelper_responseData = {};
 var extHelper_postData = {};
 
+const scriptTag = document.currentScript;
+const countryCode = scriptTag.getAttribute("data-country-code");
+
 window.fetch = async (...args) => {
 	let response = await origFetch(...args);
 	let lastParent = extHelper_LastParentVariant;
@@ -136,11 +139,14 @@ window.fetch = async (...args) => {
 			}
 
 			for (const key in variation.dimensions) {
-				//Replace all non-standard characters
-				newValue = variation.dimensions[key].replace(/[^a-zA-Z0-9\][()/.,\-"'¼½¾+&%# ]/g, "?");
-				if (newValue !== variation.dimensions[key]) {
-					variation.dimensions[key] = newValue;
-					fixed++;
+				//If the country code is not jp or si:
+				if (countryCode !== "jp" && countryCode !== "sg") {
+					//Replace all non-standard characters
+					newValue = variation.dimensions[key].replace(/[^a-zA-Z0-9\][()/.,\-"'¼½¾+&%# ]/g, "?");
+					if (newValue !== variation.dimensions[key]) {
+						variation.dimensions[key] = newValue;
+						fixed++;
+					}
 				}
 
 				// Any variation ending with a space will crash, ensure there is no space at the end.
