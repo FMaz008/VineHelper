@@ -246,6 +246,9 @@ class NotificationMonitor {
 			this.#preventRedirections();
 		}
 
+		//Activate the listeners
+		this.#listeners();
+
 		//Check if the user is a gold tier user
 		this.#updateGoldStatus();
 	}
@@ -559,6 +562,15 @@ class NotificationMonitor {
 			.replace("T", " ") // Replace T with space
 			.replace(/\.\d+Z$/, ""); // Remove milliseconds and Z
 	}
+
+	async setETVFromASIN(asin, etv) {
+		const notif = this.#getNotificationByASIN(asin);
+		if (!notif) {
+			return false;
+		}
+		this.setETV(notif, etv);
+	}
+
 	async setETV(notif, etv) {
 		if (!notif) {
 			return false;
@@ -992,6 +1004,71 @@ class NotificationMonitor {
 		).length;
 
 		document.title = "VHNM (" + visibleChildrenCount + ")";
+	}
+
+	#listeners() {
+		//Message from within the context of the extension
+		//Messages sent via: chrome.tabs.sendMessage(tab.id, data);
+		//In this case, all messages are coming from the service_worker file.
+		chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+			let data = message;
+			if (data.type == undefined) {
+				return false;
+			}
+
+			if (data.type == "newETV") {
+				this.setETVFromASIN(data.asin, data.etv);
+			}
+			if (data.type == "wsOpen") {
+				this.setWebSocketStatus(true);
+			}
+			if (data.type == "wsError") {
+				this.setWebSocketStatus(false, data.error);
+			}
+			if (data.type == "wsClosed") {
+				this.setWebSocketStatus(false);
+			}
+
+			if (data.type == "unavailableItem") {
+				thisdisableItem(data.asin);
+			}
+			if (data.type == "newItem") {
+				let {
+					date,
+					asin,
+					title,
+					reason,
+					img_url,
+					etv_min,
+					etv_max,
+					queue,
+					KW,
+					BlurKW,
+					KWsMatch,
+					BlurKWsMatch,
+					is_parent_asin,
+					enrollment_guid,
+					unavailable,
+				} = data;
+				this.addTileInGrid(
+					asin,
+					queue,
+					date,
+					title,
+					img_url,
+					is_parent_asin,
+					enrollment_guid,
+					etv_min,
+					etv_max,
+					reason,
+					KW,
+					KWsMatch,
+					BlurKW,
+					BlurKWsMatch,
+					unavailable
+				);
+			}
+		});
 	}
 }
 

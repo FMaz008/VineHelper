@@ -1268,69 +1268,9 @@ chrome.runtime.onMessage.addListener(async function (message, sender, sendRespon
 		hookMgr.hookExecute(data.hookname, data);
 	}
 
-	if (data.type == "newETV") {
-		if (notificationMonitor) {
-			notificationMonitor.setETV(data.asin, data.etv);
-		}
-	}
-	if (data.type == "wsOpen") {
-		if (notificationMonitor) {
-			notificationMonitor.setWebSocketStatus(true);
-		}
-	}
-	if (data.type == "wsError") {
-		if (notificationMonitor) {
-			notificationMonitor.setWebSocketStatus(false, data.error);
-		}
-	}
-	if (data.type == "wsClosed") {
-		if (notificationMonitor) {
-			notificationMonitor.setWebSocketStatus(false);
-		}
-	}
-
-	if (data.type == "unavailableItem") {
-		if (notificationMonitor) {
-			notificationMonitor.disableItem(data.asin);
-		}
-	}
 	if (data.type == "newItem") {
-		if (notificationMonitor) {
-			let {
-				date,
-				asin,
-				title,
-				reason,
-				img_url,
-				etv_min,
-				etv_max,
-				queue,
-				KW,
-				BlurKW,
-				KWsMatch,
-				BlurKWsMatch,
-				is_parent_asin,
-				enrollment_guid,
-				unavailable,
-			} = data;
-			notificationMonitor.addTileInGrid(
-				asin,
-				queue,
-				date,
-				title,
-				img_url,
-				is_parent_asin,
-				enrollment_guid,
-				etv_min,
-				etv_max,
-				reason,
-				KW,
-				KWsMatch,
-				BlurKW,
-				BlurKWsMatch,
-				unavailable
-			);
-		} else if (
+		if (
+			!notificationMonitor &&
 			data.index < 10 && //Limit the notification to the top 10 most recents
 			env.data.vineBrowsingListing && //Only show notification on listing pages
 			Settings.get("notification.screen.active")
