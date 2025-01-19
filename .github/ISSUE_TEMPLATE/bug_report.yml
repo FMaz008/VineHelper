@@ -71,6 +71,19 @@ body:
       label: Browser
       description: e.g. chrome, firefox, kiwi
       placeholder: Add your browser
+    validations:
+      required: true
+      
+  - type: input
+    id: version
+    attributes:
+      label: Version Number
+      description: e.g. 3.0.10
+      placeholder: Add your Version Number of the extension
+    validations:
+      required: true
+
+  
 
   - type: textarea
     id: additional_context
