@@ -102,6 +102,16 @@ class NotificationMonitor {
 		document.querySelector(".vvp-body").style.margin = "0";
 		document.querySelector(".vvp-body").style.padding = "0";
 
+		document.querySelectorAll(".vvp-tab-content>*").forEach((elem) => {
+			elem.style.margin = "0px";
+		});
+		document.querySelectorAll(".vvp-body>*+*").forEach((elem) => {
+			elem.style.margin = "0px";
+		});
+		document.querySelectorAll(".a-section").forEach((elem) => {
+			elem.style.margin = "0px";
+		});
+
 		//Check if the browser is firefox
 		this.#firefox = navigator.userAgent.includes("Firefox");
 
@@ -657,7 +667,7 @@ class NotificationMonitor {
 		if (!this.#goldTier) {
 			if (this.#etvLimit != null && parseFloat(etvObj.dataset.etvMax) > this.#etvLimit) {
 				//Remove the See Details button for item outside the tier limit.
-				notif.querySelector(".vvp-details-btn").remove();
+				notif.querySelector(".vvp-details-btn")?.remove();
 			}
 		}
 	}
@@ -1030,7 +1040,7 @@ class NotificationMonitor {
 			}
 
 			if (data.type == "unavailableItem") {
-				thisdisableItem(data.asin);
+				this.disableItem(data.asin);
 			}
 			if (data.type == "newItem") {
 				let {
