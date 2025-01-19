@@ -502,16 +502,15 @@ function initiateTestKeywords() {
 	});
 }
 
+import { keywordMatch } from "../scripts/service_worker/keywordMatch.js";
 function testKeyword(key, title) {
 	const keyE = CSS.escape(key);
 
 	const lines = document.querySelectorAll(`#${keyE} table>tr`);
 	for (let i = 0; i < lines.length; i++) {
-		let regex;
 		const containsObj = lines[i].querySelector(`td input[name="contains"]`);
 		const contains = containsObj.value.trim();
-		regex = new RegExp(`\\b${contains}\\b`, "i");
-		if (regex.test(title)) {
+		if (keywordMatch([{ contains: contains, without: "", etv_min: "", etv_max: "" }], title) != false) {
 			containsObj.style.background = "lightgreen";
 		} else {
 			containsObj.style.background = "white";
@@ -519,8 +518,7 @@ function testKeyword(key, title) {
 
 		const withoutObj = lines[i].querySelector(`td input[name="without"]`);
 		const without = withoutObj.value.trim();
-		regex = new RegExp(`\\b${without}\\b`, "i");
-		if (regex.test(title) && without != "") {
+		if (keywordMatch([{ contains: without, without: "", etv_min: "", etv_max: "" }], title) != false) {
 			withoutObj.style.background = "lightgreen";
 		} else {
 			withoutObj.style.background = "white";
@@ -1035,12 +1033,6 @@ function manageCheckboxSetting(key, def = null) {
 		const element = document.querySelector(`input[name='${keyE}']`);
 		element.click();
 	}.bind(keyE);
-}
-
-//Utility functions
-
-function isNumeric(n) {
-	return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
 export { initiateSettings };

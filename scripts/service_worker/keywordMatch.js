@@ -5,7 +5,10 @@ function keywordMatchReturnFullObject(keywords, title, etv_min = null, etv_max =
 		if (typeof word == "string") {
 			//Old data format where each keyword was a string
 			try {
-				regex = new RegExp(`\\b${word}\\b`, "i");
+				const pattern = /^[\x20-\x7E]+$/.test(word)
+					? `\\b${word}\\b`
+					: `(?<![\\p{L}\\p{N}])${word}(?![\\p{L}\\p{N}])`;
+				regex = new RegExp(pattern, "iu");
 			} catch (error) {
 				if (error instanceof SyntaxError) {
 					return false;
@@ -18,8 +21,16 @@ function keywordMatchReturnFullObject(keywords, title, etv_min = null, etv_max =
 		} else if (typeof word == "object") {
 			//New data format where keywords are objects
 			try {
-				regex = new RegExp(`\\b${word.contains}\\b`, "i");
-				regex2 = new RegExp(`\\b${word.without}\\b`, "i");
+				//Check if the keyword contains non-ASCII characters
+				//If it does, use a regex pattern supporting japanese characters
+				const pattern = /^[\x20-\x7E]+$/.test(word.contains)
+					? `\\b${word.contains}\\b`
+					: `(?<![\\p{L}\\p{N}])${word.contains}(?![\\p{L}\\p{N}])`;
+				regex = new RegExp(pattern, "iu");
+				const pattern2 = /^[\x20-\x7E]+$/.test(word.without)
+					? `\\b${word.without}\\b`
+					: `(?<![\\p{L}\\p{N}])${word.without}(?![\\p{L}\\p{N}])`;
+				regex2 = new RegExp(pattern2, "iu");
 			} catch (error) {
 				if (error instanceof SyntaxError) {
 					return false;
