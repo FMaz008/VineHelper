@@ -261,6 +261,21 @@ class NotificationMonitor {
 
 		//Check if the user is a gold tier user
 		this.#updateGoldStatus();
+
+		//Change the tab's favicon
+		this.#updateTabFavicon();
+	}
+
+	#updateTabFavicon() {
+		const favicon = document.querySelector("link[rel~='icon']");
+		if (favicon) {
+			favicon.href = "https://vinehelper.ovh/favicon.ico";
+		} else {
+			const link = document.createElement("link");
+			link.rel = "icon"; // Specify the relationship type
+			link.href = "https://vinehelper.ovh/favicon.ico";
+			document.head.appendChild(link);
+		}
 	}
 
 	#hideSelector(selector) {
