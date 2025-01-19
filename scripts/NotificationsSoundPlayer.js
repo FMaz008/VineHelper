@@ -18,6 +18,16 @@ class NotificationsSoundPlayer {
 		this.#waitDelay = 250;
 		this.#notificationType = -1; //-1 = no sound to play
 		this.#loadSettings();
+
+		//Wait until the computer is awaken from sleep
+		window.addEventListener("pageshow", (event) => {
+			if (event.persisted) {
+				this.#state = STATE_COOLDOWN;
+				setTimeout(() => {
+					this.#state = STATE_READY;
+				}, 5000);
+			}
+		});
 	}
 	async #loadSettings() {
 		while (!Settings || !Settings.isLoaded()) {
