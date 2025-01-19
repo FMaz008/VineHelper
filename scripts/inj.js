@@ -142,11 +142,18 @@ window.fetch = async (...args) => {
 				//If the country code is not jp or si:
 				if (countryCode !== "jp" && countryCode !== "sg") {
 					//Replace all non-standard characters
-					newValue = variation.dimensions[key].replace(/[^a-zA-Z0-9\][()/.,\-"'¼½¾+&%# ]/g, "?");
+					newValue = variation.dimensions[key].replace(/[^a-zA-Z0-9\][(){}/.,\-"'¼½¾+&%# ]/g, "?");
 					if (newValue !== variation.dimensions[key]) {
 						variation.dimensions[key] = newValue;
 						fixed++;
 					}
+				}
+
+				//Escape the special characters
+				newValue = variation.dimensions[key].replace(/[/\\()[\]{}]/g, "\\$&");
+				if (newValue !== variation.dimensions[key]) {
+					variation.dimensions[key] = newValue;
+					fixed++;
 				}
 
 				// Any variation ending with a space will crash, ensure there is no space at the end.
