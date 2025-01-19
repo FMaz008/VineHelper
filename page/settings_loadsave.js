@@ -8,7 +8,6 @@ var HiddenList = new HiddenListMgr();
 //          The console used is the browser console, not the inspector console.
 const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_URL = "http://127.0.0.1:3000";
-const arrSounds = ["notification", "upgrade", "vintage-horn"];
 
 async function drawDiscord() {
 	//Show or hide the discord options
