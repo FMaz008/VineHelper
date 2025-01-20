@@ -1748,10 +1748,17 @@ async function openDynamicModal(asin, queue, isParent, enrollmentGUID, autoClick
 		}
 
 		//If DOM is loaded and ready
-		while (!document.querySelector("#a-popover-3")) {
+		let maxAttempts = 3;
+		while (!document.querySelector(".a-popover-modal") && maxAttempts > 0) {
 			btn.click();
-			await new Promise((r) => setTimeout(r, 100));
+			await new Promise((r) => setTimeout(r, 300));
+			maxAttempts--;
 		}
+
+		if (maxAttempts == 0) {
+			console.error("Failed to open modal");
+		}
+
 		setTimeout(function () {
 			container1.remove(); // Removes container1 from the DOM
 		}, 500);
