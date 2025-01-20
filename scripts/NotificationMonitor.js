@@ -44,6 +44,7 @@ const TYPE_HIGHLIGHT_OR_ZEROETV = 9;
 class NotificationMonitor {
 	#feedPaused;
 	#feedPausedAmountStored;
+	#serviceWorkerStatusTimer;
 	#waitTimer; //Timer which wait a short delay to see if anything new is about to happen
 	#imageUrls;
 	#asinsOnPage;
@@ -165,6 +166,9 @@ class NotificationMonitor {
 
 		//Service worker status
 		this.#updateServiceWorkerStatus();
+
+		//Create a timer to check if the service worker is still running
+		this.#createServiceWorkerStatusTimer();
 
 		//Obtain the status of the WebSocket connection.
 		chrome.runtime.sendMessage({
@@ -368,9 +372,16 @@ class NotificationMonitor {
 		});
 	}
 
-	async disableItem(asin) {
-		const notif = this.#getNotificationByASIN(asin);
+	async #enableItem(notif) {
+		if (!notif) {
+			return false;
+		}
+		notif.style.opacity = "1";
+		notif.style.filter = "brightness(1)";
+		notif.querySelector(".unavailable-banner")?.remove();
+	}
 
+	async #disableItem(notif) {
 		if (!notif) {
 			return false;
 		}
@@ -410,13 +421,22 @@ class NotificationMonitor {
 			return false;
 		}
 
+		const recommendationType = getRecommendationTypeFromQueue(queue); //grid.js
+		const recommendationId = generateRecommendationString(recommendationType, asin, enrollment_guid); //grid.js
+
 		//If the notification already exist, ignore this request.
 		if (this.#asinsOnPage.has(asin)) {
 			//Remove the old item
-			const element = this.#gridContainer.querySelector("#vh-notification-" + asin);
+			const element = this.#getNotificationByASIN(asin);
 			if (element) {
-				element.remove();
-				logger.add(`NOTIF: Item ${asin} already exist, replacing it.`);
+				logger.add(`NOTIF: Item ${asin} already exist, updating RecommendationId.`);
+				element.dataset.recommendationId = recommendationId;
+				element.querySelector(`input[data-asin='${asin}']`).dataset.recommendationId = recommendationId;
+
+				if (unavailable != 1) {
+					this.#enableItem(element);
+				}
+				return false;
 			}
 		} else {
 			this.#asinsOnPage.add(asin);
@@ -431,9 +451,6 @@ class NotificationMonitor {
 				this.#imageUrls.add(img_url);
 			}
 		}
-
-		const recommendationType = getRecommendationTypeFromQueue(queue); //grid.js
-		const recommendationId = generateRecommendationString(recommendationType, asin, enrollment_guid); //grid.js
 
 		//Add the notification
 		let templateFile;
@@ -520,7 +537,7 @@ class NotificationMonitor {
 
 		//If unavailable, change opacity
 		if (unavailable == 1) {
-			this.disableItem(asin);
+			this.#disableItem(tileDOM);
 		}
 
 		//Update the most recent date
@@ -707,6 +724,12 @@ class NotificationMonitor {
 		}
 	}
 
+	#createServiceWorkerStatusTimer() {
+		this.#serviceWorkerStatusTimer = window.setInterval(() => {
+			this.#updateServiceWorkerStatus();
+		}, 10000);
+	}
+
 	#updateServiceWorkerStatus() {
 		if (!Settings.get("notification.active")) {
 			this.#setServiceWorkerStatus(false, "You need to enable the notifications in the settings.");
@@ -723,7 +746,9 @@ class NotificationMonitor {
 					"', which is not currently supported by Vine Helper. Reach out so we can add it!"
 			);
 		} else if (Settings.get("notification.active")) {
-			this.#setServiceWorkerStatus(true, "Working.");
+			//Send a message to the service worker to check if it is still running
+			this.#setServiceWorkerStatus(false, "Pinging service worker...");
+			chrome.runtime.sendMessage({ type: "ping" });
 		}
 	}
 
@@ -1041,6 +1066,9 @@ class NotificationMonitor {
 				return false;
 			}
 
+			if (data.type == "pong") {
+				this.#setServiceWorkerStatus(true, "Service worker is running.");
+			}
 			if (data.type == "newETV") {
 				this.setETVFromASIN(data.asin, data.etv);
 			}

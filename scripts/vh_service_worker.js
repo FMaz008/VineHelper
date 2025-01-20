@@ -34,6 +34,10 @@ chrome.runtime.onMessage.addListener((data, sender, sendResponse) => {
 
 	sendResponse({ success: true });
 
+	if (data.type == "ping") {
+		sendMessageToAllTabs({ type: "pong" }, "Service worker is running.");
+	}
+
 	if (data.type == "fetchLast100Items") {
 		//Get the last 100 most recent items
 		if (socket?.connected) {
