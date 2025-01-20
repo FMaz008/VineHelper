@@ -1008,6 +1008,7 @@ async function serverProductsResponse(data) {
 //Messaging from accross tabs and context
 //Messages sent via window.postMessage({}, "*");
 //Most requests comes from the inj.js file, which is in a different scope/context.
+var arrVariationsAsins = null;
 window.addEventListener("message", async function (event) {
 	//Do not run the extension if ultraviner is running
 	if (ultraviner) {
@@ -1065,8 +1066,19 @@ window.addEventListener("message", async function (event) {
 		await Notifications.pushNotification(note);
 	}
 
+	//If we got back a message after we found variations
+	if (event.data.type == "variations") {
+		//Make an array of all the asin values
+		arrVariationsAsins = event.data.data.map((variation) => variation.asin);
+		//Will be sent by the ETV request
+	}
+
 	//If we got back a message after we found an ETV.
 	if (event.data.type == "etv") {
+		if (arrVariationsAsins != null) {
+			console.log(arrVariationsAsins);
+		}
+
 		//Send the ETV info to the server
 		let tileASIN = event.data.data.parent_asin;
 		if (tileASIN === null) {
@@ -1081,7 +1093,10 @@ window.addEventListener("message", async function (event) {
 			parent_asin: event.data.data.parent_asin,
 			queue: env.data.vineQueue,
 			etv: event.data.data.etv,
+			variations: arrVariationsAsins,
 		};
+
+		arrVariationsAsins = null;
 
 		await fetch(env.getAPIUrl(), {
 			method: "POST",

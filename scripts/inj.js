@@ -103,6 +103,14 @@ window.fetch = async (...args) => {
 		if (result.variations !== undefined) {
 			//The item has variations and so is a parent, store it for later interceptions
 			extHelper_LastParentVariant = result;
+
+			window.postMessage(
+				{
+					type: "variations",
+					data: result.variations,
+				},
+				"/" //message should be sent to the same origin as the current document.
+			);
 		} else if (result.taxValue !== undefined) {
 			// The item has an ETV value, let's find out if it's a child or a parent
 			const isChild = !!lastParent?.variations?.some((v) => v.asin == result.asin);
