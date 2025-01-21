@@ -1036,14 +1036,19 @@ class NotificationMonitor {
 	#autoTruncate(max = 2000) {
 		//Auto truncate
 		if (document.getElementById("auto-truncate").checked) {
-			const itemsD = document.getElementsByClassName("vvp-item-tile");
+			const itemsD = Array.from(document.getElementsByClassName("vvp-item-tile")); // Convert to array
 			const itemsCount = itemsD.length;
 			if (itemsCount > max) {
-				for (let i = itemsCount - 1; i >= 2000; i--) {
-					logger.add(`NOTIF: Auto truncating item from the page.`);
-					itemsD[i].remove(); //remove the element from the DOM
-					this.#asinsOnPage.delete(itemsD[i].dataset.asin);
+				logger.add(`NOTIF: Auto truncating item(s) from the page.`);
+				const itemsToRemove = []; // Collect items to remove
+				for (let i = itemsCount - 1; i >= max; i--) {
+					if (itemsD[i]) {
+						this.#asinsOnPage.delete(itemsD[i].dataset.asin);
+						itemsToRemove.push(itemsD[i]); // Add to removal list
+					}
 				}
+				// Remove all items at once
+				itemsToRemove.forEach((item) => item.remove());
 			}
 		}
 	}
@@ -1086,7 +1091,8 @@ class NotificationMonitor {
 			}
 
 			if (data.type == "unavailableItem") {
-				this.#disableItem(data.asin);
+				const notif = this.#getNotificationByASIN(data.asin);
+				this.#disableItem(notif);
 			}
 			if (data.type == "newItem") {
 				let {
