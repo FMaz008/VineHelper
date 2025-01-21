@@ -606,6 +606,9 @@ class NotificationMonitor {
 	}
 
 	async setETVFromASIN(asin, etv) {
+		if (!this.#asinsOnPage.has(asin)) {
+			return false;
+		}
 		const notif = this.#getNotificationByASIN(asin);
 		if (!notif) {
 			return false;
@@ -1083,7 +1086,7 @@ class NotificationMonitor {
 			}
 
 			if (data.type == "unavailableItem") {
-				this.disableItem(data.asin);
+				this.#disableItem(data.asin);
 			}
 			if (data.type == "newItem") {
 				let {
