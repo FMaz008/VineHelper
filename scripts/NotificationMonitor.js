@@ -74,26 +74,36 @@ class NotificationMonitor {
 		//Remove the categories
 		this.#hideSelector("#vvp-browse-nodes-container");
 
-		//Remove the header
-		this.#hideSelector("#vvp-header");
+		//Desktop header/footer
+		this.#hideSelector("#vvp-header, #navFooter, ul.a-tabs");
+
+		//Mobile header/footer
+		this.#hideSelector("header, footer");
 
 		//Remove the search bar
 		this.#hideSelector(".vvp-items-button-and-search-container");
-
-		//Remove the nagivation tabs:
-		this.#hideSelector("ul.a-tabs");
-
-		//Remove the footer;
-		this.#hideSelector("#navFooter");
-
-		//Remove the header:
-		this.#hideSelector("#navbar-main");
 
 		//Remove the carousel/suggested items
 		this.#hideSelector("#rhf");
 
 		//Remove the header add-ons
 		this.#hideSelector(".amzn-ss-wrap");
+
+		//Delete all the scripts
+		document.querySelectorAll("head script, body script").forEach((elem) => {
+			elem.remove();
+		});
+
+		//Remove any pre-existing VH header if the extension was reloaded
+		const vhHeader = document.getElementById("vh-notifications-monitor-header");
+		if (vhHeader) {
+			vhHeader.remove();
+			//Remove the tile size tool
+			const tileSizeTool = document.getElementById("vh-tile-size-tool-container");
+			if (tileSizeTool) {
+				tileSizeTool.remove();
+			}
+		}
 
 		//Remove the page width limitation
 		document.querySelector(".vvp-body").style.maxWidth = "unset";
@@ -284,7 +294,9 @@ class NotificationMonitor {
 
 	#hideSelector(selector) {
 		try {
-			document.querySelector(selector).style.display = "none";
+			document.querySelectorAll(selector).forEach((elem) => {
+				elem.style.display = "none";
+			});
 		} catch (err) {
 			//Do nothing
 		}
@@ -648,7 +660,7 @@ class NotificationMonitor {
 
 		//If Brenda is enabled, toggle the button display according to wether the ETV is known.
 		if (brendaAnnounce) {
-			if (etvObj.dataset.etvMin == "") {
+			if (etvObj.dataset.etvMin === "") {
 				brendaAnnounce.style.display = "none";
 			} else {
 				brendaAnnounce.style.display = "block";
@@ -750,7 +762,7 @@ class NotificationMonitor {
 			);
 		} else if (Settings.get("notification.active")) {
 			//Send a message to the service worker to check if it is still running
-			this.#setServiceWorkerStatus(false, "Pinging service worker...");
+			this.#setServiceWorkerStatus(false, "Not responding, reload the page.");
 			chrome.runtime.sendMessage({ type: "ping" });
 		}
 	}
