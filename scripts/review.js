@@ -83,18 +83,20 @@ async function boot_review() {
 	Tpl.setVar("tpl_manage_url", chrome.runtime.getURL("page/reviews_templates.html"));
 	Tpl.setVar("review_manage_url", chrome.runtime.getURL("page/reviews_manage.html"));
 	Tpl.setVar("asin", asin);
-	let content = Tpl.render(prom);
 
 	//Firefox seems to execute this script before the content (presumably loaded from a fetch request)
 	//is available. Waiting 500ms seems to give time to the elements to exist.
 
+	let content = null;
 	let attempts = 0;
 	while (attempts >= 0) {
 		const submitContainer = document.querySelector(".in-context-ryp__submit-button-frame-desktop");
 		if (submitContainer) {
+			content = Tpl.render(prom, true);
 			submitContainer.parentElement.insertBefore(content, submitContainer);
 			break;
 		} else {
+			content = Tpl.render(prom);
 			arrZone = document.querySelectorAll("form.ryp__review-form__form .ryp__card-frame");
 			container = arrZone[arrZone.length - 1];
 			if (container !== undefined) {
