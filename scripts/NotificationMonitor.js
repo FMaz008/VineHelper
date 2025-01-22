@@ -246,7 +246,6 @@ class NotificationMonitor {
 			this.#updateTabTitle();
 		});
 		this.#filterType = filterType.value;
-		console.log(this.#filterType);
 
 		const filterQueue = document.querySelector("select[name='filter-queue']");
 		filterQueue.addEventListener("change", (event) => {
@@ -258,7 +257,7 @@ class NotificationMonitor {
 			this.#updateTabTitle();
 		});
 		this.#filterQueue = filterQueue.value;
-		console.log(this.#filterQueue);
+
 		// Add the fix toolbar with the pause button if we scroll past the original pause button
 		const originalPauseBtn = document.getElementById("pauseFeed");
 		const fixedPauseBtn = document.getElementById("pauseFeed-fixed");
@@ -1061,7 +1060,7 @@ class NotificationMonitor {
 		});
 	}
 
-	#autoTruncate(max = 2000) {
+	#autoTruncate(max = 1000) {
 		//Auto truncate
 		if (document.getElementById("auto-truncate").checked) {
 			const itemsD = Array.from(document.getElementsByClassName("vvp-item-tile")); // Convert to array
