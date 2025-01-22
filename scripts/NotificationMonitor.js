@@ -1068,7 +1068,7 @@ class NotificationMonitor {
 		});
 	}
 
-	#autoTruncate(max = 10) {
+	#autoTruncate(max = 1000) {
 		//Auto truncate
 		if (document.getElementById("auto-truncate").checked) {
 			const itemsD = Array.from(document.getElementsByClassName("vvp-item-tile")); // Convert to array
