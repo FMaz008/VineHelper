@@ -312,6 +312,7 @@ class NotificationMonitor {
 		}
 		this.#goldTier = gold;
 
+		logger.add("NOTIF:Gold tier: " + this.#goldTier);
 		if (!this.#goldTier) {
 			//Get the maximum allowed value
 			const rawText = document.querySelector("#vvp-vine-participation-content ul>li").innerText;
@@ -319,6 +320,7 @@ class NotificationMonitor {
 			const match = rawText.match(regex);
 			if (match) {
 				this.#etvLimit = parseFloat(match[1]);
+				logger.add("NOTIF: ETV limit: " + this.#etvLimit);
 			}
 		}
 	}
@@ -697,7 +699,7 @@ class NotificationMonitor {
 					if (val2 !== false) {
 						//Remove (permanently "hide") the tile
 						logger.add(`NOTIF: Item ${asin} matched hide keyword ${val2}. Hidding it.`);
-						notif.remove();
+						notif?.remove();
 						this.#asinsOnPage.delete(asin);
 						this.#updateTabTitle(); //Update the tab counter
 					}
@@ -712,7 +714,7 @@ class NotificationMonitor {
 
 		//If the user if silver, remove he items which are above the threshold
 		if (!this.#goldTier) {
-			if (this.#etvLimit != null && parseFloat(etvObj.dataset.etvMax) > this.#etvLimit) {
+			if (this.#etvLimit != null && parseFloat(etvObj.dataset.etvMin) > this.#etvLimit) {
 				//Remove the See Details button for item outside the tier limit.
 				notif.querySelector(".vvp-details-btn")?.remove();
 			}
