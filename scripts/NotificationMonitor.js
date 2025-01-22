@@ -195,6 +195,10 @@ class NotificationMonitor {
 		btnClearMonitor.addEventListener("click", async (event) => {
 			//Delete all items from the grid
 			if (confirm("Clear all items?")) {
+				const elements = this.#gridContainer.getElementsByClassName("vvp-item-tile");
+				Array.from(elements).forEach((element) => {
+					this.#removeTile(element, null);
+				});
 				this.#gridContainer.innerHTML = "";
 				this.#asinsOnPage.clear();
 
@@ -603,14 +607,17 @@ class NotificationMonitor {
 			const btnContainer = document.querySelector(`#vh-notification-${asin} .vvp-details-btn`);
 			btnContainer.classList.remove("vvp-details-btn");
 
-			//Bind the button's click
+			//Store the function reference as a property on the element
 			const seeDetailsBtn = document.querySelector(`#vh-notification-${asin} .a-button-primary input`);
-			seeDetailsBtn.addEventListener("click", () => {
+			seeDetailsBtn.openDetailsHandler = () => {
 				window.open(
 					`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`,
 					"_blank"
 				);
-			});
+			};
+
+			//Add the event listener using the stored reference
+			seeDetailsBtn.addEventListener("click", seeDetailsBtn.openDetailsHandler);
 		}
 
 		//Autotruncate the items if there are too many
@@ -909,17 +916,18 @@ class NotificationMonitor {
 	//############################################################
 	//## CLICK HANDLERS
 
-	#handleHideClick(e) {
+	#handleHideClick = (e) => {
 		e.preventDefault();
 
 		const asin = e.target.dataset.asin;
 		logger.add(`NOTIF: Hiding icon clicked for item ${asin}`);
-		document.querySelector("#vh-notification-" + asin).remove();
+		const tile = document.querySelector("#vh-notification-" + asin);
+		this.#removeTile(tile, asin);
 		this.#asinsOnPage.delete(asin);
 		this.#updateTabTitle();
-	}
+	};
 
-	#handleBrendaClick(e) {
+	#handleBrendaClick = (e) => {
 		e.preventDefault();
 
 		const asin = e.target.dataset.asin;
@@ -928,9 +936,9 @@ class NotificationMonitor {
 		let etv = document.querySelector("#vh-notification-" + asin + " .etv").dataset.etvMax;
 
 		brendaAnnounceQueue.announce(asin, etv, queue, i13n.getDomainTLD());
-	}
+	};
 
-	#handlePinClick(e) {
+	#handlePinClick = (e) => {
 		e.preventDefault();
 
 		const asin = e.target.dataset.asin;
@@ -950,9 +958,9 @@ class NotificationMonitor {
 				content: title,
 			})
 		);
-	}
+	};
 
-	#handleDetailsClick(e) {
+	#handleDetailsClick = (e) => {
 		e.preventDefault();
 
 		const asin = e.target.dataset.asin;
@@ -982,9 +990,9 @@ class NotificationMonitor {
 			blurKW +
 			"</li></ul>";
 		m.show();
-	}
+	};
 
-	#handleReportClick(e) {
+	#handleReportClick = (e) => {
 		e.preventDefault(); // Prevent the default click behavior
 		const asin = e.target.dataset.asin;
 
@@ -999,7 +1007,7 @@ class NotificationMonitor {
 		if (val !== null && val.toLowerCase() == "report") {
 			this.#send_report(asin);
 		}
-	}
+	};
 
 	#send_report(asin) {
 		let manifest = chrome.runtime.getManifest();
@@ -1060,25 +1068,63 @@ class NotificationMonitor {
 		});
 	}
 
-	#autoTruncate(max = 1000) {
+	#autoTruncate(max = 10) {
 		//Auto truncate
 		if (document.getElementById("auto-truncate").checked) {
 			const itemsD = Array.from(document.getElementsByClassName("vvp-item-tile")); // Convert to array
 			const itemsCount = itemsD.length;
 			if (itemsCount > max) {
 				logger.add(`NOTIF: Auto truncating item(s) from the page.`);
-				const itemsToRemove = []; // Collect items to remove
 				for (let i = itemsCount - 1; i >= max; i--) {
 					if (itemsD[i]) {
-						this.#asinsOnPage.delete(itemsD[i].dataset.asin);
-						itemsToRemove.push(itemsD[i]); // Add to removal list
+						this.#removeTile(itemsD[i], itemsD[i].dataset.asin);
 					}
 				}
-				// Remove all items at once
-				itemsToRemove.forEach((item) => item.remove());
 			}
 		}
 	}
+
+	#removeTile(tile, asin) {
+		if (asin != null) {
+			this.#asinsOnPage.delete(asin);
+		}
+
+		// Remove specific event listeners
+		const reportBtn = tile.querySelector('[id^="vh-report-link-"]');
+		if (reportBtn) {
+			reportBtn.removeEventListener("click", this.#handleReportClick);
+		}
+
+		const announceBtn = tile.querySelector('[id^="vh-announce-link-"]');
+		if (announceBtn) {
+			announceBtn.removeEventListener("click", this.#handleBrendaClick);
+		}
+
+		const pinBtn = tile.querySelector('[id^="vh-pin-link-"]');
+		if (pinBtn) {
+			pinBtn.removeEventListener("click", this.#handlePinClick);
+		}
+
+		const hideBtn = tile.querySelector('[id^="vh-hide-link-"]');
+		if (hideBtn) {
+			hideBtn.removeEventListener("click", this.#handleHideClick);
+		}
+
+		const detailsBtn = tile.querySelector('[id^="vh-reason-link-"]');
+		if (detailsBtn) {
+			detailsBtn.removeEventListener("click", this.#handleDetailsClick);
+		}
+
+		const seeDetailsBtn = tile.querySelector(`.a-button-primary input`);
+		if (seeDetailsBtn && seeDetailsBtn.openDetailsHandler) {
+			seeDetailsBtn.removeEventListener("click", seeDetailsBtn.openDetailsHandler);
+			delete seeDetailsBtn.openDetailsHandler;
+		}
+
+		// Remove the element's data
+		tile.remove();
+	}
+
 	#updateTabTitle() {
 		// Select all child elements of #vvp-items-grid
 		const children = document.querySelectorAll("#vvp-items-grid > *");
