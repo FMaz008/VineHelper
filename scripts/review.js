@@ -90,14 +90,20 @@ async function boot_review() {
 
 	let attempts = 0;
 	while (attempts >= 0) {
-		arrZone = document.querySelectorAll("form.ryp__review-form__form .ryp__card-frame");
-		container = arrZone[arrZone.length - 1];
-
-		if (container !== undefined) {
-			attempts = -1;
-			container.insertAdjacentHTML("afterend", content);
+		const submitContainer = document.querySelector(".in-context-ryp__submit-button-frame-desktop");
+		if (submitContainer) {
+			submitContainer.parentElement.insertBefore(content, submitContainer);
 			break;
-		} else if (attempts > 20) {
+		} else {
+			arrZone = document.querySelectorAll("form.ryp__review-form__form .ryp__card-frame");
+			container = arrZone[arrZone.length - 1];
+			if (container !== undefined) {
+				container.insertAdjacentHTML("afterend", content);
+				break;
+			}
+		}
+
+		if (attempts > 20) {
 			break; //Something is wrong, don't loop infinitely.
 		} else {
 			//Wait 100ms and try again
@@ -110,7 +116,6 @@ async function boot_review() {
 	let selectBox = document.getElementById("template_name");
 	let title = "";
 	if (arrTemplate.length > 0) {
-		console.log(arrTemplate.length);
 		for (let i = 0; i < arrTemplate.length; i++) {
 			try {
 				title = JSON.parse(arrTemplate[i].title);
@@ -132,7 +137,7 @@ async function boot_review() {
 		let id = document.getElementById("template_name").value;
 		for (let i = 0; i < arrTemplate.length; i++) {
 			if (arrTemplate[i].id == id) {
-				let review = document.getElementById("scarface-review-text-card-title");
+				let review = getReviewContentObject();
 				try {
 					review.value += JSON.parse(arrTemplate[i].content);
 				} catch (e) {
@@ -147,9 +152,11 @@ async function boot_review() {
 	//Save review button
 	document.getElementById("saveReview").addEventListener("click", async function () {
 		let found = false;
-		let reviewTitle = document.getElementById("scarface-review-title-label").value;
 
-		let reviewContent = document.getElementById("scarface-review-text-card-title").value;
+		//Check if the review title is empt
+		let reviewTitle = getReviewTitleObject().value;
+
+		let reviewContent = getReviewContentObject().value;
 
 		if (!reviewTitle || !reviewContent) {
 			return;
@@ -166,8 +173,8 @@ async function boot_review() {
 			arrReview.push({
 				asin: asin,
 				date: new Date().toString(),
-				title: JSON.stringify(document.getElementById("scarface-review-title-label").value),
-				content: JSON.stringify(document.getElementById("scarface-review-text-card-title").value),
+				title: JSON.stringify(getReviewTitleObject().value),
+				content: JSON.stringify(getReviewContentObject().value),
 			});
 
 			//Limit the saved array to 100. Delete older ones.
@@ -186,4 +193,22 @@ async function boot_review() {
 			showRuntime("Error saving review: " + e.message);
 		}
 	});
+
+	function getReviewTitleObject() {
+		let reviewTitle;
+		reviewTitle = document.getElementById("reviewTitle");
+		if (reviewTitle == undefined) {
+			return document.getElementById("scarface-review-title-label");
+		}
+		return reviewTitle;
+	}
+
+	function getReviewContentObject() {
+		let reviewContent;
+		reviewContent = document.getElementById("reviewText");
+		if (reviewContent == undefined) {
+			return document.getElementById("scarface-review-text-card-title");
+		}
+		return reviewContent;
+	}
 }
