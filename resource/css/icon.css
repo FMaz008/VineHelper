@@ -400,10 +400,6 @@ div[role="navigation"] > ul > li {
 }
 
 @media (prefers-color-scheme: dark) {
-	.vh-icon-question {
-		filter: invert(1);
-	}
-
 	.vh-icon-request {
 		filter: invert(1);
 	}

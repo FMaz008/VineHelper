@@ -65,6 +65,9 @@ class NotificationMonitor {
 		this.#gridContainer = document.querySelector("#vvp-items-grid");
 		this.#gridContainer.innerHTML = "";
 
+		//Check if the user is a gold tier user
+		this.#updateGoldStatus();
+
 		//Remove the item count
 		this.#hideSelector("#vvp-items-grid-container>p");
 
@@ -194,6 +197,7 @@ class NotificationMonitor {
 			if (confirm("Clear all items?")) {
 				this.#gridContainer.innerHTML = "";
 				this.#asinsOnPage.clear();
+
 				this.#imageUrls.clear();
 				this.#updateTabTitle();
 			}
@@ -241,6 +245,9 @@ class NotificationMonitor {
 			});
 			this.#updateTabTitle();
 		});
+		this.#filterType = filterType.value;
+		console.log(this.#filterType);
+
 		const filterQueue = document.querySelector("select[name='filter-queue']");
 		filterQueue.addEventListener("change", (event) => {
 			this.#filterQueue = filterQueue.value;
@@ -250,7 +257,8 @@ class NotificationMonitor {
 			});
 			this.#updateTabTitle();
 		});
-
+		this.#filterQueue = filterQueue.value;
+		console.log(this.#filterQueue);
 		// Add the fix toolbar with the pause button if we scroll past the original pause button
 		const originalPauseBtn = document.getElementById("pauseFeed");
 		const fixedPauseBtn = document.getElementById("pauseFeed-fixed");
@@ -275,9 +283,6 @@ class NotificationMonitor {
 
 		//Activate the listeners
 		this.#listeners();
-
-		//Check if the user is a gold tier user
-		this.#updateGoldStatus();
 
 		//Change the tab's favicon
 		this.#updateTabFavicon();
