@@ -193,6 +193,9 @@ class NotificationMonitor {
 			//Delete all items from the grid
 			if (confirm("Clear all items?")) {
 				this.#gridContainer.innerHTML = "";
+				this.#asinsOnPage.clear();
+				this.#imageUrls.clear();
+				this.#updateTabTitle();
 			}
 		});
 
