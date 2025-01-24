@@ -787,7 +787,6 @@ class NotificationMonitor {
 			);
 		} else if (Settings.get("notification.active")) {
 			//Send a message to the service worker to check if it is still running
-			this.#setServiceWorkerStatus(false, "");
 			const statusTimer = window.setTimeout(() => {
 				const txtStatus = document.querySelector("#statusSW .description");
 				if (txtStatus.innerText == "") {
