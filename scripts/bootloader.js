@@ -59,6 +59,9 @@ var tileSizer = new TileSizer();
 
 import { Toolbar } from "./Toolbar.js";
 
+import { Tooltip } from "./Tooltip.js";
+var tooltip = new Tooltip();
+
 const ultraviner = env.data.ultraviner; //If Ultravine is detected, Vine Helper will deactivate itself to avoid conflicts.
 
 //Create the 4 grids/tabs instance of Grid:
@@ -78,9 +81,6 @@ env.data.gridDOM = {
 	hidden: null,
 	pinned: null,
 };
-
-//Tooltip used to display full titles/description. Same tooltip will get reused for all uses.
-const tooltip = document.createElement("div");
 
 //Constants
 env.data.NOT_DISCARDED_ORDER_SUCCESS = -4;
@@ -643,9 +643,6 @@ async function initTilesAndDrawToolbars() {
 	//- Create an empty toolbar for the item tile
 	//- Create the tooltip to display full titles when hovering item names
 
-	tooltip.className = "hover-tooltip";
-	document.body.appendChild(tooltip);
-
 	const arrObj = document.querySelectorAll(".vvp-item-tile:not(.pinned)");
 	let tile = null;
 	let a = null;
@@ -655,21 +652,8 @@ async function initTilesAndDrawToolbars() {
 
 		//Add tool tip to the truncated item title link
 		if (Settings.get("general.displayFullTitleTooltip")) {
-			a = arrObj[i].querySelector(".a-link-normal");
-			a.setAttribute("data-tooltip", tile.getTitle());
-			a.addEventListener("mouseenter", (event) => {
-				tooltip.textContent = event.currentTarget.getAttribute("data-tooltip");
-				tooltip.style.display = "block";
-				positionTooltip(event);
-			});
-
-			a.addEventListener("mouseleave", () => {
-				tooltip.style.display = "none";
-			});
-
-			a.addEventListener("mousemove", (event) => {
-				positionTooltip(event);
-			});
+			const titleDOM = arrObj[i].querySelector(".a-link-normal");
+			tooltip.addTooltip(titleDOM, tile.getTitle());
 		}
 
 		//Generate the toolbar
@@ -704,29 +688,6 @@ async function initTilesAndDrawToolbars() {
 
 	toolbarsDrawn = true;
 	hookMgr.hookExecute("tilesUpdated", null);
-}
-
-// Function to position the tooltip
-function positionTooltip(event) {
-	const tooltipRect = tooltip.getBoundingClientRect();
-	const offsetX = 10; // horizontal offset from the link element
-	const offsetY = 10; // vertical offset from the link element
-
-	// Use pageX and pageY to account for the scrolled distance
-	let tooltipX = event.pageX + offsetX;
-	let tooltipY = event.pageY + offsetY;
-
-	// Ensure the tooltip doesn't go off-screen
-	if (tooltipX + tooltipRect.width > window.scrollX + document.documentElement.clientWidth) {
-		tooltipX = event.pageX - tooltipRect.width - offsetX;
-	}
-
-	if (tooltipY + tooltipRect.height > window.scrollY + document.documentElement.clientHeight) {
-		tooltipY = event.pageY - tooltipRect.height - offsetY;
-	}
-
-	tooltip.style.left = `${tooltipX}px`;
-	tooltip.style.top = `${tooltipY}px`;
 }
 
 //This function will return an array of all the product on the page, with their description and thumbnail url

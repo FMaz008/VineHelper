@@ -267,6 +267,7 @@ class SettingsMgr {
 				highlightKeywords: [],
 				blurKeywords: [],
 				displayVariantIcon: false,
+				displayFullTitleTooltip: false,
 				versionInfoPopup: 0,
 				GDPRPopup: true,
 				highlightKWFirst: true,

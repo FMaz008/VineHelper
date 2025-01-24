@@ -29,6 +29,9 @@ import { keywordMatch } from "./service_worker/keywordMatch.js";
 import { TileSizer } from "./TileSizer.js";
 var tileSizer = new TileSizer();
 
+import { Tooltip } from "./Tooltip.js";
+var tooltip = new Tooltip();
+
 import { BrendaAnnounceQueue } from "./BrendaAnnounce.js";
 var brendaAnnounceQueue = new BrendaAnnounceQueue();
 
@@ -519,6 +522,12 @@ class NotificationMonitor {
 
 		//Set the tile custom dimension according to the settings.
 		tileSizer.adjustAll(tileDOM);
+
+		//Add tool tip to the truncated item title link
+		if (Settings.get("general.displayFullTitleTooltip")) {
+			const titleDOM = tileDOM.querySelector(".a-link-normal");
+			tooltip.addTooltip(titleDOM, title);
+		}
 
 		//If the feed is paused, up the counter and rename the Resume button
 		if (this.#feedPaused) {
@@ -1120,6 +1129,9 @@ class NotificationMonitor {
 			seeDetailsBtn.removeEventListener("click", seeDetailsBtn.openDetailsHandler);
 			delete seeDetailsBtn.openDetailsHandler;
 		}
+
+		const a = tile.querySelector(".a-link-normal");
+		tooltip.removeTooltip(a);
 
 		// Remove the element's data
 		tile.remove();
