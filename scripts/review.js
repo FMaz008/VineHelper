@@ -139,8 +139,10 @@ async function boot_review() {
 		let id = document.getElementById("template_name").value;
 		for (let i = 0; i < arrTemplate.length; i++) {
 			if (arrTemplate[i].id == id) {
+				let title = getReviewTitleObject();
 				let review = getReviewContentObject();
 				try {
+					title.value += JSON.parse(arrTemplate[i].title);
 					review.value += JSON.parse(arrTemplate[i].content);
 				} catch (e) {
 					showRuntime("Error with insertTemplate listener: " + e.message);
