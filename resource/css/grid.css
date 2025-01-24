@@ -14,6 +14,7 @@ div.vh-grid,
 #tab-hidden .vvp-item-tile {
 	margin-bottom: 0;
 	margin-top: auto;
+	display: flex;
 }
 
 div.vh-grid .vvp-item-tile {
@@ -21,9 +22,13 @@ div.vh-grid .vvp-item-tile {
 	margin-top: -1px;
 	margin-left: -1px;
 }
+
+div.tab-grid .vvp-item-tile .vvp-item-tile-content,
 div.vh-grid .vvp-item-tile .vvp-item-tile-content {
 	width: 210px;
 	margin: 0 auto;
+	display: flex;
+	flex-direction: column;
 }
 
 div.vh-grid .vvp-item-tile .vvp-item-tile-content > .vvp-item-product-title-container {

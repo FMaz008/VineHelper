@@ -662,24 +662,6 @@ async function initTilesAndDrawToolbars() {
 
 	logger.add("done creating toolbars.");
 
-	//Assign the toolbar item's CSS order depending on the settings
-	if (Settings.get("general.displayETV") && Settings.get("unavailableTab.active")) {
-		//ETV
-		document.querySelectorAll(".vh-toolbar-etv").forEach((item) => {
-			item.style.order = 2;
-		});
-
-		//Order
-		document.querySelectorAll(".vh-order-widget").forEach((item) => {
-			item.style.order = Settings.get("general.listView") ? 3 : 4;
-		});
-
-		//Hide
-		document.querySelectorAll(".vh-hide-link").forEach((item) => {
-			item.style.order = Settings.get("general.listView") ? 4 : 3;
-		});
-	}
-
 	// Scoll to the RFY/AFA/AI header
 	if (Settings.get("general.scrollToRFY")) {
 		var scrollTarget = document.getElementById("vvp-items-button-container");

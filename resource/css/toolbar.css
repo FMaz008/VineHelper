@@ -21,7 +21,6 @@ div.hidden-toolbar.mobile {
 
 div.vh-status-container {
 	position: relative;
-	margin-top: 5px;
 	padding: 0px;
 	z-index: 1;
 	width: 100%;
@@ -31,6 +30,10 @@ div.vh-status-container {
 	color: #0f1111;
 	font-weight: bold;
 	font-size: 10px;
+}
+
+div.vh-status {
+	flex-grow: 1;
 }
 
 div.vh-status-container div.vh-status-container2 {
@@ -43,18 +46,16 @@ div.vh-status-container div.vh-status-container2 {
 	flex-wrap: wrap;
 }
 
-.vh-grid div.vh-toolbar-etv,
+.tab-grid div.vh-toolbar-etv,
 .vh-notification-monitor div.vh-toolbar-etv {
 	display: flex;
-	order: 2;
+	order: 3;
 	flex-direction: row;
 	flex-grow: 1;
 	vertical-align: middle;
 	overflow: visible;
 	line-height: 16px;
-	margin-left: 5px;
-	margin-right: 5px;
-
+	padding-left: 25px;
 	min-width: 70px;
 	flex-basis: 70px;
 	justify-content: center;
@@ -63,7 +64,7 @@ div.vh-status-container div.vh-status-container2 {
 /* order Widgets */
 div.vh-order-widget {
 	display: flex;
-	order: 3;
+	order: 2;
 
 	text-align: center;
 	margin: 0 auto;
