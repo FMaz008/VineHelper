@@ -18,9 +18,7 @@ div.hidden-toolbar {
 div.hidden-toolbar.mobile {
 	width: 120px;
 }
-.vh-order-widget {
-	min-width: 70px;
-}
+
 div.vh-status-container {
 	position: relative;
 	padding: 0px;
