@@ -500,6 +500,11 @@ function initiateTestKeywords() {
 		testKeyword("general.highlightKeywords", title);
 		testKeyword("general.hideKeywords", title);
 	});
+
+	document.querySelector("#testTitleAgain").addEventListener("click", (event) => {
+		const keyUpEvent = new Event("keyup");
+		titleObj.dispatchEvent(keyUpEvent);
+	});
 }
 
 import { keywordMatch } from "../scripts/service_worker/keywordMatch.js";
