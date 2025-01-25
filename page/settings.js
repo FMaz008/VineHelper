@@ -41,7 +41,7 @@ Tpl.flushLocalStorage();
 	}
 	Tpl.setIf("country_known", countryCode != null);
 	Tpl.setVar("monitor_link", "https://www.amazon." + domainTLD + "/vine/vine-items?queue=encore#monitor");
-
+	Tpl.setVar("light_monitor_link", chrome.runtime.getURL("page/notification_monitor_light.html"));
 	document.body.innerHTML = Tpl.render(promMainTpl);
 
 	initTabs();
