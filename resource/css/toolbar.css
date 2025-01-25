@@ -6,6 +6,7 @@
 	margin-bottom: 2px !important;
 }
 #vh-tabs .vvp-item-tile .vvp-item-tile-content > div.vh-img-container {
+	margin-bottom: 0px;
 	margin-top: 5px;
 }
 div.hidden-toolbar {
@@ -66,7 +67,7 @@ div.vh-status-container div.vh-status-container2 {
 div.vh-order-widget {
 	display: flex;
 	order: 2;
-
+	min-width: 57px;
 	text-align: center;
 	margin: 0 auto;
 	height: 20px;
