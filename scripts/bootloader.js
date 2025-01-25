@@ -1486,27 +1486,6 @@ function escapeHTML(value) {
 	return val;
 }
 
-/**
- * Only unescape characters which are frequent in vine title and pause no risk of code injection
- * Used by tile.js:initiateTile
- * @param {string} value
- */
-window.unescapeHTML = function (encodedString) {
-	const entityMap = {
-		"&amp;": "&",
-		"&#34;": '"',
-		"&#39;": "'",
-	};
-
-	// Use a for...in loop for better performance
-	for (const key in entityMap) {
-		const value = entityMap[key];
-		encodedString = encodedString.split(key).join(value);
-	}
-
-	return encodedString;
-};
-
 /** Remove an element from the DOM, ignore if it does not exist
  * @param selector CSS style selector of the element to remove
  */

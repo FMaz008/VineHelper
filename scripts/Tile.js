@@ -13,6 +13,7 @@ var HiddenList = new HiddenListMgr();
 import { keywordMatch } from "./service_worker/keywordMatch.js";
 import { YMDHiStoISODate } from "./DateHelper.js";
 import { updateTileCounts } from "./Grid.js";
+import { unescapeHTML } from "./StringHelper.js";
 
 class Tile {
 	#tileDOM;

@@ -15,16 +15,18 @@ import { getRecommendationTypeFromQueue, generateRecommendationString } from "./
 import { HookMgr } from "./HookMgr.js";
 var hookMgr = new HookMgr();
 
-import { PinnedListMgr } from "./PinnedListMgr.js";
-var PinnedList = new PinnedListMgr();
+import { keywordMatch } from "./service_worker/keywordMatch.js";
 
 import { NotificationsSoundPlayer } from "./NotificationsSoundPlayer.js";
 const SoundPlayer = new NotificationsSoundPlayer();
 
+import { PinnedListMgr } from "./PinnedListMgr.js";
+var PinnedList = new PinnedListMgr();
+
 import { ScreenNotifier, ScreenNotification } from "./ScreenNotifier.js";
 var Notifications = new ScreenNotifier();
 
-import { keywordMatch } from "./service_worker/keywordMatch.js";
+import { unescapeHTML } from "./StringHelper.js";
 
 import { TileSizer } from "./TileSizer.js";
 var tileSizer = new TileSizer();
@@ -407,6 +409,8 @@ class NotificationMonitor {
 		if (!asin) {
 			return false;
 		}
+
+		title = unescapeHTML(title);
 
 		const recommendationType = getRecommendationTypeFromQueue(queue); //grid.js
 		const recommendationId = generateRecommendationString(recommendationType, asin, enrollment_guid); //grid.js
