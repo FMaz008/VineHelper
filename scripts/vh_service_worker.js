@@ -2,14 +2,14 @@ const DEBUG_MODE = false; //Will switch the notification countries to "com"
 const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_WS_URL = "ws://127.0.0.1:3000";
 
+import "../node_modules/socket.io/client-dist/socket.io.min.js";
 import { Internationalization } from "../scripts/Internationalization.js";
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
 import {
-	dataStream as myStream,
 	broadcastFunction,
+	dataStream as myStream,
 	notificationPushFunction,
 } from "./service_worker/NewItemStreamProcessing.js";
-import "../node_modules/socket.io/client-dist/socket.io.min.js";
 
 //Bind/Inject the service worker's functions to the dataStream.
 broadcastFunction(sendMessageToAllTabs);
@@ -89,6 +89,44 @@ chrome.notifications.onClicked.addListener((notificationId) => {
 			url: `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search}`,
 		});
 	}
+});
+
+chrome.runtime.onInstalled.addListener(() => {
+	chrome.contextMenus.create({
+		id: "add-to-hideKeywords",
+		title: "Add to hide keywords",
+		contexts: ["selection"],
+	});
+});
+
+chrome.runtime.onInstalled.addListener(() => {
+	chrome.contextMenus.create({
+		id: "add-to-highlightKeywords",
+		title: "Add to highlight keywords",
+		contexts: ["selection"],
+	});
+});
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+	chrome.storage.local.get("settings", (result) => {
+		const settings = result.settings;
+		if (!settings || !settings.general) return;
+
+		const newKeyword = {
+			contains: info.selectionText,
+			without: "",
+			etv_min: "",
+			etv_max: "",
+		};
+
+		if (info.menuItemId === "add-to-hideKeywords" && settings.general.hideKeywords) {
+			settings.general.hideKeywords.push(newKeyword);
+		} else if (info.menuItemId === "add-to-highlightKeywords" && settings.general.highlightKeywords) {
+			settings.general.highlightKeywords.push(newKeyword);
+		}
+
+		chrome.storage.local.set({ settings: settings });
+	});
 });
 
 //Websocket
