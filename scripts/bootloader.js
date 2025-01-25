@@ -259,12 +259,18 @@ function displayAccountData() {
 
 function hideRecommendationsAndBrowsingHistory() {
 	if (Settings.isPremiumUser() && Settings.get("general.hideRecommendations") == true) {
-		document.getElementById("rhf").style.display = "none";
+		const rhf = document.getElementById("rhf");
+		if (rhf) {
+			rhf.style.display = "none";
+		}
 	}
 }
 function displayAccountHideOptOutButton() {
 	if (Settings.isPremiumUser() && Settings.get("general.hideOptOutButton") == true) {
-		document.getElementById("vvp-opt-out-of-vine-button").style.display = "none";
+		const optOut = document.getElementById("vvp-opt-out-of-vine-button");
+		if (optOut) {
+			optOut.style.display = "none";
+		}
 	}
 }
 

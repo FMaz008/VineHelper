@@ -12,8 +12,8 @@ div.vh-grid,
 #vvp-items-grid .vvp-item-tile,
 #tab-unavailable .vvp-item-tile,
 #tab-hidden .vvp-item-tile {
-	margin-bottom: 0;
-	margin-top: auto;
+	margin-top: -1px;
+	margin-left: -1px;
 	display: flex;
 }
 
@@ -23,26 +23,18 @@ div.vh-grid .vvp-item-tile {
 	margin-left: -1px;
 }
 
+#vvp-items-grid.tab-grid .vvp-item-tile .vvp-item-tile-content,
 div.tab-grid .vvp-item-tile .vvp-item-tile-content,
 div.vh-grid .vvp-item-tile .vvp-item-tile-content {
-	width: 210px;
-	margin: 0 auto;
+	overflow: hidden;
+	width: 100%;
+	margin: 0 2px;
 	display: flex;
 	flex-direction: column;
 }
 
 div.vh-grid .vvp-item-tile .vvp-item-tile-content > .vvp-item-product-title-container {
 	height: 60px;
-}
-
-div.vh-grid .vvp-item-tile .vvp-item-tile-content > * {
-	width: 100%;
-	margin: 20px 0;
-}
-
-div.vh-grid .vvp-item-tile .vvp-item-tile-content > * {
-	width: 100%;
-	margin: 20px 0;
 }
 
 .vvp-item-tile {
@@ -66,8 +58,8 @@ body.darktheme #vvp-items-grid-container .vvp-item-tile a:active {
 	z-index: 1000;
 	top: 50%;
 	bottom: 50%;
-	left: -10px;
-	right: -10px;
+	left: 0px;
+	right: 0px;
 	height: 25px;
 	padding: 3px;
 	background-color: red;

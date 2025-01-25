@@ -125,12 +125,12 @@ class TileSizer {
 			grids.forEach((elem) => {
 				elem.style.gridTemplateColumns = `repeat(auto-fill,minmax(${width}px,auto))`;
 				elem.querySelectorAll(".vvp-item-tile .vvp-item-tile-content").forEach((tile) => {
-					tile.style.width = parseInt(width - 8) + "px";
+					//tile.style.width = parseInt(width - 8) + "px";
 				});
 			});
 		} else {
 			//Target 1 specific element
-			DOMElem.querySelector(".vvp-item-tile-content").style.width = width - 8 + "px";
+			//DOMElem.querySelector(".vvp-item-tile-content").style.width = width - 8 + "px";
 		}
 	};
 
