@@ -1,6 +1,7 @@
 const DEBUG_MODE = false; //Will switch the notification countries to "com"
 const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_WS_URL = "ws://127.0.0.1:3000";
+const channel = new BroadcastChannel("VineHelper");
 
 import { Internationalization } from "../scripts/Internationalization.js";
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
@@ -27,12 +28,20 @@ if (typeof browser === "undefined") {
 //#####################################################
 //## LISTENERS
 //#####################################################
+channel.onmessage = (event) => {
+	processBroadcastMessage(event.data);
+};
+
 chrome.runtime.onMessage.addListener((data, sender, sendResponse) => {
+	sendResponse({ success: true });
+
+	processBroadcastMessage(data);
+});
+
+function processBroadcastMessage(data) {
 	if (data.type == undefined) {
 		return false;
 	}
-
-	sendResponse({ success: true });
 
 	if (data.type == "ping") {
 		sendMessageToAllTabs({ type: "pong" }, "Service worker is running.");
@@ -61,7 +70,7 @@ chrome.runtime.onMessage.addListener((data, sender, sendResponse) => {
 			sendMessageToAllTabs({ type: "wsClosed" }, "Websocket server disconnected.");
 		}
 	}
-});
+}
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
 	//Reload the settings as a change to the keyword list would require the SW to be reloaded to
@@ -293,6 +302,7 @@ function pushNotification(asin, queue, is_parent_asin, enrollment_guid, search_s
 }
 
 async function sendMessageToAllTabs(data, debugInfo) {
+	channel.postMessage(data);
 	try {
 		const tabs = await chrome.tabs.query({});
 		const regex = /^.+?amazon\.([a-z.]+).*\/vine\/.*$/;

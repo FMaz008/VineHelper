@@ -1,0 +1,89 @@
+<div
+	id="vh-notification-{{$asin}}"
+	data-asin="{{$asin}}"
+	class="vh-notification-box vvp-item-tile"
+	data-type="0"
+	data-feed-paused="{{$feedPaused}}"
+	data-queue="{{$queue}}"
+	style="display: hidden"
+>
+	<div class="vh-notification-toolbar vh-status-container">
+		<a href="https://www.amazon.{{$domain}}/vine/vine-items?search={{$search_url_slug}}" target="_blank">
+			<div
+				class="vh-toolbar-large-icon vh-icon-search"
+				data-asin="{{$asin}}"
+				data-queue="{{$queue}}"
+				data-is-parent-asin="{{$is_parent_asin}}"
+				data-enrollment-guid="{{$enrollment_guid}}"
+				style="float: right"
+			></div>
+		</a>
+		{{if pinned}}
+		<a href="#{{$asin}}" id="vh-pin-link-{{$asin}}" class="vh-floating-icon" title="Pin item">
+			<div
+				class="vh-toolbar-large-icon vh-icon-pin"
+				data-asin="{{$asin}}"
+				data-queue="{{$queue}}"
+				data-is-parent-asin="{{$is_parent_asin}}"
+				data-enrollment-guid="{{$enrollment_guid}}"
+				data-title="{{$description}}"
+				data-thumbnail="{{$img_url}}"
+				style="float: right; margin-right: 20px"
+			></div>
+		</a>
+		{{endif}} {{if announce}}
+
+		<a
+			href="#"
+			id="vh-announce-link-{{$asin}}"
+			class="vh-floating-icon vh-announce-link"
+			title="Announce the product on discord! (The ETV must be known)"
+		>
+			<div
+				class="vh-toolbar-large-icon vh-icon-announcement"
+				data-asin="{{$asin}}"
+				data-queue="{{$queue}}"
+				style="float: right; margin-right: 20px"
+			></div>
+		</a>
+		{{endif}}
+		<a href="#" id="vh-hide-link-{{$asin}}" class="vh-floating-icon" title="Hide item">
+			<div
+				class="vh-toolbar-large-icon vh-icon-hide"
+				data-asin="{{$asin}}"
+				style="float: right; margin-right: 20px"
+			></div>
+		</a>
+
+		<div style="clear: right"></div>
+		<a href="#" id="vh-report-link-{{$asin}}" class="report-link">
+			<div
+				class="vh-toolbar-large-icon vh-icon-report"
+				data-asin="{{$asin}}"
+				style="float: right; margin-top: 20px"
+			></div>
+		</a>
+	</div>
+	<div class="vh-notification-content" style="margin-top: 20px">
+		<div class="vh-img-container">
+			<img src="{{$img_url}}" style="margin-top: -20px" />
+			{{if variant}}
+			<div class="vh-variant-indicator-container">
+				<a href="#" onclick="return false;" title="The item has variant(s)">
+					<div class="vh-indicator-icon vh-icon-choice"></div>
+				</a>
+			</div>
+			{{endif}}
+		</div>
+		<div>
+			<a href="https://www.amazon.{{$domain}}/dp/{{$asin}}" class="a-truncate-full" target="_blank"
+				>{{$description}}</a
+			>
+		</div>
+	</div>
+	<div class="vh-notification-footer">
+		<div class="etv" style="display: inline-block" data-etv-min="" data-etv-max=""><span class="etv"></span></div>
+		<span class="date_shown">{{$date}}</span>
+	</div>
+	<div style="clear: both"></div>
+</div>

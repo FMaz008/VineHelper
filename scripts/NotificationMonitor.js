@@ -58,11 +58,22 @@ class NotificationMonitor {
 	#filterQueue = -1;
 	#goldTier = true;
 	#etvLimit = null;
-
-	async initialize() {
+	#itemTemplateFile = "tile_gridview.html";
+	#channel = null; //Broadcast channel for light mode
+	#lightMode = false;
+	constructor() {
 		this.#imageUrls = new Set();
 		this.#asinsOnPage = new Set();
 		this.#feedPausedAmountStored = 0;
+		this.#channel = new BroadcastChannel("VineHelper");
+	}
+
+	async initialize() {
+		if (Settings.get("notification.monitor.listView")) {
+			this.#itemTemplateFile = "tile_listview.html";
+		} else {
+			this.#itemTemplateFile = "tile_gridview.html";
+		}
 
 		//Remove the existing items.
 		this.#gridContainer = document.querySelector("#vvp-items-grid");
@@ -193,96 +204,6 @@ class NotificationMonitor {
 
 		document.getElementById("date_loaded").innerText = new Date().toLocaleString(i13n.getLocale());
 
-		//Bind clear-monitor button
-		const btnClearMonitor = document.getElementById("clear-monitor");
-		btnClearMonitor.addEventListener("click", async (event) => {
-			//Delete all items from the grid
-			if (confirm("Clear all items?")) {
-				const elements = this.#gridContainer.getElementsByClassName("vvp-item-tile");
-				Array.from(elements).forEach((element) => {
-					this.#removeTile(element, null);
-				});
-				this.#gridContainer.innerHTML = "";
-				this.#asinsOnPage.clear();
-
-				this.#imageUrls.clear();
-				this.#updateTabTitle();
-			}
-		});
-
-		//Bind fetch-last-100 button
-		const btnLast100 = document.getElementById("fetch-last-100");
-		btnLast100.addEventListener("click", async (event) => {
-			btnLast100.disabled = true;
-			chrome.runtime.sendMessage({
-				type: "fetchLast100Items",
-			});
-			await new Promise((r) => setTimeout(r, 60 * 1000)); //Prevent abuse
-			btnLast100.disabled = false;
-		});
-
-		//Bind Pause Feed button
-		this.#feedPaused = false;
-		const btnPauseFeed = document.getElementById("pauseFeed");
-		btnPauseFeed.addEventListener("click", (event) => {
-			this.#feedPaused = !this.#feedPaused;
-			if (this.#feedPaused) {
-				this.#feedPausedAmountStored = 0;
-				document.getElementById("pauseFeed").value = "Resume Feed (0)";
-				document.getElementById("pauseFeed-fixed").value = "Resume Feed (0)";
-			} else {
-				document.getElementById("pauseFeed").value = "Pause & Buffer Feed";
-				document.getElementById("pauseFeed-fixed").value = "Pause & Buffer Feed";
-				document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
-					if (node.dataset.feedPaused == "true") {
-						node.style.display = "flex";
-						node.dataset.feedPaused = "false";
-					}
-				});
-			}
-		});
-
-		//Bind the event when changing the filter
-		const filterType = document.querySelector("select[name='filter-type']");
-		filterType.addEventListener("change", (event) => {
-			this.#filterType = filterType.value;
-			//Display a specific type of notifications only
-			document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
-				this.#processNotificationFiltering(node);
-			});
-			this.#updateTabTitle();
-		});
-		this.#filterType = filterType.value;
-
-		const filterQueue = document.querySelector("select[name='filter-queue']");
-		filterQueue.addEventListener("change", (event) => {
-			this.#filterQueue = filterQueue.value;
-			//Display a specific type of notifications only
-			document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
-				this.#processNotificationFiltering(node);
-			});
-			this.#updateTabTitle();
-		});
-		this.#filterQueue = filterQueue.value;
-
-		// Add the fix toolbar with the pause button if we scroll past the original pause button
-		const originalPauseBtn = document.getElementById("pauseFeed");
-		const fixedPauseBtn = document.getElementById("pauseFeed-fixed");
-		const originalBtnPosition = originalPauseBtn.getBoundingClientRect().top + window.scrollY;
-
-		// Handle scroll
-		window.addEventListener("scroll", () => {
-			if (window.scrollY > originalBtnPosition) {
-				document.getElementById("fixed-toolbar").style.display = "block";
-			} else {
-				document.getElementById("fixed-toolbar").style.display = "none";
-			}
-		});
-
-		fixedPauseBtn.addEventListener("click", () => {
-			originalPauseBtn.click();
-		});
-
 		if (!this.#firefox && Settings.get("notification.monitor.openLinksInNewTab") != "1") {
 			this.#preventRedirections();
 		}
@@ -292,6 +213,44 @@ class NotificationMonitor {
 
 		//Change the tab's favicon
 		this.#updateTabFavicon();
+	}
+
+	async initializeLight() {
+		this.#lightMode = true;
+		this.#itemTemplateFile = "tile_lightview.html";
+
+		//Insert the header
+		const parentContainer = document.querySelector("body");
+
+		const prom2 = await Tpl.loadFile("view/notification_monitor_header.html");
+		const header = Tpl.render(prom2, true);
+		parentContainer.appendChild(header);
+
+		const itemContainer = document.createElement("div");
+		itemContainer.id = "vvp-items-grid";
+		parentContainer.appendChild(itemContainer);
+
+		this.#gridContainer = document.querySelector("#vvp-items-grid");
+
+		//Obtain the status of the WebSocket connection.
+		chrome.runtime.sendMessage({
+			type: "wsStatus",
+		});
+
+		i13n.setCountryCode(Settings.get("general.country"));
+		document.getElementById("date_loaded").innerText = new Date().toLocaleString(i13n.getLocale());
+
+		this.#listeners();
+
+		this.#broadcastChannel();
+	}
+
+	#broadcastChannel() {
+		this.#channel.onmessage = (event) => {
+			this.#processBroadcastMessage(event.data);
+		};
+		this.#updateServiceWorkerStatus();
+		this.#channel.postMessage({ type: "wsStatus" });
 	}
 
 	#updateTabFavicon() {
@@ -481,17 +440,11 @@ class NotificationMonitor {
 		}
 
 		//Add the notification
-		let templateFile;
-		if (Settings.get("notification.monitor.listView")) {
-			templateFile = "tile_listview.html";
-		} else {
-			templateFile = "tile_gridview.html";
-		}
 
 		const truncatedTitle = title.length > 40 ? title.substr(0, 40).split(" ").slice(0, -1).join(" ") : title;
 		const search_url_slug = encodeURIComponent(truncatedTitle);
 
-		let prom2 = await Tpl.loadFile("view/" + templateFile);
+		let prom2 = await Tpl.loadFile("view/" + this.#itemTemplateFile);
 		Tpl.setVar("id", asin);
 		Tpl.setVar("domain", i13n.getDomainTLD());
 		Tpl.setVar("img_url", img_url);
@@ -521,10 +474,11 @@ class NotificationMonitor {
 		toolbar.style.backgroundColor = Settings.get("general.toolbarBackgroundColor");
 
 		//Set the tile custom dimension according to the settings.
-		tileSizer.adjustAll(tileDOM);
-
+		if (!this.#lightMode) {
+			tileSizer.adjustAll(tileDOM);
+		}
 		//Add tool tip to the truncated item title link
-		if (Settings.get("general.displayFullTitleTooltip")) {
+		if (!this.#lightMode && Settings.get("general.displayFullTitleTooltip")) {
 			const titleDOM = tileDOM.querySelector(".a-link-normal");
 			tooltip.addTooltip(titleDOM, title);
 		}
@@ -608,7 +562,9 @@ class NotificationMonitor {
 
 		//Add new click listener for the technical details button
 		const detailsIcon = document.querySelector("#vh-reason-link-" + asin);
-		detailsIcon.addEventListener("click", this.#handleDetailsClick);
+		if (detailsIcon) {
+			detailsIcon.addEventListener("click", this.#handleDetailsClick);
+		}
 
 		//Add the click listener for the See Details button
 		if (this.#firefox || Settings.get("notification.monitor.openLinksInNewTab") == "1") {
@@ -674,7 +630,7 @@ class NotificationMonitor {
 
 		//Display for formatted ETV in the toolbar
 		if (etvObj.dataset.etvMin != "" && etvObj.dataset.etvMax != "") {
-			etvObj.style.display = "block";
+			etvObj.style.display = this.#lightMode ? "inline-block" : "block";
 			if (etvObj.dataset.etvMin == etvObj.dataset.etvMax) {
 				etvTxt.innerText = this.#formatETV(etvObj.dataset.etvMin);
 			} else {
@@ -794,6 +750,7 @@ class NotificationMonitor {
 				}
 			}, 500);
 			chrome.runtime.sendMessage({ type: "ping" });
+			this.#channel.postMessage({ type: "ping" });
 		}
 	}
 
@@ -897,23 +854,24 @@ class NotificationMonitor {
 		}
 
 		if (this.#filterType == -1) {
-			node.style.display = "flex";
+			node.style.display = this.#lightMode ? "block" : "flex";
 		} else if (this.#filterType == TYPE_HIGHLIGHT_OR_ZEROETV) {
 			node.style.display = notificationTypeZeroETV || notificationTypeHighlight ? "flex" : "none";
 		} else if (this.#filterType == TYPE_HIGHLIGHT) {
-			node.style.display = notificationTypeHighlight ? "flex" : "none";
+			node.style.display = notificationTypeHighlight ? (this.#lightMode ? "block" : "flex") : "none";
 		} else if (this.#filterType == TYPE_ZEROETV) {
-			node.style.display = notificationTypeZeroETV ? "flex" : "none";
+			node.style.display = notificationTypeZeroETV ? (this.#lightMode ? "block" : "flex") : "none";
 		} else if (this.#filterType == TYPE_REGULAR) {
-			node.style.display = !notificationTypeZeroETV && !notificationTypeHighlight ? "flex" : "none";
+			node.style.display =
+				!notificationTypeZeroETV && !notificationTypeHighlight ? (this.#lightMode ? "block" : "flex") : "none";
 		}
 
 		//Queue filter
-		if (node.style.display == "flex") {
+		if (node.style.display == "flex" || node.style.display == "block") {
 			if (this.#filterQueue == "-1") {
 				return true;
 			} else {
-				node.style.display = queueType == this.#filterQueue ? "flex" : "none";
+				node.style.display = queueType == this.#filterQueue ? (this.#lightMode ? "block" : "flex") : "none";
 				return queueType == this.#filterQueue;
 			}
 		} else {
@@ -1130,7 +1088,9 @@ class NotificationMonitor {
 		}
 
 		const a = tile.querySelector(".a-link-normal");
-		tooltip.removeTooltip(a);
+		if (a) {
+			tooltip.removeTooltip(a);
+		}
 
 		// Remove the element's data
 		tile.remove();
@@ -1149,72 +1109,164 @@ class NotificationMonitor {
 	}
 
 	#listeners() {
+		// Add the fix toolbar with the pause button if we scroll past the original pause button
+		const originalPauseBtn = document.getElementById("pauseFeed");
+		const fixedPauseBtn = document.getElementById("pauseFeed-fixed");
+		const originalBtnPosition = originalPauseBtn.getBoundingClientRect().top + window.scrollY;
+
+		// Handle scroll
+		window.addEventListener("scroll", () => {
+			if (window.scrollY > originalBtnPosition) {
+				document.getElementById("fixed-toolbar").style.display = "block";
+			} else {
+				document.getElementById("fixed-toolbar").style.display = "none";
+			}
+		});
+
+		fixedPauseBtn.addEventListener("click", () => {
+			originalPauseBtn.click();
+		});
+
+		//Bind clear-monitor button
+		const btnClearMonitor = document.getElementById("clear-monitor");
+		btnClearMonitor.addEventListener("click", async (event) => {
+			//Delete all items from the grid
+			if (confirm("Clear all items?")) {
+				const elements = this.#gridContainer.getElementsByClassName("vvp-item-tile");
+				Array.from(elements).forEach((element) => {
+					this.#removeTile(element, null);
+				});
+				this.#gridContainer.innerHTML = "";
+				this.#asinsOnPage.clear();
+
+				this.#imageUrls.clear();
+				this.#updateTabTitle();
+			}
+		});
+
+		//Bind fetch-last-100 button
+		const btnLast100 = document.getElementById("fetch-last-100");
+		btnLast100.addEventListener("click", async (event) => {
+			btnLast100.disabled = true;
+			chrome.runtime.sendMessage({
+				type: "fetchLast100Items",
+			});
+			await new Promise((r) => setTimeout(r, 60 * 1000)); //Prevent abuse
+			btnLast100.disabled = false;
+		});
+
+		//Bind Pause Feed button
+		this.#feedPaused = false;
+		const btnPauseFeed = document.getElementById("pauseFeed");
+		btnPauseFeed.addEventListener("click", (event) => {
+			this.#feedPaused = !this.#feedPaused;
+			if (this.#feedPaused) {
+				this.#feedPausedAmountStored = 0;
+				document.getElementById("pauseFeed").value = "Resume Feed (0)";
+				document.getElementById("pauseFeed-fixed").value = "Resume Feed (0)";
+			} else {
+				document.getElementById("pauseFeed").value = "Pause & Buffer Feed";
+				document.getElementById("pauseFeed-fixed").value = "Pause & Buffer Feed";
+				document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
+					if (node.dataset.feedPaused == "true") {
+						node.style.display = "flex";
+						node.dataset.feedPaused = "false";
+					}
+				});
+			}
+		});
+
+		//Bind the event when changing the filter
+		const filterType = document.querySelector("select[name='filter-type']");
+		filterType.addEventListener("change", (event) => {
+			this.#filterType = filterType.value;
+			//Display a specific type of notifications only
+			document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
+				this.#processNotificationFiltering(node);
+			});
+			this.#updateTabTitle();
+		});
+		this.#filterType = filterType.value;
+
+		const filterQueue = document.querySelector("select[name='filter-queue']");
+		filterQueue.addEventListener("change", (event) => {
+			this.#filterQueue = filterQueue.value;
+			//Display a specific type of notifications only
+			document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
+				this.#processNotificationFiltering(node);
+			});
+			this.#updateTabTitle();
+		});
+		this.#filterQueue = filterQueue.value;
+
 		//Message from within the context of the extension
 		//Messages sent via: chrome.tabs.sendMessage(tab.id, data);
 		//In this case, all messages are coming from the service_worker file.
 		chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-			let data = message;
-			if (data.type == undefined) {
-				return false;
-			}
-
-			if (data.type == "pong") {
-				this.#setServiceWorkerStatus(true, "Service worker is running.");
-			}
-			if (data.type == "newETV") {
-				this.setETVFromASIN(data.asin, data.etv);
-			}
-			if (data.type == "wsOpen") {
-				this.setWebSocketStatus(true);
-			}
-			if (data.type == "wsError") {
-				this.setWebSocketStatus(false, data.error);
-			}
-			if (data.type == "wsClosed") {
-				this.setWebSocketStatus(false);
-			}
-
-			if (data.type == "unavailableItem") {
-				const notif = this.#getNotificationByASIN(data.asin);
-				this.#disableItem(notif);
-			}
-			if (data.type == "newItem") {
-				let {
-					date,
-					asin,
-					title,
-					reason,
-					img_url,
-					etv_min,
-					etv_max,
-					queue,
-					KW,
-					BlurKW,
-					KWsMatch,
-					BlurKWsMatch,
-					is_parent_asin,
-					enrollment_guid,
-					unavailable,
-				} = data;
-				this.addTileInGrid(
-					asin,
-					queue,
-					date,
-					title,
-					img_url,
-					is_parent_asin,
-					enrollment_guid,
-					etv_min,
-					etv_max,
-					reason,
-					KW,
-					KWsMatch,
-					BlurKW,
-					BlurKWsMatch,
-					unavailable
-				);
-			}
+			this.#processBroadcastMessage(message);
 		});
+	}
+	#processBroadcastMessage(data) {
+		if (data.type == undefined) {
+			return false;
+		}
+
+		if (data.type == "pong") {
+			this.#setServiceWorkerStatus(true, "Service worker is running.");
+		}
+		if (data.type == "newETV") {
+			this.setETVFromASIN(data.asin, data.etv);
+		}
+		if (data.type == "wsOpen") {
+			this.setWebSocketStatus(true);
+		}
+		if (data.type == "wsError") {
+			this.setWebSocketStatus(false, data.error);
+		}
+		if (data.type == "wsClosed") {
+			this.setWebSocketStatus(false);
+		}
+
+		if (data.type == "unavailableItem") {
+			const notif = this.#getNotificationByASIN(data.asin);
+			this.#disableItem(notif);
+		}
+		if (data.type == "newItem") {
+			let {
+				date,
+				asin,
+				title,
+				reason,
+				img_url,
+				etv_min,
+				etv_max,
+				queue,
+				KW,
+				BlurKW,
+				KWsMatch,
+				BlurKWsMatch,
+				is_parent_asin,
+				enrollment_guid,
+				unavailable,
+			} = data;
+			this.addTileInGrid(
+				asin,
+				queue,
+				date,
+				title,
+				img_url,
+				is_parent_asin,
+				enrollment_guid,
+				etv_min,
+				etv_max,
+				reason,
+				KW,
+				KWsMatch,
+				BlurKW,
+				BlurKWsMatch,
+				unavailable
+			);
+		}
 	}
 }
 

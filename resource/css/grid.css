@@ -53,21 +53,6 @@ body.darktheme #vvp-items-grid-container .vvp-item-tile a:active {
 	color: var(--item-link-dark);
 }
 
-.unavailable-banner {
-	position: absolute;
-	z-index: 1000;
-	top: 50%;
-	bottom: 50%;
-	left: 0px;
-	right: 0px;
-	height: 25px;
-	padding: 3px;
-	background-color: red;
-	text-align: center;
-	color: white;
-	font-weight: bold;
-}
-
 #vvp-items-grid.listview {
 	grid-template-columns: auto !important;
 }

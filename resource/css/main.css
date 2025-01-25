@@ -132,3 +132,18 @@ div#vh-tabs {
 .vvp-item-tile .vvp-item-tile-content > .vvp-item-product-title-container {
 	height: auto !important;
 }
+
+.unavailable-banner {
+	position: absolute;
+	z-index: 1000;
+	top: 50%;
+	bottom: 50%;
+	left: 0px;
+	right: 0px;
+	height: 25px;
+	padding: 3px;
+	background-color: red;
+	text-align: center;
+	color: white;
+	font-weight: bold;
+}
