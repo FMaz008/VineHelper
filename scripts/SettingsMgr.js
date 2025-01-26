@@ -40,8 +40,8 @@ class SettingsMgr {
 	}
 
 	//Return true if the user has a valid premium membership on Patreon
-	isPremiumUser() {
-		return parseInt(this.get("general.patreon.tier")) > 1;
+	isPremiumUser(tier = 2) {
+		return parseInt(this.get("general.patreon.tier")) >= tier;
 	}
 
 	// Replace the old isLoaded() method

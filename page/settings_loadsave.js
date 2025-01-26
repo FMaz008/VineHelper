@@ -48,16 +48,18 @@ async function initiateSettings() {
 		});
 	}
 
-	//Disable the premium options for non-premium users.
-	if (!Settings.isPremiumUser()) {
-		document
-			.querySelectorAll(
-				".premium-feature input, .premium-feature select, .premium-feature button, .premium-feature textarea"
-			)
-			.forEach(function (item) {
-				item.disabled = true;
-			});
-	}
+	//Handle premium feature access
+	[1, 2, 3].forEach((tier) => {
+		if (!Settings.isPremiumUser(tier)) {
+			document
+				.querySelectorAll(
+					`.premium-feature-${tier} input, .premium-feature-${tier} select, .premium-feature-${tier} button, .premium-feature-${tier} textarea`
+				)
+				.forEach((item) => {
+					item.disabled = true;
+				});
+		}
+	});
 
 	//##########################
 	// TABS

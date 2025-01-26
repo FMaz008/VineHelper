@@ -895,7 +895,7 @@ async function serverProductsResponse(data) {
 		}
 
 		//If there is a remote value for the hidden item, ensure it is sync'ed up with the local list
-		if (Settings.isPremiumUser() && Settings.get("hiddenTab.remote") && values.hidden != null) {
+		if (Settings.isPremiumUser(1) && Settings.get("hiddenTab.remote") && values.hidden != null) {
 			if (values.hidden == true && !(await tile.isHidden())) {
 				logger.add("DRAW: Remote is ordering to hide item");
 				await tile.hideTile(false); //Will update the placement and list
@@ -924,7 +924,7 @@ async function serverProductsResponse(data) {
 	}
 
 	//Loading remote stored pinned items
-	if (Settings.isPremiumUser() && Settings.get("pinnedTab.active") && Settings.get("hiddenTab.remote")) {
+	if (Settings.isPremiumUser(1) && Settings.get("pinnedTab.active") && Settings.get("hiddenTab.remote")) {
 		if (data["pinned_products"] != undefined) {
 			logger.add("DRAW: Loading remote pinned products");
 			for (let i = 0; i < data["pinned_products"].length; i++) {
