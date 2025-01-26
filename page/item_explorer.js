@@ -6,6 +6,8 @@ var env = new Environment();
 import { Internationalization } from "../scripts/Internationalization.js";
 const i13n = new Internationalization();
 
+import { generatePagination } from "../scripts/Pagination.js";
+
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
 const Settings = new SettingsMgr();
 
@@ -51,7 +53,48 @@ const Settings = new SettingsMgr();
 			}
 		}, 1000);
 	});
+
+	loadFormItemsStateFromURL();
 })();
+
+function gotoPage(page) {
+	window.location.href = generateUrl() + "&page=" + parseInt(page);
+}
+
+function generateUrl() {
+	const asin = document.getElementById("search-asin").value;
+	const title = document.getElementById("search-title").value;
+	const orderBy = document.getElementById("vh-order-by-select").value;
+	const queue = document.getElementById("vh-queue-select").value;
+
+	return (
+		"/page/item_explorer.html?asin=" +
+		encodeURI(asin) +
+		"&title=" +
+		encodeURI(title) +
+		"&orderBy=" +
+		encodeURI(orderBy) +
+		"&queue=" +
+		encodeURI(queue)
+	);
+}
+
+function loadFormItemsStateFromURL() {
+	const asin = document.getElementById("search-asin");
+	const title = document.getElementById("search-title");
+	const orderBy = document.getElementById("vh-order-by-select");
+	const queue = document.getElementById("vh-queue-select");
+
+	//If the URL contains the parameters, load them
+	if (window.location.search) {
+		const urlParams = new URLSearchParams(window.location.search);
+		asin.value = urlParams.get("asin");
+		title.value = urlParams.get("title");
+		orderBy.value = urlParams.get("orderBy");
+		queue.value = urlParams.get("queue");
+		queryDB(parseInt(urlParams.get("page")));
+	}
+}
 
 function queryDB(page = 1) {
 	const asin = document.getElementById("search-asin").value;
@@ -129,6 +172,10 @@ function serverProductsResponse(data) {
 		html += "</tr>";
 		table.innerHTML += html;
 	}
+
+	const paginationContainer = document.getElementById("vh-pagination");
+	paginationContainer.innerHTML = "";
+	paginationContainer.appendChild(generatePagination(generateUrl(), data["total_items"], 50, data["page"]));
 }
 
 function displayError(message) {

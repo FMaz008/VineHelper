@@ -133,8 +133,6 @@ div.button-notification-monitor {
 	border: 2px solid #000000;
 	border-radius: 5px;
 	background-color: var(--tab-border);
-	/*background-color: var(--tab-border-active);*/
-	height: 40px;
 	margin-right: 5px;
 	font-size: 14pt;
 	font-weight: bold;
@@ -150,17 +148,15 @@ div.button-settings {
 	border: 2px solid #000000;
 	border-radius: 5px;
 	background-color: #cccccc;
-	width: 40px;
-	height: 40px;
+	padding: 5px;
 }
 div.button-settings:hover {
 	background-color: #aaaaaa;
 }
 div.buttons-header .button-inner {
 	color: #ffffff;
-	padding: 5px;
 	text-align: center;
-	vertical-align: middle;
+	line-height: 2em;
 }
 
 a.toggle {
