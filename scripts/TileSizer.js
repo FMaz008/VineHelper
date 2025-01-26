@@ -8,7 +8,10 @@ import { Template } from "./Template.js";
 var Tpl = new Template();
 
 class TileSizer {
-	constructor() {}
+	#settingPrefix = null;
+	constructor(settingPrefix = "general.tileSize") {
+		this.#settingPrefix = settingPrefix;
+	}
 
 	injectGUI = async function (container) {
 		//Insert the template
@@ -37,11 +40,11 @@ class TileSizer {
 		//Bind the action to all the sliders
 		//Tile size
 		const sliderTile = document.querySelector("input[name='general.tileSize.width']");
-		sliderTile.value = Settings.get("general.tileSize.width");
+		sliderTile.value = Settings.get(`${this.#settingPrefix}.width`);
 
 		sliderTile.addEventListener("change", async () => {
 			const sliderValue = parseInt(sliderTile.value);
-			await Settings.set("general.tileSize.width", sliderValue);
+			await Settings.set(`${this.#settingPrefix}.width`, sliderValue);
 			this.#adjustTileSize();
 		});
 		sliderTile.addEventListener("input", () => {
@@ -52,11 +55,11 @@ class TileSizer {
 
 		//Icons size
 		const sliderIcons = document.querySelector("input[name='general.tileSize.iconSize']");
-		sliderIcons.value = Settings.get("general.tileSize.iconSize");
+		sliderIcons.value = Settings.get(`${this.#settingPrefix}.iconSize`);
 
 		sliderIcons.addEventListener("change", async () => {
 			const sliderValue = parseInt(sliderIcons.value);
-			await Settings.set("general.tileSize.iconSize", sliderValue);
+			await Settings.set(`${this.#settingPrefix}.iconSize`, sliderValue);
 			this.#adjustIconsSize();
 		});
 		sliderIcons.addEventListener("input", () => {
@@ -66,11 +69,11 @@ class TileSizer {
 
 		//Icons size
 		const sliderVertSpacing = document.querySelector("input[name='general.tileSize.verticalSpacing']");
-		sliderVertSpacing.value = Settings.get("general.tileSize.verticalSpacing");
+		sliderVertSpacing.value = Settings.get(`${this.#settingPrefix}.verticalSpacing`);
 
 		sliderVertSpacing.addEventListener("change", async () => {
 			const sliderValue = parseInt(sliderVertSpacing.value);
-			await Settings.set("general.tileSize.verticalSpacing", sliderValue);
+			await Settings.set(`${this.#settingPrefix}.verticalSpacing`, sliderValue);
 			this.#adjustVerticalSpacing();
 		});
 		sliderVertSpacing.addEventListener("input", () => {
@@ -80,11 +83,11 @@ class TileSizer {
 
 		//Title spacing
 		const sliderTitleSpacing = document.querySelector("input[name='general.tileSize.titleSpacing']");
-		sliderTitleSpacing.value = Settings.get("general.tileSize.titleSpacing");
+		sliderTitleSpacing.value = Settings.get(`${this.#settingPrefix}.titleSpacing`);
 
 		sliderTitleSpacing.addEventListener("change", async () => {
 			const sliderValue = parseInt(sliderTitleSpacing.value);
-			await Settings.set("general.tileSize.titleSpacing", sliderValue);
+			await Settings.set(`${this.#settingPrefix}.titleSpacing`, sliderValue);
 			this.#adjustTitleSpacing();
 		});
 		sliderTitleSpacing.addEventListener("input", () => {
@@ -94,16 +97,30 @@ class TileSizer {
 
 		//Font size
 		const sliderFontSize = document.querySelector("input[name='general.tileSize.fontSize']");
-		sliderFontSize.value = Settings.get("general.tileSize.fontSize");
+		sliderFontSize.value = Settings.get(`${this.#settingPrefix}.fontSize`);
 
 		sliderFontSize.addEventListener("change", async () => {
 			const sliderValue = parseInt(sliderFontSize.value);
-			await Settings.set("general.tileSize.fontSize", sliderValue);
+			await Settings.set(`${this.#settingPrefix}.fontSize`, sliderValue);
 			this.#adjustFontSize();
 		});
 		sliderFontSize.addEventListener("input", () => {
 			const sliderValue = parseInt(sliderFontSize.value);
 			this.#adjustFontSize(null, sliderValue);
+		});
+
+		//Toolbar font size
+		const sliderToolbarFontSize = document.querySelector("input[name='general.tileSize.toolbarFontSize']");
+		sliderToolbarFontSize.value = Settings.get(`${this.#settingPrefix}.toolbarFontSize`);
+
+		sliderToolbarFontSize.addEventListener("change", async () => {
+			const sliderValue = parseInt(sliderToolbarFontSize.value);
+			await Settings.set(`${this.#settingPrefix}.toolbarFontSize`, sliderValue);
+			this.#adjustToolbarFontSize();
+		});
+		sliderToolbarFontSize.addEventListener("input", () => {
+			const sliderValue = parseInt(sliderToolbarFontSize.value);
+			this.#adjustToolbarFontSize(null, sliderValue);
 		});
 	};
 
@@ -114,11 +131,12 @@ class TileSizer {
 			this.#adjustVerticalSpacing(DOMElem);
 			this.#adjustTitleSpacing(DOMElem);
 			this.#adjustFontSize(DOMElem);
+			this.#adjustToolbarFontSize(DOMElem);
 		}
 	};
 
 	#adjustTileSize = function (DOMElem = null, sliderValue = null) {
-		const width = parseInt(sliderValue || Settings.get("general.tileSize.width"));
+		const width = parseInt(sliderValue || Settings.get(`${this.#settingPrefix}.width`));
 		if (DOMElem == null) {
 			//Adjust all elements on the page
 			const grids = document.querySelectorAll("div#vh-tabs .tab-grid");
@@ -135,7 +153,7 @@ class TileSizer {
 	};
 
 	#adjustIconsSize = function (DOMElem = null, sliderValue = null) {
-		const size = parseInt(sliderValue || Settings.get("general.tileSize.iconSize"));
+		const size = parseInt(sliderValue || Settings.get(`${this.#settingPrefix}.iconSize`));
 		const selector = ".vh-status-container a>.vh-toolbar-icon";
 		const elements = (DOMElem || document).querySelectorAll(
 			DOMElem ? selector : `div#vh-tabs .tab-grid ${selector}`
@@ -147,7 +165,7 @@ class TileSizer {
 	};
 
 	#adjustVerticalSpacing = function (DOMElem = null, sliderValue = null) {
-		const size = parseInt(sliderValue || Settings.get("general.tileSize.verticalSpacing"));
+		const size = parseInt(sliderValue || Settings.get(`${this.#settingPrefix}.verticalSpacing`));
 		const selector =
 			".vvp-item-tile-content .vvp-item-product-title-container, .vvp-item-tile-content .vvp-details-btn";
 		const elements = (DOMElem || document).querySelectorAll(selector);
@@ -157,7 +175,7 @@ class TileSizer {
 	};
 
 	#adjustTitleSpacing = function (DOMElem = null, sliderValue = null) {
-		const size = parseFloat(sliderValue || Settings.get("general.tileSize.titleSpacing"));
+		const size = parseFloat(sliderValue || Settings.get(`${this.#settingPrefix}.titleSpacing`));
 		//Adjust all elements on the page
 		const box1 = (DOMElem || document).querySelectorAll(
 			".vvp-item-tile-content .vvp-item-product-title-container .a-truncate"
@@ -175,8 +193,17 @@ class TileSizer {
 	};
 
 	#adjustFontSize = function (DOMElem = null, sliderValue = null) {
-		const size = parseInt(sliderValue || Settings.get("general.tileSize.fontSize"));
+		const size = parseInt(sliderValue || Settings.get(`${this.#settingPrefix}.fontSize`));
 		const selector = ".vvp-item-tile-content .vvp-item-product-title-container .a-truncate";
+		const elements = (DOMElem || document).querySelectorAll(selector);
+		elements.forEach((elem) => {
+			elem.style.fontSize = size + "px";
+		});
+	};
+
+	#adjustToolbarFontSize = function (DOMElem = null, sliderValue = null) {
+		const size = parseInt(sliderValue || Settings.get(`${this.#settingPrefix}.toolbarFontSize`));
+		const selector = "span.etv, .vh-order-success, .vh-order-failed";
 		const elements = (DOMElem || document).querySelectorAll(selector);
 		elements.forEach((elem) => {
 			elem.style.fontSize = size + "px";

@@ -240,10 +240,9 @@ class SettingsMgr {
 			await this.#save();
 		}
 
-		//V3 beta
-		if (this.#settings.tileSize?.titleSpacing < 19) {
-			this.#settings.tileSize.titleSpacing = 50;
-			await chrome.storage.local.set({ arrTemplate: [] });
+		//V3.1.0
+		if (this.#settings.notification.monitor.tileSize == undefined) {
+			this.#settings.notification.monitor.tileSize = this.#settings.tileSize;
 			await this.#save();
 		}
 	}
@@ -293,6 +292,7 @@ class SettingsMgr {
 					verticalSpacing: 20,
 					titleSpacing: 50,
 					fontSize: 14,
+					toolbarFontSize: 10,
 				},
 				hideNoNews: true,
 			},
@@ -328,6 +328,14 @@ class SettingsMgr {
 						sound: "0",
 						volume: 1,
 						color: "#64af4b",
+					},
+					tileSize: {
+						width: 236,
+						iconSize: 14,
+						verticalSpacing: 20,
+						titleSpacing: 50,
+						fontSize: 14,
+						toolbarFontSize: 10,
 					},
 				},
 			},

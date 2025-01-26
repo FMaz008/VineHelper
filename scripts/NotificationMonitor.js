@@ -29,7 +29,7 @@ var Notifications = new ScreenNotifier();
 import { unescapeHTML } from "./StringHelper.js";
 
 import { TileSizer } from "./TileSizer.js";
-var tileSizer = new TileSizer();
+var tileSizer = new TileSizer("notification.monitor.tileSize");
 
 import { Tooltip } from "./Tooltip.js";
 var tooltip = new Tooltip();
@@ -147,7 +147,7 @@ class NotificationMonitor {
 
 		//Set the grid items size
 		if (Settings.get("general.tileSize.enabled")) {
-			const width = Settings.get("general.tileSize.width");
+			const width = Settings.get("notification.monitor.tileSize.width");
 			const grid = document.querySelector("#vvp-items-grid");
 			grid.classList.add("vh-notification-monitor");
 			grid.style.gridTemplateColumns = `repeat(auto-fill,minmax(${width}px,auto))`;
