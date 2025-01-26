@@ -4,6 +4,8 @@
 	"description": "Improve the Amazon Vine experience.",
 	"version": "3.0.19",
 	"permissions": [
+		"contextMenus",
+    	"activeTab",
 		"alarms",
 		"storage",
 		"tabs",
