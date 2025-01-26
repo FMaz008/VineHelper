@@ -41,7 +41,9 @@ function generatePagination(url, totalItems, itemsPerPage, currentPage) {
 
 	//Generate the last
 	for (let i = LAST_PAGE - END_PAGE_PADDING; i <= LAST_PAGE; i++) {
-		pagination.querySelector("ul").appendChild(generatePageItem(url, i, currentPage));
+		if (i > 0) {
+			pagination.querySelector("ul").appendChild(generatePageItem(url, i, currentPage));
+		}
 	}
 
 	return pagination;
