@@ -1152,11 +1152,26 @@ class NotificationMonitor {
 		const btnLast100 = document.getElementById("fetch-last-100");
 		btnLast100.addEventListener("click", async (event) => {
 			btnLast100.disabled = true;
+
+			// Start 60 second countdown
+			let secondsLeft = 60;
+			const originalText = btnLast100.value;
+			btnLast100.value = `Wait ${secondsLeft}s`;
+
+			const countdown = setInterval(() => {
+				btnLast100.value = `Wait ${secondsLeft}s`;
+				secondsLeft--;
+
+				if (secondsLeft < 0) {
+					clearInterval(countdown);
+					btnLast100.value = originalText;
+					btnLast100.disabled = false;
+				}
+			}, 1000);
+
 			chrome.runtime.sendMessage({
 				type: "fetchLast100Items",
 			});
-			await new Promise((r) => setTimeout(r, 60 * 1000)); //Prevent abuse
-			btnLast100.disabled = false;
 		});
 
 		//Bind Pause Feed button
