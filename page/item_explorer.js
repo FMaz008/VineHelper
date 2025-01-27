@@ -57,10 +57,6 @@ const Settings = new SettingsMgr();
 	loadFormItemsStateFromURL();
 })();
 
-function gotoPage(page) {
-	window.location.href = generateUrl() + "&page=" + parseInt(page);
-}
-
 function generateUrl() {
 	const asin = document.getElementById("search-asin").value;
 	const title = document.getElementById("search-title").value;
@@ -144,21 +140,29 @@ function serverProductsResponse(data) {
 	const container = document.getElementById("vh-item-explorer-content");
 
 	//Create the HTML for the basic table containing the products
-	let html = "<table id='vh-item-table' border='1'>";
+	let html = "<table id='vh-item-table'>";
 	html += "<tr>";
-	html += "<th>ASIN</th>";
-	html += "<th>Title</th>";
-	html += "<th>ETV</th>";
-	html += "<th>Queue</th>";
-	html += "<th>Order Success</th>";
-	html += "<th>Order Failed</th>";
-	html += "<th>Date created</th>";
-	html += "<th>Date broadcasted</th>";
+	html += "<th rowspan='2'>ASIN</th>";
+	html += "<th rowspan='2'>Title</th>";
+	html += "<th rowspan='2'>ETV</th>";
+	html += "<th rowspan='2'>Queue</th>";
+	html += "<th colspan='2'>Orders</th>";
+	html += "<th rowspan='2'>Date created</th>";
+	html += "<th rowspan='2'>Last broadcast</th>";
+	html += "</tr>";
+	html += "<tr>";
+	html += `<th style="padding:2px"><div class="vh-icon-32 vh-icon-order-success"></div></th>`;
+	html += `<th style="padding:2px"><div class="vh-icon-32 vh-icon-order-failed"></div></th>`;
 	html += "</tr>";
 	html += "</table>";
 	container.innerHTML = html;
 
 	const table = document.getElementById("vh-item-table");
+	if (data["items"] == null || data["items"].length == 0) {
+		table.innerHTML += "<tr><td colspan='8' style='text-align: center;'>No items found</td></tr>";
+		return;
+	}
+
 	for (const [key, values] of Object.entries(data["items"])) {
 		html = "<tr>";
 		html += "<td>" + values.asin + "</td>";

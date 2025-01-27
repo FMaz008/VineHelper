@@ -1,5 +1,35 @@
+#vh-item-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin: 20px auto;
+	font-size: 16px;
+	font-family: Arial, sans-serif;
+	text-align: left;
+	background-color: #f9f9f9;
+	border-radius: 8px;
+	overflow: hidden;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#vh-item-table th,
 #vh-item-table td {
+	padding: 12px 16px;
+	border: 1px solid #ddd;
 	vertical-align: top;
+}
+
+#vh-item-table th {
+	background-color: #4caf50;
+	color: white;
+	font-weight: bold;
+}
+
+#vh-item-table tr:nth-child(even) {
+	background-color: #f2f2f2;
+}
+
+#vh-item-table tr:hover {
+	background-color: #e1f5fe;
 }
 
 /* Pagination */
