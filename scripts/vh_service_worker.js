@@ -125,7 +125,7 @@ function connectWebSocket() {
 
 	// On connection success
 	socket.on("connect", () => {
-		console.log("WS Connected");
+		console.log(`${new Date().toISOString().replace("T", " ").slice(0, 19)} - WS Connected`);
 		sendMessageToAllTabs({ type: "wsOpen" }, "Socket.IO server connected.");
 	});
 
@@ -181,18 +181,20 @@ function connectWebSocket() {
 
 	socket.on("connection_error", (error) => {
 		sendMessageToAllTabs({ type: "wsError", error: error }, "Socket.IO connection error");
-		console.error(`Socket.IO connection error: ${error}`);
+		console.error(
+			`${new Date().toISOString().replace("T", " ").slice(0, 19)} - Socket.IO connection error: ${error}`
+		);
 	});
 
 	// On disconnection
 	socket.on("disconnect", () => {
-		console.log("WS Disconnected");
+		console.log(`${new Date().toISOString().replace("T", " ").slice(0, 19)} - WS Disconnected`);
 		sendMessageToAllTabs({ type: "wsClosed" }, "Socket.IO server disconnected.");
 	});
 
 	// On error
 	socket.on("connect_error", (error) => {
-		console.error(`Socket.IO error: ${error.message}`);
+		console.error(`${new Date().toISOString().replace("T", " ").slice(0, 19)} - Socket.IO error: ${error.message}`);
 	});
 }
 
