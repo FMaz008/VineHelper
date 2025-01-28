@@ -27,8 +27,7 @@ div.vh-grid .vvp-item-tile {
 div.tab-grid .vvp-item-tile .vvp-item-tile-content,
 div.vh-grid .vvp-item-tile .vvp-item-tile-content {
 	overflow: hidden;
-	width: 100%;
-	margin: 0 2px;
+	margin: 0 auto;
 	display: flex;
 	flex-direction: column;
 }
