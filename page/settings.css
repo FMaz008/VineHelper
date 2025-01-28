@@ -134,7 +134,8 @@ div.button-notification-monitor {
 	border-radius: 5px;
 	background-color: var(--tab-border);
 	margin-right: 5px;
-	font-size: 14pt;
+	font-size: 12pt;
+	line-height: 2.5em;
 	font-weight: bold;
 }
 div.button-notification-monitor:hover {
@@ -156,7 +157,6 @@ div.button-settings:hover {
 div.buttons-header .button-inner {
 	color: #ffffff;
 	text-align: center;
-	line-height: 2em;
 }
 
 a.toggle {
