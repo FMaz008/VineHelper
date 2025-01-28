@@ -267,8 +267,8 @@ class Toolbar {
 
 		// Generate the HTML for the widget
 		let prom = await Tpl.loadFile("view/widget_order.html");
-		Tpl.setVar("order_success", this.#tile.getOrderSuccess());
-		Tpl.setVar("order_failed", this.#tile.getOrderFailed());
+		Tpl.setVar("order_success", "-");
+		Tpl.setVar("order_failed", "-");
 		let content = Tpl.render(prom, false);
 		return content;
 	}
