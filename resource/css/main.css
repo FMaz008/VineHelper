@@ -97,13 +97,14 @@ div#vh-healing-text {
 }
 .vh-new-corner-discovered {
 	position: absolute;
-	width: 120px;
+	top: 0;
+	right: 0;
+	width: 100px;
 	height: 2.5em;
-	top: -25px;
-	right: -130px;
 	font-size: 8pt;
 	line-height: 8pt;
-	transform-origin: -0px -100px;
+	clip-path: polygon(75% 0, 25% 0, 0 100%, 100% 100%);
+	transform-origin: 50px 50px;
 	transform: rotate(45deg);
 	padding-top: 2px;
 	background-color: #ff0000;
