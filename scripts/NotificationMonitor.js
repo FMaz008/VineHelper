@@ -245,6 +245,8 @@ class NotificationMonitor {
 		this.#listeners();
 
 		this.#broadcastChannel();
+
+		this.#updateTabTitle();
 	}
 
 	#broadcastChannel() {
