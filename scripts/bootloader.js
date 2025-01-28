@@ -894,6 +894,11 @@ async function serverProductsResponse(data) {
 			tile.setDateAdded(timenow, values.date_added);
 		}
 
+		if (values.discovered) {
+			logger.add("DRAW: Marking as discovered");
+			tile.markAsDiscovered();
+		}
+
 		//If there is a remote value for the hidden item, ensure it is sync'ed up with the local list
 		if (Settings.isPremiumUser(1) && Settings.get("hiddenTab.remote") && values.hidden != null) {
 			if (values.hidden == true && !(await tile.isHidden())) {

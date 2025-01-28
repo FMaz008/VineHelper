@@ -141,6 +141,20 @@ class Tile {
 		return this.#thumbnailUrl;
 	}
 
+	markAsDiscovered() {
+		const container = this.#tileDOM.querySelector(".vh-img-container");
+
+		const newCorner = document.createElement("div");
+		newCorner.classList.add("vh-new-corner-discovered");
+		//Add a span into the div
+		const span = document.createElement("span");
+		span.innerHTML = "FIRST<br>DISCOVERY";
+		newCorner.appendChild(span);
+
+		//Insert newCorner as the first child of the container
+		container.insertBefore(newCorner, container.firstChild);
+	}
+
 	setDateAdded(timenow, mysqlDate) {
 		if (mysqlDate == undefined || !Settings.get("general.displayFirstSeen")) {
 			return false;

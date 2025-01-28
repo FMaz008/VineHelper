@@ -95,7 +95,25 @@ div#vh-healing-text {
 	background-color: rgba(255, 255, 255, 0.5);
 	color: #0f1111;
 }
+.vh-new-corner-discovered {
+	position: absolute;
+	top: -15px;
+	right: -120px;
+	font-size: 8pt;
+	line-height: 8pt;
+	transform-origin: -0px -100px;
+	transform: rotate(45deg);
+	width: 100px;
+	height: 2.5em;
+	padding-top: 2px;
+	background-color: #ff0000;
+	color: #fff;
+	text-transform: uppercase;
+	font-weight: bold;
+	text-align: center;
 
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
 .vvp-container-right-align {
 	flex-flow: row wrap;
 }

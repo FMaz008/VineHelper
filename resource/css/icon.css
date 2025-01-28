@@ -193,6 +193,16 @@
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/save.png");
 		background-repeat: no-repeat;
 	}
+	.vh-new-corner {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/new-corner.png");
+		background-repeat: no-repeat;
+	}
+	.vh-1st-medal {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/1st-medal.png");
+		background-repeat: no-repeat;
+	}
 }
 
 @supports (-moz-appearance: none) {
@@ -387,6 +397,16 @@
 	.vh-icon-save {
 		background-size: 100%;
 		background-image: url("/resource/image/save.png");
+		background-repeat: no-repeat;
+	}
+	.vh-new-corner {
+		background-size: 100%;
+		background-image: url("/resource/image/new-corner.png");
+		background-repeat: no-repeat;
+	}
+	.vh-1st-medal {
+		background-size: 100%;
+		background-image: url("/resource/image/1st-medal.png");
 		background-repeat: no-repeat;
 	}
 }
