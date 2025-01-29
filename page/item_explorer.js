@@ -31,6 +31,10 @@ const Settings = new SettingsMgr();
 	let countdownInterval;
 
 	searchBtn.addEventListener("click", function () {
+		if (searchBtn.disabled) {
+			return;
+		}
+
 		const now = Date.now();
 		if (now - lastSearchTime < 10000) {
 			return;
@@ -52,6 +56,18 @@ const Settings = new SettingsMgr();
 				searchBtn.value = `Wait ${secondsLeft}s`;
 			}
 		}, 1000);
+	});
+
+	document.getElementById("search-asin").addEventListener("keyup", function (event) {
+		//If ENTER is pressed, search
+		if (event.key === "Enter") {
+			searchBtn.click();
+		}
+	});
+	document.getElementById("search-title").addEventListener("keyup", function (event) {
+		if (event.key === "Enter") {
+			searchBtn.click();
+		}
 	});
 
 	loadFormItemsStateFromURL();
