@@ -55,3 +55,7 @@ body.darktheme #vvp-items-grid-container .vvp-item-tile a:active {
 #vvp-items-grid.listview {
 	grid-template-columns: auto !important;
 }
+
+.vh-listview .vvp-details-btn {
+	width: 150px !important;
+}

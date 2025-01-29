@@ -733,6 +733,7 @@ async function generateTile(obj) {
 		//imgContainer.parentNode.removeChild(imgContainer);
 		//obj.insertBefore(imgContainer, obj.firstChild);
 		obj.prepend(imgContainer);
+		obj.classList.add("vh-listview");
 
 		//Display the full titles
 		/*
@@ -744,13 +745,17 @@ async function generateTile(obj) {
 		console.log(full.classList);
 		obj.querySelector(".a-truncate-cut").classList.add("a-offscreen");
 		*/
+	} else {
+		obj.classList.add("vh-gridview");
 	}
 
 	//If small items stylesheet are used, add a class to resize-down the thumnails.
+	if (Settings.get("thorvarium.smallItems")) {
+		document.querySelector("#vh-tabs").classList.add("smallitems");
+	}
 	if (
-		Settings.get("thorvarium.mobileios") ||
-		Settings.get("thorvarium.mobileandroid") ||
-		Settings.get("thorvarium.smallItems")
+		(Settings.get("thorvarium.mobileios") || Settings.get("thorvarium.mobileandroid")) &&
+		!Settings.get("general.tileSize.enabled")
 	) {
 		document.querySelector("#vh-tabs").classList.add("smallitems");
 	}

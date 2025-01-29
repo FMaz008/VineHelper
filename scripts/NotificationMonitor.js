@@ -189,7 +189,7 @@ class NotificationMonitor {
 		}
 
 		//Display tile size widget if the list view is not active and the tile size is active
-		if (Settings.get("general.tileSize.active")) {
+		if (Settings.get("general.tileSize.active") && !Settings.get("notification.monitor.listView")) {
 			this.#initTileSizeWidget();
 		}
 
@@ -302,6 +302,9 @@ class NotificationMonitor {
 		}
 	}
 	async #initTileSizeWidget() {
+		if (!Settings.get("notification.monitor.listView")) {
+			return;
+		}
 		const container = document.querySelector("#vvp-items-grid-container");
 		if (container) {
 			if (Settings.get("general.tileSize.enabled")) {
@@ -480,7 +483,7 @@ class NotificationMonitor {
 		toolbar.style.backgroundColor = Settings.get("general.toolbarBackgroundColor");
 
 		//Set the tile custom dimension according to the settings.
-		if (!this.#lightMode) {
+		if (!this.#lightMode && !Settings.get("notification.monitor.listView")) {
 			tileSizer.adjustAll(tileDOM);
 		}
 		//Add tool tip to the truncated item title link
@@ -941,6 +944,7 @@ class NotificationMonitor {
 		const reason = e.target.dataset.reason;
 		const highlightKW = e.target.dataset.highlightkw;
 		const blurKW = e.target.dataset.blurkw;
+		const queue = e.target.dataset.queue;
 
 		let m = DialogMgr.newModal("item-details-" + asin);
 		m.title = "Item " + asin;
@@ -954,6 +958,9 @@ class NotificationMonitor {
 			"</li>" +
 			"<li>Broadcast reason: " +
 			reason +
+			"</li>" +
+			"<li>Queue: " +
+			queue +
 			"</li>" +
 			"<li>Highlight Keyword: " +
 			highlightKW +
