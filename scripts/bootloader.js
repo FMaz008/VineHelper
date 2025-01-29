@@ -44,8 +44,8 @@ import { News } from "./News.js";
 
 import { NotificationMonitor } from "./NotificationMonitor.js";
 
-import { generatePagination } from "./Pagination.js";
-
+import { Pagination } from "./Pagination.js";
+var pagination = new Pagination();
 import { PinnedListMgr } from "./PinnedListMgr.js";
 var PinnedList = new PinnedListMgr();
 
@@ -525,9 +525,10 @@ function initInsertTopPagination() {
 			const CURRENT_PAGE = parseInt(currentPageDOM.innerText.replace(/,/g, ""));
 
 			const URL = window.location.pathname + window.location.search; //Sample URL to be modified
-			let pagination = generatePagination(URL, TOTAL_ITEMS, ITEM_PER_PAGE, CURRENT_PAGE);
+			pagination.setStartPagePadding(parseInt(Settings.get("general.verbosePaginationStartPadding")));
+			let paginationObj = pagination.generatePagination(URL, TOTAL_ITEMS, ITEM_PER_PAGE, CURRENT_PAGE);
 
-			env.data.gridDOM.container.querySelector("p").appendChild(pagination);
+			env.data.gridDOM.container.querySelector("p").appendChild(paginationObj);
 		} else {
 			// Clone the bottom pagination to the top of the listing
 			let paginationElement = document.querySelector(".a-pagination");

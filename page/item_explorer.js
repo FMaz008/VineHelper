@@ -6,8 +6,8 @@ var env = new Environment();
 import { Internationalization } from "../scripts/Internationalization.js";
 const i13n = new Internationalization();
 
-import { generatePagination } from "../scripts/Pagination.js";
-
+import { Pagination } from "../scripts/Pagination.js";
+const pagination = new Pagination();
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
 const Settings = new SettingsMgr();
 
@@ -179,7 +179,9 @@ function serverProductsResponse(data) {
 
 	const paginationContainer = document.getElementById("vh-pagination");
 	paginationContainer.innerHTML = "";
-	paginationContainer.appendChild(generatePagination(generateUrl(), data["total_items"], 50, data["page"]));
+	paginationContainer.appendChild(
+		pagination.generatePagination(generateUrl(), data["total_items"], 50, data["page"])
+	);
 }
 
 function displayError(message) {
