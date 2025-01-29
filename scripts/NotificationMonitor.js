@@ -63,6 +63,8 @@ class NotificationMonitor {
 	#itemTemplateFile = "tile_gridview.html";
 	#channel = null; //Broadcast channel for light mode
 	#lightMode = false;
+	#statusTimer = null;
+
 	constructor() {
 		this.#imageUrls = new Set();
 		this.#asinsOnPage = new Set();
@@ -752,14 +754,15 @@ class NotificationMonitor {
 			);
 		} else if (Settings.get("notification.active")) {
 			//Send a message to the service worker to check if it is still running
-			const statusTimer = window.setTimeout(() => {
-				const txtStatus = document.querySelector("#statusSW .description");
-				if (txtStatus.innerText == "") {
-					this.#setServiceWorkerStatus(false, "Not responding, reload the page.");
-				}
+			this.#statusTimer = window.setTimeout(() => {
+				this.#setServiceWorkerStatus(false, "Not responding, reload the page.");
 			}, 500);
-			chrome.runtime.sendMessage({ type: "ping" });
-			this.#channel.postMessage({ type: "ping" });
+			try {
+				chrome.runtime.sendMessage({ type: "ping" });
+				this.#channel.postMessage({ type: "ping" });
+			} catch (e) {
+				//Page out of context, let the display show an error.
+			}
 		}
 	}
 
@@ -1240,6 +1243,7 @@ class NotificationMonitor {
 		}
 
 		if (data.type == "pong") {
+			window.clearTimeout(this.#statusTimer);
 			this.#setServiceWorkerStatus(true, "Service worker is running.");
 		}
 		if (data.type == "newETV") {
