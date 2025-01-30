@@ -126,6 +126,19 @@ async function init() {
 		//Do nothing
 	}
 
+	//Add a div to the body to indicate VH's status(es)
+	const divStatus = document.createElement("div");
+	divStatus.id = "vh-status";
+	divStatus.style.display = "none";
+	document.body.appendChild(divStatus);
+
+	hookMgr.hookBind("productsUpdated", () => {
+		//Add a div to the body with a data-status attribute to indicate the products
+		//have been updated.
+		const div = document.getElementById("vh-status");
+		div.setAttribute("data-status", "productsUpdated");
+	});
+
 	//Wait for the config to be loaded before running this script
 	logger.add("BOOT: Waiting on preboot to complete...");
 	await Settings.waitForLoad();
