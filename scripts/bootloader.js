@@ -1687,15 +1687,16 @@ async function openDynamicModal(asin, queue, isParent, enrollmentGUID, autoClick
 		}
 
 		//If DOM is loaded and ready
-		let maxAttempts = 3;
-		while (!document.querySelector(".a-popover-modal") && maxAttempts > 0) {
+		let attempt = 1;
+		while (!document.querySelector(".a-popover-modal") && attempt <= 5) {
+			console.log(`Attempt #${attempt} to open the modal window`);
 			btn.click();
-			await new Promise((r) => setTimeout(r, 300));
-			maxAttempts--;
+			await new Promise((r) => setTimeout(r, 200 * attempt));
+			attempt++;
 		}
 
-		if (maxAttempts == 0) {
-			console.error("Failed to open modal");
+		if (attempt == 6) {
+			console.error("Failed to open modal or succeeded on last attempt");
 		}
 
 		setTimeout(function () {
