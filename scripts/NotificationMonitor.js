@@ -868,7 +868,8 @@ class NotificationMonitor {
 		if (this.#filterType == -1) {
 			node.style.display = this.#lightMode ? "block" : "flex";
 		} else if (this.#filterType == TYPE_HIGHLIGHT_OR_ZEROETV) {
-			node.style.display = notificationTypeZeroETV || notificationTypeHighlight ? "flex" : "none";
+			node.style.display =
+				notificationTypeZeroETV || notificationTypeHighlight ? (this.#lightMode ? "block" : "flex") : "none";
 		} else if (this.#filterType == TYPE_HIGHLIGHT) {
 			node.style.display = notificationTypeHighlight ? (this.#lightMode ? "block" : "flex") : "none";
 		} else if (this.#filterType == TYPE_ZEROETV) {
