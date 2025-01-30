@@ -190,7 +190,8 @@ async function init() {
 
 	hookMgr.hookExecute("EndOfBootloader", null);
 
-	HiddenList.garbageCollection();
+	await HiddenList.garbageCollection(false); //Remove items older than 90 days
+	HiddenList.forceGarbageCollection(); //Enforce the storage limit.
 }
 
 async function initTileSizeWidget() {

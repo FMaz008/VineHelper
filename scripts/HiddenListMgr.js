@@ -176,7 +176,7 @@ class HiddenListMgr {
 		});
 	}
 
-	async garbageCollection() {
+	async garbageCollection(runForceGC = true) {
 		if (!this.mapHidden) {
 			return false;
 		}
@@ -214,13 +214,19 @@ class HiddenListMgr {
 			Settings.set("hiddenTab.lastGC", timestampNow);
 		}
 		if (needsSave) {
-			this.saveList();
+			awaitthis.saveList();
 		}
 
+		if (runForceGC) {
+			this.forceGarbageCollection(Settings.get("general.hiddenItemsCacheSize"));
+		}
+	}
+
+	async forceGarbageCollection(storageMaxSize = 9) {
 		//Delete older items if the storage space is exceeded.
 		let bytes = await getStorageSizeFull();
-		const storageLimit = Settings.get("general.hiddenItemsCacheSize") * 1048576; // 9MB
-		const deletionThreshold = (Settings.get("general.hiddenItemsCacheSize") - 1) * 1048576; // 8MB
+		const storageLimit = storageMaxSize * 1048576; // 9MB
+		const deletionThreshold = (storageMaxSize - 1) * 1048576; // 8MB
 		if (bytes > storageLimit) {
 			let itemDeleted = 0;
 			let note = new ScreenNotification();
