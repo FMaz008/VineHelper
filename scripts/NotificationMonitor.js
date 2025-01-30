@@ -304,7 +304,7 @@ class NotificationMonitor {
 		}
 	}
 	async #initTileSizeWidget() {
-		if (!Settings.get("notification.monitor.listView")) {
+		if (Settings.get("notification.monitor.listView")) {
 			return;
 		}
 		const container = document.querySelector("#vvp-items-grid-container");
