@@ -4,6 +4,9 @@ var logger = new Logger();
 import { SettingsMgr } from "./SettingsMgr.js";
 const Settings = new SettingsMgr();
 
+import { ScreenNotifier, ScreenNotification } from "./ScreenNotifier.js";
+var Notifications = new ScreenNotifier();
+
 import { Internationalization } from "./Internationalization.js";
 const i13n = new Internationalization();
 
@@ -176,14 +179,16 @@ class HiddenListMgr {
 		});
 	}
 
-	async garbageCollection(runForceGC = true) {
+	async garbageCollection() {
 		if (!this.mapHidden) {
 			return false;
 		}
-		if (isNaN(Settings.get("general.hiddenItemsCacheSize"))) {
+
+		const storageMaxSize = Settings.get("general.hiddenItemsCacheSize");
+		if (isNaN(storageMaxSize)) {
 			return false;
 		}
-		if (Settings.get("general.hiddenItemsCacheSize") < 2 || Settings.get("general.hiddenItemsCacheSize") > 9) {
+		if (storageMaxSize < 2 || storageMaxSize > 9) {
 			return false;
 		}
 
@@ -214,15 +219,9 @@ class HiddenListMgr {
 			Settings.set("hiddenTab.lastGC", timestampNow);
 		}
 		if (needsSave) {
-			awaitthis.saveList();
+			await this.saveList();
 		}
 
-		if (runForceGC) {
-			this.forceGarbageCollection(Settings.get("general.hiddenItemsCacheSize"));
-		}
-	}
-
-	async forceGarbageCollection(storageMaxSize = 9) {
 		//Delete older items if the storage space is exceeded.
 		let bytes = await getStorageSizeFull();
 		const storageLimit = storageMaxSize * 1048576; // 9MB
@@ -300,6 +299,20 @@ function getStorageSizeFull() {
 			}
 		});
 	});
+}
+
+function bytesToSize(bytes, decimals = 2) {
+	if (!Number(bytes)) {
+		return "0 Bytes";
+	}
+
+	const kbToBytes = 1024;
+	const dm = decimals < 0 ? 0 : decimals;
+	const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+
+	const index = Math.floor(Math.log(bytes) / Math.log(kbToBytes));
+
+	return `${parseFloat((bytes / Math.pow(kbToBytes, index)).toFixed(dm))} ${sizes[index]}`;
 }
 
 export { HiddenListMgr };

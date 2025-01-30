@@ -190,8 +190,7 @@ async function init() {
 
 	hookMgr.hookExecute("EndOfBootloader", null);
 
-	await HiddenList.garbageCollection(false); //Remove items older than 90 days
-	HiddenList.forceGarbageCollection(); //Enforce the storage limit.
+	HiddenList.garbageCollection();
 }
 
 async function initTileSizeWidget() {
@@ -1357,27 +1356,28 @@ window.addEventListener("keyup", async function (e) {
 	}
 
 	//Debug: secret keybind to generate dummy hidden items
-	/*if (e.key == "g") {
-		if (
-			this.confirm(
-				"Generate 10,000 dummy items in local storage? (Will take ~1min)"
-			)
-		) {
-			for (i = 0; i < 10000; i++) {
-				fakeAsin = (()=>{
+	/*
+	//Don't forget to comment this.updateArrChange({ in the addItem function in HiddenListMgr.js
+	if (e.key == "g") {
+		if (this.confirm("Generate 20,000 dummy items in local storage? (Will take ~1min)")) {
+			for (let i = 0; i < 20000; i++) {
+				const fakeAsin = (() => {
 					let result = "";
 					const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 					const charactersLength = characters.length;
-					for (let i = 0; i < length; i++) {
+					for (let i = 0; i < 10; i++) {
 						result += characters.charAt(Math.floor(Math.random() * charactersLength));
 					}
 
 					return result;
 				})();
-				HiddenList.addItem(fakeAsin, false);
+				if (i % 1000 == 0) {
+					console.log("Generated " + i + " items");
+				}
+				await HiddenList.addItem(fakeAsin, false, false);
 			}
-			HiddenList.saveList();
-			this.alert("10000 items generated");
+			HiddenList.saveList(false);
+			this.alert("20,000 items generated");
 		}
 	}
 	*/
