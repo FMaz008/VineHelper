@@ -52,3 +52,12 @@ div.vh-status-container {
 	flex-basis: unset;
 	padding-left: 0px;
 }
+
+/* Remove the min-width from the main page */
+body,
+.vvp-body,
+.a-container,
+#navFooter.navLeftFooter,
+#navbar {
+	min-width: unset !important;
+}

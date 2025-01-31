@@ -176,9 +176,9 @@ async function init() {
 	if (Settings.get("general.listView")) {
 		logger.add("BOOT: Loading listView stylesheet");
 		loadStyleSheet("resource/css/listView.css");
+	} else {
+		initTileSizeWidget();
 	}
-
-	initTileSizeWidget();
 	await initCreateTabs(); //Create the 4 grids/tabs
 	await initTilesAndDrawToolbars(); //Create the tiles, and move the locally hidden tiles to the hidden tab
 	fetchProductsDatav5(); //Obtain the data to fill the toolbars with it.
@@ -216,9 +216,11 @@ async function initTileSizeWidget() {
 
 	//Set the slider default value
 	//Wait until the items are loaded.
-	hookMgr.hookBind("tilesUpdated", () => {
-		tileSizer.adjustAll();
-	});
+	if (!Settings.get("general.listView")) {
+		hookMgr.hookBind("tilesUpdated", () => {
+			tileSizer.adjustAll();
+		});
+	}
 }
 
 //If we are on the Account page, display additional info
