@@ -1066,6 +1066,7 @@ window.addEventListener("message", async function (event) {
 		}
 		const content = {
 			api_version: 5,
+			version: env.data.appVersion,
 			action: "record_etv",
 			country: i13n.getCountryCode(),
 			uuid: Settings.get("general.uuid", false),
@@ -1138,6 +1139,7 @@ window.addEventListener("message", async function (event) {
 			//Report the order status to the server
 			const content = {
 				api_version: 5,
+				version: env.data.appVersion,
 				action: "record_order",
 				country: i13n.getCountryCode(),
 				uuid: Settings.get("general.uuid", false),
@@ -1232,6 +1234,7 @@ window.addEventListener("message", async function (event) {
 async function recordUnavailableProduct(asin, reason) {
 	const content = {
 		api_version: 5,
+		version: env.data.appVersion,
 		action: "record_unavailable",
 		country: i13n.getCountryCode(),
 		uuid: Settings.get("general.uuid", false),
