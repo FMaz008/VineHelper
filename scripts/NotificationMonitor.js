@@ -129,6 +129,7 @@ class NotificationMonitor {
 		//Remove the page width limitation
 		document.querySelector(".vvp-body").style.maxWidth = "unset";
 		document.querySelector(".vvp-body").style.minWidth = "unset";
+		document.querySelector("body").style.minWidth = "unset";
 
 		//Remove the margins
 		document.querySelector(".vvp-body").style.margin = "0";

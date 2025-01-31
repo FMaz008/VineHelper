@@ -160,6 +160,11 @@ async function init() {
 	let regex = /^[^#]+#monitor$/;
 	let arrMatches = currentUrl.match(regex);
 	if (arrMatches != null) {
+		if (Settings.get("notification.monitor.listView")) {
+			logger.add("BOOT: Loading listView stylesheet");
+			loadStyleSheet("resource/css/listView.css");
+		}
+
 		//Initate the notification monitor
 		notificationMonitor = new NotificationMonitor();
 		await notificationMonitor.initialize();

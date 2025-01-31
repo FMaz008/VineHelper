@@ -13,14 +13,29 @@
 
 #vh-tabs > .tab-grid > .vvp-item-tile .vvp-item-tile-content {
 	display: flex;
+	flex-grow: 1;
 	flex-direction: column;
 	margin-left: 10px;
 	width: 100% !important;
 }
 
+#vh-tabs > .tab-grid > .vvp-item-tile .vvp-item-tile-content .a-truncate {
+	height: unset;
+}
+
+#vh-tabs > .tab-grid > .vvp-item-tile .vvp-item-tile-content > * {
+	margin: 2px 0;
+}
+
+#vh-tabs .vvp-item-tile .vvp-item-tile-content > div.vh-status {
+	margin-top: 0px !important;
+	flex-grow: unset;
+}
+
 #vh-tabs > .tab-grid > .vvp-item-tile .vvp-details-btn {
 	width: 150px;
 	margin: 0 auto !important;
+	margin-bottom: 2px !important;
 }
 
 div.vh-status-container {
@@ -29,4 +44,11 @@ div.vh-status-container {
 
 #vh-tabs.smallitems .vh-img-container {
 	width: 130px !important;
+}
+
+.tab-grid div.vh-toolbar-etv,
+.vh-notification-monitor div.vh-toolbar-etv {
+	min-width: unset;
+	flex-basis: unset;
+	padding-left: 0px;
 }
