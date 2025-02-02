@@ -201,7 +201,8 @@ function serverProductsResponse(data) {
 		}
 
 		html = "<tr>";
-		html += "<td>";
+		html += "<td class='asin'>";
+		html += `<img src='${values.img_url}' style='display:block;margin:0 auto;width: 60px; height: 60px;'>`;
 		html += values.asin;
 		html += `<a href='https://www.amazon.${i13n.getDomainTLD()}/dp/${values.asin}' target='_blank'><div class='vh-icon-16 vh-icon-newtab' style='margin-left: 5px;'></div></a>`;
 		html += "</td>";
