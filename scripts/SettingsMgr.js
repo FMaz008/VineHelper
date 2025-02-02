@@ -257,6 +257,8 @@ class SettingsMgr {
 				country: null,
 				uuid: null,
 				topPagination: true,
+				verbosePagination: false,
+				verbosePaginationStartPadding: 5,
 				displayFirstSeen: true,
 				displayETV: true,
 				bookmark: false, //Highlight recently added items
