@@ -1,17 +1,5 @@
 /* Chrome 29+ */
 @media screen and (-webkit-min-device-pixel-ratio: 0) and (min-resolution: 0.001dpcm) {
-	.vh-icon-sad,
-	div.vh-icon-no {
-		background-size: 200%;
-		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/rating-bad.png");
-		background-repeat: no-repeat;
-	}
-	.vh-icon-happy,
-	div.vh-icon-yes {
-		background-size: 200%;
-		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/rating-good.png");
-		background-repeat: no-repeat;
-	}
 	.vh-icon-info {
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/info.png");
@@ -203,21 +191,19 @@
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/1st-medal.png");
 		background-repeat: no-repeat;
 	}
+	.vh-icon-newtab {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/new-tab.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-declined {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/declined.png");
+		background-repeat: no-repeat;
+	}
 }
 
 @supports (-moz-appearance: none) {
-	.vh-icon-sad,
-	div.vh-icon-no {
-		background-size: 200%;
-		background-image: url("/resource/image/rating-bad.png");
-		background-repeat: no-repeat;
-	}
-	.vh-icon-happy,
-	div.vh-icon-yes {
-		background-size: 200%;
-		background-image: url("/resource/image/rating-good.png");
-		background-repeat: no-repeat;
-	}
 	.vh-icon-info {
 		background-size: 100%;
 		background-image: url("/resource/image/info.png");
@@ -407,6 +393,16 @@
 	.vh-1st-medal {
 		background-size: 100%;
 		background-image: url("/resource/image/1st-medal.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-newtab {
+		background-size: 100%;
+		background-image: url("/resource/image/new-tab.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-declined {
+		background-size: 100%;
+		background-image: url("/resource/image/declined.png");
 		background-repeat: no-repeat;
 	}
 }

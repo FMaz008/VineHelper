@@ -162,6 +162,7 @@ function serverProductsResponse(data) {
 	html += "<th rowspan='2'>Title</th>";
 	html += "<th rowspan='2'>ETV</th>";
 	html += "<th rowspan='2'>Queue</th>";
+	html += "<th rowspan='2'><div class='vh-icon-32 vh-icon-declined'></div></th>";
 	html += "<th colspan='2'>Orders</th>";
 	html += "<th rowspan='2'>Date created</th>";
 	html += "<th rowspan='2'>Last broadcast</th>";
@@ -180,11 +181,40 @@ function serverProductsResponse(data) {
 	}
 
 	for (const [key, values] of Object.entries(data["items"])) {
+		let searchStyle = "";
+		let searchUrl;
+		if (
+			Settings.get("general.searchOpenModal") &&
+			values.is_parent_asin != null &&
+			values.enrollment_guid != null &&
+			values.queue != "potluck"
+		) {
+			searchUrl = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${values.asin};${values.queue};${values.is_parent_asin ? "true" : "false"};${values.enrollment_guid}`;
+		} else {
+			if (values.queue == "potluck") {
+				searchStyle = "opacity: 0.4;";
+			}
+			const truncatedTitle =
+				values.title.length > 40 ? values.title.substr(0, 40).split(" ").slice(0, -1).join(" ") : values.title;
+			const search_url_slug = encodeURIComponent(truncatedTitle);
+			searchUrl = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search_url_slug}`;
+		}
+
 		html = "<tr>";
-		html += "<td>" + values.asin + "</td>";
-		html += "<td>" + values.title + "</td>";
+		html += "<td>";
+		html += values.asin;
+		html += `<a href='https://www.amazon.${i13n.getDomainTLD()}/dp/${values.asin}' target='_blank'><div class='vh-icon-16 vh-icon-newtab' style='margin-left: 5px;'></div></a>`;
+		html += "</td>";
+		html += "<td>";
+		html += values.title;
+		html += `<a href='${searchUrl}' target='_blank'><div class='vh-icon-16 vh-icon-search' style='margin-left: 5px;${searchStyle}'></div></a>`;
+		html += `</td>`;
 		html += "<td>" + (values.etv == null ? "N/A" : values.etv) + "</td>";
 		html += "<td>" + values.queue + "</td>";
+		html +=
+			"<td style='text-align: center;'>" +
+			(values.unavailable ? "<div class='vh-icon-16 vh-icon-declined'></div>" : "") +
+			"</td>";
 		html += "<td>" + values.order_success + "</td>";
 		html += "<td>" + values.order_failed + "</td>";
 		html += "<td>" + ISODatetoYMDHiS(values.date_added) + "</td>";
