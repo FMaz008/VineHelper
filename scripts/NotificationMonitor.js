@@ -481,10 +481,6 @@ class NotificationMonitor {
 		let tileDOM = await Tpl.render(prom2, true);
 		this.#gridContainer.insertBefore(tileDOM, this.#gridContainer.firstChild);
 
-		//Set the background color of the tile's toolbar
-		const toolbar = tileDOM.querySelector(".vh-status-container");
-		toolbar.style.backgroundColor = Settings.get("general.toolbarBackgroundColor");
-
 		//Set the tile custom dimension according to the settings.
 		if (!this.#lightMode && !Settings.get("notification.monitor.listView")) {
 			tileSizer.adjustAll(tileDOM);
