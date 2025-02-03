@@ -1055,10 +1055,6 @@ window.addEventListener("message", async function (event) {
 
 	//If we got back a message after we found an ETV.
 	if (event.data.type == "etv") {
-		if (arrVariationsAsins != null) {
-			console.log(arrVariationsAsins);
-		}
-
 		//Send the ETV info to the server
 		let tileASIN = event.data.data.parent_asin;
 		if (tileASIN === null) {
