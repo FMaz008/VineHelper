@@ -157,7 +157,7 @@ async function init() {
 
 	//Check if we want to display the notification monitor
 	const currentUrl = window.location.href;
-	let regex = /^[^#]+#monitor$/;
+	let regex = /^[^#]+#monitor.*$/;
 	let arrMatches = currentUrl.match(regex);
 	if (arrMatches != null) {
 		if (Settings.get("notification.monitor.listView")) {
