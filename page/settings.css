@@ -163,6 +163,10 @@ a.toggle {
 	cursor: pointer;
 }
 
+#premiumTier {
+	font-size: 14pt;
+}
+
 .patreonLevelbar {
 	display: flex;
 	flex-direction: row;
@@ -176,6 +180,7 @@ a.toggle {
 	border: 2px solid #000;
 	border-radius: 7px;
 	margin-right: 5px;
+	box-shadow: -3px 3px 5px black;
 }
 
 .patreonLevelbarSegment.filled0 {
