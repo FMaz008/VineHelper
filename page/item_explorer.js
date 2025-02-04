@@ -8,6 +8,10 @@ const i13n = new Internationalization();
 
 import { Pagination } from "../scripts/Pagination.js";
 const pagination = new Pagination();
+
+import { PinnedListMgr } from "../scripts/PinnedListMgr.js";
+var PinnedList = new PinnedListMgr();
+
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
 const Settings = new SettingsMgr();
 
@@ -209,6 +213,16 @@ function serverProductsResponse(data) {
 		html += "<td>";
 		html += values.title;
 		html += `<a href='${searchUrl}' target='_blank'><div class='vh-icon-16 vh-icon-search' style='margin-left: 5px;${searchStyle}'></div></a>`;
+		if (Settings.get("pinnedTab.active") && values.queue != "potluck") {
+			html += `<div class='vh-icon-16 vh-icon-pin'
+							data-asin='${values.asin}'
+							data-queue='${values.queue}'
+							data-is-parent-asin='${values.is_parent_asin}'
+							data-enrollment-guid='${values.enrollment_guid}'
+							data-title='${values.title}'
+							data-thumbnail='${values.img_url}' 
+							style='margin-left: 5px;'></div>`;
+		}
 		html += `</td>`;
 		html += "<td>" + (values.etv == null ? "N/A" : values.etv) + "</td>";
 		html += "<td>" + values.queue + "</td>";
@@ -234,6 +248,25 @@ function serverProductsResponse(data) {
 	paginationContainerBottom.appendChild(
 		pagination.generatePagination(generateUrl(), data["total_items"], 50, data["page"])
 	);
+
+	//Add pinned item listerner
+	if (Settings.get("pinnedTab.active")) {
+		const pinnedItems = document.querySelectorAll(".vh-icon-pin");
+		pinnedItems.forEach((item) => {
+			item.addEventListener("click", () => {
+				const asin = item.getAttribute("data-asin");
+				const queue = item.getAttribute("data-queue");
+				const isParentAsin = item.getAttribute("data-is-parent-asin");
+				const enrollmentGuid = item.getAttribute("data-enrollment-guid");
+				const title = item.getAttribute("data-title");
+				const thumbnail = item.getAttribute("data-thumbnail");
+
+				PinnedList.addItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGuid);
+
+				item.style.opacity = "0.4";
+			});
+		});
+	}
 }
 
 function displayError(message) {
