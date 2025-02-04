@@ -452,9 +452,19 @@ class NotificationMonitor {
 		}
 
 		//Add the notification
-
-		const truncatedTitle = title.length > 40 ? title.substr(0, 40).split(" ").slice(0, -1).join(" ") : title;
-		const search_url_slug = encodeURIComponent(truncatedTitle);
+		let search_url;
+		if (
+			Settings.isPremiumUser(2) &&
+			Settings.get("general.searchOpenModal") &&
+			is_parent_asin != null &&
+			enrollment_guid != null
+		) {
+			search_url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`;
+		} else {
+			const truncatedTitle = title.length > 40 ? title.substr(0, 40).split(" ").slice(0, -1).join(" ") : title;
+			const search_url_slug = encodeURIComponent(truncatedTitle);
+			search_url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search_url_slug}`;
+		}
 
 		let prom2 = await Tpl.loadFile("view/" + this.#itemTemplateFile);
 		Tpl.setVar("id", asin);
@@ -473,7 +483,7 @@ class NotificationMonitor {
 		Tpl.setVar("enrollment_guid", enrollment_guid);
 		Tpl.setVar("recommendationType", recommendationType);
 		Tpl.setVar("recommendationId", recommendationId);
-		Tpl.setVar("search_url_slug", search_url_slug);
+		Tpl.setVar("search_url", search_url);
 		Tpl.setIf("announce", Settings.get("discord.active") && Settings.get("discord.guid", false) != null);
 		Tpl.setIf("pinned", Settings.get("pinnedTab.active"));
 		Tpl.setIf("variant", Settings.isPremiumUser() && Settings.get("general.displayVariantIcon") && is_parent_asin);
