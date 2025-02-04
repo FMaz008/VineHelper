@@ -205,12 +205,7 @@ function serverProductsResponse(data) {
 
 		html = "<tr>";
 		html += "<td class='asin'>";
-		html += `<img src='${values.img_url}' style='display:block;margin:0 auto;width: 60px; height: 60px;'>`;
-		html += values.asin;
-		html += `<a href='https://www.amazon.${i13n.getDomainTLD()}/dp/${values.asin}' target='_blank'><div class='vh-icon-16 vh-icon-newtab' style='margin-left: 5px;'></div></a>`;
-		html += "</td>";
-		html += "<td>";
-		html += values.title;
+		html += `<div class='thumbnailContainer'><img src='${values.img_url}'><div class='iconsContainer'>`;
 		html += `<a href='${searchUrl}' target='_blank'><div class='vh-icon-16 vh-icon-search' style='margin-left: 5px;${searchStyle}'></div></a>`;
 		if (Settings.get("pinnedTab.active") && values.queue != "potluck") {
 			html += `<div class='vh-icon-16 vh-icon-pin'
@@ -222,6 +217,12 @@ function serverProductsResponse(data) {
 							data-thumbnail='${values.img_url}' 
 							style='margin-left: 5px;'></div>`;
 		}
+		html += `</div></div>`;
+		html += values.asin;
+		html += `<a href='https://www.amazon.${i13n.getDomainTLD()}/dp/${values.asin}' target='_blank'><div class='vh-icon-16 vh-icon-newtab' style='margin-left: 5px;'></div></a>`;
+		html += "</td>";
+		html += "<td>";
+		html += values.title;
 		html += `</td>`;
 		html += "<td style='text-align: right;'>" + (values.etv == null ? "N/A" : values.etv) + "</td>";
 		html += "<td>" + values.queue + "</td>";

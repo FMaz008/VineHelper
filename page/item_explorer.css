@@ -36,6 +36,27 @@
 	background-color: #e1f5fe;
 }
 
+.thumbnailContainer {
+	display: flex;
+	justify-content: center;
+	margin: 0 auto;
+}
+
+.thumbnailContainer img {
+	width: 60px;
+	height: 60px;
+}
+
+.thumbnailContainer .iconsContainer {
+	display: flex;
+	flex-direction: column;
+}
+
+.thumbnailContainer .iconsContainer > * {
+	margin-bottom: 5px;
+	cursor: pointer;
+}
+
 /* Pagination */
 
 .vh-pagination {
