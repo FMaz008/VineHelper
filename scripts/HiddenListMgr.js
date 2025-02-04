@@ -225,7 +225,8 @@ class HiddenListMgr {
 		//Delete older items if the storage space is exceeded.
 		let bytes = await getStorageSizeFull();
 		const storageLimit = storageMaxSize * 1048576; // 9MB
-		const deletionThreshold = (storageMaxSize - 1) * 1048576; // 8MB
+		const reduction = storageMaxSize > 1 ? 1 : 0.5; //If max is 1, only clear 0.5mb
+		const deletionThreshold = (storageMaxSize - reduction) * 1048576; // 8MB
 		if (bytes > storageLimit) {
 			let itemDeleted = 0;
 			let note = new ScreenNotification();
@@ -245,7 +246,7 @@ class HiddenListMgr {
 			// Sort the array based on the date values (oldest first)
 			arrHidden.sort((a, b) => a[1] - b[1]);
 
-			while (bytes > deletionThreshold) {
+			while (bytes > deletionThreshold && arrHidden.length > 0) {
 				let itemCount = arrHidden.length;
 				//Delete 1000 items at the time
 				let batchSize = 1000;
