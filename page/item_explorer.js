@@ -25,7 +25,7 @@ const Settings = new SettingsMgr();
 	}
 
 	const countryCode = Settings.get("general.country");
-	console.log(countryCode);
+
 	if (countryCode != null) {
 		i13n.setCountryCode(countryCode);
 	}
@@ -118,7 +118,6 @@ function queryDB(page = 1) {
 	const orderBy = document.getElementById("vh-order-by-select").value;
 	const queue = document.getElementById("vh-queue-select").value;
 
-	console.log(i13n.getCountryCode());
 	const content = {
 		api_version: 5,
 		app_version: env.data.appVersion,
