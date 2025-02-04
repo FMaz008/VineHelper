@@ -38,13 +38,13 @@
 
 /* Pagination */
 
-#vh-pagination {
+.vh-pagination {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	margin: 5px auto;
 }
-#vh-pagination ul {
+.vh-pagination ul {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
@@ -52,11 +52,15 @@
 	padding: 0;
 	margin: 0;
 }
-#vh-pagination li {
+.vh-pagination li {
 	margin: 0 5px; /* Add spacing between items */
 }
+.vh-pagination li.a-selected {
+	font-weight: bold;
+	font-size: 12pt;
+}
 
-#vh-pagination a {
+.vh-pagination a {
 	display: block;
 	padding: 8px 12px;
 	text-decoration: none;
@@ -68,12 +72,12 @@
 		color 0.3s;
 }
 
-#vh-pagination a:hover {
+.vh-pagination a:hover {
 	background-color: #f0f0f0; /* Light gray on hover */
 	color: #0056b3; /* Darker blue on hover */
 }
 
-#vh-pagination a.active {
+.vh-pagination a.active {
 	background-color: #007bff;
 	color: white;
 	border-color: #007bff;

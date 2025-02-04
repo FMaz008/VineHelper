@@ -224,9 +224,14 @@ function serverProductsResponse(data) {
 		table.innerHTML += html;
 	}
 
-	const paginationContainer = document.getElementById("vh-pagination");
-	paginationContainer.innerHTML = "";
-	paginationContainer.appendChild(
+	const paginationContainerTop = document.getElementById("vh-pagination-top");
+	const paginationContainerBottom = document.getElementById("vh-pagination-bottom");
+	paginationContainerTop.innerHTML = "";
+	paginationContainerBottom.innerHTML = "";
+	paginationContainerTop.appendChild(
+		pagination.generatePagination(generateUrl(), data["total_items"], 50, data["page"])
+	);
+	paginationContainerBottom.appendChild(
 		pagination.generatePagination(generateUrl(), data["total_items"], 50, data["page"])
 	);
 }
