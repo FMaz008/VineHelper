@@ -223,14 +223,14 @@ function serverProductsResponse(data) {
 							style='margin-left: 5px;'></div>`;
 		}
 		html += `</td>`;
-		html += "<td>" + (values.etv == null ? "N/A" : values.etv) + "</td>";
+		html += "<td style='text-align: right;'>" + (values.etv == null ? "N/A" : values.etv) + "</td>";
 		html += "<td>" + values.queue + "</td>";
 		html +=
 			"<td style='text-align: center;'>" +
 			(values.unavailable ? "<div class='vh-icon-16 vh-icon-declined'></div>" : "") +
 			"</td>";
-		html += "<td>" + values.order_success + "</td>";
-		html += "<td>" + values.order_failed + "</td>";
+		html += "<td style='text-align: center;'>" + values.order_success + "</td>";
+		html += "<td style='text-align: center;'>" + values.order_failed + "</td>";
 		html += "<td>" + ISODatetoYMDHiS(values.date_added) + "</td>";
 		html += "<td>" + (values.last_broadcast == null ? "never" : ISODatetoYMDHiS(values.last_broadcast)) + "</td>";
 		html += "</tr>";
