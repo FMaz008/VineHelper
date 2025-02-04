@@ -297,6 +297,9 @@ class SettingsMgr {
 					toolbarFontSize: 10,
 				},
 				hideNoNews: true,
+				patreon: {
+					tier: 0,
+				},
 			},
 
 			notification: {

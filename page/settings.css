@@ -162,3 +162,41 @@ div.buttons-header .button-inner {
 a.toggle {
 	cursor: pointer;
 }
+
+.patreonLevelbar {
+	display: flex;
+	flex-direction: row;
+	margin-top: 10px;
+}
+
+.patreonLevelbarSegment {
+	width: 50px;
+	height: 15px;
+	background-color: #eee;
+	border: 2px solid #000;
+	border-radius: 7px;
+	margin-right: 5px;
+}
+
+.patreonLevelbarSegment.filled0 {
+	background-color: #5fbd63;
+}
+
+.patreonLevelbarSegment.filled1 {
+	background-color: #5fbd63;
+	filter: brightness(1.1);
+}
+
+.patreonLevelbarSegment.filled2 {
+	background-color: #5fbd63;
+	filter: brightness(1.2);
+}
+
+.patreonLevelbarSegment.filled3 {
+	background-color: #5fbd63;
+	filter: brightness(1.3);
+}
+
+#patreonCharacterDescription {
+	font-style: italic;
+}

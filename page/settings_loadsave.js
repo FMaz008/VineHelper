@@ -1,6 +1,9 @@
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
 const Settings = new SettingsMgr();
 
+import { Internationalization } from "../scripts/Internationalization.js";
+const i13n = new Internationalization();
+
 import { HiddenListMgr } from "../scripts/HiddenListMgr.js";
 var HiddenList = new HiddenListMgr();
 
@@ -60,6 +63,53 @@ async function initiateSettings() {
 				});
 		}
 	});
+
+	const tierLevel = Settings.get("general.patreon.tier");
+
+	const tierCharacters = {
+		0: {
+			name: "Commoner",
+			image: "character-tier-0.png",
+			description:
+				"The Commoner weaves through the bustling market, blending with the crowd. Keen-eyed and shrewd, they know every deal, every shortcut, and every hidden gem.",
+		},
+		1: {
+			name: "Omni Curator",
+			image: "character-tier-1.png",
+			description:
+				"The Omni Curator shops with masterful precision, crafting lists like enchanted scrolls. Every item chosen holds purpose, every purchase a step toward perfection.",
+		},
+		2: {
+			name: "Gearmancer",
+			image: "character-tier-2.png",
+			description:
+				"The Gearmancer strides through the market, armed with precision tools for every task. No gadget is too rare, no mechanism beyond their mastery.",
+		},
+		3: {
+			name: "Antiquarian Scout",
+			image: "character-tier-3.png",
+			description:
+				"The Antiquarian Scout navigates the market with wisdom, one of the rare few granted access to the hidden archives where secrets of past wares reside.",
+		},
+	};
+	document.getElementById("premiumTier").innerText = tierCharacters[tierLevel].name;
+	document.getElementById("premiumCharacter").src = chrome.runtime.getURL(
+		"resource/image/" + tierCharacters[tierLevel].image
+	);
+	document.getElementById("patreonCharacterDescription").innerText = tierCharacters[tierLevel].description;
+
+	if (tierLevel >= 3) {
+		document.getElementById("patreonLevelbarTier3").classList.add("filled3");
+	}
+	if (tierLevel >= 2) {
+		document.getElementById("patreonLevelbarTier2").classList.add("filled2");
+	}
+	if (tierLevel >= 1) {
+		document.getElementById("patreonLevelbarTier1").classList.add("filled1");
+	}
+	if (tierLevel >= 0) {
+		document.getElementById("patreonLevelbarTier0").classList.add("filled0");
+	}
 
 	//##########################
 	// TABS
@@ -467,6 +517,10 @@ async function initiateSettings() {
 		//"&scope=pledges-to-me" +
 		"&state=" +
 		Settings.get("general.uuid", false);
+
+	//Patreon load page link:
+	document.getElementById("PatreonLoadPage").href =
+		`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore`;
 }
 
 /**

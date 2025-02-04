@@ -21,7 +21,8 @@ Tpl.flushLocalStorage();
 	const promTab5 = await Tpl.loadFile("/page/settings_keywords.tpl.html");
 	const promTab6 = await Tpl.loadFile("/page/settings_keybindings.tpl.html");
 	const promTab7 = await Tpl.loadFile("/page/settings_styles.tpl.html");
-	const promTab8 = await Tpl.loadFile("/page/settings_about.tpl.html");
+	const promTab8 = await Tpl.loadFile("/page/settings_premium.tpl.html");
+	const promTab9 = await Tpl.loadFile("/page/settings_about.tpl.html");
 
 	Tpl.setVar("APP_VERSION", getAppVersion());
 	Tpl.setVar("TAB1", Tpl.render(promTab1));
@@ -32,6 +33,7 @@ Tpl.flushLocalStorage();
 	Tpl.setVar("TAB6", Tpl.render(promTab6));
 	Tpl.setVar("TAB7", Tpl.render(promTab7));
 	Tpl.setVar("TAB8", Tpl.render(promTab8));
+	Tpl.setVar("TAB9", Tpl.render(promTab9));
 
 	let domainTLD = "";
 	const countryCode = Settings.get("general.country");
