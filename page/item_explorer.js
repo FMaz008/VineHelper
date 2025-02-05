@@ -116,7 +116,10 @@ function queryDB(page = 1) {
 	const asin = document.getElementById("search-asin").value;
 	const title = document.getElementById("search-title").value;
 	const orderBy = document.getElementById("vh-order-by-select").value;
+	const orderBy2 = document.getElementById("vh-order-by-select2").value;
 	const queue = document.getElementById("vh-queue-select").value;
+	const etvMin = document.getElementById("search-etv-min").value;
+	const etvMax = document.getElementById("search-etv-max").value;
 
 	const content = {
 		api_version: 5,
@@ -127,8 +130,11 @@ function queryDB(page = 1) {
 		asin: asin,
 		title: title,
 		orderBy: orderBy,
+		orderBy2: orderBy2,
 		queue: queue,
 		page: page,
+		etvMin: etvMin,
+		etvMax: etvMax,
 	};
 
 	fetch(env.getAPIUrl(), {
