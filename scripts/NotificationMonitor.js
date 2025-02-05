@@ -1075,8 +1075,6 @@ class NotificationMonitor {
 			this.#asinsOnPage.delete(asin);
 		}
 
-		console.log(`Removing tile ${asin || "unknown"} from ${new Error().stack}`);
-
 		// Remove specific event listeners
 		const reportBtn = tile.querySelector('[id^="vh-report-link-"]');
 		if (reportBtn) {
