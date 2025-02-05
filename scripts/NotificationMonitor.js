@@ -684,7 +684,7 @@ class NotificationMonitor {
 
 				if (val !== false) {
 					//We got a keyword match, highlight the item
-					this.#highlightedItemFound(notif, true);
+					this.#highlightedItemFound(notif, Settings.get("notification.monitor.highlight.sound") != "0");
 				} else if (Settings.get("notification.hideList")) {
 					//Check if we need to hide the item
 					const val2 = await keywordMatch(
@@ -704,7 +704,7 @@ class NotificationMonitor {
 
 		//zero ETV found, highlight the item accordingly
 		if (oldMaxValue == "" && parseFloat(etvObj.dataset.etvMin) == 0) {
-			this.#zeroETVItemFound(notif, true);
+			this.#zeroETVItemFound(notif, Settings.get("notification.monitor.zeroETV.sound") != "0");
 		}
 
 		//If the user if silver, remove he items which are above the threshold
