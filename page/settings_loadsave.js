@@ -64,7 +64,7 @@ async function initiateSettings() {
 		}
 	});
 
-	const tierLevel = Settings.get("general.patreon.tier");
+	const tierLevel = 2; //Settings.get("general.patreon.tier");
 
 	const tierCharacters = {
 		0: {
@@ -519,8 +519,12 @@ async function initiateSettings() {
 		Settings.get("general.uuid", false);
 
 	//Patreon load page link:
-	document.getElementById("PatreonLoadPage").href =
-		`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore`;
+	if (Settings.get("general.country") == null) {
+		document.getElementById("PatreonLoadPage").style.display = "none";
+	} else {
+		document.getElementById("PatreonLoadPage").href =
+			`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore`;
+	}
 }
 
 /**
