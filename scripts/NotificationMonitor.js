@@ -685,7 +685,7 @@ class NotificationMonitor {
 				if (val !== false) {
 					//We got a keyword match, highlight the item
 					this.#highlightedItemFound(notif, true);
-				} else {
+				} else if (Settings.get("notification.hideList")) {
 					//Check if we need to hide the item
 					const val2 = await keywordMatch(
 						Settings.get("general.hideKeywords"),
@@ -696,9 +696,7 @@ class NotificationMonitor {
 					if (val2 !== false) {
 						//Remove (permanently "hide") the tile
 						logger.add(`NOTIF: Item ${asin} matched hide keyword ${val2}. Hidding it.`);
-						notif?.remove();
-						this.#asinsOnPage.delete(asin);
-						this.#updateTabTitle(); //Update the tab counter
+						this.#removeTile(notif, asin);
 					}
 				}
 			}
@@ -909,8 +907,6 @@ class NotificationMonitor {
 		logger.add(`NOTIF: Hiding icon clicked for item ${asin}`);
 		const tile = document.querySelector("#vh-notification-" + asin);
 		this.#removeTile(tile, asin);
-		this.#asinsOnPage.delete(asin);
-		this.#updateTabTitle();
 	};
 
 	#handleBrendaClick = (e) => {
@@ -1079,6 +1075,8 @@ class NotificationMonitor {
 			this.#asinsOnPage.delete(asin);
 		}
 
+		console.log(`Removing tile ${asin || "unknown"} from ${new Error().stack}`);
+
 		// Remove specific event listeners
 		const reportBtn = tile.querySelector('[id^="vh-report-link-"]');
 		if (reportBtn) {
@@ -1118,6 +1116,8 @@ class NotificationMonitor {
 
 		// Remove the element's data
 		tile.remove();
+
+		this.#updateTabTitle(); //Update the tab counter
 	}
 
 	#updateTabTitle() {
