@@ -6,13 +6,20 @@
 		<script src="../page/item_explorer.js" type="module"></script>
 	</head>
 	<body>
-		<div class="vh-icon-32 vh-icon-vh" style="float: left; margin-right: 10px"></div>
-		<h2>Vine Helper Item Explorer</h2>
 		<div id="vh-container">
 			<div id="vh-header">
 				<div id="vh-search-bar">
-					<h3>Search by</h3>
 					<table>
+						<tr>
+							<td colspan="5">
+								<div class="vh-icon-32 vh-icon-vh" style="float: left; margin-right: 10px"></div>
+								<h2>Vine Helper Item Explorer</h2>
+								<h3>Search by</h3>
+							</td>
+							<td colspan="3">
+								<div id="characterImage"></div>
+							</td>
+						</tr>
 						<tr>
 							<th valign="top">ASIN</th>
 							<td valign="top">
@@ -47,8 +54,7 @@
 									<option value="last_broadcast_asc">Date broadcast (Old-New)</option>
 									<option value="last_broadcast_desc">Date broadcast (New-Old)</option>
 								</select>
-							</td>
-							<td valign="top">
+								<br />
 								<select id="vh-order-by-select2">
 									<option value="asin_asc">ASIN (A-Z)</option>
 									<option value="asin_desc">ASIN (Z-A)</option>
@@ -62,9 +68,6 @@
 									<option value="last_broadcast_desc">Date broadcast (New-Old)</option>
 								</select>
 							</td>
-							<td valign="top">
-								<input type="submit" id="search-button" value="Search" />
-							</td>
 						</tr>
 						<tr>
 							<th>ETV Min</th>
@@ -74,6 +77,9 @@
 							<th>ETV Max</th>
 							<td>
 								<input type="number" id="search-etv-max" placeholder="ETV Max" />
+							</td>
+							<td colspan="4" style="text-align: right">
+								<input type="submit" id="search-button" value="Search" />
 							</td>
 						</tr>
 					</table>

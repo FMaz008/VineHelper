@@ -1,3 +1,24 @@
+body {
+	background-image: url("/resource/image/logo.png");
+	background-repeat: no-repeat;
+	background-size: 1000px;
+	background-position-x: -750px;
+	background-blend-mode: lighten;
+	background-color: rgba(255, 255, 255, 0.8);
+}
+
+#characterImage {
+	height: 80px;
+	width: 128px;
+	background-image: url("/resource/image/character-tier-3.png");
+	background-repeat: no-repeat;
+	background-size: 100%;
+	background-position-y: -30px;
+	float: right;
+	border: 1px solid black;
+	box-shadow: 4px 4px 6px rgba(0, 0, 0, 0.7);
+}
+
 #vh-item-table {
 	width: 100%;
 	border-collapse: collapse;
