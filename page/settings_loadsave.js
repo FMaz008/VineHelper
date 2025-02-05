@@ -64,7 +64,7 @@ async function initiateSettings() {
 		}
 	});
 
-	const tierLevel = 2; //Settings.get("general.patreon.tier");
+	const tierLevel = Settings.get("general.patreon.tier");
 
 	const tierCharacters = {
 		0: {
