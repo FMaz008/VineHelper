@@ -1192,7 +1192,10 @@ class NotificationMonitor {
 					btnLast100.disabled = false;
 				}
 			}, 1000);
-
+			//Buffer the feed
+			if (!this.#feedPaused) {
+				document.getElementById("pauseFeed").click();
+			}
 			chrome.runtime.sendMessage({
 				type: "fetchLast100Items",
 			});
@@ -1311,6 +1314,10 @@ class NotificationMonitor {
 				BlurKWsMatch,
 				unavailable
 			);
+		}
+		if (data.type == "fetchRecentItemsEnd" && this.#feedPaused) {
+			//Unbuffer the feed
+			document.getElementById("pauseFeed").click();
 		}
 	}
 }

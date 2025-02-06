@@ -10,6 +10,9 @@ var outputFunctions = {
 
 const dataStream = new Streamy();
 const filterHideitem = dataStream.filter(function (data) {
+	if (data.title == undefined || data.etv_min == undefined || data.etv_max == undefined) {
+		return true; //Skip this filter
+	}
 	if (Settings.get("notification.hideList")) {
 		const hideKWMatch = keywordMatch(Settings.get("general.hideKeywords"), data.title, data.etv_min, data.etv_max);
 		if (hideKWMatch !== false) {
@@ -20,6 +23,9 @@ const filterHideitem = dataStream.filter(function (data) {
 	return true;
 });
 const transformIsHighlight = dataStream.transformer(function (data) {
+	if (data.title == undefined || data.etv_min == undefined || data.etv_max == undefined) {
+		return data; //Skip this transformer
+	}
 	const highlightKWMatch = keywordMatch(
 		Settings.get("general.highlightKeywords"),
 		data.title,
@@ -32,6 +38,9 @@ const transformIsHighlight = dataStream.transformer(function (data) {
 	return data;
 });
 const transformIsBlur = dataStream.transformer(function (data) {
+	if (data.title == undefined) {
+		return data; //Skip this transformer
+	}
 	const blurKWMatch = keywordMatch(Settings.get("general.blurKeywords"), data.title);
 	data.BlurKWsMatch = blurKWMatch !== false;
 	data.BlurKW = blurKWMatch;
@@ -39,6 +48,10 @@ const transformIsBlur = dataStream.transformer(function (data) {
 	return data;
 });
 const transformSearchPhrase = dataStream.transformer(function (data) {
+	if (data.title == undefined) {
+		return data; //Skip this transformer
+	}
+
 	//Method no longer useful.
 	const search = data.title.replace(/^([a-zA-Z0-9\s'".,]{0,40})[\s]+.*$/, "$1");
 	data.search = search;
@@ -49,6 +62,10 @@ const transformUnixTimestamp = dataStream.transformer(function (data) {
 	return data;
 });
 const transformPostNotification = dataStream.transformer(function (data) {
+	if (data.asin == undefined) {
+		return data; //Skip this transformer
+	}
+
 	//If the new item match a highlight keyword, push a real notification.
 	if (Settings.get("notification.pushNotifications") && data.KWsMatch) {
 		outputFunctions.push(

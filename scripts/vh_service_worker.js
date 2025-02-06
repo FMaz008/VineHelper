@@ -276,6 +276,7 @@ function processLast100Items(arrProducts) {
 			unavailable: unavailable,
 		});
 	}
+	myStream.input({ type: "fetchRecentItemsEnd" });
 }
 
 function pushNotification(asin, queue, is_parent_asin, enrollment_guid, search_string, title, description, img_url) {
