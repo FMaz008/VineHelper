@@ -47,8 +47,9 @@ const TYPE_HIGHLIGHT = 2;
 const TYPE_HIGHLIGHT_OR_ZEROETV = 9;
 
 class NotificationMonitor {
-	#feedPaused;
+	#feedPaused = false;
 	#feedPausedAmountStored;
+	#fetchingRecentItems;
 	#serviceWorkerStatusTimer;
 	#waitTimer; //Timer which wait a short delay to see if anything new is about to happen
 	#imageUrls;
@@ -801,7 +802,7 @@ class NotificationMonitor {
 		const tileVisible = this.#processNotificationFiltering(notif);
 
 		//Play the zero ETV sound effect
-		if (tileVisible && playSoundEffect) {
+		if ((tileVisible || this.#fetchingRecentItems) && playSoundEffect) {
 			SoundPlayer.play(TYPE_ZEROETV);
 		}
 
@@ -827,7 +828,7 @@ class NotificationMonitor {
 		const tileVisible = this.#processNotificationFiltering(notif);
 
 		//Play the highlight sound effect
-		if (tileVisible && playSoundEffect) {
+		if ((tileVisible || this.#fetchingRecentItems) && playSoundEffect) {
 			SoundPlayer.play(TYPE_HIGHLIGHT);
 		}
 
@@ -846,7 +847,7 @@ class NotificationMonitor {
 		const tileVisible = this.#processNotificationFiltering(notif);
 
 		//Play the regular notification sound effect.
-		if (tileVisible && playSoundEffect) {
+		if ((tileVisible || this.#fetchingRecentItems) && playSoundEffect) {
 			SoundPlayer.play(TYPE_REGULAR);
 		}
 	}
@@ -1193,6 +1194,7 @@ class NotificationMonitor {
 				}
 			}, 1000);
 			//Buffer the feed
+			this.#fetchingRecentItems = true;
 			if (!this.#feedPaused) {
 				document.getElementById("pauseFeed").click();
 			}
@@ -1202,7 +1204,6 @@ class NotificationMonitor {
 		});
 
 		//Bind Pause Feed button
-		this.#feedPaused = false;
 		const btnPauseFeed = document.getElementById("pauseFeed");
 		btnPauseFeed.addEventListener("click", (event) => {
 			this.#feedPaused = !this.#feedPaused;
@@ -1315,9 +1316,12 @@ class NotificationMonitor {
 				unavailable
 			);
 		}
-		if (data.type == "fetchRecentItemsEnd" && this.#feedPaused) {
-			//Unbuffer the feed
-			document.getElementById("pauseFeed").click();
+		if (data.type == "fetchRecentItemsEnd") {
+			this.#fetchingRecentItems = false;
+			if (this.#feedPaused) {
+				//Unbuffer the feed
+				document.getElementById("pauseFeed").click();
+			}
 		}
 	}
 }
