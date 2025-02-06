@@ -56,6 +56,8 @@ class NotificationMonitor {
 	#gridContainer = null;
 	#wsErrorMessage = null;
 	#firefox = false;
+	#mostRecentItemDate = null;
+	#mostRecentItemDateDOM = null;
 	#filterType = -1;
 	#filterQueue = -1;
 	#goldTier = true;
@@ -208,6 +210,7 @@ class NotificationMonitor {
 		});
 
 		document.getElementById("date_loaded").innerText = new Date().toLocaleString(i13n.getLocale());
+		this.#mostRecentItemDateDOM = document.getElementById("date_most_recent_item");
 
 		if (!this.#firefox && Settings.get("notification.monitor.openLinksInNewTab") != "1") {
 			this.#preventRedirections();
@@ -244,6 +247,7 @@ class NotificationMonitor {
 
 		i13n.setCountryCode(Settings.get("general.country"));
 		document.getElementById("date_loaded").innerText = new Date().toLocaleString(i13n.getLocale());
+		this.#mostRecentItemDateDOM = document.getElementById("date_most_recent_item");
 
 		this.#listeners();
 
@@ -546,8 +550,10 @@ class NotificationMonitor {
 			this.#disableItem(tileDOM);
 		}
 
-		//Update the most recent date
-		document.getElementById("date_most_recent_item").innerText = this.#formatDate(date);
+		if (this.#mostRecentItemDate == null || new Date(date) > new Date(this.#mostRecentItemDate)) {
+			this.#mostRecentItemDateDOM.innerText = this.#formatDate(date);
+			this.#mostRecentItemDate = date;
+		}
 
 		//Apply the filters
 		this.#processNotificationFiltering(tileDOM);
@@ -1210,6 +1216,7 @@ class NotificationMonitor {
 						node.dataset.feedPaused = "false";
 					}
 				});
+				this.#updateTabTitle();
 			}
 		});
 
