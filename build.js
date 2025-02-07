@@ -21,7 +21,7 @@ const pkg = require("./package.json");
 	);
 	fs.cpSync("./node_modules/vine-styling/", "./dist/node_modules/vine-styling/", { recursive: true });
 
-	const platforms = ["firefox", "chrome"];
+	const platforms = ["firefox", "chrome", "ios"];
 	for (const platform of platforms) {
 		console.log(`Building ${platform} extension...`);
 		fs.cpSync(`./manifest_${platform}.json`, "./dist/manifest.json");

@@ -111,6 +111,14 @@ async function initiateSettings() {
 		document.getElementById("patreonLevelbarTier0").classList.add("filled0");
 	}
 
+	//Handle removing push notifications for safari
+	chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
+		if (!result) {
+			document.querySelector("#notification.pushNotifications").disabled = true;
+			document.querySelector("#notification.pushNotificationsAFA").disabled = true;
+		}
+	});
+
 	//##########################
 	// TABS
 	//Bind the click event for the tabs

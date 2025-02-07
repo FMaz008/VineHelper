@@ -280,28 +280,32 @@ function processLast100Items(arrProducts) {
 }
 
 function pushNotification(asin, queue, is_parent_asin, enrollment_guid, search_string, title, description, img_url) {
-	notificationsData["item-" + asin] = {
-		asin: asin,
-		queue: queue,
-		is_parent_asin: is_parent_asin,
-		enrollment_guid: enrollment_guid,
-		search: search_string,
-	};
-	chrome.notifications.create(
-		"item-" + asin,
-		{
-			type: "basic",
-			iconUrl: img_url,
-			title: title,
-			message: description,
-			priority: 2,
-		},
-		(notificationId) => {
-			if (chrome.runtime.lastError) {
-				console.error("Notification error:", chrome.runtime.lastError);
-			}
+	chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
+		if (result) {
+			notificationsData["item-" + asin] = {
+				asin: asin,
+				queue: queue,
+				is_parent_asin: is_parent_asin,
+				enrollment_guid: enrollment_guid,
+				search: search_string,
+			};
+			chrome.notifications.create(
+				"item-" + asin,
+				{
+					type: "basic",
+					iconUrl: img_url,
+					title: title,
+					message: description,
+					priority: 2,
+				},
+				(notificationId) => {
+					if (chrome.runtime.lastError) {
+						console.error("Notification error:", chrome.runtime.lastError);
+					}
+				}
+			);
 		}
-	);
+	});
 }
 
 async function sendMessageToAllTabs(data, debugInfo) {
