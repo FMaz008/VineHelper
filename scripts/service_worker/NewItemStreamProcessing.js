@@ -10,7 +10,7 @@ var outputFunctions = {
 
 const dataStream = new Streamy();
 const filterHideitem = dataStream.filter(function (data) {
-	if (data.title == undefined || data.etv_min == undefined || data.etv_max == undefined) {
+	if (data.title === undefined || data.etv_min === undefined || data.etv_max === undefined) {
 		return true; //Skip this filter
 	}
 	if (Settings.get("notification.hideList")) {
@@ -23,7 +23,7 @@ const filterHideitem = dataStream.filter(function (data) {
 	return true;
 });
 const transformIsHighlight = dataStream.transformer(function (data) {
-	if (data.title == undefined || data.etv_min == undefined || data.etv_max == undefined) {
+	if (data.title === undefined || data.etv_min === undefined || data.etv_max === undefined) {
 		return data; //Skip this transformer
 	}
 	const highlightKWMatch = keywordMatch(
