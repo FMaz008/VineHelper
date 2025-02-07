@@ -1218,8 +1218,8 @@ class NotificationMonitor {
 				document.getElementById("pauseFeed-fixed").value = "Pause & Buffer Feed";
 				document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
 					if (node.dataset.feedPaused == "true") {
-						node.style.display = "flex";
 						node.dataset.feedPaused = "false";
+						this.#processNotificationFiltering(node);
 					}
 				});
 				this.#updateTabTitle();
