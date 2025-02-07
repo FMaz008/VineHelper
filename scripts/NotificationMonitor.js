@@ -1077,7 +1077,7 @@ class NotificationMonitor {
 		}
 	}
 
-	#removeTile(tile, asin) {
+	#removeTile(tile, asin, countTotalTiles = true) {
 		if (asin != null) {
 			this.#asinsOnPage.delete(asin);
 		}
@@ -1122,7 +1122,9 @@ class NotificationMonitor {
 		// Remove the element's data
 		tile.remove();
 
-		this.#updateTabTitle(); //Update the tab counter
+		if (countTotalTiles) {
+			this.#updateTabTitle(); //Update the tab counter
+		}
 	}
 
 	#updateTabTitle() {
@@ -1163,7 +1165,7 @@ class NotificationMonitor {
 			if (confirm("Clear all items?")) {
 				const elements = this.#gridContainer.getElementsByClassName("vvp-item-tile");
 				Array.from(elements).forEach((element) => {
-					this.#removeTile(element, null);
+					this.#removeTile(element, null, false);
 				});
 				this.#gridContainer.innerHTML = "";
 				this.#asinsOnPage.clear();
