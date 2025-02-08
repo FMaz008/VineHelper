@@ -279,6 +279,7 @@ class SettingsMgr {
 				reviewToolbar: true,
 				projectedAccountStatistics: false,
 				hideRecommendations: false,
+				hideSideCart: false,
 				hideOptOutButton: false,
 				keywordHighlightColor: "#FFE815",
 				toolbarBackgroundColor: "#FFFFFF",

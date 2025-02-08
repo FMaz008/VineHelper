@@ -284,6 +284,17 @@ function hideRecommendationsAndBrowsingHistory() {
 			rhf.style.display = "none";
 		}
 	}
+
+	if (Settings.isPremiumUser() && Settings.get("general.hideSideCart") == true) {
+		const sideCart = document.getElementById("nav-flyout-ewc");
+		if (sideCart) {
+			sideCart.style.display = "none";
+		}
+		const sideCartArrow = document.querySelector(".nav-ewc-arrow");
+		if (sideCartArrow) {
+			sideCartArrow.style.display = "none";
+		}
+	}
 }
 function displayAccountHideOptOutButton() {
 	if (Settings.isPremiumUser() && Settings.get("general.hideOptOutButton") == true) {
