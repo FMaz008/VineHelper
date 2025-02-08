@@ -177,3 +177,14 @@ test("Case insensitive regex match", () => {
 	];
 	expect(keywordMatch(arrKWs, "Smart tv Box")).toBe(".*TV.*");
 });
+
+test("Practical case 1", () => {
+	const arrKWs = [
+		{ contains: "glue|tape", without: "case|patch(es)?|nails", etv_min: 0, etv_max: 0 },
+		{ contains: ".*TV.*", without: "", etv_min: "", etv_max: "" },
+		{ contains: "ccc", without: "", etv_min: "", etv_max: "" },
+	];
+	const str =
+		"Glitter Nude Press on Nails Medium Short Square Fake Nails with Sparkly Rhinestones Sliver Stripes Design Cute Short Coffin False Nails Bling Glue on Nails Acrylic Stick on Nails for Women 24Pcs (Sliver Glitter)";
+	expect(keywordMatch(arrKWs, str, null, null)).toBe(false);
+});
