@@ -511,6 +511,8 @@ class NotificationMonitor {
 			this.#feedPausedAmountStored++;
 			document.getElementById("pauseFeed").value = `Resume Feed (${this.#feedPausedAmountStored})`;
 			document.getElementById("pauseFeed-fixed").value = `Resume Feed (${this.#feedPausedAmountStored})`;
+			//sleep for 5ms to allow the value to be updated
+			await new Promise((resolve) => setTimeout(resolve, 5));
 		}
 
 		//Process the item according to the notification type (highlight > 0etv > regular)
@@ -816,7 +818,9 @@ class NotificationMonitor {
 		}
 
 		//Move the notification to the top
-		this.#moveNotifToTop(notif);
+		if (!this.#fetchingRecentItems) {
+			this.#moveNotifToTop(notif);
+		}
 	}
 
 	#highlightedItemFound(notif, playSoundEffect = true) {
@@ -836,7 +840,9 @@ class NotificationMonitor {
 		notif.style.backgroundColor = Settings.get("notification.monitor.highlight.color");
 
 		//Move the notification to the top
-		this.#moveNotifToTop(notif);
+		if (!this.#fetchingRecentItems) {
+			this.#moveNotifToTop(notif);
+		}
 	}
 
 	#regularItemFound(notif, playSoundEffect = true) {
@@ -1256,7 +1262,7 @@ class NotificationMonitor {
 			this.#processBroadcastMessage(message);
 		});
 	}
-	#processBroadcastMessage(data) {
+	async #processBroadcastMessage(data) {
 		if (data.type == undefined) {
 			return false;
 		}
@@ -1318,11 +1324,33 @@ class NotificationMonitor {
 				unavailable
 			);
 		}
-		if (data.type == "fetchRecentItemsEnd") {
-			this.#fetchingRecentItems = false;
-			if (this.#feedPaused) {
-				//Unbuffer the feed
-				document.getElementById("pauseFeed").click();
+		if (data.type == "fetch100") {
+			for (const item of data.data) {
+				if (item.type == "newItem") {
+					await this.addTileInGrid(
+						item.asin,
+						item.queue,
+						item.date,
+						item.title,
+						item.img_url,
+						item.is_parent_asin,
+						item.enrollment_guid,
+						item.etv_min,
+						item.etv_max,
+						item.reason,
+						item.KW,
+						item.BlurKW,
+						item.KWsMatch,
+						item.BlurKWsMatch,
+						item.unavailable
+					);
+				} else if (item.type == "fetchRecentItemsEnd") {
+					if (this.#feedPaused) {
+						//Unbuffer the feed
+						document.getElementById("pauseFeed").click();
+					}
+					this.#fetchingRecentItems = false;
+				}
 			}
 		}
 	}

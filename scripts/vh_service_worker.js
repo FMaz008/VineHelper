@@ -13,7 +13,7 @@ import {
 import "../node_modules/socket.io/client-dist/socket.io.min.js";
 
 //Bind/Inject the service worker's functions to the dataStream.
-broadcastFunction(sendMessageToAllTabs);
+broadcastFunction(dataBuffering);
 notificationPushFunction(pushNotification);
 
 var i13n = new Internationalization();
@@ -23,6 +23,21 @@ var WSReconnectInterval = 0.3; //Firefox shutdown the background script after 30
 
 if (typeof browser === "undefined") {
 	var browser = chrome;
+}
+
+var fetch100 = false;
+var dataBuffer = [];
+function dataBuffering(data) {
+	if (!fetch100) {
+		sendMessageToAllTabs(data);
+		return;
+	}
+	dataBuffer.push(data);
+	if (data.type == "fetchRecentItemsEnd") {
+		sendMessageToAllTabs({ type: "fetch100", data: dataBuffer });
+		dataBuffer = [];
+		fetch100 = false;
+	}
 }
 
 //#####################################################
@@ -238,6 +253,7 @@ function processLast100Items(arrProducts) {
 		const dateB = new Date(b.date);
 		return dateB - dateA;
 	});
+	fetch100 = true;
 	for (let i = arrProducts.length - 1; i >= 0; i--) {
 		const {
 			title,
