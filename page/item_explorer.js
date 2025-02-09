@@ -237,8 +237,14 @@ function serverProductsResponse(data) {
 	container.innerHTML = html;
 
 	const table = document.getElementById("vh-item-table");
+	const paginationContainerTop = document.getElementById("vh-pagination-top");
+	const paginationContainerBottom = document.getElementById("vh-pagination-bottom");
+
 	if (data["items"] == null || data["items"].length == 0) {
-		table.innerHTML += "<tr><td colspan='8' style='text-align: center;'>No items found</td></tr>";
+		table.innerHTML += "<tr><td colspan='9' style='text-align: center;'>No items found</td></tr>";
+		paginationContainerTop.innerHTML = "";
+		paginationContainerBottom.innerHTML = "";
+		disableSearch();
 		return;
 	}
 
@@ -297,8 +303,6 @@ function serverProductsResponse(data) {
 		table.innerHTML += html;
 	}
 
-	const paginationContainerTop = document.getElementById("vh-pagination-top");
-	const paginationContainerBottom = document.getElementById("vh-pagination-bottom");
 	paginationContainerTop.innerHTML = "";
 	paginationContainerBottom.innerHTML = "";
 	paginationContainerTop.appendChild(
