@@ -150,7 +150,7 @@ async function init() {
 
 	//### Run the boot sequence
 	initAddNotificationMonitorLink();
-	hideRecommendationsAndBrowsingHistory();
+	hidePageContent();
 	showGDPRPopup();
 	await initFlushTplCache(); //And display the version changelog popup
 	initInjectScript();
@@ -277,7 +277,8 @@ function displayAccountData() {
 	container.appendChild(div);
 }
 
-function hideRecommendationsAndBrowsingHistory() {
+function hidePageContent() {
+	//Hide recommendation and browsing history
 	if (Settings.isPremiumUser() && Settings.get("general.hideRecommendations") == true) {
 		const rhf = document.getElementById("rhf");
 		if (rhf) {
@@ -285,6 +286,7 @@ function hideRecommendationsAndBrowsingHistory() {
 		}
 	}
 
+	//Hide side cart
 	if (Settings.isPremiumUser() && Settings.get("general.hideSideCart") == true) {
 		const sideCart = document.getElementById("nav-flyout-ewc");
 		if (sideCart) {
@@ -293,6 +295,14 @@ function hideRecommendationsAndBrowsingHistory() {
 		const sideCartArrow = document.querySelector(".nav-ewc-arrow");
 		if (sideCartArrow) {
 			sideCartArrow.style.display = "none";
+		}
+	}
+
+	//Hide category in RFY and AFA
+	if (Settings.isPremiumUser() && Settings.get("general.hideCategoriesRFYAFA")) {
+		//If the current page is RFY or AFA, hide the category
+		if (["last_chance", "potluck"].indexOf(env.data.vineQueue) != -1) {
+			document.getElementById("vvp-browse-nodes-container").style.display = "none";
 		}
 	}
 }

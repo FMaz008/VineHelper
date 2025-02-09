@@ -189,6 +189,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("general.hideOptOutButton");
 	manageCheckboxSetting("general.hideRecommendations");
 	manageCheckboxSetting("general.hideSideCart");
+	manageCheckboxSetting("general.hideCategoriesRFYAFA");
 	manageCheckboxSetting("general.reviewToolbar");
 	manageCheckboxSetting("general.hideNoNews");
 	manageCheckboxSetting("general.tileSize.enabled");
