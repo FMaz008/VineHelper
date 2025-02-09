@@ -302,10 +302,10 @@ function serverProductsResponse(data) {
 	paginationContainerTop.innerHTML = "";
 	paginationContainerBottom.innerHTML = "";
 	paginationContainerTop.appendChild(
-		pagination.generatePagination(generateUrl(), data["total_items"], 50, data["page"])
+		pagination.generatePagination(generateUrl(), data["total_items"], 50, data["page"], true)
 	);
 	paginationContainerBottom.appendChild(
-		pagination.generatePagination(generateUrl(), data["total_items"], 50, data["page"])
+		pagination.generatePagination(generateUrl(), data["total_items"], 50, data["page"], true)
 	);
 
 	//Add pinned item listerner

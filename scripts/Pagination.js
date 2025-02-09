@@ -32,7 +32,7 @@ class Pagination {
 		this.#startPagePadding = value;
 	}
 
-	generatePagination(url, totalItems, itemsPerPage, currentPage) {
+	generatePagination(url, totalItems, itemsPerPage, currentPage, showPreviousAndNext = false) {
 		const LAST_PAGE = Math.ceil(totalItems / itemsPerPage);
 		const START_PAGE_PADDING = this.#startPagePadding;
 		const CURRENT_PAGE_PADDING = 3;
@@ -40,6 +40,10 @@ class Pagination {
 
 		//Generate the pagination container
 		var pagination = this.#container();
+
+		if (showPreviousAndNext && currentPage > 1) {
+			this.#addElement(pagination, this.#page(url, currentPage - 1, currentPage, "Prev."));
+		}
 
 		//First "10" pages links
 		for (let i = 1; i <= START_PAGE_PADDING && i <= LAST_PAGE; i++) {
@@ -74,6 +78,10 @@ class Pagination {
 			}
 		}
 
+		if (showPreviousAndNext && currentPage < LAST_PAGE) {
+			this.#addElement(pagination, this.#page(url, currentPage + 1, currentPage, "Next"));
+		}
+
 		return pagination;
 	}
 
@@ -88,14 +96,14 @@ class Pagination {
 		}
 	}
 
-	generatePageItem(url, pageNo, currentPage) {
+	generatePageItem(url, pageNo, currentPage, caption = null) {
 		let li = document.createElement("li");
 		if (pageNo == currentPage) {
 			li.classList.add("a-selected");
 		}
 		let a = document.createElement("a");
 		a.href = this.generatePageLink(url, pageNo);
-		a.innerText = pageNo;
+		a.innerText = caption ? caption : pageNo;
 		li.appendChild(a);
 
 		return li;
