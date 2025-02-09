@@ -32,7 +32,6 @@ const Settings = new SettingsMgr();
 
 	let lastSearchTime = 0;
 	const searchBtn = document.getElementById("search-button");
-	let countdownInterval;
 
 	searchBtn.addEventListener("click", function () {
 		if (searchBtn.disabled) {
@@ -44,22 +43,9 @@ const Settings = new SettingsMgr();
 			return;
 		}
 		lastSearchTime = now;
-		searchBtn.disabled = true;
+
 		queryDB();
-
-		let secondsLeft = 10;
-		searchBtn.value = `Wait ${secondsLeft}s`;
-
-		countdownInterval = setInterval(() => {
-			secondsLeft--;
-			if (secondsLeft <= 0) {
-				clearInterval(countdownInterval);
-				searchBtn.disabled = false;
-				searchBtn.value = "Search";
-			} else {
-				searchBtn.value = `Wait ${secondsLeft}s`;
-			}
-		}, 1000);
+		searchBtn.disabled = true;
 	});
 
 	document.getElementById("search-asin").addEventListener("keyup", function (event) {
@@ -77,12 +63,63 @@ const Settings = new SettingsMgr();
 	loadFormItemsStateFromURL();
 })();
 
+function disableSearch() {
+	const searchBtn = document.getElementById("search-button");
+	let secondsLeft = 10;
+	searchBtn.disabled = true;
+	searchBtn.value = `Wait ${secondsLeft}s`;
+
+	let countdownInterval = setInterval(() => {
+		secondsLeft--;
+		if (secondsLeft <= 0) {
+			clearInterval(countdownInterval);
+			enableSearch();
+		} else {
+			searchBtn.value = `Wait ${secondsLeft}s`;
+		}
+	}, 1000);
+
+	const paginationContainerTop = document.getElementById("vh-pagination-top");
+	const paginationContainerBottom = document.getElementById("vh-pagination-bottom");
+	const links = document.querySelectorAll("ul.a-pagination li a");
+	links.forEach((link) => {
+		link.addEventListener("click", preventDefault);
+		link.style.pointerEvents = "none";
+	});
+	paginationContainerTop.style.opacity = "0.5";
+	paginationContainerBottom.style.opacity = "0.5";
+}
+
+function enableSearch() {
+	const searchBtn = document.getElementById("search-button");
+	searchBtn.disabled = false;
+	searchBtn.value = "Search";
+	const paginationContainerTop = document.getElementById("vh-pagination-top");
+	const paginationContainerBottom = document.getElementById("vh-pagination-bottom");
+	paginationContainerTop.style.opacity = "unset";
+	paginationContainerBottom.style.opacity = "unset";
+
+	const links = document.querySelectorAll("ul.a-pagination li a");
+	links.forEach((link) => {
+		link.removeEventListener("click", preventDefault);
+		link.style.pointerEvents = "auto";
+	});
+}
+function preventDefault(event) {
+	alert("preventDefault");
+	event.preventDefault();
+	return false;
+}
+
 function generateUrl() {
 	const asin = document.getElementById("search-asin").value;
 	const title = document.getElementById("search-title").value;
 	const orderBy = document.getElementById("vh-order-by-select").value;
+	const orderBy2 = document.getElementById("vh-order-by-select2").value;
+	const etvMin = document.getElementById("search-etv-min").value;
+	const etvMax = document.getElementById("search-etv-max").value;
 	const queue = document.getElementById("vh-queue-select").value;
-
+	const excludeUnavailable = document.getElementById("search-exclude-unavailable").checked;
 	return (
 		"/page/item_explorer.html?asin=" +
 		encodeURI(asin) +
@@ -90,8 +127,16 @@ function generateUrl() {
 		encodeURI(title) +
 		"&orderBy=" +
 		encodeURI(orderBy) +
+		"&orderBy2=" +
+		encodeURI(orderBy2) +
+		"&etvMin=" +
+		encodeURI(etvMin) +
+		"&etvMax=" +
+		encodeURI(etvMax) +
 		"&queue=" +
-		encodeURI(queue)
+		encodeURI(queue) +
+		"&excludeUnavailable=" +
+		encodeURI(excludeUnavailable)
 	);
 }
 
@@ -99,15 +144,22 @@ function loadFormItemsStateFromURL() {
 	const asin = document.getElementById("search-asin");
 	const title = document.getElementById("search-title");
 	const orderBy = document.getElementById("vh-order-by-select");
+	const orderBy2 = document.getElementById("vh-order-by-select2");
+	const etvMin = document.getElementById("search-etv-min");
+	const etvMax = document.getElementById("search-etv-max");
 	const queue = document.getElementById("vh-queue-select");
-
+	const excludeUnavailable = document.getElementById("search-exclude-unavailable");
 	//If the URL contains the parameters, load them
 	if (window.location.search) {
 		const urlParams = new URLSearchParams(window.location.search);
 		asin.value = urlParams.get("asin");
 		title.value = urlParams.get("title");
 		orderBy.value = urlParams.get("orderBy");
+		orderBy2.value = urlParams.get("orderBy2");
+		etvMin.value = urlParams.get("etvMin");
+		etvMax.value = urlParams.get("etvMax");
 		queue.value = urlParams.get("queue");
+		excludeUnavailable.checked = urlParams.get("excludeUnavailable") == "true";
 		queryDB(parseInt(urlParams.get("page")));
 	}
 }
@@ -120,6 +172,7 @@ function queryDB(page = 1) {
 	const queue = document.getElementById("vh-queue-select").value;
 	const etvMin = document.getElementById("search-etv-min").value;
 	const etvMax = document.getElementById("search-etv-max").value;
+	const excludeUnavailable = document.getElementById("search-exclude-unavailable").checked;
 
 	const content = {
 		api_version: 5,
@@ -135,6 +188,7 @@ function queryDB(page = 1) {
 		page: page,
 		etvMin: etvMin,
 		etvMax: etvMax,
+		excludeUnavailable: excludeUnavailable,
 	};
 
 	fetch(env.getAPIUrl(), {
@@ -161,7 +215,6 @@ function serverProductsResponse(data) {
 		//Do no complete this execution
 		return false;
 	}
-
 	const container = document.getElementById("vh-item-explorer-content");
 
 	//Create the HTML for the basic table containing the products
@@ -273,6 +326,7 @@ function serverProductsResponse(data) {
 			});
 		});
 	}
+	disableSearch();
 }
 
 function displayError(message) {
