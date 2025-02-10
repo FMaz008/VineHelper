@@ -421,6 +421,12 @@ div[role="navigation"] > ul > li {
 	}
 }
 
+.vh-icon-12 {
+	display: inline-block;
+	width: 12px;
+	height: 12px;
+}
+
 .vh-icon-16 {
 	display: inline-block;
 	width: 16px;

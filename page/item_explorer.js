@@ -285,6 +285,9 @@ function serverProductsResponse(data) {
 		html += `</div></div>`;
 		html += values.asin;
 		html += `<a href='https://www.amazon.${i13n.getDomainTLD()}/dp/${values.asin}' target='_blank'><div class='vh-icon-16 vh-icon-newtab' style='margin-left: 5px;'></div></a>`;
+		if (values.is_parent_asin) {
+			html += `<br /><span style='font-size: 8pt;'>(<a href='#' class='load-variants' data-asin='${values.asin}'>load variants</a>)</span>`;
+		}
 		html += "</td>";
 		html += "<td>";
 		html += values.title;
@@ -330,6 +333,65 @@ function serverProductsResponse(data) {
 			});
 		});
 	}
+
+	//Add event listener to the load variants link
+	const loadVariants = document.querySelectorAll(".load-variants");
+	loadVariants.forEach((item) => {
+		item.addEventListener("click", (event) => {
+			event.preventDefault();
+			const tr = item.parentElement.parentElement.parentElement;
+			const asin = item.getAttribute("data-asin");
+
+			//Delete the link
+			item.parentElement.remove();
+
+			//Query the API for the variants
+			const content = {
+				api_version: 5,
+				version: env.data.appVersion,
+				action: "item_explorer_variants",
+				country: i13n.getCountryCode(),
+				uuid: Settings.get("general.uuid", false),
+				asin: asin,
+			};
+			fetch(env.getAPIUrl(), {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(content),
+			})
+				.then(async (response) => {
+					const data = await response.json();
+					if (!response.ok) {
+						throw new Error(data.error || "Server error");
+					}
+					return data;
+				})
+				.then((data) => {
+					//Delete all pre-existing variant rows for that asin
+					const variantRows = document.querySelectorAll(`.variant-row-${asin}`);
+					variantRows.forEach((row) => {
+						row.remove();
+					});
+
+					//Create the new rows.
+					for (const variant of data.variants) {
+						const html = `<tr class='variant-row-${asin}' style='font-size: 8pt;'>
+						<td>
+							${variant.asin}
+							<a href='https://www.amazon.${i13n.getDomainTLD()}/dp/${variant.asin}' target='_blank'><div class='vh-icon-12 vh-icon-newtab' style='margin-left: 5px;'></div></a>	
+						</td>
+						<td>${variant.title}</td>
+						<td style='text-align: right;'>${variant.etv}</td>
+						<td colspan='6'></td>
+					</tr>`;
+
+						//Insert the HTML after the tr
+						tr.insertAdjacentHTML("afterend", html);
+					}
+				});
+		});
+	});
+
 	disableSearch();
 }
 
