@@ -190,12 +190,23 @@ async function init() {
 	await initInsertBookmarkButton();
 	initFixPreviousButton();
 	initModalNagivation();
-
+	serviceWorkerPing();
 	updateTileCounts();
 
 	hookMgr.hookExecute("EndOfBootloader", null);
 
 	HiddenList.garbageCollection();
+}
+
+//Ping the service worker every minute to let him know
+//VH is being actively used. (not a keep alive system)
+function serviceWorkerPing() {
+	//Create a timer to ping the service worker every minute
+	setInterval(() => {
+		chrome.runtime.sendMessage({
+			action: "ping",
+		});
+	}, 60 * 1000);
 }
 
 async function initTileSizeWidget() {

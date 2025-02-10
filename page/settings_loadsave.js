@@ -119,6 +119,14 @@ async function initiateSettings() {
 		}
 	});
 
+	//Show the usage time in days and hours
+	const minutesUsed = Settings.get("metrics.minutesUsed");
+	const days = Math.floor(minutesUsed / 1440);
+	const hours = Math.floor((minutesUsed % 1440) / 60);
+	const minutes = minutesUsed % 60;
+	document.getElementById("usageTime").innerText =
+		days + " day(s) and " + hours + " hour(s) and " + minutes + " minute(s)";
+
 	//##########################
 	// TABS
 	//Bind the click event for the tabs

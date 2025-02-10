@@ -303,7 +303,9 @@ class SettingsMgr {
 					tier: 0,
 				},
 			},
-
+			metrics: {
+				minutesUsed: 0,
+			},
 			notification: {
 				active: false,
 				reduce: false,

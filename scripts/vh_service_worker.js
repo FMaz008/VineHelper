@@ -20,7 +20,7 @@ var i13n = new Internationalization();
 var Settings = new SettingsMgr();
 var notificationsData = {};
 var WSReconnectInterval = 0.3; //Firefox shutdown the background script after 30seconds.
-
+var lastActivityUpdate = Date.now();
 if (typeof browser === "undefined") {
 	var browser = chrome;
 }
@@ -60,6 +60,13 @@ function processBroadcastMessage(data) {
 
 	if (data.type == "ping") {
 		sendMessageToAllTabs({ type: "pong" }, "Service worker is running.");
+
+		//Update the last activity time as a unix timestamp
+		if (Date.now() - lastActivityUpdate >= 1 * 60 * 1000) {
+			let minutesUsed = parseInt(Settings.get("metrics.minutesUsed"));
+			Settings.set("metrics.minutesUsed", minutesUsed + 1);
+			lastActivityUpdate = Date.now();
+		}
 	}
 
 	if (data.type == "fetchLast100Items") {
