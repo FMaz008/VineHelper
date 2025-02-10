@@ -293,7 +293,7 @@ function serverProductsResponse(data) {
 		html += values.title;
 		html += `</td>`;
 		html += "<td style='text-align: right;'>" + (values.etv == null ? "N/A" : values.etv) + "</td>";
-		html += "<td>" + values.queue + "</td>";
+		html += "<td>" + queueToAbbr(values.queue) + "</td>";
 		html +=
 			"<td style='text-align: center;'>" +
 			(values.unavailable ? "<div class='vh-icon-16 vh-icon-declined'></div>" : "") +
@@ -397,4 +397,14 @@ function serverProductsResponse(data) {
 
 function displayError(message) {
 	document.getElementById("vh-item-explorer-content").innerHTML = "<div class='notice'>" + message + "</div>";
+}
+
+function queueToAbbr(queue) {
+	const arr = {
+		potluck: "RFY",
+		encore: "AI",
+		last_chance: "AFA",
+	};
+
+	return arr[queue];
 }
