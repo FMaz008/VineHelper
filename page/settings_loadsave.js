@@ -127,6 +127,26 @@ async function initiateSettings() {
 	document.getElementById("usageTime").innerText =
 		days + " day(s) and " + hours + " hour(s) and " + minutes + " minute(s)";
 
+	//Get the user's stats from the API
+	const content = {
+		api_version: 5,
+		version: chrome.runtime.getManifest().version,
+		action: "get_user_stats",
+		country: i13n.getCountryCode(),
+		uuid: Settings.get("general.uuid", false),
+	};
+	fetch(VINE_HELPER_API_V5_URL, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(content),
+	}).then(async function (response) {
+		const data = await response.json();
+		document.getElementById("itemsFound").innerText = data.items_found;
+		document.getElementById("itemsFoundRank").innerText = data.items_found_rank;
+		document.getElementById("etvFound").innerText = data.etv_found;
+		document.getElementById("etvFoundRank").innerText = data.etv_found_rank;
+	});
+
 	//##########################
 	// TABS
 	//Bind the click event for the tabs
@@ -586,6 +606,7 @@ function initiateTestKeywords() {
 }
 
 import { keywordMatch } from "../scripts/service_worker/keywordMatch.js";
+import { Environment } from "../scripts/Environment.js";
 function testKeyword(key, title) {
 	const keyE = CSS.escape(key);
 
