@@ -67,12 +67,22 @@ class NotificationMonitor {
 	#channel = null; //Broadcast channel for light mode
 	#lightMode = false;
 	#statusTimer = null;
+	#fetchLimit = 100;
 
 	constructor() {
 		this.#imageUrls = new Set();
 		this.#asinsOnPage = new Set();
 		this.#feedPausedAmountStored = 0;
 		this.#channel = new BroadcastChannel("VineHelper");
+
+		//Define the fetch limit based on the user's tier
+		if (Settings.isPremiumUser(3)) {
+			this.#fetchLimit = 300;
+		} else if (Settings.isPremiumUser(2)) {
+			this.#fetchLimit = 200;
+		} else {
+			this.#fetchLimit = 100;
+		}
 	}
 
 	async initialize() {
@@ -168,6 +178,7 @@ class NotificationMonitor {
 		const itemContainer = document.querySelector("div#vvp-items-grid");
 
 		let prom2 = await Tpl.loadFile("view/notification_monitor_header.html");
+		Tpl.setVar("fetchLimit", this.#fetchLimit);
 		const header = Tpl.render(prom2, true);
 		parentContainer.insertBefore(header, mainContainer);
 
@@ -232,6 +243,7 @@ class NotificationMonitor {
 		const parentContainer = document.querySelector("body");
 
 		const prom2 = await Tpl.loadFile("view/notification_monitor_header.html");
+		Tpl.setVar("fetchLimit", this.#fetchLimit);
 		const header = Tpl.render(prom2, true);
 		parentContainer.appendChild(header);
 
@@ -1206,8 +1218,10 @@ class NotificationMonitor {
 			if (!this.#feedPaused) {
 				document.getElementById("pauseFeed").click();
 			}
+
 			chrome.runtime.sendMessage({
-				type: "fetchLast100Items",
+				type: "fetchLatestItems",
+				limit: this.#fetchLimit,
 			});
 		});
 

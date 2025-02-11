@@ -69,12 +69,13 @@ function processBroadcastMessage(data) {
 		}
 	}
 
-	if (data.type == "fetchLast100Items") {
+	if (data.type == "fetchLatestItems") {
 		//Get the last 100 most recent items
 		if (socket?.connected) {
 			socket.emit("getLast100", {
 				uuid: Settings.get("general.uuid", false),
 				countryCode: i13n.getCountryCode(),
+				limit: data.limit || 100,
 			});
 		} else {
 			console.warn("Socket not connected - cannot fetch last 100 items");
@@ -279,6 +280,7 @@ function processLast100Items(arrProducts) {
 		//Only display notification for products with a title and image url
 		//And that are more recent than the latest notification received.
 		if (img_url == "" || title == "") {
+			console.log("FETCH LATEST: item without title or image url: " + asin);
 			continue;
 		}
 
