@@ -1774,10 +1774,19 @@ function loadStyleSheetContent(content, path = "injected") {
 		document.head.appendChild(style);
 	}
 }
-
-document.addEventListener("contextmenu", (event) => {
+let selectedASIN = null;
+document.addEventListener("contextmenu", async (event) => {
+	// Try to obtain the word that was right clicked on
 	const range = getCaretPositionFromPoint(event.clientX, event.clientY);
 	let word = null;
+
+	const tileContent = range.startContainer.parentElement.closest(".vvp-item-tile");
+	if (tileContent) {
+		const asin = tileContent.dataset.asin;
+		selectedASIN = asin;
+	} else {
+		selectedASIN = null;
+	}
 
 	if (range && range.startContainer.nodeType === Node.TEXT_NODE) {
 		const textNode = range.startContainer;
@@ -1829,6 +1838,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 			sendResponse({ confirmed, word: editedWord });
 		});
 		return true; // Keep the message channel open for the async response
+	}
+
+	if (message.action === "copyASIN") {
+		if (selectedASIN) {
+			navigator.clipboard.writeText(selectedASIN);
+			alert("ASIN " + selectedASIN + " copied to clipboard");
+		} else {
+			alert("No ASIN detected. :(");
+		}
 	}
 });
 

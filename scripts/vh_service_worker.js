@@ -371,20 +371,40 @@ async function sendMessageToAllTabs(data, debugInfo) {
 }
 
 let selectedWord = "";
-
 // Create static context menu items
 chrome.runtime.onInstalled.addListener(() => {
+	const patterns = [
+		"https://*.amazon.com/vine/*",
+		"https://*.amazon.co.uk/vine/*",
+		"https://*.amazon.co.jp/vine/*",
+		"https://*.amazon.de/vine/*",
+		"https://*.amazon.fr/vine/*",
+		"https://*.amazon.it/vine/*",
+		"https://*.amazon.es/vine/*",
+		"https://*.amazon.ca/vine/*",
+		"https://*.amazon.com.au/vine/*",
+		"https://*.amazon.com.br/vine/*",
+		"https://*.amazon.com.mx/vine/*",
+		"https://*.amazon.sg/vine/*",
+	];
 
-	
+	chrome.contextMenus.create({
+		id: "copy-asin",
+		title: "Copy ASIN",
+		contexts: ["all"],
+		documentUrlPatterns: patterns,
+	});
 	chrome.contextMenus.create({
 		id: "add-to-highlightKeywords",
 		title: "Add to highlight keywords",
 		contexts: ["all"],
+		documentUrlPatterns: patterns,
 	});
 	chrome.contextMenus.create({
 		id: "add-to-hideKeywords",
 		title: "Add to hide keywords",
 		contexts: ["all"],
+		documentUrlPatterns: patterns,
 	});
 });
 
@@ -397,6 +417,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // Handle context menu clicks and save the word
 chrome.contextMenus.onClicked.addListener((info, tab) => {
+	if (info.menuItemId === "copy-asin") {
+		chrome.tabs.sendMessage(tab.id, { action: "copyASIN" });
+		return;
+	}
+
 	if (!selectedWord) {
 		console.error("No word selected!");
 		return;
