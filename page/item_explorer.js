@@ -15,6 +15,8 @@ var PinnedList = new PinnedListMgr();
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
 const Settings = new SettingsMgr();
 
+let secondsLeft = 10;
+
 (async () => {
 	await Settings.waitForLoad();
 
@@ -30,19 +32,12 @@ const Settings = new SettingsMgr();
 		i13n.setCountryCode(countryCode);
 	}
 
-	let lastSearchTime = 0;
 	const searchBtn = document.getElementById("search-button");
 
 	searchBtn.addEventListener("click", function () {
 		if (searchBtn.disabled) {
 			return;
 		}
-
-		const now = Date.now();
-		if (now - lastSearchTime < 10000) {
-			return;
-		}
-		lastSearchTime = now;
 
 		queryDB();
 		searchBtn.disabled = true;
@@ -65,7 +60,6 @@ const Settings = new SettingsMgr();
 
 function disableSearch() {
 	const searchBtn = document.getElementById("search-button");
-	let secondsLeft = 10;
 	searchBtn.disabled = true;
 	searchBtn.value = `Wait ${secondsLeft}s`;
 
@@ -216,6 +210,15 @@ function serverProductsResponse(data) {
 		return false;
 	}
 	const container = document.getElementById("vh-item-explorer-content");
+	container.innerHTML = "";
+
+	const stats = document.createElement("div");
+	stats.id = "vh-item-explorer-stats";
+	stats.style.fontSize = "8pt;";
+	stats.innerText = `Query time: ${data.query_time}ms`;
+	container.appendChild(stats);
+
+	secondsLeft = parseInt(data.wait_time);
 
 	//Create the HTML for the basic table containing the products
 	let html = "<table id='vh-item-table'>";
@@ -234,7 +237,7 @@ function serverProductsResponse(data) {
 	html += `<th style="padding:2px"><div class="vh-icon-32 vh-icon-order-failed"></div></th>`;
 	html += "</tr>";
 	html += "</table>";
-	container.innerHTML = html;
+	container.innerHTML += html;
 
 	const table = document.getElementById("vh-item-table");
 	const paginationContainerTop = document.getElementById("vh-pagination-top");
