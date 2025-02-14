@@ -3,14 +3,14 @@ const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_WS_URL = "ws://127.0.0.1:3000";
 const channel = new BroadcastChannel("VineHelper");
 
+import "../node_modules/socket.io/client-dist/socket.io.min.js";
 import { Internationalization } from "../scripts/Internationalization.js";
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
 import {
-	dataStream as myStream,
 	broadcastFunction,
+	dataStream as myStream,
 	notificationPushFunction,
 } from "./service_worker/NewItemStreamProcessing.js";
-import "../node_modules/socket.io/client-dist/socket.io.min.js";
 
 //Bind/Inject the service worker's functions to the dataStream.
 broadcastFunction(dataBuffering);
@@ -369,3 +369,71 @@ async function sendMessageToAllTabs(data, debugInfo) {
 		}
 	}
 }
+
+let selectedWord = "";
+
+// Create static context menu items
+chrome.runtime.onInstalled.addListener(() => {
+	chrome.contextMenus.create({
+		id: "add-to-hideKeywords",
+		title: "Add to hide keywords",
+		contexts: ["all"],
+	});
+
+	chrome.contextMenus.create({
+		id: "add-to-highlightKeywords",
+		title: "Add to highlight keywords",
+		contexts: ["all"],
+	});
+});
+
+// Store the word sent by the content script
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+	if (message.action === "setWord" && message.word) {
+		selectedWord = message.word; // Update the selected word
+		console.log(`Stored word: "${selectedWord}"`);
+	}
+});
+
+// Handle context menu clicks and save the word
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+	if (!selectedWord) {
+		console.error("No word selected!");
+		return;
+	}
+
+	const list = info.menuItemId === "add-to-hideKeywords" ? "Hide" : "Highlight";
+	console.log(`Context menu clicked. Sending prompt for word: "${selectedWord}" to the ${list} list.`);
+
+	chrome.tabs.sendMessage(tab.id, { action: "showPrompt", word: selectedWord, list: list }, (response) => {
+		if (response && response.confirmed) {
+			const confirmedWord = response.word;
+
+			// Save the word to Chrome's local storage
+			chrome.storage.local.get("settings", (result) => {
+				const settings = result.settings || { general: { hideKeywords: [], highlightKeywords: [] } };
+
+				const newKeyword = {
+					contains: confirmedWord,
+					without: "",
+					etv_min: "",
+					etv_max: "",
+				};
+
+				if (list === "Hide" && settings.general.hideKeywords) {
+					settings.general.hideKeywords.push(newKeyword);
+					console.log(`Word "${confirmedWord}" added to hide keywords.`);
+				} else if (list === "Highlight" && settings.general.highlightKeywords) {
+					settings.general.highlightKeywords.push(newKeyword);
+					console.log(`Word "${confirmedWord}" added to highlight keywords.`);
+				}
+
+				chrome.storage.local.set({ settings: settings }, () => {
+					console.log("Settings updated successfully.");
+				});
+			});
+		} else {
+			console.log("Word addition canceled.");
+		}
+	});
+});
