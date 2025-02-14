@@ -1779,7 +1779,7 @@ function loadStyleSheetContent(content, path = "injected") {
 }
 
 document.addEventListener("contextmenu", (event) => {
-	const range = document.caretRangeFromPoint(event.clientX, event.clientY);
+	const range = getCaretPositionFromPoint(event.clientX, event.clientY);
 	let word = null;
 
 	if (range && range.startContainer.nodeType === Node.TEXT_NODE) {
@@ -1794,17 +1794,40 @@ document.addEventListener("contextmenu", (event) => {
 	}
 
 	if (word) {
-		console.log(`Extracted word: "${word}"`);
-
 		// Send the word to the background script
 		chrome.runtime.sendMessage({ action: "setWord", word: word });
 	}
 });
 
+function getCaretPositionFromPoint(x, y) {
+	if (document.caretRangeFromPoint) {
+		// Chrome or browsers supporting caretRangeFromPoint
+		return document.caretRangeFromPoint(x, y);
+	} else {
+		// Firefox
+		const position = document.caretPositionFromPoint(x, y);
+		if (position) {
+			const range = document.createRange();
+			range.setStart(position.offsetNode, position.offset);
+			range.setEnd(position.offsetNode, position.offset);
+			return range;
+		}
+	}
+
+	// Fallback for other browsers
+	const range = document.createRange();
+	const selection = window.getSelection();
+
+	if (selection.rangeCount > 0) {
+		return selection.getRangeAt(0);
+	}
+
+	return range;
+}
+
 // Show a custom dialog when prompted by the background script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 	if (message.action === "showPrompt" && message.word) {
-		console.log(`Displaying prompt for word: "${message.word}" and list: "${message.list}"`);
 		showCustomPrompt(message.word, message.list, (editedWord, confirmed) => {
 			sendResponse({ confirmed, word: editedWord });
 		});

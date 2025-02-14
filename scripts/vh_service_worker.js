@@ -391,7 +391,6 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 	if (message.action === "setWord" && message.word) {
 		selectedWord = message.word; // Update the selected word
-		console.log(`Stored word: "${selectedWord}"`);
 	}
 });
 
@@ -403,37 +402,27 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 	}
 
 	const list = info.menuItemId === "add-to-hideKeywords" ? "Hide" : "Highlight";
-	console.log(`Context menu clicked. Sending prompt for word: "${selectedWord}" to the ${list} list.`);
 
-	chrome.tabs.sendMessage(tab.id, { action: "showPrompt", word: selectedWord, list: list }, (response) => {
+	chrome.tabs.sendMessage(tab.id, { action: "showPrompt", word: selectedWord, list: list }, async (response) => {
 		if (response && response.confirmed) {
 			const confirmedWord = response.word;
 
-			// Save the word to Chrome's local storage
-			chrome.storage.local.get("settings", (result) => {
-				const settings = result.settings || { general: { hideKeywords: [], highlightKeywords: [] } };
+			const newKeyword = {
+				contains: confirmedWord,
+				without: "",
+				etv_min: "",
+				etv_max: "",
+			};
 
-				const newKeyword = {
-					contains: confirmedWord,
-					without: "",
-					etv_min: "",
-					etv_max: "",
-				};
-
-				if (list === "Hide" && settings.general.hideKeywords) {
-					settings.general.hideKeywords.push(newKeyword);
-					console.log(`Word "${confirmedWord}" added to hide keywords.`);
-				} else if (list === "Highlight" && settings.general.highlightKeywords) {
-					settings.general.highlightKeywords.push(newKeyword);
-					console.log(`Word "${confirmedWord}" added to highlight keywords.`);
-				}
-
-				chrome.storage.local.set({ settings: settings }, () => {
-					console.log("Settings updated successfully.");
-				});
-			});
-		} else {
-			console.log("Word addition canceled.");
+			if (list === "Hide") {
+				const arrHide = await Settings.get("general.hideKeywords");
+				const newArrHide = [...arrHide, newKeyword];
+				Settings.set("general.hideKeywords", newArrHide);
+			} else if (list === "Highlight") {
+				const arrHighlight = await Settings.get("general.highlightKeywords");
+				const newArrHighlight = [...arrHighlight, newKeyword];
+				Settings.set("general.highlightKeywords", newArrHighlight);
+			}
 		}
 	});
 });
