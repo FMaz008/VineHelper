@@ -261,6 +261,7 @@ class SettingsMgr {
 				verbosePaginationStartPadding: 5,
 				displayFirstSeen: true,
 				displayETV: true,
+				displayModalETV: false,
 				bookmark: false, //Highlight recently added items
 				bookmarkDate: 0,
 				bookmarkColor: "#90ee90",

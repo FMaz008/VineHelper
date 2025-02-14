@@ -1141,10 +1141,7 @@ window.addEventListener("message", async function (event) {
 			await Notifications.pushNotification(note);
 		}
 
-		if (
-			Settings.get("general.displayModalETV") &&
-			document.getElementById("vvp-product-details-modal--tax-value").style?.display == "none"
-		) {
+		if (Settings.get("general.displayModalETV")) {
 			document.getElementById("vvp-product-details-modal--tax-value").style.display = "block";
 			document.getElementById("vvp-product-details-modal--tax-spinner").style.display = "none";
 			document.getElementById("vvp-product-details-modal--tax-value-string").innerText = event.data.data.etv;
