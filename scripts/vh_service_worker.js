@@ -374,15 +374,16 @@ let selectedWord = "";
 
 // Create static context menu items
 chrome.runtime.onInstalled.addListener(() => {
-	chrome.contextMenus.create({
-		id: "add-to-hideKeywords",
-		title: "Add to hide keywords",
-		contexts: ["all"],
-	});
 
+	
 	chrome.contextMenus.create({
 		id: "add-to-highlightKeywords",
 		title: "Add to highlight keywords",
+		contexts: ["all"],
+	});
+	chrome.contextMenus.create({
+		id: "add-to-hideKeywords",
+		title: "Add to hide keywords",
 		contexts: ["all"],
 	});
 });
