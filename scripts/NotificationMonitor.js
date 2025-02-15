@@ -434,7 +434,6 @@ class NotificationMonitor {
 		if (!asin) {
 			return false;
 		}
-
 		title = unescapeHTML(title);
 
 		const recommendationType = getRecommendationTypeFromQueue(queue); //grid.js
@@ -539,6 +538,7 @@ class NotificationMonitor {
 
 		//Process the bluring
 		if (BlurKWsMatch) {
+			console.log(BlurKWsMatch);
 			this.#blurItemFound(tileDOM);
 		}
 
@@ -609,19 +609,23 @@ class NotificationMonitor {
 		if (this.#firefox || Settings.get("notification.monitor.openLinksInNewTab") == "1") {
 			//Deactivate Vine click handling
 			const btnContainer = document.querySelector(`#vh-notification-${asin} .vvp-details-btn`);
-			btnContainer.classList.remove("vvp-details-btn");
-
-			//Store the function reference as a property on the element
 			const seeDetailsBtn = document.querySelector(`#vh-notification-${asin} .a-button-primary input`);
-			seeDetailsBtn.openDetailsHandler = () => {
-				window.open(
-					`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`,
-					"_blank"
-				);
-			};
+			if (btnContainer && seeDetailsBtn) {
+				//Monitor V2 does not have these buttons
+				btnContainer.classList.remove("vvp-details-btn");
 
-			//Add the event listener using the stored reference
-			seeDetailsBtn.addEventListener("click", seeDetailsBtn.openDetailsHandler);
+				//Store the function reference as a property on the element
+
+				seeDetailsBtn.openDetailsHandler = () => {
+					window.open(
+						`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`,
+						"_blank"
+					);
+				};
+
+				//Add the event listener using the stored reference
+				seeDetailsBtn.addEventListener("click", seeDetailsBtn.openDetailsHandler);
+			}
 		}
 
 		//Autotruncate the items if there are too many
@@ -1353,8 +1357,8 @@ class NotificationMonitor {
 						item.etv_max,
 						item.reason,
 						item.KW,
-						item.BlurKW,
 						item.KWsMatch,
+						item.BlurKW,
 						item.BlurKWsMatch,
 						item.unavailable
 					);
