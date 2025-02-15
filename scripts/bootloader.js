@@ -296,14 +296,38 @@ function hidePageContent() {
 
 	//Hide side cart
 	if (Settings.isPremiumUser() && Settings.get("general.hideSideCart") == true) {
-		const sideCart = document.getElementById("nav-flyout-ewc");
-		if (sideCart) {
+		//Firefox will load the side cart before VH run this code, and it will also reset the display value to the default.
+		//So we need to wait for the side cart to be created, and then observe it to make sure it gets hidden again after it's modified.
+		//Wait for nav-flyout-ewc to be created, without interupting the main thread
+		(async () => {
+			let sideCart, sideCartArrow;
+			await new Promise((resolve) => {
+				const interval = setInterval(() => {
+					sideCart = document.getElementById("nav-flyout-ewc");
+					sideCartArrow = document.querySelector(".nav-ewc-arrow");
+					if (sideCart) {
+						clearInterval(interval);
+						resolve();
+					}
+				}, 100);
+			});
+
 			sideCart.style.display = "none";
-		}
-		const sideCartArrow = document.querySelector(".nav-ewc-arrow");
-		if (sideCartArrow) {
 			sideCartArrow.style.display = "none";
-		}
+
+			//Observe the side cart style.display value to be alerted if it becomes something else than "none"
+			const observer = new MutationObserver((mutations) => {
+				mutations.forEach((mutation) => {
+					if (mutation.type === "attributes" && mutation.attributeName === "style") {
+						if (sideCart.style.display !== "none") {
+							sideCart.style.display = "none"; // Force it back to hidden
+						}
+					}
+				});
+			});
+
+			observer.observe(sideCart, { attributes: true });
+		})();
 	}
 
 	//Hide category in RFY and AFA
