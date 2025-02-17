@@ -335,7 +335,10 @@ function hidePageContent() {
 	if (Settings.isPremiumUser() && Settings.get("general.hideCategoriesRFYAFA")) {
 		//If the current page is RFY or AFA, hide the category
 		if (["last_chance", "potluck"].indexOf(env.data.vineQueue) != -1) {
-			document.getElementById("vvp-browse-nodes-container").style.display = "none";
+			const categories = document.getElementById("vvp-browse-nodes-container");
+			if (categories) {
+				categories.style.display = "none";
+			}
 		}
 	}
 }

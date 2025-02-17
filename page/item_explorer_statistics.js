@@ -46,7 +46,7 @@ Chart.register({
 			const endIdx = dates.findIndex((d) => d >= nextDay);
 
 			if (startIdx !== -1) {
-				const startPixel = scale.getPixelForValue(startIdx);
+				const startPixel = startIdx === 0 ? chartArea.left : scale.getPixelForValue(startIdx);
 				const endPixel = endIdx !== -1 ? scale.getPixelForValue(endIdx) : chartArea.right;
 
 				ctx.fillStyle = i % 2 === 0 ? "rgba(0,0,0,0.05)" : "rgba(0,0,0,0.15)";
@@ -114,7 +114,7 @@ Chart.register({
 				data: {
 					labels: data.drop_stats.map((d) => {
 						const date = new Date(d.hour_slot);
-						return date.toLocaleString("en-US", { weekday: "long" }) + " " + date.getHours() + "h";
+						return date.toLocaleString("en-US", { weekday: "long" }) + " " + date.getHours() + ":00";
 					}),
 					_source_dates: dates, // Store the original dates here
 					datasets: [
@@ -139,7 +139,10 @@ Chart.register({
 								callback: function (value, index) {
 									const date = new Date(data.drop_stats[index].hour_slot);
 									return (
-										date.toLocaleString("en-US", { weekday: "long" }) + " " + date.getHours() + "h"
+										date.toLocaleString("en-US", { weekday: "short" }) +
+										" " +
+										date.getHours() +
+										":00"
 									);
 								},
 							},
