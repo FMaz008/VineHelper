@@ -19,6 +19,8 @@ import { addPinnedTile, updateTileCounts } from "./Grid.js";
 import { Template } from "./Template.js";
 var Tpl = new Template();
 
+import { keywordMatch } from "./service_worker/keywordMatch.js";
+
 import { BrendaAnnounceQueue } from "./BrendaAnnounce.js";
 var brendaAnnounceQueue = new BrendaAnnounceQueue();
 
@@ -231,9 +233,12 @@ class Toolbar {
 
 	setETV(etv1, etv2, onlyIfEmpty = false) {
 		let span = this.#toolbarDOM.querySelector(".vh-toolbar-etv .etv");
-		this.#tile.setETV(etv2);
 
-		if (onlyIfEmpty && span.textContent !== "") return false;
+		if (onlyIfEmpty && span.textContent !== "") {
+			return false;
+		}
+
+		this.processHighlight(etv1, etv2);
 
 		etv1 = new Intl.NumberFormat(i13n.getLocale(), {
 			style: "currency",
@@ -252,6 +257,59 @@ class Toolbar {
 
 		if (Settings.get("general.displayETV")) {
 			this.#toolbarDOM.querySelector(".vh-toolbar-etv").style.display = "flex";
+		}
+	}
+
+	unknownETV() {
+		this.processHighlight(null, null);
+	}
+
+	processHighlight(etv1, etv2) {
+		logger.add("Toolbar: processHighlight");
+		let colorize = false;
+		if (Settings.get("general.highlightKeywords")?.length > 0) {
+			let match = keywordMatch(Settings.get("general.highlightKeywords"), this.#tile.getTitle(), etv1, etv2);
+			if (!match) {
+				logger.add("Toolbar: processHighlight: no match");
+				//No match now, remove the highlight
+				this.#tile.getDOM().dataset.keywordHighlight = false;
+
+				//Check if the item should be hidden
+				if (Settings.get("hiddenTab.active") && Settings.get("general.hideKeywords")?.length > 0) {
+					match = keywordMatch(Settings.get("general.hideKeywords"), this.#tile.getTitle(), etv1, etv2);
+					if (match) {
+						logger.add("Toolbar: processHide: hide match");
+						this.#tile.hideTile(false, false, true); //Do not save, skip the hidden manager: just move the tile.
+
+						document.getElementById("vh-hide-link-" + this.getAsin()).style.display = "none";
+					}
+				}
+			} else {
+				logger.add("Toolbar: processHighlight: match");
+				//Match found, keep the highlight
+				this.#tile.getDOM().dataset.keywordHighlight = true;
+				colorize = true;
+
+				if (Settings.get("general.highlightKWFirst")) {
+					logger.add("Toolbar: processHighlight: highlightKWFirst");
+					//Move the highlighted item to the top of the grid
+					this.#tile
+						.getGrid()
+						.getDOM()
+						.insertBefore(this.#tile.getDOM(), this.#tile.getGrid().getDOM().firstChild);
+				}
+			}
+		}
+
+		if (parseFloat(etv1) == 0 || parseFloat(etv2) == 0) {
+			logger.add("Toolbar: processHighlight: zeroETV");
+			this.#tile.getDOM().dataset.zeroETV = true;
+			colorize = true;
+		}
+
+		if (colorize) {
+			logger.add("Toolbar: processHighlight: colorize");
+			this.#tile.colorizeHighlight();
 		}
 	}
 

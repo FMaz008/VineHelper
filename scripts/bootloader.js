@@ -966,6 +966,9 @@ async function serverProductsResponse(data) {
 		if (values.etv_min != null) {
 			logger.add("DRAW: Setting ETV");
 			tile.getToolbar().setETV(values.etv_min, values.etv_max);
+		} else {
+			logger.add("DRAW: No ETV value found");
+			tile.getToolbar().unknownETV();
 		}
 
 		if (values.date_added != null) {

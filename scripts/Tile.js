@@ -71,19 +71,6 @@ class Tile {
 		return this.#toolbar;
 	}
 
-	//Generally called by Toolbar().setETV(min, max)
-	setETV(etv) {
-		this.#etv = etv;
-		if (parseFloat(etv) == 0) {
-			this.#tileDOM.dataset.zeroETV = true;
-			this.#colorizeHighlight();
-		}
-	}
-
-	getETV() {
-		return this.#etv;
-	}
-
 	setOrders(success, failed) {
 		this.#tileDOM.querySelector(".vh-order-success").textContent = success;
 		this.#tileDOM.querySelector(".vh-order-failed").textContent = failed;
@@ -202,45 +189,9 @@ class Tile {
 	}
 
 	async initiateTile() {
-		//Highlight the tile border if the title match highlight keywords
-		let highligthed = false;
-		let match;
-		if (Settings.get("general.highlightKeywords")?.length > 0) {
-			match = keywordMatch(
-				Settings.get("general.highlightKeywords"),
-				this.getTitle(),
-				this.getETV(),
-				this.getETV()
-			);
-
-			if (match) {
-				highligthed = true;
-				logger.add("TILE: The item match the keyword '" + match + "', highlight it");
-				this.#tileDOM.dataset.keywordHighlight = true;
-
-				this.#colorizeHighlight();
-
-				if (Settings.get("general.highlightKWFirst")) {
-					//Move the highlighted item to the top of the grid
-					this.#grid.getDOM().insertBefore(this.#tileDOM, this.#grid.getDOM().firstChild);
-				}
-			}
-		}
-
-		//Match with hide keywords. Only hide if not highlighed.
-		if (!highligthed && Settings.get("hiddenTab.active") && Settings.get("general.hideKeywords")?.length > 0) {
-			match = keywordMatch(Settings.get("general.hideKeywords"), this.getTitle(), this.getETV(), this.getETV());
-			if (match) {
-				logger.add("TILE: The item match the keyword '" + match + "', hide it");
-				this.hideTile(false, false, true); //Do not save, skip the hidden manager: just move the tile.
-
-				document.getElementById("vh-hide-link-" + this.getAsin()).style.display = "none";
-			}
-		}
-
 		//Match with blur keywords.
 		if (Settings.isPremiumUser() && Settings.get("general.blurKeywords")?.length > 0) {
-			match = keywordMatch(Settings.get("general.blurKeywords"), this.getTitle(), this.getETV(), this.getETV());
+			let match = keywordMatch(Settings.get("general.blurKeywords"), this.getTitle(), null, null);
 			if (match) {
 				logger.add("TILE: The item match the keyword '" + match + "', blur it");
 				this.#tileDOM.querySelector("img")?.classList.add("blur");
@@ -256,7 +207,7 @@ class Tile {
 		this.getDOM().closest(".vvp-item-tile").dataset.asin = this.#asin;
 	}
 
-	#colorizeHighlight() {
+	colorizeHighlight() {
 		const zeroETV = this.#tileDOM.dataset.zeroETV === "true" && Settings.get("general.zeroETVHighlight.active");
 		const highlight = this.#tileDOM.dataset.keywordHighlight === "true";
 
