@@ -1816,7 +1816,7 @@ document.addEventListener("contextmenu", async (event) => {
 	const range = getCaretPositionFromPoint(event.clientX, event.clientY);
 	let word = null;
 
-	const tileContent = range.startContainer.parentElement.closest(".vvp-item-tile");
+	const tileContent = range.startContainer.parentElement?.closest(".vvp-item-tile");
 	if (tileContent) {
 		const asin = tileContent.dataset.asin;
 		selectedASIN = asin;
