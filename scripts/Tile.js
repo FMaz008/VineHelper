@@ -12,7 +12,7 @@ var HiddenList = new HiddenListMgr();
 
 import { keywordMatch } from "./service_worker/keywordMatch.js";
 import { YMDHiStoISODate } from "./DateHelper.js";
-import { updateTileCounts } from "./Grid.js";
+import { getTileByAsin, updateTileCounts } from "./Grid.js";
 import { unescapeHTML } from "./StringHelper.js";
 
 class Tile {
@@ -210,16 +210,26 @@ class Tile {
 	colorizeHighlight() {
 		const zeroETV = this.#tileDOM.dataset.zeroETV === "true" && Settings.get("general.zeroETVHighlight.active");
 		const highlight = this.#tileDOM.dataset.keywordHighlight === "true";
+		const unknownETV =
+			this.#tileDOM.dataset.unknownETV === "true" && Settings.get("general.unknownETVHighlight.active");
+
+		this.#tileDOM.style.backgroundColor = "unset";
+		this.#tileDOM.style.background = "unset";
 
 		if (zeroETV && highlight) {
 			const color1 = Settings.get("general.zeroETVHighlight.color");
 			const color2 = Settings.get("general.keywordHighlightColor");
-			this.#tileDOM.style.backgroundColor = "unset";
+			this.#tileDOM.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;
+		} else if (unknownETV && highlight) {
+			const color1 = Settings.get("general.unknownETVHighlight.color");
+			const color2 = Settings.get("general.keywordHighlightColor");
 			this.#tileDOM.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;
 		} else if (highlight) {
 			this.#tileDOM.style.backgroundColor = Settings.get("general.keywordHighlightColor");
 		} else if (zeroETV) {
 			this.#tileDOM.style.backgroundColor = Settings.get("general.zeroETVHighlight.color");
+		} else if (unknownETV) {
+			this.#tileDOM.style.backgroundColor = Settings.get("general.unknownETVHighlight.color");
 		}
 	}
 
@@ -301,24 +311,6 @@ function timeSince(timenow, date) {
 	return `${Math.floor(seconds)} secs`;
 }
 
-function getTileByAsin(asin) {
-	if (env.data.grid.gridRegular == null) {
-		throw Error("Grid(s) not instanciated yet.");
-	}
-
-	let tile = null;
-	tile = env.data.grid.gridRegular.getTileByASIN(asin);
-	if (tile != null) return tile;
-
-	if (env.data.grid.gridUnavailable != null) {
-		tile = env.data.grid.gridUnavailable.getTileByASIN(asin);
-		if (tile != null) return tile;
-	}
-
-	tile = env.data.grid.gridHidden.getTileByASIN(asin);
-	return tile;
-}
-
 function getAsinFromDom(tileDom) {
 	let regex = /^(?:.*\/dp\/)(.+?)(?:\?.*)?$/; //Isolate the product ID in the URL.
 	let urlElement = tileDom.querySelector(".a-link-normal");
@@ -378,4 +370,4 @@ function animateOpacity(element, targetOpacity, duration) {
 	});
 }
 
-export { Tile, getTileByAsin, getTileFromDom, getAsinFromDom };
+export { Tile, getTileFromDom, getAsinFromDom };

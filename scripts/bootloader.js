@@ -26,6 +26,7 @@ import {
 	hideAllItemsNext,
 	showAllItems,
 	updateTileCounts,
+	getTileByAsin,
 } from "./Grid.js";
 
 import { HiddenListMgr } from "./HiddenListMgr.js";
@@ -49,7 +50,7 @@ var PinnedList = new PinnedListMgr();
 import { ScreenNotification, ScreenNotifier } from "./ScreenNotifier.js";
 var Notifications = new ScreenNotifier();
 
-import { Tile, getTileByAsin, getTileFromDom } from "./Tile.js";
+import { Tile, getTileFromDom } from "./Tile.js";
 
 import { TileSizer } from "./TileSizer.js";
 var tileSizer = new TileSizer();
@@ -1120,6 +1121,14 @@ window.addEventListener("message", async function (event) {
 		if (tileASIN === null) {
 			tileASIN = event.data.data.asin;
 		}
+
+		//Update the tile with the new ETV
+		const tile = getTileByAsin(tileASIN);
+		if (tile) {
+			tile.getToolbar().setETV(event.data.data.etv, event.data.data.etv);
+		}
+
+		//Update the server with the new ETV
 		const content = {
 			api_version: 5,
 			version: env.data.appVersion,

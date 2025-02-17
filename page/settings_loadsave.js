@@ -228,6 +228,8 @@ async function initiateSettings() {
 	manageColorPicker("general.bookmarkColor");
 	manageCheckboxSetting("general.zeroETVHighlight.active");
 	manageColorPicker("general.zeroETVHighlight.color");
+	manageCheckboxSetting("general.unknownETVHighlight.active");
+	manageColorPicker("general.unknownETVHighlight.color");
 	manageColorPicker("general.toolbarBackgroundColor");
 
 	//##TAB - NOTIFICATIONS

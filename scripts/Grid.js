@@ -16,7 +16,7 @@ var PinnedList = new PinnedListMgr();
 import { HiddenListMgr } from "./HiddenListMgr.js";
 var HiddenList = new HiddenListMgr();
 
-import { getTileByAsin, getAsinFromDom } from "./Tile.js";
+import { getAsinFromDom } from "./Tile.js";
 
 import { TileSizer } from "./TileSizer.js";
 var tileSizer = new TileSizer();
@@ -25,6 +25,7 @@ import { Template } from "./Template.js";
 var Tpl = new Template();
 
 var currentTab = "vvp-items-grid";
+var arrTile = [];
 class Grid {
 	gridDOM;
 	pArrTile;
@@ -44,6 +45,7 @@ class Grid {
 
 	async addTile(t) {
 		return new Promise((resolve) => {
+			arrTile.push(t);
 			this.pArrTile.push(t);
 
 			if (Object.keys(t).length !== 0) {
@@ -405,6 +407,10 @@ function removeElements(selector) {
 	});
 }
 
+function getTileByAsin(asin) {
+	return arrTile.find((t) => t.getAsin() === asin);
+}
+
 export {
 	Grid,
 	updateTileCounts,
@@ -416,4 +422,5 @@ export {
 	hideAllItemsNext,
 	showAllItems,
 	selectCurrentTab,
+	getTileByAsin,
 };

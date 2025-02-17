@@ -289,6 +289,10 @@ class SettingsMgr {
 					active: true,
 					color: "#64af4b",
 				},
+				unknownETVHighlight: {
+					active: false,
+					color: "#FF3366",
+				},
 				tileSize: {
 					enabled: true, //Will apply the changes to the tile size as configured
 					active: true, //Will show the widget with sliders to adjust the size of various element in listings

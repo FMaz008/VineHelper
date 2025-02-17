@@ -13,8 +13,7 @@ var i13n = new Internationalization();
 import { PinnedListMgr } from "./PinnedListMgr.js";
 var PinnedList = new PinnedListMgr();
 
-import { getTileByAsin } from "./Tile.js";
-import { addPinnedTile, updateTileCounts } from "./Grid.js";
+import { getTileByAsin, addPinnedTile, updateTileCounts } from "./Grid.js";
 
 import { Template } from "./Template.js";
 var Tpl = new Template();
@@ -266,7 +265,7 @@ class Toolbar {
 
 	processHighlight(etv1, etv2) {
 		logger.add("Toolbar: processHighlight");
-		let colorize = false;
+
 		if (Settings.get("general.highlightKeywords")?.length > 0) {
 			let match = keywordMatch(Settings.get("general.highlightKeywords"), this.#tile.getTitle(), etv1, etv2);
 			if (!match) {
@@ -281,14 +280,13 @@ class Toolbar {
 						logger.add("Toolbar: processHide: hide match");
 						this.#tile.hideTile(false, false, true); //Do not save, skip the hidden manager: just move the tile.
 
-						document.getElementById("vh-hide-link-" + this.getAsin()).style.display = "none";
+						document.getElementById("vh-hide-link-" + this.#tile.getAsin()).style.display = "none";
 					}
 				}
 			} else {
 				logger.add("Toolbar: processHighlight: match");
 				//Match found, keep the highlight
 				this.#tile.getDOM().dataset.keywordHighlight = true;
-				colorize = true;
 
 				if (Settings.get("general.highlightKWFirst")) {
 					logger.add("Toolbar: processHighlight: highlightKWFirst");
@@ -301,16 +299,21 @@ class Toolbar {
 			}
 		}
 
-		if (parseFloat(etv1) == 0 || parseFloat(etv2) == 0) {
+		if (etv1 === null && etv2 === null) {
+			logger.add("Toolbar: processHighlight: unknownETV");
+			this.#tile.getDOM().dataset.unknownETV = true;
+			this.#tile.getDOM().dataset.zeroETV = false;
+		} else if (parseFloat(etv1) == 0 || parseFloat(etv2) == 0) {
 			logger.add("Toolbar: processHighlight: zeroETV");
 			this.#tile.getDOM().dataset.zeroETV = true;
-			colorize = true;
+			this.#tile.getDOM().dataset.unknownETV = false;
+		} else {
+			this.#tile.getDOM().dataset.zeroETV = false;
+			this.#tile.getDOM().dataset.unknownETV = false;
 		}
 
-		if (colorize) {
-			logger.add("Toolbar: processHighlight: colorize");
-			this.#tile.colorizeHighlight();
-		}
+		logger.add("Toolbar: processHighlight: colorize");
+		this.#tile.colorizeHighlight();
 	}
 
 	//Create the order widget part of the toolbar
