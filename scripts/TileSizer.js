@@ -167,7 +167,7 @@ class TileSizer {
 	#adjustVerticalSpacing = function (DOMElem = null, sliderValue = null) {
 		const size = parseInt(sliderValue || Settings.get(`${this.#settingPrefix}.verticalSpacing`));
 		const selector =
-			".vvp-item-tile-content .vvp-item-product-title-container, .vvp-item-tile-content .vvp-details-btn";
+			".vvp-item-tile-content .vvp-item-product-title-container, .vvp-item-tile-content .vvp-details-btn, .vvp-item-tile-content .a-button-primary";
 		const elements = (DOMElem || document).querySelectorAll(selector);
 		elements.forEach((elem) => {
 			elem.style.margin = size + "px 0";
@@ -178,17 +178,11 @@ class TileSizer {
 		const size = parseFloat(sliderValue || Settings.get(`${this.#settingPrefix}.titleSpacing`));
 		//Adjust all elements on the page
 		const box1 = (DOMElem || document).querySelectorAll(
-			".vvp-item-tile-content .vvp-item-product-title-container .a-truncate"
+			".vvp-item-tile-content .vvp-item-product-title-container .a-truncate, .vvp-item-tile-content .vvp-item-product-title-container .a-truncate-cut, .vvp-item-tile-content .vvp-item-product-title-container"
 		);
 		box1.forEach((elem) => {
-			elem.style.maxHeight = size + "px";
-		});
-
-		const box2 = (DOMElem || document).querySelectorAll(
-			".vvp-item-tile-content .vvp-item-product-title-container .a-truncate-cut"
-		);
-		box2.forEach((elem) => {
 			elem.style.height = size + "px";
+			elem.style.maxHeight = size + "px";
 		});
 	};
 
