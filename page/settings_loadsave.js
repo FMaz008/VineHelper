@@ -141,12 +141,20 @@ async function initiateSettings() {
 		body: JSON.stringify(content),
 	}).then(async function (response) {
 		const data = await response.json();
-		document.getElementById("itemsFound").innerText = data.items_found == undefined ? "N/A" : data.items_found;
+		document.getElementById("itemsFound").innerText =
+			data.items_found == undefined
+				? "N/A"
+				: data.items_found +
+					" (Reliability score: " +
+					(data.items_found < 10 || typeof data.items_found_ratio === "undefined"
+						? "N/A"
+						: Math.round(data.items_found_ratio * 100) + "%") +
+					")";
 		document.getElementById("itemsFoundRank").innerText =
-			data.items_found_rank == undefined ? "N/A" : data.items_found_rank;
+			data.items_found_rank == undefined ? "N/A" : data.items_found_rank + rankSuffix(data.items_found_rank);
 		document.getElementById("etvFound").innerText = data.etv_found == undefined ? "N/A" : data.etv_found;
 		document.getElementById("etvFoundRank").innerText =
-			data.etv_found_rank == undefined ? "N/A" : data.etv_found_rank;
+			data.etv_found_rank == undefined ? "N/A" : data.etv_found_rank + rankSuffix(data.etv_found_rank);
 	});
 
 	//##########################
@@ -1141,6 +1149,18 @@ function manageCheckboxSetting(key, def = null) {
 		const element = document.querySelector(`input[name='${keyE}']`);
 		element.click();
 	}.bind(keyE);
+}
+
+//Return the suffix for the rank (st, nd, rd, th)
+function rankSuffix(number) {
+	if (number % 10 == 1 && number % 100 != 11) {
+		return "st";
+	} else if (number % 10 == 2 && number % 100 != 12) {
+		return "nd";
+	} else if (number % 10 == 3 && number % 100 != 13) {
+		return "rd";
+	}
+	return "th";
 }
 
 export { initiateSettings };
