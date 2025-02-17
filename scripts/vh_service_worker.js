@@ -442,11 +442,27 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
 			if (list === "Hide") {
 				const arrHide = await Settings.get("general.hideKeywords");
-				const newArrHide = [...arrHide, newKeyword];
+				let newArrHide = [...arrHide, newKeyword];
+
+				//Sort the list
+				newArrHide.sort((a, b) => {
+					if (a.contains.toLowerCase() < b.contains.toLowerCase()) return -1;
+					if (a.contains.toLowerCase() > b.contains.toLowerCase()) return 1;
+					return 0;
+				});
+
 				Settings.set("general.hideKeywords", newArrHide);
 			} else if (list === "Highlight") {
 				const arrHighlight = await Settings.get("general.highlightKeywords");
-				const newArrHighlight = [...arrHighlight, newKeyword];
+				let newArrHighlight = [...arrHighlight, newKeyword];
+
+				//Sort the list
+				newArrHighlight.sort((a, b) => {
+					if (a.contains.toLowerCase() < b.contains.toLowerCase()) return -1;
+					if (a.contains.toLowerCase() > b.contains.toLowerCase()) return 1;
+					return 0;
+				});
+
 				Settings.set("general.highlightKeywords", newArrHighlight);
 			}
 		}
