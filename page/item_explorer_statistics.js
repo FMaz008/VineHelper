@@ -106,59 +106,68 @@ Chart.register({
 			// Create canvas element for the chart
 			const canvas = document.createElement("canvas");
 			document.getElementById("vh-drop-stats").appendChild(canvas);
+			generateGraph(canvas, data.drop_stats);
 
-			// When creating the chart, store the original dates
-			const dates = data.drop_stats.map((d) => new Date(d.hour_slot));
-			const chart = new Chart(canvas, {
-				type: "bar",
-				data: {
-					labels: data.drop_stats.map((d) => {
-						const date = new Date(d.hour_slot);
-						return date.toLocaleString("en-US", { weekday: "long" }) + " " + date.getHours() + ":00";
-					}),
-					_source_dates: dates, // Store the original dates here
-					datasets: [
-						{
-							label: "Items per Hour",
-							data: data.drop_stats.map((d) => d.item_count),
-							tension: 0.1,
-						},
-					],
-				},
-				options: {
-					responsive: true,
-					scales: {
-						y: {
-							beginAtZero: true,
-						},
-						x: {
-							grid: {
-								display: false,
-							},
-							ticks: {
-								callback: function (value, index) {
-									const date = new Date(data.drop_stats[index].hour_slot);
-									return (
-										date.toLocaleString("en-US", { weekday: "short" }) +
-										" " +
-										date.getHours() +
-										":00"
-									);
-								},
-							},
-						},
-					},
-					plugins: {
-						legend: {
-							display: true,
-						},
-						customBackground: true, // Enable the custom background plugin
-					},
-				},
-			});
+			const canvas2 = document.createElement("canvas");
+			document.getElementById("vh-drop-stats-rfy").appendChild(canvas2);
+			generateGraph(canvas2, data.drop_stats_rfy);
+
+			const canvas3 = document.createElement("canvas");
+			document.getElementById("vh-drop-stats-afa").appendChild(canvas3);
+			generateGraph(canvas3, data.drop_stats_afa);
+
+			const canvas4 = document.createElement("canvas");
+			document.getElementById("vh-drop-stats-ai").appendChild(canvas4);
+			generateGraph(canvas4, data.drop_stats_ai);
 		});
 })();
 
+function generateGraph(canvas, data) {
+	// When creating the chart, store the original dates
+	const dates = data.map((d) => new Date(d.hour_slot));
+	const chart = new Chart(canvas, {
+		type: "bar",
+		data: {
+			labels: data.map((d) => {
+				const date = new Date(d.hour_slot);
+				return date.toLocaleString("en-US", { weekday: "long" }) + " " + date.getHours() + ":00";
+			}),
+			_source_dates: dates, // Store the original dates here
+			datasets: [
+				{
+					label: "Items per Hour",
+					data: data.map((d) => d.item_count),
+					tension: 0.1,
+				},
+			],
+		},
+		options: {
+			responsive: true,
+			scales: {
+				y: {
+					beginAtZero: true,
+				},
+				x: {
+					grid: {
+						display: false,
+					},
+					ticks: {
+						callback: function (value, index) {
+							const date = new Date(data[index].hour_slot);
+							return date.toLocaleString("en-US", { weekday: "short" }) + " " + date.getHours() + ":00";
+						},
+					},
+				},
+			},
+			plugins: {
+				legend: {
+					display: true,
+				},
+				customBackground: true, // Enable the custom background plugin
+			},
+		},
+	});
+}
 function displayError(message) {
 	document.getElementById("vh-item-explorer-content").innerHTML = "<div class='notice'>" + message + "</div>";
 }
