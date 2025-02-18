@@ -709,6 +709,10 @@ class NotificationMonitor {
 
 				if (val !== false) {
 					//We got a keyword match, highlight the item
+					const technicalBtn = document.querySelector("#vh-reason-link-" + asin + ">div");
+					if (technicalBtn) {
+						technicalBtn.dataset.highlightkw = val;
+					}
 					this.#highlightedItemFound(notif, Settings.get("notification.monitor.highlight.sound") != "0");
 				} else if (Settings.get("notification.hideList")) {
 					//Check if we need to hide the item
@@ -1317,8 +1321,8 @@ class NotificationMonitor {
 				etv_max,
 				queue,
 				KW,
-				BlurKW,
 				KWsMatch,
+				BlurKW,
 				BlurKWsMatch,
 				is_parent_asin,
 				enrollment_guid,
