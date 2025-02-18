@@ -108,6 +108,10 @@ Chart.register({
 			document.getElementById("vh-drop-stats").appendChild(canvas);
 			generateGraph(canvas, data.drop_stats);
 
+			const canvas5 = document.createElement("canvas");
+			document.getElementById("vh-drop-stats-stacked").appendChild(canvas5);
+			generateStackedGraph(canvas5, data.drop_stats_rfy, data.drop_stats_afa, data.drop_stats_ai);
+
 			const canvas2 = document.createElement("canvas");
 			document.getElementById("vh-drop-stats-rfy").appendChild(canvas2);
 			generateGraph(canvas2, data.drop_stats_rfy);
@@ -123,6 +127,10 @@ Chart.register({
 })();
 
 function generateGraph(canvas, data) {
+	if (!data) {
+		console.error("No data for graph");
+		return;
+	}
 	// When creating the chart, store the original dates
 	const dates = data.map((d) => new Date(d.hour_slot));
 	const chart = new Chart(canvas, {
@@ -168,6 +176,76 @@ function generateGraph(canvas, data) {
 		},
 	});
 }
+
+function generateStackedGraph(canvas, dataRFY, dataAFA, dataAI) {
+	if (!dataRFY || !dataAFA || !dataAI) {
+		console.error("No data for graph");
+		return;
+	}
+	// When creating the chart, store the original dates
+	const dates = dataRFY.map((d) => new Date(d.hour_slot));
+	const chart = new Chart(canvas, {
+		type: "bar",
+		data: {
+			labels: dataRFY.map((d) => {
+				const date = new Date(d.hour_slot);
+				return date.toLocaleString("en-US", { weekday: "long" }) + " " + date.getHours() + ":00";
+			}),
+			_source_dates: dates, // Store the original dates here
+			datasets: [
+				{
+					label: "AI Items",
+					data: dataAI.map((d) => d.item_count),
+					backgroundColor: "rgba(75, 192, 192, 0.8)",
+					borderColor: "rgb(75, 192, 192)",
+					borderWidth: 1,
+				},
+				{
+					label: "AFA Items",
+					data: dataAFA.map((d) => d.item_count),
+					backgroundColor: "rgba(54, 162, 235, 0.8)",
+					borderColor: "rgb(54, 162, 235)",
+					borderWidth: 1,
+				},
+				{
+					label: "RFY Items",
+					data: dataRFY.map((d) => d.item_count),
+					backgroundColor: "rgba(255, 99, 132, 0.8)",
+					borderColor: "rgb(255, 99, 132)",
+					borderWidth: 1,
+				},
+			],
+		},
+		options: {
+			responsive: true,
+			scales: {
+				y: {
+					beginAtZero: true,
+					stacked: true,
+				},
+				x: {
+					grid: {
+						display: false,
+					},
+					stacked: true,
+					ticks: {
+						callback: function (value, index) {
+							const date = new Date(dataRFY[index].hour_slot);
+							return date.toLocaleString("en-US", { weekday: "short" }) + " " + date.getHours() + ":00";
+						},
+					},
+				},
+			},
+			plugins: {
+				legend: {
+					display: true,
+				},
+				customBackground: true, // Enable the custom background plugin
+			},
+		},
+	});
+}
+
 function displayError(message) {
 	document.getElementById("vh-item-explorer-content").innerHTML = "<div class='notice'>" + message + "</div>";
 }

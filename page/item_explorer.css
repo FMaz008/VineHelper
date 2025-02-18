@@ -1,6 +1,7 @@
 body {
 	background-image: url("/resource/image/logo.png");
 	background-repeat: no-repeat;
+	background-attachment: fixed;
 	background-size: 1000px;
 	background-position-x: -750px;
 	background-blend-mode: lighten;
