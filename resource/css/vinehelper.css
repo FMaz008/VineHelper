@@ -482,8 +482,12 @@ div#account-extra-stats {
 	border-top-right-radius: 0px !important;
 	border-bottom-left-radius: 5px;
 	border-bottom-right-radius: 5px;
-	border: 2px solid white !important;
+	border: 0px !important;
 	border-top: 3px solid var(--tab-border-active) !important;
+}
+
+.vh-upsidedown-tabs li.active {
+	padding: 5px 10px;
 }
 
 .vh-tabs li.active {

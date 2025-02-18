@@ -256,6 +256,7 @@ function initTabs(tabSelector, tabContainerSelector) {
 	//Bind the click event for the tabs
 	document.querySelectorAll(`${tabSelector} > ul li`).forEach(function (item) {
 		item.onclick = function (event) {
+			event.preventDefault();
 			const currentTab = this.querySelector("a").href.split("#").pop();
 			selectTab(currentTab, tabSelector, tabContainerSelector);
 			this.classList.add("active");
