@@ -15,8 +15,7 @@ label {
 }
 
 #tabs-index.vh-tabs ul li {
-	padding: 4px 0px;
-	width: 80px;
+	padding: 4px 10px;
 }
 #tabs-content .tab {
 	width: 350px;

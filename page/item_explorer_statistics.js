@@ -57,6 +57,8 @@ Chart.register({
 });
 
 (async () => {
+	initTabs("#tabs-index", "#tabs-content");
+	initTabs("#tabs-index2", "#tabs-content2");
 	await Settings.waitForLoad();
 
 	//Check if the membership is valid
@@ -248,4 +250,32 @@ function generateStackedGraph(canvas, dataRFY, dataAFA, dataAI) {
 
 function displayError(message) {
 	document.getElementById("vh-item-explorer-content").innerHTML = "<div class='notice'>" + message + "</div>";
+}
+
+function initTabs(tabSelector, tabContainerSelector) {
+	//Bind the click event for the tabs
+	document.querySelectorAll(`${tabSelector} > ul li`).forEach(function (item) {
+		item.onclick = function (event) {
+			const currentTab = this.querySelector("a").href.split("#").pop();
+			selectTab(currentTab, tabSelector, tabContainerSelector);
+			this.classList.add("active");
+			return false;
+		};
+	});
+	//Set the first tab as active
+	document.querySelector(`${tabSelector} > ul li:first-child`).click();
+}
+
+function selectTab(selectedTab, tabSelector, tabContainerSelector) {
+	//Hide all tabs
+	document.querySelectorAll(`${tabContainerSelector} .tab`).forEach(function (item) {
+		item.style.display = "none";
+	});
+
+	document.querySelectorAll(`${tabSelector} > ul li`).forEach(function (item) {
+		item.classList.remove("active");
+	});
+
+	//Display the current tab
+	document.querySelector("#" + selectedTab).style.display = "block";
 }

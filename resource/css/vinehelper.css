@@ -474,12 +474,27 @@ div#account-extra-stats {
 	padding: 4px 10px;
 	text-align: center;
 }
+.vh-upsidedown-tabs {
+	align-items: flex-end;
+}
+.vh-upsidedown-tabs li {
+	border-top-left-radius: 0px !important;
+	border-top-right-radius: 0px !important;
+	border-bottom-left-radius: 5px;
+	border-bottom-right-radius: 5px;
+	border: 2px solid white !important;
+	border-top: 3px solid var(--tab-border-active) !important;
+}
 
 .vh-tabs li.active {
 	background: var(--button-overlay), var(--tab-border-active);
 	border: 2px solid var(--tab-border-active);
 	border-bottom: 3px solid var(--tab-border-active);
 	justify-content: end;
+}
+
+.vh-upsidedown-tabs li.active {
+	border-top: 3px solid var(--tab-border-active) !important;
 }
 
 .vh-tabs li > a {

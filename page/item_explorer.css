@@ -125,3 +125,15 @@ body {
 	color: white;
 	border-color: #007bff;
 }
+
+/* Upside down tabs */
+
+#tabs-content,
+#tabs-content2 {
+	border: 1px solid black;
+	padding: 5px;
+}
+
+.spacer {
+	height: 20px;
+}

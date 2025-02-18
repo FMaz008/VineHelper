@@ -1,8 +1,10 @@
-<html>
+<html class="theme-default">
 	<head>
 		<title>VHIE</title>
 		<link rel="stylesheet" type="text/css" href="../resource/css/icon.css" />
 		<link rel="stylesheet" type="text/css" href="../page/item_explorer.css" />
+		<link rel="stylesheet" type="text/css" href="../resource/css/main.css" />
+		<link rel="stylesheet" type="text/css" href="../resource/css/vinehelper.css" />
 		<script src="../page/item_explorer_statistics.js" type="module"></script>
 	</head>
 	<body>
@@ -20,20 +22,50 @@
 		</table>
 		<div id="vh-item-explorer-content">
 			<div id="vh-container" style="width: 800px; margin: 0 auto">
-				<h3>Drop statistics for the last 7 days - True Total (including unknown queue)</h3>
-				<div id="vh-drop-stats"></div>
+				<div id="tabs-content2">
+					<div>
+						<div id="tabs-stacked" class="tab">
+							<h3>Drop statistics for the last 7 days - Total Stacked</h3>
+							<div id="vh-drop-stats-stacked"></div>
+						</div>
+						<div id="tabs-total" class="tab">
+							<h3>Drop statistics for the last 7 days - True Total (including unknown queue)</h3>
+							<div id="vh-drop-stats"></div>
+						</div>
+					</div>
+				</div>
+				<div id="tabs-index2" style="height: auto" class="vh-tabs vh-upsidedown-tabs">
+					<ul>
+						<li class="active"><a href="#tabs-stacked">Stacked</a></li>
+						<li><a href="#tabs-total">True Total</a></li>
+					</ul>
+				</div>
 
-				<h3>Drop statistics for the last 7 days - Total Stacked</h3>
-				<div id="vh-drop-stats-stacked"></div>
+				<div class="spacer"></div>
 
-				<h3>Drop statistics for the last 7 days - RFY</h3>
-				<div id="vh-drop-stats-rfy"></div>
-
-				<h3>Drop statistics for the last 7 days - AFA</h3>
-				<div id="vh-drop-stats-afa"></div>
-
-				<h3>Drop statistics for the last 7 days - AI</h3>
-				<div id="vh-drop-stats-ai"></div>
+				<div id="tabs-content">
+					<div>
+						<div id="tabs-rfy" class="tab">
+							<h3>Drop statistics for the last 7 days - RFY</h3>
+							<div id="vh-drop-stats-rfy"></div>
+						</div>
+						<div id="tabs-afa" class="tab">
+							<h3>Drop statistics for the last 7 days - AFA</h3>
+							<div id="vh-drop-stats-afa"></div>
+						</div>
+						<div id="tabs-ai" class="tab">
+							<h3>Drop statistics for the last 7 days - AI</h3>
+							<div id="vh-drop-stats-ai"></div>
+						</div>
+					</div>
+				</div>
+				<div id="tabs-index" style="height: auto" class="vh-tabs vh-upsidedown-tabs">
+					<ul>
+						<li class="active"><a href="#tabs-rfy">RFY</a></li>
+						<li><a href="#tabs-afa">AFA</a></li>
+						<li><a href="#tabs-ai">AI</a></li>
+					</ul>
+				</div>
 			</div>
 		</div>
 	</body>
