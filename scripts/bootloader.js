@@ -172,7 +172,10 @@ async function init() {
 	}
 
 	if (Settings.get("general.blindLoading")) {
-		document.querySelector("#vvp-items-grid-container").style.display = "none";
+		const gridContainer = document.querySelector("#vvp-items-grid-container");
+		if (gridContainer) {
+			gridContainer.style.display = "none";
+		}
 	}
 
 	if (Settings.get("general.listView")) {
