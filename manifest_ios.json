@@ -50,6 +50,7 @@
 				"node_modules/vine-styling/desktop/*",
 				"node_modules/vine-styling/mobile/*",
 				"node_modules/socket.io/client-dist/*",
+				"node_modules/canvas-confetti/*",
 				"scripts/inj.js",
 				"scripts/*"
 			],

@@ -20,7 +20,8 @@ const pkg = require("./package.json");
 		"./dist/node_modules/socket.io/client-dist/socket.io.min.js.map"
 	);
 	fs.cpSync("./node_modules/vine-styling/", "./dist/node_modules/vine-styling/", { recursive: true });
-	fs.cpSync("./node_modules/@kurkle\\color/", "./dist/node_modules/@kurkle\\color/", { recursive: true });
+	fs.cpSync("./node_modules/@kurkle/color/", "./dist/node_modules/@kurkle\\color/", { recursive: true });
+	fs.cpSync("./node_modules/canvas-confetti/", "./dist/node_modules/canvas-confetti/", { recursive: true });
 	const platforms = ["firefox", "chrome", "ios"];
 	for (const platform of platforms) {
 		console.log(`Building ${platform} extension...`);

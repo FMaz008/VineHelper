@@ -61,6 +61,7 @@
 				"node_modules/vine-styling/mobile/*",
 				"node_modules/socket.io/client-dist/*",
 				"node_modules/stream-browserify/*",
+				"node_modules/canvas-confetti/*",
 				"scripts/inj.js",
 				"scripts/*",
 				"plugins/*"

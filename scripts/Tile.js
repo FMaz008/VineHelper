@@ -15,6 +15,8 @@ import { YMDHiStoISODate } from "./DateHelper.js";
 import { getTileByAsin, updateTileCounts } from "./Grid.js";
 import { unescapeHTML } from "./StringHelper.js";
 
+import "../node_modules/canvas-confetti/dist/confetti.browser.js";
+
 class Tile {
 	#tileDOM;
 	#grid;
@@ -140,6 +142,60 @@ class Tile {
 
 		//Insert newCorner as the first child of the container
 		container.insertBefore(newCorner, container.firstChild);
+
+		if (Settings.get("general.discoveryFirst")) {
+			logger.add("Tile: markAsDiscovered: discoveryFirst");
+			//Move the highlighted item to the top of the grid
+			this.getGrid().getDOM().insertBefore(this.getDOM(), this.getGrid().getDOM().firstChild);
+		}
+
+		//Confetti animation
+		//Wait 1 seconds for the item to take their final position
+		setTimeout(() => {
+			this.explodeConfettiFromDiv(this.getDOM());
+		}, 1000);
+	}
+
+	explodeConfettiFromDiv(div) {
+		if (!div) return;
+
+		const rect = div.getBoundingClientRect();
+
+		if (rect.top == 0 && rect.left == 0) {
+			return; //div not visible.
+		}
+
+		// Create confetti from three sides
+		const positions = [
+			// Left side
+			{ x: rect.left / window.innerWidth, y: rect.top / window.innerHeight },
+			{ x: rect.left / window.innerWidth, y: (rect.top + rect.height / 2) / window.innerHeight },
+			{ x: rect.left / window.innerWidth, y: rect.bottom / window.innerHeight },
+			// Top side
+			{ x: (rect.left + rect.width / 4) / window.innerWidth, y: rect.top / window.innerHeight },
+			{ x: (rect.left + rect.width / 2) / window.innerWidth, y: rect.top / window.innerHeight },
+			{ x: (rect.left + (rect.width * 3) / 4) / window.innerWidth, y: rect.top / window.innerHeight },
+			// Right side
+			{ x: rect.right / window.innerWidth, y: rect.top / window.innerHeight },
+			{ x: rect.right / window.innerWidth, y: (rect.top + rect.height / 2) / window.innerHeight },
+			{ x: rect.right / window.innerWidth, y: rect.bottom / window.innerHeight },
+		];
+
+		positions.forEach((pos) => {
+			confetti({
+				particleCount: 15, // Reduced particle count per origin point
+				spread: 45,
+				startVelocity: 15, // Reduced velocity for shorter distance
+				decay: 0.9, // Faster decay
+				gravity: 0.8, // Reduced gravity
+				ticks: 100, // Controls animation duration (~500ms)
+				origin: pos,
+				colors: ["#ff0", "#ff4500", "#ff1493", "#00ffff", "#00ff00"],
+				scalar: 0.8, // Smaller particles
+				drift: 0, // No sideways drift
+				disableForReducedMotion: true,
+			});
+		});
 	}
 
 	setDateAdded(timenow, mysqlDate) {

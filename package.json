@@ -25,6 +25,7 @@
 	"homepage": "https://github.com/FMaz008/VineHelper#readme",
 	"dependencies": {
 		"@kurkle/color": "^0.3.4",
+		"canvas-confetti": "^1.9.3",
 		"socket.io": "^4.8.0",
 		"vine-styling": "github:FMaz008/vine-styling.git#main"
 	},
