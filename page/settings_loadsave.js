@@ -234,6 +234,8 @@ async function initiateSettings() {
 	manageCheckboxSetting("general.tileSize.active");
 	manageCheckboxSetting("general.projectedAccountStatistics");
 	manageColorPicker("general.bookmarkColor");
+	manageCheckboxSetting("general.highlightColor.active");
+	manageColorPicker("general.highlightColor.color");
 	manageCheckboxSetting("general.zeroETVHighlight.active");
 	manageColorPicker("general.zeroETVHighlight.color");
 	manageCheckboxSetting("general.unknownETVHighlight.active");
@@ -251,6 +253,8 @@ async function initiateSettings() {
 	manageCheckboxSetting("notification.hideList");
 	manageCheckboxSetting("notification.monitor.hideDuplicateThumbnail");
 	manageCheckboxSetting("notification.reduce");
+	manageCheckboxSetting("notification.monitor.zeroETV.colorActive");
+	manageCheckboxSetting("notification.monitor.highlight.colorActive");
 	manageRadio("notification.monitor.openLinksInNewTab");
 
 	//Sliders
@@ -452,9 +456,7 @@ async function initiateSettings() {
 	}
 
 	//##TAB - KEYWORDS
-
 	manageCheckboxSetting("general.highlightKWFirst");
-	manageColorPicker("general.keywordHighlightColor");
 	manageKeywords("general.highlightKeywords");
 	manageKeywords("general.hideKeywords");
 	manageTextareaCSK("general.blurKeywords");

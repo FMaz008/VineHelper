@@ -283,8 +283,11 @@ class SettingsMgr {
 				hideSideCart: false,
 				hideCategoriesRFYAFA: false,
 				hideOptOutButton: false,
-				keywordHighlightColor: "#FFE815",
 				toolbarBackgroundColor: "#FFFFFF",
+				highlightColor: {
+					active: true,
+					color: "#FFE815",
+				},
 				zeroETVHighlight: {
 					active: true,
 					color: "#64af4b",
@@ -336,11 +339,13 @@ class SettingsMgr {
 					highlight: {
 						sound: "0",
 						volume: 1,
+						colorActive: true,
 						color: "#FFE815",
 					},
 					zeroETV: {
 						sound: "0",
 						volume: 1,
+						colorActive: true,
 						color: "#64af4b",
 					},
 					tileSize: {

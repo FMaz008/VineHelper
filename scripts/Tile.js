@@ -209,7 +209,8 @@ class Tile {
 
 	colorizeHighlight() {
 		const zeroETV = this.#tileDOM.dataset.zeroETV === "true" && Settings.get("general.zeroETVHighlight.active");
-		const highlight = this.#tileDOM.dataset.keywordHighlight === "true";
+		const highlight =
+			this.#tileDOM.dataset.keywordHighlight === "true" && Settings.get("general.highlightColor.active");
 		const unknownETV =
 			this.#tileDOM.dataset.unknownETV === "true" && Settings.get("general.unknownETVHighlight.active");
 
@@ -218,14 +219,14 @@ class Tile {
 
 		if (zeroETV && highlight) {
 			const color1 = Settings.get("general.zeroETVHighlight.color");
-			const color2 = Settings.get("general.keywordHighlightColor");
+			const color2 = Settings.get("general.highlightColor.color");
 			this.#tileDOM.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;
 		} else if (unknownETV && highlight) {
 			const color1 = Settings.get("general.unknownETVHighlight.color");
-			const color2 = Settings.get("general.keywordHighlightColor");
+			const color2 = Settings.get("general.highlightColor.color");
 			this.#tileDOM.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;
 		} else if (highlight) {
-			this.#tileDOM.style.backgroundColor = Settings.get("general.keywordHighlightColor");
+			this.#tileDOM.style.backgroundColor = Settings.get("general.highlightColor.color");
 		} else if (zeroETV) {
 			this.#tileDOM.style.backgroundColor = Settings.get("general.zeroETVHighlight.color");
 		} else if (unknownETV) {

@@ -829,12 +829,16 @@ class NotificationMonitor {
 		}
 
 		//Highlight for ETV
-		if (notif.dataset.typeHighlight == 1) {
+		const highlightColor = Settings.get("notification.monitor.highlight.colorActive");
+		const zeroETVColor = Settings.get("notification.monitor.zeroETV.colorActive");
+		if (notif.dataset.typeHighlight == 1 && highlightColor && zeroETVColor) {
 			const color1 = Settings.get("notification.monitor.zeroETV.color");
 			const color2 = Settings.get("notification.monitor.highlight.color");
 			notif.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;
 		} else {
-			notif.style.backgroundColor = Settings.get("notification.monitor.zeroETV.color");
+			if (zeroETVColor) {
+				notif.style.backgroundColor = Settings.get("notification.monitor.zeroETV.color");
+			}
 		}
 
 		//Move the notification to the top
@@ -857,7 +861,10 @@ class NotificationMonitor {
 		}
 
 		//Highlight for Highlighted item
-		notif.style.backgroundColor = Settings.get("notification.monitor.highlight.color");
+		const highlightColor = Settings.get("notification.monitor.highlight.colorActive");
+		if (highlightColor) {
+			notif.style.backgroundColor = Settings.get("notification.monitor.highlight.color");
+		}
 
 		//Move the notification to the top
 		if (!this.#fetchingRecentItems) {
