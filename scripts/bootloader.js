@@ -171,6 +171,10 @@ async function init() {
 		return; //Do not initialize the page as normal
 	}
 
+	if (Settings.get("general.blindLoading")) {
+		document.querySelector("#vvp-items-grid-container").style.display = "none";
+	}
+
 	if (Settings.get("general.listView")) {
 		logger.add("BOOT: Loading listView stylesheet");
 		loadStyleSheet("resource/css/listView.css");
@@ -902,12 +906,7 @@ async function fetchProductsDatav5() {
 		.then((response) => response.json())
 		.then(serverProductsResponse)
 		.catch(function () {
-			//error =>  console.log(error);
-			/*
-			content.items.forEach(function (val, key) {
-				let t = getTileByAsin(val.asin); //server offline
-			});
-			*/
+			document.querySelector("#vvp-items-grid-container").style.display = "block";
 		});
 }
 
@@ -917,6 +916,7 @@ async function serverProductsResponse(data) {
 	logger.add("FETCH: Response received from VineHelper's server...");
 	if (data["invalid_uuid"] == true) {
 		console.error("Invalid UUID");
+		document.querySelector("#vvp-items-grid-container").style.display = "block";
 		//Do no complete this execution
 		return false;
 	}
@@ -1040,6 +1040,8 @@ async function serverProductsResponse(data) {
 	logger.add("Done updating products");
 	productUpdated = true;
 	hookMgr.hookExecute("productsUpdated", null);
+
+	document.querySelector("#vvp-items-grid-container").style.display = "block";
 }
 
 //#########################

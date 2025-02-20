@@ -234,6 +234,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("general.tileSize.active");
 	manageCheckboxSetting("general.projectedAccountStatistics");
 	manageCheckboxSetting("general.discoveryFirst");
+	manageCheckboxSetting("general.blindLoading");
 	manageColorPicker("general.bookmarkColor");
 	manageCheckboxSetting("general.highlightColor.active");
 	manageColorPicker("general.highlightColor.color");
