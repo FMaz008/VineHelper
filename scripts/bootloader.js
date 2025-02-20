@@ -205,9 +205,13 @@ async function init() {
 function serviceWorkerPing() {
 	//Create a timer to ping the service worker every minute
 	setInterval(() => {
-		chrome.runtime.sendMessage({
-			action: "ping",
-		});
+		try {
+			chrome.runtime.sendMessage({
+				action: "ping",
+			});
+		} catch (error) {
+			//Extension context is invaliated, but do nothing.
+		}
 	}, 60 * 1000);
 }
 
