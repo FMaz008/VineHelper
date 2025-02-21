@@ -886,7 +886,10 @@ async function generateTile(obj) {
 async function fetchProductsDatav5() {
 	const arrProductsData = getAllProductsData();
 	if (arrProductsData.length == 0) {
-		document.querySelector("#vvp-items-grid-container").style.display = "block";
+		const gridContainer = document.querySelector("#vvp-items-grid-container");
+		if (gridContainer) {
+			gridContainer.style.display = "block";
+		}
 		return false; //No product on this page
 	}
 

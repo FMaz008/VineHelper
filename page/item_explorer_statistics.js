@@ -145,7 +145,7 @@ function generateGraph(canvas, data) {
 			_source_dates: dates, // Store the original dates here
 			datasets: [
 				{
-					label: "Items per Hour",
+					label: "Items",
 					data: data.map((d) => d.item_count),
 					tension: 0.1,
 				},
