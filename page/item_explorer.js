@@ -208,7 +208,7 @@ function serverProductsResponse(data) {
 	const stats = document.createElement("div");
 	stats.id = "vh-item-explorer-stats";
 	stats.style.fontSize = "8pt;";
-	stats.innerText = `Query time: ${data.query_time}ms`;
+	stats.innerText = `Query time: ${data.query_time}ms - Result(s): ${data.total_items}`;
 	container.appendChild(stats);
 
 	secondsLeft = parseInt(data.wait_time);
