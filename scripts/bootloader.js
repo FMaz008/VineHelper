@@ -909,15 +909,27 @@ async function fetchProductsDatav5() {
 		items: arrProductsData,
 	};
 
+	const controller = new AbortController();
+	const timeoutId = setTimeout(() => controller.abort(), 10000); // timeout in ms.
+
 	fetch(env.getAPIUrl(), {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(content),
+		signal: controller.signal,
 	})
 		.then((response) => response.json())
 		.then(serverProductsResponse)
-		.catch(function () {
+		.catch(function (err) {
+			if (err.name === "AbortError") {
+				logger.add("FETCH: Server request timed out after 10 seconds");
+			} else {
+				logger.add("FETCH: Server request failed");
+			}
 			document.querySelector("#vvp-items-grid-container").style.display = "block";
+		})
+		.finally(() => {
+			clearTimeout(timeoutId);
 		});
 }
 
