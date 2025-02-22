@@ -109,7 +109,6 @@ function generateUrl() {
 	const asin = document.getElementById("search-asin").value;
 	const title = document.getElementById("search-title").value;
 	const orderBy = document.getElementById("vh-order-by-select").value;
-	const orderBy2 = document.getElementById("vh-order-by-select2").value;
 	const etvMin = document.getElementById("search-etv-min").value;
 	const etvMax = document.getElementById("search-etv-max").value;
 	const queue = document.getElementById("vh-queue-select").value;
@@ -121,8 +120,6 @@ function generateUrl() {
 		encodeURI(title) +
 		"&orderBy=" +
 		encodeURI(orderBy) +
-		"&orderBy2=" +
-		encodeURI(orderBy2) +
 		"&etvMin=" +
 		encodeURI(etvMin) +
 		"&etvMax=" +
@@ -138,7 +135,6 @@ function loadFormItemsStateFromURL() {
 	const asin = document.getElementById("search-asin");
 	const title = document.getElementById("search-title");
 	const orderBy = document.getElementById("vh-order-by-select");
-	const orderBy2 = document.getElementById("vh-order-by-select2");
 	const etvMin = document.getElementById("search-etv-min");
 	const etvMax = document.getElementById("search-etv-max");
 	const queue = document.getElementById("vh-queue-select");
@@ -149,7 +145,6 @@ function loadFormItemsStateFromURL() {
 		asin.value = urlParams.get("asin");
 		title.value = urlParams.get("title");
 		orderBy.value = urlParams.get("orderBy");
-		orderBy2.value = urlParams.get("orderBy2");
 		etvMin.value = urlParams.get("etvMin");
 		etvMax.value = urlParams.get("etvMax");
 		queue.value = urlParams.get("queue");
@@ -162,7 +157,6 @@ function queryDB(page = 1) {
 	const asin = document.getElementById("search-asin").value;
 	const title = document.getElementById("search-title").value;
 	const orderBy = document.getElementById("vh-order-by-select").value;
-	const orderBy2 = document.getElementById("vh-order-by-select2").value;
 	const queue = document.getElementById("vh-queue-select").value;
 	const etvMin = document.getElementById("search-etv-min").value;
 	const etvMax = document.getElementById("search-etv-max").value;
@@ -177,7 +171,6 @@ function queryDB(page = 1) {
 		asin: asin,
 		title: title,
 		orderBy: orderBy,
-		orderBy2: orderBy2,
 		queue: queue,
 		page: page,
 		etvMin: etvMin,
