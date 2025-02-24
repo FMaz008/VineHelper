@@ -266,6 +266,7 @@ class Toolbar {
 	processHighlight(etv1, etv2) {
 		logger.add("Toolbar: processHighlight");
 
+		let checkHideList = false;
 		if (Settings.get("general.highlightKeywords")?.length > 0) {
 			let match = keywordMatch(Settings.get("general.highlightKeywords"), this.#tile.getTitle(), etv1, etv2);
 			if (!match) {
@@ -273,16 +274,7 @@ class Toolbar {
 				//No match now, remove the highlight
 				this.#tile.getDOM().dataset.keywordHighlight = false;
 
-				//Check if the item should be hidden
-				if (Settings.get("hiddenTab.active") && Settings.get("general.hideKeywords")?.length > 0) {
-					match = keywordMatch(Settings.get("general.hideKeywords"), this.#tile.getTitle(), etv1, etv2);
-					if (match) {
-						logger.add("Toolbar: processHide: hide match");
-						this.#tile.hideTile(false, false, true); //Do not save, skip the hidden manager: just move the tile.
-
-						document.getElementById("vh-hide-link-" + this.#tile.getAsin()).style.display = "none";
-					}
-				}
+				checkHideList = true;
 			} else {
 				logger.add("Toolbar: processHighlight: match");
 				//Match found, keep the highlight
@@ -295,6 +287,22 @@ class Toolbar {
 						.getGrid()
 						.getDOM()
 						.insertBefore(this.#tile.getDOM(), this.#tile.getGrid().getDOM().firstChild);
+				}
+			}
+		} else {
+			this.#tile.getDOM().dataset.keywordHighlight = false;
+			checkHideList = true;
+		}
+
+		if (checkHideList) {
+			//Check if the item should be hidden
+			if (Settings.get("hiddenTab.active") && Settings.get("general.hideKeywords")?.length > 0) {
+				match = keywordMatch(Settings.get("general.hideKeywords"), this.#tile.getTitle(), etv1, etv2);
+				if (match) {
+					logger.add("Toolbar: processHide: hide match");
+					this.#tile.hideTile(false, false, true); //Do not save, skip the hidden manager: just move the tile.
+
+					document.getElementById("vh-hide-link-" + this.#tile.getAsin()).style.display = "none";
 				}
 			}
 		}
