@@ -267,8 +267,9 @@ class Toolbar {
 		logger.add("Toolbar: processHighlight");
 
 		let checkHideList = false;
+		let match;
 		if (Settings.get("general.highlightKeywords")?.length > 0) {
-			let match = keywordMatch(Settings.get("general.highlightKeywords"), this.#tile.getTitle(), etv1, etv2);
+			match = keywordMatch(Settings.get("general.highlightKeywords"), this.#tile.getTitle(), etv1, etv2);
 			if (!match) {
 				logger.add("Toolbar: processHighlight: no match");
 				//No match now, remove the highlight
