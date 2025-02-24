@@ -41,9 +41,6 @@ async function loadStyleSheets() {
 	if (Settings.get("thorvarium.removeAssociateHeader"))
 		loadStyleSheet("node_modules/vine-styling/desktop/remove-associate-header.css");
 
-	if (Settings.get("thorvarium.moreDescriptionText"))
-		loadStyleSheet("node_modules/vine-styling/desktop/more-description-text.css");
-
 	if (Settings.get("thorvarium.darktheme")) loadStyleSheet("node_modules/vine-styling/desktop/dark-theme.css");
 
 	if (Settings.get("thorvarium.ETVModalOnTop"))

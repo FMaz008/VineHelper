@@ -524,7 +524,6 @@ async function initiateSettings() {
 	manageCheckboxSetting("thorvarium.removeHeader");
 	manageCheckboxSetting("thorvarium.removeFooter");
 	manageCheckboxSetting("thorvarium.removeAssociateHeader");
-	manageCheckboxSetting("thorvarium.moreDescriptionText");
 	manageCheckboxSetting("thorvarium.darktheme");
 	manageCheckboxSetting("thorvarium.ETVModalOnTop");
 	manageCheckboxSetting("thorvarium.categoriesWithEmojis");
