@@ -157,6 +157,13 @@ window.fetch = async (...args) => {
 					}
 				}
 
+				//& without a space after it will crash, add a space after it.
+				newValue = variation.dimensions[key].replace(/[&]([^\s])/g, "& $1");
+				if (newValue !== variation.dimensions[key]) {
+					variation.dimensions[key] = newValue;
+					fixed++;
+				}
+
 				//Escape the special characters
 				newValue = variation.dimensions[key].replace(/[/\\()[\]{}]/g, "\\$&");
 				if (newValue !== variation.dimensions[key]) {
