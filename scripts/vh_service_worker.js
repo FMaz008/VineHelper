@@ -112,15 +112,15 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 
 chrome.notifications.onClicked.addListener((notificationId) => {
 	const { asin, queue, is_parent_asin, enrollment_guid, search } = notificationsData[notificationId];
+	let url;
 	if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
-		chrome.tabs.create({
-			url: `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`,
-		});
+		url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`;
 	} else {
-		chrome.tabs.create({
-			url: `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search}`,
-		});
+		url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search}`;
 	}
+	chrome.tabs.create({
+		url: url,
+	});
 });
 
 //Websocket
@@ -148,7 +148,7 @@ function connectWebSocket() {
 
 	// On connection success
 	socket.on("connect", () => {
-		console.log(`${new Date().toISOString().replace("T", " ").slice(0, 19)} - WS Connected`);
+		console.log(`${new Date().toLocaleString()} - WS Connected`);
 		sendMessageToAllTabs({ type: "wsOpen" }, "Socket.IO server connected.");
 	});
 
@@ -204,20 +204,18 @@ function connectWebSocket() {
 
 	socket.on("connection_error", (error) => {
 		sendMessageToAllTabs({ type: "wsError", error: error }, "Socket.IO connection error");
-		console.error(
-			`${new Date().toISOString().replace("T", " ").slice(0, 19)} - Socket.IO connection error: ${error}`
-		);
+		console.error(`${new Date().toLocaleString()} - Socket.IO connection error: ${error}`);
 	});
 
 	// On disconnection
 	socket.on("disconnect", () => {
-		console.log(`${new Date().toISOString().replace("T", " ").slice(0, 19)} - WS Disconnected`);
+		console.log(`${new Date().toLocaleString()} - WS Disconnected`);
 		sendMessageToAllTabs({ type: "wsClosed" }, "Socket.IO server disconnected.");
 	});
 
 	// On error
 	socket.on("connect_error", (error) => {
-		console.error(`${new Date().toISOString().replace("T", " ").slice(0, 19)} - Socket.IO error: ${error.message}`);
+		console.error(`${new Date().toLocaleString()} - Socket.IO error: ${error.message}`);
 	});
 }
 
@@ -322,10 +320,21 @@ function pushNotification(asin, queue, is_parent_asin, enrollment_guid, search_s
 					title: title,
 					message: description,
 					priority: 2,
+					silent: false,
+					//requireInteraction: true
 				},
 				(notificationId) => {
 					if (chrome.runtime.lastError) {
 						console.error("Notification error:", chrome.runtime.lastError);
+					} else {
+						// Verify the notification exists
+						chrome.notifications.getAll((notifications) => {
+							if (!notifications[notificationId]) {
+								console.warn(
+									`Notification ${notificationId} was created but not found in active notifications`
+								);
+							}
+						});
 					}
 				}
 			);
