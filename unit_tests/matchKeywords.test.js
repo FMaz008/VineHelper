@@ -188,3 +188,53 @@ test("Practical case 1", () => {
 		"Glitter Nude Press on Nails Medium Short Square Fake Nails with Sparkly Rhinestones Sliver Stripes Design Cute Short Coffin False Nails Bling Glue on Nails Acrylic Stick on Nails for Women 24Pcs (Sliver Glitter)";
 	expect(keywordMatch(arrKWs, str, null, null)).toBe(false);
 });
+
+test("ETV_max_on_ranged_values", () => {
+	const arrKWs = [
+		{ contains: "glue|tape", without: "case|patch(es)?|nails", etv_min: 0, etv_max: 0 },
+		{ contains: ".*TV.*", without: "", etv_min: "", etv_max: "500" },
+		{ contains: "ccc", without: "", etv_min: "", etv_max: "" },
+	];
+	const str = "TV";
+	expect(keywordMatch(arrKWs, str, 300, 700)).toBe(".*TV.*");
+});
+
+test("ETV_min_on_ranged_values", () => {
+	const arrKWs = [
+		{ contains: "glue|tape", without: "case|patch(es)?|nails", etv_min: 0, etv_max: 0 },
+		{ contains: ".*TV.*", without: "", etv_min: "500", etv_max: "" },
+		{ contains: "ccc", without: "", etv_min: "", etv_max: "" },
+	];
+	const str = "TV";
+	expect(keywordMatch(arrKWs, str, 300, 700)).toBe(".*TV.*");
+});
+
+test("ETV_min_max_on_ranged_values", () => {
+	const arrKWs = [
+		{ contains: "glue|tape", without: "case|patch(es)?|nails", etv_min: 0, etv_max: 0 },
+		{ contains: ".*TV.*", without: "", etv_min: "500", etv_max: "600" },
+		{ contains: "ccc", without: "", etv_min: "", etv_max: "" },
+	];
+	const str = "TV";
+	expect(keywordMatch(arrKWs, str, 300, 700)).toBe(".*TV.*");
+});
+
+test("ETV_max_out_of_range_values", () => {
+	const arrKWs = [
+		{ contains: "glue|tape", without: "case|patch(es)?|nails", etv_min: 0, etv_max: 0 },
+		{ contains: ".*TV.*", without: "", etv_min: "", etv_max: "200" },
+		{ contains: "ccc", without: "", etv_min: "", etv_max: "" },
+	];
+	const str = "TV";
+	expect(keywordMatch(arrKWs, str, 300, 700)).toBe(false);
+});
+
+test("ETV_min_out_of_range_values", () => {
+	const arrKWs = [
+		{ contains: "glue|tape", without: "case|patch(es)?|nails", etv_min: 0, etv_max: 0 },
+		{ contains: ".*TV.*", without: "", etv_min: "800", etv_max: "" },
+		{ contains: "ccc", without: "", etv_min: "", etv_max: "" },
+	];
+	const str = "TV";
+	expect(keywordMatch(arrKWs, str, 300, 700)).toBe(false);
+});
