@@ -74,7 +74,9 @@ class Pagination {
 		//Generate the last
 		if (LAST_PAGE > 1) {
 			for (let i = LAST_PAGE - END_PAGE_PADDING; i <= LAST_PAGE; i++) {
-				this.#addElement(pagination, this.#page(url, i, currentPage));
+				if (i > START_PAGE_PADDING) {
+					this.#addElement(pagination, this.#page(url, i, currentPage));
+				}
 			}
 		}
 

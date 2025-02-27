@@ -69,3 +69,8 @@ test("Pagination - 100 items, 5 items per page, current page 9", () => {
 	pagination.generatePagination("", 100, 5, 9);
 	expect(buffer).toBe("1...678[9]101112...20");
 });
+test("Pagination - 138 items, 36 items per page, current page 1", () => {
+	pagination.setStartPagePadding(4);
+	pagination.generatePagination("", 138, 36, 1);
+	expect(buffer).toBe("[1]234");
+});
