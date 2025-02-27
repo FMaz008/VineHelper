@@ -40,12 +40,16 @@ function keywordMatchReturnFullObject(keywords, title, etv_min = null, etv_max =
 			if (regex.test(title)) {
 				if (word.without == "" || !regex2.test(title)) {
 					if (word.etv_min == "" && word.etv_max == "") {
-						//There is ETV filtering defined, we have a match.
+						//There is no ETV filtering defined, we have a match.
 						return true;
 					} else {
-						//There is an ETV filtering defined, we need to satisfy it
-						if (word.etv_min == "" || (etv_min !== null && etv_min >= parseFloat(word.etv_min))) {
-							if (word.etv_max == "" || (etv_max !== null && etv_max <= parseFloat(word.etv_max))) {
+						//There is an ETV filtering defined, we need to satisfy it.
+						//etv_min and etv_max are the values returned by the server.
+						//word.etv_min and word.etv_max are from the user.
+						//For the user's ETV min, match if any variations match (compare against highest ETV, etv_max.)
+						//For the user's ETV max, match if any variations match (compare against lowest ETV, etv_min.)
+						if (word.etv_min == "" || (etv_max !== null && etv_max >= parseFloat(word.etv_min))) {
+							if (word.etv_max == "" || (etv_min !== null && etv_min <= parseFloat(word.etv_max))) {
 								return true;
 							}
 						}
