@@ -188,7 +188,7 @@ class HiddenListMgr {
 		if (isNaN(storageMaxSize)) {
 			return false;
 		}
-		if (storageMaxSize < 2 || storageMaxSize > 9) {
+		if (storageMaxSize < 1 || storageMaxSize > 9) {
 			return false;
 		}
 
@@ -224,7 +224,7 @@ class HiddenListMgr {
 
 		//Delete older items if the storage space is exceeded.
 		let bytes = await getStorageSizeFull();
-		const storageLimit = storageMaxSize * 1048576; // 9MB
+		const storageLimit = storageMaxSize * 1024 * 1024; // 9MB
 		const reduction = storageMaxSize > 1 ? 1 : 0.5; //If max is 1, only clear 0.5mb
 		const deletionThreshold = (storageMaxSize - reduction) * 1048576; // 8MB
 		if (bytes > storageLimit) {
@@ -234,7 +234,7 @@ class HiddenListMgr {
 			note.lifespan = 60;
 			note.content = `You've hidden so many items that your quota in the local storage has exceeded ${bytesToSize(
 				storageLimit
-			)}. To prevent issues, ~1MB of the oldest items are being deleted...`;
+			)}. To prevent issues, ~${reduction}MB of the oldest items are being deleted...`;
 			await Notifications.pushNotification(note);
 
 			//Give some breathing room for the notification to be displayed.
@@ -291,12 +291,12 @@ class HiddenListMgr {
 
 function getStorageSizeFull() {
 	return new Promise((resolve, reject) => {
-		chrome.storage.local.get(function (items) {
+		//chrome.storage.local.getBytesInUse(['hiddenItems'], function(bytes) {
+		chrome.storage.local.getBytesInUse(null, function (bytes) {
 			if (chrome.runtime.lastError) {
 				reject(new Error(chrome.runtime.lastError.message));
 			} else {
-				const storageSize = JSON.stringify(items).length;
-				resolve(storageSize);
+				resolve(bytes);
 			}
 		});
 	});
