@@ -82,7 +82,7 @@ class Template {
 
 class TemplateMgr {
 	static #instance = null;
-
+	#templatesLoaded = false;
 	constructor() {
 		//Singleton
 		if (TemplateMgr.#instance) {
@@ -103,10 +103,19 @@ class TemplateMgr {
 			return;
 		}
 		this.arrTemplate = data.arrTemplate;
+		this.#templatesLoaded = true;
 	}
 
 	async getTemplate(url) {
-		let content = this.arrTemplate.find((e) => e.url === url);
+		//Wait until the template are loaded from local storage
+		while (!this.#templatesLoaded) {
+			await new Promise((r) => setTimeout(r, 50));
+		}
+
+		//Search for the template in the memory
+		let content = this.arrTemplate.find((e) => {
+			return e.url === url;
+		});
 		if (content != null) {
 			logger.add("TEMPLATE: Loaded template " + url + " from memory.");
 			return content.prom;
