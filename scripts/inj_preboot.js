@@ -16,7 +16,7 @@
 			//with options === false (there are 2), and prevent the other listeners from being added
 			//as they cause resource usage issues when thousands of items are in the monitor
 			//and can't get garbage collected because they have listeners on them.
-			if (type == "click" && this == document) {
+			if (type == "click" && (this == document || this instanceof HTMLInputElement)) {
 				originalAddEventListener.call(this, type, listener, options);
 			}
 		};
