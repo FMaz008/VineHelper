@@ -142,17 +142,16 @@ body {
 	box-shadow: 4px 4px 6px rgba(0, 0, 0, 0.7);
 }
 
-
 /* Graphs grid display */
-.vh-graph-grid{
+.vh-graph-grid {
 	display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(800px, auto));
-    grid-column-gap: 20px;
+	grid-template-columns: repeat(auto-fill, minmax(1200px, auto));
+	grid-column-gap: 20px;
 	grid-row-gap: 20px;
-    max-width: 1700px;
+	max-width: 2500px;
 	margin: 0 auto;
 }
-.vh-graph{
-	width:800px;
-	margin:0 auto;
+.vh-graph {
+	width: 1200px;
+	margin: 0 auto;
 }
