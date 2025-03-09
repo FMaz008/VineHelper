@@ -75,6 +75,12 @@ class NotificationMonitor {
 		this.#feedPausedAmountStored = 0;
 		this.#channel = new BroadcastChannel("VineHelper");
 
+		this.#defineFetchLimit();
+	}
+
+	async #defineFetchLimit() {
+		await Settings.waitForLoad();
+
 		//Define the fetch limit based on the user's tier
 		if (Settings.isPremiumUser(3)) {
 			this.#fetchLimit = 300;
@@ -221,7 +227,7 @@ class NotificationMonitor {
 			type: "wsStatus",
 		});
 
-		document.getElementById("date_loaded").innerText = new Date().toLocaleString(i13n.getLocale());
+		document.getElementById("date_loaded").innerText = this.#formatDate();
 		this.#mostRecentItemDateDOM = document.getElementById("date_most_recent_item");
 
 		if (!this.#firefox && Settings.get("notification.monitor.openLinksInNewTab") != "1") {
@@ -259,7 +265,7 @@ class NotificationMonitor {
 		});
 
 		i13n.setCountryCode(Settings.get("general.country"));
-		document.getElementById("date_loaded").innerText = new Date().toLocaleString(i13n.getLocale());
+		document.getElementById("date_loaded").innerText = this.#formatDate();
 		this.#mostRecentItemDateDOM = document.getElementById("date_most_recent_item");
 
 		this.#listeners();
@@ -1083,14 +1089,17 @@ class NotificationMonitor {
 		return formattedETV;
 	}
 
-	#formatDate(date) {
+	#formatDate(date = null) {
+		if (date == null) {
+			date = new Date().toISOString().slice(0, 19).replace("T", " ");
+		}
 		return new Date(date.replace(" ", "T") + "Z").toLocaleString(i13n.getLocale(), {
 			month: "2-digit",
 			day: "2-digit",
 			hour: "2-digit",
 			minute: "2-digit",
 			second: "2-digit",
-			hour12: false,
+			hour12: true,
 		});
 	}
 
