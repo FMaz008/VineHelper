@@ -334,6 +334,7 @@ class SettingsMgr {
 					preventUnload: true,
 					hideDuplicateThumbnail: false,
 					listView: false,
+					"24hrsFormat": false,
 					openLinksInNewTab: "1",
 					regular: {
 						sound: "0",

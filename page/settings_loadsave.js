@@ -259,7 +259,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("notification.monitor.highlight.colorActive");
 	manageRadio("notification.monitor.openLinksInNewTab");
 	manageCheckboxSetting("notification.monitor.preventUnload");
-
+	manageCheckboxSetting("notification.monitor.24hrsFormat");
 	//Sliders
 	manageSlider("notification.screen.regular.volume");
 	manageSlider("notification.monitor.highlight.volume");
