@@ -308,7 +308,7 @@ async function initiateSettings() {
 	//Factory reset
 	document.getElementById("factoryReset").addEventListener("click", async function () {
 		if (
-			confirm(
+			await confirmPrompt(
 				"SAVE YOUR UUID OR YOU WILL LOOSE YOUR REMOTE STORED ITEMS !\n\nReset all Vine Helper settings & local storage to default?"
 			)
 		) {
@@ -319,11 +319,11 @@ async function initiateSettings() {
 		}
 	});
 	document.getElementById("hiddenItemReset").addEventListener("click", async function () {
-		if (confirm("Delete all locally stored hidden items from Vine Helper?")) {
+		if (await confirmPrompt("Delete all locally stored hidden items from Vine Helper?")) {
 			chrome.storage.local.set({ hiddenItems: [] });
 			alert("Hidden items in local storage emptied.");
 		}
-		if (confirm("Delete all remotely stored hidden items from Vine Helper?")) {
+		if (await confirmPrompt("Delete all remotely stored hidden items from Vine Helper?")) {
 			const content = {
 				api_version: 5,
 				country: "loremipsum",
@@ -667,14 +667,14 @@ function keywordsTypeToSettingKey(type) {
 	return null;
 }
 
-function remoteSaveList(keywordType) {
+async function remoteSaveList(keywordType) {
 	const settingKey = keywordsTypeToSettingKey(keywordType);
 	const keyE = CSS.escape(settingKey);
 	const btnSave = document.querySelector(`#${keyE} input[name="save"]`);
-	if (btnSave && confirm("Save highlight keywords first?")) {
+	if (btnSave && (await confirmPrompt("Save highlight keywords first?"))) {
 		btnSave.click();
 	}
-	if (confirm("Overwrite remote stored keywords with the saved list?")) {
+	if (await confirmPrompt("Overwrite remote stored keywords with the saved list?")) {
 		const content = {
 			api_version: 5,
 			country: "loremipsum",
@@ -693,8 +693,8 @@ function remoteSaveList(keywordType) {
 		});
 	}
 }
-function remoteLoadList(keywordsType) {
-	if (confirm("Load remote list and overwrite local list?")) {
+async function remoteLoadList(keywordsType) {
+	if (await confirmPrompt("Load remote list and overwrite local list?")) {
 		const content = {
 			api_version: 5,
 			country: "loremipsum",
@@ -870,7 +870,7 @@ function manageKeywords(key) {
 	});
 
 	document.getElementById(`bulkDelete${keywordType}`).addEventListener("click", async () => {
-		if (confirm("Delete all?")) {
+		if (await confirmPrompt("Delete all?")) {
 			//Remove all the existing lines
 			const rows = document.querySelectorAll(`#${keyE} table>tr`);
 			rows.forEach((row) => row.remove());
@@ -1031,8 +1031,8 @@ function manageKeywordsAddLine(key, contains, without, etv_min, etv_max) {
 	input5.classList.add("vh-icon-trash");
 	input5.name = "remove";
 	input5.value = " ";
-	input5.addEventListener("click", () => {
-		if (confirm("Delete?")) {
+	input5.addEventListener("click", async () => {
+		if (await confirmPrompt("Delete?")) {
 			tr.remove();
 		}
 	});
@@ -1164,6 +1164,118 @@ function rankSuffix(number) {
 		return "rd";
 	}
 	return "th";
+}
+
+function confirmPrompt(message) {
+	return new Promise((resolve) => {
+		// Create overlay
+		const overlay = document.createElement("div");
+		overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9998;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        `;
+
+		// Create confirm box
+		const confirmBox = document.createElement("div");
+		confirmBox.style.cssText = `
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 9999;
+            min-width: 300px;
+        `;
+
+		// Add message
+		const messageDiv = document.createElement("div");
+		messageDiv.textContent = message;
+		messageDiv.style.marginBottom = "20px";
+		confirmBox.appendChild(messageDiv);
+
+		// Add buttons container
+		const buttonContainer = document.createElement("div");
+		buttonContainer.style.cssText = `
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        `;
+
+		// Create buttons
+		const okButton = document.createElement("button");
+		okButton.textContent = "OK";
+		okButton.style.cssText = `
+            padding: 5px 15px;
+            cursor: pointer;
+            background: #4CAF50;
+            border: none;
+            color: white;
+            border-radius: 3px;
+        `;
+
+		const cancelButton = document.createElement("button");
+		cancelButton.textContent = "Cancel";
+		cancelButton.style.cssText = `
+            padding: 5px 15px;
+            cursor: pointer;
+            background: #f44336;
+            border: none;
+            color: white;
+            border-radius: 3px;
+        `;
+
+		// Add buttons to container
+		buttonContainer.appendChild(cancelButton);
+		buttonContainer.appendChild(okButton);
+		confirmBox.appendChild(buttonContainer);
+
+		// Add confirm box to overlay
+		overlay.appendChild(confirmBox);
+
+		// Add overlay to body
+		document.body.appendChild(overlay);
+
+		// Handle button clicks
+		const cleanup = () => {
+			document.body.removeChild(overlay);
+			document.removeEventListener("keydown", handleKeyPress);
+		};
+
+		const handleConfirm = () => {
+			cleanup();
+			resolve(true);
+		};
+
+		const handleCancel = () => {
+			cleanup();
+			resolve(false);
+		};
+
+		// Add click handlers
+		okButton.addEventListener("click", handleConfirm);
+		cancelButton.addEventListener("click", handleCancel);
+
+		// Handle keyboard events
+		const handleKeyPress = (e) => {
+			if (e.key === "Enter") {
+				handleConfirm();
+			} else if (e.key === "Escape") {
+				handleCancel();
+			}
+		};
+
+		document.addEventListener("keydown", handleKeyPress);
+
+		// Focus OK button
+		okButton.focus();
+	});
 }
 
 export { initiateSettings };
