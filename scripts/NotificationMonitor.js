@@ -231,7 +231,9 @@ class NotificationMonitor {
 		this.#mostRecentItemDateDOM = document.getElementById("date_most_recent_item");
 
 		if (!this.#firefox && Settings.get("notification.monitor.openLinksInNewTab") != "1") {
-			this.#preventRedirections();
+			if (Settings.get("notification.monitor.preventUnload")) {
+				this.#preventRedirections();
+			}
 		}
 
 		//Activate the listeners
@@ -352,8 +354,6 @@ class NotificationMonitor {
 	}
 
 	#preventRedirections() {
-		//Prevent redirections
-
 		//Prevent redirections
 		//This is working but will display a popup in the browser
 		window.addEventListener(

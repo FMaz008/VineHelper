@@ -258,6 +258,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("notification.monitor.zeroETV.colorActive");
 	manageCheckboxSetting("notification.monitor.highlight.colorActive");
 	manageRadio("notification.monitor.openLinksInNewTab");
+	manageCheckboxSetting("notification.monitor.preventUnload");
 
 	//Sliders
 	manageSlider("notification.screen.regular.volume");

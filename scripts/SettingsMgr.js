@@ -331,6 +331,7 @@ class SettingsMgr {
 					},
 				},
 				monitor: {
+					preventUnload: true,
 					hideDuplicateThumbnail: false,
 					listView: false,
 					openLinksInNewTab: "1",
