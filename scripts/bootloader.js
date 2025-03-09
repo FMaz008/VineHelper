@@ -545,6 +545,10 @@ async function loadPinnedList() {
 		let mapPin = new Map();
 		mapPin = await PinnedList.getList();
 		mapPin.forEach(async (value, key) => {
+			const tile = getTileByAsin(key);
+			if (tile) {
+				tile.setPinned(true);
+			}
 			addPinnedTile(key, value.queue, value.title, value.thumbnail, value.is_parent_asin, value.enrollment_guid);
 		});
 	}
@@ -1042,6 +1046,12 @@ async function serverProductsResponse(data) {
 		if (data["pinned_products"] != undefined) {
 			logger.add("DRAW: Loading remote pinned products");
 			for (let i = 0; i < data["pinned_products"].length; i++) {
+				//Get the tile
+				const tile = getTileByAsin(data["pinned_products"][i]["asin"]);
+				if (tile) {
+					tile.setPinned(true);
+				}
+
 				await addPinnedTile(
 					data["pinned_products"][i]["asin"],
 					data["pinned_products"][i]["queue"],

@@ -23,7 +23,7 @@ class Tile {
 	#toolbar;
 
 	#asin;
-	#etv;
+	#isPinned = false;
 	#orderSuccess = 0;
 	#orderFailed = 0;
 	#title = null;
@@ -34,7 +34,6 @@ class Tile {
 		this.#grid = gridInstance;
 		this.#toolbar = null;
 		this.#asin = this.#findasin();
-		this.#etv = null;
 		this.#orderSuccess = 0;
 		this.#orderFailed = 0;
 
@@ -54,6 +53,17 @@ class Tile {
 
 	//#################
 	//## Public methods
+
+	isPinned() {
+		return this.#isPinned;
+	}
+
+	setPinned(isPinned) {
+		this.#isPinned = isPinned;
+
+		this.#tileDOM.querySelector("#vh-pin-icon-" + this.#asin).classList.toggle("vh-icon-pin", !isPinned);
+		this.#tileDOM.querySelector("#vh-pin-icon-" + this.#asin).classList.toggle("vh-icon-unpin", isPinned);
+	}
 
 	async animateVanish() {
 		const defaultOpacity = window.getComputedStyle(this.#tileDOM).opacity;

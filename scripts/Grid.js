@@ -286,11 +286,25 @@ async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enro
 	//Bind the click event for the unpin button
 	document.querySelector("#vh-pin-" + asin + " .unpin-link").onclick = (e) => {
 		e.preventDefault();
-		PinnedList.removeItem(asin);
-		document.getElementById("vh-pin-" + asin).remove();
+
+		removePinnedTile(asin);
 
 		updateTileCounts();
 	};
+}
+
+async function removePinnedTile(asin) {
+	PinnedList.removeItem(asin);
+	const pinnedTile = document.getElementById("vh-pin-" + asin);
+	if (pinnedTile) {
+		pinnedTile.remove();
+	}
+
+	//If it exists, mark the tile in the available grid as unpinned
+	const tile = getTileByAsin(asin);
+	if (tile) {
+		tile.setPinned(false);
+	}
 }
 
 function getRecommendationTypeFromQueue(queue) {
@@ -331,7 +345,9 @@ async function hideAllItems() {
 		let asin = getAsinFromDom(vvpItemTile);
 		arrTile.push({ asin: asin, hidden: true });
 		let tile = getTileByAsin(asin); // Obtain the real tile
-		await tile.hideTile(false, false); // Do not update local storage
+		if (!tile.isPinned()) {
+			await tile.hideTile(false, false); // Do not update local storage
+		}
 	}
 	HiddenList.saveList();
 
@@ -416,6 +432,7 @@ export {
 	updateTileCounts,
 	createGridInterface,
 	addPinnedTile,
+	removePinnedTile,
 	getRecommendationTypeFromQueue,
 	generateRecommendationString,
 	hideAllItems,

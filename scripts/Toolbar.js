@@ -13,7 +13,7 @@ var i13n = new Internationalization();
 import { PinnedListMgr } from "./PinnedListMgr.js";
 var PinnedList = new PinnedListMgr();
 
-import { getTileByAsin, addPinnedTile, updateTileCounts } from "./Grid.js";
+import { getTileByAsin, addPinnedTile, removePinnedTile, updateTileCounts } from "./Grid.js";
 
 import { Template } from "./Template.js";
 var Tpl = new Template();
@@ -66,6 +66,7 @@ class Toolbar {
 		}
 
 		Tpl.setIf("pinned", Settings.get("pinnedTab.active"));
+		Tpl.setVar("pinnedClass", this.#tile.isPinned() ? "vh-icon-unpin" : "vh-icon-pin");
 		Tpl.setIf("toggleview", Settings.get("hiddenTab.active"));
 		this.#toolbarDOM = Tpl.render(prom, true);
 
@@ -177,7 +178,7 @@ class Toolbar {
 
 			if (h2) {
 				h2.addEventListener("click", async (event) => {
-					h2.style.opacity = 0.3;
+					//h2.style.opacity = 0.3;
 
 					// A hide/display item button was pressed
 					let asin = this.#tile.getAsin(); // Directly access ASIN
@@ -190,13 +191,37 @@ class Toolbar {
 					const btn = document.querySelector(`input[data-asin="${asin}"]`);
 
 					if (btn) {
-						const isParentAsin = btn.dataset.isParentAsin;
-						const enrollmentGUID = btn.dataset.recommendationId.match(
-							/#vine\.enrollment\.([a-f0-9-]+)/i
-						)[1];
+						//Check if the item is already pinned
+						if (tile.isPinned()) {
+							//Unpin the item
+							tile.setPinned(false);
+							await removePinnedTile(asin); //grid.js
+						} else {
+							//Pin the item
+							tile.setPinned(true);
+							const isParentAsin = btn.dataset.isParentAsin;
+							const enrollmentGUID = btn.dataset.recommendationId.match(
+								/#vine\.enrollment\.([a-f0-9-]+)/i
+							)[1];
 
-						PinnedList.addItem(asin, env.data.vineQueue, title, thumbnail, isParentAsin, enrollmentGUID);
-						await addPinnedTile(asin, env.data.vineQueue, title, thumbnail, isParentAsin, enrollmentGUID); // grid.js
+							PinnedList.addItem(
+								asin,
+								env.data.vineQueue,
+								title,
+								thumbnail,
+								isParentAsin,
+								enrollmentGUID
+							);
+
+							await addPinnedTile(
+								asin,
+								env.data.vineQueue,
+								title,
+								thumbnail,
+								isParentAsin,
+								enrollmentGUID
+							); // grid.js
+						}
 
 						updateTileCounts();
 					}
