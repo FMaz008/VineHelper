@@ -13,3 +13,10 @@ export function unescapeHTML(encodedString) {
 
 	return encodedString;
 }
+
+export function removeSpecialHTML(string) {
+	//Remove all special characters
+	string = string.replace(/[^\w\s.-]/g, " ");
+
+	return string;
+}

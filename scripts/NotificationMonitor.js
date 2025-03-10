@@ -26,7 +26,7 @@ var PinnedList = new PinnedListMgr();
 import { ScreenNotifier, ScreenNotification } from "./ScreenNotifier.js";
 var Notifications = new ScreenNotifier();
 
-import { unescapeHTML } from "./StringHelper.js";
+import { unescapeHTML, removeSpecialHTML } from "./StringHelper.js";
 
 import { TileSizer } from "./TileSizer.js";
 var tileSizer = new TileSizer("notification.monitor.tileSize");
@@ -440,7 +440,7 @@ class NotificationMonitor {
 		if (!asin) {
 			return false;
 		}
-		title = unescapeHTML(title);
+		title = unescapeHTML(unescapeHTML(title));
 
 		const recommendationType = getRecommendationTypeFromQueue(queue); //grid.js
 		const recommendationId = generateRecommendationString(recommendationType, asin, enrollment_guid); //grid.js
@@ -483,7 +483,8 @@ class NotificationMonitor {
 		) {
 			search_url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`;
 		} else {
-			const truncatedTitle = title.length > 40 ? title.substr(0, 40).split(" ").slice(0, -1).join(" ") : title;
+			let truncatedTitle = title.length > 40 ? title.substr(0, 40).split(" ").slice(0, -1).join(" ") : title;
+			truncatedTitle = removeSpecialHTML(truncatedTitle);
 			const search_url_slug = encodeURIComponent(truncatedTitle);
 			search_url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search_url_slug}`;
 		}
@@ -544,7 +545,6 @@ class NotificationMonitor {
 
 		//Process the bluring
 		if (BlurKWsMatch) {
-			console.log(BlurKWsMatch);
 			this.#blurItemFound(tileDOM);
 		}
 

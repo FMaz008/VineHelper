@@ -15,6 +15,8 @@ var PinnedList = new PinnedListMgr();
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
 const Settings = new SettingsMgr();
 
+import { unescapeHTML, removeSpecialHTML } from "../scripts/StringHelper.js";
+
 let secondsLeft = 10;
 
 (async () => {
@@ -247,6 +249,7 @@ function serverProductsResponse(data) {
 	for (const [key, values] of Object.entries(data["items"])) {
 		let searchStyle = "";
 		let searchUrl;
+		values.title = unescapeHTML(unescapeHTML(values.title));
 		if (
 			Settings.get("general.searchOpenModal") &&
 			values.is_parent_asin != null &&
@@ -258,8 +261,9 @@ function serverProductsResponse(data) {
 			if (values.queue == "potluck") {
 				searchStyle = "opacity: 0.4;";
 			}
-			const truncatedTitle =
+			let truncatedTitle =
 				values.title.length > 40 ? values.title.substr(0, 40).split(" ").slice(0, -1).join(" ") : values.title;
+			truncatedTitle = removeSpecialHTML(truncatedTitle);
 			const search_url_slug = encodeURIComponent(truncatedTitle);
 			searchUrl = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search_url_slug}`;
 		}
