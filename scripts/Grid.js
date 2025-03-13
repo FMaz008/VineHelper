@@ -45,14 +45,25 @@ class Grid {
 
 	async addTile(t) {
 		return new Promise((resolve) => {
-			arrTile.push(t);
-			this.pArrTile.push(t);
+			try {
+				arrTile.push(t);
+				this.pArrTile.push(t);
 
-			if (Object.keys(t).length !== 0) {
-				const domElement = t.getDOM();
-				domElement.parentNode?.removeChild(domElement); // Detach from the current parent
-				document.getElementById(this.getId()).appendChild(domElement); // Append to the new parent
-				domElement.style.display = ""; // Show the element
+				if (Object.keys(t).length !== 0) {
+					const domElement = t.getDOM();
+					//Detach the element from the current parent
+					if (domElement && domElement.parentNode) {
+						domElement.parentNode.removeChild(domElement);
+					}
+					//Append the element to the grid
+					const gridElement = document.getElementById(this.getId());
+					if (gridElement) {
+						gridElement.appendChild(domElement);
+						domElement.style.display = "";
+					}
+				}
+			} catch (e) {
+				logger.add("Error in addTile: " + e.message);
 			}
 			resolve();
 		});

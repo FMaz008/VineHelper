@@ -48,7 +48,12 @@ class Tile {
 	//#################
 	//## Private method
 	#findasin() {
-		return getAsinFromDom(this.#tileDOM);
+		try {
+			return getAsinFromDom(this.#tileDOM);
+		} catch (e) {
+			logger.add("Error finding ASIN: " + e.message);
+			return null;
+		}
 	}
 
 	//#################

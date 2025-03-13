@@ -745,24 +745,27 @@ async function initTilesAndDrawToolbars() {
 	//- Create an array of all the products listed on the page
 	//- Create an empty toolbar for the item tile
 	//- Create the tooltip to display full titles when hovering item names
-
 	const arrObj = document.querySelectorAll(".vvp-item-tile:not(.pinned)");
 	let tile = null;
 	let a = null;
 	for (let i = 0; i < arrObj.length; i++) {
-		tile = await generateTile(arrObj[i]);
-		let t = new Toolbar(tile);
+		try {
+			tile = await generateTile(arrObj[i]);
+			let t = new Toolbar(tile);
 
-		//Add tool tip to the truncated item title link
-		if (Settings.get("general.displayFullTitleTooltip")) {
-			const titleDOM = arrObj[i].querySelector(".a-link-normal");
-			tooltip.addTooltip(titleDOM, tile.getTitle());
+			//Add tool tip to the truncated item title link
+			if (Settings.get("general.displayFullTitleTooltip")) {
+				const titleDOM = arrObj[i].querySelector(".a-link-normal");
+				tooltip.addTooltip(titleDOM, tile.getTitle());
+			}
+
+			//Generate the toolbar
+			await t.createProductToolbar();
+		} catch (e) {
+			logger.add("Error processing tile: " + e.message);
+			continue; // Skip this tile and continue with others
 		}
-
-		//Generate the toolbar
-		await t.createProductToolbar();
 	}
-
 	logger.add("done creating toolbars.");
 
 	// Scoll to the RFY/AFA/AI header
