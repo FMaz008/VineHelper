@@ -333,6 +333,7 @@ class SettingsMgr {
 				monitor: {
 					preventUnload: true,
 					hideDuplicateThumbnail: false,
+					blockNonEssentialListeners: false,
 					listView: false,
 					"24hrsFormat": false,
 					openLinksInNewTab: "1",

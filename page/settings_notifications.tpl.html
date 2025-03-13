@@ -150,6 +150,21 @@
 							notification monitor's page.
 						</div>
 					</div>
+					<div class="setting-container">
+						<label for="notification.monitor.blockNonEssentialListeners">
+							<input type="checkbox" name="notification.monitor.blockNonEssentialListeners" value="1" />
+							Block non-essential event listeners
+						</label>
+						<div class="setting-summary">
+							<div class="vh-toolbar-icon vh-icon-question"></div>
+							Amazon generates a lot of event listeners, which use up a lot of resources when the
+							notification monitor has lots of items. (Some event listeners can prevent a deleted item
+							from being cleared from memory.) If you have memory usage issues, you can enable this
+							setting. Using this setting can, sometimes, render the See Details button inactive. A page
+							refresh usually solve the problem, but if you are using this setting, take the habbit to
+							test the See Details button upon loading the notification monitor.
+						</div>
+					</div>
 				</div>
 				<label
 					><input type="radio" name="notification.monitor.openLinksInNewTab" value="1" />

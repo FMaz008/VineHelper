@@ -260,6 +260,8 @@ async function initiateSettings() {
 	manageRadio("notification.monitor.openLinksInNewTab");
 	manageCheckboxSetting("notification.monitor.preventUnload");
 	manageCheckboxSetting("notification.monitor.24hrsFormat");
+	manageCheckboxSetting("notification.monitor.blockNonEssentialListeners");
+
 	//Sliders
 	manageSlider("notification.screen.regular.volume");
 	manageSlider("notification.monitor.highlight.volume");

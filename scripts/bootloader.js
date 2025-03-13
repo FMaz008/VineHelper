@@ -526,7 +526,11 @@ function initAddNotificationMonitorLink() {
 
 		const a = document.createElement("a");
 		//a.href = chrome.runtime.getURL("page/notifications.html");
-		a.href = "/vine/vine-items?queue=encore#monitor";
+		if (Settings.get("notification.monitor.blockNonEssentialListeners")) {
+			a.href = "/vine/vine-items?queue=encore#monitor";
+		} else {
+			a.href = "/vine/vine-items?queue=encore#monitorLoadAllListerners";
+		}
 		a.target = "_blank";
 		a.innerHTML = `<div class="vh-icon-16 vh-icon-vh"></div> Notifications Monitor`;
 		li.appendChild(a);

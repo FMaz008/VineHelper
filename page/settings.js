@@ -42,7 +42,15 @@ Tpl.flushLocalStorage();
 		domainTLD = i13n.getDomainTLD();
 	}
 	Tpl.setIf("country_known", countryCode != null);
-	Tpl.setVar("monitor_link", "https://www.amazon." + domainTLD + "/vine/vine-items?queue=encore#monitor");
+	if (Settings.get("notification.monitor.blockNonEssentialListeners")) {
+		Tpl.setVar("monitor_link", "https://www.amazon." + domainTLD + "/vine/vine-items?queue=encore#monitor");
+	} else {
+		Tpl.setVar(
+			"monitor_link",
+			"https://www.amazon." + domainTLD + "/vine/vine-items?queue=encore#monitorLoadAllListerners"
+		);
+	}
+
 	Tpl.setVar("light_monitor_link", chrome.runtime.getURL("page/notification_monitor_light.html"));
 	Tpl.setVar("item_explorer_link", chrome.runtime.getURL("page/item_explorer.html"));
 	Tpl.setIf("tier_3", Settings.isPremiumUser(3));
