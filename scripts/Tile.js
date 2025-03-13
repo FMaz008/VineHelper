@@ -268,7 +268,9 @@ class Tile {
 		//Unescape titles
 		const fullText = this.getDOM().querySelector(".a-truncate-full").innerText;
 		this.getDOM().querySelector(".a-truncate-full").innerText = unescapeHTML(unescapeHTML(fullText));
-
+		if (fullText) {
+			this.getDOM().querySelector(".a-truncate-cut").innerText = unescapeHTML(unescapeHTML(fullText));
+		}
 		//Assign the ASIN to the tile content
 		this.getDOM().closest(".vvp-item-tile").dataset.asin = this.#asin;
 	}
