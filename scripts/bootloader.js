@@ -862,7 +862,7 @@ async function generateTile(obj) {
 		await tile.moveToGrid(env.data.grid.gridHidden, false); //This is the main sort, do not animate it
 	}
 
-	if (Settings.get("general.displayVariantIcon")) {
+	if (Settings.isPremiumUser(2) && Settings.get("general.displayVariantIcon")) {
 		//Check if the item is a parent ASIN (as variants)
 		let buttonInput = obj.querySelector(".a-button-input");
 		let variant = buttonInput.getAttribute("data-is-parent-asin");
