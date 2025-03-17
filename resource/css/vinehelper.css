@@ -580,8 +580,8 @@ input[type="checkbox"] {
 }
 
 .blur {
-	filter: blur(10px);
-	-webkit-filter: blur(10px);
+	filter: blur(10px) !important;
+	-webkit-filter: blur(10px) !important;
 	position: relative;
 }
 
