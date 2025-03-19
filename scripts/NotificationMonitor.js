@@ -46,6 +46,9 @@ const TYPE_ZEROETV = 1;
 const TYPE_HIGHLIGHT = 2;
 const TYPE_HIGHLIGHT_OR_ZEROETV = 9;
 
+const TYPE_DATE = "date";
+const TYPE_PRICE = "price";
+
 class NotificationMonitor {
 	#feedPaused = false;
 	#feedPausedAmountStored;
@@ -61,6 +64,7 @@ class NotificationMonitor {
 	#mostRecentItemDateDOM = null;
 	#filterType = -1;
 	#filterQueue = -1;
+	#sortQueue = window.localStorage.getItem("vhnm-sortQueueType") || TYPE_DATE;
 	#goldTier = true;
 	#etvLimit = null;
 	#itemTemplateFile = "tile_gridview.html";
@@ -236,6 +240,10 @@ class NotificationMonitor {
 			}
 		}
 
+		//Restore the sort queue type
+		const sortQueue = document.querySelector("select[name='sort-queue']");
+		sortQueue.value = this.#sortQueue;
+
 		//Activate the listeners
 		this.#listeners();
 
@@ -269,6 +277,10 @@ class NotificationMonitor {
 		i13n.setCountryCode(Settings.get("general.country"));
 		document.getElementById("date_loaded").innerText = this.#formatDate();
 		this.#mostRecentItemDateDOM = document.getElementById("date_most_recent_item");
+
+		//Restore the sort queue type
+		const sortQueue = document.querySelector("select[name='sort-queue']");
+		sortQueue.value = this.#sortQueue;
 
 		this.#listeners();
 
@@ -512,7 +524,13 @@ class NotificationMonitor {
 		Tpl.setIf("variant", Settings.isPremiumUser() && Settings.get("general.displayVariantIcon") && is_parent_asin);
 
 		let tileDOM = await Tpl.render(prom2, true);
-		this.#gridContainer.insertBefore(tileDOM, this.#gridContainer.firstChild);
+
+		// Insert the tile based on sort type
+		if (this.#sortQueue === TYPE_PRICE) {
+			this.#gridContainer.appendChild(tileDOM);
+		} else {
+			this.#gridContainer.insertBefore(tileDOM, this.#gridContainer.firstChild);
+		}
 
 		//Set the tile custom dimension according to the settings.
 		if (!this.#lightMode && !Settings.get("notification.monitor.listView")) {
@@ -901,6 +919,30 @@ class NotificationMonitor {
 		notif.querySelector(".vvp-item-product-title-container>a")?.classList.add("dynamic-blur");
 	}
 
+	#processNotificationSorting() {
+		const container = document.getElementById("vvp-items-grid");
+		const tiles = Array.from(document.querySelectorAll(".vvp-item-tile"));
+
+		// Sort tiles based on the current sort queue
+		tiles.sort((a, b) => {
+			if (this.#sortQueue === TYPE_DATE) {
+				const aDate = a.querySelector("div.vh-date-added")?.innerText?.trim();
+				const bDate = b.querySelector("div.vh-date-added")?.innerText?.trim();
+				return new Date(bDate) - new Date(aDate); // Newest first
+			} else if (this.#sortQueue === TYPE_PRICE) {
+				const aEtvData = a.querySelector("div.etv")?.dataset.etvMax;
+				const bEtvData = b.querySelector("div.etv")?.dataset.etvMax;
+				const aPrice = parseFloat(aEtvData) || 0;
+				const bPrice = parseFloat(bEtvData) || 0;
+				return bPrice - aPrice; // Highest price first
+			}
+			return 0;
+		});
+
+		// Reorder tiles in the DOM
+		tiles.forEach((tile) => container.appendChild(tile));
+	}
+
 	#processNotificationFiltering(node) {
 		if (!node) {
 			return false;
@@ -1270,6 +1312,14 @@ class NotificationMonitor {
 			}
 		});
 
+		const sortQueue = document.querySelector("select[name='sort-queue']");
+		sortQueue.addEventListener("change", (event) => {
+			this.#sortQueue = sortQueue.value;
+			window.localStorage.setItem("vhnm-sortQueueType", this.#sortQueue);
+			this.#processNotificationSorting();
+		});
+		this.#sortQueue = sortQueue.value;
+
 		//Bind the event when changing the filter
 		const filterType = document.querySelector("select[name='filter-type']");
 		filterType.addEventListener("change", (event) => {
@@ -1311,6 +1361,7 @@ class NotificationMonitor {
 		}
 		if (data.type == "newETV") {
 			this.setETVFromASIN(data.asin, data.etv);
+			this.#processNotificationSorting();
 		}
 		if (data.type == "wsOpen") {
 			this.setWebSocketStatus(true);
@@ -1344,7 +1395,7 @@ class NotificationMonitor {
 				enrollment_guid,
 				unavailable,
 			} = data;
-			this.addTileInGrid(
+			await this.addTileInGrid(
 				asin,
 				queue,
 				date,
@@ -1361,6 +1412,7 @@ class NotificationMonitor {
 				BlurKWsMatch,
 				unavailable
 			);
+			this.#processNotificationSorting();
 		}
 		if (data.type == "fetch100") {
 			for (const item of data.data) {
@@ -1390,6 +1442,7 @@ class NotificationMonitor {
 					this.#fetchingRecentItems = false;
 				}
 			}
+			this.#processNotificationSorting();
 		}
 	}
 }
