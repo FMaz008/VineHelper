@@ -46,21 +46,22 @@ const TYPE_ZEROETV = 1;
 const TYPE_HIGHLIGHT = 2;
 const TYPE_HIGHLIGHT_OR_ZEROETV = 9;
 
+const TYPE_DATE = "date";
+const TYPE_PRICE = "price";
+
 class NotificationMonitor {
 	#feedPaused = false;
 	#feedPausedAmountStored;
 	#fetchingRecentItems;
 	#serviceWorkerStatusTimer;
 	#waitTimer; //Timer which wait a short delay to see if anything new is about to happen
-	#imageUrls;
-	#asinsOnPage;
+	#imageUrls; // Set of image URLs used for duplicate thumbnail detection (kept separate for O(1) lookup performance)
+	#items; // Combined map to store both item data and DOM elements
 	#gridContainer = null;
 	#wsErrorMessage = null;
 	#firefox = false;
 	#mostRecentItemDate = null;
 	#mostRecentItemDateDOM = null;
-	#filterType = -1;
-	#filterQueue = -1;
 	#goldTier = true;
 	#etvLimit = null;
 	#itemTemplateFile = "tile_gridview.html";
@@ -69,13 +70,64 @@ class NotificationMonitor {
 	#statusTimer = null;
 	#fetchLimit = 100;
 
+	// UI User settings (will be loaded from storage)
+	#autoTruncateEnabled = true;
+	#filterQueue = -1;
+	#filterType = -1;
+	#sortType = TYPE_DATE;
+
 	constructor() {
 		this.#imageUrls = new Set();
-		this.#asinsOnPage = new Set();
+		this.#items = new Map(); // Initialize the combined map to store all item data and DOM elements
 		this.#feedPausedAmountStored = 0;
 		this.#channel = new BroadcastChannel("VineHelper");
 
+		// Create a promise to track when settings are loaded
+		this.settingsLoaded = new Promise((resolve) => {
+			this.settingsLoadedResolver = resolve;
+		});
+
+		this.#loadUIUserSettings();
 		this.#defineFetchLimit();
+	}
+
+	async #loadUIUserSettings() {
+		// Load settings from chrome.storage.local
+		chrome.storage.local.get(
+			{
+				"vhnm-autoTruncate": true,
+				"vhnm-filterQueue": -1,
+				"vhnm-filterType": -1,
+				"vhnm-sortType": TYPE_DATE,
+			},
+			(result) => {
+				// restore the settings from storage
+				this.#autoTruncateEnabled = result["vhnm-autoTruncate"] === true;
+				this.#filterQueue = result["vhnm-filterQueue"];
+				this.#filterType = result["vhnm-filterType"];
+				this.#sortType = result["vhnm-sortType"];
+
+				// Update UI if it's already initialized
+				this.#updateUIUserSettings();
+
+				// Resolve the promise to indicate settings are loaded
+				this.settingsLoadedResolver();
+			}
+		);
+	}
+
+	#updateUIUserSettings() {
+		const autoTruncateCheckbox = document.getElementById("auto-truncate");
+		if (autoTruncateCheckbox) autoTruncateCheckbox.checked = this.#autoTruncateEnabled;
+
+		const filterQueueSelect = document.querySelector("select[name='filter-queue']");
+		if (filterQueueSelect) filterQueueSelect.value = this.#filterQueue;
+
+		const filterTypeSelect = document.querySelector("select[name='filter-type']");
+		if (filterTypeSelect) filterTypeSelect.value = this.#filterType;
+
+		const sortQueueSelect = document.querySelector("select[name='sort-queue']");
+		if (sortQueueSelect) sortQueueSelect.value = this.#sortType;
 	}
 
 	async #defineFetchLimit() {
@@ -97,6 +149,9 @@ class NotificationMonitor {
 		} else {
 			this.#itemTemplateFile = "tile_gridview.html";
 		}
+
+		// Wait for settings to load before proceeding
+		await this.settingsLoaded;
 
 		//Remove the existing items.
 		this.#gridContainer = document.querySelector("#vvp-items-grid");
@@ -188,6 +243,9 @@ class NotificationMonitor {
 		const header = Tpl.render(prom2, true);
 		parentContainer.insertBefore(header, mainContainer);
 
+		// Update UI filters after header is inserted
+		this.#updateUIUserSettings();
+
 		//Insert the VH tab container for the items even if there is no tabs
 		const tabContainer = document.createElement("div");
 		tabContainer.id = "vh-tabs";
@@ -247,6 +305,9 @@ class NotificationMonitor {
 		this.#lightMode = true;
 		this.#itemTemplateFile = "tile_lightview.html";
 
+		// Wait for settings to load before proceeding
+		await this.settingsLoaded;
+
 		//Insert the header
 		const parentContainer = document.querySelector("body");
 
@@ -254,6 +315,9 @@ class NotificationMonitor {
 		Tpl.setVar("fetchLimit", this.#fetchLimit);
 		const header = Tpl.render(prom2, true);
 		parentContainer.appendChild(header);
+
+		// Update UI filters after header is inserted
+		this.#updateUIUserSettings();
 
 		const itemContainer = document.createElement("div");
 		itemContainer.id = "vvp-items-grid";
@@ -440,40 +504,65 @@ class NotificationMonitor {
 		if (!asin) {
 			return false;
 		}
+
 		title = unescapeHTML(unescapeHTML(title));
 
 		const recommendationType = getRecommendationTypeFromQueue(queue); //grid.js
 		const recommendationId = generateRecommendationString(recommendationType, asin, enrollment_guid); //grid.js
 
-		//If the notification already exist, ignore this request.
-		if (this.#asinsOnPage.has(asin)) {
-			//Remove the old item
-			const element = this.#getNotificationByASIN(asin);
+		// Create the item data object
+		const itemData = {
+			asin,
+			queue,
+			date,
+			title,
+			img_url,
+			is_parent_asin,
+			enrollment_guid,
+			etv_min,
+			etv_max,
+			reason,
+			highlightKW,
+			KWsMatch,
+			blurKW,
+			BlurKWsMatch,
+			unavailable: unavailable == 1,
+			recommendationType,
+			recommendationId,
+			typeHighlight: KWsMatch ? 1 : 0,
+			typeZeroETV: etv_min !== null && parseFloat(etv_min) === 0 ? 1 : 0,
+		};
+
+		// If the notification already exists, update the data and return the existing DOM element
+		if (this.#hasItem(asin)) {
+			const element = this.#getItemDOMElement(asin);
 			if (element) {
-				logger.add(`NOTIF: Item ${asin} already exist, updating RecommendationId.`);
+				logger.add(`NOTIF: Item ${asin} already exists, updating RecommendationId.`);
+				// Update the data
+				this.#addItemData(asin, itemData);
+
+				// Update recommendationId in the DOM
 				element.dataset.recommendationId = recommendationId;
 				element.querySelector(`input[data-asin='${asin}']`).dataset.recommendationId = recommendationId;
 
-				if (unavailable != 1) {
+				if (!itemData.unavailable) {
 					this.#enableItem(element);
 				}
-				return false;
+				return element;
 			}
-		} else {
-			this.#asinsOnPage.add(asin);
 		}
 
-		//Check if the de-duplicate image setting is on, if so, do not add items
-		//for which an item with the same thumbnail already exist.
+		// Check if the de-duplicate image setting is on
 		if (Settings.get("notification.monitor.hideDuplicateThumbnail")) {
 			if (this.#imageUrls.has(img_url)) {
-				return false; //The image already exist, do not add the item
-			} else {
-				this.#imageUrls.add(img_url);
+				return false; // The image already exists, do not add the item
 			}
 		}
 
-		//Add the notification
+		// Store the item data
+		this.#addItemData(asin, itemData);
+
+		// Generate the search URL
 		let search_url;
 		if (
 			Settings.isPremiumUser(2) &&
@@ -512,7 +601,45 @@ class NotificationMonitor {
 		Tpl.setIf("variant", Settings.isPremiumUser() && Settings.get("general.displayVariantIcon") && is_parent_asin);
 
 		let tileDOM = await Tpl.render(prom2, true);
-		this.#gridContainer.insertBefore(tileDOM, this.#gridContainer.firstChild);
+
+		// Insert the tile based on sort type
+		if (this.#sortType === TYPE_PRICE) {
+			if (etv_min !== null) {
+				// For price sorting, find the correct position and insert there
+				const newPrice = parseFloat(etv_min) || 0;
+				let insertPosition = null;
+
+				// Find the first item with a lower price
+				const existingItems = Array.from(this.#items.entries());
+				for (const [existingAsin, item] of existingItems) {
+					// Skip the current item or items without elements
+					if (existingAsin === asin || !item.element) continue;
+
+					const existingPrice = parseFloat(item.data.etv_min) || 0;
+					if (newPrice > existingPrice) {
+						insertPosition = item.element;
+						break;
+					}
+				}
+
+				if (insertPosition) {
+					// Insert before the found position
+					this.#gridContainer.insertBefore(tileDOM, insertPosition);
+				} else {
+					// If no position found or item has highest price, append to the end
+					this.#gridContainer.appendChild(tileDOM);
+				}
+			} else {
+				// If no ETV min, append to the end
+				this.#gridContainer.appendChild(tileDOM);
+			}
+		} else {
+			// For other sort types, just insert at the beginning
+			this.#gridContainer.insertBefore(tileDOM, this.#gridContainer.firstChild);
+		}
+
+		// Store a reference to the DOM element
+		this.#storeItemDOMElement(asin, tileDOM);
 
 		//Set the tile custom dimension according to the settings.
 		if (!this.#lightMode && !Settings.get("notification.monitor.listView")) {
@@ -537,7 +664,7 @@ class NotificationMonitor {
 		//This is what determine & trigger what sound effect to play
 		if (KWsMatch) {
 			this.#highlightedItemFound(tileDOM, true); //Play the highlight sound
-		} else if (parseFloat(etv_min) == 0) {
+		} else if (parseFloat(etv_min) === 0) {
 			this.#zeroETVItemFound(tileDOM, true); //Play the zeroETV sound
 		} else {
 			this.#regularItemFound(tileDOM, true); //Play the regular sound
@@ -555,7 +682,7 @@ class NotificationMonitor {
 			this.setETV(tileDOM, etv_max);
 
 			//We found a zero ETV item, but we don't want to play a sound just yet
-			if (parseFloat(etv_min) == 0) {
+			if (parseFloat(etv_min) === 0) {
 				this.#zeroETVItemFound(tileDOM, false); //Ok now process 0etv, but no sound
 			}
 		} else {
@@ -621,7 +748,6 @@ class NotificationMonitor {
 				btnContainer.classList.remove("vvp-details-btn");
 
 				//Store the function reference as a property on the element
-
 				seeDetailsBtn.openDetailsHandler = () => {
 					window.open(
 						`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`,
@@ -647,15 +773,241 @@ class NotificationMonitor {
 			.replace(/\.\d+Z$/, ""); // Remove milliseconds and Z
 	}
 
-	async setETVFromASIN(asin, etv) {
-		if (!this.#asinsOnPage.has(asin)) {
+	// Add or update item data in the Map
+	#addItemData(asin, itemData) {
+		// Create a new item object or update existing one
+		if (!this.#items.has(asin)) {
+			// New item
+			this.#items.set(asin, {
+				data: {
+					...itemData,
+					dateAdded: this.#currentDateTime(),
+				},
+				element: null, // Element will be set later
+			});
+		} else {
+			// Update existing item data, preserving the element reference
+			const existing = this.#items.get(asin);
+			this.#items.set(asin, {
+				data: {
+					...existing.data,
+					...itemData,
+				},
+				element: existing.element,
+			});
+		}
+
+		// Store image URL if needed for duplicate detection
+		if (itemData.img_url && Settings.get("notification.monitor.hideDuplicateThumbnail")) {
+			this.#imageUrls.add(itemData.img_url);
+		}
+
+		// Sort the items after adding or updating a new item
+		this.#sortItems();
+	}
+
+	#sortItems() {
+		// Only proceed if there are items to sort
+		if (this.#items.size === 0) return;
+
+		// Convert Map to array for sorting
+		const itemsArray = Array.from(this.#items.entries()).map(([asin, item]) => {
+			return {
+				asin,
+				data: item.data,
+				element: item.element,
+			};
+		});
+
+		itemsArray.sort((a, b) => {
+			// Sort by ETV value, highest first
+			const aPrice = parseFloat(a.data.etv_min) || 0;
+			const bPrice = parseFloat(b.data.etv_min) || 0;
+			return bPrice - aPrice;
+		});
+
+		// Transform the sorted array back to [key, value] pairs for the Map constructor
+		this.#items = new Map(
+			itemsArray.map((item) => [
+				item.asin,
+				{
+					data: item.data,
+					element: item.element,
+				},
+			])
+		);
+	}
+
+	// Update item data with ETV
+	#updateItemETV(asin, etv) {
+		if (!this.#items.has(asin)) {
 			return false;
 		}
-		const notif = this.#getNotificationByASIN(asin);
+
+		const item = this.#items.get(asin);
+
+		// Update min and max ETV values
+		if (!item.data.etv_min || etv < item.data.etv_min) {
+			item.data.etv_min = etv;
+		}
+
+		if (!item.data.etv_max || etv > item.data.etv_max) {
+			item.data.etv_max = etv;
+		}
+
+		// Update the Map
+		this.#items.set(asin, item);
+		// Sort the items after adding or updating a new item
+		this.#sortItems();
+
+		return true;
+	}
+
+	// Store DOM element reference
+	#storeItemDOMElement(asin, element) {
+		if (this.#items.has(asin)) {
+			const item = this.#items.get(asin);
+			item.element = element;
+			this.#items.set(asin, item);
+		} else {
+			// Should not happen, but handle the case
+			this.#items.set(asin, {
+				data: {
+					asin: asin,
+					dateAdded: this.#currentDateTime(),
+				},
+				element: element,
+			});
+		}
+	}
+
+	// Get DOM element for an item
+	#getItemDOMElement(asin) {
+		return this.#items.get(asin)?.element;
+	}
+
+	// Check if an item exists
+	#hasItem(asin) {
+		return this.#items.has(asin);
+	}
+
+	// Remove item completely
+	#removeTile(tile, asin, countTotalTiles = true) {
+		if (!tile || !asin) {
+			return;
+		}
+
+		// Get the item data to access its image URL
+		const item = this.#items.get(asin);
+		const imgUrl = item?.data?.img_url;
+
+		// Remove specific event listeners
+		const reportBtn = tile.querySelector('[id^="vh-report-link-"]');
+		if (reportBtn) {
+			reportBtn.removeEventListener("click", this.#handleReportClick);
+		}
+
+		const announceBtn = tile.querySelector('[id^="vh-announce-link-"]');
+		if (announceBtn) {
+			announceBtn.removeEventListener("click", this.#handleBrendaClick);
+		}
+
+		const pinBtn = tile.querySelector('[id^="vh-pin-link-"]');
+		if (pinBtn) {
+			pinBtn.removeEventListener("click", this.#handlePinClick);
+		}
+
+		const hideBtn = tile.querySelector('[id^="vh-hide-link-"]');
+		if (hideBtn) {
+			hideBtn.removeEventListener("click", this.#handleHideClick);
+		}
+
+		const detailsBtn = tile.querySelector('[id^="vh-reason-link-"]');
+		if (detailsBtn) {
+			detailsBtn.removeEventListener("click", this.#handleDetailsClick);
+		}
+
+		const seeDetailsBtn = tile.querySelector(`.a-button-primary input`);
+		if (seeDetailsBtn && seeDetailsBtn.openDetailsHandler) {
+			seeDetailsBtn.removeEventListener("click", seeDetailsBtn.openDetailsHandler);
+			delete seeDetailsBtn.openDetailsHandler;
+		}
+
+		const a = tile.querySelector(".a-link-normal");
+		if (a) {
+			tooltip.removeTooltip(a);
+		}
+
+		// Remove from data structures
+		this.#items.delete(asin);
+
+		// Also remove the image URL from the set if duplicate detection is enabled
+		if (imgUrl && Settings.get("notification.monitor.hideDuplicateThumbnail")) {
+			this.#imageUrls.delete(imgUrl);
+		}
+
+		// Remove the element from DOM
+		tile.remove();
+
+		if (countTotalTiles) {
+			this.#updateTabTitle(); // Update the tab counter
+		}
+	}
+
+	async setETVFromASIN(asin, etv) {
+		// Store old ETV value to detect if reordering is needed
+		const oldETV = this.#items.get(asin)?.data?.etv_min || 0;
+
+		// Update the data in our Map
+		if (!this.#updateItemETV(asin, etv)) {
+			return false;
+		}
+
+		// Get the corresponding DOM element
+		const notif = this.#getItemDOMElement(asin);
 		if (!notif) {
 			return false;
 		}
+
+		// Update the DOM element
 		this.setETV(notif, etv);
+
+		// Re-position the item if using price sort and the value changed significantly
+		if (this.#sortType === TYPE_PRICE) {
+			const newETV = this.#items.get(asin)?.data?.etv_min || 0;
+
+			// Only reposition if the ETV changed significantly enough to potentially affect order
+			if (Math.abs(newETV - oldETV) > 0.01) {
+				// Remove the element from DOM
+				notif.remove();
+
+				// Find the correct position to insert
+				const newPrice = parseFloat(newETV);
+				let insertPosition = null;
+
+				// Find the first item with a lower price
+				for (const [existingAsin, item] of this.#items.entries()) {
+					// Skip the current item or items without elements
+					if (existingAsin === asin || !item.element || !item.element.parentNode) continue;
+
+					const existingPrice = parseFloat(item.data.etv_min) || 0;
+					if (newPrice > existingPrice) {
+						insertPosition = item.element;
+						break;
+					}
+				}
+
+				if (insertPosition) {
+					// Insert before the found position
+					this.#gridContainer.insertBefore(notif, insertPosition);
+				} else {
+					// If no position found or item has highest price, append to the end
+					this.#gridContainer.appendChild(notif);
+				}
+			}
+		}
+
+		return true;
 	}
 
 	async setETV(notif, etv) {
@@ -850,6 +1202,11 @@ class NotificationMonitor {
 		//Move the notification to the top
 		if (!this.#fetchingRecentItems) {
 			this.#moveNotifToTop(notif);
+
+			// If sorting by price is active, resort after identifying as zero ETV
+			if (this.#sortType === TYPE_PRICE) {
+				this.#processNotificationSorting();
+			}
 		}
 	}
 
@@ -899,6 +1256,53 @@ class NotificationMonitor {
 		//Blur the thumbnail and title
 		notif.querySelector(".vh-img-container>img")?.classList.add("blur");
 		notif.querySelector(".vvp-item-product-title-container>a")?.classList.add("dynamic-blur");
+	}
+
+	#processNotificationSorting() {
+		const container = document.getElementById("vvp-items-grid");
+
+		// Only proceed if there are items to sort
+		if (this.#items.size === 0) return;
+
+		// Convert Map to array for sorting
+		const itemsArray = Array.from(this.#items.entries()).map(([asin, item]) => {
+			return {
+				asin,
+				data: item.data,
+				element: item.element,
+			};
+		});
+
+		// Filter out any items without DOM elements
+		const validItems = itemsArray.filter((item) => item.element);
+
+		// Sort the array based on the current sort queue
+		validItems.sort((a, b) => {
+			if (this.#sortType === TYPE_DATE) {
+				// Sort by date, newest first
+				return new Date(b.data.date) - new Date(a.data.date);
+			} else if (this.#sortType === TYPE_PRICE) {
+				// Sort by price, highest first
+				const aPrice = parseFloat(a.data.etv_min) || 0;
+				const bPrice = parseFloat(b.data.etv_min) || 0;
+				return bPrice - aPrice;
+			}
+			return 0;
+		});
+
+		// Efficiently reorder DOM elements
+		// Remove all items from the DOM first to avoid unnecessary reflows
+		validItems.forEach((item) => {
+			// We use a trick here - detach the element but keep the reference
+			if (item.element.parentNode) {
+				item.element.remove();
+			}
+		});
+
+		// Then re-append them in the correct order
+		validItems.forEach((item) => {
+			container.appendChild(item.element);
+		});
 	}
 
 	#processNotificationFiltering(node) {
@@ -951,8 +1355,12 @@ class NotificationMonitor {
 
 		const asin = e.target.dataset.asin;
 		logger.add(`NOTIF: Hiding icon clicked for item ${asin}`);
-		const tile = document.querySelector("#vh-notification-" + asin);
-		this.#removeTile(tile, asin);
+
+		// Get the DOM element from our Map
+		const tile = this.#getItemDOMElement(asin);
+		if (tile) {
+			this.#removeTile(tile, asin);
+		}
 	};
 
 	#handleBrendaClick = (e) => {
@@ -1075,7 +1483,7 @@ class NotificationMonitor {
 	}
 
 	#getNotificationByASIN(asin) {
-		return document.querySelector("#vh-notification-" + asin);
+		return this.#items.get(asin)?.element;
 	}
 
 	#formatETV(etv) {
@@ -1104,81 +1512,60 @@ class NotificationMonitor {
 	}
 
 	#autoTruncate(max = 1000) {
-		//Auto truncate
-		if (document.getElementById("auto-truncate").checked) {
-			const itemsD = Array.from(document.getElementsByClassName("vvp-item-tile")); // Convert to array
-			const itemsCount = itemsD.length;
-			if (itemsCount > max) {
-				logger.add(`NOTIF: Auto truncating item(s) from the page.`);
-				for (let i = itemsCount - 1; i >= max; i--) {
-					if (itemsD[i]) {
-						this.#removeTile(itemsD[i], itemsD[i].dataset.asin);
+		// Auto truncate
+		if (this.#autoTruncateEnabled) {
+			// Check if we need to truncate based on map size
+			if (this.#items.size > max) {
+				logger.add(`NOTIF: Auto truncating item(s) from the page using the ${this.#sortType} sort method.`);
+
+				// Convert map to array for sorting
+				const itemsArray = Array.from(this.#items.entries()).map(([asin, item]) => ({
+					asin,
+					date: new Date(item.data.date),
+					price: parseFloat(item.data.etv_min) || 0,
+					element: item.element,
+				}));
+
+				// Sort according to current sort method, but reversed
+				// (we want to remove lowest price or oldest items)
+				if (this.#sortType === TYPE_PRICE) {
+					itemsArray.sort((a, b) => a.price - b.price); // Sort lowest price first
+				} else {
+					itemsArray.sort((a, b) => a.date - b.date); // Sort oldest first (default)
+				}
+
+				// Remove the oldest/lowest-priced items exceeding the max
+				const itemsToRemove = itemsArray.slice(0, itemsArray.length - max);
+
+				for (const item of itemsToRemove) {
+					if (item.element) {
+						this.#removeTile(item.element, item.asin);
+					} else {
+						// Element not found but we should clean up the data
+						this.#items.delete(item.asin);
 					}
 				}
 			}
 		}
 	}
 
-	#removeTile(tile, asin, countTotalTiles = true) {
-		if (asin != null) {
-			this.#asinsOnPage.delete(asin);
-		}
-
-		// Remove specific event listeners
-		const reportBtn = tile.querySelector('[id^="vh-report-link-"]');
-		if (reportBtn) {
-			reportBtn.removeEventListener("click", this.#handleReportClick);
-		}
-
-		const announceBtn = tile.querySelector('[id^="vh-announce-link-"]');
-		if (announceBtn) {
-			announceBtn.removeEventListener("click", this.#handleBrendaClick);
-		}
-
-		const pinBtn = tile.querySelector('[id^="vh-pin-link-"]');
-		if (pinBtn) {
-			pinBtn.removeEventListener("click", this.#handlePinClick);
-		}
-
-		const hideBtn = tile.querySelector('[id^="vh-hide-link-"]');
-		if (hideBtn) {
-			hideBtn.removeEventListener("click", this.#handleHideClick);
-		}
-
-		const detailsBtn = tile.querySelector('[id^="vh-reason-link-"]');
-		if (detailsBtn) {
-			detailsBtn.removeEventListener("click", this.#handleDetailsClick);
-		}
-
-		const seeDetailsBtn = tile.querySelector(`.a-button-primary input`);
-		if (seeDetailsBtn && seeDetailsBtn.openDetailsHandler) {
-			seeDetailsBtn.removeEventListener("click", seeDetailsBtn.openDetailsHandler);
-			delete seeDetailsBtn.openDetailsHandler;
-		}
-
-		const a = tile.querySelector(".a-link-normal");
-		if (a) {
-			tooltip.removeTooltip(a);
-		}
-
-		// Remove the element's data
-		tile.remove();
-
-		if (countTotalTiles) {
-			this.#updateTabTitle(); //Update the tab counter
-		}
-	}
-
 	#updateTabTitle() {
-		// Select all child elements of #vvp-items-grid
-		const children = document.querySelectorAll("#vvp-items-grid > *");
+		// Count visible items based on current filters
+		let visibleCount = 0;
 
-		// Filter and count elements that are not display: none
-		const visibleChildrenCount = Array.from(children).filter(
-			(child) => window.getComputedStyle(child).display !== "none"
-		).length;
+		// Loop through all items
+		for (const [asin, item] of this.#items.entries()) {
+			// Skip items without DOM elements
+			if (!item.element) continue;
 
-		document.title = "VHNM (" + visibleChildrenCount + ")";
+			// Skip items hidden by style
+			if (window.getComputedStyle(item.element).display === "none") continue;
+
+			visibleCount++;
+		}
+
+		// Update the tab title
+		document.title = "VHNM (" + visibleCount + ")";
 	}
 
 	#listeners() {
@@ -1205,14 +1592,13 @@ class NotificationMonitor {
 		btnClearMonitor.addEventListener("click", async (event) => {
 			//Delete all items from the grid
 			if (confirm("Clear all items?")) {
-				const elements = this.#gridContainer.getElementsByClassName("vvp-item-tile");
-				Array.from(elements).forEach((element) => {
-					this.#removeTile(element, null, false);
-				});
-				this.#gridContainer.innerHTML = "";
-				this.#asinsOnPage.clear();
+				for (const [asin, item] of this.#items.entries()) {
+					if (item.element) {
+						this.#removeTile(item.element, asin, false);
+					}
+				}
 
-				this.#imageUrls.clear();
+				this.#clearAllItemData();
 				this.#updateTabTitle();
 			}
 		});
@@ -1270,28 +1656,42 @@ class NotificationMonitor {
 			}
 		});
 
-		//Bind the event when changing the filter
+		// Bind sort and filter controls
+		const sortQueue = document.querySelector("select[name='sort-queue']");
+		sortQueue.addEventListener("change", (event) => {
+			this.#sortType = sortQueue.value;
+			chrome.storage.local.set({ "vhnm-sortType": this.#sortType });
+			this.#processNotificationSorting();
+		});
+
 		const filterType = document.querySelector("select[name='filter-type']");
 		filterType.addEventListener("change", (event) => {
 			this.#filterType = filterType.value;
+			chrome.storage.local.set({ "vhnm-filterType": this.#filterType });
 			//Display a specific type of notifications only
 			document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
 				this.#processNotificationFiltering(node);
 			});
 			this.#updateTabTitle();
 		});
-		this.#filterType = filterType.value;
 
 		const filterQueue = document.querySelector("select[name='filter-queue']");
 		filterQueue.addEventListener("change", (event) => {
 			this.#filterQueue = filterQueue.value;
+			chrome.storage.local.set({ "vhnm-filterQueue": this.#filterQueue });
 			//Display a specific type of notifications only
 			document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
 				this.#processNotificationFiltering(node);
 			});
 			this.#updateTabTitle();
 		});
-		this.#filterQueue = filterQueue.value;
+
+		const autoTruncateCheckbox = document.getElementById("auto-truncate");
+		autoTruncateCheckbox.checked = this.#autoTruncateEnabled;
+		autoTruncateCheckbox.addEventListener("change", (event) => {
+			this.#autoTruncateEnabled = autoTruncateCheckbox.checked;
+			chrome.storage.local.set({ "vhnm-autoTruncate": this.#autoTruncateEnabled });
+		});
 
 		//Message from within the context of the extension
 		//Messages sent via: chrome.tabs.sendMessage(tab.id, data);
@@ -1300,6 +1700,7 @@ class NotificationMonitor {
 			this.#processBroadcastMessage(message);
 		});
 	}
+
 	async #processBroadcastMessage(data) {
 		if (data.type == undefined) {
 			return false;
@@ -1323,7 +1724,15 @@ class NotificationMonitor {
 		}
 
 		if (data.type == "unavailableItem") {
-			const notif = this.#getNotificationByASIN(data.asin);
+			// Update the item data first
+			if (this.#hasItem(data.asin)) {
+				const item = this.#items.get(data.asin);
+				item.data.unavailable = true;
+				this.#items.set(data.asin, item);
+			}
+
+			// Then update the DOM
+			const notif = this.#getItemDOMElement(data.asin);
 			this.#disableItem(notif);
 		}
 		if (data.type == "newItem") {
@@ -1344,7 +1753,8 @@ class NotificationMonitor {
 				enrollment_guid,
 				unavailable,
 			} = data;
-			this.addTileInGrid(
+
+			await this.addTileInGrid(
 				asin,
 				queue,
 				date,
@@ -1390,6 +1800,18 @@ class NotificationMonitor {
 					this.#fetchingRecentItems = false;
 				}
 			}
+
+			this.#processNotificationSorting();
+		}
+	}
+
+	// Clear all item-related data structures
+	#clearAllItemData() {
+		this.#items.clear();
+		this.#imageUrls.clear();
+		this.#mostRecentItemDate = null;
+		if (this.#mostRecentItemDateDOM) {
+			this.#mostRecentItemDateDOM.innerText = "";
 		}
 	}
 }

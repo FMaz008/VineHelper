@@ -2,7 +2,7 @@
 	<div class="vh-icon-32 vh-icon-vh" style="float: left; margin-right: 10px"></div>
 	<h3>Notification Monitor</h3>
 	<div style="display: flex">
-		<div style="width: 300px">
+		<div style="width: 300px; margin-bottom: 15px;">
 			<strong>Loaded on: </strong><span id="date_loaded"></span><br />
 			<strong>Most recent item: </strong><span id="date_most_recent_item">(tba)</span><br />
 		</div>
@@ -37,6 +37,15 @@
 			<label for="auto-truncate" style="float: left; margin-left: 10px">
 				<input type="checkbox" name="auto-truncate" id="auto-truncate" checked />
 				<span>Auto truncate after 1000 items.</span>
+			</label>
+		</div>
+		<div style="float: right">
+			<label for="sort-queue" style="float: right; margin-right: 20px">
+				Sort by:
+				<select name="sort-queue">
+					<option value="date">Date</option>
+					<option value="price">Price (ETV)</option>
+				</select>
 			</label>
 		</div>
 		<div style="float: right">
