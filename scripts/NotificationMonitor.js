@@ -82,41 +82,20 @@ class NotificationMonitor {
 		this.#feedPausedAmountStored = 0;
 		this.#channel = new BroadcastChannel("VineHelper");
 
-		// Create a promise to track when settings are loaded
-		this.settingsLoaded = new Promise((resolve) => {
-			this.settingsLoadedResolver = resolve;
-		});
-
-		this.#loadUIUserSettings();
 		this.#defineFetchLimit();
 	}
 
 	async #loadUIUserSettings() {
 		// Load settings from chrome.storage.local
-		chrome.storage.local.get(
-			{
-				"vhnm-autoTruncate": true,
-				"vhnm-filterQueue": -1,
-				"vhnm-filterType": -1,
-				"vhnm-sortType": TYPE_DATE,
-			},
-			(result) => {
-				// restore the settings from storage
-				this.#autoTruncateEnabled = result["vhnm-autoTruncate"] === true;
-				this.#filterQueue = result["vhnm-filterQueue"];
-				this.#filterType = result["vhnm-filterType"];
-				this.#sortType = result["vhnm-sortType"];
+		await Settings.waitForLoad();
 
-				// Update UI if it's already initialized
-				this.#updateUIUserSettings();
+		//Get the filter and sorting settings
+		this.#autoTruncateEnabled = Settings.get("notification.monitor.autoTruncate");
+		this.#filterQueue = Settings.get("notification.monitor.filterQueue");
+		this.#filterType = Settings.get("notification.monitor.filterType");
+		this.#sortType = Settings.get("notification.monitor.sortType");
 
-				// Resolve the promise to indicate settings are loaded
-				this.settingsLoadedResolver();
-			}
-		);
-	}
-
-	#updateUIUserSettings() {
+		// Update UI
 		const autoTruncateCheckbox = document.getElementById("auto-truncate");
 		if (autoTruncateCheckbox) autoTruncateCheckbox.checked = this.#autoTruncateEnabled;
 
@@ -244,7 +223,7 @@ class NotificationMonitor {
 		parentContainer.insertBefore(header, mainContainer);
 
 		// Update UI filters after header is inserted
-		this.#updateUIUserSettings();
+		this.#loadUIUserSettings();
 
 		//Insert the VH tab container for the items even if there is no tabs
 		const tabContainer = document.createElement("div");
@@ -317,7 +296,7 @@ class NotificationMonitor {
 		parentContainer.appendChild(header);
 
 		// Update UI filters after header is inserted
-		this.#updateUIUserSettings();
+		this.#loadUIUserSettings();
 
 		const itemContainer = document.createElement("div");
 		itemContainer.id = "vvp-items-grid";
@@ -1660,14 +1639,14 @@ class NotificationMonitor {
 		const sortQueue = document.querySelector("select[name='sort-queue']");
 		sortQueue.addEventListener("change", (event) => {
 			this.#sortType = sortQueue.value;
-			chrome.storage.local.set({ "vhnm-sortType": this.#sortType });
+			Settings.set("notification.monitor.sortType", this.#sortType);
 			this.#processNotificationSorting();
 		});
 
 		const filterType = document.querySelector("select[name='filter-type']");
 		filterType.addEventListener("change", (event) => {
 			this.#filterType = filterType.value;
-			chrome.storage.local.set({ "vhnm-filterType": this.#filterType });
+			Settings.set("notification.monitor.filterType", this.#filterType);
 			//Display a specific type of notifications only
 			document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
 				this.#processNotificationFiltering(node);
@@ -1678,7 +1657,7 @@ class NotificationMonitor {
 		const filterQueue = document.querySelector("select[name='filter-queue']");
 		filterQueue.addEventListener("change", (event) => {
 			this.#filterQueue = filterQueue.value;
-			chrome.storage.local.set({ "vhnm-filterQueue": this.#filterQueue });
+			Settings.set("notification.monitor.filterQueue", this.#filterQueue);
 			//Display a specific type of notifications only
 			document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
 				this.#processNotificationFiltering(node);
@@ -1690,7 +1669,7 @@ class NotificationMonitor {
 		autoTruncateCheckbox.checked = this.#autoTruncateEnabled;
 		autoTruncateCheckbox.addEventListener("change", (event) => {
 			this.#autoTruncateEnabled = autoTruncateCheckbox.checked;
-			chrome.storage.local.set({ "vhnm-autoTruncate": this.#autoTruncateEnabled });
+			Settings.set("notification.monitor.autoTruncate", this.#autoTruncateEnabled);
 		});
 
 		//Message from within the context of the extension

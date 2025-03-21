@@ -337,6 +337,10 @@ class SettingsMgr {
 					listView: false,
 					"24hrsFormat": false,
 					openLinksInNewTab: "1",
+					autoTruncate: true,
+					filterQueue: -1,
+					filterType: -1,
+					sortType: "date",
 					regular: {
 						sound: "0",
 						volume: 1,
