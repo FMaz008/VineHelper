@@ -603,29 +603,34 @@ class NotificationMonitor {
 		let tileDOM = await Tpl.render(prom2, true);
 
 		// Insert the tile based on sort type
-		if (this.#sortType === TYPE_PRICE && etv_min !== null) {
-			// For price sorting, find the correct position and insert there
-			const newPrice = parseFloat(etv_min) || 0;
-			let insertPosition = null;
+		if (this.#sortType === TYPE_PRICE) {
+			if (etv_min !== null) {
+				// For price sorting, find the correct position and insert there
+				const newPrice = parseFloat(etv_min) || 0;
+				let insertPosition = null;
 
-			// Find the first item with a lower price
-			const existingItems = Array.from(this.#items.entries());
-			for (const [existingAsin, item] of existingItems) {
-				// Skip the current item or items without elements
-				if (existingAsin === asin || !item.element) continue;
+				// Find the first item with a lower price
+				const existingItems = Array.from(this.#items.entries());
+				for (const [existingAsin, item] of existingItems) {
+					// Skip the current item or items without elements
+					if (existingAsin === asin || !item.element) continue;
 
-				const existingPrice = parseFloat(item.data.etv_min) || 0;
-				if (newPrice > existingPrice) {
-					insertPosition = item.element;
-					break;
+					const existingPrice = parseFloat(item.data.etv_min) || 0;
+					if (newPrice > existingPrice) {
+						insertPosition = item.element;
+						break;
+					}
 				}
-			}
 
-			if (insertPosition) {
-				// Insert before the found position
-				this.#gridContainer.insertBefore(tileDOM, insertPosition);
+				if (insertPosition) {
+					// Insert before the found position
+					this.#gridContainer.insertBefore(tileDOM, insertPosition);
+				} else {
+					// If no position found or item has highest price, append to the end
+					this.#gridContainer.appendChild(tileDOM);
+				}
 			} else {
-				// If no position found or item has highest price, append to the end
+				// If no ETV min, append to the end
 				this.#gridContainer.appendChild(tileDOM);
 			}
 		} else {
@@ -796,6 +801,41 @@ class NotificationMonitor {
 		if (itemData.img_url && Settings.get("notification.monitor.hideDuplicateThumbnail")) {
 			this.#imageUrls.add(itemData.img_url);
 		}
+
+		// Sort the items after adding or updating a new item
+		this.#sortItems();
+	}
+
+	#sortItems() {
+		// Only proceed if there are items to sort
+		if (this.#items.size === 0) return;
+
+		// Convert Map to array for sorting
+		const itemsArray = Array.from(this.#items.entries()).map(([asin, item]) => {
+			return {
+				asin,
+				data: item.data,
+				element: item.element,
+			};
+		});
+
+		itemsArray.sort((a, b) => {
+			// Sort by ETV value, highest first
+			const aPrice = parseFloat(a.data.etv_min) || 0;
+			const bPrice = parseFloat(b.data.etv_min) || 0;
+			return bPrice - aPrice;
+		});
+
+		// Transform the sorted array back to [key, value] pairs for the Map constructor
+		this.#items = new Map(
+			itemsArray.map((item) => [
+				item.asin,
+				{
+					data: item.data,
+					element: item.element,
+				},
+			])
+		);
 	}
 
 	// Update item data with ETV
@@ -817,6 +857,8 @@ class NotificationMonitor {
 
 		// Update the Map
 		this.#items.set(asin, item);
+		// Sort the items after adding or updating a new item
+		this.#sortItems();
 
 		return true;
 	}
@@ -914,7 +956,7 @@ class NotificationMonitor {
 
 	async setETVFromASIN(asin, etv) {
 		// Store old ETV value to detect if reordering is needed
-		const oldETV = this.#items.get(asin)?.data?.etv_max || 0;
+		const oldETV = this.#items.get(asin)?.data?.etv_min || 0;
 
 		// Update the data in our Map
 		if (!this.#updateItemETV(asin, etv)) {
@@ -932,7 +974,7 @@ class NotificationMonitor {
 
 		// Re-position the item if using price sort and the value changed significantly
 		if (this.#sortType === TYPE_PRICE) {
-			const newETV = this.#items.get(asin)?.data?.etv_max || 0;
+			const newETV = this.#items.get(asin)?.data?.etv_min || 0;
 
 			// Only reposition if the ETV changed significantly enough to potentially affect order
 			if (Math.abs(newETV - oldETV) > 0.01) {
@@ -948,7 +990,7 @@ class NotificationMonitor {
 					// Skip the current item or items without elements
 					if (existingAsin === asin || !item.element || !item.element.parentNode) continue;
 
-					const existingPrice = parseFloat(item.data.etv_max) || 0;
+					const existingPrice = parseFloat(item.data.etv_min) || 0;
 					if (newPrice > existingPrice) {
 						insertPosition = item.element;
 						break;
@@ -1241,8 +1283,8 @@ class NotificationMonitor {
 				return new Date(b.data.date) - new Date(a.data.date);
 			} else if (this.#sortType === TYPE_PRICE) {
 				// Sort by price, highest first
-				const aPrice = parseFloat(a.data.etv_max) || 0;
-				const bPrice = parseFloat(b.data.etv_max) || 0;
+				const aPrice = parseFloat(a.data.etv_min) || 0;
+				const bPrice = parseFloat(b.data.etv_min) || 0;
 				return bPrice - aPrice;
 			}
 			return 0;
@@ -1474,13 +1516,13 @@ class NotificationMonitor {
 		if (this.#autoTruncateEnabled) {
 			// Check if we need to truncate based on map size
 			if (this.#items.size > max) {
-				logger.add(`NOTIF: Auto truncating item(s) from the page use the ${this.#sortType} sort method.`);
+				logger.add(`NOTIF: Auto truncating item(s) from the page using the ${this.#sortType} sort method.`);
 
 				// Convert map to array for sorting
 				const itemsArray = Array.from(this.#items.entries()).map(([asin, item]) => ({
 					asin,
 					date: new Date(item.data.date),
-					price: parseFloat(item.data.etv_max) || 0,
+					price: parseFloat(item.data.etv_min) || 0,
 					element: item.element,
 				}));
 
@@ -1658,6 +1700,7 @@ class NotificationMonitor {
 			this.#processBroadcastMessage(message);
 		});
 	}
+
 	async #processBroadcastMessage(data) {
 		if (data.type == undefined) {
 			return false;
