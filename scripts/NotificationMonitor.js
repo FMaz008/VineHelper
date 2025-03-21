@@ -62,9 +62,6 @@ class NotificationMonitor {
 	#firefox = false;
 	#mostRecentItemDate = null;
 	#mostRecentItemDateDOM = null;
-	#filterType = -1;
-	#filterQueue = -1;
-	#sortQueue = window.localStorage.getItem("vhnm-sortQueueType") || TYPE_DATE;
 	#goldTier = true;
 	#etvLimit = null;
 	#itemTemplateFile = "tile_gridview.html";
@@ -72,7 +69,12 @@ class NotificationMonitor {
 	#lightMode = false;
 	#statusTimer = null;
 	#fetchLimit = 100;
-	#autoTruncateEnabled = window.localStorage.getItem("vhnm-autoTruncate") === "true";
+
+	// UI User settings (will be loaded from storage)
+	#autoTruncateEnabled = true;
+	#filterQueue = -1;
+	#filterType = -1;
+	#sortType = TYPE_DATE;
 
 	constructor() {
 		this.#imageUrls = new Set();
@@ -80,11 +82,52 @@ class NotificationMonitor {
 		this.#feedPausedAmountStored = 0;
 		this.#channel = new BroadcastChannel("VineHelper");
 
-		// Initialize filter settings from localStorage
-		this.#filterType = parseInt(window.localStorage.getItem("vhnm-filterType") || "-1");
-		this.#filterQueue = window.localStorage.getItem("vhnm-filterQueue") || "-1";
+		// Create a promise to track when settings are loaded
+		this.settingsLoaded = new Promise((resolve) => {
+			this.settingsLoadedResolver = resolve;
+		});
 
+		this.#loadUIUserSettings();
 		this.#defineFetchLimit();
+	}
+
+	async #loadUIUserSettings() {
+		// Load settings from chrome.storage.local
+		chrome.storage.local.get(
+			{
+				"vhnm-autoTruncate": true,
+				"vhnm-filterQueue": -1,
+				"vhnm-filterType": -1,
+				"vhnm-sortType": TYPE_DATE,
+			},
+			(result) => {
+				// restore the settings from storage
+				this.#autoTruncateEnabled = result["vhnm-autoTruncate"] === true;
+				this.#filterQueue = result["vhnm-filterQueue"];
+				this.#filterType = result["vhnm-filterType"];
+				this.#sortType = result["vhnm-sortType"];
+
+				// Update UI if it's already initialized
+				this.#updateUIUserSettings();
+
+				// Resolve the promise to indicate settings are loaded
+				this.settingsLoadedResolver();
+			}
+		);
+	}
+
+	#updateUIUserSettings() {
+		const autoTruncateCheckbox = document.getElementById("auto-truncate");
+		if (autoTruncateCheckbox) autoTruncateCheckbox.checked = this.#autoTruncateEnabled;
+
+		const filterQueueSelect = document.querySelector("select[name='filter-queue']");
+		if (filterQueueSelect) filterQueueSelect.value = this.#filterQueue;
+
+		const filterTypeSelect = document.querySelector("select[name='filter-type']");
+		if (filterTypeSelect) filterTypeSelect.value = this.#filterType;
+
+		const sortQueueSelect = document.querySelector("select[name='sort-queue']");
+		if (sortQueueSelect) sortQueueSelect.value = this.#sortType;
 	}
 
 	async #defineFetchLimit() {
@@ -106,6 +149,9 @@ class NotificationMonitor {
 		} else {
 			this.#itemTemplateFile = "tile_gridview.html";
 		}
+
+		// Wait for settings to load before proceeding
+		await this.settingsLoaded;
 
 		//Remove the existing items.
 		this.#gridContainer = document.querySelector("#vvp-items-grid");
@@ -197,6 +243,9 @@ class NotificationMonitor {
 		const header = Tpl.render(prom2, true);
 		parentContainer.insertBefore(header, mainContainer);
 
+		// Update UI filters after header is inserted
+		this.#updateUIUserSettings();
+
 		//Insert the VH tab container for the items even if there is no tabs
 		const tabContainer = document.createElement("div");
 		tabContainer.id = "vh-tabs";
@@ -245,10 +294,6 @@ class NotificationMonitor {
 			}
 		}
 
-		//Restore the sort queue type
-		const sortQueue = document.querySelector("select[name='sort-queue']");
-		sortQueue.value = this.#sortQueue;
-
 		//Activate the listeners
 		this.#listeners();
 
@@ -260,6 +305,9 @@ class NotificationMonitor {
 		this.#lightMode = true;
 		this.#itemTemplateFile = "tile_lightview.html";
 
+		// Wait for settings to load before proceeding
+		await this.settingsLoaded;
+
 		//Insert the header
 		const parentContainer = document.querySelector("body");
 
@@ -267,6 +315,9 @@ class NotificationMonitor {
 		Tpl.setVar("fetchLimit", this.#fetchLimit);
 		const header = Tpl.render(prom2, true);
 		parentContainer.appendChild(header);
+
+		// Update UI filters after header is inserted
+		this.#updateUIUserSettings();
 
 		const itemContainer = document.createElement("div");
 		itemContainer.id = "vvp-items-grid";
@@ -282,10 +333,6 @@ class NotificationMonitor {
 		i13n.setCountryCode(Settings.get("general.country"));
 		document.getElementById("date_loaded").innerText = this.#formatDate();
 		this.#mostRecentItemDateDOM = document.getElementById("date_most_recent_item");
-
-		//Restore the sort queue type
-		const sortQueue = document.querySelector("select[name='sort-queue']");
-		sortQueue.value = this.#sortQueue;
 
 		this.#listeners();
 
@@ -556,9 +603,9 @@ class NotificationMonitor {
 		let tileDOM = await Tpl.render(prom2, true);
 
 		// Insert the tile based on sort type
-		if (this.#sortQueue === TYPE_PRICE && etv_min !== null) {
+		if (this.#sortType === TYPE_PRICE && etv_min !== null) {
 			// For price sorting, find the correct position and insert there
-			const newPrice = parseFloat(etv_max) || 0;
+			const newPrice = parseFloat(etv_min) || 0;
 			let insertPosition = null;
 
 			// Find the first item with a lower price
@@ -567,7 +614,7 @@ class NotificationMonitor {
 				// Skip the current item or items without elements
 				if (existingAsin === asin || !item.element) continue;
 
-				const existingPrice = parseFloat(item.data.etv_max) || 0;
+				const existingPrice = parseFloat(item.data.etv_min) || 0;
 				if (newPrice > existingPrice) {
 					insertPosition = item.element;
 					break;
@@ -612,7 +659,7 @@ class NotificationMonitor {
 		//This is what determine & trigger what sound effect to play
 		if (KWsMatch) {
 			this.#highlightedItemFound(tileDOM, true); //Play the highlight sound
-		} else if (etv_min !== null && parseFloat(etv_min) === 0) {
+		} else if (parseFloat(etv_min) === 0) {
 			this.#zeroETVItemFound(tileDOM, true); //Play the zeroETV sound
 		} else {
 			this.#regularItemFound(tileDOM, true); //Play the regular sound
@@ -774,11 +821,6 @@ class NotificationMonitor {
 		return true;
 	}
 
-	// Get item data from the Map
-	#getItemData(asin) {
-		return this.#items.get(asin)?.data;
-	}
-
 	// Store DOM element reference
 	#storeItemDOMElement(asin, element) {
 		if (this.#items.has(asin)) {
@@ -889,7 +931,7 @@ class NotificationMonitor {
 		this.setETV(notif, etv);
 
 		// Re-position the item if using price sort and the value changed significantly
-		if (this.#sortQueue === TYPE_PRICE) {
+		if (this.#sortType === TYPE_PRICE) {
 			const newETV = this.#items.get(asin)?.data?.etv_max || 0;
 
 			// Only reposition if the ETV changed significantly enough to potentially affect order
@@ -1120,7 +1162,7 @@ class NotificationMonitor {
 			this.#moveNotifToTop(notif);
 
 			// If sorting by price is active, resort after identifying as zero ETV
-			if (this.#sortQueue === TYPE_PRICE) {
+			if (this.#sortType === TYPE_PRICE) {
 				this.#processNotificationSorting();
 			}
 		}
@@ -1194,10 +1236,10 @@ class NotificationMonitor {
 
 		// Sort the array based on the current sort queue
 		validItems.sort((a, b) => {
-			if (this.#sortQueue === TYPE_DATE) {
+			if (this.#sortType === TYPE_DATE) {
 				// Sort by date, newest first
 				return new Date(b.data.date) - new Date(a.data.date);
-			} else if (this.#sortQueue === TYPE_PRICE) {
+			} else if (this.#sortType === TYPE_PRICE) {
 				// Sort by price, highest first
 				const aPrice = parseFloat(a.data.etv_max) || 0;
 				const bPrice = parseFloat(b.data.etv_max) || 0;
@@ -1432,18 +1474,25 @@ class NotificationMonitor {
 		if (this.#autoTruncateEnabled) {
 			// Check if we need to truncate based on map size
 			if (this.#items.size > max) {
-				logger.add(`NOTIF: Auto truncating item(s) from the page.`);
+				logger.add(`NOTIF: Auto truncating item(s) from the page use the ${this.#sortType} sort method.`);
 
-				// Convert map to array for sorting by date
-				const itemsArray = Array.from(this.#items.entries())
-					.map(([asin, item]) => ({
-						asin,
-						date: new Date(item.data.date),
-						element: item.element,
-					}))
-					.sort((a, b) => a.date - b.date); // Sort oldest first
+				// Convert map to array for sorting
+				const itemsArray = Array.from(this.#items.entries()).map(([asin, item]) => ({
+					asin,
+					date: new Date(item.data.date),
+					price: parseFloat(item.data.etv_max) || 0,
+					element: item.element,
+				}));
 
-				// Remove the oldest items exceeding the max
+				// Sort according to current sort method, but reversed
+				// (we want to remove lowest price or oldest items)
+				if (this.#sortType === TYPE_PRICE) {
+					itemsArray.sort((a, b) => a.price - b.price); // Sort lowest price first
+				} else {
+					itemsArray.sort((a, b) => a.date - b.date); // Sort oldest first (default)
+				}
+
+				// Remove the oldest/lowest-priced items exceeding the max
 				const itemsToRemove = itemsArray.slice(0, itemsArray.length - max);
 
 				for (const item of itemsToRemove) {
@@ -1475,12 +1524,6 @@ class NotificationMonitor {
 
 		// Update the tab title
 		document.title = "VHNM (" + visibleCount + ")";
-
-		// Update the visible items count in the UI
-		const visibleItemsElement = document.getElementById("visible_items_count");
-		if (visibleItemsElement) {
-			visibleItemsElement.textContent = visibleCount;
-		}
 	}
 
 	#listeners() {
@@ -1571,20 +1614,18 @@ class NotificationMonitor {
 			}
 		});
 
+		// Bind sort and filter controls
 		const sortQueue = document.querySelector("select[name='sort-queue']");
 		sortQueue.addEventListener("change", (event) => {
-			this.#sortQueue = sortQueue.value;
-			window.localStorage.setItem("vhnm-sortQueueType", this.#sortQueue);
+			this.#sortType = sortQueue.value;
+			chrome.storage.local.set({ "vhnm-sortType": this.#sortType });
 			this.#processNotificationSorting();
 		});
-		this.#sortQueue = sortQueue.value;
 
-		//Bind the event when changing the filter
 		const filterType = document.querySelector("select[name='filter-type']");
-		filterType.value = this.#filterType; // Set the initial value from saved settings
 		filterType.addEventListener("change", (event) => {
 			this.#filterType = filterType.value;
-			window.localStorage.setItem("vhnm-filterType", this.#filterType);
+			chrome.storage.local.set({ "vhnm-filterType": this.#filterType });
 			//Display a specific type of notifications only
 			document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
 				this.#processNotificationFiltering(node);
@@ -1593,10 +1634,9 @@ class NotificationMonitor {
 		});
 
 		const filterQueue = document.querySelector("select[name='filter-queue']");
-		filterQueue.value = this.#filterQueue; // Set the initial value from saved settings
 		filterQueue.addEventListener("change", (event) => {
 			this.#filterQueue = filterQueue.value;
-			window.localStorage.setItem("vhnm-filterQueue", this.#filterQueue);
+			chrome.storage.local.set({ "vhnm-filterQueue": this.#filterQueue });
 			//Display a specific type of notifications only
 			document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
 				this.#processNotificationFiltering(node);
@@ -1604,12 +1644,11 @@ class NotificationMonitor {
 			this.#updateTabTitle();
 		});
 
-		// Auto truncate checkbox
 		const autoTruncateCheckbox = document.getElementById("auto-truncate");
 		autoTruncateCheckbox.checked = this.#autoTruncateEnabled;
 		autoTruncateCheckbox.addEventListener("change", (event) => {
 			this.#autoTruncateEnabled = autoTruncateCheckbox.checked;
-			window.localStorage.setItem("vhnm-autoTruncate", this.#autoTruncateEnabled);
+			chrome.storage.local.set({ "vhnm-autoTruncate": this.#autoTruncateEnabled });
 		});
 
 		//Message from within the context of the extension
@@ -1689,8 +1728,6 @@ class NotificationMonitor {
 				BlurKWsMatch,
 				unavailable
 			);
-
-			// No need to sort - items are now inserted at the correct position
 		}
 		if (data.type == "fetch100") {
 			for (const item of data.data) {
@@ -1721,7 +1758,6 @@ class NotificationMonitor {
 				}
 			}
 
-			// Sort all items after batch processing
 			this.#processNotificationSorting();
 		}
 	}
