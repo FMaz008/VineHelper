@@ -1178,12 +1178,13 @@ class NotificationMonitor {
 			}
 		}
 
-		//Move the notification to the top
+		//Move the notification to the top only if we're not using price-based sorting
 		if (!this.#fetchingRecentItems) {
-			this.#moveNotifToTop(notif);
-
-			// If sorting by price is active, resort after identifying as zero ETV
-			if (this.#sortType === TYPE_PRICE) {
+			// Only move to top if we're NOT using price sort
+			if (this.#sortType !== TYPE_PRICE) {
+				this.#moveNotifToTop(notif);
+			} else {
+				// If sorting by price is active, just resort after identifying as zero ETV
 				this.#processNotificationSorting();
 			}
 		}
