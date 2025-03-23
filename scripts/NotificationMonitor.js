@@ -798,11 +798,20 @@ class NotificationMonitor {
 			};
 		});
 
+		// Sort based on the current sort type
 		itemsArray.sort((a, b) => {
-			// Sort by ETV value, highest first
-			const aPrice = parseFloat(a.data.etv_min) || 0;
-			const bPrice = parseFloat(b.data.etv_min) || 0;
-			return bPrice - aPrice;
+			if (this.#sortType === TYPE_DATE) {
+				// Sort by date, newest first
+				return new Date(b.data.date) - new Date(a.data.date);
+			} else {
+				// Default: sort by price (TYPE_PRICE), highest first
+				// Treat null/undefined as -1 so actual 0 values rank higher
+				const aPrice =
+					a.data.etv_min !== null && a.data.etv_min !== undefined ? parseFloat(a.data.etv_min) : -1;
+				const bPrice =
+					b.data.etv_min !== null && b.data.etv_min !== undefined ? parseFloat(b.data.etv_min) : -1;
+				return bPrice - aPrice;
+			}
 		});
 
 		// Transform the sorted array back to [key, value] pairs for the Map constructor
@@ -815,6 +824,8 @@ class NotificationMonitor {
 				},
 			])
 		);
+
+		return itemsArray;
 	}
 
 	// Update item data with ETV
@@ -1178,12 +1189,13 @@ class NotificationMonitor {
 			}
 		}
 
-		//Move the notification to the top
+		//Move the notification to the top only if we're not using price-based sorting
 		if (!this.#fetchingRecentItems) {
-			this.#moveNotifToTop(notif);
-
-			// If sorting by price is active, resort after identifying as zero ETV
-			if (this.#sortType === TYPE_PRICE) {
+			// Only move to top if we're NOT using price sort
+			if (this.#sortType !== TYPE_PRICE) {
+				this.#moveNotifToTop(notif);
+			} else {
+				// If sorting by price is active, just resort after identifying as zero ETV
 				this.#processNotificationSorting();
 			}
 		}
@@ -1240,34 +1252,14 @@ class NotificationMonitor {
 	#processNotificationSorting() {
 		const container = document.getElementById("vvp-items-grid");
 
-		// Only proceed if there are items to sort
-		if (this.#items.size === 0) return;
+		// Sort the items - reuse the sorting logic from #sortItems
+		const sortedItems = this.#sortItems();
 
-		// Convert Map to array for sorting
-		const itemsArray = Array.from(this.#items.entries()).map(([asin, item]) => {
-			return {
-				asin,
-				data: item.data,
-				element: item.element,
-			};
-		});
+		// Only proceed if we have items
+		if (!sortedItems || sortedItems.length === 0) return;
 
 		// Filter out any items without DOM elements
-		const validItems = itemsArray.filter((item) => item.element);
-
-		// Sort the array based on the current sort queue
-		validItems.sort((a, b) => {
-			if (this.#sortType === TYPE_DATE) {
-				// Sort by date, newest first
-				return new Date(b.data.date) - new Date(a.data.date);
-			} else if (this.#sortType === TYPE_PRICE) {
-				// Sort by price, highest first
-				const aPrice = parseFloat(a.data.etv_min) || 0;
-				const bPrice = parseFloat(b.data.etv_min) || 0;
-				return bPrice - aPrice;
-			}
-			return 0;
-		});
+		const validItems = sortedItems.filter((item) => item.element);
 
 		// Efficiently reorder DOM elements
 		// Remove all items from the DOM first to avoid unnecessary reflows
