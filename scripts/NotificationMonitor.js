@@ -136,6 +136,9 @@ class NotificationMonitor {
 		this.#gridContainer = document.querySelector("#vvp-items-grid");
 		this.#gridContainer.innerHTML = "";
 
+		//Create the event listeners
+		this.#createEventListeners();
+
 		//Check if the user is a gold tier user
 		this.#updateGoldStatus();
 
@@ -304,6 +307,9 @@ class NotificationMonitor {
 
 		this.#gridContainer = document.querySelector("#vvp-items-grid");
 
+		//Create the event listeners
+		this.#createEventListeners();
+
 		//Obtain the status of the WebSocket connection.
 		chrome.runtime.sendMessage({
 			type: "wsStatus",
@@ -360,7 +366,7 @@ class NotificationMonitor {
 		}
 		this.#goldTier = gold;
 
-		logger.add("NOTIF:Gold tier: " + this.#goldTier);
+		logger.add("NOTIF: Gold tier: " + this.#goldTier);
 		if (!this.#goldTier) {
 			//Get the maximum allowed value
 			const rawText = document.querySelector("#vvp-vine-participation-content ul>li").innerText;
@@ -699,57 +705,91 @@ class NotificationMonitor {
 			this.#updateTabTitle();
 		}, 250);
 
-		// Add new click listener for the report button
-		document.querySelector("#vh-report-link-" + asin).addEventListener("click", this.#handleReportClick);
+		//Autotruncate the items if there are too many
+		this.#autoTruncate();
 
-		//Add new click listener for Brenda announce:
-		if (Settings.get("discord.active") && Settings.get("discord.guid", false) != null) {
-			const announce = document.querySelector("#vh-announce-link-" + asin);
-			announce.addEventListener("click", this.#handleBrendaClick);
+		return tileDOM; //Return the DOM element for the tile.
+	}
+
+	#createEventListeners() {
+		// Bind the click handler to the instance and then add as event listener
+		this.#gridContainer.addEventListener("click", (e) => this.#clickHandler(e));
+	}
+
+	#clickHandler(e) {
+		e.preventDefault();
+
+		//Check if the closes element is .vh-icon-search
+		const searchLink = e.target.closest(".vh-icon-search");
+		if (searchLink) {
+			window.open(searchLink.parentElement.href, "_blank");
+			return;
 		}
 
-		//Add new click listener for the pinned button
-		if (Settings.get("pinnedTab.active")) {
-			const pinIcon = document.querySelector("#vh-pin-link-" + asin);
-			pinIcon.addEventListener("click", this.#handlePinClick);
+		//Check if the closest element is .vh-icon-report
+		const reportLink = e.target.closest(".vh-icon-report");
+		if (reportLink) {
+			this.#handleReportClick(e);
+			return;
 		}
 
-		//Add new click listener for the hide button
-		const hideIcon = document.querySelector("#vh-hide-link-" + asin);
-		hideIcon.addEventListener("click", this.#handleHideClick);
+		//Check if the closest element is .vh-icon-announcement
+		const announceLink = e.target.closest(".vh-icon-announcement");
+		if (announceLink) {
+			if (Settings.get("discord.active") && Settings.get("discord.guid", false) != null) {
+				this.#handleBrendaClick(e);
+				return;
+			}
+		}
 
-		//Add new click listener for the technical details button
-		const detailsIcon = document.querySelector("#vh-reason-link-" + asin);
+		//Check if the closest element is .vh-icon-pin
+		const pinLink = e.target.closest(".vh-icon-pin");
+		if (pinLink) {
+			if (Settings.get("pinnedTab.active")) {
+				this.#handlePinClick(e);
+				return;
+			}
+		}
+
+		//Check if the closest element is .vh-icon-hide
+		const hideLink = e.target.closest(".vh-icon-hide");
+		if (hideLink) {
+			this.#handleHideClick(e);
+			return;
+		}
+
+		//Check if the closest element is .vh-icon-question
+		const detailsIcon = e.target.closest(".vh-icon-question");
 		if (detailsIcon) {
-			detailsIcon.addEventListener("click", this.#handleDetailsClick);
+			this.#handleDetailsClick(e);
+			return;
 		}
 
 		//Add the click listener for the See Details button
 		if (this.#firefox || Settings.get("notification.monitor.openLinksInNewTab") == "1") {
 			//Deactivate Vine click handling
-			const btnContainer = document.querySelector(`#vh-notification-${asin} .vvp-details-btn`);
-			const seeDetailsBtn = document.querySelector(`#vh-notification-${asin} .a-button-primary input`);
-			if (btnContainer && seeDetailsBtn) {
+
+			const btnContainer = e.target.closest(".vvp-details-btn");
+			const seeDetailsBtn = e.target.closest(".a-button-primary input");
+			if (seeDetailsBtn) {
 				//Monitor V2 does not have these buttons
-				btnContainer.classList.remove("vvp-details-btn");
+
+				//Remove the class to remove the default behavior of the button
+				if (btnContainer) {
+					btnContainer.classList.remove("vvp-details-btn");
+				}
+				const asin = seeDetailsBtn.dataset.asin;
+				const queue = seeDetailsBtn.dataset.queue;
+				const is_parent_asin = seeDetailsBtn.dataset.isParentAsin;
+				const enrollment_guid = seeDetailsBtn.dataset.enrollmentGuid;
 
 				//Store the function reference as a property on the element
-				seeDetailsBtn.openDetailsHandler = () => {
-					window.open(
-						`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`,
-						"_blank"
-					);
-				};
-
-				//Add the event listener using the stored reference
-				seeDetailsBtn.addEventListener("click", seeDetailsBtn.openDetailsHandler);
+				window.open(
+					`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`,
+					"_blank"
+				);
 			}
 		}
-
-		//Autotruncate the items if there are too many
-		this.#autoTruncate();
-
-		return tileDOM; //Return the DOM element for the tile.
 	}
 
 	#currentDateTime() {
@@ -896,38 +936,7 @@ class NotificationMonitor {
 		const item = this.#items.get(asin);
 		const imgUrl = item?.data?.img_url;
 
-		// Remove specific event listeners
-		const reportBtn = tile.querySelector('[id^="vh-report-link-"]');
-		if (reportBtn) {
-			reportBtn.removeEventListener("click", this.#handleReportClick);
-		}
-
-		const announceBtn = tile.querySelector('[id^="vh-announce-link-"]');
-		if (announceBtn) {
-			announceBtn.removeEventListener("click", this.#handleBrendaClick);
-		}
-
-		const pinBtn = tile.querySelector('[id^="vh-pin-link-"]');
-		if (pinBtn) {
-			pinBtn.removeEventListener("click", this.#handlePinClick);
-		}
-
-		const hideBtn = tile.querySelector('[id^="vh-hide-link-"]');
-		if (hideBtn) {
-			hideBtn.removeEventListener("click", this.#handleHideClick);
-		}
-
-		const detailsBtn = tile.querySelector('[id^="vh-reason-link-"]');
-		if (detailsBtn) {
-			detailsBtn.removeEventListener("click", this.#handleDetailsClick);
-		}
-
-		const seeDetailsBtn = tile.querySelector(`.a-button-primary input`);
-		if (seeDetailsBtn && seeDetailsBtn.openDetailsHandler) {
-			seeDetailsBtn.removeEventListener("click", seeDetailsBtn.openDetailsHandler);
-			delete seeDetailsBtn.openDetailsHandler;
-		}
-
+		// Remove the tooltip
 		const a = tile.querySelector(".a-link-normal");
 		if (a) {
 			tooltip.removeTooltip(a);
@@ -1326,7 +1335,7 @@ class NotificationMonitor {
 	//############################################################
 	//## CLICK HANDLERS
 
-	#handleHideClick = (e) => {
+	#handleHideClick(e) {
 		e.preventDefault();
 
 		const asin = e.target.dataset.asin;
@@ -1337,9 +1346,9 @@ class NotificationMonitor {
 		if (tile) {
 			this.#removeTile(tile, asin);
 		}
-	};
+	}
 
-	#handleBrendaClick = (e) => {
+	#handleBrendaClick(e) {
 		e.preventDefault();
 
 		const asin = e.target.dataset.asin;
@@ -1348,9 +1357,9 @@ class NotificationMonitor {
 		let etv = document.querySelector("#vh-notification-" + asin + " .etv").dataset.etvMax;
 
 		brendaAnnounceQueue.announce(asin, etv, queue, i13n.getDomainTLD());
-	};
+	}
 
-	#handlePinClick = (e) => {
+	#handlePinClick(e) {
 		e.preventDefault();
 
 		const asin = e.target.dataset.asin;
@@ -1370,9 +1379,9 @@ class NotificationMonitor {
 				content: title,
 			})
 		);
-	};
+	}
 
-	#handleDetailsClick = (e) => {
+	#handleDetailsClick(e) {
 		e.preventDefault();
 
 		const asin = e.target.dataset.asin;
@@ -1406,9 +1415,9 @@ class NotificationMonitor {
 			blurKW +
 			"</li></ul>";
 		m.show();
-	};
+	}
 
-	#handleReportClick = (e) => {
+	#handleReportClick(e) {
 		e.preventDefault(); // Prevent the default click behavior
 		const asin = e.target.dataset.asin;
 
@@ -1423,7 +1432,7 @@ class NotificationMonitor {
 		if (val !== null && val.toLowerCase() == "report") {
 			this.#send_report(asin);
 		}
-	};
+	}
 
 	#send_report(asin) {
 		let manifest = chrome.runtime.getManifest();
