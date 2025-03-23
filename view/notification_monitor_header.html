@@ -10,24 +10,16 @@
 			>
 		</div>
 		<div style="width: 200px">
-			<div class="notice" id="statusSW">
-				<table>
-					<tr id="statusSW">
-						<td width="36px"><div class="vh-switch-32 vh-icon-switch-off"></div></td>
-						<td width="130px" style="font-weight: bold">Service Worker:</td>
-					</tr>
-					<tr>
-						<td id="descriptionSW" colspan="2"></td>
-					</tr>
-					<tr id="statusWS">
-						<td width="36px"><div class="vh-switch-32 vh-icon-switch-off"></div></td>
-						<td width="130px" style="font-weight: bold">Websocket Server:</td>
-					</tr>
-					<tr>
-						<td id="descriptionWS" colspan="2"></td>
-					</tr>
-				</table>
+			<div class="notice" id="statusSW" style="display: flex">
+				<div class="vh-switch-32 vh-icon-switch-off" style="margin-right: 10px"></div>
+				<div>Service Worker:</div>
 			</div>
+			<div id="descriptionSW"></div>
+			<div class="notice" id="statusWS" style="display: flex">
+				<div class="vh-switch-32 vh-icon-switch-off" style="margin-right: 10px"></div>
+				<div>Websocket Server:</div>
+			</div>
+			<div id="descriptionWS"></div>
 		</div>
 	</div>
 	<div>
