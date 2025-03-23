@@ -489,6 +489,7 @@ class NotificationMonitor {
 		const recommendationType = getRecommendationTypeFromQueue(queue); //grid.js
 		const recommendationId = generateRecommendationString(recommendationType, asin, enrollment_guid); //grid.js
 
+		date = new Date(date);
 		// Create the item data object
 		const itemData = {
 			asin,
@@ -677,7 +678,7 @@ class NotificationMonitor {
 			this.#disableItem(tileDOM);
 		}
 
-		if (this.#mostRecentItemDate == null || new Date(date) > new Date(this.#mostRecentItemDate)) {
+		if (this.#mostRecentItemDate == null || date > this.#mostRecentItemDate) {
 			this.#mostRecentItemDateDOM.innerText = this.#formatDate(date);
 			this.#mostRecentItemDate = date;
 		}
@@ -746,15 +747,13 @@ class NotificationMonitor {
 	}
 
 	#currentDateTime() {
-		return new Date()
-			.toISOString()
-			.replace("T", " ") // Replace T with space
-			.replace(/\.\d+Z$/, ""); // Remove milliseconds and Z
+		return new Date();
 	}
 
 	// Add or update item data in the Map
 	#addItemData(asin, itemData) {
 		// Create a new item object or update existing one
+
 		if (!this.#items.has(asin)) {
 			// New item
 			this.#items.set(asin, {
@@ -802,7 +801,7 @@ class NotificationMonitor {
 		itemsArray.sort((a, b) => {
 			if (this.#sortType === TYPE_DATE) {
 				// Sort by date, newest first
-				return new Date(b.data.date) - new Date(a.data.date);
+				return b.data.date - a.data.date;
 			} else {
 				// Default: sort by price (TYPE_PRICE), highest first
 				// Treat null/undefined as -1 so actual 0 values rank higher
@@ -1470,16 +1469,16 @@ class NotificationMonitor {
 
 	#formatDate(date = null) {
 		if (date == null) {
-			date = new Date().toISOString().slice(0, 19).replace("T", " ");
+			date = new Date();
 		}
-		return new Date(date.replace(" ", "T") + "Z").toLocaleString(i13n.getLocale(), {
+		return new Intl.DateTimeFormat(i13n.getLocale(), {
 			month: "2-digit",
 			day: "2-digit",
 			hour: "2-digit",
 			minute: "2-digit",
 			second: "2-digit",
 			hour12: !Settings.get("notification.monitor.24hrsFormat"),
-		});
+		}).format(date);
 	}
 
 	#autoTruncate(max = 1000) {
