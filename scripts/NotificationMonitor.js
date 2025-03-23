@@ -582,6 +582,10 @@ class NotificationMonitor {
 
 		let tileDOM = await Tpl.render(prom2, true);
 
+		// Create fragment and add the tile to it
+		const fragment = document.createDocumentFragment();
+		fragment.appendChild(tileDOM);
+
 		// Insert the tile based on sort type
 		if (this.#sortType === TYPE_PRICE) {
 			if (etv_min !== null) {
@@ -604,18 +608,20 @@ class NotificationMonitor {
 
 				if (insertPosition) {
 					// Insert before the found position
-					this.#gridContainer.insertBefore(tileDOM, insertPosition);
+					this.#gridContainer.insertBefore(fragment, insertPosition);
 				} else {
 					// If no position found or item has highest price, append to the end
-					this.#gridContainer.appendChild(tileDOM);
+
+					this.#gridContainer.appendChild(fragment);
 				}
 			} else {
 				// If no ETV min, append to the end
-				this.#gridContainer.appendChild(tileDOM);
+				this.#gridContainer.appendChild(fragment);
 			}
 		} else {
 			// For other sort types, just insert at the beginning
-			this.#gridContainer.insertBefore(tileDOM, this.#gridContainer.firstChild);
+
+			this.#gridContainer.insertBefore(fragment, this.#gridContainer.firstChild);
 		}
 
 		// Store a reference to the DOM element
