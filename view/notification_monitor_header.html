@@ -1,23 +1,30 @@
 <div style="margin: 0px" id="vh-notifications-monitor-header">
 	<div class="vh-icon-32 vh-icon-vh" style="float: left; margin-right: 10px"></div>
 	<h3>Notification Monitor</h3>
-	<div style="display: flex">
-		<div style="width: 300px; margin-bottom: 15px">
-			<strong>Loaded on: </strong><span id="date_loaded"></span><br />
-			<strong>Most recent item: </strong><span id="date_most_recent_item">(tba)</span><br />
+	<div style="display: flex; clear: both">
+		<div style="width: 150px; margin-bottom: 15px">
+			<strong>Loaded on: </strong>
+			<br /><span id="date_loaded"></span> <br /><strong>Most recent item: </strong> <br /><span
+				id="date_most_recent_item"
+				>(tba)</span
+			>
 		</div>
-		<div>
+		<div style="width: 200px">
 			<div class="notice" id="statusSW">
 				<table>
 					<tr id="statusSW">
 						<td width="36px"><div class="vh-switch-32 vh-icon-switch-off"></div></td>
 						<td width="130px" style="font-weight: bold">Service Worker:</td>
-						<td class="description"></td>
+					</tr>
+					<tr>
+						<td id="descriptionSW" colspan="2"></td>
 					</tr>
 					<tr id="statusWS">
 						<td width="36px"><div class="vh-switch-32 vh-icon-switch-off"></div></td>
 						<td width="130px" style="font-weight: bold">Websocket Server:</td>
-						<td class="description"></td>
+					</tr>
+					<tr>
+						<td id="descriptionWS" colspan="2"></td>
 					</tr>
 				</table>
 			</div>
@@ -40,30 +47,31 @@
 			</label>
 		</div>
 		<div style="float: right">
-			<label for="sort-queue" style="float: right; margin-right: 20px">
-				Sort by:
-				<select name="sort-queue">
-					<option value="date">Date (new-old)</option>
-					<option value="price">ETV (high-low)</option>
-				</select>
-			</label>
-		</div>
-		<div style="float: right">
-			<label for="filter-queue" style="float: right; margin-right: 20px">
-				Filter by:
-				<select name="filter-queue">
-					<option value="-1">Show all queues</option>
-					<option value="last_chance">AFA</option>
-					<option value="encore">AI</option>
-				</select>
-				<select name="filter-type">
-					<option value="-1">Show all notifications</option>
-					<option value="0">Regular only</option>
-					<option value="1">Zero ETV only</option>
-					<option value="2">KW match only</option>
-					<option value="9">Zero ETV or KW match only</option>
-				</select>
-			</label>
+			<div style="display: flex; align-items: right">
+				<label for="filter-queue" style="margin-right: 10px">
+					Filter by:
+					<select name="filter-queue">
+						<option value="-1">Show all queues</option>
+						<option value="last_chance">AFA</option>
+						<option value="encore">AI</option>
+					</select>
+					<select name="filter-type">
+						<option value="-1">Show all notifications</option>
+						<option value="0">Regular only</option>
+						<option value="1">Zero ETV only</option>
+						<option value="2">KW match only</option>
+						<option value="9">Zero ETV or KW match only</option>
+					</select>
+				</label>
+
+				<label for="sort-queue">
+					Sort by:
+					<select name="sort-queue">
+						<option value="date">Date (new-old)</option>
+						<option value="price">ETV (high-low)</option>
+					</select>
+				</label>
+			</div>
 		</div>
 	</div>
 	<div style="clear: both"></div>

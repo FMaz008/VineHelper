@@ -1084,7 +1084,7 @@ class NotificationMonitor {
 
 	setWebSocketStatus(status, message = null) {
 		const icon = document.querySelector("#statusWS div.vh-switch-32");
-		const description = document.querySelector("#statusWS .description");
+		const description = document.querySelector("#descriptionWS");
 		if (status) {
 			icon.classList.remove("vh-icon-switch-off");
 			icon.classList.add("vh-icon-switch-on");
@@ -1139,7 +1139,7 @@ class NotificationMonitor {
 
 	#setServiceWorkerStatus(status, desc = "") {
 		const icon = document.querySelector("#statusSW div.vh-switch-32");
-		const description = document.querySelector("#statusSW .description");
+		const description = document.querySelector("#descriptionSW");
 
 		if (status) {
 			icon.classList.remove("vh-icon-switch-off");
