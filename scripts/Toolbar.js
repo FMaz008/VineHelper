@@ -82,6 +82,40 @@ class Toolbar {
 		// Activate the announce button when the ETV is set (changed)
 		const etvElements = container2.querySelectorAll(".etv");
 		etvElements.forEach((etv) => {
+			// Create the click handler outside the change event
+			const announceClickHandler = async (e) => {
+				e.preventDefault();
+
+				if (env.data.vineQueue == null) throw new Exception("Cannot announce an item in an unknown queue.");
+
+				let etv = this.#tile.getDOM().querySelector(".etv").textContent;
+
+				// In case of price range, only send the highest value
+				etv = etv.split("-").pop();
+				etv = Number(etv.replace(/[^0-9-.]+/g, ""));
+
+				brendaAnnounceQueue.announce(this.#tile.getAsin(), etv, env.data.vineQueue, i13n.getDomainTLD());
+
+				if (!Settings.get("notification.reduce")) {
+					let note = new ScreenNotification();
+					note.title = "Announce to Brenda";
+					note.lifespan = 10;
+					note.content = `Sending this product ${this.#tile.getAsin()} from the ${env.data.vineQueueAbbr} queue to Brenda over on discord`;
+					await Notifications.pushNotification(note);
+				}
+
+				// Visually deactivate this item
+				let tileDOM = this.#tile.getDOM();
+				let announcementIcon = tileDOM.querySelector(".vh-icon-announcement");
+				if (announcementIcon) {
+					let parentAnchor = announcementIcon.parentElement;
+					if (parentAnchor && parentAnchor.tagName === "A") {
+						parentAnchor.removeEventListener("click", announceClickHandler);
+						parentAnchor.style.opacity = "0.3";
+					}
+				}
+			};
+
 			etv.addEventListener("change", (event) => {
 				if (event.currentTarget.textContent === "") return false;
 				if (env.data.vineSearch) return false;
@@ -92,39 +126,9 @@ class Toolbar {
 				if (announcementIcon) {
 					announcementIcon.style.opacity = "1";
 					let parentAnchor = announcementIcon.parentElement;
-					const announceClickHandler = async (e) => {
-						e.preventDefault();
-
-						if (env.data.vineQueue == null)
-							throw new Exception("Cannot announce an item in an unknown queue.");
-
-						let etv = this.#tile.getDOM().querySelector(".etv").textContent;
-
-						// In case of price range, only send the highest value
-						etv = etv.split("-").pop();
-						etv = Number(etv.replace(/[^0-9-.]+/g, ""));
-
-						brendaAnnounceQueue.announce(
-							this.#tile.getAsin(),
-							etv,
-							env.data.vineQueue,
-							i13n.getDomainTLD()
-						);
-
-						if (!Settings.get("notification.reduce")) {
-							let note = new ScreenNotification();
-							note.title = "Announce to Brenda";
-							note.lifespan = 10;
-							note.content = `Sending this product ${this.#tile.getAsin()} from the ${env.data.vineQueueAbbr} queue to Brenda over on discord`;
-							await Notifications.pushNotification(note);
-						}
-
-						// Visually deactivate this item
-						parentAnchor.removeEventListener("click", announceClickHandler);
-						parentAnchor.style.opacity = "0.3";
-					};
 					if (parentAnchor && parentAnchor.tagName === "A") {
-						parentAnchor.removeEventListener("click", announceClickHandler); // Remove any previous click handlers
+						// Only add the click handler once
+						parentAnchor.removeEventListener("click", announceClickHandler);
 						parentAnchor.addEventListener("click", announceClickHandler);
 					}
 				}
