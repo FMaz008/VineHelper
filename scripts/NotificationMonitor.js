@@ -496,6 +496,7 @@ class NotificationMonitor {
 		const recommendationType = getRecommendationTypeFromQueue(queue); //grid.js
 		const recommendationId = generateRecommendationString(recommendationType, asin, enrollment_guid); //grid.js
 
+		//Convert server date time to local date time
 		date = new Date(YMDHiStoISODate(date));
 		// Create the item data object
 		const itemData = {
@@ -1104,6 +1105,14 @@ class NotificationMonitor {
 			if (this.#etvLimit != null && parseFloat(etvObj.dataset.etvMin) > this.#etvLimit) {
 				//Remove the See Details button for item outside the tier limit.
 				notif.querySelector(".vvp-details-btn")?.remove();
+				notif.querySelector(".vh-gold-tier-only")?.remove();
+
+				//Create a replacement button with no action linked it.
+				const btn = document.createElement("span");
+				btn.classList.add("a-button", "vh-gold-tier-only");
+				btn.innerText = "Gold tier only";
+				//Insert at the end of .vvp-item-tile-content
+				notif.querySelector(".vvp-item-tile-content").appendChild(btn);
 			}
 		}
 	}
