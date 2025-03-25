@@ -12,6 +12,7 @@ var Tpl = new Template();
 
 import { getRecommendationTypeFromQueue, generateRecommendationString } from "./Grid.js";
 
+import { YMDHiStoISODate } from "./DateHelper.js";
 import { HookMgr } from "./HookMgr.js";
 var hookMgr = new HookMgr();
 
@@ -495,7 +496,7 @@ class NotificationMonitor {
 		const recommendationType = getRecommendationTypeFromQueue(queue); //grid.js
 		const recommendationId = generateRecommendationString(recommendationType, asin, enrollment_guid); //grid.js
 
-		date = new Date(date);
+		date = new Date(YMDHiStoISODate(date));
 		// Create the item data object
 		const itemData = {
 			asin,
