@@ -100,6 +100,10 @@ class NotificationMonitor {
 		const autoTruncateCheckbox = document.getElementById("auto-truncate");
 		if (autoTruncateCheckbox) autoTruncateCheckbox.checked = this.#autoTruncateEnabled;
 
+		const autoTruncateLimit = document.getElementById("auto-truncate-limit");
+		if (autoTruncateLimit)
+			autoTruncateLimit.value = Settings.get("notification.monitor.autoTruncateLimit").toString();
+
 		const filterQueueSelect = document.querySelector("select[name='filter-queue']");
 		if (filterQueueSelect) filterQueueSelect.value = this.#filterQueue;
 
@@ -1506,9 +1510,10 @@ class NotificationMonitor {
 		}).format(date);
 	}
 
-	#autoTruncate(max = 1000) {
+	#autoTruncate() {
 		// Auto truncate
 		if (this.#autoTruncateEnabled) {
+			const max = Settings.get("notification.monitor.autoTruncateLimit");
 			// Check if we need to truncate based on map size
 			if (this.#items.size > max) {
 				logger.add(`NOTIF: Auto truncating item(s) from the page using the ${this.#sortType} sort method.`);
@@ -1686,6 +1691,11 @@ class NotificationMonitor {
 		autoTruncateCheckbox.addEventListener("change", (event) => {
 			this.#autoTruncateEnabled = autoTruncateCheckbox.checked;
 			Settings.set("notification.monitor.autoTruncate", this.#autoTruncateEnabled);
+		});
+
+		const autoTruncateLimitSelect = document.getElementById("auto-truncate-limit");
+		autoTruncateLimitSelect.addEventListener("change", (event) => {
+			Settings.set("notification.monitor.autoTruncateLimit", parseInt(autoTruncateLimitSelect.value));
 		});
 
 		//Message from within the context of the extension
