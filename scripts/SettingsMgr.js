@@ -365,6 +365,7 @@ class SettingsMgr {
 						fontSize: 14,
 						toolbarFontSize: 10,
 					},
+					autoTruncateLimit: 1000,
 				},
 			},
 

@@ -35,7 +35,15 @@
 			</label>
 			<label for="auto-truncate" style="float: left; margin-left: 10px">
 				<input type="checkbox" name="auto-truncate" id="auto-truncate" checked />
-				<span>Auto truncate after 1000 items.</span>
+				<span>Auto truncate after </span>
+				<select name="auto-truncate-limit" id="auto-truncate-limit">
+					<option value="1000">1000</option>
+					<option value="2000">2000</option>
+					<option value="3000">3000</option>
+					<option value="4000">4000</option>
+					<option value="5000">5000</option>
+				</select>
+				<span> items.</span>
 			</label>
 		</div>
 		<div style="float: right">
