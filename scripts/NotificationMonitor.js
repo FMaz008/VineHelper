@@ -124,14 +124,14 @@ class NotificationMonitor {
 	}
 
 	async initialize() {
+		// Wait for settings to load before proceeding
+		await Settings.waitForLoad();
+
 		if (Settings.get("notification.monitor.listView")) {
 			this.#itemTemplateFile = "tile_listview.html";
 		} else {
 			this.#itemTemplateFile = "tile_gridview.html";
 		}
-
-		// Wait for settings to load before proceeding
-		await this.settingsLoaded;
 
 		//Remove the existing items.
 		this.#gridContainer = document.querySelector("#vvp-items-grid");
@@ -289,7 +289,7 @@ class NotificationMonitor {
 		this.#itemTemplateFile = "tile_lightview.html";
 
 		// Wait for settings to load before proceeding
-		await this.settingsLoaded;
+		await Settings.waitForLoad();
 
 		//Insert the header
 		const parentContainer = document.querySelector("body");
