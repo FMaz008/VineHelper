@@ -723,11 +723,10 @@ class NotificationMonitor {
 	}
 
 	#clickHandler(e) {
-		e.preventDefault();
-
 		//Check if the closes element is .vh-icon-search
 		const searchLink = e.target.closest(".vh-icon-search");
 		if (searchLink) {
+			e.preventDefault();
 			window.open(searchLink.parentElement.href, "_blank");
 			return;
 		}
@@ -735,6 +734,7 @@ class NotificationMonitor {
 		//Check if the closest element is .vh-icon-report
 		const reportLink = e.target.closest(".vh-icon-report");
 		if (reportLink) {
+			e.preventDefault();
 			this.#handleReportClick(e);
 			return;
 		}
@@ -742,6 +742,7 @@ class NotificationMonitor {
 		//Check if the closest element is .vh-icon-announcement
 		const announceLink = e.target.closest(".vh-icon-announcement");
 		if (announceLink) {
+			e.preventDefault();
 			if (Settings.get("discord.active") && Settings.get("discord.guid", false) != null) {
 				this.#handleBrendaClick(e);
 				return;
@@ -751,6 +752,7 @@ class NotificationMonitor {
 		//Check if the closest element is .vh-icon-pin
 		const pinLink = e.target.closest(".vh-icon-pin");
 		if (pinLink) {
+			e.preventDefault();
 			if (Settings.get("pinnedTab.active")) {
 				this.#handlePinClick(e);
 				return;
@@ -760,6 +762,7 @@ class NotificationMonitor {
 		//Check if the closest element is .vh-icon-hide
 		const hideLink = e.target.closest(".vh-icon-hide");
 		if (hideLink) {
+			e.preventDefault();
 			this.#handleHideClick(e);
 			return;
 		}
@@ -767,6 +770,7 @@ class NotificationMonitor {
 		//Check if the closest element is .vh-icon-question
 		const detailsIcon = e.target.closest(".vh-icon-question");
 		if (detailsIcon) {
+			e.preventDefault();
 			this.#handleDetailsClick(e);
 			return;
 		}
@@ -778,6 +782,7 @@ class NotificationMonitor {
 			const btnContainer = e.target.closest(".vvp-details-btn");
 			const seeDetailsBtn = e.target.closest(".a-button-primary input");
 			if (seeDetailsBtn) {
+				e.preventDefault();
 				//Monitor V2 does not have these buttons
 
 				//Remove the class to remove the default behavior of the button
