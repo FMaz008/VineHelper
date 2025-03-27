@@ -958,6 +958,7 @@ class NotificationMonitor {
 
 		// Remove the element from DOM
 		tile.remove();
+		tile = null;
 
 		if (countTotalTiles) {
 			this.#updateTabTitle(); // Update the tab counter
@@ -1540,6 +1541,7 @@ class NotificationMonitor {
 				for (const item of itemsToRemove) {
 					if (item.element) {
 						this.#removeTile(item.element, item.asin);
+						item.element = null;
 					} else {
 						// Element not found but we should clean up the data
 						this.#items.delete(item.asin);
@@ -1595,6 +1597,7 @@ class NotificationMonitor {
 				for (const [asin, item] of this.#items.entries()) {
 					if (item.element) {
 						this.#removeTile(item.element, asin, false);
+						item.element = null;
 					}
 				}
 
