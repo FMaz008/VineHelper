@@ -1,39 +1,51 @@
 class Tooltip {
 	tooltip = null;
+	// WeakMap to store tooltip text for each element
+	#tooltipTexts = new WeakMap();
+
 	constructor() {
 		this.tooltip = document.createElement("div");
 		this.tooltip.className = "hover-tooltip";
 		document.body.appendChild(this.tooltip);
+
+		// Add single event listeners at the document level
+		document.addEventListener("mouseenter", this.#handleMouseEnter.bind(this), true);
+		document.addEventListener("mouseleave", this.#handleMouseLeave.bind(this), true);
+		document.addEventListener("mousemove", this.#handleMouseMove.bind(this), true);
 	}
 
 	addTooltip(bindTo, title) {
 		bindTo.setAttribute("data-tooltip", title);
-
-		// Define the handler functions
-		bindTo.tooltipEnterHandler = (event) => {
-			this.tooltip.textContent = event.currentTarget.getAttribute("data-tooltip");
-			this.tooltip.style.display = "block";
-			this.#positionTooltip(event);
-		};
-
-		bindTo.tooltipLeaveHandler = () => {
-			this.tooltip.style.display = "none";
-		};
-
-		bindTo.tooltipMoveHandler = (event) => {
-			this.#positionTooltip(event);
-		};
-
-		// Add the event listeners
-		bindTo.addEventListener("mouseenter", bindTo.tooltipEnterHandler);
-		bindTo.addEventListener("mouseleave", bindTo.tooltipLeaveHandler);
-		bindTo.addEventListener("mousemove", bindTo.tooltipMoveHandler);
+		// Store the tooltip text in WeakMap
+		this.#tooltipTexts.set(bindTo, title);
 	}
 
 	removeTooltip(bindTo) {
-		bindTo.removeEventListener("mouseenter", bindTo.tooltipEnterHandler);
-		bindTo.removeEventListener("mouseleave", bindTo.tooltipLeaveHandler);
-		bindTo.removeEventListener("mousemove", bindTo.tooltipMoveHandler);
+		bindTo.removeAttribute("data-tooltip");
+		this.#tooltipTexts.delete(bindTo);
+	}
+
+	#handleMouseEnter(event) {
+		const target = event.target;
+		const tooltipText = this.#tooltipTexts.get(target);
+		if (tooltipText) {
+			this.tooltip.textContent = tooltipText;
+			this.tooltip.style.display = "block";
+			this.#positionTooltip(event);
+		}
+	}
+
+	#handleMouseLeave(event) {
+		if (this.#tooltipTexts.has(event.target)) {
+			this.tooltip.style.display = "none";
+		}
+	}
+
+	#handleMouseMove(event) {
+		const target = event.target.closest(".a-link-normal");
+		if (target && this.#tooltipTexts.has(target)) {
+			this.#positionTooltip(event);
+		}
 	}
 
 	#positionTooltip(event) {
