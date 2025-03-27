@@ -581,6 +581,63 @@ async function initiateSettings() {
 		document.getElementById("PatreonLoadPage").href =
 			`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore`;
 	}
+
+	//Make the save button follow the scroll in the keyword tab
+	const highlightKeywordsTable = document.querySelector("#general\\.highlightKeywords table");
+	const highlightSaveButton = document.querySelector("#general\\.highlightKeywords input[name='save']");
+	const highlightAddButton = document.querySelector("#general\\.highlightKeywords input[name='add']");
+	const hideKeywordsTable = document.querySelector("#general\\.hideKeywords table");
+	const hideSaveButton = document.querySelector("#general\\.hideKeywords input[name='save']");
+	const hideAddButton = document.querySelector("#general\\.hideKeywords input[name='add']");
+	window.addEventListener("scroll", () => {
+		//if general.highlightKeywords table is displayed and the save button is not displayed in the current scroll position, make the scroll button position fixed
+
+		if (
+			isVisibleInViewport(highlightKeywordsTable, false, "highlightKeywordsTable") &&
+			!isVisibleInViewport(highlightAddButton, true, "highlightAddButton")
+		) {
+			highlightSaveButton.style.position = "fixed";
+			highlightSaveButton.style.bottom = "10px";
+			highlightSaveButton.style.right = "10px";
+		} else {
+			highlightSaveButton.style.position = "relative";
+		}
+
+		if (
+			isVisibleInViewport(hideKeywordsTable, false, "hideKeywordsTable") &&
+			!isVisibleInViewport(hideAddButton, true, "hideAddButton")
+		) {
+			hideSaveButton.style.position = "fixed";
+			hideSaveButton.style.bottom = "10px";
+			hideSaveButton.style.right = "10px";
+		} else {
+			hideSaveButton.style.position = "relative";
+		}
+	});
+}
+
+//Determine if a query selector is visible in the scrolled area
+function isVisibleInViewport(element, fullyInView = true, debug) {
+	if (!element) {
+		throw new Error("Element is not found: " + debug);
+	}
+
+	const rect = element.getBoundingClientRect();
+	const windowHeight = window.innerHeight;
+
+	// Element is at least partially visible if:
+	// - Its top is in view (top >= 0 && top < windowHeight)
+	// - Its bottom is in view (bottom > 0 && bottom <= windowHeight)
+	// - Or it spans the entire viewport (top <= 0 && bottom >= windowHeight)
+	if (fullyInView) {
+		return rect.top >= 0 && rect.bottom <= windowHeight;
+	} else {
+		return (
+			(rect.top >= 0 && rect.top < windowHeight) ||
+			(rect.bottom > 0 && rect.bottom <= windowHeight) ||
+			(rect.top <= 0 && rect.bottom >= windowHeight)
+		);
+	}
 }
 
 /**
