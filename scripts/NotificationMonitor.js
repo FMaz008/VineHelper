@@ -288,6 +288,20 @@ class NotificationMonitor {
 
 		//Change the tab's favicon
 		this.#updateTabFavicon();
+
+		//If the current data is April 1st, add a button next to #clear-unavailable
+		const currentDate = new Date();
+		if (currentDate.getMonth() === 3 && currentDate.getDate() === 1) {
+			const btnClearUnavailable = document.getElementById("clear-unavailable");
+			btnClearUnavailable.insertAdjacentHTML("afterend", '<button id="april-fools">Random Auto Order</button>');
+			const btnAprilFools = document.getElementById("april-fools");
+			btnAprilFools.addEventListener("click", async (event) => {
+				if (confirm("Do you want to auto-order a random product from the monitor?")) {
+					alert("Happy April Fools!");
+					btnAprilFools.remove();
+				}
+			});
+		}
 	}
 
 	async initializeLight() {
