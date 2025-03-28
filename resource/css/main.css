@@ -163,3 +163,10 @@ div#vh-tabs {
 	color: white;
 	font-weight: bold;
 }
+
+.a-box {
+	border: none !important;
+}
+.a-box-inner {
+	padding: 14px 10px;
+}
