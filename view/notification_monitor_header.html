@@ -1,55 +1,69 @@
 <div style="margin: 0px" id="vh-notifications-monitor-header">
 	<div class="vh-icon-32 vh-icon-vh" style="float: left; margin-right: 10px"></div>
 	<h3>Notification Monitor</h3>
-	<div style="display: flex; clear: both">
-		<div style="width: 150px; margin-bottom: 15px">
-			<strong>Loaded on: </strong>
-			<br /><span id="date_loaded"></span> <br /><strong>Most recent item: </strong> <br /><span
-				id="date_most_recent_item"
-				>(tba)</span
-			>
-		</div>
-		<div style="width: 200px">
-			<div class="notice" id="statusSW" style="display: flex">
-				<div class="vh-switch-32 vh-icon-switch-off" style="margin-right: 10px"></div>
-				<div>Service Worker:</div>
+
+	<div style="display: flex; gap: 10px; flex-wrap: wrap;">
+		<div style="flex-grow: 1;">
+			<div style="display: flex; flex-wrap: wrap; gap: 5px;">
+				<div style="width: 150px;">
+					<strong>Loaded on: </strong>
+					<br /><span id="date_loaded"></span> <br /><strong>Most recent item: </strong> <br /><span
+						id="date_most_recent_item"
+						>(tba)</span
+					>
+				</div>
+				<div style="width: 200px">
+					<div class="notice" id="statusSW" style="display: flex">
+						<div class="vh-switch-32 vh-icon-switch-off" style="margin-right: 10px"></div>
+						<div>Service Worker:</div>
+					</div>
+					<div id="descriptionSW"></div>
+					<div class="notice" id="statusWS" style="display: flex">
+						<div class="vh-switch-32 vh-icon-switch-off" style="margin-right: 10px"></div>
+						<div>Websocket Server:</div>
+					</div>
+					<div id="descriptionWS"></div>
+				</div>
 			</div>
-			<div id="descriptionSW"></div>
-			<div class="notice" id="statusWS" style="display: flex">
-				<div class="vh-switch-32 vh-icon-switch-off" style="margin-right: 10px"></div>
-				<div>Websocket Server:</div>
+			<div style="display: flex; flex-wrap: wrap; gap: 5px; margin: 5px 0;">
+				<label for="clear-monitor">
+					<input type="button" name="clear-monitor" id="clear-monitor" value="Clear All" />
+				</label>
+				<label for="fetch-last-100">
+					<input type="button" name="fetch-last-100" id="fetch-last-100" value="Fetch last {{$fetchLimit}}" />
+				</label>
+				<label for="pauseFeed" style="margin-right: 5px;">
+					<input type="button" name="pauseFeed" id="pauseFeed" value="Pause & Buffer Feed" />
+				</label>
+				<label for="auto-truncate" style="align-self: center;">
+					<input type="checkbox" name="auto-truncate" id="auto-truncate" checked />
+					<span>Auto truncate after </span>
+					<select name="auto-truncate-limit" id="auto-truncate-limit">
+						<option value="100">100</option>
+						<option value="200">200</option>
+						<option value="500">500</option>
+						<option value="1000">1000</option>
+						<option value="2000">2000</option>
+						<option value="3000">3000</option>
+						<option value="4000">4000</option>
+						<option value="5000">5000</option>
+					</select>
+					<span> items.</span>
+				</label>
 			</div>
-			<div id="descriptionWS"></div>
 		</div>
-	</div>
-	<div>
-		<div style="float: left">
-			<label for="clear-monitor" style="float: left">
-				<input type="button" name="clear-monitor" id="clear-monitor" value="Clear All" />
-			</label>
-			<label for="fetch-last-100" style="float: left">
-				<input type="button" name="fetch-last-100" id="fetch-last-100" value="Fetch last {{$fetchLimit}}" />
-			</label>
-			<label for="pauseFeed" style="float: left">
-				<input type="button" name="pauseFeed" id="pauseFeed" value="Pause & Buffer Feed" />
-			</label>
-			<label for="auto-truncate" style="float: left; margin-left: 10px">
-				<input type="checkbox" name="auto-truncate" id="auto-truncate" checked />
-				<span>Auto truncate after </span>
-				<select name="auto-truncate-limit" id="auto-truncate-limit">
-					<option value="1000">1000</option>
-					<option value="2000">2000</option>
-					<option value="3000">3000</option>
-					<option value="4000">4000</option>
-					<option value="5000">5000</option>
-				</select>
-				<span> items.</span>
-			</label>
-		</div>
-		<div style="float: right">
-			<div style="display: flex; align-items: right">
-				<label for="filter-queue" style="margin-right: 10px">
-					Filter by:
+		
+		<div style="align-self: flex-end; margin-bottom: 3px;">
+			<div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0 5px;">
+				<label style="justify-self: end;">
+					Search:
+				</label>
+				<input type="text" id="search-input" name="search-input" placeholder="Search items..." style="width: 150px; height: inherit; width: 100%;" />
+	
+				<label style="margin-top: 5px; justify-self: end;">
+					<span>Filter by: </span>
+				</label>
+				<span>
 					<select name="filter-queue">
 						<option value="-1">Show all queues</option>
 						<option value="last_chance">AFA</option>
@@ -62,15 +76,16 @@
 						<option value="2">KW match only</option>
 						<option value="9">Zero ETV or KW match only</option>
 					</select>
-				</label>
-
-				<label for="sort-queue">
+				</span>
+	
+				<label style="margin-top: 5px; justify-self: end;">
 					Sort by:
-					<select name="sort-queue">
-						<option value="date">Date (new-old)</option>
-						<option value="price">ETV (high-low)</option>
-					</select>
 				</label>
+				<select name="sort-queue">
+					<option value="date">Date (new-old)</option>
+					<option value="price">ETV (high-low)</option>
+				</select>
+	
 			</div>
 		</div>
 	</div>

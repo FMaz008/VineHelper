@@ -70,6 +70,8 @@ class NotificationMonitor {
 	#lightMode = false;
 	#statusTimer = null;
 	#fetchLimit = 100;
+	#searchText = ""; // Current search text
+	#searchDebounceTimer = null; // Timer for debouncing search
 
 	// UI User settings (will be loaded from storage)
 	#autoTruncateEnabled = true;
@@ -1325,6 +1327,15 @@ class NotificationMonitor {
 			return false;
 		}
 
+		// Search filter - if search text is not empty, check if item matches
+		if (this.#searchText.trim()) {
+			const title = node.querySelector(".a-truncate-full")?.innerText?.toLowerCase() || "";
+			if (!title.includes(this.#searchText.toLowerCase().trim())) {
+				node.style.display = "none";
+				return false;
+			}
+		}
+
 		if (this.#filterType == -1) {
 			node.style.display = this.#lightMode ? "block" : "flex";
 		} else if (this.#filterType == TYPE_HIGHLIGHT_OR_ZEROETV) {
@@ -1594,6 +1605,24 @@ class NotificationMonitor {
 			originalPauseBtn.click();
 		});
 
+		// Search handler
+		const searchInput = document.getElementById("search-input");
+		if (searchInput) {
+			searchInput.addEventListener("input", (event) => {
+				if (this.#searchDebounceTimer) {
+					clearTimeout(this.#searchDebounceTimer);
+				}
+				this.#searchDebounceTimer = setTimeout(() => {
+					this.#searchText = event.target.value;
+					// Apply search filter to all items
+					document.querySelectorAll(".vvp-item-tile").forEach((node) => {
+						this.#processNotificationFiltering(node);
+					});
+					this.#updateTabTitle();
+				}, 750); // 300ms debounce delay
+			});
+		}
+
 		//Bind clear-monitor button
 		const btnClearMonitor = document.getElementById("clear-monitor");
 		btnClearMonitor.addEventListener("click", async (event) => {
@@ -1815,6 +1844,7 @@ class NotificationMonitor {
 			}
 
 			this.#processNotificationSorting();
+			this.#updateTabTitle();
 		}
 	}
 
