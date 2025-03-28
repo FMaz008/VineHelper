@@ -1640,6 +1640,15 @@ class NotificationMonitor {
 			}
 		});
 
+		//Bind clear-unavailable button
+		const btnClearUnavailable = document.getElementById("clear-unavailable");
+		btnClearUnavailable.addEventListener("click", async (event) => {
+			if (confirm("Clear unavailable items?")) {
+				this.#clearUnavailableItems();
+				this.#updateTabTitle();
+			}
+		});
+
 		//Bind fetch-last-100 button
 		const btnLast100 = document.getElementById("fetch-last-100");
 		btnLast100.addEventListener("click", async (event) => {
@@ -1856,6 +1865,17 @@ class NotificationMonitor {
 		if (this.#mostRecentItemDateDOM) {
 			this.#mostRecentItemDateDOM.innerText = "";
 		}
+	}
+
+	// Clear unavailable items
+	#clearUnavailableItems() {
+		this.#items.forEach((item) => {
+			if (item.data.unavailable) {
+				//Get the DOM element for the item
+				this.#removeTile(item.element, item.data.asin, false);
+				item = null;
+			}
+		});
 	}
 }
 

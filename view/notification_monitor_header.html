@@ -2,10 +2,10 @@
 	<div class="vh-icon-32 vh-icon-vh" style="float: left; margin-right: 10px"></div>
 	<h3>Notification Monitor</h3>
 
-	<div style="display: flex; gap: 10px; flex-wrap: wrap;">
-		<div style="flex-grow: 1;">
-			<div style="display: flex; flex-wrap: wrap; gap: 5px;">
-				<div style="width: 150px;">
+	<div style="display: flex; gap: 10px; flex-wrap: wrap; clear: both">
+		<div style="flex-grow: 1">
+			<div style="display: flex; flex-wrap: wrap; gap: 5px">
+				<div style="width: 150px">
 					<strong>Loaded on: </strong>
 					<br /><span id="date_loaded"></span> <br /><strong>Most recent item: </strong> <br /><span
 						id="date_most_recent_item"
@@ -25,17 +25,20 @@
 					<div id="descriptionWS"></div>
 				</div>
 			</div>
-			<div style="display: flex; flex-wrap: wrap; gap: 5px; margin: 5px 0;">
+			<div style="display: flex; flex-wrap: wrap; gap: 5px; margin: 5px 0">
 				<label for="clear-monitor">
 					<input type="button" name="clear-monitor" id="clear-monitor" value="Clear All" />
+				</label>
+				<label for="clear-unavailable">
+					<input type="button" name="clear-unavailable" id="clear-unavailable" value="Clear Unavail." />
 				</label>
 				<label for="fetch-last-100">
 					<input type="button" name="fetch-last-100" id="fetch-last-100" value="Fetch last {{$fetchLimit}}" />
 				</label>
-				<label for="pauseFeed" style="margin-right: 5px;">
+				<label for="pauseFeed" style="margin-right: 5px">
 					<input type="button" name="pauseFeed" id="pauseFeed" value="Pause & Buffer Feed" />
 				</label>
-				<label for="auto-truncate" style="align-self: center;">
+				<label for="auto-truncate" style="align-self: center">
 					<input type="checkbox" name="auto-truncate" id="auto-truncate" checked />
 					<span>Auto truncate after </span>
 					<select name="auto-truncate-limit" id="auto-truncate-limit">
@@ -52,15 +55,19 @@
 				</label>
 			</div>
 		</div>
-		
-		<div style="align-self: flex-end; margin-bottom: 3px;">
-			<div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0 5px;">
-				<label style="justify-self: end;">
-					Search:
-				</label>
-				<input type="text" id="search-input" name="search-input" placeholder="Search items..." style="width: 150px; height: inherit; width: 100%;" />
-	
-				<label style="margin-top: 5px; justify-self: end;">
+
+		<div style="align-self: flex-end; margin-bottom: 3px">
+			<div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0 5px">
+				<label style="justify-self: end"> Search: </label>
+				<input
+					type="text"
+					id="search-input"
+					name="search-input"
+					placeholder="Search items..."
+					style="width: 150px; height: inherit; width: 100%"
+				/>
+
+				<label style="margin-top: 5px; justify-self: end">
 					<span>Filter by: </span>
 				</label>
 				<span>
@@ -77,15 +84,12 @@
 						<option value="9">Zero ETV or KW match only</option>
 					</select>
 				</span>
-	
-				<label style="margin-top: 5px; justify-self: end;">
-					Sort by:
-				</label>
+
+				<label style="margin-top: 5px; justify-self: end"> Sort by: </label>
 				<select name="sort-queue">
 					<option value="date">Date (new-old)</option>
 					<option value="price">ETV (high-low)</option>
 				</select>
-	
 			</div>
 		</div>
 	</div>
