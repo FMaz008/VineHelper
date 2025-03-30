@@ -9,6 +9,7 @@ import { initiateSettings } from "../page/settings_loadsave.js";
 import { Template } from "../scripts/Template.js";
 var Tpl = new Template();
 
+// Clear template cache and variables when opening settings
 Tpl.flushLocalStorage();
 
 //Render the main layout
@@ -24,7 +25,14 @@ Tpl.flushLocalStorage();
 	const promTab8 = await Tpl.loadFile("/page/settings_premium.tpl.html");
 	const promTab9 = await Tpl.loadFile("/page/settings_about.tpl.html");
 
+	const tab = (await chrome.tabs.query({ active: true, currentWindow: true }))?.[0];
+	const isVinePage = Boolean(tab.url.match(/https:\/\/[^\.]+\.amazon\.[^/]+\/vine/i));
+
+	// Clear any existing template variables before setting new ones
+	Tpl.clearVariables();
+
 	Tpl.setVar("APP_VERSION", getAppVersion());
+	Tpl.setIf("vine_page", isVinePage);
 	Tpl.setVar("TAB1", Tpl.render(promTab1));
 	Tpl.setVar("TAB2", Tpl.render(promTab2));
 	Tpl.setVar("TAB3", Tpl.render(promTab3));
@@ -57,9 +65,10 @@ Tpl.flushLocalStorage();
 
 	document.body.innerHTML = Tpl.render(promMainTpl);
 
-	initTabs();
-
-	initiateSettings(); //page/settings_loadsave.js, initialize the loading and saving code for the page
+	if (isVinePage) {
+		initTabs();
+		initiateSettings(); //page/settings_loadsave.js, initialize the loading and saving code for the page
+	}
 })();
 
 function getAppVersion() {

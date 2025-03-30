@@ -40,6 +40,12 @@ class Template {
 		else variable.value = value;
 	}
 
+	clearVariables() {
+		this.arrCache = [];
+		this.arrVar = [];
+		this.arrIf = [];
+	}
+
 	render(html, convertToDOMObject = false) {
 		if (html == null) {
 			logger.add("No content for " + this.currentURL + ", did you await loadFile()) ?");
@@ -49,18 +55,78 @@ class Template {
 		for (let i = 0; i < this.arrVar.length; i++) {
 			output = output.replaceAll("{{$" + this.arrVar[i]["name"] + "}}", this.arrVar[i]["value"]);
 		}
-		for (let j = 0; j < this.arrIf.length; j++) {
-			if (this.arrIf[j]["value"] == true) {
-				//Remove the if tags
-				output = output.replaceAll(
-					new RegExp("{{if " + this.arrIf[j]["name"] + "}}(.*?){{endif}}", "sg"),
-					`$1`
-				);
-			} else {
-				//Remove the if block entirely
-				output = output.replaceAll(new RegExp("{{if " + this.arrIf[j]["name"] + "}}(.*?){{endif}}", "sg"), "");
+
+		// Process if conditions with a stack-based approach for proper nesting
+
+		// Parse and evaluate the template
+		const parseTemplate = (template) => {
+			let pos = 0;
+			let result = "";
+			let stack = [];
+
+			while (pos < template.length) {
+				// Find the next tag
+				const ifStart = template.indexOf("{{if ", pos);
+				const elseTag = template.indexOf("{{else}}", pos);
+				const endIf = template.indexOf("{{endif}}", pos);
+
+				// Find the minimum positive position
+				const positions = [
+					ifStart >= 0 ? ifStart : Infinity,
+					elseTag >= 0 ? elseTag : Infinity,
+					endIf >= 0 ? endIf : Infinity,
+				];
+				const nextTagPos = Math.min(...positions);
+
+				// No more tags found, add the remaining text if we should include content
+				if (nextTagPos === Infinity) {
+					if (!stack.some((item) => !item.includeContent)) {
+						result += template.substring(pos);
+					}
+					break;
+				}
+
+				// Add the text before the tag if we should include content
+				if (!stack.some((item) => !item.includeContent)) {
+					result += template.substring(pos, nextTagPos);
+				}
+
+				// Process tag based on type
+				if (nextTagPos === ifStart) {
+					// Extract the condition name
+					const endOfIf = template.indexOf("}}", nextTagPos);
+					const condName = template.substring(nextTagPos + 5, endOfIf);
+
+					// Find the condition value
+					const condValue = this.arrIf.find((c) => c.name === condName)?.value || false;
+
+					// Push current position and condition value to the stack
+					stack.push({
+						type: "if",
+						value: condValue,
+						includeContent: condValue,
+					});
+
+					pos = endOfIf + 2;
+				} else if (nextTagPos === elseTag) {
+					// Toggle the include flag for the current block
+					if (stack.length > 0) {
+						const current = stack[stack.length - 1];
+						current.includeContent = !current.value;
+					}
+
+					pos = elseTag + 8; // "{{else}}".length = 8
+				} else if (nextTagPos === endIf) {
+					// Pop the stack
+					stack.pop();
+					pos = endIf + 9; // "{{endif}}".length = 9
+				}
 			}
-		}
+
+			return result;
+		};
+
+		output = parseTemplate(output);
 
 		if (!convertToDOMObject) {
 			return output;
@@ -76,6 +142,7 @@ class Template {
 	async flushLocalStorage() {
 		await chrome.storage.local.set({ arrTemplate: [] });
 		this.#tplMgr.arrTemplate = [];
+		this.clearVariables(); // Clear variables when flushing storage
 		logger.add("TEMPLATE: Flushed template cache.");
 	}
 }
