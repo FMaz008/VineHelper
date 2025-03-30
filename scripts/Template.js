@@ -40,6 +40,12 @@ class Template {
 		else variable.value = value;
 	}
 
+	clearVariables() {
+		this.arrCache = [];
+		this.arrVar = [];
+		this.arrIf = [];
+	}
+
 	render(html, convertToDOMObject = false) {
 		if (html == null) {
 			logger.add("No content for " + this.currentURL + ", did you await loadFile()) ?");
@@ -50,15 +56,17 @@ class Template {
 			output = output.replaceAll("{{$" + this.arrVar[i]["name"] + "}}", this.arrVar[i]["value"]);
 		}
 		for (let j = 0; j < this.arrIf.length; j++) {
+			const name = this.arrIf[j]["name"];
 			if (this.arrIf[j]["value"] == true) {
-				//Remove the if tags
-				output = output.replaceAll(
-					new RegExp("{{if " + this.arrIf[j]["name"] + "}}(.*?){{endif}}", "sg"),
-					`$1`
-				);
+				// If condition is true, keep content before {{else}} (if it exists) and remove the else part
+				output = output.replaceAll(new RegExp("{{if " + name + "}}(.*?){{else}}.*?{{endif}}", "sg"), "$1");
+				// Also handle the case where there is no {{else}}
+				output = output.replaceAll(new RegExp("{{if " + name + "}}(.*?){{endif}}", "sg"), "$1");
 			} else {
-				//Remove the if block entirely
-				output = output.replaceAll(new RegExp("{{if " + this.arrIf[j]["name"] + "}}(.*?){{endif}}", "sg"), "");
+				// If condition is false, remove content before {{else}} and keep content after {{else}} (if it exists)
+				output = output.replaceAll(new RegExp("{{if " + name + "}}.*?{{else}}(.*?){{endif}}", "sg"), "$1");
+				// Also handle the case where there is no {{else}} - remove the entire block
+				output = output.replaceAll(new RegExp("{{if " + name + "}}.*?{{endif}}", "sg"), "");
 			}
 		}
 
@@ -76,6 +84,7 @@ class Template {
 	async flushLocalStorage() {
 		await chrome.storage.local.set({ arrTemplate: [] });
 		this.#tplMgr.arrTemplate = [];
+		this.clearVariables(); // Clear variables when flushing storage
 		logger.add("TEMPLATE: Flushed template cache.");
 	}
 }
