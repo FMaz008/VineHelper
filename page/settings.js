@@ -11,8 +11,21 @@ var Tpl = new Template();
 
 Tpl.flushLocalStorage();
 
-//Render the main layout
 (async () => {
+	const nonVineUrlTpl = await Tpl.loadFile("/page/settings_nonvineurl.tpl.html");	
+	chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+		const activeTab = tabs[0];
+		const isVinePage = activeTab?.url?.match(/https:\/\/www\.amazon\.[^\/]+\/vine/i);
+		if (!isVinePage) {
+			document.body.innerHTML = Tpl.render(nonVineUrlTpl);
+		} else {
+			initializeAndRenderMain();
+		}
+	});
+})();
+
+async function initializeAndRenderMain() {
+	// Load all templates
 	const promMainTpl = await Tpl.loadFile("/page/settings_main.tpl.html");
 	const promTab1 = await Tpl.loadFile("/page/settings_general.tpl.html");
 	const promTab2 = await Tpl.loadFile("/page/settings_notifications.tpl.html");
@@ -56,11 +69,9 @@ Tpl.flushLocalStorage();
 	Tpl.setIf("tier_3", Settings.isPremiumUser(3));
 
 	document.body.innerHTML = Tpl.render(promMainTpl);
-
-	initTabs();
-
+	initTabs();	
 	initiateSettings(); //page/settings_loadsave.js, initialize the loading and saving code for the page
-})();
+}
 
 function getAppVersion() {
 	const manifest = chrome.runtime.getManifest();
