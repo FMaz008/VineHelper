@@ -185,11 +185,10 @@ async function init() {
 		}
 	}
 
-	const searchTextInput = document.querySelector("#vvp-search-text-input").value;
-
 	// If a search has been performed, unescape the HTML encoded characters for the text in the search box
+	const searchTextInput = document.querySelector("#vvp-search-text-input");
 	if (searchTextInput) {
-		document.querySelector("#vvp-search-text-input").value = unescapeHTML(unescapeHTML(searchTextInput));
+		searchTextInput.value = unescapeHTML(unescapeHTML(searchTextInput.value));
 	}
 
 	if (Settings.get("general.blindLoading")) {
