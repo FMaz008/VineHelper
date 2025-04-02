@@ -40,7 +40,7 @@ var DialogMgr = new ModalMgr();
 
 import { News } from "./News.js";
 
-import { NotificationMonitor } from "./NotificationMonitor.js";
+import { NotificationMonitorV3 } from "./NotificationMonitorV3.js";
 
 import { Pagination } from "./Pagination.js";
 var pagination = new Pagination();
@@ -166,7 +166,7 @@ async function init() {
 		}
 
 		//Initate the notification monitor
-		notificationMonitor = new NotificationMonitor();
+		notificationMonitor = new NotificationMonitorV3();
 		await notificationMonitor.initialize();
 
 		hookMgr.hookExecute("productsUpdated", null);
