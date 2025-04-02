@@ -25,14 +25,10 @@ Tpl.flushLocalStorage();
 	const promTab8 = await Tpl.loadFile("/page/settings_premium.tpl.html");
 	const promTab9 = await Tpl.loadFile("/page/settings_about.tpl.html");
 
-	const tab = (await chrome.tabs.query({ active: true, currentWindow: true }))?.[0];
-	const isVinePage = Boolean(tab.url.match(/https:\/\/[^\.]+\.amazon\.[^/]+\/vine/i));
-
 	// Clear any existing template variables before setting new ones
 	Tpl.clearVariables();
 
 	Tpl.setVar("APP_VERSION", getAppVersion());
-	Tpl.setIf("vine_page", isVinePage);
 	Tpl.setVar("TAB1", Tpl.render(promTab1));
 	Tpl.setVar("TAB2", Tpl.render(promTab2));
 	Tpl.setVar("TAB3", Tpl.render(promTab3));
@@ -65,7 +61,7 @@ Tpl.flushLocalStorage();
 
 	document.body.innerHTML = Tpl.render(promMainTpl);
 
-	if (isVinePage) {
+	if (countryCode != null) {
 		initTabs();
 		initiateSettings(); //page/settings_loadsave.js, initialize the loading and saving code for the page
 	}

@@ -9,61 +9,59 @@
 	</div>
 </div>
 
-{{if vine_page}}
-	<div class="buttons-header" style="width: 100%">
-		{{if tier_3}}
-		<div class="button-settings" style="margin-right: 5px">
-			<a id="itemExplorerLink" href="{{$item_explorer_link}}" target="_blank">
-				<div class="button-inner vh-icon-32 vh-icon-search"></div>
-			</a>
-		</div>
-		{{endif}} {{if country_known}}
-		<div class="button-notification-monitor">
-			<a id="notificationsMonitorLightLink" href="{{$light_monitor_link}}" target="_blank">
-				<div class="button-inner">v2 Monitor</div>
-			</a>
-		</div>
-		<div class="button-notification-monitor">
-			<a id="notificationsMonitorLink" href="{{$monitor_link}}" target="_blank">
-				<div class="button-inner">v3 Monitor</div>
-			</a>
-		</div>
-		{{endif}}
-		<div class="button-settings" style="margin-right: 15px; margin-left: auto">
-			<a id="settingsLink" href="" target="_blank">
-				<div class="button-inner vh-icon-32 vh-icon-cogs"></div>
-			</a>
-		</div>
+{{if country_known}}
+<div class="buttons-header" style="width: 100%">
+	{{if tier_3}}
+	<div class="button-settings" style="margin-right: 5px">
+		<a id="itemExplorerLink" href="{{$item_explorer_link}}" target="_blank">
+			<div class="button-inner vh-icon-32 vh-icon-search"></div>
+		</a>
 	</div>
-
-	<div id="tabs-index" style="height: auto" class="vh-tabs">
-		<ul>
-			<li class="active"><a href="#tabs-1">General</a></li>
-			<li><a href="#tabs-2">Notifications</a></li>
-			<li><a href="#tabs-3">System</a></li>
-			<li><a href="#tabs-4">"Brenda"</a></li>
-			<li><a href="#tabs-5">Keywords</a></li>
-			<li><a href="#tabs-6">Keyboard</a></li>
-			<li><a href="#tabs-7">Styles</a></li>
-			<li><a href="#tabs-8">Premium</a></li>
-			<li><a href="#tabs-9">?</a></li>
-		</ul>
+	{{endif}} {{if country_known}}
+	<div class="button-notification-monitor">
+		<a id="notificationsMonitorLightLink" href="{{$light_monitor_link}}" target="_blank">
+			<div class="button-inner">v2 Monitor</div>
+		</a>
 	</div>
-	<div id="tabs-content">
-		<div>
-			<div id="tabs-1" class="tab">{{$TAB1}}</div>
-			<div id="tabs-2" class="tab">{{$TAB2}}</div>
-			<div id="tabs-3" class="tab">{{$TAB3}}</div>
-			<div id="tabs-4" class="tab">{{$TAB4}}</div>
-			<div id="tabs-5" class="tab">{{$TAB5}}</div>
-			<div id="tabs-6" class="tab">{{$TAB6}}</div>
-			<div id="tabs-7" class="tab">{{$TAB7}}</div>
-			<div id="tabs-8" class="tab">{{$TAB8}}</div>
-			<div id="tabs-9" class="tab">{{$TAB9}}</div>
-		</div>
+	<div class="button-notification-monitor">
+		<a id="notificationsMonitorLink" href="{{$monitor_link}}" target="_blank">
+			<div class="button-inner">v3 Monitor</div>
+		</a>
 	</div>
-{{else}}
-<div id="non-vine-page" style="width: 100%">
-	Please visit Amazon Vine to activate this extension.
+	{{endif}}
+	<div class="button-settings" style="margin-right: 15px; margin-left: auto">
+		<a id="settingsLink" href="" target="_blank">
+			<div class="button-inner vh-icon-32 vh-icon-cogs"></div>
+		</a>
+	</div>
 </div>
+
+<div id="tabs-index" style="height: auto" class="vh-tabs">
+	<ul>
+		<li class="active"><a href="#tabs-1">General</a></li>
+		<li><a href="#tabs-2">Notifications</a></li>
+		<li><a href="#tabs-3">System</a></li>
+		<li><a href="#tabs-4">"Brenda"</a></li>
+		<li><a href="#tabs-5">Keywords</a></li>
+		<li><a href="#tabs-6">Keyboard</a></li>
+		<li><a href="#tabs-7">Styles</a></li>
+		<li><a href="#tabs-8">Premium</a></li>
+		<li><a href="#tabs-9">?</a></li>
+	</ul>
+</div>
+<div id="tabs-content">
+	<div>
+		<div id="tabs-1" class="tab">{{$TAB1}}</div>
+		<div id="tabs-2" class="tab">{{$TAB2}}</div>
+		<div id="tabs-3" class="tab">{{$TAB3}}</div>
+		<div id="tabs-4" class="tab">{{$TAB4}}</div>
+		<div id="tabs-5" class="tab">{{$TAB5}}</div>
+		<div id="tabs-6" class="tab">{{$TAB6}}</div>
+		<div id="tabs-7" class="tab">{{$TAB7}}</div>
+		<div id="tabs-8" class="tab">{{$TAB8}}</div>
+		<div id="tabs-9" class="tab">{{$TAB9}}</div>
+	</div>
+</div>
+{{else}}
+<div id="non-vine-page" style="width: 100%">Please visit Amazon Vine to activate this extension.</div>
 {{endif}}
