@@ -9,6 +9,7 @@
 	</div>
 </div>
 
+{{if country_known}}
 <div class="buttons-header" style="width: 100%">
 	{{if tier_3}}
 	<div class="button-settings" style="margin-right: 5px">
@@ -61,3 +62,6 @@
 		<div id="tabs-9" class="tab">{{$TAB9}}</div>
 	</div>
 </div>
+{{else}}
+<div id="non-vine-page" style="width: 100%">Please visit Amazon Vine to activate this extension.</div>
+{{endif}}

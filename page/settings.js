@@ -9,6 +9,7 @@ import { initiateSettings } from "../page/settings_loadsave.js";
 import { Template } from "../scripts/Template.js";
 var Tpl = new Template();
 
+// Clear template cache and variables when opening settings
 Tpl.flushLocalStorage();
 
 //Render the main layout
@@ -23,6 +24,9 @@ Tpl.flushLocalStorage();
 	const promTab7 = await Tpl.loadFile("/page/settings_styles.tpl.html");
 	const promTab8 = await Tpl.loadFile("/page/settings_premium.tpl.html");
 	const promTab9 = await Tpl.loadFile("/page/settings_about.tpl.html");
+
+	// Clear any existing template variables before setting new ones
+	Tpl.clearVariables();
 
 	Tpl.setVar("APP_VERSION", getAppVersion());
 	Tpl.setVar("TAB1", Tpl.render(promTab1));
@@ -57,9 +61,10 @@ Tpl.flushLocalStorage();
 
 	document.body.innerHTML = Tpl.render(promMainTpl);
 
-	initTabs();
-
-	initiateSettings(); //page/settings_loadsave.js, initialize the loading and saving code for the page
+	if (countryCode != null) {
+		initTabs();
+		initiateSettings(); //page/settings_loadsave.js, initialize the loading and saving code for the page
+	}
 })();
 
 function getAppVersion() {
