@@ -127,9 +127,13 @@ chrome.notifications.onClicked.addListener((notificationId) => {
 
 let socket;
 function connectWebSocket() {
-	if (!Settings.get("notification.active") || socket?.connected) {
-		//Not reconnecting to WS.
+	if (!Settings.get("notification.active")) {
 		return;
+	}
+
+	// Disconnect existing socket if it exists
+	if (socket) {
+		socket.disconnect();
 	}
 
 	if (i13n.getCountryCode() === null) {
@@ -229,6 +233,9 @@ init();
 async function init() {
 	await retrieveSettings();
 
+	// Clear any existing alarms first
+	await chrome.alarms.clearAll();
+
 	//Check for new items (if the option is disabled the method will return)
 	chrome.alarms.create("websocketReconnect", { periodInMinutes: WSReconnectInterval });
 
@@ -236,7 +243,7 @@ async function init() {
 		//Firefox sometimes re-initialize the background script.
 		//Do not attempt to recreate a new websocket if this method is called when
 		//a websocket already exist.
-		if (socket?.connected == undefined) {
+		if (!socket?.connected) {
 			connectWebSocket();
 		}
 	}
