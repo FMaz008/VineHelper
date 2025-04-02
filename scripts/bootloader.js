@@ -58,6 +58,8 @@ var tileSizer = new TileSizer();
 import { Toolbar } from "./Toolbar.js";
 
 import { Tooltip } from "./Tooltip.js";
+import { unescapeHTML } from "./StringHelper.js";
+
 var tooltip = new Tooltip();
 
 const ultraviner = env.data.ultraviner; //If Ultravine is detected, Vine Helper will deactivate itself to avoid conflicts.
@@ -169,6 +171,25 @@ async function init() {
 
 		hookMgr.hookExecute("productsUpdated", null);
 		return; //Do not initialize the page as normal
+	}
+
+	// If a search has been performed, unescape the HTML encoded characters for the line
+	// X item(s) matching "[SEARCH STRING WITH HTML ENCODED CHARACTERS]"
+	for (const node of document.querySelector("#vvp-items-grid-container").childNodes) {
+		if (node.nodeName === "P") {
+			const matchingSearchText = node.innerHTML;
+
+			if (matchingSearchText) {
+				node.innerHTML = unescapeHTML(unescapeHTML(matchingSearchText));
+			}
+		}
+	}
+
+	const searchTextInput = document.querySelector("#vvp-search-text-input").value;
+
+	// If a search has been performed, unescape the HTML encoded characters for the text in the search box
+	if (searchTextInput) {
+		document.querySelector("#vvp-search-text-input").value = unescapeHTML(unescapeHTML(searchTextInput));
 	}
 
 	if (Settings.get("general.blindLoading")) {
@@ -756,7 +777,7 @@ async function initTilesAndDrawToolbars() {
 			//Add tool tip to the truncated item title link
 			if (Settings.get("general.displayFullTitleTooltip")) {
 				const titleDOM = arrObj[i].querySelector(".a-link-normal");
-				tooltip.addTooltip(titleDOM, tile.getTitle());
+				tooltip.addTooltip(titleDOM, unescapeHTML(unescapeHTML(tile.getTitle())));
 			}
 
 			//Generate the toolbar
