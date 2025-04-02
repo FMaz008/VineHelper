@@ -550,8 +550,12 @@ class NotificationMonitor {
 				this.#addItemData(asin, itemData);
 
 				// Update recommendationId in the DOM
+				// it's possible that the input element was removed as part of the de-duplicate image process or the gold tier check
 				element.dataset.recommendationId = recommendationId;
-				element.querySelector(`input[data-asin='${asin}']`).dataset.recommendationId = recommendationId;
+				const inputElement = element.querySelector(`input[data-asin='${asin}']`);
+				if (inputElement) {
+					inputElement.dataset.recommendationId = recommendationId;
+				}
 
 				if (!itemData.unavailable) {
 					this.#enableItem(element);
@@ -711,6 +715,9 @@ class NotificationMonitor {
 		if (unavailable == 1) {
 			this.#disableItem(tileDOM);
 		}
+
+		//Check gold tier status for this item
+		this.disableGoldItemsForSilverUsers(tileDOM);
 
 		if (this.#mostRecentItemDate == null || date > this.#mostRecentItemDate) {
 			this.#mostRecentItemDateDOM.innerText = this.#formatDate(date);
@@ -1126,8 +1133,17 @@ class NotificationMonitor {
 			this.#zeroETVItemFound(notif, Settings.get("notification.monitor.zeroETV.sound") != "0");
 		}
 
-		//If the user if silver, remove he items which are above the threshold
+		this.disableGoldItemsForSilverUsers(notif);
+	}
+
+	disableGoldItemsForSilverUsers(notif) {
+		if (!notif) {
+			return;
+		}
+
 		if (!this.#goldTier) {
+			const etvObj = notif.querySelector("div.etv");
+
 			if (this.#etvLimit != null && parseFloat(etvObj.dataset.etvMin) > this.#etvLimit) {
 				//Remove the See Details button for item outside the tier limit.
 				notif.querySelector(".vvp-details-btn")?.remove();
@@ -1339,6 +1355,15 @@ class NotificationMonitor {
 		if (node.dataset.feedPaused == "true") {
 			node.style.display = "none";
 			return false;
+		}
+
+		// Gold item filter for silver users
+		if (!this.#goldTier && Settings.get("notification.monitor.hideGoldNotificationsForSilverUser")) {
+			const etvObj = node.querySelector("div.etv");
+			if (etvObj && this.#etvLimit != null && parseFloat(etvObj.dataset.etvMin) > this.#etvLimit) {
+				node.style.display = "none";
+				return false;
+			}
 		}
 
 		// Search filter - if search text is not empty, check if item matches

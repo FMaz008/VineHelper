@@ -38,7 +38,17 @@
 		</div>
 	</div>
 	<div class="setting-container">
-		<label for="notification.soundCooldownDelay" style="margin-left: 20px"
+		<label for="notification.monitor.hideGoldNotificationsForSilverUser">
+			<input type="checkbox" name="notification.monitor.hideGoldNotificationsForSilverUser" value="1" />
+			Hide Gold-tier Notifications for Silver-tier user
+		</label>
+		<div class="setting-summary">
+			<div class="vh-toolbar-icon vh-icon-question"></div>
+			When enabled, items above your ETV limit (Gold-tier items) will be completely hidden in the notification monitor.
+		</div>
+	</div>
+	<div class="setting-container">
+		<label for="notification.soundCooldownDelay" style="margin-left: 20px; margin-top: 5px;"
 			>Sound cooldown:&nbsp;
 			<select name="notification.soundCooldownDelay">
 				<option value="0">Instant</option>
