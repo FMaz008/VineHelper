@@ -338,6 +338,7 @@ class SettingsMgr {
 					"24hrsFormat": false,
 					openLinksInNewTab: "1",
 					autoTruncate: true,
+					hideGoldNotificationsForSilverUser: false,
 					filterQueue: -1,
 					filterType: -1,
 					sortType: "date",
