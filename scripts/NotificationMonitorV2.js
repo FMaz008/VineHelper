@@ -13,8 +13,11 @@ import { Internationalization } from "./Internationalization.js";
 var i13n = new Internationalization();
 
 class NotificationMonitorV2 extends NotificationMonitor {
+	#channel = null; //Broadcast channel for light mode
+
 	constructor() {
 		super();
+		this.#channel = new BroadcastChannel("VineHelper");
 	}
 
 	async initialize() {
@@ -57,15 +60,16 @@ class NotificationMonitorV2 extends NotificationMonitor {
 
 		this.#broadcastChannel();
 
+		//Create a timer to check if the service worker is still running
+		this._createServiceWorkerStatusTimer();
+
 		this._updateTabTitle();
 	}
 
 	#broadcastChannel() {
-		this._channel.onmessage = (event) => {
+		this.#channel.onmessage = (event) => {
 			this._processBroadcastMessage(event.data);
 		};
-		this._updateServiceWorkerStatus();
-		this._channel.postMessage({ type: "wsStatus" });
 	}
 }
 

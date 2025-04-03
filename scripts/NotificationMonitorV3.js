@@ -155,9 +155,6 @@ class NotificationMonitorV3 extends NotificationMonitor {
 			this.#initTileSizeWidget();
 		}
 
-		//Service worker status
-		this._updateServiceWorkerStatus();
-
 		//Create a timer to check if the service worker is still running
 		this._createServiceWorkerStatusTimer();
 

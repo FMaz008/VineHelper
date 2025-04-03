@@ -61,7 +61,6 @@ class NotificationMonitor {
 	_goldTier = true;
 	_etvLimit = null;
 	_itemTemplateFile = "tile_gridview.html";
-	_channel = null; //Broadcast channel for light mode
 	_lightMode = false;
 	_statusTimer = null;
 	_fetchLimit = 100;
@@ -84,7 +83,6 @@ class NotificationMonitor {
 		this._imageUrls = new Set();
 		this._items = new Map(); // Initialize the combined map to store all item data and DOM elements
 		this._feedPausedAmountStored = 0;
-		this._channel = new BroadcastChannel("VineHelper");
 
 		this.#defineFetchLimit();
 	}
@@ -893,6 +891,7 @@ class NotificationMonitor {
 	}
 
 	_createServiceWorkerStatusTimer() {
+		this._updateServiceWorkerStatus();
 		this._serviceWorkerStatusTimer = window.setInterval(() => {
 			this._updateServiceWorkerStatus();
 		}, 10000);
@@ -920,7 +919,6 @@ class NotificationMonitor {
 			}, 500);
 			try {
 				chrome.runtime.sendMessage({ type: "ping" });
-				this._channel.postMessage({ type: "ping" });
 			} catch (e) {
 				//Page out of context, let the display show an error.
 			}
