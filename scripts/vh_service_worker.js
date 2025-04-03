@@ -131,9 +131,9 @@ function connectWebSocket() {
 		return;
 	}
 
-	// Disconnect existing socket if it exists
-	if (socket) {
-		socket.disconnect();
+	// If the socket is already connected, do not connect again
+	if (socket?.connected) {
+		return;
 	}
 
 	if (i13n.getCountryCode() === null) {
