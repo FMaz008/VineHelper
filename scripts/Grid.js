@@ -18,6 +18,7 @@ var HiddenList = new HiddenListMgr();
 
 import { getAsinFromDom } from "./Tile.js";
 
+import { unescapeHTML } from "./StringHelper.js";
 import { TileSizer } from "./TileSizer.js";
 var tileSizer = new TileSizer();
 
@@ -272,7 +273,11 @@ async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enro
 	}
 	let prom2 = await Tpl.loadFile("view/" + templateFile);
 
-	const truncatedTitle = title.length > 40 ? title.substr(0, 40).split(" ").slice(0, -1).join(" ") : title;
+	let truncatedTitle = title.length > 40 ? title.substr(0, 40).split(" ").slice(0, -1).join(" ") : title;
+
+	// These characters were breaking search, resulting in zero results
+	truncatedTitle = unescapeHTML(unescapeHTML(truncatedTitle)).replace(/[&,±]/g, " ");
+
 	const search_url_slug = encodeURIComponent(truncatedTitle);
 
 	const recommendationType = getRecommendationTypeFromQueue(queue);
