@@ -866,6 +866,11 @@ class NotificationMonitor {
 				btn.innerText = "Gold tier only";
 				//Insert at the end of .vvp-item-tile-content
 				notif.querySelector(".vvp-item-tile-content").appendChild(btn);
+
+				// Re-filter this item to apply gold tier filtering, ensuring it's hidden if the setting is enabled
+				if (Settings.get("notification.monitor.hideGoldNotificationsForSilverUser")) {
+					this.#processNotificationFiltering(notif);
+				}
 			}
 		}
 	}
