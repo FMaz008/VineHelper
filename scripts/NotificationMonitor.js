@@ -67,6 +67,7 @@ class NotificationMonitor {
 	_searchText = ""; // Current search text
 	_searchDebounceTimer = null; // Timer for debouncing search
 	_tileSizer = null;
+	_autoTruncateDebounceTimer = null; // Timer for debouncing autoTruncate
 
 	// UI User settings (will be loaded from storage)
 	_autoTruncateEnabled = true;
@@ -866,6 +867,11 @@ class NotificationMonitor {
 				btn.innerText = "Gold tier only";
 				//Insert at the end of .vvp-item-tile-content
 				notif.querySelector(".vvp-item-tile-content").appendChild(btn);
+
+				// Re-filter this item to apply gold tier filtering, ensuring it's hidden if the setting is enabled
+				if (Settings.get("notification.monitor.hideGoldNotificationsForSilverUser")) {
+					this.#processNotificationFiltering(notif);
+				}
 			}
 		}
 	}
@@ -1277,43 +1283,80 @@ class NotificationMonitor {
 		}).format(date);
 	}
 
-	#autoTruncate() {
-		// Auto truncate
-		if (this._autoTruncateEnabled) {
-			const max = Settings.get("notification.monitor.autoTruncateLimit");
-			// Check if we need to truncate based on map size
-			if (this._items.size > max) {
-				logger.add(`NOTIF: Auto truncating item(s) from the page using the ${this._sortType} sort method.`);
+	#autoTruncate(forceRun = false) {
+		// Clear any existing debounce timer
+		if (this._autoTruncateDebounceTimer) {
+			clearTimeout(this._autoTruncateDebounceTimer);
+		}
 
-				// Convert map to array for sorting
-				const itemsArray = Array.from(this._items.entries()).map(([asin, item]) => ({
-					asin,
-					date: new Date(item.data.date),
-					price: parseFloat(item.data.etv_min) || 0,
-					element: item.element,
-				}));
+		// Run immediately if forced, otherwise debounce
+		const runTruncate = () => {
+			// Auto truncate
+			if (this._autoTruncateEnabled) {
+				const max = Settings.get("notification.monitor.autoTruncateLimit");
+				// Check if we need to truncate based on map size
+				if (this._items.size > max) {
+					logger.add(`NOTIF: Auto truncating item(s) from the page using the ${this._sortType} sort method.`);
 
-				// Sort according to current sort method, but reversed
-				// (we want to remove lowest price or oldest items)
-				if (this._sortType === TYPE_PRICE) {
-					itemsArray.sort((a, b) => a.price - b.price); // Sort lowest price first
-				} else {
-					itemsArray.sort((a, b) => a.date - b.date); // Sort oldest first (default)
-				}
+					// Convert map to array for sorting
+					const itemsArray = Array.from(this._items.entries()).map(([asin, item]) => ({
+						asin,
+						date: new Date(item.data.date),
+						price: parseFloat(item.data.etv_min) || 0,
+						element: item.element,
+					}));
 
-				// Remove the oldest/lowest-priced items exceeding the max
-				const itemsToRemove = itemsArray.slice(0, itemsArray.length - max);
-
-				for (const item of itemsToRemove) {
-					if (item.element) {
-						this.#removeTile(item.element, item.asin);
-						item.element = null;
+					// Sort according to current sort method, but reversed
+					// (we want to remove lowest price or oldest items)
+					if (this._sortType === TYPE_PRICE) {
+						itemsArray.sort((a, b) => a.price - b.price); // Sort lowest price first
 					} else {
-						// Element not found but we should clean up the data
-						this._items.delete(item.asin);
+						itemsArray.sort((a, b) => a.date - b.date); // Sort oldest first (default)
 					}
+
+					// Remove the oldest/lowest-priced items exceeding the max
+					const itemsToRemove = itemsArray.slice(0, itemsArray.length - max);
+
+					// Batch DOM removals to reduce reflows
+					requestAnimationFrame(() => {
+						// First collect all elements to remove
+						const asinsToRemove = [];
+
+						for (const item of itemsToRemove) {
+							if (item.element) {
+								// Remove the element from DOM in a single operation
+								item.element.remove();
+								asinsToRemove.push(item.asin);
+							}
+						}
+
+						// Then batch update the data structures
+						for (const asin of asinsToRemove) {
+							// Get the item data to access its image URL
+							const item = this._items.get(asin);
+							const imgUrl = item?.data?.img_url;
+
+							// Also remove the image URL from the set if duplicate detection is enabled
+							if (imgUrl && Settings.get("notification.monitor.hideDuplicateThumbnail")) {
+								this._imageUrls.delete(imgUrl);
+							}
+
+							// Remove from data structures
+							this._items.delete(asin);
+						}
+
+						// Update the tab counter after batch removal
+						this._updateTabTitle();
+					});
 				}
 			}
+		};
+
+		if (forceRun) {
+			runTruncate();
+		} else {
+			// Set a new debounce timer
+			this._autoTruncateDebounceTimer = setTimeout(runTruncate, 500); // 500ms debounce delay
 		}
 	}
 
@@ -1458,6 +1501,8 @@ class NotificationMonitor {
 			this._sortType = sortQueue.value;
 			Settings.set("notification.monitor.sortType", this._sortType);
 			this.#processNotificationSorting();
+			// Force immediate truncate when sort type changes
+			this.#autoTruncate(true);
 		});
 
 		const filterType = document.querySelector("select[name='filter-type']");
@@ -1487,11 +1532,17 @@ class NotificationMonitor {
 		autoTruncateCheckbox.addEventListener("change", (event) => {
 			this._autoTruncateEnabled = autoTruncateCheckbox.checked;
 			Settings.set("notification.monitor.autoTruncate", this._autoTruncateEnabled);
+			// Force immediate truncate when auto truncate is enabled
+			if (this._autoTruncateEnabled) {
+				this.#autoTruncate(true);
+			}
 		});
 
 		const autoTruncateLimitSelect = document.getElementById("auto-truncate-limit");
 		autoTruncateLimitSelect.addEventListener("change", (event) => {
 			Settings.set("notification.monitor.autoTruncateLimit", parseInt(autoTruncateLimitSelect.value));
+			// Force immediate truncate when limit changes
+			this.#autoTruncate(true);
 		});
 
 		//Message from within the context of the extension
@@ -1609,6 +1660,17 @@ class NotificationMonitor {
 
 	// Clear all item-related data structures
 	#clearAllItemData() {
+		// For extremely large collections, it's faster to replace the entire container
+		// than to remove each element individually
+		if (this._gridContainer && this._gridContainer.children.length > 100) {
+			// Create empty clone of the container
+			const newContainer = this._gridContainer.cloneNode(false);
+			// Replace the old container with the empty one
+			this._gridContainer.parentNode.replaceChild(newContainer, this._gridContainer);
+			// Update the reference
+			this._gridContainer = newContainer;
+		}
+
 		this._items.clear();
 		this._imageUrls.clear();
 		this._mostRecentItemDate = null;
@@ -1619,12 +1681,38 @@ class NotificationMonitor {
 
 	// Clear unavailable items
 	#clearUnavailableItems() {
-		this._items.forEach((item) => {
-			if (item.data.unavailable) {
-				//Get the DOM element for the item
-				this.#removeTile(item.element, item.data.asin, false);
-				item = null;
+		// Collect all unavailable items first
+		const unavailableItems = [];
+		this._items.forEach((item, asin) => {
+			if (item.data.unavailable && item.element) {
+				unavailableItems.push({
+					asin,
+					element: item.element,
+					imgUrl: item.data.img_url,
+				});
 			}
+		});
+
+		// Batch process removals to minimize reflows
+		requestAnimationFrame(() => {
+			// Remove all elements from DOM first
+			for (const item of unavailableItems) {
+				item.element.remove();
+			}
+
+			// Then update data structures
+			for (const item of unavailableItems) {
+				// Remove image URL from duplicate detection if needed
+				if (item.imgUrl && Settings.get("notification.monitor.hideDuplicateThumbnail")) {
+					this._imageUrls.delete(item.imgUrl);
+				}
+
+				// Remove from items map
+				this._items.delete(item.asin);
+			}
+
+			// Update counter once after all operations
+			this._updateTabTitle();
 		});
 	}
 }
