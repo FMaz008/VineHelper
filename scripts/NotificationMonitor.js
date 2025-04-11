@@ -223,6 +223,9 @@ class NotificationMonitor {
 			return false;
 		}
 
+		// Save current scroll position
+		const scrollPosition = window.scrollY;
+		
 		title = unescapeHTML(unescapeHTML(title));
 
 		const recommendationType = getRecommendationTypeFromQueue(queue); //grid.js
@@ -368,6 +371,14 @@ class NotificationMonitor {
 			this._gridContainer.insertBefore(fragment, this._gridContainer.firstChild);
 		}
 
+		// Restore scroll position if not in fetch mode
+		if (!this._fetchingRecentItems) {
+			window.scrollTo({
+				top: scrollPosition,
+				behavior: "auto"
+			});
+		}
+		
 		// Store a reference to the DOM element
 		this.#storeItemDOMElement(asin, tileDOM);
 
@@ -1034,6 +1045,9 @@ class NotificationMonitor {
 
 	#processNotificationSorting() {
 		const container = document.getElementById("vvp-items-grid");
+		
+		// Save current scroll position
+		const scrollPosition = window.scrollY;
 
 		// Sort the items - reuse the sorting logic from #sortItems
 		const sortedItems = this.#sortItems();
@@ -1056,6 +1070,12 @@ class NotificationMonitor {
 		// Then re-append them in the correct order
 		validItems.forEach((item) => {
 			container.appendChild(item.element);
+		});
+		
+		// Restore scroll position
+		window.scrollTo({
+			top: scrollPosition,
+			behavior: "auto" // Use "auto" instead of "smooth" to prevent visible jumping
 		});
 	}
 
@@ -1251,7 +1271,18 @@ class NotificationMonitor {
 
 	#moveNotifToTop(notif) {
 		const container = document.getElementById("vvp-items-grid");
+		
+		// Save current scroll position
+		const scrollPosition = window.scrollY;
+		
+		// Insert the notification at the top
 		container.insertBefore(notif, container.firstChild);
+		
+		// Restore scroll position
+		window.scrollTo({
+			top: scrollPosition,
+			behavior: "auto" // Use "auto" instead of "smooth" to prevent visible jumping
+		});
 	}
 
 	#getNotificationByASIN(asin) {
@@ -1314,40 +1345,51 @@ class NotificationMonitor {
 						itemsArray.sort((a, b) => a.date - b.date); // Sort oldest first (default)
 					}
 
-					// Remove the oldest/lowest-priced items exceeding the max
-					const itemsToRemove = itemsArray.slice(0, itemsArray.length - max);
+					// Identify which items to keep and which to remove
+					const itemsToKeep = itemsArray.slice(itemsArray.length - max);
+					const asinsToKeep = new Set(itemsToKeep.map(item => item.asin));
+					
+					// Use bulk removal for large numbers of items
+					if (this._items.size - asinsToKeep.size > 100) {
+						// Faster to rebuild the container with just the items to keep
+						this.#bulkRemoveItems(asinsToKeep, true);
+					} else {
+						// For smaller counts, use the regular approach
+						// Remove the oldest/lowest-priced items exceeding the max
+						const itemsToRemove = itemsArray.slice(0, itemsArray.length - max);
 
-					// Batch DOM removals to reduce reflows
-					requestAnimationFrame(() => {
-						// First collect all elements to remove
-						const asinsToRemove = [];
+						// Batch DOM removals to reduce reflows
+						requestAnimationFrame(() => {
+							// First collect all elements to remove
+							const asinsToRemove = [];
 
-						for (const item of itemsToRemove) {
-							if (item.element) {
-								// Remove the element from DOM in a single operation
-								item.element.remove();
-								asinsToRemove.push(item.asin);
+							for (const item of itemsToRemove) {
+								if (item.element) {
+									// Remove the element from DOM in a single operation
+									item.element.remove();
+									asinsToRemove.push(item.asin);
+								}
 							}
-						}
 
-						// Then batch update the data structures
-						for (const asin of asinsToRemove) {
-							// Get the item data to access its image URL
-							const item = this._items.get(asin);
-							const imgUrl = item?.data?.img_url;
+							// Then batch update the data structures
+							for (const asin of asinsToRemove) {
+								// Get the item data to access its image URL
+								const item = this._items.get(asin);
+								const imgUrl = item?.data?.img_url;
 
-							// Also remove the image URL from the set if duplicate detection is enabled
-							if (imgUrl && Settings.get("notification.monitor.hideDuplicateThumbnail")) {
-								this._imageUrls.delete(imgUrl);
+								// Also remove the image URL from the set if duplicate detection is enabled
+								if (imgUrl && Settings.get("notification.monitor.hideDuplicateThumbnail")) {
+									this._imageUrls.delete(imgUrl);
+								}
+
+								// Remove from data structures
+								this._items.delete(asin);
 							}
 
-							// Remove from data structures
-							this._items.delete(asin);
-						}
-
-						// Update the tab counter after batch removal
-						this._updateTabTitle();
-					});
+							// Update the tab counter after batch removal
+							this._updateTabTitle();
+						});
+					}
 				}
 			}
 		};
@@ -1679,41 +1721,101 @@ class NotificationMonitor {
 		}
 	}
 
+	// New method for efficient bulk item removal or retention
+	#bulkRemoveItems(asinsToKeep, isKeepSet = false) {
+		// Save current scroll position
+		const scrollPosition = window.scrollY;
+		
+		// Create a new empty container
+		const newContainer = this._gridContainer.cloneNode(false);
+		
+		// Create a new items map to store the updated collection
+		const newItems = new Map();
+		const newImageUrls = new Set();
+		
+		// Efficiently process all items
+		this._items.forEach((item, asin) => {
+			const shouldKeep = isKeepSet ? asinsToKeep.has(asin) : !asinsToKeep.has(asin);
+			
+			if (shouldKeep && item.element) {
+				// Add this item to the new container
+				newContainer.appendChild(item.element);
+				newItems.set(asin, item);
+				
+				// Keep track of the image URL for duplicate detection
+				if (item.data.img_url && Settings.get("notification.monitor.hideDuplicateThumbnail")) {
+					newImageUrls.add(item.data.img_url);
+				}
+			}
+		});
+		
+		// Replace the old container with the new one
+		this._gridContainer.parentNode.replaceChild(newContainer, this._gridContainer);
+		this._gridContainer = newContainer;
+		
+		// Update the data structures
+		this._items = newItems;
+		this._imageUrls = newImageUrls;
+		
+		// Restore scroll position
+		window.scrollTo({
+			top: scrollPosition,
+			behavior: "auto"
+		});
+		
+		// Update the tab counter
+		this._updateTabTitle();
+	}
+
 	// Clear unavailable items
 	#clearUnavailableItems() {
-		// Collect all unavailable items first
-		const unavailableItems = [];
+		// Get all unavailable ASINs
+		const unavailableAsins = new Set();
 		this._items.forEach((item, asin) => {
-			if (item.data.unavailable && item.element) {
-				unavailableItems.push({
-					asin,
-					element: item.element,
-					imgUrl: item.data.img_url,
-				});
+			if (item.data.unavailable) {
+				unavailableAsins.add(asin);
 			}
 		});
+		
+		// If there are many unavailable items, use the bulk removal method
+		if (unavailableAsins.size > 100) {
+			this.#bulkRemoveItems(unavailableAsins);
+		} else {
+			// Original implementation for smaller sets
+			// Collect all unavailable items first
+			const unavailableItems = [];
+			this._items.forEach((item, asin) => {
+				if (item.data.unavailable && item.element) {
+					unavailableItems.push({
+						asin,
+						element: item.element,
+						imgUrl: item.data.img_url,
+					});
+				}
+			});
 
-		// Batch process removals to minimize reflows
-		requestAnimationFrame(() => {
-			// Remove all elements from DOM first
-			for (const item of unavailableItems) {
-				item.element.remove();
-			}
-
-			// Then update data structures
-			for (const item of unavailableItems) {
-				// Remove image URL from duplicate detection if needed
-				if (item.imgUrl && Settings.get("notification.monitor.hideDuplicateThumbnail")) {
-					this._imageUrls.delete(item.imgUrl);
+			// Batch process removals to minimize reflows
+			requestAnimationFrame(() => {
+				// Remove all elements from DOM first
+				for (const item of unavailableItems) {
+					item.element.remove();
 				}
 
-				// Remove from items map
-				this._items.delete(item.asin);
-			}
+				// Then update data structures
+				for (const item of unavailableItems) {
+					// Remove image URL from duplicate detection if needed
+					if (item.imgUrl && Settings.get("notification.monitor.hideDuplicateThumbnail")) {
+						this._imageUrls.delete(item.imgUrl);
+					}
 
-			// Update counter once after all operations
-			this._updateTabTitle();
-		});
+					// Remove from items map
+					this._items.delete(item.asin);
+				}
+
+				// Update counter once after all operations
+				this._updateTabTitle();
+			});
+		}
 	}
 }
 
