@@ -459,57 +459,85 @@ class NotificationMonitor {
 	}
 
 	#clickHandler(e) {
-		//Check if the closes element is .vh-icon-search
-		const searchLink = e.target.closest(".vh-icon-search");
-		if (searchLink) {
-			e.preventDefault();
-			window.open(searchLink.parentElement.href, "_blank");
-			return;
-		}
+		// If a user clicks on the link wrapper around an icon, it would navigate to the
+		// default href (which is usually #) which breaks several things. We'll fix this by
+		// matching the parent link elements and prevent default there (bubbling events)
 
-		//Check if the closest element is .vh-icon-report
-		const reportLink = e.target.closest(".vh-icon-report");
-		if (reportLink) {
-			e.preventDefault();
-			this.#handleReportClick(e);
-			return;
-		}
-
-		//Check if the closest element is .vh-icon-announcement
-		const announceLink = e.target.closest(".vh-icon-announcement");
-		if (announceLink) {
-			e.preventDefault();
-			if (Settings.get("discord.active") && Settings.get("discord.guid", false) != null) {
-				this.#handleBrendaClick(e);
-				return;
+		// Helper function to handle icon clicks and their parent links
+		const handleIconClick = (iconSelector, handler) => {
+			const icon = e.target.closest(iconSelector);
+			if (icon) {
+				e.preventDefault();
+				handler(icon, e);
+				return true;
 			}
-		}
 
-		//Check if the closest element is .vh-icon-pin
-		const pinLink = e.target.closest(".vh-icon-pin");
-		if (pinLink) {
-			e.preventDefault();
-			if (Settings.get("pinnedTab.active")) {
-				this.#handlePinClick(e);
-				return;
+			// Check if clicked on a parent link containing this icon type
+			const parentLink = e.target.closest(`a:has(${iconSelector})`);
+			if (parentLink && !e.target.closest(iconSelector)) {
+				e.preventDefault();
+				// Find the actual icon and handle it
+				const containedIcon = parentLink.querySelector(iconSelector);
+				if (containedIcon) {
+					handler(containedIcon, e);
+					return true;
+				}
 			}
-		}
 
-		//Check if the closest element is .vh-icon-hide
-		const hideLink = e.target.closest(".vh-icon-hide");
-		if (hideLink) {
-			e.preventDefault();
-			this.#handleHideClick(e);
-			return;
-		}
+			return false;
+		};
 
-		//Check if the closest element is .vh-icon-question
-		const detailsIcon = e.target.closest(".vh-icon-question");
-		if (detailsIcon) {
-			e.preventDefault();
-			this.#handleDetailsClick(e);
+		// Handle search icon
+		if (
+			handleIconClick(".vh-icon-search", (icon) => {
+				window.open(icon.closest("a").href, "_blank");
+			})
+		)
 			return;
-		}
+
+		// Handle report icon
+		if (
+			handleIconClick(".vh-icon-report", () => {
+				this.#handleReportClick(e);
+			})
+		)
+			return;
+
+		// Handle announcement icon
+		if (
+			handleIconClick(".vh-icon-announcement", () => {
+				if (Settings.get("discord.active") && Settings.get("discord.guid", false) != null) {
+					this.#handleBrendaClick(e);
+				}
+			})
+		)
+			return;
+
+		// Handle pin icon
+		if (
+			handleIconClick(".vh-icon-pin", () => {
+				if (Settings.get("pinnedTab.active")) {
+					this.#handlePinClick(e);
+				}
+			})
+		)
+			return;
+
+		// Handle hide icon
+		if (
+			handleIconClick(".vh-icon-hide", () => {
+				this.#handleHideClick(e);
+			})
+		)
+			return;
+
+		// Handle details icon
+		if (
+			handleIconClick(".vh-icon-question", () => {
+				this.#handleDetailsClick(e);
+			})
+		)
+			return;
 
 		//Add the click listener for the See Details button
 		if (this._firefox || Settings.get("notification.monitor.openLinksInNewTab") == "1") {
