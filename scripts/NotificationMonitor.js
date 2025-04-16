@@ -492,16 +492,14 @@ class NotificationMonitor {
 			_handleIconClick(".vh-icon-search", (icon) => {
 				window.open(icon.closest("a").href, "_blank");
 			})
-		)
-			return;
+		) return;
 
 		// Handle report icon
 		if (
 			_handleIconClick(".vh-icon-report", () => {
 				this.#handleReportClick(e);
 			})
-		)
-			return;
+		) return;
 
 		// Handle announcement icon
 		if (
@@ -510,8 +508,7 @@ class NotificationMonitor {
 					this.#handleBrendaClick(e);
 				}
 			})
-		)
-			return;
+		) return;
 
 		// Handle pin icon
 		if (
@@ -520,24 +517,21 @@ class NotificationMonitor {
 					this.#handlePinClick(e);
 				}
 			})
-		)
-			return;
+		) return;
 
 		// Handle hide icon
 		if (
 			_handleIconClick(".vh-icon-hide", () => {
 				this.#handleHideClick(e);
 			})
-		)
-			return;
+		) return;
 
 		// Handle details icon
 		if (
 			_handleIconClick(".vh-icon-question", () => {
 				this.#handleDetailsClick(e);
 			})
-		)
-			return;
+		) return;
 
 		//Add the click listener for the See Details button
 		if (this._firefox || Settings.get("notification.monitor.openLinksInNewTab") == "1") {
