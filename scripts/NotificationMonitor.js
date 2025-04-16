@@ -464,7 +464,7 @@ class NotificationMonitor {
 		// matching the parent link elements and prevent default there (bubbling events)
 
 		// Helper function to handle icon clicks and their parent links
-		const handleIconClick = (iconSelector, handler) => {
+		const _handleIconClick = (iconSelector, handler) => {
 			const icon = e.target.closest(iconSelector);
 			if (icon) {
 				e.preventDefault();
@@ -489,7 +489,7 @@ class NotificationMonitor {
 
 		// Handle search icon
 		if (
-			handleIconClick(".vh-icon-search", (icon) => {
+			_handleIconClick(".vh-icon-search", (icon) => {
 				window.open(icon.closest("a").href, "_blank");
 			})
 		)
@@ -497,7 +497,7 @@ class NotificationMonitor {
 
 		// Handle report icon
 		if (
-			handleIconClick(".vh-icon-report", () => {
+			_handleIconClick(".vh-icon-report", () => {
 				this.#handleReportClick(e);
 			})
 		)
@@ -505,7 +505,7 @@ class NotificationMonitor {
 
 		// Handle announcement icon
 		if (
-			handleIconClick(".vh-icon-announcement", () => {
+			_handleIconClick(".vh-icon-announcement", () => {
 				if (Settings.get("discord.active") && Settings.get("discord.guid", false) != null) {
 					this.#handleBrendaClick(e);
 				}
@@ -515,7 +515,7 @@ class NotificationMonitor {
 
 		// Handle pin icon
 		if (
-			handleIconClick(".vh-icon-pin", () => {
+			_handleIconClick(".vh-icon-pin", () => {
 				if (Settings.get("pinnedTab.active")) {
 					this.#handlePinClick(e);
 				}
@@ -525,7 +525,7 @@ class NotificationMonitor {
 
 		// Handle hide icon
 		if (
-			handleIconClick(".vh-icon-hide", () => {
+			_handleIconClick(".vh-icon-hide", () => {
 				this.#handleHideClick(e);
 			})
 		)
@@ -533,7 +533,7 @@ class NotificationMonitor {
 
 		// Handle details icon
 		if (
-			handleIconClick(".vh-icon-question", () => {
+			_handleIconClick(".vh-icon-question", () => {
 				this.#handleDetailsClick(e);
 			})
 		)
@@ -1386,19 +1386,10 @@ class NotificationMonitor {
 
 	// Clear all item-related data structures
 	#clearAllItemData() {
-		// For extremely large collections, it's faster to replace the entire container
-		// than to remove each element individually
-		if (this._gridContainer && this._gridContainer.children.length > 100) {
-			// Create empty clone of the container
-			const newContainer = this._gridContainer.cloneNode(false);
-			// Replace the old container with the empty one
-			this._gridContainer.parentNode.replaceChild(newContainer, this._gridContainer);
-			// Update the reference
-			this._gridContainer = newContainer;
-		}
+		// Call bulkRemoveItems with empty set to keep (removing everything)
+		this.#bulkRemoveItems(new Set(), true);
 
-		this._items.clear();
-		this._imageUrls.clear();
+		// Additional reset operations specific to clearing all data
 		this._mostRecentItemDate = null;
 		if (this._mostRecentItemDateDOM) {
 			this._mostRecentItemDateDOM.innerText = "";
