@@ -389,6 +389,9 @@ async function sendMessageToAllTabs(data, debugInfo) {
 let selectedWord = "";
 // Create static context menu items
 chrome.runtime.onInstalled.addListener(() => {
+	// Clear existing menu items before creating new ones
+	chrome.contextMenus.removeAll();
+
 	const patterns = [
 		"https://*.amazon.com/vine/*",
 		"https://*.amazon.co.uk/vine/*",

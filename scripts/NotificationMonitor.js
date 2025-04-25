@@ -1,38 +1,25 @@
 import { Logger } from "./Logger.js";
 var logger = new Logger();
-
 import { SettingsMgr } from "./SettingsMgr.js";
 const Settings = new SettingsMgr();
-
 import { Internationalization } from "./Internationalization.js";
 const i13n = new Internationalization();
-
 import { Template } from "./Template.js";
 var Tpl = new Template();
-
 import { getRecommendationTypeFromQueue, generateRecommendationString } from "./Grid.js";
-
 import { YMDHiStoISODate } from "./DateHelper.js";
-
 import { keywordMatch } from "./service_worker/keywordMatch.js";
-
 import { NotificationsSoundPlayer } from "./NotificationsSoundPlayer.js";
 const SoundPlayer = new NotificationsSoundPlayer();
-
 import { PinnedListMgr } from "./PinnedListMgr.js";
 var PinnedList = new PinnedListMgr();
-
 import { ScreenNotifier, ScreenNotification } from "./ScreenNotifier.js";
 var Notifications = new ScreenNotifier();
-
 import { unescapeHTML, removeSpecialHTML } from "./StringHelper.js";
-
 import { Tooltip } from "./Tooltip.js";
 var tooltip = new Tooltip();
-
 import { BrendaAnnounceQueue } from "./BrendaAnnounce.js";
 var brendaAnnounceQueue = new BrendaAnnounceQueue();
-
 import { ModalMgr } from "./ModalMgr.js";
 var DialogMgr = new ModalMgr();
 
@@ -150,6 +137,7 @@ class NotificationMonitor {
 			//Do nothing
 		}
 	}
+
 	_updateGoldStatus() {
 		let gold = true;
 		try {
@@ -202,6 +190,7 @@ class NotificationMonitor {
 		notif.style.opacity = "0.5";
 		notif.style.filter = "brightness(0.7)";
 	}
+
 	async addTileInGrid(
 		asin,
 		queue,
@@ -330,43 +319,55 @@ class NotificationMonitor {
 		const fragment = document.createDocumentFragment();
 		fragment.appendChild(tileDOM);
 
-		// Insert the tile based on sort type
-		if (this._sortType === TYPE_PRICE) {
-			if (etv_min !== null) {
-				// For price sorting, find the correct position and insert there
-				const newPrice = parseFloat(etv_min) || 0;
-				let insertPosition = null;
-
-				// Find the first item with a lower price
-				const existingItems = Array.from(this._items.entries());
-				for (const [existingAsin, item] of existingItems) {
-					// Skip the current item or items without elements
-					if (existingAsin === asin || !item.element) continue;
-
-					const existingPrice = parseFloat(item.data.etv_min) || 0;
-					if (newPrice > existingPrice) {
-						insertPosition = item.element;
-						break;
-					}
+		// Check if the item is already pinned and update the pin icon
+		if (Settings.get("pinnedTab.active")) {
+			const isPinned = await this.#checkIfPinned(asin);
+			if (isPinned) {
+				const pinIcon = tileDOM.querySelector(".vh-icon-pin");
+				if (pinIcon) {
+					pinIcon.classList.add("vh-icon-pin-active");
+					pinIcon.title = "Click to unpin this item";
 				}
+			}
+		}
 
-				if (insertPosition) {
-					// Insert before the found position
-					this._gridContainer.insertBefore(fragment, insertPosition);
+		this.#preserveScrollPosition(() => {
+			// Insert the tile based on sort type
+			if (this._sortType === TYPE_PRICE) {
+				if (etv_min !== null) {
+					// For price sorting, find the correct position and insert there
+					const newPrice = parseFloat(etv_min) || 0;
+					let insertPosition = null;
+
+					// Find the first item with a lower price
+					const existingItems = Array.from(this._items.entries());
+					for (const [existingAsin, item] of existingItems) {
+						// Skip the current item or items without elements
+						if (existingAsin === asin || !item.element) continue;
+
+						const existingPrice = parseFloat(item.data.etv_min) || 0;
+						if (newPrice > existingPrice) {
+							insertPosition = item.element;
+							break;
+						}
+					}
+
+					if (insertPosition) {
+						// Insert before the found position
+						this._gridContainer.insertBefore(fragment, insertPosition);
+					} else {
+						// If no position found or item has highest price, append to the end
+						this._gridContainer.appendChild(fragment);
+					}
 				} else {
-					// If no position found or item has highest price, append to the end
-
+					// If no ETV min, append to the end
 					this._gridContainer.appendChild(fragment);
 				}
 			} else {
-				// If no ETV min, append to the end
-				this._gridContainer.appendChild(fragment);
+				// For other sort types, just insert at the beginning
+				this._gridContainer.insertBefore(fragment, this._gridContainer.firstChild);
 			}
-		} else {
-			// For other sort types, just insert at the beginning
-
-			this._gridContainer.insertBefore(fragment, this._gridContainer.firstChild);
-		}
+		});
 
 		// Store a reference to the DOM element
 		this.#storeItemDOMElement(asin, tileDOM);
@@ -458,57 +459,85 @@ class NotificationMonitor {
 	}
 
 	#clickHandler(e) {
-		//Check if the closes element is .vh-icon-search
-		const searchLink = e.target.closest(".vh-icon-search");
-		if (searchLink) {
-			e.preventDefault();
-			window.open(searchLink.parentElement.href, "_blank");
-			return;
-		}
+		// If a user clicks on the link wrapper around an icon, it would navigate to the
+		// default href (which is usually #) which breaks several things. We'll fix this by
+		// matching the parent link elements and prevent default there (bubbling events)
 
-		//Check if the closest element is .vh-icon-report
-		const reportLink = e.target.closest(".vh-icon-report");
-		if (reportLink) {
-			e.preventDefault();
-			this.#handleReportClick(e);
-			return;
-		}
-
-		//Check if the closest element is .vh-icon-announcement
-		const announceLink = e.target.closest(".vh-icon-announcement");
-		if (announceLink) {
-			e.preventDefault();
-			if (Settings.get("discord.active") && Settings.get("discord.guid", false) != null) {
-				this.#handleBrendaClick(e);
-				return;
+		// Helper function to handle icon clicks and their parent links
+		const _handleIconClick = (iconSelector, handler) => {
+			const icon = e.target.closest(iconSelector);
+			if (icon) {
+				e.preventDefault();
+				handler(icon, e);
+				return true;
 			}
-		}
 
-		//Check if the closest element is .vh-icon-pin
-		const pinLink = e.target.closest(".vh-icon-pin");
-		if (pinLink) {
-			e.preventDefault();
-			if (Settings.get("pinnedTab.active")) {
-				this.#handlePinClick(e);
-				return;
+			// Check if clicked on a parent link containing this icon type
+			const parentLink = e.target.closest(`a:has(${iconSelector})`);
+			if (parentLink && !e.target.closest(iconSelector)) {
+				e.preventDefault();
+				// Find the actual icon and handle it
+				const containedIcon = parentLink.querySelector(iconSelector);
+				if (containedIcon) {
+					handler(containedIcon, e);
+					return true;
+				}
 			}
-		}
 
-		//Check if the closest element is .vh-icon-hide
-		const hideLink = e.target.closest(".vh-icon-hide");
-		if (hideLink) {
-			e.preventDefault();
-			this.#handleHideClick(e);
-			return;
-		}
+			return false;
+		};
 
-		//Check if the closest element is .vh-icon-question
-		const detailsIcon = e.target.closest(".vh-icon-question");
-		if (detailsIcon) {
-			e.preventDefault();
-			this.#handleDetailsClick(e);
+		// Handle search icon
+		if (
+			_handleIconClick(".vh-icon-search", (icon) => {
+				window.open(icon.closest("a").href, "_blank");
+			})
+		)
 			return;
-		}
+
+		// Handle report icon
+		if (
+			_handleIconClick(".vh-icon-report", () => {
+				this.#handleReportClick(e);
+			})
+		)
+			return;
+
+		// Handle announcement icon
+		if (
+			_handleIconClick(".vh-icon-announcement", () => {
+				if (Settings.get("discord.active") && Settings.get("discord.guid", false) != null) {
+					this.#handleBrendaClick(e);
+				}
+			})
+		)
+			return;
+
+		// Handle pin icon
+		if (
+			_handleIconClick(".vh-icon-pin", () => {
+				if (Settings.get("pinnedTab.active")) {
+					this.#handlePinClick(e);
+				}
+			})
+		)
+			return;
+
+		// Handle hide icon
+		if (
+			_handleIconClick(".vh-icon-hide", () => {
+				this.#handleHideClick(e);
+			})
+		)
+			return;
+
+		// Handle details icon
+		if (
+			_handleIconClick(".vh-icon-question", () => {
+				this.#handleDetailsClick(e);
+			})
+		)
+			return;
 
 		//Add the click listener for the See Details button
 		if (this._firefox || Settings.get("notification.monitor.openLinksInNewTab") == "1") {
@@ -696,8 +725,10 @@ class NotificationMonitor {
 			this._imageUrls.delete(imgUrl);
 		}
 
-		// Remove the element from DOM
-		tile.remove();
+		// Remove the element from DOM with scroll position preserved
+		this.#preserveScrollPosition(() => {
+			tile.remove();
+		});
 		tile = null;
 
 		if (countTotalTiles) {
@@ -1035,27 +1066,29 @@ class NotificationMonitor {
 	#processNotificationSorting() {
 		const container = document.getElementById("vvp-items-grid");
 
-		// Sort the items - reuse the sorting logic from #sortItems
-		const sortedItems = this.#sortItems();
+		this.#preserveScrollPosition(() => {
+			// Sort the items - reuse the sorting logic from #sortItems
+			const sortedItems = this.#sortItems();
 
-		// Only proceed if we have items
-		if (!sortedItems || sortedItems.length === 0) return;
+			// Only proceed if we have items
+			if (!sortedItems || sortedItems.length === 0) return;
 
-		// Filter out any items without DOM elements
-		const validItems = sortedItems.filter((item) => item.element);
+			// Filter out any items without DOM elements
+			const validItems = sortedItems.filter((item) => item.element);
 
-		// Efficiently reorder DOM elements
-		// Remove all items from the DOM first to avoid unnecessary reflows
-		validItems.forEach((item) => {
-			// We use a trick here - detach the element but keep the reference
-			if (item.element.parentNode) {
-				item.element.remove();
-			}
-		});
+			// Efficiently reorder DOM elements
+			// Remove all items from the DOM first to avoid unnecessary reflows
+			validItems.forEach((item) => {
+				// We use a trick here - detach the element but keep the reference
+				if (item.element.parentNode) {
+					item.element.remove();
+				}
+			});
 
-		// Then re-append them in the correct order
-		validItems.forEach((item) => {
-			container.appendChild(item.element);
+			// Then re-append them in the correct order
+			validItems.forEach((item) => {
+				container.appendChild(item.element);
+			});
 		});
 	}
 
@@ -1150,22 +1183,47 @@ class NotificationMonitor {
 		e.preventDefault();
 
 		const asin = e.target.dataset.asin;
-		const isParentAsin = e.target.dataset.isParentAsin;
-		const enrollmentGUID = e.target.dataset.enrollmentGuid;
-		const queue = e.target.dataset.queue;
+		const isPinned = e.target.classList.contains("vh-icon-pin-active");
 		const title = e.target.dataset.title;
-		const thumbnail = e.target.dataset.thumbnail;
 
-		PinnedList.addItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID);
+		if (isPinned) {
+			// Unpin the item
+			PinnedList.removeItem(asin);
 
-		//Display notification
-		Notifications.pushNotification(
-			new ScreenNotification({
-				title: `Item ${asin} pinned.`,
-				lifespan: 3,
-				content: title,
-			})
-		);
+			// Update the icon
+			e.target.classList.remove("vh-icon-pin-active");
+			e.target.title = "Pin this item";
+
+			// Display notification
+			Notifications.pushNotification(
+				new ScreenNotification({
+					title: `Item ${asin} unpinned.`,
+					lifespan: 3,
+					content: title,
+				})
+			);
+		} else {
+			// Pin the item
+			const isParentAsin = e.target.dataset.isParentAsin;
+			const enrollmentGUID = e.target.dataset.enrollmentGuid;
+			const queue = e.target.dataset.queue;
+			const thumbnail = e.target.dataset.thumbnail;
+
+			PinnedList.addItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID);
+
+			// Update the icon
+			e.target.classList.add("vh-icon-pin-active");
+			e.target.title = "Unpin this item";
+
+			// Display notification
+			Notifications.pushNotification(
+				new ScreenNotification({
+					title: `Item ${asin} pinned.`,
+					lifespan: 3,
+					content: title,
+				})
+			);
+		}
 	}
 
 	#handleDetailsClick(e) {
@@ -1181,26 +1239,16 @@ class NotificationMonitor {
 
 		let m = DialogMgr.newModal("item-details-" + asin);
 		m.title = "Item " + asin;
-		m.content =
-			"<ul>" +
-			"<li>Broadcast date/time: " +
-			date +
-			"</li>" +
-			"<li>Received date/time: " +
-			dateReceived +
-			"</li>" +
-			"<li>Broadcast reason: " +
-			reason +
-			"</li>" +
-			"<li>Queue: " +
-			queue +
-			"</li>" +
-			"<li>Highlight Keyword: " +
-			highlightKW +
-			"</li>" +
-			"<li>Blur Keyword: " +
-			blurKW +
-			"</li></ul>";
+		m.content = `
+			<ul style="margin-bottom: 10px;">
+				<li>Broadcast date/time: ${date}</li>
+				<li>Received date/time: ${dateReceived}</li>
+				<li>Broadcast reason: ${reason}</li>
+				<li>Queue: ${queue}</li>
+				<li>Highlight Keyword: ${highlightKW}</li>
+				<li>Blur Keyword: ${blurKW}</li>
+			</ul>
+		`;
 		m.show();
 	}
 
@@ -1251,7 +1299,11 @@ class NotificationMonitor {
 
 	#moveNotifToTop(notif) {
 		const container = document.getElementById("vvp-items-grid");
-		container.insertBefore(notif, container.firstChild);
+
+		this.#preserveScrollPosition(() => {
+			// Insert the notification at the top
+			container.insertBefore(notif, container.firstChild);
+		});
 	}
 
 	#getNotificationByASIN(asin) {
@@ -1314,40 +1366,12 @@ class NotificationMonitor {
 						itemsArray.sort((a, b) => a.date - b.date); // Sort oldest first (default)
 					}
 
-					// Remove the oldest/lowest-priced items exceeding the max
-					const itemsToRemove = itemsArray.slice(0, itemsArray.length - max);
+					// Identify which items to keep and which to remove
+					const itemsToKeep = itemsArray.slice(itemsArray.length - max);
+					const asinsToKeep = new Set(itemsToKeep.map((item) => item.asin));
 
-					// Batch DOM removals to reduce reflows
-					requestAnimationFrame(() => {
-						// First collect all elements to remove
-						const asinsToRemove = [];
-
-						for (const item of itemsToRemove) {
-							if (item.element) {
-								// Remove the element from DOM in a single operation
-								item.element.remove();
-								asinsToRemove.push(item.asin);
-							}
-						}
-
-						// Then batch update the data structures
-						for (const asin of asinsToRemove) {
-							// Get the item data to access its image URL
-							const item = this._items.get(asin);
-							const imgUrl = item?.data?.img_url;
-
-							// Also remove the image URL from the set if duplicate detection is enabled
-							if (imgUrl && Settings.get("notification.monitor.hideDuplicateThumbnail")) {
-								this._imageUrls.delete(imgUrl);
-							}
-
-							// Remove from data structures
-							this._items.delete(asin);
-						}
-
-						// Update the tab counter after batch removal
-						this._updateTabTitle();
-					});
+					// Use bulk removal method with the optimized approach for large sets
+					this.#bulkRemoveItems(asinsToKeep, true);
 				}
 			}
 		};
@@ -1358,6 +1382,96 @@ class NotificationMonitor {
 			// Set a new debounce timer
 			this._autoTruncateDebounceTimer = setTimeout(runTruncate, 500); // 500ms debounce delay
 		}
+	}
+
+	// Clear all item-related data structures
+	#clearAllItemData() {
+		// Call bulkRemoveItems with empty set to keep (removing everything)
+		this.#bulkRemoveItems(new Set(), true);
+
+		// Additional reset operations specific to clearing all data
+		this._mostRecentItemDate = null;
+		if (this._mostRecentItemDateDOM) {
+			this._mostRecentItemDateDOM.innerText = "";
+		}
+	}
+
+	// Method for efficient bulk item removal or retention using container replacement
+	#bulkRemoveItems(asinsToKeep, isKeepSet = false) {
+		this.#preserveScrollPosition(() => {
+			// Always use the optimized container replacement approach
+			// Create a new empty container
+			const newContainer = this._gridContainer.cloneNode(false);
+
+			// Create a new items map to store the updated collection
+			const newItems = new Map();
+			const newImageUrls = new Set();
+
+			// Efficiently process all items
+			this._items.forEach((item, asin) => {
+				const shouldKeep = isKeepSet ? asinsToKeep.has(asin) : !asinsToKeep.has(asin);
+
+				if (shouldKeep && item.element) {
+					// Add this item to the new container
+					newContainer.appendChild(item.element);
+					newItems.set(asin, item);
+
+					// Keep track of the image URL for duplicate detection
+					if (item.data.img_url && Settings.get("notification.monitor.hideDuplicateThumbnail")) {
+						newImageUrls.add(item.data.img_url);
+					}
+				}
+			});
+
+			// Replace the old container with the new one
+			this._gridContainer.parentNode.replaceChild(newContainer, this._gridContainer);
+			this._gridContainer = newContainer;
+
+			// Reattach event listeners to the new container
+			this._createEventListeners();
+
+			// Update the data structures
+			this._items = newItems;
+			this._imageUrls = newImageUrls;
+		});
+
+		// Update the tab counter
+		this._updateTabTitle();
+	}
+
+	// Clear unavailable items
+	#clearUnavailableItems() {
+		// Get all unavailable ASINs
+		const unavailableAsins = new Set();
+		this._items.forEach((item, asin) => {
+			if (item.data.unavailable) {
+				unavailableAsins.add(asin);
+			}
+		});
+
+		// Use the bulk remove method, letting it decide the optimal approach
+		this.#bulkRemoveItems(unavailableAsins, false);
+	}
+
+	// Helper method to preserve scroll position during DOM operations
+	#preserveScrollPosition(callback) {
+		// Save current scroll position
+		const scrollPosition = window.scrollY;
+
+		// Execute the DOM operation
+		callback();
+
+		// Restore scroll position
+		window.scrollTo({
+			top: scrollPosition,
+			behavior: "auto", // Use "auto" instead of "smooth" to prevent visible jumping
+		});
+	}
+
+	// Check if an item is already pinned
+	async #checkIfPinned(asin) {
+		await PinnedList.getList(); // This will wait for the list to be loaded
+		return PinnedList.isPinned(asin);
 	}
 
 	_updateTabTitle() {
@@ -1421,14 +1535,9 @@ class NotificationMonitor {
 		btnClearMonitor.addEventListener("click", async (event) => {
 			//Delete all items from the grid
 			if (confirm("Clear all items?")) {
-				for (const [asin, item] of this._items.entries()) {
-					if (item.element) {
-						this.#removeTile(item.element, asin, false);
-						item.element = null;
-					}
-				}
-
-				this.#clearAllItemData();
+				this.#preserveScrollPosition(() => {
+					this.#clearAllItemData();
+				});
 				this._updateTabTitle();
 			}
 		});
@@ -1574,6 +1683,17 @@ class NotificationMonitor {
 		if (data.type == "wsClosed") {
 			this.setWebSocketStatus(false);
 		}
+		if (data.type == "unpinnedItem") {
+			// Update pin icon if this item was unpinned from another tab
+			const notif = this.#getItemDOMElement(data.asin);
+			if (notif) {
+				const pinIcon = notif.querySelector(".vh-icon-pin");
+				if (pinIcon && pinIcon.classList.contains("vh-icon-pin-active")) {
+					pinIcon.classList.remove("vh-icon-pin-active");
+					pinIcon.title = "Pin this item";
+				}
+			}
+		}
 
 		if (data.type == "unavailableItem") {
 			// Update the item data first
@@ -1656,64 +1776,6 @@ class NotificationMonitor {
 			this.#processNotificationSorting();
 			this._updateTabTitle();
 		}
-	}
-
-	// Clear all item-related data structures
-	#clearAllItemData() {
-		// For extremely large collections, it's faster to replace the entire container
-		// than to remove each element individually
-		if (this._gridContainer && this._gridContainer.children.length > 100) {
-			// Create empty clone of the container
-			const newContainer = this._gridContainer.cloneNode(false);
-			// Replace the old container with the empty one
-			this._gridContainer.parentNode.replaceChild(newContainer, this._gridContainer);
-			// Update the reference
-			this._gridContainer = newContainer;
-		}
-
-		this._items.clear();
-		this._imageUrls.clear();
-		this._mostRecentItemDate = null;
-		if (this._mostRecentItemDateDOM) {
-			this._mostRecentItemDateDOM.innerText = "";
-		}
-	}
-
-	// Clear unavailable items
-	#clearUnavailableItems() {
-		// Collect all unavailable items first
-		const unavailableItems = [];
-		this._items.forEach((item, asin) => {
-			if (item.data.unavailable && item.element) {
-				unavailableItems.push({
-					asin,
-					element: item.element,
-					imgUrl: item.data.img_url,
-				});
-			}
-		});
-
-		// Batch process removals to minimize reflows
-		requestAnimationFrame(() => {
-			// Remove all elements from DOM first
-			for (const item of unavailableItems) {
-				item.element.remove();
-			}
-
-			// Then update data structures
-			for (const item of unavailableItems) {
-				// Remove image URL from duplicate detection if needed
-				if (item.imgUrl && Settings.get("notification.monitor.hideDuplicateThumbnail")) {
-					this._imageUrls.delete(item.imgUrl);
-				}
-
-				// Remove from items map
-				this._items.delete(item.asin);
-			}
-
-			// Update counter once after all operations
-			this._updateTabTitle();
-		});
 	}
 }
 
