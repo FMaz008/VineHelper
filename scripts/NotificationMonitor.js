@@ -1439,6 +1439,22 @@ class NotificationMonitor {
 		this._updateTabTitle();
 	}
 
+	#clearAllVisibleItems() {
+		this.#preserveScrollPosition(() => {
+			// Get the asin of all visible items
+			const visibleItems = document.querySelectorAll(".vvp-item-tile:not([style*='display: none'])");
+			const asins = new Set();
+			visibleItems.forEach((item) => {
+				const asin = item.dataset.asin;
+				if (asin) {
+					asins.add(asin);
+				}
+			});
+			// Remove each visible item
+			this.#bulkRemoveItems(asins, false);
+		});
+	}
+
 	// Clear unavailable items
 	#clearUnavailableItems() {
 		// Get all unavailable ASINs
@@ -1534,9 +1550,9 @@ class NotificationMonitor {
 		const btnClearMonitor = document.getElementById("clear-monitor");
 		btnClearMonitor.addEventListener("click", async (event) => {
 			//Delete all items from the grid
-			if (confirm("Clear all items?")) {
+			if (confirm("Clear all visible items?")) {
 				this.#preserveScrollPosition(() => {
-					this.#clearAllItemData();
+					this.#clearAllVisibleItems();
 				});
 				this._updateTabTitle();
 			}
