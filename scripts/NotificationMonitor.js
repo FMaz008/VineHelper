@@ -1495,6 +1495,7 @@ class NotificationMonitor {
 
 	_listeners() {
 		// Add the fix toolbar with the pause button if we scroll past the original pause button
+		const scrollToTopBtn = document.getElementById("scrollToTop-fixed");
 		const originalPauseBtn = document.getElementById("pauseFeed");
 		const fixedPauseBtn = document.getElementById("pauseFeed-fixed");
 		const originalBtnPosition = originalPauseBtn.getBoundingClientRect().top + window.scrollY;
@@ -1506,6 +1507,13 @@ class NotificationMonitor {
 			} else {
 				document.getElementById("fixed-toolbar").style.display = "none";
 			}
+		});
+
+		scrollToTopBtn.addEventListener("click", () => {
+			window.scrollTo({
+				top: 0,
+				behavior: "smooth",
+			});
 		});
 
 		fixedPauseBtn.addEventListener("click", () => {
