@@ -705,7 +705,9 @@ async function initInsertBookmarkButton() {
 		const prom = await Tpl.loadFile("view/bookmark.html");
 		Tpl.setVar("date", Settings.get("general.bookmarkDate"));
 		let bookmarkContent = Tpl.render(prom);
-		document.querySelector("#vvp-items-button-container").insertAdjacentHTML("beforeend", bookmarkContent);
+		document
+			.querySelector(".vvp-items-button-and-search-container")
+			.insertAdjacentHTML("afterend", bookmarkContent);
 		const button0 = document.querySelector("button.bookmarknow");
 		if (button0) {
 			button0.addEventListener("click", function (event) {

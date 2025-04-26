@@ -119,9 +119,12 @@ div#vh-healing-text {
 .vvp-container-right-align {
 	flex-flow: row wrap;
 }
+.vvp-items-button-and-search-container {
+	margin: 0px !important;
+}
 div#bookmark {
+	margin: 0px;
 	margin-top: 10px;
-	flex-basis: 100%;
 	text-align: left;
 }
 
