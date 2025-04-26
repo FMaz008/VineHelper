@@ -268,7 +268,7 @@ class SettingsMgr {
 				hideKeywords: [],
 				highlightKeywords: [],
 				blurKeywords: [],
-				blindLoading: true,
+				blindLoading: false,
 				displayVariantIcon: false,
 				displayFullTitleTooltip: false,
 				versionInfoPopup: 0,
