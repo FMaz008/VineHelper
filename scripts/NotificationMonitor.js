@@ -55,7 +55,7 @@ class NotificationMonitor {
 	_searchDebounceTimer = null; // Timer for debouncing search
 	_tileSizer = null;
 	_autoTruncateDebounceTimer = null; // Timer for debouncing autoTruncate
-	_shiftPress = false;
+	_ctrlPress = false;
 	// UI User settings (will be loaded from storage)
 	_autoTruncateEnabled = true;
 	_filterQueue = -1;
@@ -456,6 +456,27 @@ class NotificationMonitor {
 	_createEventListeners() {
 		// Bind the click handler to the instance and then add as event listener
 		this._gridContainer.addEventListener("click", (e) => this.#clickHandler(e));
+
+		// Add key event listeners with more robust handling
+		window.addEventListener(
+			"keydown",
+			(event) => {
+				if (event.key === "Control") {
+					this._ctrlPress = true;
+				}
+			},
+			true
+		);
+
+		window.addEventListener(
+			"keyup",
+			(event) => {
+				if (event.key === "Control") {
+					this._ctrlPress = false;
+				}
+			},
+			true
+		);
 	}
 
 	#clickHandler(e) {
@@ -539,20 +560,8 @@ class NotificationMonitor {
 		)
 			return;
 
-		window.addEventListener("keydown", function (event) {
-			if (event.shiftKey) {
-				this._shiftPress = true;
-			}
-		});
-
-		window.addEventListener("keyup", function (event) {
-			if (event.shiftKey) {
-				this._shiftPress = false;
-			}
-		});
-
 		//Add the click listener for the See Details button
-		if (this._firefox || Settings.get("notification.monitor.openLinksInNewTab") == "1" || this._shiftPress) {
+		if (this._firefox || Settings.get("notification.monitor.openLinksInNewTab") == "1" || this._ctrlPress) {
 			//Deactivate Vine click handling
 
 			const btnContainer = e.target.closest(".vvp-details-btn");
@@ -575,6 +584,14 @@ class NotificationMonitor {
 					`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`,
 					"_blank"
 				);
+
+				//The release key will not be captured by the event listener when the new window/tab is opened.
+				if (this._ctrlPress) {
+					this._ctrlPress = false;
+					setTimeout(() => {
+						btnContainer.classList.add("vvp-details-btn");
+					}, 500);
+				}
 			}
 		}
 	}
