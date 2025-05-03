@@ -1192,8 +1192,16 @@ function manageSelectBox(key) {
 
 function manageCheckboxSetting(key, def = null) {
 	const val = def === null ? Settings.get(key) : def;
+	if (val === null) {
+		console.log("Setting " + key + " does not exist");
+		return;
+	}
 	const keyE = CSS.escape(key);
 	const checkObj = document.querySelector(`input[name='${keyE}']`);
+	if (checkObj == null) {
+		console.log("Checkbox input name='" + key + "' does not exist");
+		return;
+	}
 	checkObj.checked = val;
 
 	//Trigger the change event so the fieldset will update accordingly.
