@@ -539,8 +539,17 @@ class NotificationMonitor {
 		)
 			return;
 
+			const shiftPress = false;
+			window.addEventListener('keydown', function(event) {
+				if (event.shiftKey) {
+				  shiftPress = true;
+				} else {
+				  shiftPress = false;
+				}
+			  });
+
 		//Add the click listener for the See Details button
-		if (this._firefox || Settings.get("notification.monitor.openLinksInNewTab") == "1") {
+		if (this._firefox || Settings.get("notification.monitor.openLinksInNewTab") == "1" || shiftPress) {
 			//Deactivate Vine click handling
 
 			const btnContainer = e.target.closest(".vvp-details-btn");
