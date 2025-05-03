@@ -936,12 +936,12 @@ class NotificationMonitor {
 
 	_updateServiceWorkerStatus() {
 		if (!Settings.get("notification.active")) {
-			this.#setServiceWorkerStatus(false, "You need to enable the notifications in the settings.");
-		} else if (i13n.getCountryCode() === null) {
-			this._setServiceWorkerStatus(
+			this.#setServiceWorkerStatus(
 				false,
-				"Your country has not been detected, ensure to load a vine page first."
+				"You need to enable the notifications in VineHelper's plugin settings, under the 'Notifications' tab."
 			);
+		} else if (i13n.getCountryCode() === null) {
+			this._setServiceWorkerStatus(false, "Your country has not been detected, load a vine page first.");
 		} else if (i13n.getDomainTLD() === null) {
 			this._setServiceWorkerStatus(
 				false,
