@@ -341,6 +341,7 @@ class SettingsMgr {
 					hideGoldNotificationsForSilverUser: false,
 					filterQueue: -1,
 					filterType: -1,
+					bump0ETV: true,
 					sortType: "date",
 					regular: {
 						sound: "0",

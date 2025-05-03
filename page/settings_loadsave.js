@@ -262,7 +262,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("notification.monitor.preventUnload");
 	manageCheckboxSetting("notification.monitor.24hrsFormat");
 	manageCheckboxSetting("notification.monitor.blockNonEssentialListeners");
-
+	manageCheckboxSetting("notification.monitor.bump0ETV");
 	//Sliders
 	manageSlider("notification.screen.regular.volume");
 	manageSlider("notification.monitor.highlight.volume");

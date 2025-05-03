@@ -1006,7 +1006,7 @@ class NotificationMonitor {
 		//Move the notification to the top only if we're not using price-based sorting
 		if (!this._fetchingRecentItems) {
 			// Only move to top if we're NOT using price sort
-			if (this._sortType !== TYPE_PRICE) {
+			if (this._sortType !== TYPE_PRICE && Settings.get("notification.monitor.bump0ETV")) {
 				this.#moveNotifToTop(notif);
 			} else {
 				// If sorting by price is active, just resort after identifying as zero ETV
