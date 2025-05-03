@@ -1,6 +1,9 @@
-if (typeof browser === "undefined") {
-	var browser = chrome;
-}
+import { Internationalization } from "../scripts/Internationalization.js";
+const i13n = new Internationalization();
+
+import { SettingsMgr } from "../scripts/SettingsMgr.js";
+const Settings = new SettingsMgr();
+
 var scriptName = "reviews_manages.js";
 
 function logError(errorArray) {
@@ -12,6 +15,14 @@ var arrReview = [];
 
 async function loadSettings() {
 	try {
+		//Set the country
+		await Settings.waitForLoad();
+		const countryCode = Settings.get("general.country");
+
+		if (countryCode != null) {
+			i13n.setCountryCode(countryCode);
+		}
+
 		let reviewSet = await chrome.storage.local.get("reviews");
 		let reviews = reviewSet?.reviews ?? []; //Nullish coalescing & Optional chaining prevents undefined without extra code
 		if (Object.keys(reviews).length === 0) {
@@ -61,7 +72,7 @@ function updateReviewTable() {
 			<button id="delete" data-asin="${asin}" class='vh-button'>Delete</button>
 			`;
 			dateCell.textContent = formattedDate;
-			asinCell.textContent = asin;
+			asinCell.innerHTML = `${asin} <a href='https://www.amazon.${i13n.getDomainTLD()}/dp/${asin}' target='_blank'><div class='vh-icon-16 vh-icon-newtab' style='margin-left: 5px;filter: invert(1);'></div></a>`;
 			titleCell.textContent = `${JSON.parse(title)}`;
 		}
 	} catch (e) {
