@@ -542,7 +542,11 @@ class NotificationMonitor {
 		window.addEventListener("keydown", function (event) {
 			if (event.shiftKey) {
 				this._shiftPress = true;
-			} else {
+			}
+		});
+
+		window.addEventListener("keyup", function (event) {
+			if (event.shiftKey) {
 				this._shiftPress = false;
 			}
 		});
