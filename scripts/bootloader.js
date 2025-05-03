@@ -1160,7 +1160,12 @@ window.addEventListener("message", async function (event) {
 			await fadeOut(textContainer);
 		}
 
-		document.querySelector("#vh-healing")?.remove();
+		//Clicking on the healing text will remove the healing text and the healing animation
+		textContainer.addEventListener("click", (e) => {
+			//Remove the healing text
+			document.querySelector("#vh-healing")?.remove();
+			document.querySelector("#vh-healing-text")?.remove();
+		});
 
 		//Show a notification
 		let note = new ScreenNotification();
