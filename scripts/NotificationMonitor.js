@@ -55,7 +55,7 @@ class NotificationMonitor {
 	_searchDebounceTimer = null; // Timer for debouncing search
 	_tileSizer = null;
 	_autoTruncateDebounceTimer = null; // Timer for debouncing autoTruncate
-
+	_shiftPress = false;
 	// UI User settings (will be loaded from storage)
 	_autoTruncateEnabled = true;
 	_filterQueue = -1;
@@ -539,17 +539,16 @@ class NotificationMonitor {
 		)
 			return;
 
-			const shiftPress = false;
-			window.addEventListener('keydown', function(event) {
-				if (event.shiftKey) {
-				  shiftPress = true;
-				} else {
-				  shiftPress = false;
-				}
-			  });
+		window.addEventListener("keydown", function (event) {
+			if (event.shiftKey) {
+				this._shiftPress = true;
+			} else {
+				this._shiftPress = false;
+			}
+		});
 
 		//Add the click listener for the See Details button
-		if (this._firefox || Settings.get("notification.monitor.openLinksInNewTab") == "1" || shiftPress) {
+		if (this._firefox || Settings.get("notification.monitor.openLinksInNewTab") == "1" || this._shiftPress) {
 			//Deactivate Vine click handling
 
 			const btnContainer = e.target.closest(".vvp-details-btn");
