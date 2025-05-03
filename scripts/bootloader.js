@@ -318,6 +318,18 @@ function displayAccountData() {
 }
 
 function hidePageContent() {
+	//Hide categories
+	if (
+		(env.data.vineQueueAbbr == "RFY" && Settings.get("general.hideRFYCategories") == true) ||
+		(env.data.vineQueueAbbr == "AFA" && Settings.get("general.hideAFACategories") == true) ||
+		(env.data.vineQueueAbbr == "AI" && Settings.get("general.hideAICategories") == true)
+	) {
+		const categories = document.getElementById("vvp-browse-nodes-container");
+		if (categories) {
+			categories.style.display = "none";
+		}
+	}
+
 	//Hide recommendation and browsing history
 	if (Settings.isPremiumUser() && Settings.get("general.hideRecommendations") == true) {
 		const rhf = document.getElementById("rhf");

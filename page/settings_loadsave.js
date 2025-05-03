@@ -235,6 +235,9 @@ async function initiateSettings() {
 	manageCheckboxSetting("general.projectedAccountStatistics");
 	manageCheckboxSetting("general.discoveryFirst");
 	manageCheckboxSetting("general.blindLoading");
+	manageCheckboxSetting("general.hideRFYCategories");
+	manageCheckboxSetting("general.hideAFACategories");
+	manageCheckboxSetting("general.hideAICategories");
 	manageColorPicker("general.bookmarkColor");
 	manageCheckboxSetting("general.highlightColor.active");
 	manageColorPicker("general.highlightColor.color");
