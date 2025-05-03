@@ -1056,11 +1056,12 @@ async function serverProductsResponse(data) {
 		if (Settings.get("unavailableTab.active")) {
 			logger.add("DRAW: Setting orders");
 			tile.setOrders(values.order_success, values.order_failed);
+			tile.setUnavailable(values.order_unavailable);
 
 			//Assign the tiles to the proper grid
 			if (Settings.get("hiddenTab.active") && (await tile.isHidden())) {
 				//The hidden tiles were already moved, keep the there.
-			} else if (tile.getStatus() >= env.data.DISCARDED_ORDER_FAILED) {
+			} else if (tile.getUnavailable()) {
 				logger.add("DRAW: moving the tile to Unavailable (failed order(s))");
 				await tile.moveToGrid(env.data.grid.gridUnavailable, false); //This is the main sort, do not animate it
 			}

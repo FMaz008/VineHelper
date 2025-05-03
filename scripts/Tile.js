@@ -26,6 +26,7 @@ class Tile {
 	#isPinned = false;
 	#orderSuccess = 0;
 	#orderFailed = 0;
+	#orderUnavailable = false;
 	#title = null;
 	#thumbnailUrl = null;
 
@@ -93,6 +94,14 @@ class Tile {
 		this.#tileDOM.querySelector(".vh-order-failed").textContent = failed;
 		this.#orderSuccess = success;
 		this.#orderFailed = failed;
+	}
+
+	setUnavailable(orderUnavailable) {
+		this.#orderUnavailable = orderUnavailable;
+	}
+
+	getUnavailable() {
+		return this.#orderUnavailable;
 	}
 
 	getOrderSuccess() {
