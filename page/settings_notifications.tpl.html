@@ -7,34 +7,13 @@
 	</legend>
 
 	<div class="setting-container">
-		<label for="notification.pushNotificationsAFA">
-			<input type="checkbox" name="notification.pushNotificationsAFA" value="1" />
-			Push Notification for all AFA items.
-		</label>
-		<div class="setting-summary">
-			<div class="vh-toolbar-icon vh-icon-question"></div>
-			Send push notifications when a new item from AFA is detected
-		</div>
-	</div>
-	<div class="setting-container">
-		<label for="notification.pushNotifications">
-			<input type="checkbox" name="notification.pushNotifications" value="1" />
-			Push Notification when KW match.
-		</label>
-		<div class="setting-summary">
-			<div class="vh-toolbar-icon vh-icon-question"></div>
-			Send push notifications when a new item match the highlight keywords
-		</div>
-	</div>
-	<div class="setting-container">
 		<label for="notification.hideList">
 			<input type="checkbox" name="notification.hideList" value="1" />
-			Hide Notifications with auto-hide Keywords
+			Hide Notifications matching Hide Keywords list
 		</label>
 		<div class="setting-summary">
 			<div class="vh-toolbar-icon vh-icon-question"></div>
-			This hides a notification in the monitor tab when it matches a hide keyword and does not also match a
-			highlight keyword.
+			Hides a notification when it matches a hide keyword and does not also match a highlight keyword.
 		</div>
 	</div>
 	<div class="setting-container">
@@ -44,11 +23,12 @@
 		</label>
 		<div class="setting-summary">
 			<div class="vh-toolbar-icon vh-icon-question"></div>
-			When enabled, items above your ETV limit (Gold-tier items) will be completely hidden in the notification monitor.
+			When enabled, items above your ETV limit (Gold-tier items) will be completely hidden in the notification
+			monitor.
 		</div>
 	</div>
 	<div class="setting-container">
-		<label for="notification.soundCooldownDelay" style="margin-left: 20px; margin-top: 5px;"
+		<label for="notification.soundCooldownDelay" style="margin-left: 20px; margin-top: 5px"
 			>Sound cooldown:&nbsp;
 			<select name="notification.soundCooldownDelay">
 				<option value="0">Instant</option>
@@ -117,6 +97,17 @@
 			<div class="setting-summary">
 				<div class="vh-toolbar-icon vh-icon-question"></div>
 				Open a dedicated tab were notifications will appear and not vanish after 60 seconds.
+			</div>
+		</div>
+		<div class="setting-container">
+			<label for="notification.monitor.bump0ETV">
+				<input type="checkbox" name="notification.monitor.bump0ETV" value="1" />
+				Bump 0 ETV notifications to the top of the list
+			</label>
+			<div class="setting-summary">
+				<div class="vh-toolbar-icon vh-icon-question"></div>
+				When enabled, notifications with a zero ETV will be bumped to the top of the list when the ETV is
+				discovered.
 			</div>
 		</div>
 		<div class="setting-container">
@@ -312,6 +303,34 @@
 		<div class="setting-summary">
 			<div class="vh-toolbar-icon vh-icon-question"></div>
 			Will not display 'ETV updated' and 'Settings saved' on screen notifications
+		</div>
+	</div>
+</fieldset>
+
+<fieldset>
+	<legend>BETA</legend>
+	<div class="vh-container">
+		BETA features are not working reliably yet. Feel free to try them out, but expect some issues.
+	</div>
+
+	<div class="setting-container">
+		<label for="notification.pushNotificationsAFA">
+			<input type="checkbox" name="notification.pushNotificationsAFA" value="1" />
+			Push Notification for all AFA items.
+		</label>
+		<div class="setting-summary">
+			<div class="vh-toolbar-icon vh-icon-question"></div>
+			Send push notifications when a new item from AFA is detected
+		</div>
+	</div>
+	<div class="setting-container">
+		<label for="notification.pushNotifications">
+			<input type="checkbox" name="notification.pushNotifications" value="1" />
+			Push Notification when KW match.
+		</label>
+		<div class="setting-summary">
+			<div class="vh-toolbar-icon vh-icon-question"></div>
+			Send push notifications when a new item match the highlight keywords
 		</div>
 	</div>
 </fieldset>

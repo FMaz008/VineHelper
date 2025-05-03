@@ -121,9 +121,15 @@ class Environment {
 		//Generate a UUID for the user
 		let uuid = Settings.get("general.uuid", false);
 		if (!uuid) {
-			uuid = await this.#requestNewUUID();
-			Settings.set("general.uuid", uuid);
-			logger.add("ENV: Obtained new UUID");
+			try {
+				uuid = await this.#requestNewUUID();
+				Settings.set("general.uuid", uuid);
+				logger.add("ENV: Obtained new UUID");
+			} catch (error) {
+				alert(
+					"Vine Helper failed to obtain a new UUID. Please ensure you are not using a VPN or proxy. If the issue persist, please contact the developer."
+				);
+			}
 		}
 	}
 
@@ -149,14 +155,14 @@ class Environment {
 		let response = await fetch(VINE_HELPER_API_V5_URL, options);
 
 		if (!response.ok) {
-			throw new Error("Network response was not ok PREBOOT:requestNewUUID");
+			throw new Error("Network response was not ok ENV:requestNewUUID");
 		}
 
 		// Parse the JSON response
 		let serverResponse = await response.json();
 
 		if (serverResponse["ok"] !== "ok") {
-			throw new Error("Content response was not ok PREBOOT:requestNewUUID");
+			throw new Error("Content response was not ok ENV:requestNewUUID");
 		}
 
 		// Return the obtained UUID

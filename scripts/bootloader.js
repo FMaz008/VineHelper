@@ -318,6 +318,7 @@ function displayAccountData() {
 }
 
 function hidePageContent() {
+
 	//Hide recommendation and browsing history
 	if (Settings.isPremiumUser() && Settings.get("general.hideRecommendations") == true) {
 		const rhf = document.getElementById("rhf");
@@ -1055,11 +1056,12 @@ async function serverProductsResponse(data) {
 		if (Settings.get("unavailableTab.active")) {
 			logger.add("DRAW: Setting orders");
 			tile.setOrders(values.order_success, values.order_failed);
+			tile.setUnavailable(values.order_unavailable);
 
 			//Assign the tiles to the proper grid
 			if (Settings.get("hiddenTab.active") && (await tile.isHidden())) {
 				//The hidden tiles were already moved, keep the there.
-			} else if (tile.getStatus() >= env.data.DISCARDED_ORDER_FAILED) {
+			} else if (tile.getUnavailable()) {
 				logger.add("DRAW: moving the tile to Unavailable (failed order(s))");
 				await tile.moveToGrid(env.data.grid.gridUnavailable, false); //This is the main sort, do not animate it
 			}
@@ -1160,7 +1162,12 @@ window.addEventListener("message", async function (event) {
 			await fadeOut(textContainer);
 		}
 
-		document.querySelector("#vh-healing")?.remove();
+		//Clicking on the healing text will remove the healing text and the healing animation
+		textContainer.addEventListener("click", (e) => {
+			//Remove the healing text
+			document.querySelector("#vh-healing")?.remove();
+			document.querySelector("#vh-healing-text")?.remove();
+		});
 
 		//Show a notification
 		let note = new ScreenNotification();

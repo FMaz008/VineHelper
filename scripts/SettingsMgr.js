@@ -321,7 +321,7 @@ class SettingsMgr {
 				reduce: false,
 				pushNotifications: false,
 				soundCooldownDelay: 2000,
-				hideList: false,
+				hideList: true,
 				screen: {
 					active: false,
 					thumbnail: true,
@@ -341,6 +341,7 @@ class SettingsMgr {
 					hideGoldNotificationsForSilverUser: false,
 					filterQueue: -1,
 					filterType: -1,
+					bump0ETV: true,
 					sortType: "date",
 					regular: {
 						sound: "0",

@@ -163,6 +163,7 @@ async function boot_review() {
 		let reviewContent = getReviewContentObject().value;
 
 		if (!reviewTitle || !reviewContent) {
+			alert("Please fill in the review title and content in order to save the review.");
 			return;
 		}
 
