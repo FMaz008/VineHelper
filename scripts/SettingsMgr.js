@@ -321,7 +321,7 @@ class SettingsMgr {
 				reduce: false,
 				pushNotifications: false,
 				soundCooldownDelay: 2000,
-				hideList: false,
+				hideList: true,
 				screen: {
 					active: false,
 					thumbnail: true,
