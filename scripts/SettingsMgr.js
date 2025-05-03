@@ -285,9 +285,6 @@ class SettingsMgr {
 				hideSideCart: false,
 				hideCategoriesRFYAFA: false,
 				hideOptOutButton: false,
-				hideRFYCategories: false,
-				hideAFACategories: false,
-				hideAICategories: false,
 				toolbarBackgroundColor: "#FFFFFF",
 				highlightColor: {
 					active: true,
