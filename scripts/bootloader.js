@@ -175,15 +175,17 @@ async function init() {
 
 	// If a search has been performed, unescape the HTML encoded characters for the line
 	// X item(s) matching "[SEARCH STRING WITH HTML ENCODED CHARACTERS]"
-	for (const node of document.querySelector("#vvp-items-grid-container").childNodes) {
-		if (node.nodeName === "P") {
-			const matchingSearchText = node.innerHTML;
+	const gridContainer = document.querySelector("#vvp-items-grid-container");
+	if(gridContainer){
+		for (const node of gridContainer.childNodes) {
+			if (node.nodeName === "P") {
+				const matchingSearchText = node.innerHTML;
 
 			if (matchingSearchText) {
 				node.innerHTML = unescapeHTML(unescapeHTML(matchingSearchText));
 			}
 		}
-	}
+	}}
 
 	// If a search has been performed, unescape the HTML encoded characters for the text in the search box
 	const searchTextInput = document.querySelector("#vvp-search-text-input");
@@ -318,7 +320,6 @@ function displayAccountData() {
 }
 
 function hidePageContent() {
-
 	//Hide recommendation and browsing history
 	if (Settings.isPremiumUser() && Settings.get("general.hideRecommendations") == true) {
 		const rhf = document.getElementById("rhf");
