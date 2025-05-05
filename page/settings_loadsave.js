@@ -128,34 +128,36 @@ async function initiateSettings() {
 		days + " day(s) and " + hours + " hour(s) and " + minutes + " minute(s)";
 
 	//Get the user's stats from the API
-	const content = {
-		api_version: 5,
-		version: chrome.runtime.getManifest().version,
-		action: "get_user_stats",
-		country: i13n.getCountryCode(),
-		uuid: Settings.get("general.uuid", false),
-	};
-	fetch(VINE_HELPER_API_V5_URL, {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify(content),
-	}).then(async function (response) {
-		const data = await response.json();
-		document.getElementById("itemsFound").innerText =
-			data.items_found == undefined
-				? "N/A"
-				: data.items_found +
-					" (Reliability score: " +
-					(data.items_found < 10 || typeof data.items_found_ratio === "undefined"
-						? "N/A"
-						: Math.round(data.items_found_ratio * 100) + "%") +
-					")";
-		document.getElementById("itemsFoundRank").innerText =
-			data.items_found_rank == undefined ? "N/A" : data.items_found_rank + rankSuffix(data.items_found_rank);
-		document.getElementById("etvFound").innerText = data.etv_found == undefined ? "N/A" : data.etv_found;
-		document.getElementById("etvFoundRank").innerText =
-			data.etv_found_rank == undefined ? "N/A" : data.etv_found_rank + rankSuffix(data.etv_found_rank);
-	});
+	if (Settings.get("general.uuid", false)) {
+		const content = {
+			api_version: 5,
+			version: chrome.runtime.getManifest().version,
+			action: "get_user_stats",
+			country: i13n.getCountryCode(),
+			uuid: Settings.get("general.uuid", false),
+		};
+		fetch(VINE_HELPER_API_V5_URL, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(content),
+		}).then(async function (response) {
+			const data = await response.json();
+			document.getElementById("itemsFound").innerText =
+				data.items_found == undefined
+					? "N/A"
+					: data.items_found +
+						" (Reliability score: " +
+						(data.items_found < 10 || typeof data.items_found_ratio === "undefined"
+							? "N/A"
+							: Math.round(data.items_found_ratio * 100) + "%") +
+						")";
+			document.getElementById("itemsFoundRank").innerText =
+				data.items_found_rank == undefined ? "N/A" : data.items_found_rank + rankSuffix(data.items_found_rank);
+			document.getElementById("etvFound").innerText = data.etv_found == undefined ? "N/A" : data.etv_found;
+			document.getElementById("etvFoundRank").innerText =
+				data.etv_found_rank == undefined ? "N/A" : data.etv_found_rank + rankSuffix(data.etv_found_rank);
+		});
+	}
 
 	//##########################
 	// TABS
