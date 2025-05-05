@@ -18,11 +18,15 @@ class DeviceFingerprint {
 	}
 
 	async generateFingerprint(env, uuid) {
-		this.#env = env;
+		try {
+			this.#env = env;
 
-		const fingerprintHashBase64 = await this.#generateFingerprintData(uuid);
-		const signatureBase64 = await this.#generateFingerprintSignature(fingerprintHashBase64);
-		await this.#uploadFingerprint(uuid, fingerprintHashBase64, signatureBase64);
+			const fingerprintHashBase64 = await this.#generateFingerprintData(uuid);
+			const signatureBase64 = await cryptoKeys.signData(fingerprintHashBase64);
+			await this.#uploadFingerprint(uuid, fingerprintHashBase64, signatureBase64);
+		} catch (error) {
+			throw error;
+		}
 	}
 
 	async #uploadFingerprint(uuid, fingerprintHashBase64, signatureBase64) {
@@ -31,7 +35,7 @@ class DeviceFingerprint {
 			app_version: this.#env.data.appVersion,
 			country: await Settings.get("general.country"),
 			action: "upload_fingerprint",
-			uuid,
+			uuid: uuid,
 			publicKey: await cryptoKeys.getExportedPublicKey(),
 			fingerprint: fingerprintHashBase64,
 			signature: signatureBase64,
@@ -85,39 +89,10 @@ class DeviceFingerprint {
 		const hash = await crypto.subtle.digest("SHA-256", dataBuffer);
 
 		// Convert ArrayBuffer to a string
-		const hashString = this.#bufferToBase64(hash); //44 characters
+		const hashString = cryptoKeys.bufferToBase64(hash); //44 characters
 
 		await Settings.set("general.fingerprint.hash", hashString);
 		return hashString;
-	}
-	async #generateFingerprintSignature(fingerprintHashBase64) {
-		const encoder = new TextEncoder();
-		const dataBuffer = encoder.encode(fingerprintHashBase64);
-		const signature = await crypto.subtle.sign(
-			{ name: "ECDSA", hash: { name: "SHA-256" } },
-			await cryptoKeys.getPrivateKey(),
-			dataBuffer
-		);
-
-		// Convert the signature to a base64 string for storage
-		const signatureBase64 = this.#bufferToBase64(signature);
-
-		await Settings.set("general.fingerprint.signature", signatureBase64);
-		return signatureBase64;
-	}
-
-	/**
-	 * Converts an ArrayBuffer to a base64 string
-	 * @param {ArrayBuffer} buffer - The buffer to convert
-	 * @returns {string} The base64 encoded string
-	 */
-	#bufferToBase64(buffer) {
-		const bytes = new Uint8Array(buffer);
-		let binary = "";
-		for (let i = 0; i < bytes.byteLength; i++) {
-			binary += String.fromCharCode(bytes[i]);
-		}
-		return btoa(binary);
 	}
 
 	/**

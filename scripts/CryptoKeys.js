@@ -108,6 +108,47 @@ class CryptoKeys {
 			throw new CryptoKeysError("Failed to import public key from JWK", error);
 		}
 	}
+
+	/**
+	 * Signs the data using the private key
+	 * @param {string} data - The data to sign
+	 * @returns {string} The signed data in base64 format
+	 */
+	async signData(data) {
+		try {
+			// Convert string to ArrayBuffer
+			const encoder = new TextEncoder();
+			const dataBuffer = encoder.encode(data);
+
+			const privateKey = await this.getPrivateKey();
+			const signature = await crypto.subtle.sign(
+				{ name: "ECDSA", hash: { name: "SHA-256" } },
+				privateKey,
+				dataBuffer
+			);
+
+			// Convert ArrayBuffer to base64 string
+			const signatureBase64 = this.bufferToBase64(signature);
+
+			return signatureBase64;
+		} catch (error) {
+			throw new CryptoKeysError("Failed to sign data: " + error);
+		}
+	}
+
+	/**
+	 * Converts an ArrayBuffer to a base64 string
+	 * @param {ArrayBuffer} buffer - The buffer to convert
+	 * @returns {string} The base64 encoded string
+	 */
+	bufferToBase64(buffer) {
+		const bytes = new Uint8Array(buffer);
+		let binary = "";
+		for (let i = 0; i < bytes.byteLength; i++) {
+			binary += String.fromCharCode(bytes[i]);
+		}
+		return btoa(binary);
+	}
 }
 
 export default CryptoKeys;
