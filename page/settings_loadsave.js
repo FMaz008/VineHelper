@@ -378,18 +378,24 @@ async function initiateSettings() {
 			});
 	});
 
-	//UUID:
-	let key = CSS.escape("generaluuid");
-	document.querySelector(`#${key}`).onmouseenter = function () {
-		let key = CSS.escape("generaluuid");
-		document.querySelector(`#${key}`).type = "text";
-	};
-	document.querySelector(`#${key}`).onmouseleave = function () {
-		let key = CSS.escape("generaluuid");
-		document.querySelector(`#${key}`).type = "password";
-	};
+	//Set the device Id:
+	document.getElementById("general.fingerprint.hash").value = Settings.get("general.fingerprint.hash");
 
-	document.querySelector(`#${key}`).value = Settings.get("general.uuid", false);
+	function dynamicPassword(id) {
+		const key = CSS.escape(id);
+		document.querySelector(`#${key}`).onmouseenter = () => {
+			document.querySelector(`#${key}`).type = "text";
+		};
+		document.querySelector(`#${key}`).onmouseleave = () => {
+			document.querySelector(`#${key}`).type = "password";
+		};
+	}
+
+	//UUID/deviceId:
+	dynamicPassword("generaluuid");
+	dynamicPassword("general.fingerprint.hash");
+	document.getElementById(`generaluuid`).value = Settings.get("general.uuid", false);
+	document.getElementById(`general.fingerprint.hash`).value = Settings.get("general.fingerprint.hash", false);
 
 	document.querySelector("#saveUUID").onclick = async function () {
 		document.querySelector("#saveUUID").disabled = true;

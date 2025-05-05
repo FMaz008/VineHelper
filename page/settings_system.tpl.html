@@ -3,13 +3,37 @@
 
 	<div class="setting-container">
 		<label for="general.uuid">
-			UUID:
-			<input type="password" name="general.uuid" id="generaluuid" value="" maxlength="36" size="30" />
+			<span style="display: inline-block; width: 55px">UUID:</span>
+			<input
+				type="password"
+				name="general.uuid"
+				id="generaluuid"
+				value=""
+				maxlength="36"
+				style="font-size: 10px; width: 200px"
+			/>
 			<input type="button" id="saveUUID" value="Save" />
 		</label>
 		<div class="setting-summary">
 			<div class="vh-toolbar-icon vh-icon-question"></div>
 			Your unique user ID. If you have multiple devices, you may want to sync them up to the same value.
+		</div>
+	</div>
+	<div class="setting-container">
+		<label for="general.fingerprint.hash">
+			<span style="display: inline-block; width: 55px">Device ID:</span>
+			<input
+				type="password"
+				name="general.fingerprint.hash"
+				id="general.fingerprint.hash"
+				value=""
+				maxlength="45"
+				style="font-size: 10px; width: 250px"
+			/>
+		</label>
+		<div class="setting-summary">
+			<div class="vh-toolbar-icon vh-icon-question"></div>
+			Anonymous device identifier to help identify distinct devices for security purposes.
 		</div>
 	</div>
 	<div class="setting-container premium-feature-1">
