@@ -667,6 +667,9 @@ async function setBookmarkDate(timeOffset) {
 	//Fetch the current date/time from the server
 	let arrJSON = {
 		api_version: 5,
+		app_version: env.data.appVersion,
+		uuid: await Settings.get("general.uuid", false),
+		fid: await Settings.get("general.fingerprint.hash", false),
 		country: i13n.getCountryCode(),
 		action: "date",
 	};
@@ -939,7 +942,8 @@ async function fetchProductsDatav5() {
 		app_version: env.data.appVersion,
 		action: "get_info",
 		country: i13n.getCountryCode(),
-		uuid: Settings.get("general.uuid", false),
+		uuid: await Settings.get("general.uuid", false),
+		fid: await Settings.get("general.fingerprint.hash", false),
 		queue: env.data.vineQueue,
 		items: arrProductsData,
 	};
@@ -1276,10 +1280,11 @@ window.addEventListener("message", async function (event) {
 			//Report the order status to the server
 			const content = {
 				api_version: 5,
-				version: env.data.appVersion,
+				app_version: env.data.appVersion,
 				action: "record_order",
 				country: i13n.getCountryCode(),
-				uuid: Settings.get("general.uuid", false),
+				uuid: await Settings.get("general.uuid", false),
+				fid: await Settings.get("general.fingerprint.hash", false),
 				asin: event.data.data.asin,
 				parent_asin: event.data.data.parent_asin,
 				order_status: event.data.data.status,
@@ -1371,10 +1376,11 @@ window.addEventListener("message", async function (event) {
 async function recordUnavailableProduct(asin, reason) {
 	const content = {
 		api_version: 5,
-		version: env.data.appVersion,
+		app_version: env.data.appVersion,
 		action: "record_unavailable",
 		country: i13n.getCountryCode(),
-		uuid: Settings.get("general.uuid", false),
+		uuid: await Settings.get("general.uuid", false),
+		fid: await Settings.get("general.fingerprint.hash", false),
 		asin: asin,
 		reason: reason,
 	};
