@@ -180,9 +180,6 @@ class Environment {
 			throw new Error("Content response was not ok ENV:requestNewUUID");
 		}
 
-		//UUID Creation was successful, generate a fingerprint
-		await generateFingerprint(serverResponse["uuid"]);
-
 		// Return the obtained UUID
 		return serverResponse["uuid"];
 	}
