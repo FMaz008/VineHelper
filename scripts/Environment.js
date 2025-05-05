@@ -7,6 +7,9 @@ var i13n = new Internationalization();
 import { SettingsMgr } from "./SettingsMgr.js";
 var Settings = new SettingsMgr();
 
+import { DeviceFingerprint } from "./DeviceFingerprint.js";
+var deviceFingerprint = new DeviceFingerprint();
+
 const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_URL = "http://127.0.0.1:3000";
 
@@ -120,15 +123,27 @@ class Environment {
 	async #loadUUID() {
 		//Generate a UUID for the user
 		let uuid = Settings.get("general.uuid", false);
-		if (!uuid) {
+		if (!uuid || uuid == "") {
 			try {
 				uuid = await this.#requestNewUUID();
 				Settings.set("general.uuid", uuid);
 				logger.add("ENV: Obtained new UUID");
 			} catch (error) {
 				alert(
-					"Vine Helper failed to obtain a new UUID. Please ensure you are not using a VPN or proxy. If the issue persist, please contact the developer."
+					"Vine Helper failed to obtain a new UUID from the server. Please ensure you are not using a VPN or proxy. If the issue persist, please contact the developer."
 				);
+				return;
+			}
+		}
+
+		//Generate a fingerprint
+		if (!Settings.get("general.fingerprint", false)) {
+			try {
+				await deviceFingerprint.generateFingerprint(this, uuid);
+			} catch (error) {
+				//There was an error generating or submitting the fingerprint.
+				//Clear the fingerprint and try again later.
+				await Settings.set("general.fingerprint", null);
 			}
 		}
 	}
@@ -164,6 +179,9 @@ class Environment {
 		if (serverResponse["ok"] !== "ok") {
 			throw new Error("Content response was not ok ENV:requestNewUUID");
 		}
+
+		//UUID Creation was successful, generate a fingerprint
+		await generateFingerprint(serverResponse["uuid"]);
 
 		// Return the obtained UUID
 		return serverResponse["uuid"];
