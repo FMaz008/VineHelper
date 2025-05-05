@@ -429,6 +429,9 @@ class NotificationMonitor {
 			this.#disableItem(tileDOM);
 		}
 
+		//Set the highlight color as needed
+		this.#processNotificationHighlight(tileDOM);
+
 		//Check gold tier status for this item
 		this.disableGoldItemsForSilverUsers(tileDOM);
 
@@ -905,6 +908,9 @@ class NotificationMonitor {
 			this.#zeroETVItemFound(notif, Settings.get("notification.monitor.zeroETV.sound") != "0");
 		}
 
+		//Set the highlight color as needed
+		this.#processNotificationHighlight(notif);
+
 		this.disableGoldItemsForSilverUsers(notif);
 	}
 
@@ -1019,19 +1025,6 @@ class NotificationMonitor {
 			SoundPlayer.play(TYPE_ZEROETV);
 		}
 
-		//Highlight for ETV
-		const highlightColor = Settings.get("notification.monitor.highlight.colorActive");
-		const zeroETVColor = Settings.get("notification.monitor.zeroETV.colorActive");
-		if (notif.dataset.typeHighlight == 1 && highlightColor && zeroETVColor) {
-			const color1 = Settings.get("notification.monitor.zeroETV.color");
-			const color2 = Settings.get("notification.monitor.highlight.color");
-			notif.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;
-		} else {
-			if (zeroETVColor) {
-				notif.style.backgroundColor = Settings.get("notification.monitor.zeroETV.color");
-			}
-		}
-
 		//Move the notification to the top only if we're not using price-based sorting
 		if (!this._fetchingRecentItems) {
 			// Only move to top if we're NOT using price sort
@@ -1057,12 +1050,6 @@ class NotificationMonitor {
 			SoundPlayer.play(TYPE_HIGHLIGHT);
 		}
 
-		//Highlight for Highlighted item
-		const highlightColor = Settings.get("notification.monitor.highlight.colorActive");
-		if (highlightColor) {
-			notif.style.backgroundColor = Settings.get("notification.monitor.highlight.color");
-		}
-
 		//Move the notification to the top
 		if (!this._fetchingRecentItems) {
 			this.#moveNotifToTop(notif);
@@ -1079,6 +1066,37 @@ class NotificationMonitor {
 		//Play the regular notification sound effect.
 		if ((tileVisible || this._fetchingRecentItems) && playSoundEffect) {
 			SoundPlayer.play(TYPE_REGULAR);
+		}
+	}
+
+	#processNotificationHighlight(notif) {
+		const etvObj = notif.querySelector("div.etv");
+
+		const isHighlighted =
+			notif.dataset.typeHighlight == 1 && Settings.get("notification.monitor.highlight.colorActive");
+		const isZeroETV = notif.dataset.typeZeroETV == 1 && Settings.get("notification.monitor.zeroETV.colorActive");
+		const isUnknownETV = etvObj.dataset.etvMax == "" && Settings.get("notification.monitor.unknownETV.colorActive");
+
+		const highlightColor = Settings.get("notification.monitor.highlight.color");
+		const zeroETVColor = Settings.get("notification.monitor.zeroETV.color");
+		const unknownETVColor = Settings.get("notification.monitor.unknownETV.color");
+
+		if (isZeroETV && isHighlighted) {
+			const color1 = zeroETVColor;
+			const color2 = highlightColor;
+			notif.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;
+		} else if (isUnknownETV && isHighlighted) {
+			const color1 = unknownETVColor;
+			const color2 = highlightColor;
+			notif.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;
+		} else if (isHighlighted) {
+			notif.style.backgroundColor = highlightColor;
+		} else if (isZeroETV) {
+			notif.style.backgroundColor = zeroETVColor;
+		} else if (isUnknownETV) {
+			notif.style.backgroundColor = unknownETVColor;
+		} else {
+			notif.style.backgroundColor = "unset";
 		}
 	}
 

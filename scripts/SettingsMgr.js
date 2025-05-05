@@ -359,6 +359,10 @@ class SettingsMgr {
 						colorActive: true,
 						color: "#64af4b",
 					},
+					unknownETV: {
+						colorActive: false,
+						color: "#FF3366",
+					},
 					tileSize: {
 						width: 236,
 						iconSize: 14,

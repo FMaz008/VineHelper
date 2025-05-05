@@ -260,6 +260,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("notification.reduce");
 	manageCheckboxSetting("notification.monitor.zeroETV.colorActive");
 	manageCheckboxSetting("notification.monitor.highlight.colorActive");
+	manageCheckboxSetting("notification.monitor.unknownETV.colorActive");
 	manageRadio("notification.monitor.openLinksInNewTab");
 	manageCheckboxSetting("notification.monitor.preventUnload");
 	manageCheckboxSetting("notification.monitor.24hrsFormat");
@@ -304,7 +305,7 @@ async function initiateSettings() {
 
 	manageColorPicker("notification.monitor.highlight.color");
 	manageColorPicker("notification.monitor.zeroETV.color");
-
+	manageColorPicker("notification.monitor.unknownETV.color");
 	//##TAB - SYSTEM
 
 	manageCheckboxSetting("hiddenTab.remote");
