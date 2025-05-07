@@ -18,20 +18,11 @@ class ModalElement {
 
 		await this.getContent(template);
 
-		const closeModal = () => this.close();
-		const closeOnKey = (event) => {
-			if (["Escape", " ", "Enter"].includes(event.key)) {
-				closeModal();
-			}
-		};
-
 		const modalButtons = document.querySelectorAll(`#modal-${this.id} .modal-ok`);
 
 		for (let i = 0; i < modalButtons.length; i++) {
-			modalButtons[i].addEventListener("click", closeModal);
+			modalButtons[i].addEventListener("click", this.close);
 		}
-
-		window.addEventListener("keydown", closeOnKey);
 	}
 
 	async getContent(template = "view/modal.html") {
@@ -49,8 +40,10 @@ class ModalElement {
 		const modal = document.getElementById(`modal-${this.id}`);
 		const overlay = document.getElementById(`overlay-${this.id}`);
 
-		body.removeChild(modal);
-		body.removeChild(overlay);
+		if (modal && overlay) {
+			body.removeChild(modal);
+			body.removeChild(overlay);
+		}
 	}
 }
 
@@ -66,6 +59,8 @@ class ModalMgr {
 		ModalMgr.#instance = this;
 
 		this.arrModal = [];
+
+		window.addEventListener("keydown", this.closeOnKey);
 	}
 
 	newModal(id) {
@@ -73,6 +68,15 @@ class ModalMgr {
 		this.arrModal.push(m);
 		return m;
 	}
+
+	closeOnKey = (event) => {
+		if (["Escape", " ", "Enter"].includes(event.key)) {
+			const m = this.arrModal.pop();
+			if (m) {
+				m.close();
+			}
+		}
+	};
 }
 
 export { ModalMgr };

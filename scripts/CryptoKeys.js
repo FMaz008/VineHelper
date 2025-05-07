@@ -132,7 +132,7 @@ class CryptoKeys {
 
 			return signatureBase64;
 		} catch (error) {
-			throw new CryptoKeysError("Failed to sign data: " + error);
+			throw new CryptoKeysError("Failed to sign data: ", error);
 		}
 	}
 
