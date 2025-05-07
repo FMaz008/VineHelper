@@ -21,7 +21,10 @@ class ModalElement {
 		const modalButtons = document.querySelectorAll(`#modal-${this.id} .modal-ok`);
 
 		for (let i = 0; i < modalButtons.length; i++) {
-			modalButtons[i].addEventListener("click", this.close);
+			modalButtons[i].addEventListener("click", () => {
+				const modelMgr = new ModalMgr();
+				modelMgr.closeModal(this.id);
+			});
 		}
 	}
 
@@ -43,6 +46,16 @@ class ModalElement {
 		if (modal && overlay) {
 			body.removeChild(modal);
 			body.removeChild(overlay);
+		}
+
+		//remove eventlisteners
+		this.removeEventListeners();
+	}
+
+	removeEventListeners() {
+		const modalButtons = document.querySelectorAll(`#modal-${this.id} .modal-ok`);
+		for (let i = 0; i < modalButtons.length; i++) {
+			modalButtons[i].removeEventListener("click", this.close);
 		}
 	}
 }
@@ -67,6 +80,16 @@ class ModalMgr {
 		const m = new ModalElement(id);
 		this.arrModal.push(m);
 		return m;
+	}
+
+	closeModal(id) {
+		const m = this.arrModal.find((m) => m.id === id);
+		if (m) {
+			m.close();
+		}
+
+		// Remove the modal from the array
+		this.arrModal = this.arrModal.filter((m) => m.id !== id);
 	}
 
 	closeOnKey = (event) => {
