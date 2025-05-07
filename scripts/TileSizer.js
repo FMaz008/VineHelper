@@ -142,6 +142,7 @@ class TileSizer {
 			const grids = document.querySelectorAll("div#vh-tabs .tab-grid");
 			grids.forEach((elem) => {
 				elem.style.gridTemplateColumns = `repeat(auto-fill,minmax(${width}px,auto))`;
+				elem.style.columnGap = `0px`;
 				elem.querySelectorAll(".vvp-item-tile .vvp-item-tile-content").forEach((tile) => {
 					tile.style.width = parseInt(width) - 4 + "px";
 				});
