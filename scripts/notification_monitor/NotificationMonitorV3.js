@@ -176,7 +176,7 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		}
 
 		//Create a timer to check if the service worker is still running
-		this._createServiceWorkerStatusTimer();
+		this._serverComMgr.createServiceWorkerStatusTimer();
 
 		//Obtain the status of the WebSocket connection.
 		chrome.runtime.sendMessage({

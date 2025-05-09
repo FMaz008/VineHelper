@@ -11,7 +11,7 @@ import { getRecommendationTypeFromQueue, generateRecommendationString } from "..
 import { YMDHiStoISODate } from "../DateHelper.js";
 import { keywordMatch } from "../service_worker/keywordMatch.js";
 import { unescapeHTML, removeSpecialHTML } from "../StringHelper.js";
-import { MonitorLib } from "./MonitorLib.js";
+import { MonitorCore } from "./MonitorCore.js";
 
 //const TYPE_SHOW_ALL = -1;
 const TYPE_REGULAR = 0;
@@ -22,11 +22,10 @@ const TYPE_HIGHLIGHT_OR_ZEROETV = 9;
 const TYPE_DATE = "date";
 const TYPE_PRICE = "price";
 
-class NotificationMonitor extends MonitorLib {
+class NotificationMonitor extends MonitorCore {
 	_feedPaused = false;
 	_feedPausedAmountStored = 0;
 	_fetchingRecentItems;
-	_serviceWorkerStatusTimer;
 	_waitTimer; //Timer which wait a short delay to see if anything new is about to happen
 	_imageUrls = new Set(); // Set of image URLs used for duplicate thumbnail detection (kept separate for O(1) lookup performance)
 	_items = new Map(); // Combined map to store both item data and DOM elements
@@ -39,7 +38,6 @@ class NotificationMonitor extends MonitorLib {
 	_etvLimit = null;
 	_itemTemplateFile = "tile_gridview.html";
 	_lightMode = false;
-	_statusTimer = null;
 	_fetchLimit = 100;
 	_searchText = ""; // Current search text
 	_searchDebounceTimer = null; // Timer for debouncing search
@@ -158,16 +156,14 @@ class NotificationMonitor extends MonitorLib {
 					this.#processNotificationFiltering(notif);
 				}
 			}
-		} else {
-			if (updateTier) {
-				const vvpDetailsBtn = notif.querySelector(".vvp-details-btn");
-				if (vvpDetailsBtn) {
-					vvpDetailsBtn.style.display = "unset";
-				}
-				const vhGoldTierOnly = notif.querySelector(".vh-gold-tier-only");
-				if (vhGoldTierOnly) {
-					vhGoldTierOnly.remove();
-				}
+		} else if (updateTier) {
+			const vvpDetailsBtn = notif.querySelector(".vvp-details-btn");
+			if (vvpDetailsBtn) {
+				vvpDetailsBtn.style.display = "unset";
+			}
+			const vhGoldTierOnly = notif.querySelector(".vh-gold-tier-only");
+			if (vhGoldTierOnly) {
+				vhGoldTierOnly.remove();
 			}
 		}
 	}
@@ -216,13 +212,32 @@ class NotificationMonitor extends MonitorLib {
 	}
 
 	// Get DOM element for an item
-	#getItemDOMElement(asin) {
+	getItemDOMElement(asin) {
 		return this._items.get(asin)?.element;
 	}
 
-	// Check if an item exists
-	#hasItem(asin) {
-		return this._items.has(asin);
+	async markItemUnavailable(asin) {
+		// Update the item data first
+		if (this._items.has(asin)) {
+			const item = this._items.get(asin);
+			item.data.unavailable = true;
+			this._items.set(asin, item);
+		}
+
+		// Then update the DOM
+		const notif = this.getItemDOMElement(asin);
+		this._disableItem(notif);
+	}
+
+	fetchRecentItemsEnd() {
+		if (this._feedPaused) {
+			//Unbuffer the feed
+			document.getElementById("pauseFeed").click();
+		}
+		this._fetchingRecentItems = false;
+
+		this.#processNotificationSorting();
+		this._updateTabTitle();
 	}
 
 	// Update item data with ETV
@@ -419,8 +434,8 @@ class NotificationMonitor extends MonitorLib {
 		const recommendationId = generateRecommendationString(recommendationType, asin, enrollment_guid); //grid.js
 
 		// If the notification already exists, update the data and return the existing DOM element
-		if (this.#hasItem(asin)) {
-			const element = this.#getItemDOMElement(asin);
+		if (this._items.has(asin)) {
+			const element = this.getItemDOMElement(asin);
 			if (element) {
 				Log.add(`NOTIF: Item ${asin} already exists, updating RecommendationId.`);
 				// Update the data
@@ -496,18 +511,6 @@ class NotificationMonitor extends MonitorLib {
 		const fragment = document.createDocumentFragment();
 		fragment.appendChild(tileDOM);
 
-		// Check if the item is already pinned and update the pin icon
-		if (Settings.get("pinnedTab.active")) {
-			const isPinned = await this._checkIfPinned(asin);
-			if (isPinned) {
-				const pinIcon = tileDOM.querySelector(".vh-icon-pin");
-				if (pinIcon) {
-					pinIcon.classList.add("vh-icon-pin-active");
-					pinIcon.title = "Click to unpin this item";
-				}
-			}
-		}
-
 		this._preserveScrollPosition(() => {
 			// Insert the tile based on sort type
 			if (this._sortType === TYPE_PRICE) {
@@ -548,6 +551,14 @@ class NotificationMonitor extends MonitorLib {
 
 		// Store a reference to the DOM element
 		this.#storeItemDOMElement(asin, tileDOM);
+
+		// Check if the item is already pinned and update the pin icon
+		if (Settings.get("pinnedTab.active")) {
+			const isPinned = await this._checkIfPinned(asin);
+			if (isPinned) {
+				this.pinItem(asin, queue, title, img_url, is_parent_asin ? "true" : "false", enrollment_guid);
+			}
+		}
 
 		//Set the tile custom dimension according to the settings.
 		if (!this._lightMode && !Settings.get("notification.monitor.listView")) {
@@ -637,7 +648,7 @@ class NotificationMonitor extends MonitorLib {
 		// Bind the click handler to the instance and then add as event listener
 		this._gridContainer.addEventListener("click", (e) => this.#clickHandler(e));
 
-		// Add key event listeners with more robust handling
+		//Track the control key, used to open SeeDetails in new tab
 		window.addEventListener(
 			"keydown",
 			(event) => {
@@ -716,7 +727,7 @@ class NotificationMonitor extends MonitorLib {
 
 		// Handle pin icon
 		if (
-			_handleIconClick(".vh-icon-pin", () => {
+			_handleIconClick(".vh-icon-pin, .vh-icon-unpin", () => {
 				if (Settings.get("pinnedTab.active")) {
 					this.#handlePinClick(e);
 				}
@@ -963,7 +974,7 @@ class NotificationMonitor extends MonitorLib {
 		}
 
 		// Get the corresponding DOM element
-		const notif = this.#getItemDOMElement(asin);
+		const notif = this.getItemDOMElement(asin);
 		if (!notif) {
 			return false;
 		}
@@ -989,7 +1000,7 @@ class NotificationMonitor extends MonitorLib {
 		}
 
 		// Get the corresponding DOM element
-		const notif = this.#getItemDOMElement(asin);
+		const notif = this.getItemDOMElement(asin);
 		if (!notif) {
 			return false;
 		}
@@ -1033,76 +1044,6 @@ class NotificationMonitor extends MonitorLib {
 		}
 
 		return true;
-	}
-
-	setWebSocketStatus(status, message = null) {
-		const icon = document.querySelector("#statusWS div.vh-switch-32");
-		const description = document.querySelector("#descriptionWS");
-		if (status) {
-			icon.classList.remove("vh-icon-switch-off");
-			icon.classList.add("vh-icon-switch-on");
-			description.innerText = "Listening for notifications...";
-			this._wsErrorMessage = null;
-		} else {
-			icon.classList.remove("vh-icon-switch-on");
-			icon.classList.add("vh-icon-switch-off");
-			if (message) {
-				this._wsErrorMessage = message;
-				description.innerText = message;
-			} else if (this._wsErrorMessage == null) {
-				description.innerText = "Not connected. Retrying in 30 sec...";
-			}
-		}
-	}
-
-	_createServiceWorkerStatusTimer() {
-		this._updateServiceWorkerStatus();
-		this._serviceWorkerStatusTimer = window.setInterval(() => {
-			this._updateServiceWorkerStatus();
-		}, 10000);
-	}
-
-	_updateServiceWorkerStatus() {
-		if (!Settings.get("notification.active")) {
-			this.#setServiceWorkerStatus(
-				false,
-				"You need to enable the notifications in VineHelper's plugin settings, under the 'Notifications' tab."
-			);
-		} else if (this._i13nMgr.getCountryCode() === null) {
-			this._setServiceWorkerStatus(false, "Your country has not been detected, load a vine page first.");
-		} else if (this._i13nMgr.getDomainTLD() === null) {
-			this._setServiceWorkerStatus(
-				false,
-				"No valid country found. You current country is detected as: '" +
-					this._i13nMgr.getCountryCode() +
-					"', which is not currently supported by Vine Helper. Reach out so we can add it!"
-			);
-		} else if (Settings.get("notification.active")) {
-			//Send a message to the service worker to check if it is still running
-			this._statusTimer = window.setTimeout(() => {
-				this.#setServiceWorkerStatus(false, "Not responding, reload the page.");
-			}, 500);
-			try {
-				chrome.runtime.sendMessage({ type: "ping" });
-			} catch (e) {
-				//Page out of context, let the display show an error.
-			}
-		}
-	}
-
-	#setServiceWorkerStatus(status, desc = "") {
-		const icon = document.querySelector("#statusSW div.vh-switch-32");
-		const description = document.querySelector("#descriptionSW");
-
-		if (status) {
-			icon.classList.remove("vh-icon-switch-off");
-			icon.classList.add("vh-icon-switch-on");
-		} else {
-			icon.classList.remove("vh-icon-switch-on");
-			icon.classList.add("vh-icon-switch-off");
-		}
-
-		description.textContent = desc;
 	}
 
 	#zeroETVItemFound(notif, playSoundEffect = true) {
@@ -1201,7 +1142,7 @@ class NotificationMonitor extends MonitorLib {
 		Log.add(`NOTIF: Hiding icon clicked for item ${asin}`);
 
 		// Get the DOM element from our Map
-		const tile = this.#getItemDOMElement(asin);
+		const tile = this.getItemDOMElement(asin);
 		if (tile) {
 			this.#removeTile(tile, asin);
 		}
@@ -1218,20 +1159,16 @@ class NotificationMonitor extends MonitorLib {
 		this._brendaMgr.announce(asin, etv, queue, this._i13nMgr.getDomainTLD());
 	}
 
-	#handlePinClick(e) {
+	async #handlePinClick(e) {
 		e.preventDefault();
 
 		const asin = e.target.dataset.asin;
-		const isPinned = e.target.classList.contains("vh-icon-pin-active");
+		const isPinned = await this._checkIfPinned(asin);
 		const title = e.target.dataset.title;
 
 		if (isPinned) {
-			// Unpin the item
-			this._pinnedListMgr.removeItem(asin);
-
 			// Update the icon
-			e.target.classList.remove("vh-icon-pin-active");
-			e.target.title = "Pin this item";
+			this.unpinItem(asin);
 
 			// Display notification
 			this._displayToasterNotification({
@@ -1246,11 +1183,8 @@ class NotificationMonitor extends MonitorLib {
 			const queue = e.target.dataset.queue;
 			const thumbnail = e.target.dataset.thumbnail;
 
-			this._pinnedListMgr.addItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID);
-
 			// Update the icon
-			e.target.classList.add("vh-icon-pin-active");
-			e.target.title = "Unpin this item";
+			this.pinItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID);
 
 			this._displayToasterNotification({
 				title: `Item ${asin} pinned.`,
@@ -1289,11 +1223,6 @@ class NotificationMonitor extends MonitorLib {
 	}
 
 	//#######################################################
-	//## UTILITY METHODS
-
-	#getNotificationByASIN(asin) {
-		return this._items.get(asin)?.element;
-	}
 
 	_listeners() {
 		// Add the fix toolbar with the pause button if we scroll past the original pause button
@@ -1463,82 +1392,6 @@ class NotificationMonitor extends MonitorLib {
 			// Force immediate truncate when limit changes
 			this.#autoTruncate(true);
 		});
-
-		//Message from within the context of the extension
-		//Messages sent via: chrome.tabs.sendMessage(tab.id, data);
-		//In this case, all messages are coming from the service_worker file.
-		chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-			this._processBroadcastMessage(message);
-		});
-	}
-
-	async _processBroadcastMessage(data) {
-		if (data.type == undefined) {
-			return false;
-		}
-
-		if (data.type == "pong") {
-			window.clearTimeout(this._statusTimer);
-			this.#setServiceWorkerStatus(true, "Service worker is running.");
-		}
-		if (data.type == "newETV") {
-			this.#setETVFromASIN(data.asin, data.etv);
-		}
-		if (data.type == "newTier") {
-			this.#setTierFromASIN(data.asin, data.tier);
-		}
-		if (data.type == "wsOpen") {
-			this.setWebSocketStatus(true);
-		}
-		if (data.type == "wsError") {
-			this.setWebSocketStatus(false, data.error);
-		}
-		if (data.type == "wsClosed") {
-			this.setWebSocketStatus(false);
-		}
-		if (data.type == "unpinnedItem") {
-			// Update pin icon if this item was unpinned from another tab
-			const notif = this.#getItemDOMElement(data.asin);
-			if (notif) {
-				const pinIcon = notif.querySelector(".vh-icon-pin");
-				if (pinIcon && pinIcon.classList.contains("vh-icon-pin-active")) {
-					pinIcon.classList.remove("vh-icon-pin-active");
-					pinIcon.title = "Pin this item";
-				}
-			}
-		}
-
-		if (data.type == "unavailableItem") {
-			// Update the item data first
-			if (this.#hasItem(data.asin)) {
-				const item = this._items.get(data.asin);
-				item.data.unavailable = true;
-				this._items.set(data.asin, item);
-			}
-
-			// Then update the DOM
-			const notif = this.#getItemDOMElement(data.asin);
-			this._disableItem(notif);
-		}
-		if (data.type == "newItem") {
-			await this.addTileInGrid(data);
-		}
-		if (data.type == "fetch100") {
-			for (const item of data.data) {
-				if (item.type == "newItem") {
-					await this.addTileInGrid(item);
-				} else if (item.type == "fetchRecentItemsEnd") {
-					if (this._feedPaused) {
-						//Unbuffer the feed
-						document.getElementById("pauseFeed").click();
-					}
-					this._fetchingRecentItems = false;
-				}
-			}
-
-			this.#processNotificationSorting();
-			this._updateTabTitle();
-		}
 	}
 }
 

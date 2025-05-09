@@ -1,16 +1,10 @@
 import { NotificationMonitor } from "./NotificationMonitor.js";
 
-import { Logger } from "../Logger.js";
-var logger = new Logger();
-
 import { SettingsMgr } from "../SettingsMgr.js";
 const Settings = new SettingsMgr();
 
 import { Template } from "../Template.js";
 var Tpl = new Template();
-
-import { Internationalization } from "../Internationalization.js";
-var i13n = new Internationalization();
 
 class NotificationMonitorV2 extends NotificationMonitor {
 	#channel = null; //Broadcast channel for light mode
@@ -52,7 +46,7 @@ class NotificationMonitorV2 extends NotificationMonitor {
 			type: "wsStatus",
 		});
 
-		i13n.setCountryCode(Settings.get("general.country"));
+		this._i13nMgr.setCountryCode(Settings.get("general.country"));
 		document.getElementById("date_loaded").innerText = this._formatDate();
 		this._mostRecentItemDateDOM = document.getElementById("date_most_recent_item");
 
@@ -61,14 +55,14 @@ class NotificationMonitorV2 extends NotificationMonitor {
 		this.#broadcastChannel();
 
 		//Create a timer to check if the service worker is still running
-		this._createServiceWorkerStatusTimer();
+		this._serverComMgr.createServiceWorkerStatusTimer();
 
 		this._updateTabTitle();
 	}
 
 	#broadcastChannel() {
 		this.#channel.onmessage = (event) => {
-			this._processBroadcastMessage(event.data);
+			this._serverComMgr.processBroadcastMessage(event.data);
 		};
 	}
 }

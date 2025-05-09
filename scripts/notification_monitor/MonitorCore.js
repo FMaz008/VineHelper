@@ -4,23 +4,25 @@
 import { SettingsMgr } from "../SettingsMgr.js";
 const Settings = new SettingsMgr();
 
+import { Environment } from "../Environment.js";
+var env = new Environment();
+
 import { PinnedListMgr } from "../PinnedListMgr.js";
 import { Internationalization } from "../Internationalization.js";
-import { ItemManager } from "./ItemManager.js";
 import { ScreenNotifier, ScreenNotification } from "../ScreenNotifier.js";
 import { Tooltip } from "../Tooltip.js";
 import { BrendaAnnounceQueue } from "../BrendaAnnounce.js";
 import { ModalMgr } from "../ModalMgr.js";
 import { NotificationsSoundPlayer } from "../NotificationsSoundPlayer.js";
+import { ServerCom } from "./ServerCom.js";
 
-class MonitorLib {
+class MonitorCore {
 	constructor() {
 		// Prevent direct instantiation of the abstract class
-		if (this.constructor === MonitorLib) {
+		if (this.constructor === MonitorCore) {
 			throw new TypeError('Abstract class "MonitorLib" cannot be instantiated directly.');
 		}
 
-		this._itemMgr = new ItemManager();
 		this._i13nMgr = new Internationalization();
 		this._pinnedListMgr = new PinnedListMgr();
 		this._notificationsMgr = new ScreenNotifier();
@@ -28,6 +30,10 @@ class MonitorLib {
 		this._brendaMgr = new BrendaAnnounceQueue();
 		this._dialogMgr = new ModalMgr();
 		this._soundPlayerMgr = new NotificationsSoundPlayer();
+		this._serverComMgr = new ServerCom();
+		this._serverComMgr.setMarkUnavailableCallback(this.markItemUnavailable.bind(this));
+		this._serverComMgr.setAddTileInGridCallback(this.addTileInGrid.bind(this));
+		this._serverComMgr.setFetchRecentItemsEndCallback(this.fetchRecentItemsEnd.bind(this));
 	}
 
 	_currentDateTime() {
@@ -83,6 +89,38 @@ class MonitorLib {
 	async _checkIfPinned(asin) {
 		await this._pinnedListMgr.getList(); // This will wait for the list to be loaded
 		return this._pinnedListMgr.isPinned(asin);
+	}
+
+	async unpinItem(asin) {
+		// Unpin the item
+		this._pinnedListMgr.removeItem(asin);
+
+		// Update pin icon if this item was unpinned from another tab
+		const notif = this.getItemDOMElement(asin);
+		if (notif) {
+			const pinIcon = notif.querySelector("#vh-pin-link-" + asin + ">div");
+			if (pinIcon) {
+				pinIcon.classList.remove("vh-icon-unpin");
+				pinIcon.classList.add("vh-icon-pin");
+				pinIcon.title = "Pin this item";
+			}
+		}
+	}
+
+	async pinItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID) {
+		// Pin the item
+		this._pinnedListMgr.addItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID);
+
+		// Update pin icon if this item was unpinned from another tab
+		const notif = this.getItemDOMElement(asin);
+		if (notif) {
+			const pinIcon = notif.querySelector("#vh-pin-link-" + asin + ">div");
+			if (pinIcon) {
+				pinIcon.classList.remove("vh-icon-pin");
+				pinIcon.classList.add("vh-icon-unpin");
+				pinIcon.title = "Unpin this item";
+			}
+		}
 	}
 
 	_updateTabFavicon() {
@@ -269,10 +307,8 @@ class MonitorLib {
 			body: JSON.stringify(content),
 		};
 
-		showRuntime("Sending report...");
-
 		//Send the report to VH's server
-		fetch(VINE_HELPER_API_V5_URL, options).then(function () {
+		fetch(env.getAPIUrl(), options).then(function () {
 			alert("Report sent. Thank you.");
 		});
 	}
@@ -291,8 +327,18 @@ class MonitorLib {
 		);
 		if (val !== null && val.toLowerCase() == "report") {
 			this.#send_report(asin);
+		} else {
+			alert("Not reported.");
+		}
+	}
+
+	async markItemUnavailable(asin) {
+		if (this._items.has(asin)) {
+			const item = this._items.get(asin);
+			item.data.unavailable = true;
+			this._items.set(asin, item);
 		}
 	}
 }
 
-export { MonitorLib };
+export { MonitorCore };
