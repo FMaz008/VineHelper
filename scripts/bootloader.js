@@ -941,6 +941,7 @@ async function fetchProductsDatav5() {
 		api_version: 5,
 		app_version: env.data.appVersion,
 		action: "get_info",
+		tier: env.getTierLevel(),
 		country: i13n.getCountryCode(),
 		uuid: await Settings.get("general.uuid", false),
 		fid: await Settings.get("general.fingerprint.hash", false),

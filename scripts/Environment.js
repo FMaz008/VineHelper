@@ -188,6 +188,43 @@ class Environment {
 		return VINE_HELPER_API_V5_URL;
 	}
 
+	getTierLevel(defaultStatus = "silver") {
+		if (!this.data.tierLevel) {
+			this.data.tierLevel = this.#readTierLevel();
+		}
+		return this.data.tierLevel ? this.data.tierLevel : defaultStatus;
+	}
+
+	#readTierLevel() {
+		let status;
+		try {
+			status =
+				JSON.parse(document.querySelector(`script[data-a-state='{"key":"vvp-context"}']`).innerHTML)
+					?.voiceDetails.tierStatus == "TIER2"
+					? "gold"
+					: "silver";
+		} catch (err) {
+			status = null;
+		}
+		return status;
+	}
+
+	getSilverTierLimit() {
+		if (!this.data.silverTierLimit) {
+			this.data.silverTierLimit = this.#readSilverTierLimit();
+		}
+		return this.data.silverTierLimit;
+	}
+
+	#readSilverTierLimit() {
+		const rawText = document.querySelector("#vvp-vine-participation-content ul>li").innerText;
+		const regex = new RegExp("^.+?[0-9]{1}.+?([0-9,.]+).+", "m");
+		const match = rawText.match(regex);
+		if (match) {
+			return parseFloat(match[1]);
+		}
+	}
+
 	//getWSSUrl() {
 	//	return "wss://api.vinehelper.ovh";
 	//}

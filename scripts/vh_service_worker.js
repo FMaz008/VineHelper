@@ -173,6 +173,7 @@ function connectWebSocket() {
 			etv_max: data.item.etv_max, //null
 			reason: data.item.reason,
 			queue: data.item.queue,
+			tier: data.item.tier,
 			is_parent_asin: data.item.is_parent_asin,
 			enrollment_guid: data.item.enrollment_guid,
 		});
@@ -279,6 +280,7 @@ function processLast100Items(arrProducts) {
 			etv_min,
 			etv_max,
 			queue,
+			tier,
 			is_parent_asin,
 			enrollment_guid,
 			unavailable,
@@ -302,6 +304,7 @@ function processLast100Items(arrProducts) {
 			etv_min: etv_min,
 			etv_max: etv_max,
 			queue: queue,
+			tier: tier,
 			reason: "Fetch last 100 new items",
 			is_parent_asin: is_parent_asin,
 			enrollment_guid: enrollment_guid,

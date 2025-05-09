@@ -4,6 +4,8 @@ import { SettingsMgr } from "./SettingsMgr.js";
 const Settings = new SettingsMgr();
 import { Internationalization } from "./Internationalization.js";
 const i13n = new Internationalization();
+import { Environment } from "./Environment.js";
+var env = new Environment();
 import { Template } from "./Template.js";
 var Tpl = new Template();
 import { getRecommendationTypeFromQueue, generateRecommendationString } from "./Grid.js";
@@ -139,26 +141,13 @@ class NotificationMonitor {
 	}
 
 	_updateGoldStatus() {
-		let gold = true;
-		try {
-			gold =
-				JSON.parse(document.querySelector(`script[data-a-state='{"key":"vvp-context"}']`).innerHTML)
-					?.voiceDetails.tierStatus == "TIER2";
-		} catch (err) {
-			//Keep gold at true
-		}
-		this._goldTier = gold;
-
+		this._goldTier = env.getTierLevel("gold") === "gold";
 		logger.add("NOTIF: Gold tier: " + this._goldTier);
+
 		if (!this._goldTier) {
 			//Get the maximum allowed value
-			const rawText = document.querySelector("#vvp-vine-participation-content ul>li").innerText;
-			const regex = new RegExp("^.+?[0-9]{1}.+?([0-9,.]+).+", "m");
-			const match = rawText.match(regex);
-			if (match) {
-				this._etvLimit = parseFloat(match[1]);
-				logger.add("NOTIF: ETV limit: " + this._etvLimit);
-			}
+			this._etvLimit = env.getSilverTierLimit();
+			logger.add("NOTIF: ETV limit: " + this._etvLimit);
 		}
 	}
 
@@ -194,6 +183,7 @@ class NotificationMonitor {
 	async addTileInGrid(
 		asin,
 		queue,
+		tier,
 		date,
 		title,
 		img_url,
@@ -223,6 +213,7 @@ class NotificationMonitor {
 		const itemData = {
 			asin,
 			queue,
+			tier,
 			date,
 			title,
 			img_url,
@@ -296,6 +287,7 @@ class NotificationMonitor {
 		Tpl.setVar("domain", i13n.getDomainTLD());
 		Tpl.setVar("img_url", img_url);
 		Tpl.setVar("asin", asin);
+		Tpl.setVar("tier", tier);
 		Tpl.setVar("dateReceived", this._formatDate(this._currentDateTime()));
 		Tpl.setVar("date", this._formatDate(date));
 		Tpl.setVar("feedPaused", this._feedPaused);
@@ -919,7 +911,7 @@ class NotificationMonitor {
 			return;
 		}
 
-		if (!this._goldTier) {
+		if (!this._goldTier && notif.dataset.tier !== "silver") {
 			const etvObj = notif.querySelector("div.etv");
 
 			if (this._etvLimit != null && parseFloat(etvObj.dataset.etvMin) > this._etvLimit) {
@@ -1279,11 +1271,12 @@ class NotificationMonitor {
 		const asin = e.target.dataset.asin;
 		const date = e.target.dataset.date;
 		const dateReceived = e.target.dataset.dateReceived;
+		const tier = e.target.dataset.tier;
 		const reason = e.target.dataset.reason;
 		const highlightKW = e.target.dataset.highlightkw;
 		const blurKW = e.target.dataset.blurkw;
 		const queue = e.target.dataset.queue;
-
+		
 		let m = DialogMgr.newModal("item-details-" + asin);
 		m.title = "Item " + asin;
 		m.content = `
@@ -1292,6 +1285,7 @@ class NotificationMonitor {
 				<li>Received date/time: ${dateReceived}</li>
 				<li>Broadcast reason: ${reason}</li>
 				<li>Queue: ${queue}</li>
+				<li>Found in tier: ${tier}</li>
 				<li>Highlight Keyword: ${highlightKW}</li>
 				<li>Blur Keyword: ${blurKW}</li>
 			</ul>
@@ -1779,40 +1773,23 @@ class NotificationMonitor {
 			this.#disableItem(notif);
 		}
 		if (data.type == "newItem") {
-			let {
-				date,
-				asin,
-				title,
-				reason,
-				img_url,
-				etv_min,
-				etv_max,
-				queue,
-				KW,
-				KWsMatch,
-				BlurKW,
-				BlurKWsMatch,
-				is_parent_asin,
-				enrollment_guid,
-				unavailable,
-			} = data;
-
 			await this.addTileInGrid(
-				asin,
-				queue,
-				date,
-				title,
-				img_url,
-				is_parent_asin,
-				enrollment_guid,
-				etv_min,
-				etv_max,
-				reason,
-				KW,
-				KWsMatch,
-				BlurKW,
-				BlurKWsMatch,
-				unavailable
+				data.asin,
+				data.queue,
+				data.tier,
+				data.date,
+				data.title,
+				data.img_url,
+				data.is_parent_asin,
+				data.enrollment_guid,
+				data.etv_min,
+				data.etv_max,
+				data.reason,
+				data.KW,
+				data.KWsMatch,
+				data.BlurKW,
+				data.BlurKWsMatch,
+				data.unavailable
 			);
 		}
 		if (data.type == "fetch100") {
@@ -1821,6 +1798,7 @@ class NotificationMonitor {
 					await this.addTileInGrid(
 						item.asin,
 						item.queue,
+						item.tier,
 						item.date,
 						item.title,
 						item.img_url,
