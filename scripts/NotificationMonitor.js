@@ -64,6 +64,19 @@ class NotificationMonitor {
 	_filterType = -1;
 	_sortType = TYPE_DATE;
 
+	async #defineFetchLimit() {
+		await Settings.waitForLoad();
+
+		//Define the fetch limit based on the user's tier
+		if (Settings.isPremiumUser(3)) {
+			this._fetchLimit = 300;
+		} else if (Settings.isPremiumUser(2)) {
+			this._fetchLimit = 200;
+		} else {
+			this._fetchLimit = 100;
+		}
+	}
+
 	constructor() {
 		// Prevent direct instantiation of the abstract class
 		if (this.constructor === NotificationMonitor) {
@@ -105,17 +118,320 @@ class NotificationMonitor {
 		if (sortQueueSelect) sortQueueSelect.value = this._sortType;
 	}
 
-	async #defineFetchLimit() {
-		await Settings.waitForLoad();
+	// Check if an item is already pinned
+	async #checkIfPinned(asin) {
+		await PinnedList.getList(); // This will wait for the list to be loaded
+		return PinnedList.isPinned(asin);
+	}
 
-		//Define the fetch limit based on the user's tier
-		if (Settings.isPremiumUser(3)) {
-			this._fetchLimit = 300;
-		} else if (Settings.isPremiumUser(2)) {
-			this._fetchLimit = 200;
-		} else {
-			this._fetchLimit = 100;
+	#processNotificationFiltering(node) {
+		if (!node) {
+			return false;
 		}
+
+		const notificationTypeZeroETV = parseInt(node.dataset.typeZeroETV) === 1;
+		const notificationTypeHighlight = parseInt(node.dataset.typeHighlight) === 1;
+		const queueType = node.dataset.queue;
+
+		//Feed Paused
+		if (node.dataset.feedPaused == "true") {
+			node.style.display = "none";
+			return false;
+		}
+
+		// Gold item filter for silver users
+		if (!this._goldTier && Settings.get("notification.monitor.hideGoldNotificationsForSilverUser")) {
+			const etvObj = node.querySelector("div.etv");
+			if (etvObj && this._etvLimit != null && parseFloat(etvObj.dataset.etvMin) > this._etvLimit) {
+				node.style.display = "none";
+				return false;
+			}
+		}
+
+		// Search filter - if search text is not empty, check if item matches
+		if (this._searchText.trim()) {
+			const title = node.querySelector(".a-truncate-full")?.innerText?.toLowerCase() || "";
+			if (!title.includes(this._searchText.toLowerCase().trim())) {
+				node.style.display = "none";
+				return false;
+			}
+		}
+
+		if (this._filterType == -1) {
+			node.style.display = this._lightMode ? "block" : "flex";
+		} else if (this._filterType == TYPE_HIGHLIGHT_OR_ZEROETV) {
+			node.style.display =
+				notificationTypeZeroETV || notificationTypeHighlight ? (this._lightMode ? "block" : "flex") : "none";
+		} else if (this._filterType == TYPE_HIGHLIGHT) {
+			node.style.display = notificationTypeHighlight ? (this._lightMode ? "block" : "flex") : "none";
+		} else if (this._filterType == TYPE_ZEROETV) {
+			node.style.display = notificationTypeZeroETV ? (this._lightMode ? "block" : "flex") : "none";
+		} else if (this._filterType == TYPE_REGULAR) {
+			node.style.display =
+				!notificationTypeZeroETV && !notificationTypeHighlight ? (this._lightMode ? "block" : "flex") : "none";
+		}
+
+		//Queue filter
+		if (node.style.display == "flex" || node.style.display == "block") {
+			if (this._filterQueue == "-1") {
+				return true;
+			} else {
+				node.style.display = queueType == this._filterQueue ? (this._lightMode ? "block" : "flex") : "none";
+				return queueType == this._filterQueue;
+			}
+		} else {
+			return false;
+		}
+	}
+
+	#disableGoldItemsForSilverUsers(notif, updateTier = false) {
+		if (!notif) {
+			return;
+		}
+
+		if (!this._goldTier && notif.dataset.tier !== "silver") {
+			const etvObj = notif.querySelector("div.etv");
+
+			if (this._etvLimit != null && parseFloat(etvObj.dataset.etvMin) > this._etvLimit) {
+				//Remove the See Details button for item outside the tier limit.
+				const vvpDetailsBtn = notif.querySelector(".vvp-details-btn");
+				if (vvpDetailsBtn) {
+					vvpDetailsBtn.style.display = "none";
+				}
+				const vhGoldTierOnly = notif.querySelector(".vh-gold-tier-only");
+				if (vhGoldTierOnly) {
+					vhGoldTierOnly.remove();
+				}
+
+				//Create a replacement button with no action linked it.
+				const btn = document.createElement("span");
+				btn.classList.add("a-button", "vh-gold-tier-only");
+				btn.innerText = "Gold tier only";
+				//Insert at the end of .vvp-item-tile-content
+				notif.querySelector(".vvp-item-tile-content").appendChild(btn);
+
+				// Re-filter this item to apply gold tier filtering, ensuring it's hidden if the setting is enabled
+				if (Settings.get("notification.monitor.hideGoldNotificationsForSilverUser")) {
+					this.#processNotificationFiltering(notif);
+				}
+			}
+		}
+	}
+
+	// Helper method to preserve scroll position during DOM operations
+	#preserveScrollPosition(callback) {
+		// Save current scroll position
+		const scrollPosition = window.scrollY;
+
+		// Execute the DOM operation
+		callback();
+
+		// Restore scroll position
+		window.scrollTo({
+			top: scrollPosition,
+			behavior: "auto", // Use "auto" instead of "smooth" to prevent visible jumping
+		});
+	}
+
+	#sortItems() {
+		// Only proceed if there are items to sort
+		if (this._items.size === 0) return;
+
+		// Convert Map to array for sorting
+		const itemsArray = Array.from(this._items.entries()).map(([asin, item]) => {
+			return {
+				asin,
+				data: item.data,
+				element: item.element,
+			};
+		});
+
+		// Sort based on the current sort type
+		itemsArray.sort((a, b) => {
+			if (this._sortType === TYPE_DATE) {
+				// Sort by date, newest first
+				return b.data.date - a.data.date;
+			} else {
+				// Default: sort by price (TYPE_PRICE), highest first
+				// Treat null/undefined as -1 so actual 0 values rank higher
+				const aPrice =
+					a.data.etv_min !== null && a.data.etv_min !== undefined ? parseFloat(a.data.etv_min) : -1;
+				const bPrice =
+					b.data.etv_min !== null && b.data.etv_min !== undefined ? parseFloat(b.data.etv_min) : -1;
+				return bPrice - aPrice;
+			}
+		});
+
+		// Transform the sorted array back to [key, value] pairs for the Map constructor
+		this._items = new Map(
+			itemsArray.map((item) => [
+				item.asin,
+				{
+					data: item.data,
+					element: item.element,
+				},
+			])
+		);
+
+		return itemsArray;
+	}
+
+	// Get DOM element for an item
+	#getItemDOMElement(asin) {
+		return this._items.get(asin)?.element;
+	}
+
+	// Check if an item exists
+	#hasItem(asin) {
+		return this._items.has(asin);
+	}
+
+	// Update item data with ETV
+	#updateItemETV(asin, etv) {
+		if (!this._items.has(asin)) {
+			return false;
+		}
+
+		const item = this._items.get(asin);
+
+		// Update min and max ETV values
+		if (!item.data.etv_min || etv < item.data.etv_min) {
+			item.data.etv_min = etv;
+		}
+
+		if (!item.data.etv_max || etv > item.data.etv_max) {
+			item.data.etv_max = etv;
+		}
+
+		// Update the Map
+		this._items.set(asin, item);
+		// Sort the items after adding or updating a new item
+		this.#sortItems();
+
+		return true;
+	}
+
+	#bulkRemoveItems(asinsToKeep, isKeepSet = false) {
+		this.#preserveScrollPosition(() => {
+			// Always use the optimized container replacement approach
+			// Create a new empty container
+			const newContainer = this._gridContainer.cloneNode(false);
+
+			// Create a new items map to store the updated collection
+			const newItems = new Map();
+			const newImageUrls = new Set();
+
+			// Efficiently process all items
+			this._items.forEach((item, asin) => {
+				const shouldKeep = isKeepSet ? asinsToKeep.has(asin) : !asinsToKeep.has(asin);
+
+				if (shouldKeep && item.element) {
+					// Add this item to the new container
+					newContainer.appendChild(item.element);
+					newItems.set(asin, item);
+
+					// Keep track of the image URL for duplicate detection
+					if (item.data.img_url && Settings.get("notification.monitor.hideDuplicateThumbnail")) {
+						newImageUrls.add(item.data.img_url);
+					}
+				}
+			});
+
+			// Replace the old container with the new one
+			this._gridContainer.parentNode.replaceChild(newContainer, this._gridContainer);
+			this._gridContainer = newContainer;
+
+			// Reattach event listeners to the new container
+			this._createEventListeners();
+
+			// Update the data structures
+			this._items = newItems;
+			this._imageUrls = newImageUrls;
+		});
+
+		// Update the tab counter
+		this._updateTabTitle();
+	}
+
+	#autoTruncate(forceRun = false) {
+		// Clear any existing debounce timer
+		if (this._autoTruncateDebounceTimer) {
+			clearTimeout(this._autoTruncateDebounceTimer);
+		}
+
+		// Run immediately if forced, otherwise debounce
+		const runTruncate = () => {
+			// Auto truncate
+			if (this._autoTruncateEnabled) {
+				const max = Settings.get("notification.monitor.autoTruncateLimit");
+				// Check if we need to truncate based on map size
+				if (this._items.size > max) {
+					logger.add(`NOTIF: Auto truncating item(s) from the page using the ${this._sortType} sort method.`);
+
+					// Convert map to array for sorting
+					const itemsArray = Array.from(this._items.entries()).map(([asin, item]) => ({
+						asin,
+						date: new Date(item.data.date),
+						price: parseFloat(item.data.etv_min) || 0,
+						element: item.element,
+					}));
+
+					// Sort according to current sort method, but reversed
+					// (we want to remove lowest price or oldest items)
+					if (this._sortType === TYPE_PRICE) {
+						itemsArray.sort((a, b) => a.price - b.price); // Sort lowest price first
+					} else {
+						itemsArray.sort((a, b) => a.date - b.date); // Sort oldest first (default)
+					}
+
+					// Identify which items to keep and which to remove
+					const itemsToKeep = itemsArray.slice(itemsArray.length - max);
+					const asinsToKeep = new Set(itemsToKeep.map((item) => item.asin));
+
+					// Use bulk removal method with the optimized approach for large sets
+					this.#bulkRemoveItems(asinsToKeep, true);
+				}
+			}
+		};
+
+		if (forceRun) {
+			runTruncate();
+		} else {
+			// Set a new debounce timer
+			this._autoTruncateDebounceTimer = setTimeout(runTruncate, 500); // 500ms debounce delay
+		}
+	}
+
+	// Method for efficient bulk item removal or retention using container replacement
+
+	#clearAllVisibleItems() {
+		this.#preserveScrollPosition(() => {
+			// Get the asin of all visible items
+			const visibleItems = document.querySelectorAll(".vvp-item-tile:not([style*='display: none'])");
+			const asins = new Set();
+			visibleItems.forEach((item) => {
+				const asin = item.dataset.asin;
+				if (asin) {
+					asins.add(asin);
+				}
+			});
+			// Remove each visible item
+			this.#bulkRemoveItems(asins, false);
+		});
+	}
+
+	// Clear unavailable items
+	#clearUnavailableItems() {
+		// Get all unavailable ASINs
+		const unavailableAsins = new Set();
+		this._items.forEach((item, asin) => {
+			if (item.data.unavailable) {
+				unavailableAsins.add(asin);
+			}
+		});
+
+		// Use the bulk remove method, letting it decide the optimal approach
+		this.#bulkRemoveItems(unavailableAsins, false);
 	}
 
 	_updateTabFavicon() {
@@ -425,7 +741,7 @@ class NotificationMonitor {
 		this.#processNotificationHighlight(tileDOM);
 
 		//Check gold tier status for this item
-		this.disableGoldItemsForSilverUsers(tileDOM);
+		this.#disableGoldItemsForSilverUsers(tileDOM);
 
 		if (this._mostRecentItemDate == null || date > this._mostRecentItemDate) {
 			this._mostRecentItemDateDOM.innerText = this._formatDate(date);
@@ -629,74 +945,6 @@ class NotificationMonitor {
 		this.#sortItems();
 	}
 
-	#sortItems() {
-		// Only proceed if there are items to sort
-		if (this._items.size === 0) return;
-
-		// Convert Map to array for sorting
-		const itemsArray = Array.from(this._items.entries()).map(([asin, item]) => {
-			return {
-				asin,
-				data: item.data,
-				element: item.element,
-			};
-		});
-
-		// Sort based on the current sort type
-		itemsArray.sort((a, b) => {
-			if (this._sortType === TYPE_DATE) {
-				// Sort by date, newest first
-				return b.data.date - a.data.date;
-			} else {
-				// Default: sort by price (TYPE_PRICE), highest first
-				// Treat null/undefined as -1 so actual 0 values rank higher
-				const aPrice =
-					a.data.etv_min !== null && a.data.etv_min !== undefined ? parseFloat(a.data.etv_min) : -1;
-				const bPrice =
-					b.data.etv_min !== null && b.data.etv_min !== undefined ? parseFloat(b.data.etv_min) : -1;
-				return bPrice - aPrice;
-			}
-		});
-
-		// Transform the sorted array back to [key, value] pairs for the Map constructor
-		this._items = new Map(
-			itemsArray.map((item) => [
-				item.asin,
-				{
-					data: item.data,
-					element: item.element,
-				},
-			])
-		);
-
-		return itemsArray;
-	}
-
-	// Update item data with ETV
-	#updateItemETV(asin, etv) {
-		if (!this._items.has(asin)) {
-			return false;
-		}
-
-		const item = this._items.get(asin);
-
-		// Update min and max ETV values
-		if (!item.data.etv_min || etv < item.data.etv_min) {
-			item.data.etv_min = etv;
-		}
-
-		if (!item.data.etv_max || etv > item.data.etv_max) {
-			item.data.etv_max = etv;
-		}
-
-		// Update the Map
-		this._items.set(asin, item);
-		// Sort the items after adding or updating a new item
-		this.#sortItems();
-
-		return true;
-	}
-
 	// Store DOM element reference
 	#storeItemDOMElement(asin, element) {
 		if (this._items.has(asin)) {
@@ -713,16 +961,6 @@ class NotificationMonitor {
 				element: element,
 			});
 		}
-	}
-
-	// Get DOM element for an item
-	#getItemDOMElement(asin) {
-		return this._items.get(asin)?.element;
-	}
-
-	// Check if an item exists
-	#hasItem(asin) {
-		return this._items.has(asin);
 	}
 
 	// Remove item completely
@@ -758,62 +996,6 @@ class NotificationMonitor {
 		if (countTotalTiles) {
 			this._updateTabTitle(); // Update the tab counter
 		}
-	}
-
-	async setETVFromASIN(asin, etv) {
-		// Store old ETV value to detect if reordering is needed
-		const oldETV = this._items.get(asin)?.data?.etv_min || 0;
-
-		// Update the data in our Map
-		if (!this.#updateItemETV(asin, etv)) {
-			return false;
-		}
-
-		// Get the corresponding DOM element
-		const notif = this.#getItemDOMElement(asin);
-		if (!notif) {
-			return false;
-		}
-
-		// Update the DOM element
-		this.setETV(notif, etv);
-
-		// Re-position the item if using price sort and the value changed significantly
-		if (this._sortType === TYPE_PRICE) {
-			const newETV = this._items.get(asin)?.data?.etv_min || 0;
-
-			// Only reposition if the ETV changed significantly enough to potentially affect order
-			if (Math.abs(newETV - oldETV) > 0.01) {
-				// Remove the element from DOM
-				notif.remove();
-
-				// Find the correct position to insert
-				const newPrice = parseFloat(newETV);
-				let insertPosition = null;
-
-				// Find the first item with a lower price
-				for (const [existingAsin, item] of this._items.entries()) {
-					// Skip the current item or items without elements
-					if (existingAsin === asin || !item.element || !item.element.parentNode) continue;
-
-					const existingPrice = parseFloat(item.data.etv_min) || 0;
-					if (newPrice > existingPrice) {
-						insertPosition = item.element;
-						break;
-					}
-				}
-
-				if (insertPosition) {
-					// Insert before the found position
-					this._gridContainer.insertBefore(notif, insertPosition);
-				} else {
-					// If no position found or item has highest price, append to the end
-					this._gridContainer.appendChild(notif);
-				}
-			}
-		}
-
-		return true;
 	}
 
 	async setETV(notif, etv) {
@@ -903,35 +1085,63 @@ class NotificationMonitor {
 		//Set the highlight color as needed
 		this.#processNotificationHighlight(notif);
 
-		this.disableGoldItemsForSilverUsers(notif);
+		this.#disableGoldItemsForSilverUsers(notif);
 	}
 
-	disableGoldItemsForSilverUsers(notif) {
-		if (!notif) {
-			return;
+	async #setETVFromASIN(asin, etv) {
+		// Store old ETV value to detect if reordering is needed
+		const oldETV = this._items.get(asin)?.data?.etv_min || 0;
+
+		// Update the data in our Map
+		if (!this.#updateItemETV(asin, etv)) {
+			return false;
 		}
 
-		if (!this._goldTier && notif.dataset.tier !== "silver") {
-			const etvObj = notif.querySelector("div.etv");
+		// Get the corresponding DOM element
+		const notif = this.#getItemDOMElement(asin);
+		if (!notif) {
+			return false;
+		}
 
-			if (this._etvLimit != null && parseFloat(etvObj.dataset.etvMin) > this._etvLimit) {
-				//Remove the See Details button for item outside the tier limit.
-				notif.querySelector(".vvp-details-btn")?.remove();
-				notif.querySelector(".vh-gold-tier-only")?.remove();
+		// Update the DOM element
+		this.setETV(notif, etv);
 
-				//Create a replacement button with no action linked it.
-				const btn = document.createElement("span");
-				btn.classList.add("a-button", "vh-gold-tier-only");
-				btn.innerText = "Gold tier only";
-				//Insert at the end of .vvp-item-tile-content
-				notif.querySelector(".vvp-item-tile-content").appendChild(btn);
+		// Re-position the item if using price sort and the value changed significantly
+		if (this._sortType === TYPE_PRICE) {
+			const newETV = this._items.get(asin)?.data?.etv_min || 0;
 
-				// Re-filter this item to apply gold tier filtering, ensuring it's hidden if the setting is enabled
-				if (Settings.get("notification.monitor.hideGoldNotificationsForSilverUser")) {
-					this.#processNotificationFiltering(notif);
+			// Only reposition if the ETV changed significantly enough to potentially affect order
+			if (Math.abs(newETV - oldETV) > 0.01) {
+				// Remove the element from DOM
+				notif.remove();
+
+				// Find the correct position to insert
+				const newPrice = parseFloat(newETV);
+				let insertPosition = null;
+
+				// Find the first item with a lower price
+				for (const [existingAsin, item] of this._items.entries()) {
+					// Skip the current item or items without elements
+					if (existingAsin === asin || !item.element || !item.element.parentNode) continue;
+
+					const existingPrice = parseFloat(item.data.etv_min) || 0;
+					if (newPrice > existingPrice) {
+						insertPosition = item.element;
+						break;
+					}
+				}
+
+				if (insertPosition) {
+					// Insert before the found position
+					this._gridContainer.insertBefore(notif, insertPosition);
+				} else {
+					// If no position found or item has highest price, append to the end
+					this._gridContainer.appendChild(notif);
 				}
 			}
 		}
+
+		return true;
 	}
 
 	setWebSocketStatus(status, message = null) {
@@ -1131,66 +1341,6 @@ class NotificationMonitor {
 		});
 	}
 
-	#processNotificationFiltering(node) {
-		if (!node) {
-			return false;
-		}
-
-		const notificationTypeZeroETV = parseInt(node.dataset.typeZeroETV) === 1;
-		const notificationTypeHighlight = parseInt(node.dataset.typeHighlight) === 1;
-		const queueType = node.dataset.queue;
-
-		//Feed Paused
-		if (node.dataset.feedPaused == "true") {
-			node.style.display = "none";
-			return false;
-		}
-
-		// Gold item filter for silver users
-		if (!this._goldTier && Settings.get("notification.monitor.hideGoldNotificationsForSilverUser")) {
-			const etvObj = node.querySelector("div.etv");
-			if (etvObj && this._etvLimit != null && parseFloat(etvObj.dataset.etvMin) > this._etvLimit) {
-				node.style.display = "none";
-				return false;
-			}
-		}
-
-		// Search filter - if search text is not empty, check if item matches
-		if (this._searchText.trim()) {
-			const title = node.querySelector(".a-truncate-full")?.innerText?.toLowerCase() || "";
-			if (!title.includes(this._searchText.toLowerCase().trim())) {
-				node.style.display = "none";
-				return false;
-			}
-		}
-
-		if (this._filterType == -1) {
-			node.style.display = this._lightMode ? "block" : "flex";
-		} else if (this._filterType == TYPE_HIGHLIGHT_OR_ZEROETV) {
-			node.style.display =
-				notificationTypeZeroETV || notificationTypeHighlight ? (this._lightMode ? "block" : "flex") : "none";
-		} else if (this._filterType == TYPE_HIGHLIGHT) {
-			node.style.display = notificationTypeHighlight ? (this._lightMode ? "block" : "flex") : "none";
-		} else if (this._filterType == TYPE_ZEROETV) {
-			node.style.display = notificationTypeZeroETV ? (this._lightMode ? "block" : "flex") : "none";
-		} else if (this._filterType == TYPE_REGULAR) {
-			node.style.display =
-				!notificationTypeZeroETV && !notificationTypeHighlight ? (this._lightMode ? "block" : "flex") : "none";
-		}
-
-		//Queue filter
-		if (node.style.display == "flex" || node.style.display == "block") {
-			if (this._filterQueue == "-1") {
-				return true;
-			} else {
-				node.style.display = queueType == this._filterQueue ? (this._lightMode ? "block" : "flex") : "none";
-				return queueType == this._filterQueue;
-			}
-		} else {
-			return false;
-		}
-	}
-
 	//############################################################
 	//## CLICK HANDLERS
 
@@ -1276,7 +1426,7 @@ class NotificationMonitor {
 		const highlightKW = e.target.dataset.highlightkw;
 		const blurKW = e.target.dataset.blurkw;
 		const queue = e.target.dataset.queue;
-		
+
 		let m = DialogMgr.newModal("item-details-" + asin);
 		m.title = "Item " + asin;
 		m.content = `
@@ -1374,161 +1524,6 @@ class NotificationMonitor {
 			second: "2-digit",
 			hour12: !Settings.get("notification.monitor.24hrsFormat"),
 		}).format(date);
-	}
-
-	#autoTruncate(forceRun = false) {
-		// Clear any existing debounce timer
-		if (this._autoTruncateDebounceTimer) {
-			clearTimeout(this._autoTruncateDebounceTimer);
-		}
-
-		// Run immediately if forced, otherwise debounce
-		const runTruncate = () => {
-			// Auto truncate
-			if (this._autoTruncateEnabled) {
-				const max = Settings.get("notification.monitor.autoTruncateLimit");
-				// Check if we need to truncate based on map size
-				if (this._items.size > max) {
-					logger.add(`NOTIF: Auto truncating item(s) from the page using the ${this._sortType} sort method.`);
-
-					// Convert map to array for sorting
-					const itemsArray = Array.from(this._items.entries()).map(([asin, item]) => ({
-						asin,
-						date: new Date(item.data.date),
-						price: parseFloat(item.data.etv_min) || 0,
-						element: item.element,
-					}));
-
-					// Sort according to current sort method, but reversed
-					// (we want to remove lowest price or oldest items)
-					if (this._sortType === TYPE_PRICE) {
-						itemsArray.sort((a, b) => a.price - b.price); // Sort lowest price first
-					} else {
-						itemsArray.sort((a, b) => a.date - b.date); // Sort oldest first (default)
-					}
-
-					// Identify which items to keep and which to remove
-					const itemsToKeep = itemsArray.slice(itemsArray.length - max);
-					const asinsToKeep = new Set(itemsToKeep.map((item) => item.asin));
-
-					// Use bulk removal method with the optimized approach for large sets
-					this.#bulkRemoveItems(asinsToKeep, true);
-				}
-			}
-		};
-
-		if (forceRun) {
-			runTruncate();
-		} else {
-			// Set a new debounce timer
-			this._autoTruncateDebounceTimer = setTimeout(runTruncate, 500); // 500ms debounce delay
-		}
-	}
-
-	// Clear all item-related data structures
-	#clearAllItemData() {
-		// Call bulkRemoveItems with empty set to keep (removing everything)
-		this.#bulkRemoveItems(new Set(), true);
-
-		// Additional reset operations specific to clearing all data
-		this._mostRecentItemDate = null;
-		if (this._mostRecentItemDateDOM) {
-			this._mostRecentItemDateDOM.innerText = "";
-		}
-	}
-
-	// Method for efficient bulk item removal or retention using container replacement
-	#bulkRemoveItems(asinsToKeep, isKeepSet = false) {
-		this.#preserveScrollPosition(() => {
-			// Always use the optimized container replacement approach
-			// Create a new empty container
-			const newContainer = this._gridContainer.cloneNode(false);
-
-			// Create a new items map to store the updated collection
-			const newItems = new Map();
-			const newImageUrls = new Set();
-
-			// Efficiently process all items
-			this._items.forEach((item, asin) => {
-				const shouldKeep = isKeepSet ? asinsToKeep.has(asin) : !asinsToKeep.has(asin);
-
-				if (shouldKeep && item.element) {
-					// Add this item to the new container
-					newContainer.appendChild(item.element);
-					newItems.set(asin, item);
-
-					// Keep track of the image URL for duplicate detection
-					if (item.data.img_url && Settings.get("notification.monitor.hideDuplicateThumbnail")) {
-						newImageUrls.add(item.data.img_url);
-					}
-				}
-			});
-
-			// Replace the old container with the new one
-			this._gridContainer.parentNode.replaceChild(newContainer, this._gridContainer);
-			this._gridContainer = newContainer;
-
-			// Reattach event listeners to the new container
-			this._createEventListeners();
-
-			// Update the data structures
-			this._items = newItems;
-			this._imageUrls = newImageUrls;
-		});
-
-		// Update the tab counter
-		this._updateTabTitle();
-	}
-
-	#clearAllVisibleItems() {
-		this.#preserveScrollPosition(() => {
-			// Get the asin of all visible items
-			const visibleItems = document.querySelectorAll(".vvp-item-tile:not([style*='display: none'])");
-			const asins = new Set();
-			visibleItems.forEach((item) => {
-				const asin = item.dataset.asin;
-				if (asin) {
-					asins.add(asin);
-				}
-			});
-			// Remove each visible item
-			this.#bulkRemoveItems(asins, false);
-		});
-	}
-
-	// Clear unavailable items
-	#clearUnavailableItems() {
-		// Get all unavailable ASINs
-		const unavailableAsins = new Set();
-		this._items.forEach((item, asin) => {
-			if (item.data.unavailable) {
-				unavailableAsins.add(asin);
-			}
-		});
-
-		// Use the bulk remove method, letting it decide the optimal approach
-		this.#bulkRemoveItems(unavailableAsins, false);
-	}
-
-	// Helper method to preserve scroll position during DOM operations
-	#preserveScrollPosition(callback) {
-		// Save current scroll position
-		const scrollPosition = window.scrollY;
-
-		// Execute the DOM operation
-		callback();
-
-		// Restore scroll position
-		window.scrollTo({
-			top: scrollPosition,
-			behavior: "auto", // Use "auto" instead of "smooth" to prevent visible jumping
-		});
-	}
-
-	// Check if an item is already pinned
-	async #checkIfPinned(asin) {
-		await PinnedList.getList(); // This will wait for the list to be loaded
-		return PinnedList.isPinned(asin);
 	}
 
 	_updateTabTitle() {
@@ -1737,7 +1732,7 @@ class NotificationMonitor {
 			this.#setServiceWorkerStatus(true, "Service worker is running.");
 		}
 		if (data.type == "newETV") {
-			this.setETVFromASIN(data.asin, data.etv);
+			this.#setETVFromASIN(data.asin, data.etv);
 		}
 		if (data.type == "wsOpen") {
 			this.setWebSocketStatus(true);
