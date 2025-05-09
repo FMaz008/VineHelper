@@ -1,18 +1,18 @@
 import { NotificationMonitor } from "./NotificationMonitor.js";
 
-import { Logger } from "./Logger.js";
+import { Logger } from "../Logger.js";
 var logger = new Logger();
 
-import { SettingsMgr } from "./SettingsMgr.js";
+import { SettingsMgr } from "../SettingsMgr.js";
 const Settings = new SettingsMgr();
 
-import { Template } from "./Template.js";
+import { Template } from "../Template.js";
 var Tpl = new Template();
 
-import { HookMgr } from "./HookMgr.js";
+import { HookMgr } from "../HookMgr.js";
 var hookMgr = new HookMgr();
 
-import { TileSizer } from "./TileSizer.js";
+import { TileSizer } from "../TileSizer.js";
 var tileSizer = new TileSizer("notification.monitor.tileSize");
 
 class NotificationMonitorV3 extends NotificationMonitor {

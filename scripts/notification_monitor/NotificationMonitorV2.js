@@ -1,15 +1,15 @@
 import { NotificationMonitor } from "./NotificationMonitor.js";
 
-import { Logger } from "./Logger.js";
+import { Logger } from "../Logger.js";
 var logger = new Logger();
 
-import { SettingsMgr } from "./SettingsMgr.js";
+import { SettingsMgr } from "../SettingsMgr.js";
 const Settings = new SettingsMgr();
 
-import { Template } from "./Template.js";
+import { Template } from "../Template.js";
 var Tpl = new Template();
 
-import { Internationalization } from "./Internationalization.js";
+import { Internationalization } from "../Internationalization.js";
 var i13n = new Internationalization();
 
 class NotificationMonitorV2 extends NotificationMonitor {

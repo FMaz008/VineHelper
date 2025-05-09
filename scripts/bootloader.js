@@ -40,7 +40,7 @@ var DialogMgr = new ModalMgr();
 
 import { News } from "./News.js";
 
-import { NotificationMonitorV3 } from "./NotificationMonitorV3.js";
+import { NotificationMonitorV3 } from "./notification_monitor/NotificationMonitorV3.js";
 
 import { Pagination } from "./Pagination.js";
 var pagination = new Pagination();
