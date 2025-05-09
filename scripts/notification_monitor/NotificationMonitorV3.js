@@ -6,6 +6,9 @@ var logger = new Logger();
 import { SettingsMgr } from "../SettingsMgr.js";
 const Settings = new SettingsMgr();
 
+import { Environment } from "../Environment.js";
+var env = new Environment();
+
 import { Template } from "../Template.js";
 var Tpl = new Template();
 
@@ -19,6 +22,17 @@ class NotificationMonitorV3 extends NotificationMonitor {
 	constructor() {
 		super();
 		this._tileSizer = tileSizer;
+	}
+
+	#updateGoldStatus() {
+		this._goldTier = env.getTierLevel("gold") === "gold";
+		logger.add("NOTIF: Gold tier: " + this._goldTier);
+
+		if (!this._goldTier) {
+			//Get the maximum allowed value
+			this._etvLimit = env.getSilverTierLimit();
+			logger.add("NOTIF: ETV limit: " + this._etvLimit);
+		}
 	}
 
 	async initialize() {
@@ -45,7 +59,7 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		this._createEventListeners();
 
 		//Check if the user is a gold tier user
-		this._updateGoldStatus();
+		this.#updateGoldStatus();
 
 		//Remove the item count
 		this._hideSelector("#vvp-items-grid-container>p");

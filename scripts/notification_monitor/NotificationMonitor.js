@@ -1,29 +1,17 @@
 import { Logger } from "../Logger.js";
-var logger = new Logger();
+const Log = new Logger();
+
 import { SettingsMgr } from "../SettingsMgr.js";
 const Settings = new SettingsMgr();
-import { Internationalization } from "../Internationalization.js";
-const i13n = new Internationalization();
-import { Environment } from "../Environment.js";
-var env = new Environment();
+
 import { Template } from "../Template.js";
-var Tpl = new Template();
+const Tpl = new Template();
+
 import { getRecommendationTypeFromQueue, generateRecommendationString } from "../Grid.js";
 import { YMDHiStoISODate } from "../DateHelper.js";
 import { keywordMatch } from "../service_worker/keywordMatch.js";
-import { NotificationsSoundPlayer } from "../NotificationsSoundPlayer.js";
-const SoundPlayer = new NotificationsSoundPlayer();
-import { PinnedListMgr } from "../PinnedListMgr.js";
-var PinnedList = new PinnedListMgr();
-import { ScreenNotifier, ScreenNotification } from "../ScreenNotifier.js";
-var Notifications = new ScreenNotifier();
 import { unescapeHTML, removeSpecialHTML } from "../StringHelper.js";
-import { Tooltip } from "../Tooltip.js";
-var tooltip = new Tooltip();
-import { BrendaAnnounceQueue } from "../BrendaAnnounce.js";
-var brendaAnnounceQueue = new BrendaAnnounceQueue();
-import { ModalMgr } from "../ModalMgr.js";
-var DialogMgr = new ModalMgr();
+import { MonitorLib } from "./MonitorLib.js";
 
 //const TYPE_SHOW_ALL = -1;
 const TYPE_REGULAR = 0;
@@ -34,17 +22,14 @@ const TYPE_HIGHLIGHT_OR_ZEROETV = 9;
 const TYPE_DATE = "date";
 const TYPE_PRICE = "price";
 
-
-
-
-class NotificationMonitor {
+class NotificationMonitor extends MonitorLib {
 	_feedPaused = false;
-	_feedPausedAmountStored;
+	_feedPausedAmountStored = 0;
 	_fetchingRecentItems;
 	_serviceWorkerStatusTimer;
 	_waitTimer; //Timer which wait a short delay to see if anything new is about to happen
-	_imageUrls; // Set of image URLs used for duplicate thumbnail detection (kept separate for O(1) lookup performance)
-	_items; // Combined map to store both item data and DOM elements
+	_imageUrls = new Set(); // Set of image URLs used for duplicate thumbnail detection (kept separate for O(1) lookup performance)
+	_items = new Map(); // Combined map to store both item data and DOM elements
 	_gridContainer = null;
 	_wsErrorMessage = null;
 	_firefox = false;
@@ -67,64 +52,19 @@ class NotificationMonitor {
 	_filterType = -1;
 	_sortType = TYPE_DATE;
 
-	async #defineFetchLimit() {
-		await Settings.waitForLoad();
-
-		//Define the fetch limit based on the user's tier
-		if (Settings.isPremiumUser(3)) {
-			this._fetchLimit = 300;
-		} else if (Settings.isPremiumUser(2)) {
-			this._fetchLimit = 200;
-		} else {
-			this._fetchLimit = 100;
-		}
+	async #initialize() {
+		this._fetchLimit = await this._getFetchLimit(); //MonitorLib
 	}
 
 	constructor() {
+		super(); //There is no parent constructor to call.
+
 		// Prevent direct instantiation of the abstract class
 		if (this.constructor === NotificationMonitor) {
 			throw new TypeError('Abstract class "NotificationMonitor" cannot be instantiated directly.');
 		}
 
-		this._imageUrls = new Set();
-		this._items = new Map(); // Initialize the combined map to store all item data and DOM elements
-		this._feedPausedAmountStored = 0;
-
-		this.#defineFetchLimit();
-	}
-
-	async _loadUIUserSettings() {
-		// Load settings from chrome.storage.local
-		await Settings.waitForLoad();
-
-		//Get the filter and sorting settings
-		this._autoTruncateEnabled = Settings.get("notification.monitor.autoTruncate");
-		this._filterQueue = Settings.get("notification.monitor.filterQueue");
-		this._filterType = Settings.get("notification.monitor.filterType");
-		this._sortType = Settings.get("notification.monitor.sortType");
-
-		// Update UI
-		const autoTruncateCheckbox = document.getElementById("auto-truncate");
-		if (autoTruncateCheckbox) autoTruncateCheckbox.checked = this._autoTruncateEnabled;
-
-		const autoTruncateLimit = document.getElementById("auto-truncate-limit");
-		if (autoTruncateLimit)
-			autoTruncateLimit.value = Settings.get("notification.monitor.autoTruncateLimit").toString();
-
-		const filterQueueSelect = document.querySelector("select[name='filter-queue']");
-		if (filterQueueSelect) filterQueueSelect.value = this._filterQueue;
-
-		const filterTypeSelect = document.querySelector("select[name='filter-type']");
-		if (filterTypeSelect) filterTypeSelect.value = this._filterType;
-
-		const sortQueueSelect = document.querySelector("select[name='sort-queue']");
-		if (sortQueueSelect) sortQueueSelect.value = this._sortType;
-	}
-
-	// Check if an item is already pinned
-	async #checkIfPinned(asin) {
-		await PinnedList.getList(); // This will wait for the list to be loaded
-		return PinnedList.isPinned(asin);
+		this.#initialize();
 	}
 
 	#processNotificationFiltering(node) {
@@ -232,21 +172,6 @@ class NotificationMonitor {
 		}
 	}
 
-	// Helper method to preserve scroll position during DOM operations
-	#preserveScrollPosition(callback) {
-		// Save current scroll position
-		const scrollPosition = window.scrollY;
-
-		// Execute the DOM operation
-		callback();
-
-		// Restore scroll position
-		window.scrollTo({
-			top: scrollPosition,
-			behavior: "auto", // Use "auto" instead of "smooth" to prevent visible jumping
-		});
-	}
-
 	#sortItems() {
 		// Only proceed if there are items to sort
 		if (this._items.size === 0) return;
@@ -339,7 +264,7 @@ class NotificationMonitor {
 	}
 
 	#bulkRemoveItems(asinsToKeep, isKeepSet = false) {
-		this.#preserveScrollPosition(() => {
+		this._preserveScrollPosition(() => {
 			// Always use the optimized container replacement approach
 			// Create a new empty container
 			const newContainer = this._gridContainer.cloneNode(false);
@@ -393,7 +318,7 @@ class NotificationMonitor {
 				const max = Settings.get("notification.monitor.autoTruncateLimit");
 				// Check if we need to truncate based on map size
 				if (this._items.size > max) {
-					logger.add(`NOTIF: Auto truncating item(s) from the page using the ${this._sortType} sort method.`);
+					Log.add(`NOTIF: Auto truncating item(s) from the page using the ${this._sortType} sort method.`);
 
 					// Convert map to array for sorting
 					const itemsArray = Array.from(this._items.entries()).map(([asin, item]) => ({
@@ -432,7 +357,7 @@ class NotificationMonitor {
 	// Method for efficient bulk item removal or retention using container replacement
 
 	#clearAllVisibleItems() {
-		this.#preserveScrollPosition(() => {
+		this._preserveScrollPosition(() => {
 			// Get the asin of all visible items
 			const visibleItems = document.querySelectorAll(".vvp-item-tile:not([style*='display: none'])");
 			const asins = new Set();
@@ -461,99 +386,17 @@ class NotificationMonitor {
 		this.#bulkRemoveItems(unavailableAsins, false);
 	}
 
-	_updateTabFavicon() {
-		const favicon = document.querySelector("link[rel~='icon']");
-		if (favicon) {
-			favicon.href = "https://vinehelper.ovh/favicon.ico";
-		} else {
-			const link = document.createElement("link");
-			link.rel = "icon"; // Specify the relationship type
-			link.href = "https://vinehelper.ovh/favicon.ico";
-			document.head.appendChild(link);
-		}
-	}
-
-	_hideSelector(selector) {
-		try {
-			document.querySelectorAll(selector).forEach((elem) => {
-				elem.style.display = "none";
-			});
-		} catch (err) {
-			//Do nothing
-		}
-	}
-
-	_updateGoldStatus() {
-		this._goldTier = env.getTierLevel("gold") === "gold";
-		logger.add("NOTIF: Gold tier: " + this._goldTier);
-
-		if (!this._goldTier) {
-			//Get the maximum allowed value
-			this._etvLimit = env.getSilverTierLimit();
-			logger.add("NOTIF: ETV limit: " + this._etvLimit);
-		}
-	}
-
-	async #enableItem(notif) {
-		if (!notif) {
-			return false;
-		}
-		notif.style.opacity = "1";
-		notif.style.filter = "brightness(1)";
-		notif.querySelector(".unavailable-banner")?.remove();
-	}
-
-	async #disableItem(notif) {
-		if (!notif) {
+	async addTileInGrid(itemData) {
+		if (!itemData) {
 			return false;
 		}
 
-		//Remove the banner if it already existed
-		notif.querySelector(".unavailable-banner")?.remove();
-
-		//Add a new banner
-		const banner = document.createElement("div");
-		banner.classList.add("unavailable-banner");
-		banner.innerText = "Unavailable";
-		banner.style.isolation = "isolate"; // This prevents the banner from inheriting the filter effects
-		const imgContainer = notif.querySelector(".vh-img-container");
-		imgContainer.insertBefore(banner, imgContainer.firstChild);
-
-		notif.style.opacity = "0.5";
-		notif.style.filter = "brightness(0.7)";
-	}
-
-	async addTileInGrid(
-		asin,
-		queue,
-		tier,
-		date,
-		title,
-		img_url,
-		is_parent_asin,
-		enrollment_guid,
-		etv_min,
-		etv_max,
-		reason,
-		highlightKW,
-		KWsMatch,
-		blurKW,
-		BlurKWsMatch,
-		unavailable
-	) {
-		if (!asin) {
-			return false;
-		}
-
-		title = unescapeHTML(unescapeHTML(title));
-
-		const recommendationType = getRecommendationTypeFromQueue(queue); //grid.js
-		const recommendationId = generateRecommendationString(recommendationType, asin, enrollment_guid); //grid.js
-
-		//Convert server date time to local date time
-		date = new Date(YMDHiStoISODate(date));
-		// Create the item data object
-		const itemData = {
+		itemData.unavailable = itemData.unavailable == 1;
+		itemData.typeHighlight = itemData.KWsMatch ? 1 : 0;
+		itemData.typeZeroETV = itemData.etv_min !== null && parseFloat(itemData.etv_min) === 0 ? 1 : 0;
+		itemData.title = unescapeHTML(unescapeHTML(itemData.title));
+		itemData.date = new Date(YMDHiStoISODate(itemData.date)); //Convert server date time to local date time
+		const {
 			asin,
 			queue,
 			tier,
@@ -569,18 +412,17 @@ class NotificationMonitor {
 			KWsMatch,
 			blurKW,
 			BlurKWsMatch,
-			unavailable: unavailable == 1,
-			recommendationType,
-			recommendationId,
-			typeHighlight: KWsMatch ? 1 : 0,
-			typeZeroETV: etv_min !== null && parseFloat(etv_min) === 0 ? 1 : 0,
-		};
+			unavailable,
+		} = itemData;
+
+		const recommendationType = getRecommendationTypeFromQueue(queue); //grid.js
+		const recommendationId = generateRecommendationString(recommendationType, asin, enrollment_guid); //grid.js
 
 		// If the notification already exists, update the data and return the existing DOM element
 		if (this.#hasItem(asin)) {
 			const element = this.#getItemDOMElement(asin);
 			if (element) {
-				logger.add(`NOTIF: Item ${asin} already exists, updating RecommendationId.`);
+				Log.add(`NOTIF: Item ${asin} already exists, updating RecommendationId.`);
 				// Update the data
 				this.#addItemData(asin, itemData);
 
@@ -593,7 +435,7 @@ class NotificationMonitor {
 				}
 
 				if (!itemData.unavailable) {
-					this.#enableItem(element);
+					this._enableItem(element);
 				}
 				return element;
 			}
@@ -617,17 +459,17 @@ class NotificationMonitor {
 			is_parent_asin != null &&
 			enrollment_guid != null
 		) {
-			search_url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`;
+			search_url = `https://www.amazon.${this._i13nMgr.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`;
 		} else {
 			let truncatedTitle = title.length > 40 ? title.substr(0, 40).split(" ").slice(0, -1).join(" ") : title;
 			truncatedTitle = removeSpecialHTML(truncatedTitle);
 			const search_url_slug = encodeURIComponent(truncatedTitle);
-			search_url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search_url_slug}`;
+			search_url = `https://www.amazon.${this._i13nMgr.getDomainTLD()}/vine/vine-items?search=${search_url_slug}`;
 		}
 
 		let prom2 = await Tpl.loadFile("view/" + this._itemTemplateFile);
 		Tpl.setVar("id", asin);
-		Tpl.setVar("domain", i13n.getDomainTLD());
+		Tpl.setVar("domain", this._i13nMgr.getDomainTLD());
 		Tpl.setVar("img_url", img_url);
 		Tpl.setVar("asin", asin);
 		Tpl.setVar("tier", tier);
@@ -656,7 +498,7 @@ class NotificationMonitor {
 
 		// Check if the item is already pinned and update the pin icon
 		if (Settings.get("pinnedTab.active")) {
-			const isPinned = await this.#checkIfPinned(asin);
+			const isPinned = await this._checkIfPinned(asin);
 			if (isPinned) {
 				const pinIcon = tileDOM.querySelector(".vh-icon-pin");
 				if (pinIcon) {
@@ -666,7 +508,7 @@ class NotificationMonitor {
 			}
 		}
 
-		this.#preserveScrollPosition(() => {
+		this._preserveScrollPosition(() => {
 			// Insert the tile based on sort type
 			if (this._sortType === TYPE_PRICE) {
 				if (etv_min !== null) {
@@ -714,7 +556,7 @@ class NotificationMonitor {
 		//Add tool tip to the truncated item title link
 		if (!this._lightMode && Settings.get("general.displayFullTitleTooltip")) {
 			const titleDOM = tileDOM.querySelector(".a-link-normal");
-			tooltip.addTooltip(titleDOM, title);
+			this._tooltipMgr.addTooltip(titleDOM, title);
 		}
 
 		//If the feed is paused, up the counter and rename the Resume button
@@ -738,7 +580,7 @@ class NotificationMonitor {
 
 		//Process the bluring
 		if (BlurKWsMatch) {
-			this.#blurItemFound(tileDOM);
+			this._blurItemFound(tileDOM);
 		}
 
 		//If we received ETV data (ie: Fetch last 100), process them
@@ -761,11 +603,11 @@ class NotificationMonitor {
 
 		//If unavailable, change opacity
 		if (unavailable == 1) {
-			this.#disableItem(tileDOM);
+			this._disableItem(tileDOM);
 		}
 
 		//Set the highlight color as needed
-		this.#processNotificationHighlight(tileDOM);
+		this._processNotificationHighlight(tileDOM);
 
 		//Check gold tier status for this item
 		this.#disableGoldItemsForSilverUsers(tileDOM);
@@ -857,7 +699,7 @@ class NotificationMonitor {
 		// Handle report icon
 		if (
 			_handleIconClick(".vh-icon-report", () => {
-				this.#handleReportClick(e);
+				this._handleReportClick(e);
 			})
 		)
 			return;
@@ -919,7 +761,7 @@ class NotificationMonitor {
 
 				//Store the function reference as a property on the element
 				window.open(
-					`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`,
+					`https://www.amazon.${this._i13nMgr.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`,
 					"_blank"
 				);
 
@@ -932,10 +774,6 @@ class NotificationMonitor {
 				}
 			}
 		}
-	}
-
-	_currentDateTime() {
-		return new Date();
 	}
 
 	// Add or update item data in the Map
@@ -1003,7 +841,7 @@ class NotificationMonitor {
 		// Remove the tooltip
 		const a = tile.querySelector(".a-link-normal");
 		if (a) {
-			tooltip.removeTooltip(a);
+			this._tooltipMgr.removeTooltip(a);
 		}
 
 		// Remove from data structures
@@ -1015,7 +853,7 @@ class NotificationMonitor {
 		}
 
 		// Remove the element from DOM with scroll position preserved
-		this.#preserveScrollPosition(() => {
+		this._preserveScrollPosition(() => {
 			tile.remove();
 		});
 		tile = null;
@@ -1048,10 +886,10 @@ class NotificationMonitor {
 		if (etvObj.dataset.etvMin != "" && etvObj.dataset.etvMax != "") {
 			etvObj.style.display = this._lightMode ? "inline-block" : "block";
 			if (etvObj.dataset.etvMin == etvObj.dataset.etvMax) {
-				etvTxt.innerText = this.#formatETV(etvObj.dataset.etvMin);
+				etvTxt.innerText = this._formatETV(etvObj.dataset.etvMin);
 			} else {
 				etvTxt.innerText =
-					this.#formatETV(etvObj.dataset.etvMin) + "-" + this.#formatETV(etvObj.dataset.etvMax);
+					this._formatETV(etvObj.dataset.etvMin) + "-" + this._formatETV(etvObj.dataset.etvMax);
 			}
 		}
 
@@ -1097,7 +935,7 @@ class NotificationMonitor {
 					);
 					if (val2 !== false) {
 						//Remove (permanently "hide") the tile
-						logger.add(`NOTIF: Item ${asin} matched hide keyword ${val2}. Hidding it.`);
+						Log.add(`NOTIF: Item ${asin} matched hide keyword ${val2}. Hidding it.`);
 						this.#removeTile(notif, asin);
 					}
 				}
@@ -1110,7 +948,7 @@ class NotificationMonitor {
 		}
 
 		//Set the highlight color as needed
-		this.#processNotificationHighlight(notif);
+		this._processNotificationHighlight(notif);
 
 		this.#disableGoldItemsForSilverUsers(notif);
 	}
@@ -1230,13 +1068,13 @@ class NotificationMonitor {
 				false,
 				"You need to enable the notifications in VineHelper's plugin settings, under the 'Notifications' tab."
 			);
-		} else if (i13n.getCountryCode() === null) {
+		} else if (this._i13nMgr.getCountryCode() === null) {
 			this._setServiceWorkerStatus(false, "Your country has not been detected, load a vine page first.");
-		} else if (i13n.getDomainTLD() === null) {
+		} else if (this._i13nMgr.getDomainTLD() === null) {
 			this._setServiceWorkerStatus(
 				false,
 				"No valid country found. You current country is detected as: '" +
-					i13n.getCountryCode() +
+					this._i13nMgr.getCountryCode() +
 					"', which is not currently supported by Vine Helper. Reach out so we can add it!"
 			);
 		} else if (Settings.get("notification.active")) {
@@ -1277,14 +1115,14 @@ class NotificationMonitor {
 
 		//Play the zero ETV sound effect
 		if ((tileVisible || this._fetchingRecentItems) && playSoundEffect) {
-			SoundPlayer.play(TYPE_ZEROETV);
+			this._soundPlayerMgr.play(TYPE_ZEROETV);
 		}
 
 		//Move the notification to the top only if we're not using price-based sorting
 		if (!this._fetchingRecentItems) {
 			// Only move to top if we're NOT using price sort
 			if (this._sortType !== TYPE_PRICE && Settings.get("notification.monitor.bump0ETV")) {
-				this.#moveNotifToTop(notif);
+				this._moveNotifToTop(notif);
 			} else {
 				// If sorting by price is active, just resort after identifying as zero ETV
 				this.#processNotificationSorting();
@@ -1302,12 +1140,12 @@ class NotificationMonitor {
 
 		//Play the highlight sound effect
 		if ((tileVisible || this._fetchingRecentItems) && playSoundEffect) {
-			SoundPlayer.play(TYPE_HIGHLIGHT);
+			this._soundPlayerMgr.play(TYPE_HIGHLIGHT);
 		}
 
 		//Move the notification to the top
 		if (!this._fetchingRecentItems) {
-			this.#moveNotifToTop(notif);
+			this._moveNotifToTop(notif);
 		}
 	}
 
@@ -1320,55 +1158,14 @@ class NotificationMonitor {
 
 		//Play the regular notification sound effect.
 		if ((tileVisible || this._fetchingRecentItems) && playSoundEffect) {
-			SoundPlayer.play(TYPE_REGULAR);
+			this._soundPlayerMgr.play(TYPE_REGULAR);
 		}
-	}
-
-	#processNotificationHighlight(notif) {
-		const etvObj = notif.querySelector("div.etv");
-
-		const isHighlighted =
-			notif.dataset.typeHighlight == 1 && Settings.get("notification.monitor.highlight.colorActive");
-		const isZeroETV = notif.dataset.typeZeroETV == 1 && Settings.get("notification.monitor.zeroETV.colorActive");
-		const isUnknownETV = etvObj.dataset.etvMax == "" && Settings.get("notification.monitor.unknownETV.colorActive");
-
-		const highlightColor = Settings.get("notification.monitor.highlight.color");
-		const zeroETVColor = Settings.get("notification.monitor.zeroETV.color");
-		const unknownETVColor = Settings.get("notification.monitor.unknownETV.color");
-
-		if (isZeroETV && isHighlighted) {
-			const color1 = zeroETVColor;
-			const color2 = highlightColor;
-			notif.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;
-		} else if (isUnknownETV && isHighlighted) {
-			const color1 = unknownETVColor;
-			const color2 = highlightColor;
-			notif.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;
-		} else if (isHighlighted) {
-			notif.style.backgroundColor = highlightColor;
-		} else if (isZeroETV) {
-			notif.style.backgroundColor = zeroETVColor;
-		} else if (isUnknownETV) {
-			notif.style.backgroundColor = unknownETVColor;
-		} else {
-			notif.style.backgroundColor = "unset";
-		}
-	}
-
-	#blurItemFound(notif) {
-		if (!notif) {
-			return false;
-		}
-
-		//Blur the thumbnail and title
-		notif.querySelector(".vh-img-container>img")?.classList.add("blur");
-		notif.querySelector(".vvp-item-product-title-container>a")?.classList.add("dynamic-blur");
 	}
 
 	#processNotificationSorting() {
 		const container = document.getElementById("vvp-items-grid");
 
-		this.#preserveScrollPosition(() => {
+		this._preserveScrollPosition(() => {
 			// Sort the items - reuse the sorting logic from #sortItems
 			const sortedItems = this.#sortItems();
 
@@ -1401,7 +1198,7 @@ class NotificationMonitor {
 		e.preventDefault();
 
 		const asin = e.target.dataset.asin;
-		logger.add(`NOTIF: Hiding icon clicked for item ${asin}`);
+		Log.add(`NOTIF: Hiding icon clicked for item ${asin}`);
 
 		// Get the DOM element from our Map
 		const tile = this.#getItemDOMElement(asin);
@@ -1418,7 +1215,7 @@ class NotificationMonitor {
 
 		let etv = document.querySelector("#vh-notification-" + asin + " .etv").dataset.etvMax;
 
-		brendaAnnounceQueue.announce(asin, etv, queue, i13n.getDomainTLD());
+		this._brendaMgr.announce(asin, etv, queue, this._i13nMgr.getDomainTLD());
 	}
 
 	#handlePinClick(e) {
@@ -1430,20 +1227,18 @@ class NotificationMonitor {
 
 		if (isPinned) {
 			// Unpin the item
-			PinnedList.removeItem(asin);
+			this._pinnedListMgr.removeItem(asin);
 
 			// Update the icon
 			e.target.classList.remove("vh-icon-pin-active");
 			e.target.title = "Pin this item";
 
 			// Display notification
-			Notifications.pushNotification(
-				new ScreenNotification({
-					title: `Item ${asin} unpinned.`,
-					lifespan: 3,
-					content: title,
-				})
-			);
+			this._displayToasterNotification({
+				title: `Item ${asin} unpinned.`,
+				lifespan: 3,
+				content: title,
+			});
 		} else {
 			// Pin the item
 			const isParentAsin = e.target.dataset.isParentAsin;
@@ -1451,20 +1246,17 @@ class NotificationMonitor {
 			const queue = e.target.dataset.queue;
 			const thumbnail = e.target.dataset.thumbnail;
 
-			PinnedList.addItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID);
+			this._pinnedListMgr.addItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID);
 
 			// Update the icon
 			e.target.classList.add("vh-icon-pin-active");
 			e.target.title = "Unpin this item";
 
-			// Display notification
-			Notifications.pushNotification(
-				new ScreenNotification({
-					title: `Item ${asin} pinned.`,
-					lifespan: 3,
-					content: title,
-				})
-			);
+			this._displayToasterNotification({
+				title: `Item ${asin} pinned.`,
+				lifespan: 3,
+				content: title,
+			});
 		}
 	}
 
@@ -1480,7 +1272,7 @@ class NotificationMonitor {
 		const blurKW = e.target.dataset.blurkw;
 		const queue = e.target.dataset.queue;
 
-		let m = DialogMgr.newModal("item-details-" + asin);
+		let m = this._dialogMgr.newModal("item-details-" + asin);
 		m.title = "Item " + asin;
 		m.content = `
 			<ul style="margin-bottom: 10px;">
@@ -1496,106 +1288,11 @@ class NotificationMonitor {
 		m.show();
 	}
 
-	#handleReportClick(e) {
-		e.preventDefault(); // Prevent the default click behavior
-		const asin = e.target.dataset.asin;
-
-		let val = prompt(
-			"Are you sure you want to REPORT the user who posted ASIN#" +
-				asin +
-				"?\n" +
-				"Only report notifications which are not Amazon products\n" +
-				"Note: False reporting may get you banned.\n\n" +
-				"type REPORT in the field below to send a report:"
-		);
-		if (val !== null && val.toLowerCase() == "report") {
-			this.#send_report(asin);
-		}
-	}
-
-	#send_report(asin) {
-		let manifest = chrome.runtime.getManifest();
-
-		const content = {
-			api_version: 5,
-			app_version: manifest.version,
-			country: i13n.getCountryCode(),
-			action: "report_asin",
-			uuid: Settings.get("general.uuid", false),
-			asin: asin,
-		};
-		const options = {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(content),
-		};
-
-		showRuntime("Sending report...");
-
-		//Send the report to VH's server
-		fetch(VINE_HELPER_API_V5_URL, options).then(function () {
-			alert("Report sent. Thank you.");
-		});
-	}
-
 	//#######################################################
 	//## UTILITY METHODS
 
-	#moveNotifToTop(notif) {
-		const container = document.getElementById("vvp-items-grid");
-
-		this.#preserveScrollPosition(() => {
-			// Insert the notification at the top
-			container.insertBefore(notif, container.firstChild);
-		});
-	}
-
 	#getNotificationByASIN(asin) {
 		return this._items.get(asin)?.element;
-	}
-
-	#formatETV(etv) {
-		let formattedETV = "";
-		if (etv != null) {
-			formattedETV = new Intl.NumberFormat(i13n.getLocale(), {
-				style: "currency",
-				currency: i13n.getCurrency(),
-			}).format(etv);
-		}
-		return formattedETV;
-	}
-
-	_formatDate(date = null) {
-		if (date == null) {
-			date = new Date();
-		}
-		return new Intl.DateTimeFormat(i13n.getLocale(), {
-			month: "2-digit",
-			day: "2-digit",
-			hour: "2-digit",
-			minute: "2-digit",
-			second: "2-digit",
-			hour12: !Settings.get("notification.monitor.24hrsFormat"),
-		}).format(date);
-	}
-
-	_updateTabTitle() {
-		// Count visible items based on current filters
-		let visibleCount = 0;
-
-		// Loop through all items
-		for (const [asin, item] of this._items.entries()) {
-			// Skip items without DOM elements
-			if (!item.element) continue;
-
-			// Skip items hidden by style
-			if (window.getComputedStyle(item.element).display === "none") continue;
-
-			visibleCount++;
-		}
-
-		// Update the tab title
-		document.title = "VHNM (" + visibleCount + ")";
 	}
 
 	_listeners() {
@@ -1648,7 +1345,7 @@ class NotificationMonitor {
 		btnClearMonitor.addEventListener("click", async (event) => {
 			//Delete all items from the grid
 			if (confirm("Clear all visible items?")) {
-				this.#preserveScrollPosition(() => {
+				this._preserveScrollPosition(() => {
 					this.#clearAllVisibleItems();
 				});
 				this._updateTabTitle();
@@ -1821,49 +1518,15 @@ class NotificationMonitor {
 
 			// Then update the DOM
 			const notif = this.#getItemDOMElement(data.asin);
-			this.#disableItem(notif);
+			this._disableItem(notif);
 		}
 		if (data.type == "newItem") {
-			await this.addTileInGrid(
-				data.asin,
-				data.queue,
-				data.tier,
-				data.date,
-				data.title,
-				data.img_url,
-				data.is_parent_asin,
-				data.enrollment_guid,
-				data.etv_min,
-				data.etv_max,
-				data.reason,
-				data.KW,
-				data.KWsMatch,
-				data.BlurKW,
-				data.BlurKWsMatch,
-				data.unavailable
-			);
+			await this.addTileInGrid(data);
 		}
 		if (data.type == "fetch100") {
 			for (const item of data.data) {
 				if (item.type == "newItem") {
-					await this.addTileInGrid(
-						item.asin,
-						item.queue,
-						item.tier,
-						item.date,
-						item.title,
-						item.img_url,
-						item.is_parent_asin,
-						item.enrollment_guid,
-						item.etv_min,
-						item.etv_max,
-						item.reason,
-						item.KW,
-						item.KWsMatch,
-						item.BlurKW,
-						item.BlurKWsMatch,
-						item.unavailable
-					);
+					await this.addTileInGrid(item);
 				} else if (item.type == "fetchRecentItemsEnd") {
 					if (this._feedPaused) {
 						//Unbuffer the feed
