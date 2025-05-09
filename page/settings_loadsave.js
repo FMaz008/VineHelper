@@ -142,15 +142,7 @@ async function initiateSettings() {
 			body: JSON.stringify(content),
 		}).then(async function (response) {
 			const data = await response.json();
-			document.getElementById("itemsFound").innerText =
-				data.items_found == undefined
-					? "N/A"
-					: data.items_found +
-						" (Reliability score: " +
-						(data.items_found < 10 || typeof data.items_found_ratio === "undefined"
-							? "N/A"
-							: Math.round(data.items_found_ratio * 100) + "%") +
-						")";
+			document.getElementById("itemsFound").innerText = data.items_found == undefined ? "N/A" : data.items_found;
 			document.getElementById("itemsFoundRank").innerText =
 				data.items_found_rank == undefined ? "N/A" : data.items_found_rank + rankSuffix(data.items_found_rank);
 			document.getElementById("etvFound").innerText = data.etv_found == undefined ? "N/A" : data.etv_found;
