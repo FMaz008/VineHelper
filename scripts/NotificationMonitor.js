@@ -215,6 +215,17 @@ class NotificationMonitor {
 					this.#processNotificationFiltering(notif);
 				}
 			}
+		} else {
+			if (updateTier) {
+				const vvpDetailsBtn = notif.querySelector(".vvp-details-btn");
+				if (vvpDetailsBtn) {
+					vvpDetailsBtn.style.display = "unset";
+				}
+				const vhGoldTierOnly = notif.querySelector(".vh-gold-tier-only");
+				if (vhGoldTierOnly) {
+					vhGoldTierOnly.remove();
+				}
+			}
 		}
 	}
 
@@ -306,6 +317,19 @@ class NotificationMonitor {
 		// Update the Map
 		this._items.set(asin, item);
 		// Sort the items after adding or updating a new item
+		this.#sortItems();
+
+		return true;
+	}
+
+	#updateItemTier(asin, tier) {
+		if (!this._items.has(asin)) {
+			return false;
+		}
+
+		const item = this._items.get(asin);
+		item.data.tier = tier;
+		this._items.set(asin, item);
 		this.#sortItems();
 
 		return true;
@@ -1088,6 +1112,32 @@ class NotificationMonitor {
 		this.#disableGoldItemsForSilverUsers(notif);
 	}
 
+	async #setTierFromASIN(asin, tier) {
+		if (!this._items.has(asin)) {
+			return false;
+		}
+
+		if (!this.#updateItemTier(asin, tier)) {
+			return false;
+		}
+
+		// Get the corresponding DOM element
+		const notif = this.#getItemDOMElement(asin);
+		if (!notif) {
+			return false;
+		}
+
+		// Update the DOM element
+		notif.dataset.tier = tier;
+		const vvpDetailsBtn = notif.querySelector(".vvp-details-btn");
+		if (vvpDetailsBtn) {
+			vvpDetailsBtn.dataset.tier = tier;
+		}
+
+		this.#processNotificationFiltering(notif);
+
+		return true;
+	}
 	async #setETVFromASIN(asin, etv) {
 		// Store old ETV value to detect if reordering is needed
 		const oldETV = this._items.get(asin)?.data?.etv_min || 0;
@@ -1733,6 +1783,9 @@ class NotificationMonitor {
 		}
 		if (data.type == "newETV") {
 			this.#setETVFromASIN(data.asin, data.etv);
+		}
+		if (data.type == "newTier") {
+			this.#setTierFromASIN(data.asin, data.tier);
 		}
 		if (data.type == "wsOpen") {
 			this.setWebSocketStatus(true);
