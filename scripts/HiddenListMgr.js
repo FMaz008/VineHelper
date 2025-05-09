@@ -28,7 +28,7 @@ class HiddenListMgr {
 		this.mapHidden = new Map();
 		this.arrChanges = [];
 		this.listLoaded = false;
-		this.broadcast = new BroadcastChannel("vine_helper");
+		this.broadcast = new BroadcastChannel("VineHelper");
 
 		logger.add("HIDDENMGR: Loading list");
 		this.loadFromLocalStorage(); //Can't be awaited

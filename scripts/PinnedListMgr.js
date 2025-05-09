@@ -26,7 +26,7 @@ class PinnedListMgr {
 		this.mapPin = new Map();
 		this.listLoaded = false;
 		this.arrChanges = [];
-		this.broadcast = new BroadcastChannel("vine_helper");
+		this.broadcast = new BroadcastChannel("VineHelper");
 
 		logger.add("PINNEDMGR: Loading list");
 		this.loadFromLocalStorage(); //Can't be awaited
