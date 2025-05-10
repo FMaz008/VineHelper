@@ -309,7 +309,7 @@ class NotificationMonitor extends MonitorCore {
 			this._gridContainer = newContainer;
 
 			// Reattach event listeners to the new container
-			this._createEventListeners();
+			this._createListeners(true);
 
 			// Update the data structures
 			this._items = newItems;
@@ -554,9 +554,9 @@ class NotificationMonitor extends MonitorCore {
 
 		// Check if the item is already pinned and update the pin icon
 		if (Settings.get("pinnedTab.active")) {
-			const isPinned = await this._checkIfPinned(asin);
+			const isPinned = await this._pinMgr.checkIfPinned(asin);
 			if (isPinned) {
-				this.pinItem(asin, queue, title, img_url, is_parent_asin ? "true" : "false", enrollment_guid);
+				this._pinMgr.pinItem(asin, queue, title, img_url, is_parent_asin ? "true" : "false", enrollment_guid);
 			}
 		}
 
@@ -1137,12 +1137,12 @@ class NotificationMonitor extends MonitorCore {
 		e.preventDefault();
 
 		const asin = e.target.dataset.asin;
-		const isPinned = await this._checkIfPinned(asin);
+		const isPinned = await this._pinMgr.checkIfPinned(asin);
 		const title = e.target.dataset.title;
 
 		if (isPinned) {
 			// Update the icon
-			this.unpinItem(asin);
+			this._pinMgr.unpinItem(asin);
 
 			// Display notification
 			this._displayToasterNotification({
@@ -1158,7 +1158,7 @@ class NotificationMonitor extends MonitorCore {
 			const thumbnail = e.target.dataset.thumbnail;
 
 			// Update the icon
-			this.pinItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID);
+			this._pinMgr.pinItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID);
 
 			this._displayToasterNotification({
 				title: `Item ${asin} pinned.`,
@@ -1198,9 +1198,13 @@ class NotificationMonitor extends MonitorCore {
 
 	//#######################################################
 
-	_createListeners() {
+	_createListeners(reattachGridContainerOnly = false) {
 		// Bind the click handler to the instance and then add as event listener
 		this._gridContainer.addEventListener("click", (e) => this.#clickHandler(e));
+
+		if (reattachGridContainerOnly) {
+			return;
+		}
 
 		//Track the control key, used to open SeeDetails in new tab
 		window.addEventListener(

@@ -7,7 +7,7 @@ const Settings = new SettingsMgr();
 import { Environment } from "../Environment.js";
 var env = new Environment();
 
-import { PinnedListMgr } from "../PinnedListMgr.js";
+import { Pin } from "./Pin.js";
 import { Internationalization } from "../Internationalization.js";
 import { ScreenNotifier, ScreenNotification } from "../ScreenNotifier.js";
 import { Tooltip } from "../Tooltip.js";
@@ -24,7 +24,8 @@ class MonitorCore {
 		}
 
 		this._i13nMgr = new Internationalization();
-		this._pinnedListMgr = new PinnedListMgr();
+		this._pinMgr = new Pin();
+		this._pinMgr.setGetItemDOMElementCallback(this.getItemDOMElement.bind(this));
 		this._notificationsMgr = new ScreenNotifier();
 		this._tooltipMgr = new Tooltip();
 		this._brendaMgr = new BrendaAnnounceQueue();
@@ -83,44 +84,6 @@ class MonitorCore {
 
 		const sortQueueSelect = document.querySelector("select[name='sort-queue']");
 		if (sortQueueSelect) sortQueueSelect.value = this._sortType;
-	}
-
-	// Check if an item is already pinned
-	async _checkIfPinned(asin) {
-		await this._pinnedListMgr.getList(); // This will wait for the list to be loaded
-		return this._pinnedListMgr.isPinned(asin);
-	}
-
-	async unpinItem(asin) {
-		// Unpin the item
-		this._pinnedListMgr.removeItem(asin);
-
-		// Update pin icon if this item was unpinned from another tab
-		const notif = this.getItemDOMElement(asin);
-		if (notif) {
-			const pinIcon = notif.querySelector("#vh-pin-link-" + asin + ">div");
-			if (pinIcon) {
-				pinIcon.classList.remove("vh-icon-unpin");
-				pinIcon.classList.add("vh-icon-pin");
-				pinIcon.title = "Pin this item";
-			}
-		}
-	}
-
-	async pinItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID) {
-		// Pin the item
-		this._pinnedListMgr.addItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID);
-
-		// Update pin icon if this item was unpinned from another tab
-		const notif = this.getItemDOMElement(asin);
-		if (notif) {
-			const pinIcon = notif.querySelector("#vh-pin-link-" + asin + ">div");
-			if (pinIcon) {
-				pinIcon.classList.remove("vh-icon-pin");
-				pinIcon.classList.add("vh-icon-unpin");
-				pinIcon.title = "Unpin this item";
-			}
-		}
 	}
 
 	_updateTabFavicon() {
