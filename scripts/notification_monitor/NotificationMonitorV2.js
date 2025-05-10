@@ -12,10 +12,10 @@ class NotificationMonitorV2 extends NotificationMonitor {
 	constructor() {
 		super();
 		this.#channel = new BroadcastChannel("VineHelper");
+		this._monitorV2 = true;
 	}
 
 	async initialize() {
-		this._lightMode = true;
 		this._itemTemplateFile = "tile_lightview.html";
 
 		// Wait for settings to load before proceeding

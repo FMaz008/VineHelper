@@ -65,7 +65,6 @@ class ServerCom {
 		if (data.type == undefined) {
 			return false;
 		}
-		console.log("ServerCom.processBroadcastMessage", data);
 
 		if (data.type == "pong") {
 			window.clearTimeout(this.#statusTimer);

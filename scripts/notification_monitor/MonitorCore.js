@@ -5,9 +5,8 @@ import { SettingsMgr } from "../SettingsMgr.js";
 const Settings = new SettingsMgr();
 
 import { Environment } from "../Environment.js";
-var env = new Environment();
 
-import { Pin } from "./Pin.js";
+import { PinMgr } from "./PinMgr.js";
 import { Internationalization } from "../Internationalization.js";
 import { ScreenNotifier, ScreenNotification } from "../ScreenNotifier.js";
 import { Tooltip } from "../Tooltip.js";
@@ -17,14 +16,21 @@ import { NotificationsSoundPlayer } from "../NotificationsSoundPlayer.js";
 import { ServerCom } from "./ServerCom.js";
 
 class MonitorCore {
+	//Variables linked to monitor V2 vs V3
+	_monitorV2 = false; //True if the monitor is in V2 mode
+	_monitorV3 = false; //True if the monitor is in V3 mode
+	_tileSizer = null; //The tile sizer tool for v3 monitor
+	_tierMgr = null; //The tier manager object
+
 	constructor() {
 		// Prevent direct instantiation of the abstract class
 		if (this.constructor === MonitorCore) {
 			throw new TypeError('Abstract class "MonitorLib" cannot be instantiated directly.');
 		}
 
+		this._env = new Environment();
 		this._i13nMgr = new Internationalization();
-		this._pinMgr = new Pin();
+		this._pinMgr = new PinMgr();
 		this._pinMgr.setGetItemDOMElementCallback(this.getItemDOMElement.bind(this));
 		this._notificationsMgr = new ScreenNotifier();
 		this._tooltipMgr = new Tooltip();
@@ -37,6 +43,7 @@ class MonitorCore {
 		this._serverComMgr.setFetchRecentItemsEndCallback(this.fetchRecentItemsEnd.bind(this));
 		this._serverComMgr.setSetETVFromASINCallback(this.setETVFromASIN.bind(this));
 		this._serverComMgr.setSetTierFromASINCallback(this.setTierFromASIN.bind(this));
+		
 	}
 
 	_currentDateTime() {
@@ -273,7 +280,7 @@ class MonitorCore {
 		};
 
 		//Send the report to VH's server
-		fetch(env.getAPIUrl(), options).then(function () {
+		fetch(this._env.getAPIUrl(), options).then(function () {
 			alert("Report sent. Thank you.");
 		});
 	}

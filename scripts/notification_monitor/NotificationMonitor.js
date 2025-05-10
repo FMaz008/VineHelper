@@ -34,14 +34,10 @@ class NotificationMonitor extends MonitorCore {
 	_firefox = false;
 	_mostRecentItemDate = null;
 	_mostRecentItemDateDOM = null;
-	_goldTier = true;
-	_etvLimit = null;
 	_itemTemplateFile = "tile_gridview.html";
-	_lightMode = false;
 	_fetchLimit = 100;
 	_searchText = ""; // Current search text
 	_searchDebounceTimer = null; // Timer for debouncing search
-	_tileSizer = null;
 	_autoTruncateDebounceTimer = null; // Timer for debouncing autoTruncate
 	_ctrlPress = false;
 	// UI User settings (will be loaded from storage)
@@ -81,9 +77,13 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Gold item filter for silver users
-		if (!this._goldTier && Settings.get("notification.monitor.hideGoldNotificationsForSilverUser")) {
+		if (this._monitorV3 && !this._tierMgr.isGold() && Settings.get("notification.monitor.hideGoldNotificationsForSilverUser")) {
 			const etvObj = node.querySelector("div.etv");
-			if (etvObj && this._etvLimit != null && parseFloat(etvObj.dataset.etvMin) > this._etvLimit) {
+			if (
+				etvObj &&
+				this._tierMgr.getSilverTierETVLimit() != null &&
+				parseFloat(etvObj.dataset.etvMin) > this._tierMgr.getSilverTierETVLimit()
+			) {
 				node.style.display = "none";
 				return false;
 			}
@@ -99,17 +99,17 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		if (this._filterType == -1) {
-			node.style.display = this._lightMode ? "block" : "flex";
+			node.style.display = this._monitorV2 ? "block" : "flex";
 		} else if (this._filterType == TYPE_HIGHLIGHT_OR_ZEROETV) {
 			node.style.display =
-				notificationTypeZeroETV || notificationTypeHighlight ? (this._lightMode ? "block" : "flex") : "none";
+				notificationTypeZeroETV || notificationTypeHighlight ? (this._monitorV2 ? "block" : "flex") : "none";
 		} else if (this._filterType == TYPE_HIGHLIGHT) {
-			node.style.display = notificationTypeHighlight ? (this._lightMode ? "block" : "flex") : "none";
+			node.style.display = notificationTypeHighlight ? (this._monitorV2 ? "block" : "flex") : "none";
 		} else if (this._filterType == TYPE_ZEROETV) {
-			node.style.display = notificationTypeZeroETV ? (this._lightMode ? "block" : "flex") : "none";
+			node.style.display = notificationTypeZeroETV ? (this._monitorV2 ? "block" : "flex") : "none";
 		} else if (this._filterType == TYPE_REGULAR) {
 			node.style.display =
-				!notificationTypeZeroETV && !notificationTypeHighlight ? (this._lightMode ? "block" : "flex") : "none";
+				!notificationTypeZeroETV && !notificationTypeHighlight ? (this._monitorV2 ? "block" : "flex") : "none";
 		}
 
 		//Queue filter
@@ -117,7 +117,7 @@ class NotificationMonitor extends MonitorCore {
 			if (this._filterQueue == "-1") {
 				return true;
 			} else {
-				node.style.display = queueType == this._filterQueue ? (this._lightMode ? "block" : "flex") : "none";
+				node.style.display = queueType == this._filterQueue ? (this._monitorV2 ? "block" : "flex") : "none";
 				return queueType == this._filterQueue;
 			}
 		} else {
@@ -130,10 +130,13 @@ class NotificationMonitor extends MonitorCore {
 			return;
 		}
 
-		if (!this._goldTier && notif.dataset.tier !== "silver") {
+		if (this._monitorV3 && !this._tierMgr.isGold() && notif.dataset.tier !== "silver") {
 			const etvObj = notif.querySelector("div.etv");
 
-			if (this._etvLimit != null && parseFloat(etvObj.dataset.etvMin) > this._etvLimit) {
+			if (
+				this._tierMgr.getSilverTierETVLimit() != null &&
+				parseFloat(etvObj.dataset.etvMin) > this._tierMgr.getSilverTierETVLimit()
+			) {
 				//Remove the See Details button for item outside the tier limit.
 				const vvpDetailsBtn = notif.querySelector(".vvp-details-btn");
 				if (vvpDetailsBtn) {
@@ -561,11 +564,11 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		//Set the tile custom dimension according to the settings.
-		if (!this._lightMode && !Settings.get("notification.monitor.listView")) {
+		if (!this._monitorV2 && !Settings.get("notification.monitor.listView")) {
 			this._tileSizer.adjustAll(tileDOM);
 		}
 		//Add tool tip to the truncated item title link
-		if (!this._lightMode && Settings.get("general.displayFullTitleTooltip")) {
+		if (!this._monitorV2 && Settings.get("general.displayFullTitleTooltip")) {
 			const titleDOM = tileDOM.querySelector(".a-link-normal");
 			this._tooltipMgr.addTooltip(titleDOM, title);
 		}
@@ -869,7 +872,7 @@ class NotificationMonitor extends MonitorCore {
 
 		//Display for formatted ETV in the toolbar
 		if (etvObj.dataset.etvMin != "" && etvObj.dataset.etvMax != "") {
-			etvObj.style.display = this._lightMode ? "inline-block" : "block";
+			etvObj.style.display = this._monitorV2 ? "inline-block" : "block";
 			if (etvObj.dataset.etvMin == etvObj.dataset.etvMax) {
 				etvTxt.innerText = this._formatETV(etvObj.dataset.etvMin);
 			} else {

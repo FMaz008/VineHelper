@@ -1,13 +1,7 @@
 import { NotificationMonitor } from "./NotificationMonitor.js";
 
-import { Logger } from "../Logger.js";
-var logger = new Logger();
-
 import { SettingsMgr } from "../SettingsMgr.js";
 const Settings = new SettingsMgr();
-
-import { Environment } from "../Environment.js";
-var env = new Environment();
 
 import { Template } from "../Template.js";
 var Tpl = new Template();
@@ -16,23 +10,14 @@ import { HookMgr } from "../HookMgr.js";
 var hookMgr = new HookMgr();
 
 import { TileSizer } from "../TileSizer.js";
-var tileSizer = new TileSizer("notification.monitor.tileSize");
+import { TierMgr } from "./TierMgr.js";
 
 class NotificationMonitorV3 extends NotificationMonitor {
 	constructor() {
 		super();
-		this._tileSizer = tileSizer;
-	}
-
-	#updateGoldStatus() {
-		this._goldTier = env.getTierLevel("gold") === "gold";
-		logger.add("NOTIF: Gold tier: " + this._goldTier);
-
-		if (!this._goldTier) {
-			//Get the maximum allowed value
-			this._etvLimit = env.getSilverTierLimit();
-			logger.add("NOTIF: ETV limit: " + this._etvLimit);
-		}
+		this._monitorV3 = true;
+		this._tileSizer = new TileSizer("notification.monitor.tileSize");
+		this._tierMgr = new TierMgr(this._env);
 	}
 
 	async initialize() {
@@ -56,7 +41,7 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		this._gridContainer.innerHTML = "";
 
 		//Check if the user is a gold tier user
-		this.#updateGoldStatus();
+		this._tierMgr.readTierInfo();
 
 		//Remove the item count
 		this._hideSelector("#vvp-items-grid-container>p");
@@ -199,7 +184,7 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		if (container) {
 			if (Settings.get("general.tileSize.enabled")) {
 				//Inject the GUI for the tile sizer widget
-				tileSizer.injectGUI(container);
+				this._tileSizer.injectGUI(container);
 			}
 		}
 
@@ -211,7 +196,7 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		//Set the slider default value
 		//Wait until the items are loaded.
 		hookMgr.hookBind("tilesUpdated", () => {
-			tileSizer.adjustAll();
+			this._tileSizer.adjustAll();
 		});
 	}
 

@@ -1,6 +1,6 @@
 import { PinnedListMgr } from "../PinnedListMgr.js";
 
-class Pin {
+class PinMgr {
 
     #getItemDOMElementCallback = null;
 
@@ -51,4 +51,4 @@ class Pin {
 	}
 }
 
-export { Pin };
+export { PinMgr };
