@@ -11,8 +11,8 @@ class ServerCom {
 	markUnavailableCallback = null;
 	addTileInGridCallback = null;
 	fetchRecentItemsEndCallback = null;
-	setETVFromASINCallback = null;
-	setTierFromASINCallback = null;
+	ETVFromASINCallback = null;
+	tierFromASINCallback = null;
 
 	constructor() {
 		//Message from within the context of the extension
@@ -41,11 +41,11 @@ class ServerCom {
 	}
 
 	setETVFromASINCallback(callback) {
-		this.setETVFromASINCallback = callback;
+		this.ETVFromASINCallback = callback;
 	}
 
 	setTierFromASINCallback(callback) {
-		this.setTierFromASINCallback = callback;
+		this.tierFromASINCallback = callback;
 	}
 
 	/**
@@ -71,10 +71,10 @@ class ServerCom {
 			this.#setServiceWorkerStatus(true, "Service worker is running.");
 		}
 		if (data.type == "newETV") {
-			this.setETVFromASINCallback(data.asin, data.etv);
+			this.ETVFromASINCallback(data.asin, data.etv);
 		}
 		if (data.type == "newTier") {
-			this.setTierFromASINCallback(data.asin, data.tier);
+			this.tierFromASINCallback(data.asin, data.tier);
 		}
 		if (data.type == "wsOpen") {
 			this.#setWebSocketStatus(true);
