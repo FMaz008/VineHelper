@@ -597,8 +597,8 @@ class NotificationMonitor extends MonitorCore {
 		//If we received ETV data (ie: Fetch last 100), process them
 		if (etv_min != null && etv_max != null) {
 			//Set the ETV but take no action on it
-			this.setETV(tileDOM, etv_min);
-			this.setETV(tileDOM, etv_max);
+			this.#setETV(tileDOM, etv_min);
+			this.#setETV(tileDOM, etv_max);
 
 			//We found a zero ETV item, but we don't want to play a sound just yet
 			if (parseFloat(etv_min) === 0) {
@@ -848,7 +848,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 	}
 
-	async setETV(notif, etv) {
+	async #setETV(notif, etv) {
 		if (!notif) {
 			return false;
 		}
@@ -938,7 +938,7 @@ class NotificationMonitor extends MonitorCore {
 		this.#disableGoldItemsForSilverUsers(notif);
 	}
 
-	async #setTierFromASIN(asin, tier) {
+	async setTierFromASIN(asin, tier) {
 		if (!this._items.has(asin)) {
 			return false;
 		}
@@ -964,7 +964,7 @@ class NotificationMonitor extends MonitorCore {
 
 		return true;
 	}
-	async #setETVFromASIN(asin, etv) {
+	async setETVFromASIN(asin, etv) {
 		// Store old ETV value to detect if reordering is needed
 		const oldETV = this._items.get(asin)?.data?.etv_min || 0;
 
@@ -980,7 +980,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Update the DOM element
-		this.setETV(notif, etv);
+		this.#setETV(notif, etv);
 
 		// Re-position the item if using price sort and the value changed significantly
 		if (this._sortType === TYPE_PRICE) {
