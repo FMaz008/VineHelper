@@ -19,6 +19,11 @@ class ServerCom {
 		chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 			this.processBroadcastMessage(message);
 		});
+
+		//Create a timer to check if the service worker is still running
+		this.#serviceWorkerStatusTimer = window.setInterval(() => {
+			this.#updateServiceWorkerStatus();
+		}, 10000);
 	}
 
 	setMarkUnavailableCallback(callback) {
@@ -31,6 +36,19 @@ class ServerCom {
 
 	setFetchRecentItemsEndCallback(callback) {
 		this.fetchRecentItemsEndCallback = callback;
+	}
+
+	/**
+	 * Check the status of the service worker and the WebSocket connection.
+	 */
+	updateServicesStatus() {
+		//Check the status of the service worker.
+		this.#updateServiceWorkerStatus();
+
+		//Obtain the status of the WebSocket connection.
+		chrome.runtime.sendMessage({
+			type: "wsStatus",
+		});
 	}
 
 	async processBroadcastMessage(data) {
@@ -93,13 +111,6 @@ class ServerCom {
 				description.innerText = "Not connected. Retrying in 30 sec...";
 			}
 		}
-	}
-
-	createServiceWorkerStatusTimer() {
-		this.#updateServiceWorkerStatus();
-		this.#serviceWorkerStatusTimer = window.setInterval(() => {
-			this.#updateServiceWorkerStatus();
-		}, 10000);
 	}
 
 	#updateServiceWorkerStatus() {

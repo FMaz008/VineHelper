@@ -175,14 +175,6 @@ class NotificationMonitorV3 extends NotificationMonitor {
 			this.#initTileSizeWidget();
 		}
 
-		//Create a timer to check if the service worker is still running
-		this._serverComMgr.createServiceWorkerStatusTimer();
-
-		//Obtain the status of the WebSocket connection.
-		chrome.runtime.sendMessage({
-			type: "wsStatus",
-		});
-
 		document.getElementById("date_loaded").innerText = this._formatDate();
 		this._mostRecentItemDateDOM = document.getElementById("date_most_recent_item");
 
@@ -197,6 +189,9 @@ class NotificationMonitorV3 extends NotificationMonitor {
 
 		//Change the tab's favicon
 		this._updateTabFavicon();
+
+		//Initial check of the status of services (service worker and WebSocket)
+		this._serverComMgr.updateServicesStatus();
 	}
 
 	async #initTileSizeWidget() {

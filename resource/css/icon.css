@@ -450,9 +450,3 @@ div[role="navigation"] > ul > li {
 	background-position-x: 5px;
 	background-position-y: center;
 }
-
-/* Active pin state */
-.vh-icon-pin-active {
-	/* Darker green colorization filter */
-	filter: brightness(0) saturate(100%) invert(35%) sepia(85%) saturate(592%) hue-rotate(93deg) brightness(80%) contrast(100%);
-}
