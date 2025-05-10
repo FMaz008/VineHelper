@@ -35,6 +35,8 @@ class MonitorCore {
 		this._serverComMgr.setMarkUnavailableCallback(this.markItemUnavailable.bind(this));
 		this._serverComMgr.setAddTileInGridCallback(this.addTileInGrid.bind(this));
 		this._serverComMgr.setFetchRecentItemsEndCallback(this.fetchRecentItemsEnd.bind(this));
+		this._serverComMgr.setETVFromASINCallback(this.setETVFromASIN.bind(this));
+		this._serverComMgr.setTierFromASINCallback(this.setTierFromASIN.bind(this));
 	}
 
 	_currentDateTime() {
