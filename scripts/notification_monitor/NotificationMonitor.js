@@ -1,4 +1,3 @@
-
 import { getRecommendationTypeFromQueue, generateRecommendationString } from "../Grid.js";
 import { YMDHiStoISODate } from "../DateHelper.js";
 import { keywordMatch } from "../service_worker/keywordMatch.js";
@@ -26,7 +25,6 @@ class NotificationMonitor extends MonitorCore {
 	_mostRecentItemDate = null;
 	_mostRecentItemDateDOM = null;
 	_itemTemplateFile = "tile_gridview.html";
-	_fetchLimit = 100;
 	_searchText = ""; // Current search text
 	_searchDebounceTimer = null; // Timer for debouncing search
 	_autoTruncateDebounceTimer = null; // Timer for debouncing autoTruncate
@@ -37,10 +35,6 @@ class NotificationMonitor extends MonitorCore {
 	_filterType = -1;
 	_sortType = TYPE_DATE;
 
-	async #initialize() {
-		this._fetchLimit = await this._getFetchLimit(); //MonitorLib
-	}
-
 	constructor() {
 		super();
 
@@ -48,8 +42,6 @@ class NotificationMonitor extends MonitorCore {
 		if (this.constructor === NotificationMonitor) {
 			throw new TypeError('Abstract class "NotificationMonitor" cannot be instantiated directly.');
 		}
-
-		this.#initialize();
 	}
 
 	#processNotificationFiltering(node) {
@@ -68,7 +60,11 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Gold item filter for silver users
-		if (this._monitorV3 && !this._tierMgr.isGold() && this._settings.get("notification.monitor.hideGoldNotificationsForSilverUser")) {
+		if (
+			this._monitorV3 &&
+			!this._tierMgr.isGold() &&
+			this._settings.get("notification.monitor.hideGoldNotificationsForSilverUser")
+		) {
 			const etvObj = node.querySelector("div.etv");
 			if (
 				etvObj &&
@@ -495,9 +491,15 @@ class NotificationMonitor extends MonitorCore {
 		this._tpl.setVar("recommendationType", recommendationType);
 		this._tpl.setVar("recommendationId", recommendationId);
 		this._tpl.setVar("search_url", search_url);
-		this._tpl.setIf("announce", this._settings.get("discord.active") && this._settings.get("discord.guid", false) != null);
+		this._tpl.setIf(
+			"announce",
+			this._settings.get("discord.active") && this._settings.get("discord.guid", false) != null
+		);
 		this._tpl.setIf("pinned", this._settings.get("pinnedTab.active"));
-		this._tpl.setIf("variant", this._settings.isPremiumUser() && this._settings.get("general.displayVariantIcon") && is_parent_asin);
+		this._tpl.setIf(
+			"variant",
+			this._settings.isPremiumUser() && this._settings.get("general.displayVariantIcon") && is_parent_asin
+		);
 
 		let tileDOM = await this._tpl.render(prom2, true);
 
@@ -720,7 +722,11 @@ class NotificationMonitor extends MonitorCore {
 			return;
 
 		//Add the click listener for the See Details button
-		if (this._env.isFirefox() || this._settings.get("notification.monitor.openLinksInNewTab") == "1" || this._ctrlPress) {
+		if (
+			this._env.isFirefox() ||
+			this._settings.get("notification.monitor.openLinksInNewTab") == "1" ||
+			this._ctrlPress
+		) {
 			//Deactivate Vine click handling
 
 			const btnContainer = e.target.closest(".vvp-details-btn");
@@ -903,7 +909,10 @@ class NotificationMonitor extends MonitorCore {
 					if (technicalBtn) {
 						technicalBtn.dataset.highlightkw = val;
 					}
-					this.#highlightedItemFound(notif, this._settings.get("notification.monitor.highlight.sound") != "0");
+					this.#highlightedItemFound(
+						notif,
+						this._settings.get("notification.monitor.highlight.sound") != "0"
+					);
 				} else if (this._settings.get("notification.hideList")) {
 					//Check if we need to hide the item
 					const val2 = await keywordMatch(

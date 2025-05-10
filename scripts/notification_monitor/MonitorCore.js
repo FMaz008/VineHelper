@@ -25,6 +25,8 @@ class MonitorCore {
 	_tileSizer = null; //The tile sizer tool for v3 monitor
 	_tierMgr = null; //The tier manager object
 
+	_fetchLimit = 100; //The fetch limit for the monitor
+
 	constructor() {
 		// Prevent direct instantiation of the abstract class
 		if (this.constructor === MonitorCore) {
@@ -52,22 +54,24 @@ class MonitorCore {
 		this._serverComMgr.setFetchRecentItemsEndCallback(this.fetchRecentItemsEnd.bind(this));
 		this._serverComMgr.setSetETVFromASINCallback(this.setETVFromASIN.bind(this));
 		this._serverComMgr.setSetTierFromASINCallback(this.setTierFromASIN.bind(this));
+
+		this.#getFetchLimit();
 	}
 
 	_currentDateTime() {
 		return new Date();
 	}
 
-	async _getFetchLimit() {
+	async #getFetchLimit() {
 		await this._settings.waitForLoad();
 
 		//Define the fetch limit based on the user's tier
 		if (this._settings.isPremiumUser(3)) {
-			return 300;
+			this._fetchLimit = 300;
 		} else if (this._settings.isPremiumUser(2)) {
-			return 200;
+			this._fetchLimit = 200;
 		} else {
-			return 100;
+			this._fetchLimit = 100;
 		}
 	}
 
