@@ -23,7 +23,6 @@ class NotificationMonitor extends MonitorCore {
 	_items = new Map(); // Combined map to store both item data and DOM elements
 	_gridContainer = null;
 	_wsErrorMessage = null;
-	_firefox = false;
 	_mostRecentItemDate = null;
 	_mostRecentItemDateDOM = null;
 	_itemTemplateFile = "tile_gridview.html";
@@ -721,7 +720,7 @@ class NotificationMonitor extends MonitorCore {
 			return;
 
 		//Add the click listener for the See Details button
-		if (this._firefox || this._settings.get("notification.monitor.openLinksInNewTab") == "1" || this._ctrlPress) {
+		if (this._env.isFirefox() || this._settings.get("notification.monitor.openLinksInNewTab") == "1" || this._ctrlPress) {
 			//Deactivate Vine click handling
 
 			const btnContainer = e.target.closest(".vvp-details-btn");

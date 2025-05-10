@@ -93,9 +93,6 @@ class NotificationMonitorV3 extends NotificationMonitor {
 			elem.style.margin = "0px";
 		});
 
-		//Check if the browser is firefox
-		this._firefox = navigator.userAgent.includes("Firefox");
-
 		//Set the grid items size
 		if (this._settings.get("general.tileSize.enabled")) {
 			const width = this._settings.get("notification.monitor.tileSize.width");

@@ -225,6 +225,10 @@ class Environment {
 		}
 	}
 
+	isFirefox() {
+		return navigator.userAgent.includes("Firefox");
+	}
+
 	//getWSSUrl() {
 	//	return "wss://api.vinehelper.ovh";
 	//}
