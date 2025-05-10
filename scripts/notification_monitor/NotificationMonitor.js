@@ -1,11 +1,3 @@
-import { Logger } from "../Logger.js";
-const Log = new Logger();
-
-import { SettingsMgr } from "../SettingsMgr.js";
-const Settings = new SettingsMgr();
-
-import { Template } from "../Template.js";
-const Tpl = new Template();
 
 import { getRecommendationTypeFromQueue, generateRecommendationString } from "../Grid.js";
 import { YMDHiStoISODate } from "../DateHelper.js";
@@ -77,7 +69,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Gold item filter for silver users
-		if (this._monitorV3 && !this._tierMgr.isGold() && Settings.get("notification.monitor.hideGoldNotificationsForSilverUser")) {
+		if (this._monitorV3 && !this._tierMgr.isGold() && this._settings.get("notification.monitor.hideGoldNotificationsForSilverUser")) {
 			const etvObj = node.querySelector("div.etv");
 			if (
 				etvObj &&
@@ -155,7 +147,7 @@ class NotificationMonitor extends MonitorCore {
 				notif.querySelector(".vvp-item-tile-content").appendChild(btn);
 
 				// Re-filter this item to apply gold tier filtering, ensuring it's hidden if the setting is enabled
-				if (Settings.get("notification.monitor.hideGoldNotificationsForSilverUser")) {
+				if (this._settings.get("notification.monitor.hideGoldNotificationsForSilverUser")) {
 					this.#processNotificationFiltering(notif);
 				}
 			}
@@ -301,7 +293,7 @@ class NotificationMonitor extends MonitorCore {
 					newItems.set(asin, item);
 
 					// Keep track of the image URL for duplicate detection
-					if (item.data.img_url && Settings.get("notification.monitor.hideDuplicateThumbnail")) {
+					if (item.data.img_url && this._settings.get("notification.monitor.hideDuplicateThumbnail")) {
 						newImageUrls.add(item.data.img_url);
 					}
 				}
@@ -333,7 +325,7 @@ class NotificationMonitor extends MonitorCore {
 		const runTruncate = () => {
 			// Auto truncate
 			if (this._autoTruncateEnabled) {
-				const max = Settings.get("notification.monitor.autoTruncateLimit");
+				const max = this._settings.get("notification.monitor.autoTruncateLimit");
 				// Check if we need to truncate based on map size
 				if (this._items.size > max) {
 					Log.add(`NOTIF: Auto truncating item(s) from the page using the ${this._sortType} sort method.`);
@@ -460,7 +452,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Check if the de-duplicate image setting is on
-		if (Settings.get("notification.monitor.hideDuplicateThumbnail")) {
+		if (this._settings.get("notification.monitor.hideDuplicateThumbnail")) {
 			if (this._imageUrls.has(img_url)) {
 				return false; // The image already exists, do not add the item
 			}
@@ -472,8 +464,8 @@ class NotificationMonitor extends MonitorCore {
 		// Generate the search URL
 		let search_url;
 		if (
-			Settings.isPremiumUser(2) &&
-			Settings.get("general.searchOpenModal") &&
+			this._settings.isPremiumUser(2) &&
+			this._settings.get("general.searchOpenModal") &&
 			is_parent_asin != null &&
 			enrollment_guid != null
 		) {
@@ -485,30 +477,30 @@ class NotificationMonitor extends MonitorCore {
 			search_url = `https://www.amazon.${this._i13nMgr.getDomainTLD()}/vine/vine-items?search=${search_url_slug}`;
 		}
 
-		let prom2 = await Tpl.loadFile("view/" + this._itemTemplateFile);
-		Tpl.setVar("id", asin);
-		Tpl.setVar("domain", this._i13nMgr.getDomainTLD());
-		Tpl.setVar("img_url", img_url);
-		Tpl.setVar("asin", asin);
-		Tpl.setVar("tier", tier);
-		Tpl.setVar("dateReceived", this._formatDate(this._currentDateTime()));
-		Tpl.setVar("date", this._formatDate(date));
-		Tpl.setVar("feedPaused", this._feedPaused);
-		Tpl.setVar("queue", queue);
-		Tpl.setVar("description", title);
-		Tpl.setVar("reason", reason);
-		Tpl.setVar("highlightKW", highlightKW);
-		Tpl.setVar("blurKW", blurKW);
-		Tpl.setVar("is_parent_asin", is_parent_asin); //"true" or "false"
-		Tpl.setVar("enrollment_guid", enrollment_guid);
-		Tpl.setVar("recommendationType", recommendationType);
-		Tpl.setVar("recommendationId", recommendationId);
-		Tpl.setVar("search_url", search_url);
-		Tpl.setIf("announce", Settings.get("discord.active") && Settings.get("discord.guid", false) != null);
-		Tpl.setIf("pinned", Settings.get("pinnedTab.active"));
-		Tpl.setIf("variant", Settings.isPremiumUser() && Settings.get("general.displayVariantIcon") && is_parent_asin);
+		let prom2 = await this._tpl.loadFile("view/" + this._itemTemplateFile);
+		this._tpl.setVar("id", asin);
+		this._tpl.setVar("domain", this._i13nMgr.getDomainTLD());
+		this._tpl.setVar("img_url", img_url);
+		this._tpl.setVar("asin", asin);
+		this._tpl.setVar("tier", tier);
+		this._tpl.setVar("dateReceived", this._formatDate(this._currentDateTime()));
+		this._tpl.setVar("date", this._formatDate(date));
+		this._tpl.setVar("feedPaused", this._feedPaused);
+		this._tpl.setVar("queue", queue);
+		this._tpl.setVar("description", title);
+		this._tpl.setVar("reason", reason);
+		this._tpl.setVar("highlightKW", highlightKW);
+		this._tpl.setVar("blurKW", blurKW);
+		this._tpl.setVar("is_parent_asin", is_parent_asin); //"true" or "false"
+		this._tpl.setVar("enrollment_guid", enrollment_guid);
+		this._tpl.setVar("recommendationType", recommendationType);
+		this._tpl.setVar("recommendationId", recommendationId);
+		this._tpl.setVar("search_url", search_url);
+		this._tpl.setIf("announce", this._settings.get("discord.active") && this._settings.get("discord.guid", false) != null);
+		this._tpl.setIf("pinned", this._settings.get("pinnedTab.active"));
+		this._tpl.setIf("variant", this._settings.isPremiumUser() && this._settings.get("general.displayVariantIcon") && is_parent_asin);
 
-		let tileDOM = await Tpl.render(prom2, true);
+		let tileDOM = await this._tpl.render(prom2, true);
 
 		// Create fragment and add the tile to it
 		const fragment = document.createDocumentFragment();
@@ -556,7 +548,7 @@ class NotificationMonitor extends MonitorCore {
 		this.#storeItemDOMElement(asin, tileDOM);
 
 		// Check if the item is already pinned and update the pin icon
-		if (Settings.get("pinnedTab.active")) {
+		if (this._settings.get("pinnedTab.active")) {
 			const isPinned = await this._pinMgr.checkIfPinned(asin);
 			if (isPinned) {
 				this._pinMgr.pinItem(asin, queue, title, img_url, is_parent_asin ? "true" : "false", enrollment_guid);
@@ -564,11 +556,11 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		//Set the tile custom dimension according to the settings.
-		if (!this._monitorV2 && !Settings.get("notification.monitor.listView")) {
+		if (!this._monitorV2 && !this._settings.get("notification.monitor.listView")) {
 			this._tileSizer.adjustAll(tileDOM);
 		}
 		//Add tool tip to the truncated item title link
-		if (!this._monitorV2 && Settings.get("general.displayFullTitleTooltip")) {
+		if (!this._monitorV2 && this._settings.get("general.displayFullTitleTooltip")) {
 			const titleDOM = tileDOM.querySelector(".a-link-normal");
 			this._tooltipMgr.addTooltip(titleDOM, title);
 		}
@@ -695,7 +687,7 @@ class NotificationMonitor extends MonitorCore {
 		// Handle announcement icon
 		if (
 			_handleIconClick(".vh-icon-announcement", () => {
-				if (Settings.get("discord.active") && Settings.get("discord.guid", false) != null) {
+				if (this._settings.get("discord.active") && this._settings.get("discord.guid", false) != null) {
 					this.#handleBrendaClick(e);
 				}
 			})
@@ -705,7 +697,7 @@ class NotificationMonitor extends MonitorCore {
 		// Handle pin icon
 		if (
 			_handleIconClick(".vh-icon-pin, .vh-icon-unpin", () => {
-				if (Settings.get("pinnedTab.active")) {
+				if (this._settings.get("pinnedTab.active")) {
 					this.#handlePinClick(e);
 				}
 			})
@@ -729,7 +721,7 @@ class NotificationMonitor extends MonitorCore {
 			return;
 
 		//Add the click listener for the See Details button
-		if (this._firefox || Settings.get("notification.monitor.openLinksInNewTab") == "1" || this._ctrlPress) {
+		if (this._firefox || this._settings.get("notification.monitor.openLinksInNewTab") == "1" || this._ctrlPress) {
 			//Deactivate Vine click handling
 
 			const btnContainer = e.target.closest(".vvp-details-btn");
@@ -790,7 +782,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Store image URL if needed for duplicate detection
-		if (itemData.img_url && Settings.get("notification.monitor.hideDuplicateThumbnail")) {
+		if (itemData.img_url && this._settings.get("notification.monitor.hideDuplicateThumbnail")) {
 			this._imageUrls.add(itemData.img_url);
 		}
 
@@ -836,7 +828,7 @@ class NotificationMonitor extends MonitorCore {
 		this._items.delete(asin);
 
 		// Also remove the image URL from the set if duplicate detection is enabled
-		if (imgUrl && Settings.get("notification.monitor.hideDuplicateThumbnail")) {
+		if (imgUrl && this._settings.get("notification.monitor.hideDuplicateThumbnail")) {
 			this._imageUrls.delete(imgUrl);
 		}
 
@@ -900,7 +892,7 @@ class NotificationMonitor extends MonitorCore {
 			if (title) {
 				//Check if we need to highlight the item now what we have an ETV
 				const val = await keywordMatch(
-					Settings.get("general.highlightKeywords"),
+					this._settings.get("general.highlightKeywords"),
 					title,
 					etvObj.dataset.etvMin,
 					etvObj.dataset.etvMax
@@ -912,11 +904,11 @@ class NotificationMonitor extends MonitorCore {
 					if (technicalBtn) {
 						technicalBtn.dataset.highlightkw = val;
 					}
-					this.#highlightedItemFound(notif, Settings.get("notification.monitor.highlight.sound") != "0");
-				} else if (Settings.get("notification.hideList")) {
+					this.#highlightedItemFound(notif, this._settings.get("notification.monitor.highlight.sound") != "0");
+				} else if (this._settings.get("notification.hideList")) {
 					//Check if we need to hide the item
 					const val2 = await keywordMatch(
-						Settings.get("general.hideKeywords"),
+						this._settings.get("general.hideKeywords"),
 						title,
 						etvObj.dataset.etvMin,
 						etvObj.dataset.etvMax
@@ -932,7 +924,7 @@ class NotificationMonitor extends MonitorCore {
 
 		//zero ETV found, highlight the item accordingly
 		if (oldMaxValue == "" && parseFloat(etvObj.dataset.etvMin) == 0) {
-			this.#zeroETVItemFound(notif, Settings.get("notification.monitor.zeroETV.sound") != "0");
+			this.#zeroETVItemFound(notif, this._settings.get("notification.monitor.zeroETV.sound") != "0");
 		}
 
 		//Set the highlight color as needed
@@ -1039,7 +1031,7 @@ class NotificationMonitor extends MonitorCore {
 		//Move the notification to the top only if we're not using price-based sorting
 		if (!this._fetchingRecentItems) {
 			// Only move to top if we're NOT using price sort
-			if (this._sortType !== TYPE_PRICE && Settings.get("notification.monitor.bump0ETV")) {
+			if (this._sortType !== TYPE_PRICE && this._settings.get("notification.monitor.bump0ETV")) {
 				this._moveNotifToTop(notif);
 			} else {
 				// If sorting by price is active, just resort after identifying as zero ETV
@@ -1352,7 +1344,7 @@ class NotificationMonitor extends MonitorCore {
 		const sortQueue = document.querySelector("select[name='sort-queue']");
 		sortQueue.addEventListener("change", (event) => {
 			this._sortType = sortQueue.value;
-			Settings.set("notification.monitor.sortType", this._sortType);
+			this._settings.set("notification.monitor.sortType", this._sortType);
 			this.#processNotificationSorting();
 			// Force immediate truncate when sort type changes
 			this.#autoTruncate(true);
@@ -1361,7 +1353,7 @@ class NotificationMonitor extends MonitorCore {
 		const filterType = document.querySelector("select[name='filter-type']");
 		filterType.addEventListener("change", (event) => {
 			this._filterType = filterType.value;
-			Settings.set("notification.monitor.filterType", this._filterType);
+			this._settings.set("notification.monitor.filterType", this._filterType);
 			//Display a specific type of notifications only
 			document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
 				this.#processNotificationFiltering(node);
@@ -1372,7 +1364,7 @@ class NotificationMonitor extends MonitorCore {
 		const filterQueue = document.querySelector("select[name='filter-queue']");
 		filterQueue.addEventListener("change", (event) => {
 			this._filterQueue = filterQueue.value;
-			Settings.set("notification.monitor.filterQueue", this._filterQueue);
+			this._settings.set("notification.monitor.filterQueue", this._filterQueue);
 			//Display a specific type of notifications only
 			document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
 				this.#processNotificationFiltering(node);
@@ -1384,7 +1376,7 @@ class NotificationMonitor extends MonitorCore {
 		autoTruncateCheckbox.checked = this._autoTruncateEnabled;
 		autoTruncateCheckbox.addEventListener("change", (event) => {
 			this._autoTruncateEnabled = autoTruncateCheckbox.checked;
-			Settings.set("notification.monitor.autoTruncate", this._autoTruncateEnabled);
+			this._settings.set("notification.monitor.autoTruncate", this._autoTruncateEnabled);
 			// Force immediate truncate when auto truncate is enabled
 			if (this._autoTruncateEnabled) {
 				this.#autoTruncate(true);
@@ -1393,7 +1385,7 @@ class NotificationMonitor extends MonitorCore {
 
 		const autoTruncateLimitSelect = document.getElementById("auto-truncate-limit");
 		autoTruncateLimitSelect.addEventListener("change", (event) => {
-			Settings.set("notification.monitor.autoTruncateLimit", parseInt(autoTruncateLimitSelect.value));
+			this._settings.set("notification.monitor.autoTruncateLimit", parseInt(autoTruncateLimitSelect.value));
 			// Force immediate truncate when limit changes
 			this.#autoTruncate(true);
 		});

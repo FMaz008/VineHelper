@@ -1,14 +1,5 @@
 import { NotificationMonitor } from "./NotificationMonitor.js";
 
-import { SettingsMgr } from "../SettingsMgr.js";
-const Settings = new SettingsMgr();
-
-import { Template } from "../Template.js";
-var Tpl = new Template();
-
-import { HookMgr } from "../HookMgr.js";
-var hookMgr = new HookMgr();
-
 import { TileSizer } from "../TileSizer.js";
 import { TierMgr } from "./TierMgr.js";
 
@@ -22,9 +13,9 @@ class NotificationMonitorV3 extends NotificationMonitor {
 
 	async initialize() {
 		// Wait for settings to load before proceeding
-		await Settings.waitForLoad();
+		await this._settings.waitForLoad();
 
-		if (Settings.get("notification.monitor.listView")) {
+		if (this._settings.get("notification.monitor.listView")) {
 			this._itemTemplateFile = "tile_listview.html";
 		} else {
 			this._itemTemplateFile = "tile_gridview.html";
@@ -106,8 +97,8 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		this._firefox = navigator.userAgent.includes("Firefox");
 
 		//Set the grid items size
-		if (Settings.get("general.tileSize.enabled")) {
-			const width = Settings.get("notification.monitor.tileSize.width");
+		if (this._settings.get("general.tileSize.enabled")) {
+			const width = this._settings.get("notification.monitor.tileSize.width");
 			const grid = document.querySelector("#vvp-items-grid");
 			grid.classList.add("vh-notification-monitor");
 			grid.style.gridTemplateColumns = `repeat(auto-fill,minmax(${width}px,auto))`;
@@ -121,9 +112,9 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		const topContainer = document.querySelector("div#vvp-items-grid-container");
 		const itemContainer = document.querySelector("div#vvp-items-grid");
 
-		let prom2 = await Tpl.loadFile("view/notification_monitor_header.html");
-		Tpl.setVar("fetchLimit", this._fetchLimit);
-		const header = Tpl.render(prom2, true);
+		let prom2 = await this._tpl.loadFile("view/notification_monitor_header.html");
+		this._tpl.setVar("fetchLimit", this._fetchLimit);
+		const header = this._tpl.render(prom2, true);
 		parentContainer.insertBefore(header, mainContainer);
 
 		// Update UI filters after header is inserted
@@ -135,9 +126,9 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		itemContainer.classList.add("tab-grid");
 
 		if (
-			Settings.get("thorvarium.mobileios") ||
-			Settings.get("thorvarium.mobileandroid") ||
-			Settings.get("thorvarium.smallItems")
+			this._settings.get("thorvarium.mobileios") ||
+			this._settings.get("thorvarium.mobileandroid") ||
+			this._settings.get("thorvarium.smallItems")
 		) {
 			tabContainer.classList.add("smallitems");
 		}
@@ -148,20 +139,20 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		//Assign the item container to the tab container
 		tabContainer.appendChild(itemContainer);
 
-		if (Settings.get("notification.monitor.listView")) {
+		if (this._settings.get("notification.monitor.listView")) {
 			this._gridContainer.classList.add("listview");
 		}
 
 		//Display tile size widget if the list view is not active and the tile size is active
-		if (Settings.get("general.tileSize.active") && !Settings.get("notification.monitor.listView")) {
+		if (this._settings.get("general.tileSize.active") && !this._settings.get("notification.monitor.listView")) {
 			this.#initTileSizeWidget();
 		}
 
 		document.getElementById("date_loaded").innerText = this._formatDate();
 		this._mostRecentItemDateDOM = document.getElementById("date_most_recent_item");
 
-		if (!this._firefox && Settings.get("notification.monitor.openLinksInNewTab") != "1") {
-			if (Settings.get("notification.monitor.preventUnload")) {
+		if (!this._firefox && this._settings.get("notification.monitor.openLinksInNewTab") != "1") {
+			if (this._settings.get("notification.monitor.preventUnload")) {
 				this.#preventRedirections();
 			}
 		}
@@ -177,27 +168,16 @@ class NotificationMonitorV3 extends NotificationMonitor {
 	}
 
 	async #initTileSizeWidget() {
-		if (Settings.get("notification.monitor.listView")) {
+		if (this._settings.get("notification.monitor.listView")) {
 			return;
 		}
 		const container = document.querySelector("#vvp-items-grid-container");
 		if (container) {
-			if (Settings.get("general.tileSize.enabled")) {
+			if (this._settings.get("general.tileSize.enabled")) {
 				//Inject the GUI for the tile sizer widget
 				this._tileSizer.injectGUI(container);
 			}
 		}
-
-		//Display full descriptions
-		//Not all of them are loaded at this stage and some get skipped.
-		//container.querySelector(".a-truncate-full").classList.remove("a-offscreen");
-		//container.querySelector(".a-truncate-cut").style.display = "none";
-
-		//Set the slider default value
-		//Wait until the items are loaded.
-		hookMgr.hookBind("tilesUpdated", () => {
-			this._tileSizer.adjustAll();
-		});
 	}
 
 	#preventRedirections() {

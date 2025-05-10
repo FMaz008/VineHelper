@@ -1,11 +1,5 @@
 import { NotificationMonitor } from "./NotificationMonitor.js";
 
-import { SettingsMgr } from "../SettingsMgr.js";
-const Settings = new SettingsMgr();
-
-import { Template } from "../Template.js";
-var Tpl = new Template();
-
 class NotificationMonitorV2 extends NotificationMonitor {
 	#channel = null; //Broadcast channel for light mode
 
@@ -19,14 +13,14 @@ class NotificationMonitorV2 extends NotificationMonitor {
 		this._itemTemplateFile = "tile_lightview.html";
 
 		// Wait for settings to load before proceeding
-		await Settings.waitForLoad();
+		await this._settings.waitForLoad();
 
 		//Insert the header
 		const parentContainer = document.querySelector("body");
 
-		const prom2 = await Tpl.loadFile("view/notification_monitor_header.html");
-		Tpl.setVar("fetchLimit", this._fetchLimit);
-		const header = Tpl.render(prom2, true);
+		const prom2 = await this._tpl.loadFile("view/notification_monitor_header.html");
+		this._tpl.setVar("fetchLimit", this._fetchLimit);
+		const header = this._tpl.render(prom2, true);
 		parentContainer.appendChild(header);
 
 		// Update UI filters after header is inserted
@@ -38,7 +32,7 @@ class NotificationMonitorV2 extends NotificationMonitor {
 
 		this._gridContainer = document.querySelector("#vvp-items-grid");
 
-		this._i13nMgr.setCountryCode(Settings.get("general.country"));
+		this._i13nMgr.setCountryCode(this._settings.get("general.country"));
 		document.getElementById("date_loaded").innerText = this._formatDate();
 		this._mostRecentItemDateDOM = document.getElementById("date_most_recent_item");
 

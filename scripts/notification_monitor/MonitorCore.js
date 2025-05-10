@@ -1,9 +1,12 @@
 //This file serve the main purpose of reducing the size of the NotificationMonitor.js file.
-//It contains some basic functions that are used by the NotificationMonitor.
+//It:
+// - contain the variables specific to V2 or V3
+// - instanciate the specific classes for V2 or V3
+// - instanciate the general purpose classes
+// - contains some basic functions that are used by the NotificationMonitor that where good to get out of the way.
 
 import { SettingsMgr } from "../SettingsMgr.js";
-const Settings = new SettingsMgr();
-
+import { Template } from "../Template.js";
 import { Environment } from "../Environment.js";
 
 import { PinMgr } from "./PinMgr.js";
@@ -28,22 +31,27 @@ class MonitorCore {
 			throw new TypeError('Abstract class "MonitorLib" cannot be instantiated directly.');
 		}
 
+		//General purpose classes
+		this._settings = new SettingsMgr();
 		this._env = new Environment();
+		this._tpl = new Template();
 		this._i13nMgr = new Internationalization();
-		this._pinMgr = new PinMgr();
-		this._pinMgr.setGetItemDOMElementCallback(this.getItemDOMElement.bind(this));
 		this._notificationsMgr = new ScreenNotifier();
 		this._tooltipMgr = new Tooltip();
 		this._brendaMgr = new BrendaAnnounceQueue();
 		this._dialogMgr = new ModalMgr();
 		this._soundPlayerMgr = new NotificationsSoundPlayer();
+
+		//Notification Monitor's specific classes
+		this._pinMgr = new PinMgr();
+		this._pinMgr.setGetItemDOMElementCallback(this.getItemDOMElement.bind(this));
+
 		this._serverComMgr = new ServerCom();
 		this._serverComMgr.setMarkUnavailableCallback(this.markItemUnavailable.bind(this));
 		this._serverComMgr.setAddTileInGridCallback(this.addTileInGrid.bind(this));
 		this._serverComMgr.setFetchRecentItemsEndCallback(this.fetchRecentItemsEnd.bind(this));
 		this._serverComMgr.setSetETVFromASINCallback(this.setETVFromASIN.bind(this));
 		this._serverComMgr.setSetTierFromASINCallback(this.setTierFromASIN.bind(this));
-		
 	}
 
 	_currentDateTime() {
@@ -51,12 +59,12 @@ class MonitorCore {
 	}
 
 	async _getFetchLimit() {
-		await Settings.waitForLoad();
+		await this._settings.waitForLoad();
 
 		//Define the fetch limit based on the user's tier
-		if (Settings.isPremiumUser(3)) {
+		if (this._settings.isPremiumUser(3)) {
 			return 300;
-		} else if (Settings.isPremiumUser(2)) {
+		} else if (this._settings.isPremiumUser(2)) {
 			return 200;
 		} else {
 			return 100;
@@ -69,13 +77,13 @@ class MonitorCore {
 
 	async _loadUIUserSettings() {
 		// Load settings from chrome.storage.local
-		await Settings.waitForLoad();
+		await this._settings.waitForLoad();
 
 		//Get the filter and sorting settings
-		this._autoTruncateEnabled = Settings.get("notification.monitor.autoTruncate");
-		this._filterQueue = Settings.get("notification.monitor.filterQueue");
-		this._filterType = Settings.get("notification.monitor.filterType");
-		this._sortType = Settings.get("notification.monitor.sortType");
+		this._autoTruncateEnabled = this._settings.get("notification.monitor.autoTruncate");
+		this._filterQueue = this._settings.get("notification.monitor.filterQueue");
+		this._filterType = this._settings.get("notification.monitor.filterType");
+		this._sortType = this._settings.get("notification.monitor.sortType");
 
 		// Update UI
 		const autoTruncateCheckbox = document.getElementById("auto-truncate");
@@ -83,7 +91,7 @@ class MonitorCore {
 
 		const autoTruncateLimit = document.getElementById("auto-truncate-limit");
 		if (autoTruncateLimit)
-			autoTruncateLimit.value = Settings.get("notification.monitor.autoTruncateLimit").toString();
+			autoTruncateLimit.value = this._settings.get("notification.monitor.autoTruncateLimit").toString();
 
 		const filterQueueSelect = document.querySelector("select[name='filter-queue']");
 		if (filterQueueSelect) filterQueueSelect.value = this._filterQueue;
@@ -157,13 +165,15 @@ class MonitorCore {
 		}
 
 		const isHighlighted =
-			notif.dataset.typeHighlight == 1 && Settings.get("notification.monitor.highlight.colorActive");
-		const isZeroETV = notif.dataset.typeZeroETV == 1 && Settings.get("notification.monitor.zeroETV.colorActive");
-		const isUnknownETV = etvObj.dataset.etvMax == "" && Settings.get("notification.monitor.unknownETV.colorActive");
+			notif.dataset.typeHighlight == 1 && this._settings.get("notification.monitor.highlight.colorActive");
+		const isZeroETV =
+			notif.dataset.typeZeroETV == 1 && this._settings.get("notification.monitor.zeroETV.colorActive");
+		const isUnknownETV =
+			etvObj.dataset.etvMax == "" && this._settings.get("notification.monitor.unknownETV.colorActive");
 
-		const highlightColor = Settings.get("notification.monitor.highlight.color");
-		const zeroETVColor = Settings.get("notification.monitor.zeroETV.color");
-		const unknownETVColor = Settings.get("notification.monitor.unknownETV.color");
+		const highlightColor = this._settings.get("notification.monitor.highlight.color");
+		const zeroETVColor = this._settings.get("notification.monitor.zeroETV.color");
+		const unknownETVColor = this._settings.get("notification.monitor.unknownETV.color");
 
 		if (isZeroETV && isHighlighted) {
 			const color1 = zeroETVColor;
@@ -215,7 +225,7 @@ class MonitorCore {
 			hour: "2-digit",
 			minute: "2-digit",
 			second: "2-digit",
-			hour12: !Settings.get("notification.monitor.24hrsFormat"),
+			hour12: !this._settings.get("notification.monitor.24hrsFormat"),
 		}).format(date);
 	}
 
@@ -270,7 +280,7 @@ class MonitorCore {
 			app_version: manifest.version,
 			country: this._i13nMgr.getCountryCode(),
 			action: "report_asin",
-			uuid: Settings.get("general.uuid", false),
+			uuid: this._settings.get("general.uuid", false),
 			asin: asin,
 		};
 		const options = {
