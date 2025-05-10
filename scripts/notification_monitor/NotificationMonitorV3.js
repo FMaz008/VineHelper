@@ -55,9 +55,6 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		this._gridContainer = document.querySelector("#vvp-items-grid");
 		this._gridContainer.innerHTML = "";
 
-		//Create the event listeners
-		this._createEventListeners();
-
 		//Check if the user is a gold tier user
 		this.#updateGoldStatus();
 
@@ -184,8 +181,8 @@ class NotificationMonitorV3 extends NotificationMonitor {
 			}
 		}
 
-		//Activate the listeners
-		this._listeners();
+		//Create the event listeners
+		this._createListeners();
 
 		//Change the tab's favicon
 		this._updateTabFavicon();

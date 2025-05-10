@@ -644,32 +644,6 @@ class NotificationMonitor extends MonitorCore {
 		return tileDOM; //Return the DOM element for the tile.
 	}
 
-	_createEventListeners() {
-		// Bind the click handler to the instance and then add as event listener
-		this._gridContainer.addEventListener("click", (e) => this.#clickHandler(e));
-
-		//Track the control key, used to open SeeDetails in new tab
-		window.addEventListener(
-			"keydown",
-			(event) => {
-				if (event.key === "Control") {
-					this._ctrlPress = true;
-				}
-			},
-			true
-		);
-
-		window.addEventListener(
-			"keyup",
-			(event) => {
-				if (event.key === "Control") {
-					this._ctrlPress = false;
-				}
-			},
-			true
-		);
-	}
-
 	#clickHandler(e) {
 		// If a user clicks on the link wrapper around an icon, it would navigate to the
 		// default href (which is usually #) which breaks several things. We'll fix this by
@@ -1224,7 +1198,31 @@ class NotificationMonitor extends MonitorCore {
 
 	//#######################################################
 
-	_listeners() {
+	_createListeners() {
+		// Bind the click handler to the instance and then add as event listener
+		this._gridContainer.addEventListener("click", (e) => this.#clickHandler(e));
+
+		//Track the control key, used to open SeeDetails in new tab
+		window.addEventListener(
+			"keydown",
+			(event) => {
+				if (event.key === "Control") {
+					this._ctrlPress = true;
+				}
+			},
+			true
+		);
+
+		window.addEventListener(
+			"keyup",
+			(event) => {
+				if (event.key === "Control") {
+					this._ctrlPress = false;
+				}
+			},
+			true
+		);
+
 		// Add the fix toolbar with the pause button if we scroll past the original pause button
 		const scrollToTopBtn = document.getElementById("scrollToTop-fixed");
 		const originalPauseBtn = document.getElementById("pauseFeed");

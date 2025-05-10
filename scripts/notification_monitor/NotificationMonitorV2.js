@@ -38,14 +38,12 @@ class NotificationMonitorV2 extends NotificationMonitor {
 
 		this._gridContainer = document.querySelector("#vvp-items-grid");
 
-		//Create the event listeners
-		this._createEventListeners();
-
 		this._i13nMgr.setCountryCode(Settings.get("general.country"));
 		document.getElementById("date_loaded").innerText = this._formatDate();
 		this._mostRecentItemDateDOM = document.getElementById("date_most_recent_item");
 
-		this._listeners();
+		//Create the event listeners
+		this._createListeners();
 
 		this.#broadcastChannel();
 
