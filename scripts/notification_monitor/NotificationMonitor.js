@@ -55,7 +55,7 @@ class NotificationMonitor extends MonitorCore {
 	}
 
 	constructor() {
-		super(); //There is no parent constructor to call.
+		super();
 
 		// Prevent direct instantiation of the abstract class
 		if (this.constructor === NotificationMonitor) {
@@ -496,7 +496,7 @@ class NotificationMonitor extends MonitorCore {
 		Tpl.setVar("reason", reason);
 		Tpl.setVar("highlightKW", highlightKW);
 		Tpl.setVar("blurKW", blurKW);
-		Tpl.setVar("is_parent_asin", is_parent_asin);
+		Tpl.setVar("is_parent_asin", is_parent_asin); //"true" or "false"
 		Tpl.setVar("enrollment_guid", enrollment_guid);
 		Tpl.setVar("recommendationType", recommendationType);
 		Tpl.setVar("recommendationId", recommendationId);
