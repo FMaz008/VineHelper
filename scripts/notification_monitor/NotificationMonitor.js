@@ -403,9 +403,9 @@ class NotificationMonitor extends MonitorCore {
 			etv_min,
 			etv_max,
 			reason,
-			highlightKW,
+			KW,
 			KWsMatch,
-			blurKW,
+			BlurKW,
 			BlurKWsMatch,
 			unavailable,
 		} = itemData;
@@ -474,8 +474,8 @@ class NotificationMonitor extends MonitorCore {
 		this._tpl.setVar("queue", queue);
 		this._tpl.setVar("description", title);
 		this._tpl.setVar("reason", reason);
-		this._tpl.setVar("highlightKW", highlightKW);
-		this._tpl.setVar("blurKW", blurKW);
+		this._tpl.setVar("highlightKW", KW);
+		this._tpl.setVar("blurKW", BlurKW);
 		this._tpl.setVar("is_parent_asin", is_parent_asin); //"true" or "false"
 		this._tpl.setVar("enrollment_guid", enrollment_guid);
 		this._tpl.setVar("recommendationType", recommendationType);
