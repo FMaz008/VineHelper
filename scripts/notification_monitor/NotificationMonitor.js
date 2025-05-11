@@ -1,3 +1,6 @@
+//Todo: setEtv, setETVFromAsin, updateItemETV ... it's a little confusing.
+//Todo: insertTileAccordingToETV and ETVChangeRepositioning are very similar. Could we merge some logic?
+
 import { getRecommendationTypeFromQueue, generateRecommendationString } from "../Grid.js";
 import { YMDHiStoISODate } from "../DateHelper.js";
 import { keywordMatch } from "../service_worker/keywordMatch.js";
@@ -44,6 +47,11 @@ class NotificationMonitor extends MonitorCore {
 		}
 	}
 
+	/**
+	 * Determine if the item should be displayed based on the filters settings. Will hide the item if it doesn't match the filters.
+	 * @param {object} node - The DOM element of the tile
+	 * @returns {boolean} - Doesn't mean anything.
+	 */
 	#processNotificationFiltering(node) {
 		if (!node) {
 			return false;
@@ -112,6 +120,12 @@ class NotificationMonitor extends MonitorCore {
 		}
 	}
 
+	/**
+	 * Disable gold items for silver users
+	 * Will try to detect if the item is gold and if it is, it will hide the See Details button and the Gold tier only button.
+	 * @param {object} notif - The DOM element of the tile
+	 * @param {boolean} updateTier - If true, update the tier of the item
+	 */
 	#disableGoldItemsForSilverUsers(notif, updateTier = false) {
 		if (!notif) {
 			return;
@@ -158,6 +172,9 @@ class NotificationMonitor extends MonitorCore {
 		}
 	}
 
+	/**
+	 * Sort the items in the _items map
+	 */
 	#sortItems() {
 		// Only proceed if there are items to sort
 		if (this._items.size === 0) return;
@@ -201,11 +218,19 @@ class NotificationMonitor extends MonitorCore {
 		return itemsArray;
 	}
 
-	// Get DOM element for an item
+	/**
+	 * Get the DOM element for an item
+	 * @param {string} asin - The ASIN of the item
+	 * @returns {object} - The DOM element of the item
+	 */
 	getItemDOMElement(asin) {
 		return this._items.get(asin)?.element;
 	}
 
+	/**
+	 * Mark an item as unavailable
+	 * @param {string} asin - The ASIN of the item
+	 */
 	async markItemUnavailable(asin) {
 		// Update the item data first
 		if (this._items.has(asin)) {
@@ -219,6 +244,10 @@ class NotificationMonitor extends MonitorCore {
 		this._disableItem(notif);
 	}
 
+	/**
+	 * When the fetch recent items is completed, this function is called.
+	 * It will unbuffer the feed if it is paused and sort the items.
+	 */
 	fetchRecentItemsEnd() {
 		if (this._feedPaused) {
 			//Unbuffer the feed
@@ -230,7 +259,11 @@ class NotificationMonitor extends MonitorCore {
 		this._updateTabTitle();
 	}
 
-	// Update item data with ETV
+	/** Update the ETV of the _items entry for the given ASIN
+	 * @param {string} asin - The ASIN of the item
+	 * @param {float} etv - The ETV value
+	 * @returns {boolean} - True if the ETV was updated, false if the entry doesn't exist
+	 */
 	#updateItemETV(asin, etv) {
 		if (!this._items.has(asin)) {
 			return false;
@@ -255,6 +288,12 @@ class NotificationMonitor extends MonitorCore {
 		return true;
 	}
 
+	/**
+	 * Update the tier of the _items entry for the given ASIN
+	 * @param {string} asin - The ASIN of the item
+	 * @param {string} tier - The tier value (silver or gold)
+	 * @returns {boolean} - True if the tier was updated, false if the entry doesn't exist
+	 */
 	#updateItemTier(asin, tier) {
 		if (!this._items.has(asin)) {
 			return false;
@@ -268,11 +307,16 @@ class NotificationMonitor extends MonitorCore {
 		return true;
 	}
 
-	#bulkRemoveItems(asinsToKeep, isKeepSet = false) {
+	/**
+	 * Bulk remove items from the monitor
+	 * @param {array} asinsToKeep - An array of ASINs to process
+	 * @param {boolean} isKeepSet - If true, keep the items in the array and delete all other items, otherwise remove them
+	 */
+	#bulkRemoveItems(arrASINs, isKeepSet = false) {
 		this._preserveScrollPosition(() => {
 			// Always use the optimized container replacement approach
 			// Create a new empty container
-			const newContainer = this._gridContainer.cloneNode(false);
+			const newContainer = this._gridContainer.cloneNode(false); //Clone the container, but not the children items
 
 			// Create a new items map to store the updated collection
 			const newItems = new Map();
@@ -280,7 +324,7 @@ class NotificationMonitor extends MonitorCore {
 
 			// Efficiently process all items
 			this._items.forEach((item, asin) => {
-				const shouldKeep = isKeepSet ? asinsToKeep.has(asin) : !asinsToKeep.has(asin);
+				const shouldKeep = isKeepSet ? arrASINs.includes(asin) : !arrASINs.includes(asin);
 
 				if (shouldKeep && item.element) {
 					// Add this item to the new container
@@ -299,7 +343,7 @@ class NotificationMonitor extends MonitorCore {
 			this._gridContainer = newContainer;
 
 			// Reattach event listeners to the new container
-			this._createListeners(true);
+			this._createListeners(true); //True to limit the creation of a listener to the grid container only.
 
 			// Update the data structures
 			this._items = newItems;
@@ -310,6 +354,10 @@ class NotificationMonitor extends MonitorCore {
 		this._updateTabTitle();
 	}
 
+	/**
+	 * Auto truncate the items in the monitor according to the set limit.
+	 * @param {boolean} forceRun - If true, run the truncation immediately, otherwise debounce the truncation
+	 */
 	#autoTruncate(forceRun = false) {
 		// Clear any existing debounce timer
 		if (this._autoTruncateDebounceTimer) {
@@ -359,8 +407,9 @@ class NotificationMonitor extends MonitorCore {
 		}
 	}
 
-	// Method for efficient bulk item removal or retention using container replacement
-
+	/**
+	 * Clear all visible items from the monitor
+	 */
 	#clearAllVisibleItems() {
 		this._preserveScrollPosition(() => {
 			// Get the asin of all visible items
@@ -377,7 +426,9 @@ class NotificationMonitor extends MonitorCore {
 		});
 	}
 
-	// Clear unavailable items
+	/**
+	 * Clear all unavailable items from the monitor
+	 */
 	#clearUnavailableItems() {
 		// Get all unavailable ASINs
 		const unavailableAsins = new Set();
@@ -391,6 +442,49 @@ class NotificationMonitor extends MonitorCore {
 		this.#bulkRemoveItems(unavailableAsins, false);
 	}
 
+	/**
+	 * Insert a tile in the DOM according to the ETV value
+	 * @param {DocumentFragment} fragment - The DOM fragment to insert the tile into
+	 * @param {string} asin - The ASIN of the item
+	 * @param {float} etv_min - The minimum ETV value
+	 */
+	#insertTileAccordingToETV(fragment, asin, etv_min) {
+		if (etv_min !== null) {
+			// For price sorting, find the correct position and insert there
+			const newPrice = parseFloat(etv_min) || 0;
+			let insertPosition = null;
+
+			// Find the first item with a lower price
+			const existingItems = Array.from(this._items.entries());
+			for (const [existingAsin, item] of existingItems) {
+				// Skip the current item or items without elements
+				if (existingAsin === asin || !item.element) continue;
+
+				const existingPrice = parseFloat(item.data.etv_min) || 0;
+				if (newPrice > existingPrice) {
+					insertPosition = item.element;
+					break;
+				}
+			}
+
+			if (insertPosition) {
+				// Insert before the found position
+				this._gridContainer.insertBefore(fragment, insertPosition);
+			} else {
+				// If no position found or item has highest price, append to the end
+				this._gridContainer.appendChild(fragment);
+			}
+		} else {
+			// If no ETV min, append to the end
+			this._gridContainer.appendChild(fragment);
+		}
+	}
+
+	/**
+	 * Add a tile to the monitor
+	 * @param {object} itemData - JSON object containing the item data
+	 * @returns {false|object} - Return the DOM element of the tile if added, false otherwise
+	 */
 	async addTileInGrid(itemData) {
 		if (!itemData) {
 			return false;
@@ -510,35 +604,8 @@ class NotificationMonitor extends MonitorCore {
 		this._preserveScrollPosition(() => {
 			// Insert the tile based on sort type
 			if (this._sortType === TYPE_PRICE) {
-				if (etv_min !== null) {
-					// For price sorting, find the correct position and insert there
-					const newPrice = parseFloat(etv_min) || 0;
-					let insertPosition = null;
-
-					// Find the first item with a lower price
-					const existingItems = Array.from(this._items.entries());
-					for (const [existingAsin, item] of existingItems) {
-						// Skip the current item or items without elements
-						if (existingAsin === asin || !item.element) continue;
-
-						const existingPrice = parseFloat(item.data.etv_min) || 0;
-						if (newPrice > existingPrice) {
-							insertPosition = item.element;
-							break;
-						}
-					}
-
-					if (insertPosition) {
-						// Insert before the found position
-						this._gridContainer.insertBefore(fragment, insertPosition);
-					} else {
-						// If no position found or item has highest price, append to the end
-						this._gridContainer.appendChild(fragment);
-					}
-				} else {
-					// If no ETV min, append to the end
-					this._gridContainer.appendChild(fragment);
-				}
+				//The tile will need to be inserted in a specific position based on the ETV value
+				this.#insertTileAccordingToETV(fragment, asin, etv_min);
 			} else {
 				// For other sort types, just insert at the beginning
 				this._gridContainer.insertBefore(fragment, this._gridContainer.firstChild);
@@ -597,9 +664,10 @@ class NotificationMonitor extends MonitorCore {
 			this.#setETV(tileDOM, etv_max);
 
 			//We found a zero ETV item, but we don't want to play a sound just yet
-			if (parseFloat(etv_min) === 0) {
-				this.#zeroETVItemFound(tileDOM, false); //Ok now process 0etv, but no sound
-			}
+			//if (parseFloat(etv_min) === 0) {
+			//?? Why are we calling this again?
+			//	this.#zeroETVItemFound(tileDOM, false); //Ok now process 0etv, but no sound
+			//}
 		} else {
 			//The ETV is not known
 			const brendaAnnounce = tileDOM.querySelector("#vh-announce-link-" + asin);
@@ -640,6 +708,10 @@ class NotificationMonitor extends MonitorCore {
 		return tileDOM; //Return the DOM element for the tile.
 	}
 
+	/**
+	 * Handle all click events in the monitor
+	 * @param {Event} e - The click event
+	 */
 	#clickHandler(e) {
 		// If a user clicks on the link wrapper around an icon, it would navigate to the
 		// default href (which is usually #) which breaks several things. We'll fix this by
@@ -761,7 +833,11 @@ class NotificationMonitor extends MonitorCore {
 		}
 	}
 
-	// Add or update item data in the Map
+	/**
+	 * Add or update item data in the Map
+	 * @param {string} asin - The ASIN of the item
+	 * @param {object} itemData - JSON object containing the item data
+	 */
 	#addItemData(asin, itemData) {
 		// Create a new item object or update existing one
 
@@ -776,6 +852,7 @@ class NotificationMonitor extends MonitorCore {
 			});
 		} else {
 			// Update existing item data, preserving the element reference
+			// both the old data and the new data are merged into the existing object, new data will override old data
 			const existing = this._items.get(asin);
 			this._items.set(asin, {
 				data: {
@@ -795,7 +872,11 @@ class NotificationMonitor extends MonitorCore {
 		this.#sortItems();
 	}
 
-	// Store DOM element reference
+	/**
+	 * Store the DOM element reference
+	 * @param {string} asin - The ASIN of the item
+	 * @param {object} element - The DOM element to store
+	 */
 	#storeItemDOMElement(asin, element) {
 		if (this._items.has(asin)) {
 			const item = this._items.get(asin);
@@ -813,7 +894,12 @@ class NotificationMonitor extends MonitorCore {
 		}
 	}
 
-	// Remove item completely
+	/**
+	 * Remove an item from the monitor
+	 * @param {object} tile - The DOM element of the tile
+	 * @param {string} asin - The ASIN of the item
+	 * @param {boolean} countTotalTiles - If true, update the tab counter
+	 */
 	#removeTile(tile, asin, countTotalTiles = true) {
 		if (!tile || !asin) {
 			return;
@@ -848,6 +934,12 @@ class NotificationMonitor extends MonitorCore {
 		}
 	}
 
+	/**
+	 * Set the ETV for an item. Call it twice with min and max values to set a range.
+	 * @param {object} notif - The DOM element of the tile
+	 * @param {number} etv - The ETV value
+	 * @returns {boolean} - True if the ETV was set, false otherwise
+	 */
 	async #setETV(notif, etv) {
 		if (!notif) {
 			return false;
@@ -939,8 +1031,16 @@ class NotificationMonitor extends MonitorCore {
 		this._processNotificationHighlight(notif);
 
 		this.#disableGoldItemsForSilverUsers(notif);
+
+		return true;
 	}
 
+	/**
+	 * Set the tier for an item
+	 * @param {string} asin - The ASIN of the item
+	 * @param {string} tier - The tier value (silver or gold)
+	 * @returns {boolean} - True if the tier was set, false otherwise
+	 */
 	async setTierFromASIN(asin, tier) {
 		if (!this._items.has(asin)) {
 			return false;
@@ -967,6 +1067,14 @@ class NotificationMonitor extends MonitorCore {
 
 		return true;
 	}
+
+	/**
+	 * Set the ETV for an item
+	 * Called when an ETV update is received from the server.
+	 * @param {string} asin - The ASIN of the item
+	 * @param {float} etv - The ETV value
+	 * @returns {boolean} - True if the ETV was set, false otherwise
+	 */
 	async setETVFromASIN(asin, etv) {
 		// Store old ETV value to detect if reordering is needed
 		const oldETV = this._items.get(asin)?.data?.etv_min || 0;
@@ -987,42 +1095,66 @@ class NotificationMonitor extends MonitorCore {
 
 		// Re-position the item if using price sort and the value changed significantly
 		if (this._sortType === TYPE_PRICE) {
-			const newETV = this._items.get(asin)?.data?.etv_min || 0;
-
-			// Only reposition if the ETV changed significantly enough to potentially affect order
-			if (Math.abs(newETV - oldETV) > 0.01) {
-				// Remove the element from DOM
-				notif.remove();
-
-				// Find the correct position to insert
-				const newPrice = parseFloat(newETV);
-				let insertPosition = null;
-
-				// Find the first item with a lower price
-				for (const [existingAsin, item] of this._items.entries()) {
-					// Skip the current item or items without elements
-					if (existingAsin === asin || !item.element || !item.element.parentNode) continue;
-
-					const existingPrice = parseFloat(item.data.etv_min) || 0;
-					if (newPrice > existingPrice) {
-						insertPosition = item.element;
-						break;
-					}
-				}
-
-				if (insertPosition) {
-					// Insert before the found position
-					this._gridContainer.insertBefore(notif, insertPosition);
-				} else {
-					// If no position found or item has highest price, append to the end
-					this._gridContainer.appendChild(notif);
-				}
-			}
+			this.#ETVChangeRepositioning(asin, oldETV);
 		}
-
 		return true;
 	}
 
+	/**
+	 * Reposition the item if using price sort and the value changed significantly
+	 * @param {string} asin - The ASIN of the item
+	 * @param {float} oldETV - The old ETV value
+	 * @returns {boolean} - True if the item was repositioned, false otherwise
+	 */
+	#ETVChangeRepositioning(asin, oldETV) {
+		const newETV = this._items.get(asin)?.data?.etv_min || 0;
+		const notif = this._items.get(asin)?.element;
+		if (!notif) {
+			return false;
+		}
+
+		// Only reposition if the ETV changed significantly enough to potentially affect order
+		if (Math.abs(newETV - oldETV) > 0.01) {
+			// Remove the element from DOM
+			notif.remove();
+
+			// Find the correct position to insert
+			const newPrice = parseFloat(newETV);
+			let insertPosition = null;
+
+			// Find the first item with a lower price
+			for (const [existingAsin, item] of this._items.entries()) {
+				// Skip the current item or items without elements
+				if (existingAsin === asin || !item.element || !item.element.parentNode) {
+					continue;
+				}
+
+				const existingPrice = parseFloat(item.data.etv_min) || 0;
+				if (newPrice > existingPrice) {
+					insertPosition = item.element;
+					break;
+				}
+			}
+
+			if (insertPosition) {
+				// Insert before the found position
+				this._gridContainer.insertBefore(notif, insertPosition);
+			} else {
+				// If no position found or item has highest price, append to the end
+				this._gridContainer.appendChild(notif);
+			}
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Handle the zero ETV item found event
+	 * @param {object} notif - The DOM element of the tile
+	 * @param {boolean} playSoundEffect - If true, play the zero ETV sound effect
+	 * @returns {boolean} - True if the zero ETV item was found, false otherwise
+	 */
 	#zeroETVItemFound(notif, playSoundEffect = true) {
 		if (!notif) {
 			return false;
@@ -1080,6 +1212,9 @@ class NotificationMonitor extends MonitorCore {
 		}
 	}
 
+	/**
+	 * Sort the DOM items according to the _items map
+	 */
 	#processNotificationSorting() {
 		const container = document.getElementById("vvp-items-grid");
 

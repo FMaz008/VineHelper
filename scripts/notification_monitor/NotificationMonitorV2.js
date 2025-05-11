@@ -32,6 +32,8 @@ class NotificationMonitorV2 extends NotificationMonitor {
 
 		this._gridContainer = document.querySelector("#vvp-items-grid");
 
+		//Monitor V2 does not run from an Amazon URL from which the country code is automatically detected,
+		// so we need to set the country code manually
 		this._i13nMgr.setCountryCode(this._settings.get("general.country"));
 		document.getElementById("date_loaded").innerText = this._formatDate();
 		this._mostRecentItemDateDOM = document.getElementById("date_most_recent_item");

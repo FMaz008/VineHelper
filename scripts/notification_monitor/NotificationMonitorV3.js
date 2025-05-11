@@ -148,7 +148,7 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		document.getElementById("date_loaded").innerText = this._formatDate();
 		this._mostRecentItemDateDOM = document.getElementById("date_most_recent_item");
 
-		if (!this._firefox && this._settings.get("notification.monitor.openLinksInNewTab") != "1") {
+		if (!this._env.isFirefox() && this._settings.get("notification.monitor.openLinksInNewTab") != "1") {
 			if (this._settings.get("notification.monitor.preventUnload")) {
 				this.#preventRedirections();
 			}
