@@ -204,7 +204,7 @@ class NotificationMonitor extends MonitorCore {
 
 	/**
 	 * Bulk remove items from the monitor
-	 * @param {array} asinsToKeep - An array of ASINs to process
+	 * @param {Set} asinsToKeep - A Set of ASINs to process
 	 * @param {boolean} isKeepSet - If true, keep the items in the array and delete all other items, otherwise remove them
 	 */
 	#bulkRemoveItems(arrASINs, isKeepSet = false) {
@@ -219,7 +219,7 @@ class NotificationMonitor extends MonitorCore {
 
 			// Efficiently process all items
 			this._itemsMgr.items.forEach((item, asin) => {
-				const shouldKeep = isKeepSet ? arrASINs.includes(asin) : !arrASINs.includes(asin);
+				const shouldKeep = isKeepSet ? arrASINs.has(asin) : !arrASINs.has(asin);
 
 				if (shouldKeep && item.element) {
 					// Add this item to the new container
