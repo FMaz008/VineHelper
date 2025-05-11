@@ -13,7 +13,8 @@ const TYPE_HIGHLIGHT = 2;
 const TYPE_HIGHLIGHT_OR_ZEROETV = 9;
 
 const TYPE_DATE = "date";
-const TYPE_PRICE = "price";
+const TYPE_PRICE_DESC = "price_desc";
+const TYPE_PRICE_ASC = "price_asc";
 
 class NotificationMonitor extends MonitorCore {
 	_feedPaused = false;
@@ -277,10 +278,12 @@ class NotificationMonitor extends MonitorCore {
 						element: item.element,
 					}));
 
-					// Sort according to current sort method, but reversed
+					// Sort according to current sort method, but **reversed**
 					// (we want to remove lowest price or oldest items)
-					if (this._sortType === TYPE_PRICE) {
-						itemsArray.sort((a, b) => a.price - b.price); // Sort lowest price first
+					if (this._sortType === TYPE_PRICE_ASC) {
+						itemsArray.sort((a, b) => b.price - a.price); // Sort lowest price first
+					} else if (this._sortType === TYPE_PRICE_DESC) {
+						itemsArray.sort((a, b) => a.price - b.price); // Sort highest price first
 					} else {
 						itemsArray.sort((a, b) => a.date - b.date); // Sort oldest first (default)
 					}
@@ -357,7 +360,10 @@ class NotificationMonitor extends MonitorCore {
 				if (existingAsin === asin || !item.element) continue;
 
 				const existingPrice = parseFloat(item.data.etv_min) || 0;
-				if (newPrice > existingPrice) {
+				if (this._sortType === TYPE_PRICE_DESC && newPrice > existingPrice) {
+					insertPosition = item.element;
+					break;
+				} else if (this._sortType === TYPE_PRICE_ASC && newPrice < existingPrice) {
 					insertPosition = item.element;
 					break;
 				}
@@ -499,7 +505,7 @@ class NotificationMonitor extends MonitorCore {
 
 		this._preserveScrollPosition(() => {
 			// Insert the tile based on sort type
-			if (this._sortType === TYPE_PRICE) {
+			if (this._sortType === TYPE_PRICE_DESC || this._sortType === TYPE_PRICE_ASC) {
 				//The tile will need to be inserted in a specific position based on the ETV value
 				this.#insertTileAccordingToETV(fragment, asin, etv_min);
 			} else {
@@ -804,7 +810,7 @@ class NotificationMonitor extends MonitorCore {
 		this.#setETV(notif, etv);
 
 		// Re-position the item if using price sort and the value changed significantly
-		if (this._sortType === TYPE_PRICE) {
+		if (this._sortType === TYPE_PRICE_DESC || this._sortType === TYPE_PRICE_ASC) {
 			this.#ETVChangeRepositioning(asin, oldETV);
 		}
 		return true;
@@ -840,7 +846,10 @@ class NotificationMonitor extends MonitorCore {
 				}
 
 				const existingPrice = parseFloat(item.data.etv_min) || 0;
-				if (newPrice > existingPrice) {
+				if (this._sortType === TYPE_PRICE_DESC && newPrice > existingPrice) {
+					insertPosition = item.element;
+					break;
+				} else if (this._sortType === TYPE_PRICE_ASC && newPrice < existingPrice) {
 					insertPosition = item.element;
 					break;
 				}
@@ -881,7 +890,7 @@ class NotificationMonitor extends MonitorCore {
 		//Move the notification to the top only if we're not using price-based sorting
 		if (!this._fetchingRecentItems) {
 			// Only move to top if we're NOT using price sort
-			if (this._sortType !== TYPE_PRICE && this._settings.get("notification.monitor.bump0ETV")) {
+			if (this._sortType === TYPE_DATE && this._settings.get("notification.monitor.bump0ETV")) {
 				this._moveNotifToTop(notif);
 			} else {
 				// If sorting by price is active, just resort after identifying as zero ETV

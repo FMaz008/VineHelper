@@ -1,5 +1,6 @@
 const TYPE_DATE = "date";
-const TYPE_PRICE = "price";
+const TYPE_PRICE_DESC = "price_desc";
+const TYPE_PRICE_ASC = "price_asc";
 
 class ItemsMgr {
 	imageUrls = new Set(); // Set of image URLs used for duplicate thumbnail detection (kept separate for O(1) lookup performance)
@@ -30,6 +31,14 @@ class ItemsMgr {
 			if (this._settings.get("notification.monitor.sortType") === TYPE_DATE) {
 				// Sort by date, newest first
 				return b.data.date - a.data.date;
+			} else if (this._settings.get("notification.monitor.sortType") === TYPE_PRICE_ASC) {
+				// Sort by price, lowest first
+				// Treat null/undefined as 99999999 so they are at the end
+				const aPrice =
+					a.data.etv_min !== null && a.data.etv_min !== undefined ? parseFloat(a.data.etv_min) : 99999999;
+				const bPrice =
+					b.data.etv_min !== null && b.data.etv_min !== undefined ? parseFloat(b.data.etv_min) : 99999999;
+				return aPrice - bPrice;
 			} else {
 				// Default: sort by price (TYPE_PRICE), highest first
 				// Treat null/undefined as -1 so actual 0 values rank higher
