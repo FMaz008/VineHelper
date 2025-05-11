@@ -8,6 +8,7 @@
 import { SettingsMgr } from "../SettingsMgr.js";
 import { Template } from "../Template.js";
 import { Environment } from "../Environment.js";
+import { Logger } from "../Logger.js";
 
 import { PinMgr } from "./PinMgr.js";
 import { Internationalization } from "../Internationalization.js";
@@ -17,7 +18,7 @@ import { BrendaAnnounceQueue } from "../BrendaAnnounce.js";
 import { ModalMgr } from "../ModalMgr.js";
 import { NotificationsSoundPlayer } from "../NotificationsSoundPlayer.js";
 import { ServerCom } from "./ServerCom.js";
-
+import { ItemsMgr } from "./ItemsMgr.js";
 class MonitorCore {
 	//Variables linked to monitor V2 vs V3
 	_monitorV2 = false; //True if the monitor is in V2 mode
@@ -37,6 +38,7 @@ class MonitorCore {
 		this._settings = new SettingsMgr();
 		this._env = new Environment();
 		this._tpl = new Template();
+		this._log = new Logger();
 		this._i13nMgr = new Internationalization();
 		this._notificationsMgr = new ScreenNotifier();
 		this._tooltipMgr = new Tooltip();
@@ -45,15 +47,18 @@ class MonitorCore {
 		this._soundPlayerMgr = new NotificationsSoundPlayer();
 
 		//Notification Monitor's specific classes
-		this._pinMgr = new PinMgr();
-		this._pinMgr.setGetItemDOMElementCallback(this.getItemDOMElement.bind(this));
-
 		this._serverComMgr = new ServerCom();
 		this._serverComMgr.setMarkUnavailableCallback(this.markItemUnavailable.bind(this));
 		this._serverComMgr.setAddTileInGridCallback(this.addTileInGrid.bind(this));
 		this._serverComMgr.setFetchRecentItemsEndCallback(this.fetchRecentItemsEnd.bind(this));
 		this._serverComMgr.setSetETVFromASINCallback(this.setETVFromASIN.bind(this));
 		this._serverComMgr.setSetTierFromASINCallback(this.setTierFromASIN.bind(this));
+
+		this._itemsMgr = new ItemsMgr(this._settings);
+		this._itemsMgr.setGetCurrentDateTimeCallback(this._currentDateTime.bind(this));
+
+		this._pinMgr = new PinMgr();
+		this._pinMgr.setGetItemDOMElementCallback(this._itemsMgr.getItemDOMElement.bind(this._itemsMgr));
 
 		this.#getFetchLimit();
 	}
@@ -238,7 +243,7 @@ class MonitorCore {
 		let visibleCount = 0;
 
 		// Loop through all items
-		for (const [asin, item] of this._items.entries()) {
+		for (const [asin, item] of this._itemsMgr.items.entries()) {
 			// Skip items without DOM elements
 			if (!item.element) continue;
 
@@ -315,14 +320,6 @@ class MonitorCore {
 			this.#send_report(asin);
 		} else {
 			alert("Not reported.");
-		}
-	}
-
-	async markItemUnavailable(asin) {
-		if (this._items.has(asin)) {
-			const item = this._items.get(asin);
-			item.data.unavailable = true;
-			this._items.set(asin, item);
 		}
 	}
 }

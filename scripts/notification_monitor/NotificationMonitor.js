@@ -21,8 +21,6 @@ class NotificationMonitor extends MonitorCore {
 	_feedPausedAmountStored = 0;
 	_fetchingRecentItems;
 	_waitTimer; //Timer which wait a short delay to see if anything new is about to happen
-	_imageUrls = new Set(); // Set of image URLs used for duplicate thumbnail detection (kept separate for O(1) lookup performance)
-	_items = new Map(); // Combined map to store both item data and DOM elements
 	_gridContainer = null;
 	_wsErrorMessage = null;
 	_mostRecentItemDate = null;
@@ -173,174 +171,6 @@ class NotificationMonitor extends MonitorCore {
 	}
 
 	//###################################################################
-	// _items map related methods
-	//###################################################################
-
-	/**
-	 * Sort the items in the _items map
-	 */
-	#sortItems() {
-		// Only proceed if there are items to sort
-		if (this._items.size === 0) return;
-
-		// Convert Map to array for sorting
-		const itemsArray = Array.from(this._items.entries()).map(([asin, item]) => {
-			return {
-				asin,
-				data: item.data,
-				element: item.element,
-			};
-		});
-
-		// Sort based on the current sort type
-		itemsArray.sort((a, b) => {
-			if (this._sortType === TYPE_DATE) {
-				// Sort by date, newest first
-				return b.data.date - a.data.date;
-			} else {
-				// Default: sort by price (TYPE_PRICE), highest first
-				// Treat null/undefined as -1 so actual 0 values rank higher
-				const aPrice =
-					a.data.etv_min !== null && a.data.etv_min !== undefined ? parseFloat(a.data.etv_min) : -1;
-				const bPrice =
-					b.data.etv_min !== null && b.data.etv_min !== undefined ? parseFloat(b.data.etv_min) : -1;
-				return bPrice - aPrice;
-			}
-		});
-
-		// Transform the sorted array back to [key, value] pairs for the Map constructor
-		this._items = new Map(
-			itemsArray.map((item) => [
-				item.asin,
-				{
-					data: item.data,
-					element: item.element,
-				},
-			])
-		);
-
-		return itemsArray;
-	}
-
-	/** Update the ETV of the _items entry for the given ASIN
-	 * @param {string} asin - The ASIN of the item
-	 * @param {float} etv - The ETV value
-	 * @returns {boolean} - True if the ETV was updated, false if the entry doesn't exist
-	 */
-	#updateItemETV(asin, etv) {
-		if (!this._items.has(asin)) {
-			return false;
-		}
-
-		const item = this._items.get(asin);
-
-		// Update min and max ETV values
-		if (!item.data.etv_min || etv < item.data.etv_min) {
-			item.data.etv_min = etv;
-		}
-
-		if (!item.data.etv_max || etv > item.data.etv_max) {
-			item.data.etv_max = etv;
-		}
-
-		// Update the Map
-		this._items.set(asin, item);
-		// Sort the items after adding or updating a new item
-		this.#sortItems();
-
-		return true;
-	}
-
-	/**
-	 * Update the tier of the _items entry for the given ASIN
-	 * @param {string} asin - The ASIN of the item
-	 * @param {string} tier - The tier value (silver or gold)
-	 * @returns {boolean} - True if the tier was updated, false if the entry doesn't exist
-	 */
-	#updateItemTier(asin, tier) {
-		if (!this._items.has(asin)) {
-			return false;
-		}
-
-		const item = this._items.get(asin);
-		item.data.tier = tier;
-		this._items.set(asin, item);
-		this.#sortItems();
-
-		return true;
-	}
-
-	/**
-	 * Add or update item data in the _items Map
-	 * @param {string} asin - The ASIN of the item
-	 * @param {object} itemData - JSON object containing the item data
-	 */
-	#addItemData(asin, itemData) {
-		// Create a new item object or update existing one
-
-		if (!this._items.has(asin)) {
-			// New item
-			this._items.set(asin, {
-				data: {
-					...itemData,
-					dateAdded: this._currentDateTime(),
-				},
-				element: null, // Element will be set later
-			});
-		} else {
-			// Update existing item data, preserving the element reference
-			// both the old data and the new data are merged into the existing object, new data will override old data
-			const existing = this._items.get(asin);
-			this._items.set(asin, {
-				data: {
-					...existing.data,
-					...itemData,
-				},
-				element: existing.element,
-			});
-		}
-
-		// Store image URL if needed for duplicate detection
-		if (itemData.img_url && this._settings.get("notification.monitor.hideDuplicateThumbnail")) {
-			this._imageUrls.add(itemData.img_url);
-		}
-
-		// Sort the items after adding or updating a new item
-		this.#sortItems();
-	}
-
-	/**
-	 * Store the DOM element reference on the _items map
-	 * @param {string} asin - The ASIN of the item
-	 * @param {object} element - The DOM element to store
-	 */
-	#storeItemDOMElement(asin, element) {
-		if (this._items.has(asin)) {
-			const item = this._items.get(asin);
-			item.element = element;
-			this._items.set(asin, item);
-		} else {
-			// Should not happen, but handle the case
-			this._items.set(asin, {
-				data: {
-					asin: asin,
-					dateAdded: this._currentDateTime(),
-				},
-				element: element,
-			});
-		}
-	}
-
-	/**
-	 * Get the DOM element for an item
-	 * @param {string} asin - The ASIN of the item
-	 * @returns {object} - The DOM element of the item
-	 */
-	getItemDOMElement(asin) {
-		return this._items.get(asin)?.element;
-	}
-
-	//###################################################################
 	// DOM element related methods
 	//###################################################################
 
@@ -350,11 +180,7 @@ class NotificationMonitor extends MonitorCore {
 	 */
 	async markItemUnavailable(asin) {
 		// Update the item data first
-		if (this._items.has(asin)) {
-			const item = this._items.get(asin);
-			item.data.unavailable = true;
-			this._items.set(asin, item);
-		}
+		this._itemsMgr.markItemUnavailable(asin);
 
 		// Then update the DOM
 		const notif = this.getItemDOMElement(asin);
@@ -392,7 +218,7 @@ class NotificationMonitor extends MonitorCore {
 			const newImageUrls = new Set();
 
 			// Efficiently process all items
-			this._items.forEach((item, asin) => {
+			this._itemsMgr.items.forEach((item, asin) => {
 				const shouldKeep = isKeepSet ? arrASINs.includes(asin) : !arrASINs.includes(asin);
 
 				if (shouldKeep && item.element) {
@@ -415,8 +241,8 @@ class NotificationMonitor extends MonitorCore {
 			this._createListeners(true); //True to limit the creation of a listener to the grid container only.
 
 			// Update the data structures
-			this._items = newItems;
-			this._imageUrls = newImageUrls;
+			this._itemsMgr.items = newItems;
+			this._itemsMgr.imageUrls = newImageUrls;
 		});
 
 		// Update the tab counter
@@ -439,11 +265,11 @@ class NotificationMonitor extends MonitorCore {
 			if (this._autoTruncateEnabled) {
 				const max = this._settings.get("notification.monitor.autoTruncateLimit");
 				// Check if we need to truncate based on map size
-				if (this._items.size > max) {
-					Log.add(`NOTIF: Auto truncating item(s) from the page using the ${this._sortType} sort method.`);
+				if (this._itemsMgr.items.size > max) {
+					this._log.add(`NOTIF: Auto truncating item(s) from the page using the ${this._sortType} sort method.`);
 
 					// Convert map to array for sorting
-					const itemsArray = Array.from(this._items.entries()).map(([asin, item]) => ({
+					const itemsArray = Array.from(this._itemsMgr.items.entries()).map(([asin, item]) => ({
 						asin,
 						date: new Date(item.data.date),
 						price: parseFloat(item.data.etv_min) || 0,
@@ -501,7 +327,7 @@ class NotificationMonitor extends MonitorCore {
 	#clearUnavailableItems() {
 		// Get all unavailable ASINs
 		const unavailableAsins = new Set();
-		this._items.forEach((item, asin) => {
+		this._itemsMgr.items.forEach((item, asin) => {
 			if (item.data.unavailable) {
 				unavailableAsins.add(asin);
 			}
@@ -524,7 +350,7 @@ class NotificationMonitor extends MonitorCore {
 			let insertPosition = null;
 
 			// Find the first item with a lower price
-			const existingItems = Array.from(this._items.entries());
+			const existingItems = Array.from(this._itemsMgr.items.entries());
 			for (const [existingAsin, item] of existingItems) {
 				// Skip the current item or items without elements
 				if (existingAsin === asin || !item.element) continue;
@@ -587,12 +413,12 @@ class NotificationMonitor extends MonitorCore {
 		const recommendationId = generateRecommendationString(recommendationType, asin, enrollment_guid); //grid.js
 
 		// If the notification already exists, update the data and return the existing DOM element
-		if (this._items.has(asin)) {
+		if (this._itemsMgr.items.has(asin)) {
 			const element = this.getItemDOMElement(asin);
 			if (element) {
-				Log.add(`NOTIF: Item ${asin} already exists, updating RecommendationId.`);
+				this._log.add(`NOTIF: Item ${asin} already exists, updating RecommendationId.`);
 				// Update the data
-				this.#addItemData(asin, itemData);
+				this._itemsMgr.addItemData(asin, itemData);
 
 				// Update recommendationId in the DOM
 				// it's possible that the input element was removed as part of the de-duplicate image process or the gold tier check
@@ -611,13 +437,13 @@ class NotificationMonitor extends MonitorCore {
 
 		// Check if the de-duplicate image setting is on
 		if (this._settings.get("notification.monitor.hideDuplicateThumbnail")) {
-			if (this._imageUrls.has(img_url)) {
+			if (this._itemsMgr.imageUrls.has(img_url)) {
 				return false; // The image already exists, do not add the item
 			}
 		}
 
 		// Store the item data
-		this.#addItemData(asin, itemData);
+		this._itemsMgr.addItemData(asin, itemData);
 
 		// Generate the search URL
 		let search_url;
@@ -682,7 +508,7 @@ class NotificationMonitor extends MonitorCore {
 		});
 
 		// Store a reference to the DOM element
-		this.#storeItemDOMElement(asin, tileDOM);
+		this._itemsMgr.storeItemDOMElement(asin, tileDOM);
 
 		// Check if the item is already pinned and update the pin icon
 		if (this._settings.get("pinnedTab.active")) {
@@ -789,7 +615,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Get the item data to access its image URL
-		const item = this._items.get(asin);
+		const item = this._itemsMgr.items.get(asin);
 		const imgUrl = item?.data?.img_url;
 
 		// Remove the tooltip
@@ -799,11 +625,11 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Remove from data structures
-		this._items.delete(asin);
+		this._itemsMgr.items.delete(asin);
 
 		// Also remove the image URL from the set if duplicate detection is enabled
 		if (imgUrl && this._settings.get("notification.monitor.hideDuplicateThumbnail")) {
-			this._imageUrls.delete(imgUrl);
+			this._itemsMgr.imageUrls.delete(imgUrl);
 		}
 
 		// Remove the element from DOM with scroll position preserved
@@ -898,7 +724,7 @@ class NotificationMonitor extends MonitorCore {
 					);
 					if (val2 !== false) {
 						//Remove (permanently "hide") the tile
-						Log.add(`NOTIF: Item ${asin} matched hide keyword ${val2}. Hidding it.`);
+						this._log.add(`NOTIF: Item ${asin} matched hide keyword ${val2}. Hidding it.`);
 						this.#removeTile(notif, asin);
 					}
 				}
@@ -925,11 +751,11 @@ class NotificationMonitor extends MonitorCore {
 	 * @returns {boolean} - True if the tier was set, false otherwise
 	 */
 	async setTierFromASIN(asin, tier) {
-		if (!this._items.has(asin)) {
+		if (!this._itemsMgr.items.has(asin)) {
 			return false;
 		}
 
-		if (!this.#updateItemTier(asin, tier)) {
+		if (!this._itemsMgr.updateItemTier(asin, tier)) {
 			return false;
 		}
 
@@ -960,10 +786,10 @@ class NotificationMonitor extends MonitorCore {
 	 */
 	async setETVFromASIN(asin, etv) {
 		// Store old ETV value to detect if reordering is needed
-		const oldETV = this._items.get(asin)?.data?.etv_min || 0;
+		const oldETV = this._itemsMgr.items.get(asin)?.data?.etv_min || 0;
 
 		// Update the data in our Map
-		if (!this.#updateItemETV(asin, etv)) {
+		if (!this._itemsMgr.updateItemETV(asin, etv)) {
 			return false;
 		}
 
@@ -990,8 +816,8 @@ class NotificationMonitor extends MonitorCore {
 	 * @returns {boolean} - True if the item was repositioned, false otherwise
 	 */
 	#ETVChangeRepositioning(asin, oldETV) {
-		const newETV = this._items.get(asin)?.data?.etv_min || 0;
-		const notif = this._items.get(asin)?.element;
+		const newETV = this._itemsMgr.items.get(asin)?.data?.etv_min || 0;
+		const notif = this._itemsMgr.items.get(asin)?.element;
 		if (!notif) {
 			return false;
 		}
@@ -1006,7 +832,7 @@ class NotificationMonitor extends MonitorCore {
 			let insertPosition = null;
 
 			// Find the first item with a lower price
-			for (const [existingAsin, item] of this._items.entries()) {
+			for (const [existingAsin, item] of this._itemsMgr.items.entries()) {
 				// Skip the current item or items without elements
 				if (existingAsin === asin || !item.element || !item.element.parentNode) {
 					continue;
@@ -1103,7 +929,7 @@ class NotificationMonitor extends MonitorCore {
 
 		this._preserveScrollPosition(() => {
 			// Sort the items - reuse the sorting logic from #sortItems
-			const sortedItems = this.#sortItems();
+			const sortedItems = this._itemsMgr.sortItems();
 
 			// Only proceed if we have items
 			if (!sortedItems || sortedItems.length === 0) return;
@@ -1139,7 +965,7 @@ class NotificationMonitor extends MonitorCore {
 		e.preventDefault();
 
 		const asin = e.target.dataset.asin;
-		Log.add(`NOTIF: Hiding icon clicked for item ${asin}`);
+		this._log.add(`NOTIF: Hiding icon clicked for item ${asin}`);
 
 		// Get the DOM element from our Map
 		const tile = this.getItemDOMElement(asin);
@@ -1516,9 +1342,9 @@ class NotificationMonitor extends MonitorCore {
 
 		// Bind sort and filter controls
 		const sortQueue = document.querySelector("select[name='sort-queue']");
-		sortQueue.addEventListener("change", (event) => {
+		sortQueue.addEventListener("change", async (event) => {
 			this._sortType = sortQueue.value;
-			this._settings.set("notification.monitor.sortType", this._sortType);
+			await this._settings.set("notification.monitor.sortType", this._sortType);
 			this.#processNotificationSorting();
 			// Force immediate truncate when sort type changes
 			this.#autoTruncate(true);
