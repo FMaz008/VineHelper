@@ -183,7 +183,7 @@ class NotificationMonitor extends MonitorCore {
 		this._itemsMgr.markItemUnavailable(asin);
 
 		// Then update the DOM
-		const notif = this.getItemDOMElement(asin);
+		const notif = this._itemsMgr.getItemDOMElement(asin);
 		this._disableItem(notif);
 	}
 
@@ -266,7 +266,9 @@ class NotificationMonitor extends MonitorCore {
 				const max = this._settings.get("notification.monitor.autoTruncateLimit");
 				// Check if we need to truncate based on map size
 				if (this._itemsMgr.items.size > max) {
-					this._log.add(`NOTIF: Auto truncating item(s) from the page using the ${this._sortType} sort method.`);
+					this._log.add(
+						`NOTIF: Auto truncating item(s) from the page using the ${this._sortType} sort method.`
+					);
 
 					// Convert map to array for sorting
 					const itemsArray = Array.from(this._itemsMgr.items.entries()).map(([asin, item]) => ({
@@ -414,7 +416,7 @@ class NotificationMonitor extends MonitorCore {
 
 		// If the notification already exists, update the data and return the existing DOM element
 		if (this._itemsMgr.items.has(asin)) {
-			const element = this.getItemDOMElement(asin);
+			const element = this._itemsMgr.getItemDOMElement(asin);
 			if (element) {
 				this._log.add(`NOTIF: Item ${asin} already exists, updating RecommendationId.`);
 				// Update the data
@@ -760,7 +762,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Get the corresponding DOM element
-		const notif = this.getItemDOMElement(asin);
+		const notif = this._itemsMgr.getItemDOMElement(asin);
 		if (!notif) {
 			return false;
 		}
@@ -794,7 +796,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Get the corresponding DOM element
-		const notif = this.getItemDOMElement(asin);
+		const notif = this._itemsMgr.getItemDOMElement(asin);
 		if (!notif) {
 			return false;
 		}
@@ -968,7 +970,7 @@ class NotificationMonitor extends MonitorCore {
 		this._log.add(`NOTIF: Hiding icon clicked for item ${asin}`);
 
 		// Get the DOM element from our Map
-		const tile = this.getItemDOMElement(asin);
+		const tile = this._itemsMgr.getItemDOMElement(asin);
 		if (tile) {
 			this.#removeTile(tile, asin);
 		}
