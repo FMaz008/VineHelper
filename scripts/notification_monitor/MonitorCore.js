@@ -281,47 +281,6 @@ class MonitorCore {
 		});
 	}
 
-	#send_report(asin) {
-		let manifest = chrome.runtime.getManifest();
-
-		const content = {
-			api_version: 5,
-			app_version: manifest.version,
-			country: this._i13nMgr.getCountryCode(),
-			action: "report_asin",
-			uuid: this._settings.get("general.uuid", false),
-			asin: asin,
-		};
-		const options = {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(content),
-		};
-
-		//Send the report to VH's server
-		fetch(this._env.getAPIUrl(), options).then(function () {
-			alert("Report sent. Thank you.");
-		});
-	}
-
-	_handleReportClick(e) {
-		e.preventDefault(); // Prevent the default click behavior
-		const asin = e.target.dataset.asin;
-
-		let val = prompt(
-			"Are you sure you want to REPORT the user who posted ASIN#" +
-				asin +
-				"?\n" +
-				"Only report notifications which are not Amazon products\n" +
-				"Note: False reporting may get you banned.\n\n" +
-				"type REPORT in the field below to send a report:"
-		);
-		if (val !== null && val.toLowerCase() == "report") {
-			this.#send_report(asin);
-		} else {
-			alert("Not reported.");
-		}
-	}
 }
 
 export { MonitorCore };

@@ -961,11 +961,12 @@ class NotificationMonitor extends MonitorCore {
 	/**
 	 * Handle the hide click event
 	 * @param {Event} e - The click event
+	 * @param {Element} target - The target element (which can be different from e.target)
 	 */
-	#handleHideClick(e) {
+	#handleHideClick(e, target) {
 		e.preventDefault();
 
-		const asin = e.target.dataset.asin;
+		const asin = target.dataset.asin;
 		this._log.add(`NOTIF: Hiding icon clicked for item ${asin}`);
 
 		// Get the DOM element from our Map
@@ -978,12 +979,13 @@ class NotificationMonitor extends MonitorCore {
 	/**
 	 * Handle the Brenda click event
 	 * @param {Event} e - The click event
+	 * @param {Element} target - The target element (which can be different from e.target)
 	 */
-	#handleBrendaClick(e) {
+	#handleBrendaClick(e, target) {
 		e.preventDefault();
 
-		const asin = e.target.dataset.asin;
-		const queue = e.target.dataset.queue;
+		const asin = target.dataset.asin;
+		const queue = target.dataset.queue;
 
 		let etv = document.querySelector("#vh-notification-" + asin + " .etv").dataset.etvMax;
 
@@ -993,13 +995,14 @@ class NotificationMonitor extends MonitorCore {
 	/**
 	 * Handle the pin click event
 	 * @param {Event} e - The click event
+	 * @param {Element} target - The target element (which can be different from e.target)
 	 */
-	async #handlePinClick(e) {
+	async #handlePinClick(e, target) {
 		e.preventDefault();
 
-		const asin = e.target.dataset.asin;
+		const asin = target.dataset.asin;
 		const isPinned = await this._pinMgr.checkIfPinned(asin);
-		const title = e.target.dataset.title;
+		const title = target.dataset.title;
 
 		if (isPinned) {
 			// Update the icon
@@ -1013,10 +1016,10 @@ class NotificationMonitor extends MonitorCore {
 			});
 		} else {
 			// Pin the item
-			const isParentAsin = e.target.dataset.isParentAsin;
-			const enrollmentGUID = e.target.dataset.enrollmentGuid;
-			const queue = e.target.dataset.queue;
-			const thumbnail = e.target.dataset.thumbnail;
+			const isParentAsin = target.dataset.isParentAsin;
+			const enrollmentGUID = target.dataset.enrollmentGuid;
+			const queue = target.dataset.queue;
+			const thumbnail = target.dataset.thumbnail;
 
 			// Update the icon
 			this._pinMgr.pinItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID);
@@ -1032,18 +1035,19 @@ class NotificationMonitor extends MonitorCore {
 	/**
 	 * Handle the details click event
 	 * @param {Event} e - The click event
+	 * @param {Element} target - The target element (which can be different from e.target)
 	 */
-	#handleDetailsClick(e) {
+	#handleDetailsClick(e, target) {
 		e.preventDefault();
 
-		const asin = e.target.dataset.asin;
-		const date = e.target.dataset.date;
-		const dateReceived = e.target.dataset.dateReceived;
-		const tier = e.target.dataset.tier;
-		const reason = e.target.dataset.reason;
-		const highlightKW = e.target.dataset.highlightkw;
-		const blurKW = e.target.dataset.blurkw;
-		const queue = e.target.dataset.queue;
+		const asin = target.dataset.asin;
+		const date = target.dataset.date;
+		const dateReceived = target.dataset.dateReceived;
+		const tier = target.dataset.tier;
+		const reason = target.dataset.reason;
+		const highlightKW = target.dataset.highlightkw;
+		const blurKW = target.dataset.blurkw;
+		const queue = target.dataset.queue;
 
 		let m = this._dialogMgr.newModal("item-details-" + asin);
 		m.title = "Item " + asin;
@@ -1062,6 +1066,57 @@ class NotificationMonitor extends MonitorCore {
 	}
 
 	/**
+	 * Send a report to VH's server
+	 * @param {string} asin - The ASIN of the item
+	 */
+	#send_report(asin) {
+		let manifest = chrome.runtime.getManifest();
+
+		const content = {
+			api_version: 5,
+			app_version: manifest.version,
+			country: this._i13nMgr.getCountryCode(),
+			action: "report_asin",
+			uuid: this._settings.get("general.uuid", false),
+			asin: asin,
+		};
+		const options = {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(content),
+		};
+
+		//Send the report to VH's server
+		fetch(this._env.getAPIUrl(), options).then(function () {
+			alert("Report sent. Thank you.");
+		});
+	}
+
+	/**
+	 * Handle the report click event
+	 * @param {Event} e - The click event
+	 * @param {Element} target - The target element (which can be different from e.target)
+	 */
+	#handleReportClick(e, target) {
+		e.preventDefault(); // Prevent the default click behavior
+		const asin = target.dataset.asin;
+
+		let val = prompt(
+			"Are you sure you want to REPORT the user who posted ASIN#" +
+				asin +
+				"?\n" +
+				"Only report notifications which are not Amazon products\n" +
+				"Note: False reporting may get you banned.\n\n" +
+				"type REPORT in the field below to send a report:"
+		);
+		if (val !== null && val.toLowerCase() == "report") {
+			this.#send_report(asin);
+		} else {
+			alert("Not reported.");
+		}
+	}
+
+	/**
 	 * Handle all click events in the monitor
 	 * @param {Event} e - The click event
 	 */
@@ -1071,11 +1126,11 @@ class NotificationMonitor extends MonitorCore {
 		// matching the parent link elements and prevent default there (bubbling events)
 
 		// Helper function to handle icon clicks and their parent links
-		const _handleIconClick = (iconSelector, handler) => {
+		const handleIconClick = (iconSelector, handler) => {
 			const icon = e.target.closest(iconSelector);
 			if (icon) {
 				e.preventDefault();
-				handler(icon, e);
+				handler(e, icon);
 				return true;
 			}
 
@@ -1086,7 +1141,7 @@ class NotificationMonitor extends MonitorCore {
 				// Find the actual icon and handle it
 				const containedIcon = parentLink.querySelector(iconSelector);
 				if (containedIcon) {
-					handler(containedIcon, e);
+					handler(e, containedIcon);
 					return true;
 				}
 			}
@@ -1096,7 +1151,7 @@ class NotificationMonitor extends MonitorCore {
 
 		// Handle search icon
 		if (
-			_handleIconClick(".vh-icon-search", (icon) => {
+			handleIconClick(".vh-icon-search", (event, icon) => {
 				window.open(icon.closest("a").href, "_blank");
 			})
 		)
@@ -1104,17 +1159,17 @@ class NotificationMonitor extends MonitorCore {
 
 		// Handle report icon
 		if (
-			_handleIconClick(".vh-icon-report", () => {
-				this._handleReportClick(e);
+			handleIconClick(".vh-icon-report", (event, icon) => {
+				this.#handleReportClick(event, icon);
 			})
 		)
 			return;
 
 		// Handle announcement icon
 		if (
-			_handleIconClick(".vh-icon-announcement", () => {
+			handleIconClick(".vh-icon-announcement", (event, icon) => {
 				if (this._settings.get("discord.active") && this._settings.get("discord.guid", false) != null) {
-					this.#handleBrendaClick(e);
+					this.#handleBrendaClick(event, icon);
 				}
 			})
 		)
@@ -1122,9 +1177,9 @@ class NotificationMonitor extends MonitorCore {
 
 		// Handle pin icon
 		if (
-			_handleIconClick(".vh-icon-pin, .vh-icon-unpin", () => {
+			handleIconClick(".vh-icon-pin, .vh-icon-unpin", (event, icon) => {
 				if (this._settings.get("pinnedTab.active")) {
-					this.#handlePinClick(e);
+					this.#handlePinClick(event, icon);
 				}
 			})
 		)
@@ -1132,16 +1187,16 @@ class NotificationMonitor extends MonitorCore {
 
 		// Handle hide icon
 		if (
-			_handleIconClick(".vh-icon-hide", () => {
-				this.#handleHideClick(e);
+			handleIconClick(".vh-icon-hide", (event, icon) => {
+				this.#handleHideClick(event, icon);
 			})
 		)
 			return;
 
 		// Handle details icon
 		if (
-			_handleIconClick(".vh-icon-question", () => {
-				this.#handleDetailsClick(e);
+			handleIconClick(".vh-icon-question", (event, icon) => {
+				this.#handleDetailsClick(event, icon);
 			})
 		)
 			return;
