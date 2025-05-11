@@ -172,6 +172,10 @@ class NotificationMonitor extends MonitorCore {
 		}
 	}
 
+	//###################################################################
+	// _items map related methods
+	//###################################################################
+
 	/**
 	 * Sort the items in the _items map
 	 */
@@ -216,47 +220,6 @@ class NotificationMonitor extends MonitorCore {
 		);
 
 		return itemsArray;
-	}
-
-	/**
-	 * Get the DOM element for an item
-	 * @param {string} asin - The ASIN of the item
-	 * @returns {object} - The DOM element of the item
-	 */
-	getItemDOMElement(asin) {
-		return this._items.get(asin)?.element;
-	}
-
-	/**
-	 * Mark an item as unavailable
-	 * @param {string} asin - The ASIN of the item
-	 */
-	async markItemUnavailable(asin) {
-		// Update the item data first
-		if (this._items.has(asin)) {
-			const item = this._items.get(asin);
-			item.data.unavailable = true;
-			this._items.set(asin, item);
-		}
-
-		// Then update the DOM
-		const notif = this.getItemDOMElement(asin);
-		this._disableItem(notif);
-	}
-
-	/**
-	 * When the fetch recent items is completed, this function is called.
-	 * It will unbuffer the feed if it is paused and sort the items.
-	 */
-	fetchRecentItemsEnd() {
-		if (this._feedPaused) {
-			//Unbuffer the feed
-			document.getElementById("pauseFeed").click();
-		}
-		this._fetchingRecentItems = false;
-
-		this.#processNotificationSorting();
-		this._updateTabTitle();
 	}
 
 	/** Update the ETV of the _items entry for the given ASIN
@@ -305,6 +268,112 @@ class NotificationMonitor extends MonitorCore {
 		this.#sortItems();
 
 		return true;
+	}
+
+	/**
+	 * Add or update item data in the _items Map
+	 * @param {string} asin - The ASIN of the item
+	 * @param {object} itemData - JSON object containing the item data
+	 */
+	#addItemData(asin, itemData) {
+		// Create a new item object or update existing one
+
+		if (!this._items.has(asin)) {
+			// New item
+			this._items.set(asin, {
+				data: {
+					...itemData,
+					dateAdded: this._currentDateTime(),
+				},
+				element: null, // Element will be set later
+			});
+		} else {
+			// Update existing item data, preserving the element reference
+			// both the old data and the new data are merged into the existing object, new data will override old data
+			const existing = this._items.get(asin);
+			this._items.set(asin, {
+				data: {
+					...existing.data,
+					...itemData,
+				},
+				element: existing.element,
+			});
+		}
+
+		// Store image URL if needed for duplicate detection
+		if (itemData.img_url && this._settings.get("notification.monitor.hideDuplicateThumbnail")) {
+			this._imageUrls.add(itemData.img_url);
+		}
+
+		// Sort the items after adding or updating a new item
+		this.#sortItems();
+	}
+
+	/**
+	 * Store the DOM element reference on the _items map
+	 * @param {string} asin - The ASIN of the item
+	 * @param {object} element - The DOM element to store
+	 */
+	#storeItemDOMElement(asin, element) {
+		if (this._items.has(asin)) {
+			const item = this._items.get(asin);
+			item.element = element;
+			this._items.set(asin, item);
+		} else {
+			// Should not happen, but handle the case
+			this._items.set(asin, {
+				data: {
+					asin: asin,
+					dateAdded: this._currentDateTime(),
+				},
+				element: element,
+			});
+		}
+	}
+
+	/**
+	 * Get the DOM element for an item
+	 * @param {string} asin - The ASIN of the item
+	 * @returns {object} - The DOM element of the item
+	 */
+	getItemDOMElement(asin) {
+		return this._items.get(asin)?.element;
+	}
+
+	//###################################################################
+	// DOM element related methods
+	//###################################################################
+
+	/**
+	 * Mark an item as unavailable
+	 * @param {string} asin - The ASIN of the item
+	 */
+	async markItemUnavailable(asin) {
+		// Update the item data first
+		if (this._items.has(asin)) {
+			const item = this._items.get(asin);
+			item.data.unavailable = true;
+			this._items.set(asin, item);
+		}
+
+		// Then update the DOM
+		const notif = this.getItemDOMElement(asin);
+		this._disableItem(notif);
+	}
+
+	/**
+	 * When the fetch recent items is completed, this function is called.
+	 * It will unbuffer the feed if it is paused and sort the items.
+	 */
+	fetchRecentItemsEnd() {
+		if (this._feedPaused) {
+			//Unbuffer the feed
+			document.getElementById("pauseFeed").click();
+		}
+		this._fetchingRecentItems = false;
+
+		this.#processNotificationSorting();
+		this._updateTabTitle();
 	}
 
 	/**
@@ -709,192 +778,6 @@ class NotificationMonitor extends MonitorCore {
 	}
 
 	/**
-	 * Handle all click events in the monitor
-	 * @param {Event} e - The click event
-	 */
-	#clickHandler(e) {
-		// If a user clicks on the link wrapper around an icon, it would navigate to the
-		// default href (which is usually #) which breaks several things. We'll fix this by
-		// matching the parent link elements and prevent default there (bubbling events)
-
-		// Helper function to handle icon clicks and their parent links
-		const _handleIconClick = (iconSelector, handler) => {
-			const icon = e.target.closest(iconSelector);
-			if (icon) {
-				e.preventDefault();
-				handler(icon, e);
-				return true;
-			}
-
-			// Check if clicked on a parent link containing this icon type
-			const parentLink = e.target.closest(`a:has(${iconSelector})`);
-			if (parentLink && !e.target.closest(iconSelector)) {
-				e.preventDefault();
-				// Find the actual icon and handle it
-				const containedIcon = parentLink.querySelector(iconSelector);
-				if (containedIcon) {
-					handler(containedIcon, e);
-					return true;
-				}
-			}
-
-			return false;
-		};
-
-		// Handle search icon
-		if (
-			_handleIconClick(".vh-icon-search", (icon) => {
-				window.open(icon.closest("a").href, "_blank");
-			})
-		)
-			return;
-
-		// Handle report icon
-		if (
-			_handleIconClick(".vh-icon-report", () => {
-				this._handleReportClick(e);
-			})
-		)
-			return;
-
-		// Handle announcement icon
-		if (
-			_handleIconClick(".vh-icon-announcement", () => {
-				if (this._settings.get("discord.active") && this._settings.get("discord.guid", false) != null) {
-					this.#handleBrendaClick(e);
-				}
-			})
-		)
-			return;
-
-		// Handle pin icon
-		if (
-			_handleIconClick(".vh-icon-pin, .vh-icon-unpin", () => {
-				if (this._settings.get("pinnedTab.active")) {
-					this.#handlePinClick(e);
-				}
-			})
-		)
-			return;
-
-		// Handle hide icon
-		if (
-			_handleIconClick(".vh-icon-hide", () => {
-				this.#handleHideClick(e);
-			})
-		)
-			return;
-
-		// Handle details icon
-		if (
-			_handleIconClick(".vh-icon-question", () => {
-				this.#handleDetailsClick(e);
-			})
-		)
-			return;
-
-		//Add the click listener for the See Details button
-		if (
-			this._env.isFirefox() ||
-			this._settings.get("notification.monitor.openLinksInNewTab") == "1" ||
-			this._ctrlPress
-		) {
-			//Deactivate Vine click handling
-
-			const btnContainer = e.target.closest(".vvp-details-btn");
-			const seeDetailsBtn = e.target.closest(".a-button-primary input");
-			if (seeDetailsBtn) {
-				e.preventDefault();
-				//Monitor V2 does not have these buttons
-
-				//Remove the class to remove the default behavior of the button
-				if (btnContainer) {
-					btnContainer.classList.remove("vvp-details-btn");
-				}
-				const asin = seeDetailsBtn.dataset.asin;
-				const queue = seeDetailsBtn.dataset.queue;
-				const is_parent_asin = seeDetailsBtn.dataset.isParentAsin;
-				const enrollment_guid = seeDetailsBtn.dataset.enrollmentGuid;
-
-				//Store the function reference as a property on the element
-				window.open(
-					`https://www.amazon.${this._i13nMgr.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`,
-					"_blank"
-				);
-
-				//The release key will not be captured by the event listener when the new window/tab is opened.
-				if (this._ctrlPress) {
-					this._ctrlPress = false;
-					setTimeout(() => {
-						btnContainer.classList.add("vvp-details-btn");
-					}, 500);
-				}
-			}
-		}
-	}
-
-	/**
-	 * Add or update item data in the Map
-	 * @param {string} asin - The ASIN of the item
-	 * @param {object} itemData - JSON object containing the item data
-	 */
-	#addItemData(asin, itemData) {
-		// Create a new item object or update existing one
-
-		if (!this._items.has(asin)) {
-			// New item
-			this._items.set(asin, {
-				data: {
-					...itemData,
-					dateAdded: this._currentDateTime(),
-				},
-				element: null, // Element will be set later
-			});
-		} else {
-			// Update existing item data, preserving the element reference
-			// both the old data and the new data are merged into the existing object, new data will override old data
-			const existing = this._items.get(asin);
-			this._items.set(asin, {
-				data: {
-					...existing.data,
-					...itemData,
-				},
-				element: existing.element,
-			});
-		}
-
-		// Store image URL if needed for duplicate detection
-		if (itemData.img_url && this._settings.get("notification.monitor.hideDuplicateThumbnail")) {
-			this._imageUrls.add(itemData.img_url);
-		}
-
-		// Sort the items after adding or updating a new item
-		this.#sortItems();
-	}
-
-	/**
-	 * Store the DOM element reference
-	 * @param {string} asin - The ASIN of the item
-	 * @param {object} element - The DOM element to store
-	 */
-	#storeItemDOMElement(asin, element) {
-		if (this._items.has(asin)) {
-			const item = this._items.get(asin);
-			item.element = element;
-			this._items.set(asin, item);
-		} else {
-			// Should not happen, but handle the case
-			this._items.set(asin, {
-				data: {
-					asin: asin,
-					dateAdded: this._currentDateTime(),
-				},
-				element: element,
-			});
-		}
-	}
-
-	/**
 	 * Remove an item from the monitor
 	 * @param {object} tile - The DOM element of the tile
 	 * @param {string} asin - The ASIN of the item
@@ -1245,8 +1128,13 @@ class NotificationMonitor extends MonitorCore {
 	}
 
 	//############################################################
-	//## CLICK HANDLERS
+	//## CLICK HANDLERS (for tiles' icons)
+	//############################################################
 
+	/**
+	 * Handle the hide click event
+	 * @param {Event} e - The click event
+	 */
 	#handleHideClick(e) {
 		e.preventDefault();
 
@@ -1260,6 +1148,10 @@ class NotificationMonitor extends MonitorCore {
 		}
 	}
 
+	/**
+	 * Handle the Brenda click event
+	 * @param {Event} e - The click event
+	 */
 	#handleBrendaClick(e) {
 		e.preventDefault();
 
@@ -1271,6 +1163,10 @@ class NotificationMonitor extends MonitorCore {
 		this._brendaMgr.announce(asin, etv, queue, this._i13nMgr.getDomainTLD());
 	}
 
+	/**
+	 * Handle the pin click event
+	 * @param {Event} e - The click event
+	 */
 	async #handlePinClick(e) {
 		e.preventDefault();
 
@@ -1306,6 +1202,10 @@ class NotificationMonitor extends MonitorCore {
 		}
 	}
 
+	/**
+	 * Handle the details click event
+	 * @param {Event} e - The click event
+	 */
 	#handleDetailsClick(e) {
 		e.preventDefault();
 
@@ -1334,8 +1234,139 @@ class NotificationMonitor extends MonitorCore {
 		m.show();
 	}
 
+	/**
+	 * Handle all click events in the monitor
+	 * @param {Event} e - The click event
+	 */
+	#clickHandler(e) {
+		// If a user clicks on the link wrapper around an icon, it would navigate to the
+		// default href (which is usually #) which breaks several things. We'll fix this by
+		// matching the parent link elements and prevent default there (bubbling events)
+
+		// Helper function to handle icon clicks and their parent links
+		const _handleIconClick = (iconSelector, handler) => {
+			const icon = e.target.closest(iconSelector);
+			if (icon) {
+				e.preventDefault();
+				handler(icon, e);
+				return true;
+			}
+
+			// Check if clicked on a parent link containing this icon type
+			const parentLink = e.target.closest(`a:has(${iconSelector})`);
+			if (parentLink && !e.target.closest(iconSelector)) {
+				e.preventDefault();
+				// Find the actual icon and handle it
+				const containedIcon = parentLink.querySelector(iconSelector);
+				if (containedIcon) {
+					handler(containedIcon, e);
+					return true;
+				}
+			}
+
+			return false;
+		};
+
+		// Handle search icon
+		if (
+			_handleIconClick(".vh-icon-search", (icon) => {
+				window.open(icon.closest("a").href, "_blank");
+			})
+		)
+			return;
+
+		// Handle report icon
+		if (
+			_handleIconClick(".vh-icon-report", () => {
+				this._handleReportClick(e);
+			})
+		)
+			return;
+
+		// Handle announcement icon
+		if (
+			_handleIconClick(".vh-icon-announcement", () => {
+				if (this._settings.get("discord.active") && this._settings.get("discord.guid", false) != null) {
+					this.#handleBrendaClick(e);
+				}
+			})
+		)
+			return;
+
+		// Handle pin icon
+		if (
+			_handleIconClick(".vh-icon-pin, .vh-icon-unpin", () => {
+				if (this._settings.get("pinnedTab.active")) {
+					this.#handlePinClick(e);
+				}
+			})
+		)
+			return;
+
+		// Handle hide icon
+		if (
+			_handleIconClick(".vh-icon-hide", () => {
+				this.#handleHideClick(e);
+			})
+		)
+			return;
+
+		// Handle details icon
+		if (
+			_handleIconClick(".vh-icon-question", () => {
+				this.#handleDetailsClick(e);
+			})
+		)
+			return;
+
+		//Add the click listener for the See Details button
+		if (
+			this._env.isFirefox() ||
+			this._settings.get("notification.monitor.openLinksInNewTab") == "1" ||
+			this._ctrlPress
+		) {
+			//Deactivate Vine click handling
+
+			const btnContainer = e.target.closest(".vvp-details-btn");
+			const seeDetailsBtn = e.target.closest(".a-button-primary input");
+			if (seeDetailsBtn) {
+				e.preventDefault();
+				//Monitor V2 does not have these buttons
+
+				//Remove the class to remove the default behavior of the button
+				if (btnContainer) {
+					btnContainer.classList.remove("vvp-details-btn");
+				}
+				const asin = seeDetailsBtn.dataset.asin;
+				const queue = seeDetailsBtn.dataset.queue;
+				const is_parent_asin = seeDetailsBtn.dataset.isParentAsin;
+				const enrollment_guid = seeDetailsBtn.dataset.enrollmentGuid;
+
+				//Store the function reference as a property on the element
+				window.open(
+					`https://www.amazon.${this._i13nMgr.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`,
+					"_blank"
+				);
+
+				//The release key will not be captured by the event listener when the new window/tab is opened.
+				if (this._ctrlPress) {
+					this._ctrlPress = false;
+					setTimeout(() => {
+						btnContainer.classList.add("vvp-details-btn");
+					}, 500);
+				}
+			}
+		}
+	}
+
+	//#######################################################
+	// Event listeners and click handlers for static elements
 	//#######################################################
 
+	/**
+	 * Create listeners for the grid container
+	 * @param {boolean} reattachGridContainerOnly - If true, only the grid container will be reattached
+	 */
 	_createListeners(reattachGridContainerOnly = false) {
 		// Bind the click handler to the instance and then add as event listener
 		this._gridContainer.addEventListener("click", (e) => this.#clickHandler(e));
