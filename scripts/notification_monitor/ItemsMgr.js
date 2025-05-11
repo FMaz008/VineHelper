@@ -5,14 +5,8 @@ class ItemsMgr {
 	imageUrls = new Set(); // Set of image URLs used for duplicate thumbnail detection (kept separate for O(1) lookup performance)
 	items = new Map(); // Combined map to store both item data and DOM elements
 
-	#getCurrentDateTimeCallback = null;
-
 	constructor(settings) {
 		this._settings = settings;
-	}
-
-	setGetCurrentDateTimeCallback(callback) {
-		this.#getCurrentDateTimeCallback = callback;
 	}
 
 	/**
@@ -122,7 +116,7 @@ class ItemsMgr {
 			this.items.set(asin, {
 				data: {
 					...itemData,
-					dateAdded: this.#getCurrentDateTimeCallback(),
+					dateAdded: new Date(),
 				},
 				element: null, // Element will be set later
 			});
@@ -163,7 +157,7 @@ class ItemsMgr {
 			this.items.set(asin, {
 				data: {
 					asin: asin,
-					dateAdded: this.#getCurrentDateTimeCallback(),
+					dateAdded: new Date(),
 				},
 				element: element,
 			});

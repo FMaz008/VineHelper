@@ -55,16 +55,11 @@ class MonitorCore {
 		this._serverComMgr.setSetTierFromASINCallback(this.setTierFromASIN.bind(this));
 
 		this._itemsMgr = new ItemsMgr(this._settings);
-		this._itemsMgr.setGetCurrentDateTimeCallback(this._currentDateTime.bind(this));
 
 		this._pinMgr = new PinMgr();
 		this._pinMgr.setGetItemDOMElementCallback(this._itemsMgr.getItemDOMElement.bind(this._itemsMgr));
 
 		this.#getFetchLimit();
-	}
-
-	_currentDateTime() {
-		return new Date();
 	}
 
 	async #getFetchLimit() {

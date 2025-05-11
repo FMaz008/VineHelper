@@ -468,7 +468,7 @@ class NotificationMonitor extends MonitorCore {
 		this._tpl.setVar("img_url", img_url);
 		this._tpl.setVar("asin", asin);
 		this._tpl.setVar("tier", tier);
-		this._tpl.setVar("dateReceived", this._formatDate(this._currentDateTime()));
+		this._tpl.setVar("dateReceived", this._formatDate(new Date()));
 		this._tpl.setVar("date", this._formatDate(date));
 		this._tpl.setVar("feedPaused", this._feedPaused);
 		this._tpl.setVar("queue", queue);
