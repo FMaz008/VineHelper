@@ -1,4 +1,3 @@
-//Todo: setEtv, setETVFromAsin, updateItemETV ... it's a little confusing.
 //Todo: insertTileAccordingToETV and ETVChangeRepositioning are very similar. Could we merge some logic?
 
 import { getRecommendationTypeFromQueue, generateRecommendationString } from "../Grid.js";
@@ -44,6 +43,10 @@ class NotificationMonitor extends MonitorCore {
 			throw new TypeError('Abstract class "NotificationMonitor" cannot be instantiated directly.');
 		}
 	}
+
+	//###################################################################
+	// DOM element related methods
+	//###################################################################
 
 	/**
 	 * Determine if the item should be displayed based on the filters settings. Will hide the item if it doesn't match the filters.
@@ -169,10 +172,6 @@ class NotificationMonitor extends MonitorCore {
 			}
 		}
 	}
-
-	//###################################################################
-	// DOM element related methods
-	//###################################################################
 
 	/**
 	 * Mark an item as unavailable
