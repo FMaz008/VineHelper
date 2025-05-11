@@ -278,15 +278,9 @@ class NotificationMonitor extends MonitorCore {
 						element: item.element,
 					}));
 
-					// Sort according to current sort method, but **reversed**
-					// (we want to remove lowest price or oldest items)
-					if (this._sortType === TYPE_PRICE_ASC) {
-						itemsArray.sort((a, b) => b.price - a.price); // Sort lowest price first
-					} else if (this._sortType === TYPE_PRICE_DESC) {
-						itemsArray.sort((a, b) => a.price - b.price); // Sort highest price first
-					} else {
-						itemsArray.sort((a, b) => a.date - b.date); // Sort oldest first (default)
-					}
+					// Reverse sort.
+					//Truncate always clear the oldest items first, regardless of the selected sort type.
+					itemsArray.sort((a, b) => a.date - b.date); // Sort oldest first (default)
 
 					// Identify which items to keep and which to remove
 					const itemsToKeep = itemsArray.slice(itemsArray.length - max);
