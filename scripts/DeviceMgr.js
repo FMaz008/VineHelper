@@ -257,6 +257,26 @@ class DeviceMgr {
 			"Mini",
 			"Micro",
 			"Macro",
+			"Arch",
+			"Meta",
+			"Para",
+			"Trans",
+			"Inter",
+			"Intra",
+			"Extra",
+			"Infra",
+			"Supra",
+			"Exo",
+			"Endo",
+			"Iso",
+			"Holo",
+			"Nano",
+			"Pico",
+			"Giga",
+			"Tera",
+			"Peta",
+			"Exa",
+			"Zetta",
 
 			// Victorian/Steampunk themed prefixes
 			"Steam",
@@ -302,6 +322,48 @@ class DeviceMgr {
 			"Arcane",
 			"Imperial",
 			"Royal",
+			"Alchemic",
+			"Mechano",
+			"Clocko",
+			"Pendulo",
+			"Differentia",
+			"Analytical",
+			"Babbage",
+			"Lovelace",
+			"Difference",
+			"Calculating",
+			"Arithmo",
+			"Cogito",
+			"Mechanico",
+			"Artificio",
+			"Industria",
+			"Victoriana",
+			"Edwardian",
+			"Baroque",
+			"Gothic",
+			"Ornato",
+			"Embellisho",
+			"Grandio",
+			"Magnifico",
+			"Splendido",
+			"Opulento",
+			"Luxurio",
+			"Telegrapho",
+			"Velocito",
+			"Dirigiblo",
+			"Zeppelino",
+			"Balloono",
+			"Aeronauto",
+			"Submersiblo",
+			"Nautilo",
+			"Oceano",
+			"Vulcano",
+			"Ferrous",
+			"Mercurio",
+			"Tungsteno",
+			"Vanadio",
+			"Titano",
+			"Platino",
 		];
 		const nouns = [
 			"Automaton",
@@ -548,7 +610,15 @@ class DeviceMgr {
 		const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
 		const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
 		const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
-		const deviceName = `${randomAdjective} ${randomPrefix} ${randomNoun}`; // Combine them to create a device name
+
+		// Generate model suffix (random capital letter + 3 numbers)
+		const randomLetter = String.fromCharCode(65 + Math.floor(Math.random() * 26)); // A-Z
+		const randomNumbers = Math.floor(Math.random() * 1000)
+			.toString()
+			.padStart(3, "0");
+		const modelSuffix = `${randomLetter}-${randomNumbers}`;
+
+		const deviceName = `${randomAdjective} ${randomPrefix} ${randomNoun} ${modelSuffix}`; // Combine them to create a device name
 
 		if (save) {
 			this.settings.set("general.deviceName", deviceName);
