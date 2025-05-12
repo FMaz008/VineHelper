@@ -137,13 +137,14 @@ class Environment {
 		}
 
 		//Generate a fingerprint
-		if (!this._deviceFingerprintMgr.getFingerprintHash()) {
+		if (!(await this._deviceFingerprintMgr.getFingerprintHash())) {
 			try {
 				const deviceName = this._deviceMgr.generateDeviceName();
 				await this._deviceFingerprintMgr.generateFingerprint(uuid, deviceName);
 			} catch (error) {
 				//There was an error generating or submitting the fingerprint.
 				//Clear the fingerprint and try again later.
+				console.log(error);
 				await this._deviceFingerprintMgr.clearFingerprint();
 			}
 		}

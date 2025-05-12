@@ -18,8 +18,6 @@ class DeviceFingerprintMgr {
 
 	async generateFingerprint(uuid, deviceName) {
 		try {
-			this._env = env;
-
 			const fingerprintHashBase64 = await this.#generateFingerprintData(uuid);
 			const signatureBase64 = await this._cryptoKeys.signData(fingerprintHashBase64);
 			await this.#uploadFingerprint(uuid, fingerprintHashBase64, signatureBase64, deviceName);
