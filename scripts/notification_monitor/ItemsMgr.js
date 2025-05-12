@@ -121,7 +121,7 @@ class ItemsMgr {
 			// New item
 			this.items.set(asin, {
 				data: {
-					...itemData,
+					...itemData, //The spread operator will convert null values to empty strings.
 					dateAdded: new Date(),
 				},
 				element: null, // Element will be set later
@@ -133,12 +133,20 @@ class ItemsMgr {
 			const existing = this.items.get(asin);
 			this.items.set(asin, {
 				data: {
-					...existing.data,
-					...itemData,
+					...existing.data, //The spread operator will convert null values to empty strings.
+					...itemData, //The spread operator will convert null values to empty strings.
 				},
 				element: existing.element,
 			});
 			addedStatus = false;
+		}
+
+		//Convert back the empty string values to null for etv_min and etv_max
+		if (this.items.get(asin).data.etv_min === "") {
+			this.items.get(asin).data.etv_min = null;
+		}
+		if (this.items.get(asin).data.etv_max === "") {
+			this.items.get(asin).data.etv_max = null;
 		}
 
 		// Store image URL if needed for duplicate detection
