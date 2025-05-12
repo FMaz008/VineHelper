@@ -1,27 +1,83 @@
 <strong>Version {{$appVersion}} change notes:</strong>
 <br />
+The notification monitor was overhauled internally, a long overdue task due to the growing set of features complicating
+the code. VH now tries to tracks the vine tier availability of items and implemented a concept of devices to complement
+the UUID system.
+<br />
+<br />Due to the extensive nature of the changes, it is to be expected that this version may have some issues. <br />As
+usual, please report any issues you encounter, and they will be fixed promptly.
+<br />
+<br />
+<br />
+Change log:
 <ul>
+	<li>NEW: Added link next to the ASIN in the saved reviews list.</li>
 	<li>
-		NEW: <strong>Search notification monitors</strong>. Notification Monitors now have a search feature as a new filter.
+		NEW: <strong>Device name and id</strong> VH now allow you to set a custom device name, so you can identify which
+		device are linked to a specific UUID. Additionally, each device now gets a unique(-ish) id (an anonymous
+		fingerprint containing no data) that is used to identify the device alongside the UUID.
 	</li>
 	<li>
-		NEW: <strong>Sort by ETV</strong>. Notification Monitors now have a sort by ETV feature.
+		CHANGE: <strong>Unavailable tab</strong> now regroup the items which have received an ITEM_NOT_IN_ENROLLMENT
+		error, and no longer rely on the successful/unsuccessful order counts. This behavior is now in line with the
+		notifications monitor.
 	</li>
 	<li>
-		NEW: <strong>Clear unavailable</strong> Notification Monitors now have a button to clear unavailable items.
+		FIX: <strong>mobile view</strong>. The highlight toolbar was on the same line as the RFY/AFA/AI buttons. It is
+		now on a new line.
 	</li>
 	<li>
-		NEW: <strong>Custom auto-truncate</strong> Notification Monitors now allow users to select the number of items to
-		auto-truncate.
+		FIX: <strong>Modal/popup closing logic</strong>. Modal/popup closing logic has fixed so pressing ESC closes the
+		top one.
 	</li>
+	<li>FIX: <strong>Rogue error</strong>. Rogue error on page without items (ie: empty AFA)</li>
 	<li>
-		NEW: Notification Monitors now <strong>remember filter/sort settings</strong>
+		FIX: The Available tab had a <strong>column gap</strong> between items, causing the grid to look different than
+		the other tabs.
 	</li>
+	<li>FIX: <strong>Unescaping titles</strong> has been improved for vine searches and tooltips.</li>
+	<li>FIX: Display error message when trying to save a review without a title.</li>
+	<li>REMOVED: <strong>Reliability score</strong>. User's reliability score is no longer displayed.</li>
 	<li>
-		CHANGE: <strong>Memory optimization</strong>. The notification monitor now use significantly less events listeners, which should help with memory usage and memory garbage collection from the browser.
-	</li>
-	<li>
-		CHANGE: <strong>Notification monitor header design</strong>. Slight change to the header design to make it more scalable with various screen sizes.
+		<strong>Notification Monitor:</strong>
+		<ul>
+			<li>
+				NEW: If you are using Open in Place,<strong>CTRL+Click</strong> on a See Details button will open it in
+				a new tab.
+			</li>
+			<li>
+				NEW: <strong>Highlight item with Unknown ETV.</strong> New option to highlight items with an unknown
+				ETV.
+			</li>
+			<li>
+				NEW: <strong>Bump 0ETV</strong>. New option to bump 0ETV items to the top of the list. (It was a default
+				behavior before)
+			</li>
+			<li>
+				NEW: <strong>Clear unavailable</strong> Notification Monitors now have a button to clear unavailable
+				items.
+			</li>
+			<li>NEW: <strong>Sort by ETV</strong>. Notification Monitors now have a sort by ETV feature.</li>
+			<li>
+				NEW: <strong>Silver items detection</strong>. Items exceeding the silver limit but still showing to
+				silver members are now flagged as silver items and available to silver members.
+			</li>
+			<li>
+				NEW: <strong>Hide gold notifications</strong>. Silver tier users can now hide gold notifications from
+				the notification monitor.
+			</li>
+			<li>CHANGE: <strong>Clear all</strong> now clear visible items only.</li>
+			<li>
+				CHANGE: <strong>Notification monitor header design</strong>. Slight change to the header design to make
+				it more scalable with various screen sizes.
+			</li>
+			<li>IMPROVEMENT: <strong>Performance improvement</strong>. Auto truncation, and other stuff.</li>
+			<li>
+				FIX: <strong>Clarified error message</strong> when the notification monitor is not activated in VH's
+				settings.
+			</li>
+			<li>FIX: <strong>Unresponsive clicks</strong> after certain items were removed in bulk.</li>
+		</ul>
 	</li>
 </ul>
 
