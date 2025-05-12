@@ -119,6 +119,7 @@ class ItemsMgr {
 	 */
 	addItemData(asin, itemData) {
 		// Create a new item object or update existing one
+		let addedStatus = false;
 
 		if (!this.items.has(asin)) {
 			// New item
@@ -129,6 +130,7 @@ class ItemsMgr {
 				},
 				element: null, // Element will be set later
 			});
+			addedStatus = true;
 		} else {
 			// Update existing item data, preserving the element reference
 			// both the old data and the new data are merged into the existing object, new data will override old data
@@ -140,6 +142,7 @@ class ItemsMgr {
 				},
 				element: existing.element,
 			});
+			addedStatus = false;
 		}
 
 		// Store image URL if needed for duplicate detection
@@ -149,6 +152,9 @@ class ItemsMgr {
 
 		// Sort the items after adding or updating a new item
 		this.sortItems();
+
+		// Return true if the item was added, false if it was updated
+		return addedStatus;
 	}
 
 	/**

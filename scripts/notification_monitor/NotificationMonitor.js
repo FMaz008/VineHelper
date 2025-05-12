@@ -444,7 +444,10 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Store the item data
-		this._itemsMgr.addItemData(asin, itemData);
+		const addedStatus = this._itemsMgr.addItemData(asin, itemData);
+		if (!addedStatus) {
+			return false; // The item already exists, do not add the item as it will create an unlinked duplicate.
+		}
 
 		// Generate the search URL
 		let search_url;
@@ -787,7 +790,7 @@ class NotificationMonitor extends MonitorCore {
 	 */
 	async setETVFromASIN(asin, etv) {
 		// Store old ETV value to detect if reordering is needed
-		const oldETV = this._itemsMgr.items.get(asin)?.data?.etv_min || 0;
+		const oldETV = this._itemsMgr.items.get(asin)?.data?.etv_min || null;
 
 		// Update the data in our Map
 		if (!this._itemsMgr.updateItemETV(asin, etv)) {
@@ -824,7 +827,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Only reposition if the ETV changed significantly enough to potentially affect order
-		if (Math.abs(newETV - oldETV) > 0.01) {
+		if (oldETV === null || Math.abs(newETV - oldETV) > 0.01) {
 			// Remove the element from DOM
 			notif.remove();
 
@@ -943,6 +946,7 @@ class NotificationMonitor extends MonitorCore {
 
 			// Efficiently reorder DOM elements
 			// Remove all items from the DOM first to avoid unnecessary reflows
+			//Should we just clone the grid back to an empty one ?
 			validItems.forEach((item) => {
 				// We use a trick here - detach the element but keep the reference
 				if (item.element.parentNode) {
