@@ -115,6 +115,26 @@ class DeviceFingerprintMgr {
 		return true;
 	}
 
+	async deleteDevice(deviceId) {
+		const content = {
+			api_version: 5,
+			uuid: await this._settings.get("general.uuid"),
+			app_version: this._env.data.appVersion,
+			country: await this._settings.get("general.country"),
+			action: "delete_device",
+			id: deviceId,
+		};
+		const options = {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(content),
+		};
+		let response = await fetch(this._env.getAPIUrl(), options);
+		if (!response.ok) {
+			throw new Error("Network response was not ok ENV:deleteDevice");
+		}
+		return true;
+	}
 	async #generateFingerprintData(uuid) {
 		const data = JSON.stringify({
 			//uuid, // the generated UUID

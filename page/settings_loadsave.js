@@ -153,8 +153,26 @@ async function initiateSettings() {
 			document.getElementById("etvFoundRank").innerText =
 				data.etv_found_rank == undefined ? "N/A" : data.etv_found_rank + rankSuffix(data.etv_found_rank);
 			document.getElementById("devicesLinkedToUUID").innerHTML = data.devices
-				.map((device) => `<li>${device}</li>`)
+				.map(
+					(device) =>
+						`<li class="device-item" data-id="${device.id}">${device.name} (<a href="#" class="delete_device" data-id="${device.id}" data-name="${device.name}">unlink</a>)</li>`
+				)
 				.join("");
+
+			document.querySelectorAll(".delete_device").forEach((item) => {
+				item.onclick = async function (e) {
+					e.preventDefault();
+					const deviceName = item.dataset.name;
+					if (confirm("Unlink device " + deviceName + " from this UUID?")) {
+						await fingerprintMgr.deleteDevice(item.dataset.id);
+						//Remove the item from the list
+						const deviceItem = document.querySelector(`.device-item[data-id="${item.dataset.id}"]`);
+						if (deviceItem) {
+							deviceItem.remove();
+						}
+					}
+				};
+			});
 		});
 	}
 
@@ -377,9 +395,6 @@ async function initiateSettings() {
 			});
 	});
 
-	//Set the device Id:
-	document.getElementById("general.fingerprint.hash").value = Settings.get("general.fingerprint.hash");
-
 	function dynamicPassword(id) {
 		const key = CSS.escape(id);
 		document.querySelector(`#${key}`).onmouseenter = () => {
@@ -392,9 +407,7 @@ async function initiateSettings() {
 
 	//UUID/deviceId:
 	dynamicPassword("generaluuid");
-	dynamicPassword("general.fingerprint.hash");
 	document.getElementById(`generaluuid`).value = Settings.get("general.uuid", false);
-	document.getElementById(`general.fingerprint.hash`).value = Settings.get("general.fingerprint.hash", false);
 
 	document.querySelector("#saveUUID").onclick = async function () {
 		document.querySelector("#saveUUID").disabled = true;

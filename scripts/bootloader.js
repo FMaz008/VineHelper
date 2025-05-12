@@ -176,16 +176,17 @@ async function init() {
 	// If a search has been performed, unescape the HTML encoded characters for the line
 	// X item(s) matching "[SEARCH STRING WITH HTML ENCODED CHARACTERS]"
 	const gridContainer = document.querySelector("#vvp-items-grid-container");
-	if(gridContainer){
+	if (gridContainer) {
 		for (const node of gridContainer.childNodes) {
 			if (node.nodeName === "P") {
 				const matchingSearchText = node.innerHTML;
 
-			if (matchingSearchText) {
-				node.innerHTML = unescapeHTML(unescapeHTML(matchingSearchText));
+				if (matchingSearchText) {
+					node.innerHTML = unescapeHTML(unescapeHTML(matchingSearchText));
+				}
 			}
 		}
-	}}
+	}
 
 	// If a search has been performed, unescape the HTML encoded characters for the text in the search box
 	const searchTextInput = document.querySelector("#vvp-search-text-input");
@@ -944,7 +945,7 @@ async function fetchProductsDatav5() {
 		tier: env.getTierLevel(),
 		country: i13n.getCountryCode(),
 		uuid: await Settings.get("general.uuid", false),
-		fid: await Settings.get("general.fingerprint.hash", false),
+		fid: await Settings.get("general.fingerprint.id", false),
 		queue: env.data.vineQueue,
 		items: arrProductsData,
 	};
