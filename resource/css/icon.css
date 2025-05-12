@@ -201,6 +201,11 @@
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/declined.png");
 		background-repeat: no-repeat;
 	}
+	.vh-icon-reload {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/reload.png");
+		background-repeat: no-repeat;
+	}
 }
 
 @supports (-moz-appearance: none) {
@@ -405,6 +410,11 @@
 		background-image: url("/resource/image/declined.png");
 		background-repeat: no-repeat;
 	}
+	.vh-icon-reload {
+		background-size: 100%;
+		background-image: url("/resource/image/reload.png");
+		background-repeat: no-repeat;
+	}
 }
 
 .invert {
@@ -447,6 +457,13 @@ div[role="navigation"] > ul > li {
 .vh-button-icon {
 	padding-left: 25px;
 	background-size: 15px;
+	background-position-x: 5px;
+	background-position-y: center;
+}
+
+.vh-icon-only-button {
+	width: 25px;
+	background-size: 12px;
 	background-position-x: 5px;
 	background-position-y: center;
 }

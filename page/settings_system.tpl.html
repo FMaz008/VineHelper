@@ -19,23 +19,6 @@
 			Your unique user ID. If you have multiple devices, you may want to sync them up to the same value.
 		</div>
 	</div>
-	<div class="setting-container">
-		<label for="general.fingerprint.hash">
-			<span style="display: inline-block; width: 55px">Device ID:</span>
-			<input
-				type="password"
-				name="general.fingerprint.hash"
-				id="general.fingerprint.hash"
-				value=""
-				maxlength="45"
-				style="font-size: 10px; width: 250px"
-			/>
-		</label>
-		<div class="setting-summary">
-			<div class="vh-toolbar-icon vh-icon-question"></div>
-			Anonymous device identifier to help identify distinct devices for security purposes.
-		</div>
-	</div>
 	<div class="setting-container premium-feature-1">
 		<label for="hiddenTab.remote">
 			<input type="checkbox" name="hiddenTab.remote" value="1" />
@@ -51,6 +34,53 @@
 			<br />
 			<strong>Note:</strong> This feature does not sync pre-existing hidden/pinned items. It only syncs new
 			hidden/pinned items from the moment you enable it.
+		</div>
+	</div>
+	<div class="setting-container">
+		<label for="general.deviceName">
+			<span style="display: inline-block; width: 200px">Devices linked to this UUID:</span>
+			<ul id="devicesLinkedToUUID"></ul>
+		</label>
+	</div>
+</fieldset>
+
+<fieldset>
+	<legend>Device Info</legend>
+	<div class="setting-container">
+		<label for="general.fingerprint.hash">
+			<span style="display: inline-block; width: 55px">ID:</span>
+			<input
+				type="password"
+				name="general.fingerprint.hash"
+				id="general.fingerprint.hash"
+				value=""
+				maxlength="45"
+				style="font-size: 10px; width: 250px"
+				disabled
+			/>
+		</label>
+		<div class="setting-summary">
+			<div class="vh-toolbar-icon vh-icon-question"></div>
+			Anonymous device identifier to help identify distinct devices for security purposes.
+		</div>
+	</div>
+	<div class="setting-container">
+		<label for="general.deviceName">
+			<span style="display: inline-block; width: 55px">Name:</span>
+			<input
+				type="text"
+				name="general.deviceName"
+				id="general.deviceName"
+				value=""
+				maxlength="100"
+				style="font-size: 10px; width: 175px"
+			/>
+			<input type="button" id="generateDeviceName" value="" class="vh-icon-reload vh-icon-only-button" />
+			<input type="button" id="saveDeviceName" value="Save" />
+		</label>
+		<div class="setting-summary">
+			<div class="vh-toolbar-icon vh-icon-question"></div>
+			Your device's name. If you have multiple devices, you can name them differently to help identify them.
 		</div>
 	</div>
 </fieldset>

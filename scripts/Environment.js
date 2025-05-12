@@ -7,11 +7,11 @@ var i13n = new Internationalization();
 import { SettingsMgr } from "./SettingsMgr.js";
 var Settings = new SettingsMgr();
 
-import { DeviceFingerprint } from "./DeviceFingerprint.js";
-var deviceFingerprint = new DeviceFingerprint();
+import { DeviceFingerprintMgr } from "./DeviceFingerprintMgr.js";
+import { DeviceMgr } from "./DeviceMgr.js";
 
-const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
-//const VINE_HELPER_API_V5_URL = "http://127.0.0.1:3000";
+//const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
+const VINE_HELPER_API_V5_URL = "http://127.0.0.1:3000";
 
 /**
  * Environment file, used to load and store global variables
@@ -20,7 +20,7 @@ const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
 class Environment {
 	static #instance = null;
 
-	data;
+	data = {};
 
 	constructor() {
 		if (Environment.#instance) {
@@ -32,8 +32,8 @@ class Environment {
 
 		logger.add("ENV: Initializing environment...");
 
-		this.data = {};
-
+		this._deviceMgr = new DeviceMgr(Settings);
+		this._deviceFingerprintMgr = new DeviceFingerprintMgr(this, Settings);
 		this.#init();
 
 		// Request the _pluginInit script to inject the plugin scripts, if any
@@ -43,7 +43,7 @@ class Environment {
 	async #init() {
 		this.#isUltraVinerRunning();
 		this.#loadAppVersion();
-		this.#loadBrowingContext();
+		this.#loadBrowsingContext();
 
 		logger.add("ENV: Waiting for settings to load...");
 		await Settings.waitForLoad();
@@ -84,7 +84,7 @@ class Environment {
 		}
 	}
 
-	#loadBrowingContext() {
+	#loadBrowsingContext() {
 		//Determine if we are browsing a queue
 		const currentUrl = window.location.href;
 		let regex = /^.+?amazon\..+\/vine\/vine-items(?:\?(queue|search)=(.+?))?(?:[#&].*)?$/;
@@ -137,13 +137,14 @@ class Environment {
 		}
 
 		//Generate a fingerprint
-		if (!Settings.get("general.fingerprint", false)) {
+		if (!this._deviceFingerprintMgr.getFingerprintHash()) {
 			try {
-				await deviceFingerprint.generateFingerprint(this, uuid);
+				const deviceName = this._deviceMgr.generateDeviceName();
+				await this._deviceFingerprintMgr.generateFingerprint(uuid, deviceName);
 			} catch (error) {
 				//There was an error generating or submitting the fingerprint.
 				//Clear the fingerprint and try again later.
-				await Settings.set("general.fingerprint", null);
+				await this._deviceFingerprintMgr.clearFingerprint();
 			}
 		}
 	}

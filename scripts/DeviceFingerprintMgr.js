@@ -1,51 +1,108 @@
-import { SettingsMgr } from "./SettingsMgr.js";
-var Settings = new SettingsMgr();
-
 import CryptoKeys from "./CryptoKeys.js";
-var cryptoKeys = new CryptoKeys();
-
-class DeviceFingerprint {
+import { DeviceMgr } from "./DeviceMgr.js";
+class DeviceFingerprintMgr {
 	static #instance = null;
-	#env;
 
-	constructor() {
-		if (DeviceFingerprint.#instance) {
+	constructor(env, settings) {
+		if (DeviceFingerprintMgr.#instance) {
 			// Return the existing instance if it already exists
-			return DeviceFingerprint.#instance;
+			return DeviceFingerprintMgr.#instance;
 		}
 		// Initialize the instance if it doesn't exist
-		DeviceFingerprint.#instance = this;
+		DeviceFingerprintMgr.#instance = this;
+
+		this._settings = settings;
+		this._env = env;
+		this._cryptoKeys = new CryptoKeys();
 	}
 
-	async generateFingerprint(env, uuid) {
+	async generateFingerprint(uuid, deviceName) {
 		try {
-			this.#env = env;
+			this._env = env;
 
 			const fingerprintHashBase64 = await this.#generateFingerprintData(uuid);
-			const signatureBase64 = await cryptoKeys.signData(fingerprintHashBase64);
-			await this.#uploadFingerprint(uuid, fingerprintHashBase64, signatureBase64);
+			const signatureBase64 = await this._cryptoKeys.signData(fingerprintHashBase64);
+			await this.#uploadFingerprint(uuid, fingerprintHashBase64, signatureBase64, deviceName);
 		} catch (error) {
 			throw error;
 		}
 	}
 
-	async #uploadFingerprint(uuid, fingerprintHashBase64, signatureBase64) {
+	async clearFingerprint() {
+		await this._settings.set("general.fingerprint", null);
+	}
+
+	async getFingerprintHash() {
+		return await this._settings.get("general.fingerprint.hash");
+	}
+
+	async getFingerprintId() {
+		return await this._settings.get("general.fingerprint.id");
+	}
+
+	async getFingerprintArray() {
+		return {
+			hash: await this.getFingerprintHash(),
+			id: await this.getFingerprintId(),
+		};
+	}
+
+	async updateUUID(uuid) {
+		try {
+			//Get the current device name
+			const deviceMgr = new DeviceMgr(this._settings);
+			const deviceName = await deviceMgr.getDeviceName();
+
+			//Generate a signature for the fingerprint
+			const fingerprintHashBase64 = await this.getFingerprintHash();
+			const signatureBase64 = await this._cryptoKeys.signData(fingerprintHashBase64);
+
+			//Upload the fingerprint, which will validate the UUID and create an entry for the device for that user_id and fingerprint.
+			const result = await this.#uploadFingerprint(uuid, fingerprintHashBase64, signatureBase64, deviceName);
+			if (result) {
+				//Update the UUID in the settings
+				await this._settings.set("general.uuid", uuid);
+			}
+			return true;
+		} catch (error) {
+			throw error;
+		}
+	}
+
+	async updateDeviceName(uuid, deviceName) {
+		try {
+			const fingerprintHashBase64 = await this.getFingerprintHash();
+			const signatureBase64 = await this._cryptoKeys.signData(fingerprintHashBase64);
+			const result = await this.#uploadFingerprint(uuid, fingerprintHashBase64, signatureBase64, deviceName);
+			if (result) {
+				//Update the device name in the settings
+				const deviceMgr = new DeviceMgr(this._settings);
+				await deviceMgr.setDeviceName(deviceName);
+			}
+			return result;
+		} catch (error) {
+			throw error;
+		}
+	}
+
+	async #uploadFingerprint(uuid, fingerprintHashBase64, signatureBase64, deviceName) {
 		const content = {
 			api_version: 5,
-			app_version: this.#env.data.appVersion,
-			country: await Settings.get("general.country"),
+			app_version: this._env.data.appVersion,
+			country: await this._settings.get("general.country"),
 			action: "upload_fingerprint",
 			uuid: uuid,
-			publicKey: await cryptoKeys.getExportedPublicKey(),
+			publicKey: await this._cryptoKeys.getExportedPublicKey(),
 			fingerprint: fingerprintHashBase64,
 			signature: signatureBase64,
+			device_name: deviceName,
 		};
 		const options = {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(content),
 		};
-		let response = await fetch(this.#env.getAPIUrl(), options);
+		let response = await fetch(this._env.getAPIUrl(), options);
 		if (!response.ok) {
 			throw new Error("Network response was not ok ENV:uploadFingerprint");
 		}
@@ -55,7 +112,7 @@ class DeviceFingerprint {
 			throw new Error("Fingerprint ID not found ENV:uploadFingerprint");
 		}
 
-		Settings.set("general.fingerprint.id", data.fingerprint_id);
+		await this._settings.set("general.fingerprint.id", data.fingerprint_id);
 
 		return true;
 	}
@@ -89,9 +146,9 @@ class DeviceFingerprint {
 		const hash = await crypto.subtle.digest("SHA-256", dataBuffer);
 
 		// Convert ArrayBuffer to a string
-		const hashString = cryptoKeys.bufferToBase64(hash); //44 characters
+		const hashString = this._cryptoKeys.bufferToBase64(hash); //44 characters
 
-		await Settings.set("general.fingerprint.hash", hashString);
+		await this._settings.set("general.fingerprint.hash", hashString);
 		return hashString;
 	}
 
@@ -233,4 +290,4 @@ class DeviceFingerprint {
 	}
 }
 
-export { DeviceFingerprint };
+export { DeviceFingerprintMgr };

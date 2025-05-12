@@ -1,16 +1,20 @@
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
 const Settings = new SettingsMgr();
 
+import { Environment } from "../scripts/Environment.js";
+const env = new Environment();
+
 import { Internationalization } from "../scripts/Internationalization.js";
 const i13n = new Internationalization();
 
 import { HiddenListMgr } from "../scripts/HiddenListMgr.js";
 var HiddenList = new HiddenListMgr();
 
-//Reminder: This script is executed from the extension popup.
-//          The console used is the browser console, not the inspector console.
-const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
-//const VINE_HELPER_API_V5_URL = "http://127.0.0.1:3000";
+import { DeviceFingerprintMgr } from "../scripts/DeviceFingerprintMgr.js";
+var fingerprintMgr = new DeviceFingerprintMgr(Settings);
+
+import { DeviceMgr } from "../scripts/DeviceMgr.js";
+var deviceMgr = new DeviceMgr(Settings);
 
 async function drawDiscord() {
 	//Show or hide the discord options
@@ -136,7 +140,7 @@ async function initiateSettings() {
 			country: i13n.getCountryCode(),
 			uuid: Settings.get("general.uuid", false),
 		};
-		fetch(VINE_HELPER_API_V5_URL, {
+		fetch(env.getAPIUrl(), {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(content),
@@ -148,6 +152,9 @@ async function initiateSettings() {
 			document.getElementById("etvFound").innerText = data.etv_found == undefined ? "N/A" : data.etv_found;
 			document.getElementById("etvFoundRank").innerText =
 				data.etv_found_rank == undefined ? "N/A" : data.etv_found_rank + rankSuffix(data.etv_found_rank);
+			document.getElementById("devicesLinkedToUUID").innerHTML = data.devices
+				.map((device) => `<li>${device}</li>`)
+				.join("");
 		});
 	}
 
@@ -298,8 +305,8 @@ async function initiateSettings() {
 	manageColorPicker("notification.monitor.highlight.color");
 	manageColorPicker("notification.monitor.zeroETV.color");
 	manageColorPicker("notification.monitor.unknownETV.color");
-	//##TAB - SYSTEM
 
+	//##TAB - SYSTEM
 	manageCheckboxSetting("hiddenTab.remote");
 	manageCheckboxSetting("general.versionInfoPopup", false);
 	manageCheckboxSetting("general.GDPRPopup", false);
@@ -331,7 +338,7 @@ async function initiateSettings() {
 				items: "DELETE_ALL",
 			};
 			//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-			fetch(VINE_HELPER_API_V5_URL, {
+			fetch(env.getAPIUrl(), {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(content),
@@ -348,7 +355,7 @@ async function initiateSettings() {
 			uuid: Settings.get("general.uuid", false),
 		};
 		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-		fetch(VINE_HELPER_API_V5_URL, {
+		fetch(env.getAPIUrl(), {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(content),
@@ -393,33 +400,36 @@ async function initiateSettings() {
 		document.querySelector("#saveUUID").disabled = true;
 		let key = CSS.escape("generaluuid");
 		//Post a fetch request to confirm if the UUID is valid
+		const uuid = document.querySelector("#" + key).value;
 
-		const content = {
-			api_version: 5,
-			action: "validate_uuid",
-			uuid: document.querySelector("#" + key).value,
-			country: "loremipsum",
-		};
-		const options = {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(content),
-		};
-		await fetch(VINE_HELPER_API_V5_URL, options)
-			.then((response) => response.json())
-			.then(async function (serverResponse) {
-				if (serverResponse["ok"] == "ok") {
-					Settings.set("general.uuid", serverResponse["uuid"]);
-				} else {
-					alert("Invalid UUID");
-					key = CSS.escape("general.uuid");
-					document.querySelector(`#${key}`).value = Settings.get("general.uuid", false);
-				}
-			})
-			.catch(function () {
-				(error) => console.log(error);
-			});
+		try {
+			await fingerprintMgr.updateUUID(uuid);
+		} catch (error) {
+			alert("Error saving UUID. Make sure the UUID is valid and try again.");
+		}
 		document.querySelector("#saveUUID").disabled = false;
+	};
+
+	manageInputText("general.deviceName");
+	document.querySelector("#generateDeviceName").onclick = function () {
+		const key = CSS.escape("general.deviceName");
+		const deviceName = deviceMgr.generateDeviceName(false);
+		document.querySelector("#" + key).value = deviceName;
+	};
+	document.querySelector("#saveDeviceName").onclick = async function () {
+		try {
+			let key = CSS.escape("generaluuid");
+			const uuid = document.querySelector("#" + key).value;
+
+			document.querySelector("#saveDeviceName").disabled = true;
+			let deviceNameKey = CSS.escape("general.deviceName");
+			let deviceName = document.querySelector("#" + deviceNameKey).value;
+			await fingerprintMgr.updateDeviceName(uuid, deviceName);
+			document.querySelector("#saveDeviceName").disabled = false;
+		} catch (error) {
+			console.error("Error saving device name:", error);
+			document.querySelector("#saveDeviceName").disabled = false;
+		}
 	};
 
 	//##TAB - BRENDA:
@@ -571,7 +581,7 @@ async function initiateSettings() {
 		"?response_type=code" +
 		"&client_id=AqsjZu6eHaLtO3y8bj0VPydtRCNNV2n-5aQoWVKil4IPNb3qoxkT75VQMhSALTcO" +
 		"&redirect_uri=" +
-		encodeURIComponent(VINE_HELPER_API_V5_URL + "/patreon-login") +
+		encodeURIComponent(env.getAPIUrl() + "/patreon-login") +
 		//"&scope=pledges-to-me" +
 		"&state=" +
 		Settings.get("general.uuid", false);
@@ -683,7 +693,6 @@ function initiateTestKeywords() {
 }
 
 import { keywordMatch } from "../scripts/service_worker/keywordMatch.js";
-import { Environment } from "../scripts/Environment.js";
 function testKeyword(key, title) {
 	const keyE = CSS.escape(key);
 
@@ -746,7 +755,7 @@ async function remoteSaveList(keywordType) {
 			keywords: Settings.get(settingKey),
 		};
 		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-		fetch(VINE_HELPER_API_V5_URL, {
+		fetch(env.getAPIUrl(), {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(content),
@@ -765,7 +774,7 @@ async function remoteLoadList(keywordsType) {
 			keywords: keywordsType,
 		};
 		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
-		fetch(VINE_HELPER_API_V5_URL, {
+		fetch(env.getAPIUrl(), {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(content),
