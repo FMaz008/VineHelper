@@ -34,18 +34,14 @@ class ItemsMgr {
 			} else if (this._settings.get("notification.monitor.sortType") === TYPE_PRICE_ASC) {
 				// Sort by price, lowest first
 				// Treat null/undefined as 99999999 so they are at the end
-				const aPrice =
-					a.data.etv_min !== null && a.data.etv_min !== undefined ? parseFloat(a.data.etv_min) : 99999999;
-				const bPrice =
-					b.data.etv_min !== null && b.data.etv_min !== undefined ? parseFloat(b.data.etv_min) : 99999999;
+				const aPrice = parseFloat(a.data.etv_min || 99999999); // || will match null/undefined/""/false
+				const bPrice = parseFloat(b.data.etv_min || 99999999);
 				return aPrice - bPrice;
 			} else {
 				// Default: sort by price (TYPE_PRICE), highest first
 				// Treat null/undefined as -1 so actual 0 values rank higher
-				const aPrice =
-					a.data.etv_min !== null && a.data.etv_min !== undefined ? parseFloat(a.data.etv_min) : -1;
-				const bPrice =
-					b.data.etv_min !== null && b.data.etv_min !== undefined ? parseFloat(b.data.etv_min) : -1;
+				const aPrice = parseFloat(a.data.etv_min || -1); // || will match null/undefined/""/false
+				const bPrice = parseFloat(b.data.etv_min || -1);
 				return bPrice - aPrice;
 			}
 		});

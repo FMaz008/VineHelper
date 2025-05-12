@@ -430,7 +430,7 @@ class NotificationMonitor extends MonitorCore {
 				}
 
 				if (!itemData.unavailable) {
-					this._enableItem(element);
+					this._enableItem(element); //Return the DOM element of the tile.
 				}
 				return element;
 			}
@@ -444,10 +444,8 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Store the item data
-		const addedStatus = this._itemsMgr.addItemData(asin, itemData);
-		if (!addedStatus) {
-			return false; // The item already exists, do not add the item as it will create an unlinked duplicate.
-		}
+		this._itemsMgr.addItemData(asin, itemData);
+		
 
 		// Generate the search URL
 		let search_url;
