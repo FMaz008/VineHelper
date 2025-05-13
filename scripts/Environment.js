@@ -22,6 +22,8 @@ class Environment {
 
 	data = {};
 
+	#UUIDRequestFailed = false;
+
 	constructor() {
 		if (Environment.#instance) {
 			// Return the existing instance if it already exists
@@ -126,13 +128,11 @@ class Environment {
 		if (!uuid || uuid == "") {
 			try {
 				uuid = await this.#requestNewUUID();
-				Settings.set("general.uuid", uuid);
+				await Settings.set("general.uuid", uuid);
 				logger.add("ENV: Obtained new UUID");
 			} catch (error) {
-				alert(
-					"Vine Helper failed to obtain a new UUID from the server. Please ensure you are not using a VPN or proxy. If the issue persist, please contact the developer."
-				);
-				return;
+				this.#UUIDRequestFailed = true;
+				return false;
 			}
 		}
 
@@ -148,6 +148,25 @@ class Environment {
 				await this._deviceFingerprintMgr.clearFingerprint();
 			}
 		}
+	}
+
+	//Wait for the UUID to be set,
+	async waitForUUID() {
+		return new Promise((resolve) => {
+			const checkUUID = () => {
+				const uuid = Settings.get("general.uuid", false);
+				console.log("ENV: Checking UUID", uuid);
+				if (uuid) {
+					resolve(true);
+				} else if (this.#UUIDRequestFailed) {
+					resolve(false);
+				} else {
+					// If still requesting, check again after a short delay
+					setTimeout(checkUUID, 50);
+				}
+			};
+			checkUUID();
+		});
 	}
 
 	/** Request a new UUID from the server.

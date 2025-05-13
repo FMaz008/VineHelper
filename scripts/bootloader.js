@@ -148,6 +148,17 @@ async function init() {
 		document.getElementsByTagName("body")[0].classList.add("darktheme");
 	}
 
+	//If the UUID is not set, display a toaster notification that the UUID request failed.
+	await env.waitForUUID();
+	if (!Settings.get("general.uuid", false)) {
+		//Display a toaster notification that the UUID request failed.
+		const notification = new ScreenNotification();
+		notification.title = "UUID request failed";
+		notification.content =
+			"Vine Helper failed to create an account for this device. Please ensure you are not using a VPN or proxy. If the issue persist, please contact the developer.";
+		Notifications.pushNotification(notification);
+	}
+
 	//### Run the boot sequence
 	initAddNotificationMonitorLink();
 	hidePageContent();
