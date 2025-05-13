@@ -267,6 +267,7 @@ class SettingsMgr {
 				blurKeywords: [],
 				country: null,
 				customCSS: "",
+				detailsIcon: true,
 				deviceName: null,
 				discoveryFirst: true,
 				displayETV: true,
@@ -371,7 +372,7 @@ class SettingsMgr {
 					},
 				},
 				pushNotifications: false,
-				pushNotificationsAFA:false,
+				pushNotificationsAFA: false,
 				reduce: false,
 				screen: {
 					active: false,

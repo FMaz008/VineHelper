@@ -7,6 +7,9 @@ var Settings = new SettingsMgr();
 import { Environment } from "./Environment.js";
 var env = new Environment();
 
+import { ModalMgr } from "./ModalMgr.js";
+var dialogMgr = new ModalMgr();
+
 import { Internationalization } from "./Internationalization.js";
 var i13n = new Internationalization();
 
@@ -19,7 +22,7 @@ import { Template } from "./Template.js";
 var Tpl = new Template();
 
 import { keywordMatch } from "./service_worker/keywordMatch.js";
-
+import { escapeHTML } from "./StringHelper.js";
 import { BrendaAnnounceQueue } from "./BrendaAnnounce.js";
 var brendaAnnounceQueue = new BrendaAnnounceQueue();
 
@@ -64,7 +67,7 @@ class Toolbar {
 		} else {
 			Tpl.setVar("flexDirection", "column");
 		}
-
+		Tpl.setIf("details", Settings.get("general.detailsIcon"));
 		Tpl.setIf("pinned", Settings.get("pinnedTab.active"));
 		Tpl.setVar("pinnedClass", this.#tile.isPinned() ? "vh-icon-unpin" : "vh-icon-pin");
 		Tpl.setIf("toggleview", Settings.get("hiddenTab.active"));
@@ -174,6 +177,31 @@ class Toolbar {
 			}
 
 			this.updateVisibilityIcon();
+		}
+
+		//Details icon
+		if (Settings.get("general.detailsIcon")) {
+			let detailsIcon = this.#toolbarDOM.querySelector(`#vh-details-link-${this.#tile.getAsin()}`);
+			if (detailsIcon) {
+				detailsIcon.addEventListener("click", async (event) => {
+					//Get the details from the parent dom element matching .vvp-item-tile
+					let tileDOM = this.#tile.getDOM();
+					let details = tileDOM.closest(".vvp-item-tile").dataset;
+
+					//Display modal windows with the details.
+					let m = dialogMgr.newModal("item-details-" + this.#tile.getAsin());
+					m.title = "Item " + this.#tile.getAsin();
+					m.content = `
+			<ul style="margin-bottom: 10px;">
+				<li>First Seen: ${details.date}</li>
+				<li>Highlight Keyword matching: ${details.highlightedKeyword}</li>
+				<li>Hide Keyword matching: ${details.hideKeyword}</li>
+				<li>Blur Keyword matching: ${details.blurredKeyword}</li>
+			</ul>
+		`;
+					m.show();
+				});
+			}
 		}
 
 		//Pinned items event handler
@@ -292,11 +320,13 @@ class Toolbar {
 		this.processHighlight(null, null);
 	}
 
+	//Why is this method in the toolbar class and not the tile class? Who coded this?!
 	processHighlight(etv1, etv2) {
 		logger.add("Toolbar: processHighlight");
 
 		let checkHideList = false;
 		let match;
+		this.#tile.getDOM().dataset.highlightedKeyword = "";
 		if (Settings.get("general.highlightKeywords")?.length > 0) {
 			match = keywordMatch(Settings.get("general.highlightKeywords"), this.#tile.getTitle(), etv1, etv2);
 			if (!match) {
@@ -308,6 +338,7 @@ class Toolbar {
 			} else {
 				logger.add("Toolbar: processHighlight: match");
 				//Match found, keep the highlight
+				this.#tile.getDOM().dataset.highlightedKeyword = escapeHTML(match);
 				this.#tile.getDOM().dataset.keywordHighlight = true;
 
 				if (Settings.get("general.highlightKWFirst")) {
@@ -324,6 +355,7 @@ class Toolbar {
 			checkHideList = true;
 		}
 
+		this.#tile.getDOM().dataset.hideKeyword = "";
 		if (checkHideList) {
 			//Check if the item should be hidden
 			if (Settings.get("hiddenTab.active") && Settings.get("general.hideKeywords")?.length > 0) {
@@ -333,6 +365,9 @@ class Toolbar {
 					this.#tile.hideTile(false, false, true); //Do not save, skip the hidden manager: just move the tile.
 
 					document.getElementById("vh-hide-link-" + this.#tile.getAsin()).style.display = "none";
+
+					//Add a data-hide-keyword attribute to the tile
+					this.#tile.getDOM().dataset.hideKeyword = escapeHTML(match);
 				}
 			}
 		}

@@ -20,3 +20,14 @@ export function removeSpecialHTML(string) {
 
 	return string;
 }
+
+export function escapeHTML(string) {
+	//Escape all special characters
+	return string.replace(/[&<>"']/g, (char) => ({
+		"&": "&amp;",
+		"<": "&lt;",
+		">": "&gt;",
+		'"': "&quot;",
+		"'": "&#39;",
+	})[char]);
+}

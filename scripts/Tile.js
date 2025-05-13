@@ -13,7 +13,7 @@ var HiddenList = new HiddenListMgr();
 import { keywordMatch } from "./service_worker/keywordMatch.js";
 import { YMDHiStoISODate } from "./DateHelper.js";
 import { getTileByAsin, updateTileCounts } from "./Grid.js";
-import { unescapeHTML } from "./StringHelper.js";
+import { unescapeHTML, escapeHTML } from "./StringHelper.js";
 
 import "../node_modules/canvas-confetti/dist/confetti.browser.js";
 
@@ -243,6 +243,9 @@ class Tile {
 			);
 			return;
 		}
+		//Add the data-date attribute to the tile
+		// Convert to local time and store in dataset
+		this.#tileDOM.dataset.date = new Date(itemDateAdded).toLocaleString();
 
 		let textDate = timeSince(serverCurrentDate, itemDateAdded);
 		const dateAddedMessage = `${textDate} ago`;
@@ -270,12 +273,14 @@ class Tile {
 
 	async initiateTile() {
 		//Match with blur keywords.
+		this.#tileDOM.dataset.blurredKeyword = "";
 		if (Settings.isPremiumUser() && Settings.get("general.blurKeywords")?.length > 0) {
 			let match = keywordMatch(Settings.get("general.blurKeywords"), this.getTitle(), null, null);
 			if (match) {
 				logger.add("TILE: The item match the keyword '" + match + "', blur it");
 				this.#tileDOM.querySelector("img")?.classList.add("blur");
 				this.#tileDOM.querySelector(".vvp-item-product-title-container")?.classList.add("dynamic-blur");
+				this.#tileDOM.dataset.blurredKeyword = escapeHTML(match);
 			}
 		}
 

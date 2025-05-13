@@ -229,6 +229,7 @@ async function initiateSettings() {
 
 	manageCheckboxSetting("general.topPagination");
 	manageCheckboxSetting("general.verbosePagination");
+	manageCheckboxSetting("general.detailsIcon");
 	manageCheckboxSetting("general.displayETV");
 	manageCheckboxSetting("general.displayModalETV");
 	manageCheckboxSetting("general.displayFullTitleTooltip");

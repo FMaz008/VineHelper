@@ -23,7 +23,7 @@
 			>
 				<div class="vh-toolbar-icon vh-icon-announcement"></div>
 			</a>
-			{{endif}} {{if pinned}}
+			{{endif}}{{if pinned}}
 			<a
 				href="#{{$asin}}"
 				id="vh-pin-link-{{$asin}}"
@@ -32,6 +32,16 @@
 				onclick="return false;"
 			>
 				<div id="vh-pin-icon-{{$asin}}" class="vh-toolbar-icon {{$pinnedClass}}"></div>
+			</a>
+			{{endif}}{{if details}}
+			<a
+				href="#{{$asin}}"
+				id="vh-details-link-{{$asin}}"
+				class="vh-floating-icon vh-details-link"
+				title="Details"
+				onclick="return false;"
+			>
+				<div class="vh-toolbar-icon vh-icon-question"></div>
 			</a>
 			{{endif}} {{$orderWidget}}
 
