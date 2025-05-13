@@ -167,6 +167,7 @@ class TemplateMgr {
 		const data = await chrome.storage.local.get("arrTemplate");
 		if (Object.keys(data).length === 0) {
 			logger.add("TEMPLATE: No template in localstorage, will load them from files as needed...");
+			this.#templatesLoaded = true;
 			return;
 		}
 		this.arrTemplate = data.arrTemplate;
@@ -178,7 +179,6 @@ class TemplateMgr {
 		while (!this.#templatesLoaded) {
 			await new Promise((r) => setTimeout(r, 50));
 		}
-
 		//Search for the template in the memory
 		let content = this.arrTemplate.find((e) => {
 			return e.url === url;
