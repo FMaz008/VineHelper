@@ -418,6 +418,7 @@ async function initiateSettings() {
 
 		try {
 			await fingerprintMgr.updateUUID(uuid);
+			alert("New UUID saved. Reload a vine page to reload your privileges.");
 		} catch (error) {
 			alert("Error saving UUID. Make sure the UUID is valid and try again.");
 		}
