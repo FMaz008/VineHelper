@@ -681,7 +681,7 @@ async function setBookmarkDate(timeOffset) {
 		api_version: 5,
 		app_version: env.data.appVersion,
 		uuid: await Settings.get("general.uuid", false),
-		fid: await Settings.get("general.fingerprint.hash", false),
+		fid: await Settings.get("general.fingerprint.id", false),
 		country: i13n.getCountryCode(),
 		action: "date",
 	};
@@ -1297,7 +1297,7 @@ window.addEventListener("message", async function (event) {
 				action: "record_order",
 				country: i13n.getCountryCode(),
 				uuid: await Settings.get("general.uuid", false),
-				fid: await Settings.get("general.fingerprint.hash", false),
+				fid: await Settings.get("general.fingerprint.id", false),
 				asin: event.data.data.asin,
 				parent_asin: event.data.data.parent_asin,
 				order_status: event.data.data.status,
@@ -1393,7 +1393,7 @@ async function recordUnavailableProduct(asin, reason) {
 		action: "record_unavailable",
 		country: i13n.getCountryCode(),
 		uuid: await Settings.get("general.uuid", false),
-		fid: await Settings.get("general.fingerprint.hash", false),
+		fid: await Settings.get("general.fingerprint.id", false),
 		asin: asin,
 		reason: reason,
 	};

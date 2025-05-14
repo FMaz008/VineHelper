@@ -74,7 +74,7 @@ function processBroadcastMessage(data) {
 		if (socket?.connected) {
 			socket.emit("getLast100", {
 				uuid: Settings.get("general.uuid", false),
-				fid: Settings.get("general.fingerprint.hash", false),
+				fid: Settings.get("general.fingerprint.id", false),
 				countryCode: i13n.getCountryCode(),
 				limit: data.limit || 100,
 			});
@@ -146,7 +146,7 @@ function connectWebSocket() {
 		query: {
 			countryCode: DEBUG_MODE ? "com" : i13n.getCountryCode(),
 			uuid: Settings.get("general.uuid", false),
-			fid: Settings.get("general.fingerprint.hash", false),
+			fid: Settings.get("general.fingerprint.id", false),
 		}, // Pass the country code as a query parameter
 		transports: ["websocket"],
 		reconnection: false, //Handled manually every 30 seconds.
