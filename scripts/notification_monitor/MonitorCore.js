@@ -62,6 +62,17 @@ class MonitorCore {
 		this.#getFetchLimit();
 	}
 
+	_updateUserTierInfo() {
+		const userTierInfo = document.getElementById("user-tier-info");
+		if (userTierInfo) {
+			//Create a div for the medal icon
+			const medalIcon = document.createElement("div");
+			medalIcon.classList.add(this._tierMgr.isGold() ? "vh-icon-medal-gold" : "vh-icon-medal-silver");
+			medalIcon.classList.add("vh-icon-12");
+			userTierInfo.innerHTML = `[Tier: ${medalIcon.outerHTML} ${this._tierMgr.getTier()}] [Limit: ${this._tierMgr.getLimit()}]`;
+		}
+	}
+
 	async #getFetchLimit() {
 		await this._settings.waitForLoad();
 
@@ -275,7 +286,6 @@ class MonitorCore {
 			container.insertBefore(notif, container.firstChild);
 		});
 	}
-
 }
 
 export { MonitorCore };

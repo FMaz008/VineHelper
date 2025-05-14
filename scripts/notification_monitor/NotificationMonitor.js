@@ -129,11 +129,12 @@ class NotificationMonitor extends MonitorCore {
 	 * @param {boolean} updateTier - If true, update the tier of the item
 	 */
 	#disableGoldItemsForSilverUsers(notif, updateTier = false) {
-		if (!notif) {
+		if (!notif || this._monitorV2) {
 			return;
 		}
 
-		if (this._monitorV3 && !this._tierMgr.isGold() && notif.dataset.tier !== "silver") {
+		//If the user is silver and the item is gold.
+		if (!this._tierMgr.isGold() && notif.dataset.tier !== "silver") {
 			const etvObj = notif.querySelector("div.etv");
 
 			if (
@@ -445,7 +446,6 @@ class NotificationMonitor extends MonitorCore {
 
 		// Store the item data
 		this._itemsMgr.addItemData(asin, itemData);
-		
 
 		// Generate the search URL
 		let search_url;

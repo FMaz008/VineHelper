@@ -151,6 +151,11 @@
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/logo.png");
 		background-repeat: no-repeat;
 	}
+	.vh-icon-vh-48 {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/icon-48.png");
+		background-repeat: no-repeat;
+	}
 	.vh-icon-chat {
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/chat.png");
@@ -204,6 +209,16 @@
 	.vh-icon-reload {
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/reload.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-medal-gold {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/medal-gold.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-medal-silver {
+		background-size: 100%;
+		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/medal-silver.png");
 		background-repeat: no-repeat;
 	}
 }
@@ -355,6 +370,11 @@
 		background-image: url("/resource/image/icon-32.png");
 		background-repeat: no-repeat;
 	}
+	.vh-icon-vh-48 {
+		background-size: 100%;
+		background-image: url("/resource/image/icon-48.png");
+		background-repeat: no-repeat;
+	}
 	.vh-logo-vh {
 		background-size: 100%;
 		background-image: url("/resource/image/logo.png");
@@ -415,6 +435,16 @@
 		background-image: url("/resource/image/reload.png");
 		background-repeat: no-repeat;
 	}
+	.vh-icon-medal-gold {
+		background-size: 100%;
+		background-image: url("/resource/image/medal-gold.png");
+		background-repeat: no-repeat;
+	}
+	.vh-icon-medal-silver {
+		background-size: 100%;
+		background-image: url("/resource/image/medal-silver.png");
+		background-repeat: no-repeat;
+	}
 }
 
 .invert {
@@ -446,6 +476,11 @@ div[role="navigation"] > ul > li {
 	display: inline-block;
 	width: 32px;
 	height: 32px;
+}
+.vh-icon-48 {
+	display: inline-block;
+	width: 48px;
+	height: 48px;
 }
 .vh-switch-32 {
 	display: inline-block;

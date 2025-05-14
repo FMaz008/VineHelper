@@ -160,6 +160,9 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		//Change the tab's favicon
 		this._updateTabFavicon();
 
+		//Update the user tier info
+		this._updateUserTierInfo();
+
 		//Initial check of the status of services (service worker and WebSocket)
 		this._serverComMgr.updateServicesStatus();
 	}
