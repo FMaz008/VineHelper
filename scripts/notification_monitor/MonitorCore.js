@@ -241,6 +241,7 @@ class MonitorCore {
 			minute: "2-digit",
 			second: "2-digit",
 			hour12: !this._settings.get("notification.monitor.24hrsFormat"),
+			hourCycle: "h23",
 		}).format(date);
 	}
 
