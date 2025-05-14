@@ -68,7 +68,7 @@ class MonitorCore {
 			//Create a div for the medal icon
 			const medalIcon = document.createElement("div");
 			medalIcon.classList.add(this._tierMgr.isGold() ? "vh-icon-medal-gold" : "vh-icon-medal-silver");
-			medalIcon.classList.add("vh-icon-12");
+			medalIcon.classList.add("vh-icon-16");
 			userTierInfo.innerHTML = `[Tier: ${medalIcon.outerHTML} ${this._tierMgr.getTier()}] [Limit: ${this._tierMgr.getLimit()}]`;
 		}
 	}
