@@ -155,7 +155,6 @@ class Environment {
 		return new Promise((resolve) => {
 			const checkUUID = () => {
 				const uuid = Settings.get("general.uuid", false);
-				console.log("ENV: Checking UUID", uuid);
 				if (uuid) {
 					resolve(true);
 				} else if (this.#UUIDRequestFailed) {

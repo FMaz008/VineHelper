@@ -17,6 +17,8 @@ var Tpl = new Template();
 
 import { YMDHiStoISODate } from "./DateHelper.js";
 
+import { openDynamicModal } from "./DynamicModalHelper.js";
+
 //Grid
 import {
 	Grid,
@@ -274,6 +276,15 @@ async function initTileSizeWidget() {
 		hookMgr.hookBind("tilesUpdated", () => {
 			tileSizer.adjustAll();
 		});
+
+		//Adjust the vertical spacing in case of vh-btn-container.
+		//This is a special case where the button is added after receiving the data from the server,
+		//so we need to run the adjustAll() method again.
+		if (Settings.isPremiumUser(2) && Settings.get("general.displayVariantButton")) {
+			hookMgr.hookBind("productsUpdated", () => {
+				tileSizer.adjustAll();
+			});
+		}
 	}
 }
 
@@ -904,6 +915,7 @@ async function generateTile(obj) {
 		await tile.moveToGrid(env.data.grid.gridHidden, false); //This is the main sort, do not animate it
 	}
 
+	//Add the variant icon to the tile
 	if (Settings.isPremiumUser(2) && Settings.get("general.displayVariantIcon")) {
 		//Check if the item is a parent ASIN (as variants)
 		let buttonInput = obj.querySelector(".a-button-input");
@@ -948,7 +960,7 @@ async function fetchProductsDatav5() {
 	}
 
 	logger.add("FETCH: Fetching data from VineHelper's server...");
-
+	const requestVariants = Settings.isPremiumUser(2) && Settings.get("general.displayVariantButton");
 	const content = {
 		api_version: 5,
 		app_version: env.data.appVersion,
@@ -959,6 +971,7 @@ async function fetchProductsDatav5() {
 		fid: await Settings.get("general.fingerprint.id", false),
 		queue: env.data.vineQueue,
 		items: arrProductsData,
+		request_variants: requestVariants,
 	};
 
 	const controller = new AbortController();
@@ -1087,6 +1100,18 @@ async function serverProductsResponse(data) {
 			logger.add("DRAW: Updating the toolbar");
 			tile.getToolbar().updateVisibilityIcon();
 			logger.add("DRAW: Done updating the toolbar");
+		}
+
+		//Process variants
+		if (Settings.isPremiumUser(2) && Settings.get("general.displayVariantButton")) {
+			if (values.variants && values.variants.length > 0) {
+				logger.add("DRAW: Processing variants");
+
+				//Add variants to the tile
+				for (const [k, val] of Object.entries(values.variants)) {
+					await tile.addVariant(val.asin, val.title, val.etv);
+				}
+			}
 		}
 	}
 
@@ -1821,70 +1846,6 @@ async function handleModalNavigation(event) {
 	// Finally update the current index
 	modalNavigatorCurrentIndex = modalNavigatorNextIndex;
 	logger.add("[DEBUG] Updated the current index to: " + modalNavigatorCurrentIndex);
-}
-
-async function openDynamicModal(asin, queue, isParent, enrollmentGUID, autoClick = true) {
-	if (!env.data.marketplaceId || !env.data.customerId) {
-		console.error("Failed to fetch opts/vvp-context data");
-	}
-
-	const recommendationTypes = {
-		potluck: "VENDOR_TARGETED",
-		last_chance: "VENDOR_VINE_FOR_ALL",
-		encore: "VINE_FOR_ALL",
-	};
-
-	const recommendationType = recommendationTypes[queue] || null;
-
-	//Generate the dynamic modal button
-	const container1 = document.createElement("span");
-	env.data.gridDOM.regular.appendChild(container1);
-	container1.id = "dynamicModalBtn-" + asin;
-	container1.classList.add("vvp-details-btn");
-	const container2 = document.createElement("span");
-	container1.appendChild(container2);
-	const btn = document.createElement("input");
-	container2.appendChild(btn);
-	btn.type = "submit";
-	btn.id = "dynamicModalBtn-" + asin;
-	btn.dataset.asin = asin;
-	btn.dataset.isParentAsin = isParent;
-
-	if (recommendationType == "VENDOR_TARGETED") {
-		btn.dataset.recommendationType = recommendationType;
-		btn.dataset.recommendationId =
-			env.data.marketplaceId + "#" + asin + "#" + env.data.customerId + "#vine.enrollment." + enrollmentGUID;
-	} else {
-		btn.dataset.recommendationType = recommendationType;
-		btn.dataset.recommendationId = env.data.marketplaceId + "#" + asin + "#vine.enrollment." + enrollmentGUID;
-	}
-
-	//Dispatch a click event on the button
-	if (autoClick) {
-		//If the click happens too fast, it won't work.
-		while (document.readyState !== "complete" || !document.querySelector("#dynamicModalBtn-" + asin)) {
-			await new Promise((r) => setTimeout(r, 100));
-		}
-
-		//If DOM is loaded and ready
-		let attempt = 1;
-		while (!document.querySelector(".a-popover-modal") && attempt <= 5) {
-			console.log(`Attempt #${attempt} to open the modal window`);
-			btn.click();
-			await new Promise((r) => setTimeout(r, 200 * attempt));
-			attempt++;
-		}
-
-		if (attempt == 6) {
-			console.error("Failed to open modal or succeeded on last attempt");
-		}
-
-		setTimeout(function () {
-			container1.remove(); // Removes container1 from the DOM
-		}, 500);
-	}
-
-	return btn;
 }
 
 async function loadStyleSheet(path, injected = true) {

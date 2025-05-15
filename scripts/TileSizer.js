@@ -167,12 +167,31 @@ class TileSizer {
 
 	#adjustVerticalSpacing = function (DOMElem = null, sliderValue = null) {
 		const size = parseInt(sliderValue || Settings.get(`${this.#settingPrefix}.verticalSpacing`));
-		const selector =
-			".vvp-item-tile-content .vvp-item-product-title-container, .vvp-item-tile-content .vvp-details-btn, .vvp-item-tile-content .a-button-primary";
-		const elements = (DOMElem || document).querySelectorAll(selector);
-		elements.forEach((elem) => {
-			elem.style.margin = size + "px 0";
-		});
+		const selectors = [
+			".vvp-item-tile-content>.vvp-item-product-title-container",
+			".vvp-item-tile-content>.vvp-details-btn",
+			".vvp-item-tile-content>.a-button-primary",
+			".vvp-item-tile-content>.vh-btn-container",
+		];
+		for (const selector of selectors) {
+			const elements = (DOMElem || document).querySelectorAll(selector);
+			elements.forEach((elem) => {
+				elem.style.margin = size + "px 0";
+			});
+		}
+
+		//Adjust the vertical spacing in case of vh-btn-container
+		const grandChildren = [
+			".vvp-item-tile-content>.vh-btn-container>.vvp-details-btn",
+			".vvp-item-tile-content>.vh-btn-container>.a-button-primary",
+		];
+		for (const selector of grandChildren) {
+			const elements = (DOMElem || document).querySelectorAll(selector);
+			elements.forEach((elem) => {
+				elem.style.margin = "0";
+				elem.style.flexGrow = "1";
+			});
+		}
 	};
 
 	#adjustTitleSpacing = function (DOMElem = null, sliderValue = null) {

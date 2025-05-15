@@ -234,6 +234,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("general.displayModalETV");
 	manageCheckboxSetting("general.displayFullTitleTooltip");
 	manageCheckboxSetting("general.displayVariantIcon");
+	manageCheckboxSetting("general.displayVariantButton");
 	manageCheckboxSetting("general.displayFirstSeen");
 	manageCheckboxSetting("general.bookmark");
 	manageCheckboxSetting("hiddenTab.active");

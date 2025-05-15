@@ -10,10 +10,17 @@ var env = new Environment();
 import { HiddenListMgr } from "./HiddenListMgr.js";
 var HiddenList = new HiddenListMgr();
 
+import { ModalMgr } from "./ModalMgr.js";
+var modalMgr = new ModalMgr();
+
+import { Template } from "./Template.js";
+var Tpl = new Template();
+
 import { keywordMatch } from "./service_worker/keywordMatch.js";
 import { YMDHiStoISODate } from "./DateHelper.js";
 import { getTileByAsin, updateTileCounts } from "./Grid.js";
 import { unescapeHTML, escapeHTML } from "./StringHelper.js";
+import { clickDynamicSeeDetailsButton, drawButton } from "./DynamicModalHelper.js";
 
 import "../node_modules/canvas-confetti/dist/confetti.browser.js";
 
@@ -29,7 +36,7 @@ class Tile {
 	#orderUnavailable = false;
 	#title = null;
 	#thumbnailUrl = null;
-
+	#variants = [];
 	constructor(obj, gridInstance) {
 		this.#tileDOM = obj;
 		this.#grid = gridInstance;
@@ -59,6 +66,99 @@ class Tile {
 
 	//#################
 	//## Public methods
+
+	async addVariant(asin, title, etv) {
+		if (this.#variants.length === 0) {
+			await this.#addVariantButton();
+		}
+		this.#variants.push({ asin, title, etv });
+	}
+
+	getVariants() {
+		return this.#variants;
+	}
+
+	getVariant(asin) {
+		return this.#variants.find((variant) => variant.asin === asin);
+	}
+
+	async #addVariantButton() {
+		//Create the drop down button
+		let prom = await Tpl.loadFile("view/btn_show_variants.html");
+		let content = Tpl.render(prom, true);
+
+		//Insert a span to contain both buttons
+		const seeDetails = this.getDOM().querySelector(".vvp-details-btn");
+		const span = document.createElement("span");
+		span.classList.add("vh-btn-container");
+		span.style.display = "flex";
+		seeDetails.insertAdjacentElement("beforebegin", span);
+
+		//Move the seeDetails button as a child span2
+		span.appendChild(seeDetails);
+
+		//Insert the content into the span
+		span.appendChild(content);
+
+		//Add data-recommendation-id to the buy now button
+		const btnShowVariants = span.querySelector(".vh-btn-variants");
+		btnShowVariants.dataset.asin = this.#asin;
+
+		//If using darktheme, invert the icon's color
+		if (Settings.get("thorvarium.darktheme")) {
+			btnShowVariants.querySelector(".vh-indicator-icon").style.filter = "invert(1)";
+		}
+
+		//Add event listener to the buy now button
+		btnShowVariants.addEventListener("click", this.btnShowVariantsClick.bind(this));
+	}
+
+	async btnShowVariantsClick(event) {
+		event.preventDefault();
+
+		//Find the asin from the data-asin attribute
+		const asin = this.#asin;
+
+		//Display a modal listing all the variants
+		let m = modalMgr.newModal("item-variants-" + asin);
+		m.title = "Variants for item #" + asin;
+		m.content = `Variants for ${this.getTitle()}:<ul>`;
+		for (let variant of this.#variants) {
+			m.content += `<li>`;
+			try {
+				const json = JSON.parse(variant.title);
+				for (let key in json) {
+					m.content += `<strong>${key}:</strong> ${json[key]}<br />`;
+				}
+			} catch (e) {
+				m.content += `(No info available)<br />`;
+			}
+			m.content += `<a href="#" class="vh-link-variant" data-asin="${variant.asin}">View</a>`;
+			m.content += `</li>`;
+		}
+		m.content += `</ul>`;
+		await m.show();
+
+		//Add event listener to the links
+		const links = document.querySelectorAll(`#modal-item-variants-${asin} .vh-link-variant`);
+		for (let link of links) {
+			link.addEventListener("click", () => {
+				//Close the modal
+				m.close();
+
+				const variantAsin = link.dataset.asin;
+
+				//Find the main See Details button
+				const seeDetails = this.#tileDOM.querySelector(".vvp-details-btn input");
+				//Generate a See Details button
+
+				const recommendationId = seeDetails.dataset.recommendationId;
+				const recommendationType = seeDetails.dataset.recommendationType;
+				drawButton(variantAsin, false, recommendationType, recommendationId);
+				clickDynamicSeeDetailsButton(variantAsin);
+			});
+		}
+	}
 
 	isPinned() {
 		return this.#isPinned;

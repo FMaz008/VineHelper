@@ -8,6 +8,7 @@
 #vh-tabs .vvp-item-tile .vvp-item-tile-content > div.vh-img-container {
 	margin-bottom: 0px;
 	margin-top: 5px;
+	text-align: center;
 }
 div.hidden-toolbar {
 	float: right;

@@ -275,6 +275,7 @@ class SettingsMgr {
 				displayFullTitleTooltip: false,
 				displayModalETV: false,
 				displayVariantIcon: false,
+				displayVariantButton: false,
 				fingerprint: null,
 				GDPRPopup: true,
 				hiddenItemsCacheSize: 4,
