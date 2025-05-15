@@ -996,6 +996,11 @@ async function fetchProductsDatav5() {
 		})
 		.finally(() => {
 			clearTimeout(timeoutId);
+
+			//If the page URL ends with #AR, send a message to the service worker to close the page
+			if (window.location.href.endsWith("#AR")) {
+				chrome.runtime.sendMessage({ type: "closeARTab" });
+			}
 		});
 }
 

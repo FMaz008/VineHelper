@@ -21,6 +21,7 @@ var Settings = new SettingsMgr();
 var notificationsData = {};
 var WSReconnectInterval = 0.3; //Firefox shutdown the background script after 30seconds.
 var lastActivityUpdate = Date.now();
+
 if (typeof browser === "undefined") {
 	var browser = chrome;
 }
@@ -94,6 +95,14 @@ function processBroadcastMessage(data) {
 			sendMessageToAllTabs({ type: "wsClosed" }, "Websocket server disconnected.");
 		}
 	}
+
+	//Close the auto-refresh tab
+	if (data.type == "closeARTab") {
+		if (currentTabId !== null) {
+			chrome.tabs.remove(currentTabId);
+			currentTabId = null;
+		}
+	}
 }
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
@@ -127,6 +136,7 @@ chrome.notifications.onClicked.addListener((notificationId) => {
 //Websocket
 
 let socket;
+let currentTabId = null;
 function connectWebSocket() {
 	if (!Settings.get("notification.active")) {
 		return;
@@ -214,6 +224,25 @@ function connectWebSocket() {
 		});
 	});
 
+	socket.on("reloadPage", async (data) => {
+		if (!data.queue || !data.page) {
+			return false;
+		}
+		const queue = data.queue;
+		const page = data.page;
+
+		const queueTable = { AI: "encore", AFA: "last_chance", RFY: "potluck" };
+		const url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=${queueTable[queue]}&page=${page}#AR`;
+
+		if (currentTabId !== null) {
+			//Close tab id
+			chrome.tabs.remove(currentTabId);
+		}
+
+		const tab = await chrome.tabs.create({ url, active: false });
+		currentTabId = tab.id;
+	});
+
 	socket.on("connection_error", (error) => {
 		sendMessageToAllTabs({ type: "wsError", error: error }, "Socket.IO connection error");
 		console.error(`${new Date().toLocaleString()} - Socket.IO connection error: ${error}`);
@@ -254,6 +283,8 @@ async function init() {
 		if (!socket?.connected) {
 			connectWebSocket();
 		}
+
+		setReloadTimer();
 	}
 }
 
@@ -266,6 +297,41 @@ async function retrieveSettings() {
 	if (countryCode != null) {
 		i13n.setCountryCode(countryCode);
 	}
+}
+
+function setReloadTimer() {
+	//Create an interval between 5 and 10 minutes to check with the server if a page needs to be refreshed
+	const timer = Math.floor(Math.random() * (10 - 5 + 1)) + 5;
+	//const timer = 0.5; //30 seconds for testing
+	const reloadTimer = setTimeout(
+		async () => {
+			//Send a websocket request
+			if (
+				socket?.connected &&
+				i13n.getCountryCode() &&
+				!Settings.get("thorvarium.mobileandroid") &&
+				!Settings.get("thorvarium.mobileios")
+			) {
+				//Check if the current active tab's url has #monitor in the URL
+				const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+				const currentTab = tabs[0];
+				if (currentTab && currentTab.url && currentTab.url.includes("#monitor")) {
+					console.log(`${new Date().toLocaleString()} - Sending reload request`);
+					socket.emit("reloadRequest", {
+						uuid: Settings.get("general.uuid", false),
+						fid: Settings.get("general.fingerprint.id", false),
+						countryCode: i13n.getCountryCode(),
+					});
+				} else {
+					console.log(`${new Date().toLocaleString()} - Not in monitor mode, not sending reload request`);
+				}
+			}
+			setReloadTimer(); //Create a new timer
+			//Clear the timer
+			clearTimeout(reloadTimer);
+		},
+		timer * 60 * 1000
+	);
 }
 
 function processLast100Items(arrProducts) {
