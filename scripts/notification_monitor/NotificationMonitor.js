@@ -618,12 +618,16 @@ class NotificationMonitor extends MonitorCore {
 
 	async addVariants(data) {
 		if (this._settings.isPremiumUser(2) && this._settings.get("general.displayVariantButton")) {
-			const tileDOM = await this._itemsMgr.getItemDOMElement(data.asin);
-			const tile = new Tile(tileDOM, null);
-
-			if (data.variants && data.variants.length > 0) {
-				for (const variant of data.variants) {
-					tile.addVariant(variant.asin, variant.title, variant.etv);
+			if (this._itemsMgr.items.has(data.asin)) {
+				//Check if the tile exists
+				const tileDOM = await this._itemsMgr.getItemDOMElement(data.asin);
+				if (tileDOM) {
+					const tile = new Tile(tileDOM, null);
+					if (data.variants && data.variants.length > 0) {
+						for (const variant of data.variants) {
+							tile.addVariant(variant.asin, variant.title, variant.etv);
+						}
+					}
 				}
 			}
 		}
