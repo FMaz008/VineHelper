@@ -276,15 +276,6 @@ async function initTileSizeWidget() {
 		hookMgr.hookBind("tilesUpdated", () => {
 			tileSizer.adjustAll();
 		});
-
-		//Adjust the vertical spacing in case of vh-btn-container.
-		//This is a special case where the button is added after receiving the data from the server,
-		//so we need to run the adjustAll() method again.
-		if (Settings.isPremiumUser(2) && Settings.get("general.displayVariantButton")) {
-			hookMgr.hookBind("productsUpdated", () => {
-				tileSizer.adjustAll();
-			});
-		}
 	}
 }
 
@@ -808,6 +799,16 @@ async function initTilesAndDrawToolbars() {
 				const titleDOM = arrObj[i].querySelector(".a-link-normal");
 				tooltip.addTooltip(titleDOM, unescapeHTML(unescapeHTML(tile.getTitle())));
 			}
+
+			//Wrap the See Details button in a span with the class vh-see-details-container
+			const seeDetails = arrObj[i].querySelector(".vvp-details-btn");
+			const span = document.createElement("span");
+			span.classList.add("vh-btn-container");
+			span.style.display = "flex";
+			seeDetails.insertAdjacentElement("beforebegin", span);
+
+			//Move the seeDetails button as a child span
+			span.appendChild(seeDetails);
 
 			//Generate the toolbar
 			await t.createProductToolbar();

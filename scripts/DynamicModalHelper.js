@@ -60,8 +60,8 @@ async function clickDynamicSeeDetailsButton(asin) {
 
 	//If DOM is loaded and ready
 	const btn = document.querySelector("#dynamicModalBtn-" + asin);
-    let attempt = 1;
-	while (!document.querySelector(".a-popover-modal") && attempt <= 5) {
+	let attempt = 1;
+	while ((!document.querySelector(".a-popover-modal") && attempt <= 5) || attempt === 1) {
 		console.log(`Attempt #${attempt} to open the modal window`);
 		btn.click();
 		await new Promise((r) => setTimeout(r, 200 * attempt));

@@ -45,7 +45,7 @@ class Tile {
 		this.#orderSuccess = 0;
 		this.#orderFailed = 0;
 
-		logger.add("Creating Tile: " + this.#asin + " to grid: " + gridInstance.getId());
+		logger.add("Creating Tile: " + this.#asin + " to grid: " + gridInstance?.getId());
 
 		//Add the tile to the grid
 		if (gridInstance !== null) {
@@ -88,14 +88,7 @@ class Tile {
 		let content = Tpl.render(prom, true);
 
 		//Insert a span to contain both buttons
-		const seeDetails = this.getDOM().querySelector(".vvp-details-btn");
-		const span = document.createElement("span");
-		span.classList.add("vh-btn-container");
-		span.style.display = "flex";
-		seeDetails.insertAdjacentElement("beforebegin", span);
-
-		//Move the seeDetails button as a child span2
-		span.appendChild(seeDetails);
+		const span = this.getDOM().querySelector(".vh-btn-container");
 
 		//Insert the content into the span
 		span.appendChild(content);

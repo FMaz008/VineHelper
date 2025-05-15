@@ -181,14 +181,10 @@ class TileSizer {
 		}
 
 		//Adjust the vertical spacing in case of vh-btn-container
-		const grandChildren = [
-			".vvp-item-tile-content>.vh-btn-container>.vvp-details-btn",
-			".vvp-item-tile-content>.vh-btn-container>.a-button-primary",
-		];
+		const grandChildren = [".vvp-item-tile-content>.vh-btn-container>.vvp-details-btn"];
 		for (const selector of grandChildren) {
 			const elements = (DOMElem || document).querySelectorAll(selector);
 			elements.forEach((elem) => {
-				elem.style.margin = "0";
 				elem.style.flexGrow = "1";
 			});
 		}

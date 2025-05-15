@@ -19,6 +19,7 @@ import { ModalMgr } from "../ModalMgr.js";
 import { NotificationsSoundPlayer } from "../NotificationsSoundPlayer.js";
 import { ServerCom } from "./ServerCom.js";
 import { ItemsMgr } from "./ItemsMgr.js";
+
 class MonitorCore {
 	//Variables linked to monitor V2 vs V3
 	_monitorV2 = false; //True if the monitor is in V2 mode
@@ -46,6 +47,8 @@ class MonitorCore {
 		this._dialogMgr = new ModalMgr();
 		this._soundPlayerMgr = new NotificationsSoundPlayer();
 
+		this._env.data.gridDOM.regular = document.getElementById("vvp-items-grid");
+
 		//Notification Monitor's specific classes
 		this._serverComMgr = new ServerCom();
 		this._serverComMgr.setMarkUnavailableCallback(this.markItemUnavailable.bind(this));
@@ -53,6 +56,7 @@ class MonitorCore {
 		this._serverComMgr.setFetchRecentItemsEndCallback(this.fetchRecentItemsEnd.bind(this));
 		this._serverComMgr.setSetETVFromASINCallback(this.setETVFromASIN.bind(this));
 		this._serverComMgr.setSetTierFromASINCallback(this.setTierFromASIN.bind(this));
+		this._serverComMgr.setAddVariantCallback(this.addVariants.bind(this));
 
 		this._itemsMgr = new ItemsMgr(this._settings);
 

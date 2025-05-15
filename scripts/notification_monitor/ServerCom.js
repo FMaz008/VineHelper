@@ -13,6 +13,7 @@ class ServerCom {
 	fetchRecentItemsEndCallback = null;
 	setETVFromASINCallback = null;
 	setTierFromASINCallback = null;
+	addVariantCallback = null;
 
 	constructor() {
 		//Message from within the context of the extension
@@ -46,6 +47,10 @@ class ServerCom {
 
 	setSetTierFromASINCallback(callback) {
 		this.setTierFromASINCallback = callback;
+	}
+
+	setAddVariantCallback(callback) {
+		this.addVariantCallback = callback;
 	}
 
 	/**
@@ -100,6 +105,10 @@ class ServerCom {
 					this.fetchRecentItemsEndCallback();
 				}
 			}
+		}
+
+		if (data.type == "newVariants") {
+			this.addVariantCallback(data);
 		}
 	}
 

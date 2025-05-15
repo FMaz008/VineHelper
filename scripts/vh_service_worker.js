@@ -200,6 +200,11 @@ function connectWebSocket() {
 		sendMessageToAllTabs(data1, "newItemETV");
 	});
 
+	socket.on("newVariants", (data) => {
+		data.type = "newVariants";
+		sendMessageToAllTabs(data, "newVariants");
+	});
+
 	socket.on("unavailableItem", (data) => {
 		sendMessageToAllTabs({
 			type: "unavailableItem",

@@ -1,6 +1,8 @@
 //Todo: insertTileAccordingToETV and ETVChangeRepositioning are very similar. Could we merge some logic?
 
 import { getRecommendationTypeFromQueue, generateRecommendationString } from "../Grid.js";
+import { Tile } from "../Tile.js";
+
 import { YMDHiStoISODate } from "../DateHelper.js";
 import { keywordMatch } from "../service_worker/keywordMatch.js";
 import { unescapeHTML, removeSpecialHTML } from "../StringHelper.js";
@@ -492,7 +494,16 @@ class NotificationMonitor extends MonitorCore {
 			this._settings.isPremiumUser() && this._settings.get("general.displayVariantIcon") && is_parent_asin
 		);
 
-		let tileDOM = await this._tpl.render(prom2, true);
+		const tileDOM = await this._tpl.render(prom2, true);
+		const tile = new Tile(tileDOM, null);
+
+		if (this._settings.isPremiumUser(2) && this._settings.get("general.displayVariantButton")) {
+			if (is_parent_asin && itemData.variants) {
+				for (const variant of itemData.variants) {
+					tile.addVariant(variant.asin, variant.title, variant.etv);
+				}
+			}
+		}
 
 		// Create fragment and add the tile to it
 		const fragment = document.createDocumentFragment();
@@ -603,6 +614,19 @@ class NotificationMonitor extends MonitorCore {
 		this.#autoTruncate();
 
 		return tileDOM; //Return the DOM element for the tile.
+	}
+
+	async addVariants(data) {
+		if (this._settings.isPremiumUser(2) && this._settings.get("general.displayVariantButton")) {
+			const tileDOM = await this._itemsMgr.getItemDOMElement(data.asin);
+			const tile = new Tile(tileDOM, null);
+
+			if (data.variants && data.variants.length > 0) {
+				for (const variant of data.variants) {
+					tile.addVariant(variant.asin, variant.title, variant.etv);
+				}
+			}
+		}
 	}
 
 	/**
