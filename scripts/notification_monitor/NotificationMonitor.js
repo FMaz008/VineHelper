@@ -500,7 +500,7 @@ class NotificationMonitor extends MonitorCore {
 		if (this._settings.isPremiumUser(2) && this._settings.get("general.displayVariantButton")) {
 			if (is_parent_asin && itemData.variants) {
 				for (const variant of itemData.variants) {
-					tile.addVariant(variant.asin, variant.title, variant.etv);
+					await tile.addVariant(variant.asin, variant.title, variant.etv);
 				}
 			}
 		}
@@ -625,7 +625,7 @@ class NotificationMonitor extends MonitorCore {
 					const tile = new Tile(tileDOM, null);
 					if (data.variants && data.variants.length > 0) {
 						for (const variant of data.variants) {
-							tile.addVariant(variant.asin, variant.title, variant.etv);
+							await tile.addVariant(variant.asin, variant.title, variant.etv);
 						}
 					}
 				}
