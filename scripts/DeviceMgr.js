@@ -2,10 +2,11 @@ class DeviceMgr {
 	constructor(settings) {
 		this.deviceId = null;
 		this.deviceFingerprint = null;
+		this.deviceName = null;
 		this.settings = settings;
 	}
 
-	generateDeviceName(save = true) {
+	async generateDeviceName(save = true) {
 		// Dictionary of adjectives and nouns for device name generation
 		const adjectives = [
 			"Brass",
@@ -621,17 +622,18 @@ class DeviceMgr {
 		const deviceName = `${randomAdjective} ${randomPrefix} ${randomNoun} ${modelSuffix}`; // Combine them to create a device name
 
 		if (save) {
-			this.settings.set("general.deviceName", deviceName);
+			await this.settings.set("general.deviceName", deviceName);
+			this.deviceName = deviceName;
 		}
 		return deviceName;
 	}
 
-	setDeviceName(name) {
+	async setDeviceName(name) {
 		if (!name) {
 			throw new Error("Device name is required");
 		}
 
-		this.settings.set("general.deviceName", name);
+		await this.settings.set("general.deviceName", name);
 		this.deviceName = name;
 		return name;
 	}
