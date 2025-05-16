@@ -137,7 +137,6 @@
 					<input type="radio" name="notification.monitor.openLinksInNewTab" value="0" />
 					Open in place (Notif. Mon. will be redirected)
 				</label>
-				<span style="font-size: 10px; margin-left: 40px">Firefox does not support open in place.</span>
 				<div class="tabulation">
 					<div class="setting-container">
 						<label for="notification.monitor.preventUnload">
@@ -158,12 +157,11 @@
 						</label>
 						<div class="setting-summary">
 							<div class="vh-toolbar-icon vh-icon-question"></div>
-							Amazon generates a lot of event listeners, which use up a lot of resources when the
-							notification monitor has lots of items. (Some event listeners can prevent a deleted item
-							from being cleared from memory.) If you have memory usage issues, you can enable this
-							setting. Using this setting can, sometimes, render the See Details button inactive. A page
-							refresh usually solve the problem, but if you are using this setting, take the habbit to
-							test the See Details button upon loading the notification monitor.
+							Amazon generates a lot of event listeners. If you have memory usage issues, or tab crash
+							(going white) issues: you can try enabling this setting. Using this setting can, sometimes,
+							render the See Details button inactive. A page refresh usually solve the problem, but if you
+							are using this setting, take the habbit to test the See Details button upon loading the
+							notification monitor.
 						</div>
 					</div>
 				</div>
@@ -251,7 +249,7 @@
 				</div>
 			</div>
 		</div>
-		
+
 		Unknown ETV
 		<div class="tabulation">
 			<div class="setting-container">

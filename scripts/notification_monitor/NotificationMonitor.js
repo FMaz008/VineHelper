@@ -1235,11 +1235,7 @@ class NotificationMonitor extends MonitorCore {
 			return;
 
 		//Add the click listener for the See Details button
-		if (
-			this._env.isFirefox() ||
-			this._settings.get("notification.monitor.openLinksInNewTab") == "1" ||
-			this._ctrlPress
-		) {
+		if (this._settings.get("notification.monitor.openLinksInNewTab") == "1" || this._ctrlPress) {
 			//Deactivate Vine click handling
 
 			const btnContainer = e.target.closest(".vvp-details-btn");
