@@ -291,14 +291,33 @@ class HiddenListMgr {
 
 function getStorageSizeFull() {
 	return new Promise((resolve, reject) => {
-		//chrome.storage.local.getBytesInUse(['hiddenItems'], function(bytes) {
-		chrome.storage.local.getBytesInUse(null, function (bytes) {
-			if (chrome.runtime.lastError) {
-				reject(new Error(chrome.runtime.lastError.message));
-			} else {
-				resolve(bytes);
+		try {
+			chrome.storage.local.getBytesInUse(null, function (bytes) {
+				if (chrome.runtime.lastError) {
+					reject(new Error(chrome.runtime.lastError.message));
+				} else {
+					resolve(bytes);
+				}
+			});
+		} catch (e) {
+			// Firefox doesn't support getBytesInUse, estimate size instead
+			try {
+				// Get the current hidden items data
+				chrome.storage.local.get("hiddenItems", function (data) {
+					if (chrome.runtime.lastError) {
+						reject(new Error(chrome.runtime.lastError.message));
+					} else {
+						// Estimate size by getting the length of the serialized data
+						// Each character in a string is typically 2 bytes in JavaScript
+						const estimatedSize = data.hiddenItems ? data.hiddenItems.length * 2 : 0;
+						resolve(estimatedSize);
+					}
+				});
+			} catch (e2) {
+				// If we can't even get the data, return 0
+				resolve(0);
 			}
-		});
+		}
 	});
 }
 
