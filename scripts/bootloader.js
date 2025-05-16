@@ -1204,11 +1204,13 @@ window.addEventListener("message", async function (event) {
 			healingAnim.classList.add("slide-transition");
 			await new Promise((resolve) => setTimeout(resolve, 1000)); // Delay 1 second
 			await fadeOut(healingAnim);
+			document.querySelector("#vh-healing")?.remove();
 		}
 
 		const textContainer = document.getElementById("vh-healing-text");
 		if (textContainer) {
 			await fadeOut(textContainer);
+			document.querySelector("#vh-healing-text")?.remove();
 		}
 
 		//Clicking on the healing text will remove the healing text and the healing animation
