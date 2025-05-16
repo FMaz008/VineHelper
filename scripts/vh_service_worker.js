@@ -1,4 +1,4 @@
-const DEBUG_MODE = false; //Will switch the notification countries to "com"
+//const DEBUG_MODE = false; //Will switch the notification countries to "com"
 const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_WS_URL = "ws://127.0.0.1:3000";
 const channel = new BroadcastChannel("VineHelper");
@@ -78,6 +78,7 @@ function processBroadcastMessage(data) {
 				fid: Settings.get("general.fingerprint.id", false),
 				countryCode: i13n.getCountryCode(),
 				limit: data.limit || 100,
+				request_variants: Settings.isPremiumUser(2) && Settings.get("general.displayVariantButton"),
 			});
 		} else {
 			console.warn("Socket not connected - cannot fetch last 100 items");
@@ -358,6 +359,7 @@ function processLast100Items(arrProducts) {
 			is_parent_asin,
 			enrollment_guid,
 			unavailable,
+			variants,
 		} = arrProducts[i];
 
 		//Only display notification for products with a title and image url
@@ -383,6 +385,7 @@ function processLast100Items(arrProducts) {
 			is_parent_asin: is_parent_asin,
 			enrollment_guid: enrollment_guid,
 			unavailable: unavailable,
+			variants: variants,
 		});
 	}
 	myStream.input({ type: "fetchRecentItemsEnd" });
