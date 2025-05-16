@@ -7,6 +7,7 @@ class ModalElement {
 		this.overlay = true;
 		this.title = "";
 		this.content = "";
+		this.style = "";
 	}
 
 	async show(template = "view/modal.html") {
@@ -34,6 +35,7 @@ class ModalElement {
 		Tpl.setVar("title", this.title);
 		Tpl.setVar("id", this.id);
 		Tpl.setVar("content", this.content);
+		Tpl.setVar("style", this.style);
 		const content = Tpl.render(prom);
 		document.body.insertAdjacentHTML("beforeend", content);
 	}

@@ -667,3 +667,24 @@ input[type="checkbox"] {
 	color: blue;
 	padding: 0 5px;
 }
+
+table.vh-table-variants {
+	width: 90%;
+	margin: 0 auto;
+}
+table.vh-table-variants tr th {
+	border-bottom: 3px solid #000;
+	padding: 5px;
+}
+table.vh-table-variants tr td {
+	border-bottom: 1px solid #000;
+	padding: 5px;
+}
+
+table.vh-table-variants tr:nth-child(even) {
+	background-color: rgba(0, 0, 0, 0.05); /* Light gray on light themes, dark gray on dark themes */
+}
+
+table.vh-table-variants tr:nth-child(odd) {
+	background-color: rgba(255, 255, 255, 0.03); /* Very subtle contrast */
+}

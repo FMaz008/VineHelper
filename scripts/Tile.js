@@ -115,9 +115,11 @@ class Tile {
 		//Display a modal listing all the variants
 		let m = modalMgr.newModal("item-variants-" + asin);
 		m.title = "Variants for item #" + asin;
-		m.content = `Variants for ${this.getTitle()}:<ul>`;
+		m.style = "min-width: 600px;";
+		m.content = `Variants for:<br />${this.getTitle()}<br /><br /><table class="vh-table-variants">`;
+		m.content += `<tr><th>Variant info</th><th>Action</th></tr>`;
 		for (let variant of this.#variants) {
-			m.content += `<li>`;
+			m.content += `<tr><td>`;
 			try {
 				const json = JSON.parse(variant.title);
 				for (let key in json) {
@@ -126,10 +128,11 @@ class Tile {
 			} catch (e) {
 				m.content += `(No info available)<br />`;
 			}
-			m.content += `<a href="#" class="vh-link-variant" data-asin="${variant.asin}">View</a>`;
-			m.content += `</li>`;
+			m.content += `</td><td width="150px">`;
+			m.content += `<a href="#" class="vh-link-variant" data-asin="${variant.asin}">View ${variant.asin}</a>`;
+			m.content += `</td></tr>`;
 		}
-		m.content += `</ul>`;
+		m.content += `</table>`;
 		await m.show();
 
 		//Add event listener to the links
