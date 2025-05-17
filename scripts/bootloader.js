@@ -1022,6 +1022,7 @@ async function serverProductsResponse(data) {
 	if (data["invalid_uuid"] == true) {
 		console.error("Invalid UUID");
 		document.querySelector("#vvp-items-grid-container").style.display = "block";
+		Settings.set("general.uuid", null); //Cancel the UUID, so the next load can regenerate a new one.
 		//Do no complete this execution
 		return false;
 	}
