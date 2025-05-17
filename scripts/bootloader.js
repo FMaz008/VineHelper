@@ -940,6 +940,7 @@ async function generateTile(obj) {
 			alink.href = "#";
 			alink.setAttribute("onclick", "return false;");
 			alink.setAttribute("title", "The item has variant(s).");
+			alink.style.cursor = "default";
 			div.appendChild(alink);
 
 			// Create another div element for the icon and add classes
@@ -984,7 +985,7 @@ async function fetchProductsDatav5() {
 	};
 	content.s = await cryptoKeys.signData(content);
 	content.pk = await cryptoKeys.getExportedPublicKey();
-	
+
 	const controller = new AbortController();
 	const timeoutId = setTimeout(() => controller.abort(), 5000); // timeout in ms.
 
