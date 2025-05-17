@@ -457,7 +457,7 @@ function processLast100Items(arrProducts) {
 			etv_max: etv_max,
 			queue: queue,
 			tier: tier,
-			reason: "Fetch last 100 new items",
+			reason: "Fetch latest new items",
 			is_parent_asin: is_parent_asin,
 			enrollment_guid: enrollment_guid,
 			unavailable: unavailable,
