@@ -16,6 +16,9 @@ var fingerprintMgr = new DeviceFingerprintMgr(Settings);
 import { DeviceMgr } from "../scripts/DeviceMgr.js";
 var deviceMgr = new DeviceMgr(Settings);
 
+import { CryptoKeys } from "../scripts/CryptoKeys.js";
+var cryptoKeys = new CryptoKeys();
+
 async function drawDiscord() {
 	//Show or hide the discord options
 	document.querySelector("#discordOptions").style.display = Settings.get("discord.active") ? "block" : "none";
@@ -135,11 +138,14 @@ async function initiateSettings() {
 	if (Settings.get("general.uuid", false)) {
 		const content = {
 			api_version: 5,
-			version: chrome.runtime.getManifest().version,
+			app_version: env.data.appVersion,
 			action: "get_user_stats",
 			country: i13n.getCountryCode(),
 			uuid: Settings.get("general.uuid", false),
 		};
+		const s = await cryptoKeys.signData(content);
+		content.s = s;
+		content.pk = await cryptoKeys.getExportedPublicKey();
 		fetch(env.getAPIUrl(), {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
@@ -352,11 +358,15 @@ async function initiateSettings() {
 		if (await confirmPrompt("Delete all remotely stored hidden items from Vine Helper?")) {
 			const content = {
 				api_version: 5,
-				country: "loremipsum",
+				app_version: env.data.appVersion,
+				country: Settings.get("general.country", false),
 				action: "save_hidden_list",
 				uuid: Settings.get("general.uuid", false),
 				items: "DELETE_ALL",
 			};
+			const s = await cryptoKeys.signData(content);
+			content.s = s;
+			content.pk = await cryptoKeys.getExportedPublicKey();
 			//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
 			fetch(env.getAPIUrl(), {
 				method: "POST",
@@ -370,10 +380,14 @@ async function initiateSettings() {
 	document.getElementById("fetchHiddenItems").addEventListener("click", async function () {
 		const content = {
 			api_version: 5,
-			country: "loremipsum",
+			app_version: env.data.appVersion,
+			country: Settings.get("general.country", false),
 			action: "load_hidden_list",
 			uuid: Settings.get("general.uuid", false),
 		};
+		const s = await cryptoKeys.signData(content);
+		content.s = s;
+		content.pk = await cryptoKeys.getExportedPublicKey();
 		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
 		fetch(env.getAPIUrl(), {
 			method: "POST",
@@ -764,12 +778,16 @@ async function remoteSaveList(keywordType) {
 	if (await confirmPrompt("Overwrite remote stored keywords with the saved list?")) {
 		const content = {
 			api_version: 5,
-			country: "loremipsum",
+			app_version: env.data.appVersion,
+			country: Settings.get("general.country", false),
 			uuid: Settings.get("general.uuid", false),
 			action: "save_keywords",
 			keywords_type: keywordType,
 			keywords: Settings.get(settingKey),
 		};
+		const s = await cryptoKeys.signData(content);
+		content.s = s;
+		content.pk = await cryptoKeys.getExportedPublicKey();
 		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
 		fetch(env.getAPIUrl(), {
 			method: "POST",
@@ -784,11 +802,15 @@ async function remoteLoadList(keywordsType) {
 	if (await confirmPrompt("Load remote list and overwrite local list?")) {
 		const content = {
 			api_version: 5,
-			country: "loremipsum",
+			app_version: env.data.appVersion,
+			country: Settings.get("general.country", false),
 			uuid: Settings.get("general.uuid", false),
 			action: "get_keywords",
 			keywords: keywordsType,
 		};
+		const s = await cryptoKeys.signData(content);
+		content.s = s;
+		content.pk = await cryptoKeys.getExportedPublicKey();
 		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
 		fetch(env.getAPIUrl(), {
 			method: "POST",

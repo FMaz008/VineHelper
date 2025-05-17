@@ -13,6 +13,9 @@ const i13n = new Internationalization();
 import { Environment } from "./Environment.js";
 var env = new Environment();
 
+import { CryptoKeys } from "./CryptoKeys.js";
+var cryptoKeys = new CryptoKeys();
+
 class HiddenListMgr {
 	static #instance = null;
 	listLoaded;
@@ -127,7 +130,7 @@ class HiddenListMgr {
 		});
 
 		if (remoteSave && Settings.get("hiddenTab.remote")) {
-			this.notifyServerOfHiddenItem();
+			await this.notifyServerOfHiddenItem();
 			this.arrChanges = [];
 		}
 	}
@@ -161,16 +164,21 @@ class HiddenListMgr {
 	/**
 	 * Send new items on the server to be added or removed from the hidden list.
 	 */
-	notifyServerOfHiddenItem() {
+	async notifyServerOfHiddenItem() {
 		logger.add("Saving hidden item(s) remotely...");
 
 		const content = {
 			api_version: 5,
+			app_version: env.data.appVersion,
 			country: i13n.getCountryCode(),
 			action: "save_hidden_list",
 			uuid: Settings.get("general.uuid", false),
 			items: this.arrChanges,
 		};
+		const s = await cryptoKeys.signData(content);
+		content.s = s;
+		content.pk = await cryptoKeys.getExportedPublicKey();
+
 		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
 		fetch(env.getAPIUrl(), {
 			method: "POST",

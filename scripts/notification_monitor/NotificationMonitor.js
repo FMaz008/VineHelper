@@ -1102,7 +1102,7 @@ class NotificationMonitor extends MonitorCore {
 	 * Send a report to VH's server
 	 * @param {string} asin - The ASIN of the item
 	 */
-	#send_report(asin) {
+	async #send_report(asin) {
 		let manifest = chrome.runtime.getManifest();
 
 		const content = {
@@ -1113,6 +1113,9 @@ class NotificationMonitor extends MonitorCore {
 			uuid: this._settings.get("general.uuid", false),
 			asin: asin,
 		};
+		const s = await this._cryptoKeys.signData(content);
+		content.s = s;
+		content.pk = await this._cryptoKeys.getExportedPublicKey();
 		const options = {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },

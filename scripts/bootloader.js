@@ -19,6 +19,9 @@ import { YMDHiStoISODate } from "./DateHelper.js";
 
 import { openDynamicModal } from "./DynamicModalHelper.js";
 
+import { CryptoKeys } from "./CryptoKeys.js";
+var cryptoKeys = new CryptoKeys();
+
 //Grid
 import {
 	Grid,
@@ -679,18 +682,22 @@ function initInsertTopPagination() {
 
 async function setBookmarkDate(timeOffset) {
 	//Fetch the current date/time from the server
-	let arrJSON = {
+	const data = {
 		api_version: 5,
 		app_version: env.data.appVersion,
+		country: i13n.getCountryCode(),
 		uuid: await Settings.get("general.uuid", false),
 		fid: await Settings.get("general.fingerprint.id", false),
-		country: i13n.getCountryCode(),
 		action: "date",
 	};
+	const s = await cryptoKeys.signData(data);
+	data.s = s;
+	data.pk = await cryptoKeys.getExportedPublicKey();
+
 	const options = {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify(arrJSON),
+		body: JSON.stringify(data),
 	};
 	fetch(env.getAPIUrl(), options)
 		.then((response) => response.json())
@@ -830,7 +837,7 @@ async function initTilesAndDrawToolbars() {
 }
 
 //This function will return an array of all the product on the page, with their description and thumbnail url
-function getAllProductsData() {
+async function getAllProductsData() {
 	let arrUrl = []; //Will be use to store the URL identifier of the listed products.
 	const arrObj = document.querySelectorAll(".vvp-item-tile:not(.pinned)");
 
@@ -860,7 +867,7 @@ function getAllProductsData() {
 			});
 		}
 	}
-	return arrUrl;
+	return { arr: arrUrl, s: await cryptoKeys.signData(arrUrl) };
 }
 
 //Convert the regular tile to the Vine Helper version.
@@ -947,7 +954,7 @@ async function generateTile(obj) {
 
 //Get data from the server about the products listed on this page
 async function fetchProductsDatav5() {
-	const arrProductsData = getAllProductsData();
+	const { arr: arrProductsData, s } = await getAllProductsData();
 	if (arrProductsData.length == 0) {
 		const gridContainer = document.querySelector("#vvp-items-grid-container");
 		if (gridContainer) {
@@ -965,18 +972,21 @@ async function fetchProductsDatav5() {
 	const content = {
 		api_version: 5,
 		app_version: env.data.appVersion,
-		action: "get_info",
-		tier: env.getTierLevel(),
 		country: i13n.getCountryCode(),
 		uuid: await Settings.get("general.uuid", false),
 		fid: await Settings.get("general.fingerprint.id", false),
+		action: "get_info",
+		tier: env.getTierLevel(),
 		queue: env.data.vineQueue,
 		items: arrProductsData,
 		request_variants: requestVariants,
+		s2: s,
 	};
-
+	content.s = await cryptoKeys.signData(content);
+	content.pk = await cryptoKeys.getExportedPublicKey();
+	
 	const controller = new AbortController();
-	const timeoutId = setTimeout(() => controller.abort(), 10000); // timeout in ms.
+	const timeoutId = setTimeout(() => controller.abort(), 5000); // timeout in ms.
 
 	fetch(env.getAPIUrl(), {
 		method: "POST",
@@ -1266,6 +1276,9 @@ window.addEventListener("message", async function (event) {
 			etv: event.data.data.etv,
 			variations: arrVariations,
 		};
+		const s = await cryptoKeys.signData(content);
+		content.s = s;
+		content.pk = await cryptoKeys.getExportedPublicKey();
 
 		arrVariations = null;
 
@@ -1336,6 +1349,10 @@ window.addEventListener("message", async function (event) {
 				order_status: event.data.data.status,
 				order_error: event.data.data.error,
 			};
+
+			const s = await cryptoKeys.signData(content);
+			content.s = s;
+			content.pk = await cryptoKeys.getExportedPublicKey();
 
 			//Form the full URL
 			await fetch(env.getAPIUrl(), {
@@ -1430,6 +1447,9 @@ async function recordUnavailableProduct(asin, reason) {
 		asin: asin,
 		reason: reason,
 	};
+	const s = await cryptoKeys.signData(content);
+	content.s = s;
+	content.pk = await cryptoKeys.getExportedPublicKey();
 
 	//Form the full URL
 	await fetch(env.getAPIUrl(), {

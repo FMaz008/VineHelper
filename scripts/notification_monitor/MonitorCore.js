@@ -9,6 +9,7 @@ import { SettingsMgr } from "../SettingsMgr.js";
 import { Template } from "../Template.js";
 import { Environment } from "../Environment.js";
 import { Logger } from "../Logger.js";
+import { CryptoKeys } from "../CryptoKeys.js";
 
 import { PinMgr } from "./PinMgr.js";
 import { Internationalization } from "../Internationalization.js";
@@ -40,6 +41,7 @@ class MonitorCore {
 		this._env = new Environment();
 		this._tpl = new Template();
 		this._log = new Logger();
+		this._cryptoKeys = new CryptoKeys();
 		this._i13nMgr = new Internationalization();
 		this._notificationsMgr = new ScreenNotifier();
 		this._tooltipMgr = new Tooltip();

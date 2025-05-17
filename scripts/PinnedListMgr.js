@@ -168,7 +168,7 @@ class PinnedListMgr {
 		});
 
 		if (remoteSave && Settings.get("hiddenTab.remote")) {
-			this.notifyServerOfChangedItem();
+			await this.notifyServerOfChangedItem();
 			this.arrChanges = [];
 		}
 	}
@@ -180,14 +180,19 @@ class PinnedListMgr {
 	/**
 	 * Send new items on the server to be added or removed from the changed list.
 	 */
-	notifyServerOfChangedItem() {
+	async notifyServerOfChangedItem() {
 		const content = {
 			api_version: 5,
+			app_version: env.data.appVersion,
 			country: i13n.getCountryCode(),
 			action: "save_pinned_list",
 			uuid: Settings.get("general.uuid", false),
 			items: this.arrChanges,
 		};
+		const s = await cryptoKeys.signData(content);
+		content.s = s;
+		content.pk = await cryptoKeys.getExportedPublicKey();
+
 		//Post an AJAX request to the 3rd party server, passing along the JSON array of all the products on the page
 		fetch(env.getAPIUrl(), {
 			method: "POST",

@@ -10,6 +10,9 @@ var Settings = new SettingsMgr();
 import { DeviceFingerprintMgr } from "./DeviceFingerprintMgr.js";
 import { DeviceMgr } from "./DeviceMgr.js";
 
+import { CryptoKeys } from "./CryptoKeys.js";
+var cryptoKeys = new CryptoKeys();
+
 const VINE_HELPER_API_V5_URL = "https://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_URL = "http://127.0.0.1:3000";
 
@@ -181,6 +184,9 @@ class Environment {
 			action: "get_uuid",
 			country: i13n.getCountryCode(),
 		};
+		const s = await cryptoKeys.signData(content);
+		content.s = s;
+		content.pk = await cryptoKeys.getExportedPublicKey();
 		const options = {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },

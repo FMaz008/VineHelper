@@ -151,4 +151,4 @@ class CryptoKeys {
 	}
 }
 
-export default CryptoKeys;
+export { CryptoKeys };

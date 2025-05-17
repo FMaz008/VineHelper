@@ -1,4 +1,4 @@
-import CryptoKeys from "./CryptoKeys.js";
+import { CryptoKeys } from "./CryptoKeys.js";
 import { DeviceMgr } from "./DeviceMgr.js";
 class DeviceFingerprintMgr {
 	static #instance = null;
@@ -90,11 +90,12 @@ class DeviceFingerprintMgr {
 			country: await this._settings.get("general.country"),
 			action: "upload_fingerprint",
 			uuid: uuid,
-			publicKey: await this._cryptoKeys.getExportedPublicKey(),
 			fingerprint: fingerprintHashBase64,
-			signature: signatureBase64,
 			device_name: deviceName,
 		};
+		const s = await this._cryptoKeys.signData(content);
+		content.s = s;
+		content.pk = await this._cryptoKeys.getExportedPublicKey();
 		const options = {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
@@ -118,12 +119,15 @@ class DeviceFingerprintMgr {
 	async deleteDevice(deviceId) {
 		const content = {
 			api_version: 5,
-			uuid: await this._settings.get("general.uuid"),
 			app_version: this._env.data.appVersion,
+			uuid: await this._settings.get("general.uuid"),
 			country: await this._settings.get("general.country"),
 			action: "delete_device",
 			id: deviceId,
 		};
+		const s = await this._cryptoKeys.signData(content);
+		content.s = s;
+		content.pk = await this._cryptoKeys.getExportedPublicKey();
 		const options = {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
