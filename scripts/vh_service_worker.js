@@ -337,17 +337,33 @@ async function retrieveSettings() {
 	}
 }
 
+let displayTimer = null;
+let reloadTimer = null;
+
 function setReloadTimer() {
+	// Clear any existing timers first
+	if (displayTimer) {
+		clearTimeout(displayTimer);
+		displayTimer = null;
+	}
+	if (reloadTimer) {
+		clearTimeout(reloadTimer);
+		reloadTimer = null;
+	}
+
 	//Create an interval between 5 and 10 minutes to check with the server if a page needs to be refreshed
 	const timer = Math.floor(Math.random() * (10 * 60 * 1000 - 5 * 60 * 1000 + 1) + 5 * 60 * 1000); //In milliseconds
 
 	//const timer = 0.5; //30 seconds for testing
-	const timerInMinutes = Math.floor(timer / 60 / 1000);
-	const secondsLeft = Math.floor((timer - timerInMinutes * 60 * 1000) / 1000);
-	console.log(
-		`${new Date().toLocaleString()} - Setting reload timer to ${timerInMinutes} minutes and ${secondsLeft} seconds`
-	);
-	const reloadTimer = setTimeout(async () => {
+	displayTimer = setTimeout(() => {
+		const timerInMinutes = Math.floor(timer / 60 / 1000);
+		const secondsLeft = Math.floor((timer - timerInMinutes * 60 * 1000) / 1000);
+		console.log(
+			`${new Date().toLocaleString()} - Setting reload timer to ${timerInMinutes} minutes and ${secondsLeft} seconds`
+		);
+	}, 500);
+
+	reloadTimer = setTimeout(async () => {
 		//Send a websocket request
 		if (
 			socket?.connected &&
@@ -361,6 +377,7 @@ function setReloadTimer() {
 
 			// If no active monitor tab, check for any monitor tab in any window
 			if (!activeMonitorTab) {
+				//Check if there is a (non-active)monitor tab in any tab
 				const allTabs = await chrome.tabs.query({});
 				const monitorTab = allTabs.find((tab) => tab.url && tab.url.includes("#monitor"));
 
@@ -381,6 +398,8 @@ function setReloadTimer() {
 							`${new Date().toLocaleString()} - Monitor tab not active and window not minimized/unfocused. Skipping.`
 						);
 					}
+				} else {
+					console.log(`${new Date().toLocaleString()} - No monitor tab found, skipping.`);
 				}
 			} else {
 				console.log(`${new Date().toLocaleString()} - Found active monitor tab, sending reload request`);
@@ -392,8 +411,6 @@ function setReloadTimer() {
 			}
 		}
 		setReloadTimer(); //Create a new timer
-		//Clear the timer
-		clearTimeout(reloadTimer);
 	}, timer);
 }
 
