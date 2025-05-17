@@ -138,6 +138,43 @@ chrome.notifications.onClicked.addListener((notificationId) => {
 
 let socket;
 let currentTabId = null;
+let lastActiveTabId = null;
+let lastActiveWindowId = null;
+
+// Track tab activation
+chrome.tabs.onActivated.addListener((activeInfo) => {
+	lastActiveTabId = activeInfo.tabId;
+	lastActiveWindowId = activeInfo.windowId;
+});
+
+// Track window focus
+chrome.windows.onFocusChanged.addListener((windowId) => {
+	if (windowId !== chrome.windows.WINDOW_ID_NONE) {
+		lastActiveWindowId = windowId;
+		// Update lastActiveTabId for the focused window
+		chrome.tabs.query({ active: true, windowId: windowId }, (tabs) => {
+			if (tabs[0]) {
+				lastActiveTabId = tabs[0].id;
+			}
+		});
+	}
+});
+
+// Modify the existing code to use the tracked tab
+async function checkActiveTab() {
+	if (lastActiveTabId) {
+		try {
+			const tab = await chrome.tabs.get(lastActiveTabId);
+			if (tab && tab.url && tab.url.includes("#monitor")) {
+				return true;
+			}
+		} catch (e) {
+			console.error("Error getting tab:", e);
+		}
+	}
+	return false;
+}
+
 function connectWebSocket() {
 	if (!Settings.get("notification.active")) {
 		return;
@@ -318,18 +355,40 @@ function setReloadTimer() {
 			!Settings.get("thorvarium.mobileandroid") &&
 			!Settings.get("thorvarium.mobileios")
 		) {
-			//Check if the current active tab's url has #monitor in the URL
-			const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-			const currentTab = tabs[0];
-			if (currentTab && currentTab.url && currentTab.url.includes("#monitor")) {
-				console.log(`${new Date().toLocaleString()} - Sending reload request`);
+			// First check for active, focused monitor tab
+			const activeTabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+			const activeMonitorTab = activeTabs.find((tab) => tab.url && tab.url.includes("#monitor"));
+
+			// If no active monitor tab, check for any monitor tab in any window
+			if (!activeMonitorTab) {
+				const allTabs = await chrome.tabs.query({});
+				const monitorTab = allTabs.find((tab) => tab.url && tab.url.includes("#monitor"));
+
+				if (monitorTab) {
+					// Check if the window containing the monitor tab is minimized/unfocused
+					const window = await chrome.windows.get(monitorTab.windowId);
+					if (window.state === "minimized" || !window.focused) {
+						console.log(
+							`${new Date().toLocaleString()} - Found monitor tab in minimized/unfocused window, sending reload request`
+						);
+						socket.emit("reloadRequest", {
+							uuid: Settings.get("general.uuid", false),
+							fid: Settings.get("general.fingerprint.id", false),
+							countryCode: i13n.getCountryCode(),
+						});
+					} else {
+						console.log(
+							`${new Date().toLocaleString()} - Monitor tab not active and window not minimized/unfocused. Skipping.`
+						);
+					}
+				}
+			} else {
+				console.log(`${new Date().toLocaleString()} - Found active monitor tab, sending reload request`);
 				socket.emit("reloadRequest", {
 					uuid: Settings.get("general.uuid", false),
 					fid: Settings.get("general.fingerprint.id", false),
 					countryCode: i13n.getCountryCode(),
 				});
-			} else {
-				console.log(`${new Date().toLocaleString()} - Not in monitor mode, not sending reload request`);
 			}
 		}
 		setReloadTimer(); //Create a new timer
