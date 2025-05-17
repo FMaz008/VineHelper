@@ -45,11 +45,6 @@
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/loading.gif");
 		background-repeat: no-repeat;
 	}
-	.vh-icon-healing {
-		background-size: 100%;
-		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/healing.gif");
-		background-repeat: no-repeat;
-	}
 	.vh-icon-etv {
 		background-size: 100%;
 		background-image: url("chrome-extension://__MSG_@@extension_id__/resource/image/etv.png");
@@ -267,11 +262,6 @@
 	.vh-icon-loading {
 		background-size: 100%;
 		background-image: url("/resource/image/loading.gif");
-		background-repeat: no-repeat;
-	}
-	.vh-icon-healing {
-		background-size: 100%;
-		background-image: url("/resource/image/healing.gif");
 		background-repeat: no-repeat;
 	}
 	.vh-icon-etv {

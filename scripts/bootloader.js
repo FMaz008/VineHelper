@@ -1199,38 +1199,6 @@ window.addEventListener("message", async function (event) {
 	if (event.data.type == "infiniteWheelFixed") {
 		//console.log("Content script received message: " + event.data.text);
 
-		let prom = await Tpl.loadFile("view/infinite_wheel_fix.html");
-		let content = Tpl.render(prom);
-
-		// Prepend content to the element with ID 'a-popover-content-3'
-		const popoverContent = document.getElementById("a-popover-content-3");
-		if (popoverContent) {
-			popoverContent.insertAdjacentHTML("afterbegin", content);
-		}
-
-		//Animate
-
-		const healingAnim = document.getElementById("vh-healing");
-		if (healingAnim) {
-			healingAnim.classList.add("slide-transition");
-			await new Promise((resolve) => setTimeout(resolve, 1000)); // Delay 1 second
-			await fadeOut(healingAnim);
-			document.querySelector("#vh-healing")?.remove();
-		}
-
-		const textContainer = document.getElementById("vh-healing-text");
-		if (textContainer) {
-			await fadeOut(textContainer);
-			document.querySelector("#vh-healing-text")?.remove();
-		}
-
-		//Clicking on the healing text will remove the healing text and the healing animation
-		textContainer.addEventListener("click", (e) => {
-			//Remove the healing text
-			document.querySelector("#vh-healing")?.remove();
-			document.querySelector("#vh-healing-text")?.remove();
-		});
-
 		//Show a notification
 		let note = new ScreenNotification();
 		note.title = "Infinite spinner fixed!";
