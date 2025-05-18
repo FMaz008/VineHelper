@@ -515,8 +515,12 @@ class NotificationMonitor extends MonitorCore {
 			if (this._sortType === TYPE_PRICE_DESC || this._sortType === TYPE_PRICE_ASC) {
 				//The tile will need to be inserted in a specific position based on the ETV value
 				this.#insertTileAccordingToETV(fragment, asin, etv_min);
+			} else if (this._sortType === TYPE_DATE_ASC) {
+				// For date ascending, append to the end
+				this._gridContainer.appendChild(fragment);
 			} else {
-				// For other sort types, just insert at the beginning
+				//Sort DESC
+				// For date descending (default), insert at the beginning
 				this._gridContainer.insertBefore(fragment, this._gridContainer.firstChild);
 			}
 		});
@@ -958,10 +962,11 @@ class NotificationMonitor extends MonitorCore {
 	/**
 	 * Sort the DOM items according to the _items map
 	 */
-	#processNotificationSorting() {
+	async #processNotificationSorting() {
 		const container = document.getElementById("vvp-items-grid");
+		if (!container) return;
 
-		this._preserveScrollPosition(() => {
+		await this._preserveScrollPosition(async () => {
 			// Sort the items - reuse the sorting logic from #sortItems
 			const sortedItems = this._itemsMgr.sortItems();
 
@@ -971,20 +976,19 @@ class NotificationMonitor extends MonitorCore {
 			// Filter out any items without DOM elements
 			const validItems = sortedItems.filter((item) => item.element);
 
-			// Efficiently reorder DOM elements
-			// Remove all items from the DOM first to avoid unnecessary reflows
-			//Should we just clone the grid back to an empty one ?
+			// Create a DocumentFragment for better performance
+			const fragment = document.createDocumentFragment();
+
+			// Add items to fragment in sorted order
 			validItems.forEach((item) => {
-				// We use a trick here - detach the element but keep the reference
 				if (item.element.parentNode) {
 					item.element.remove();
 				}
+				fragment.appendChild(item.element);
 			});
 
-			// Then re-append them in the correct order
-			validItems.forEach((item) => {
-				container.appendChild(item.element);
-			});
+			// Append all items at once
+			container.appendChild(fragment);
 		});
 	}
 

@@ -31,10 +31,10 @@ class ItemsMgr {
 		itemsArray.sort((a, b) => {
 			if (this._settings.get("notification.monitor.sortType") === TYPE_DATE_ASC) {
 				// Sort by date, oldest first
-				return a.data.date - b.data.date;
+				return a.data.dateAdded - b.data.dateAdded;
 			} else if (this._settings.get("notification.monitor.sortType") === TYPE_DATE_DESC) {
 				// Sort by date, newest first
-				return b.data.date - a.data.date;
+				return b.data.dateAdded - a.data.dateAdded;
 			} else if (this._settings.get("notification.monitor.sortType") === TYPE_PRICE_ASC) {
 				// Sort by price, lowest first
 				// Treat null/undefined as 99999999 so they are at the end
