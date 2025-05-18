@@ -1,4 +1,5 @@
-const TYPE_DATE = "date";
+const TYPE_DATE_ASC = "date_asc";
+const TYPE_DATE_DESC = "date_desc";
 const TYPE_PRICE_DESC = "price_desc";
 const TYPE_PRICE_ASC = "price_asc";
 
@@ -28,7 +29,10 @@ class ItemsMgr {
 
 		// Sort based on the current sort type
 		itemsArray.sort((a, b) => {
-			if (this._settings.get("notification.monitor.sortType") === TYPE_DATE) {
+			if (this._settings.get("notification.monitor.sortType") === TYPE_DATE_ASC) {
+				// Sort by date, oldest first
+				return a.data.date - b.data.date;
+			} else if (this._settings.get("notification.monitor.sortType") === TYPE_DATE_DESC) {
 				// Sort by date, newest first
 				return b.data.date - a.data.date;
 			} else if (this._settings.get("notification.monitor.sortType") === TYPE_PRICE_ASC) {

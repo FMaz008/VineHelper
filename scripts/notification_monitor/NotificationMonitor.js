@@ -14,7 +14,8 @@ const TYPE_ZEROETV = 1;
 const TYPE_HIGHLIGHT = 2;
 const TYPE_HIGHLIGHT_OR_ZEROETV = 9;
 
-const TYPE_DATE = "date";
+const TYPE_DATE_ASC = "date_asc";
+const TYPE_DATE_DESC = "date_desc";
 const TYPE_PRICE_DESC = "price_desc";
 const TYPE_PRICE_ASC = "price_asc";
 
@@ -36,7 +37,7 @@ class NotificationMonitor extends MonitorCore {
 	_autoTruncateEnabled = true;
 	_filterQueue = -1;
 	_filterType = -1;
-	_sortType = TYPE_DATE;
+	_sortType = TYPE_DATE_DESC;
 
 	constructor() {
 		super();
@@ -913,7 +914,7 @@ class NotificationMonitor extends MonitorCore {
 		//Move the notification to the top only if we're not using price-based sorting
 		if (!this._fetchingRecentItems) {
 			// Only move to top if we're NOT using price sort
-			if (this._sortType === TYPE_DATE && this._settings.get("notification.monitor.bump0ETV")) {
+			if (this._sortType === TYPE_DATE_ASC && this._settings.get("notification.monitor.bump0ETV")) {
 				this._moveNotifToTop(notif);
 			} else {
 				// If sorting by price is active, just resort after identifying as zero ETV
