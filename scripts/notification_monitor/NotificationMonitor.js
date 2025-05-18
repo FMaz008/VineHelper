@@ -400,6 +400,7 @@ class NotificationMonitor extends MonitorCore {
 			queue,
 			tier,
 			date,
+			date_added,
 			title,
 			img_url,
 			is_parent_asin,
@@ -472,8 +473,10 @@ class NotificationMonitor extends MonitorCore {
 		this._tpl.setVar("img_url", img_url);
 		this._tpl.setVar("asin", asin);
 		this._tpl.setVar("tier", tier);
-		this._tpl.setVar("dateReceived", this._formatDate(new Date()));
-		this._tpl.setVar("date", this._formatDate(date));
+		this._tpl.setVar("date_added", date_added);
+		this._tpl.setVar("date_received", new Date());
+		this._tpl.setVar("date_sent", date);
+		this._tpl.setVar("date_displayed", this._formatDate(date));
 		this._tpl.setVar("feedPaused", this._feedPaused);
 		this._tpl.setVar("queue", queue);
 		this._tpl.setVar("description", title);
@@ -485,6 +488,7 @@ class NotificationMonitor extends MonitorCore {
 		this._tpl.setVar("recommendationType", recommendationType);
 		this._tpl.setVar("recommendationId", recommendationId);
 		this._tpl.setVar("search_url", search_url);
+		this._tpl.setIf("delayed", reason.includes("enrollement_guid") || reason.includes("queue"));
 		this._tpl.setIf(
 			"announce",
 			this._settings.get("discord.active") && this._settings.get("discord.guid", false) != null
@@ -918,7 +922,7 @@ class NotificationMonitor extends MonitorCore {
 		//Move the notification to the top only if we're not using price-based sorting
 		if (!this._fetchingRecentItems) {
 			// Only move to top if we're NOT using price sort
-			if (this._sortType === TYPE_DATE_ASC && this._settings.get("notification.monitor.bump0ETV")) {
+			if (this._sortType === TYPE_DATE_DESC && this._settings.get("notification.monitor.bump0ETV")) {
 				this._moveNotifToTop(notif);
 			} else {
 				// If sorting by price is active, just resort after identifying as zero ETV
@@ -1079,7 +1083,8 @@ class NotificationMonitor extends MonitorCore {
 		e.preventDefault();
 
 		const asin = target.dataset.asin;
-		const date = target.dataset.date;
+		const dateSent = target.dataset.dateSent;
+		const dateAdded = target.dataset.dateAdded;
 		const dateReceived = target.dataset.dateReceived;
 		const tier = target.dataset.tier;
 		const reason = target.dataset.reason;
@@ -1091,8 +1096,10 @@ class NotificationMonitor extends MonitorCore {
 		m.title = "Item " + asin;
 		m.content = `
 			<ul style="margin-bottom: 10px;">
-				<li>Broadcast date/time: ${date}</li>
-				<li>Received date/time: ${dateReceived}</li>
+				<li>First seen: ${this._formatDate(new Date(dateAdded))}</li>
+				<li>Broadcast sent: ${this._formatDate(new Date(dateSent))}</li>
+				<li>Broadcast received: ${this._formatDate(new Date(dateReceived))}</li>
+				<li>Latency: ${Math.round((new Date(dateReceived) - new Date(dateSent)) / 1000)} second(s)</li>
 				<li>Broadcast reason: ${reason}</li>
 				<li>Queue: ${queue}</li>
 				<li>Found in tier: ${tier}</li>

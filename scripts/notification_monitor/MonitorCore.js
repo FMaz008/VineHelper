@@ -240,15 +240,23 @@ class MonitorCore {
 		if (date == null) {
 			date = new Date();
 		}
-		return new Intl.DateTimeFormat(this._i13nMgr.getLocale(), {
-			month: "2-digit",
-			day: "2-digit",
-			hour: "2-digit",
-			minute: "2-digit",
-			second: "2-digit",
-			hour12: !this._settings.get("notification.monitor.24hrsFormat"),
-			hourCycle: "h23",
-		}).format(date);
+		if (date === "undefined") {
+			return "N/A";
+		}
+		try {
+			return new Intl.DateTimeFormat(this._i13nMgr.getLocale(), {
+				month: "2-digit",
+				day: "2-digit",
+				hour: "2-digit",
+				minute: "2-digit",
+				second: "2-digit",
+				hour12: !this._settings.get("notification.monitor.24hrsFormat"),
+				hourCycle: "h23",
+			}).format(date);
+		} catch (err) {
+			console.log("Date format invalid: " + date);
+			return "N/A";
+		}
 	}
 
 	_updateTabTitle() {

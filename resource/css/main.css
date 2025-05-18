@@ -60,6 +60,13 @@
 	background-color: rgba(255, 255, 255, 0.5);
 	color: #0f1111;
 }
+.vh-delayed-indicator-container {
+	position: absolute;
+	margin-top: -30px;
+	left: 0;
+	height: 16px;
+	line-height: 16px;
+}
 .vh-new-corner-discovered {
 	position: absolute;
 	z-index: 5;

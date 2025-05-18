@@ -14,12 +14,23 @@
 		<img alt="" src="{{$img_url}}" />
 		{{if variant}}
 		<div class="vh-variant-indicator-container">
-			<a href="#" onclick="return false;" title="The item has variant(s)">
+			<a href="#" onclick="return false;" style="cursor: default" title="The item has variant(s)">
 				<div class="vh-indicator-icon vh-icon-choice"></div>
 			</a>
 		</div>
+		{{endif}} {{if delayed}}
+		<div class="vh-delayed-indicator-container">
+			<a
+				href="#"
+				onclick="return false;"
+				style="cursor: default"
+				title="Delayed broadcast. Click (?) for details."
+			>
+				<div class="vh-indicator-icon vh-icon-delayed"></div>
+			</a>
+		</div>
 		{{endif}}
-		<div class="vh-date-added">{{$date}}</div>
+		<div class="vh-date-added">{{$date_added}}</div>
 	</div>
 	<div class="vvp-item-tile-content" style="display: flex; flex-direction: column; width: 100%; margin-left: 10px">
 		<div class="vh-status">
@@ -78,8 +89,9 @@
 						<div
 							class="vh-toolbar-icon vh-icon-question"
 							data-asin="{{$asin}}"
-							data-date="{{$date}}"
-							data-date-received="{{$dateReceived}}"
+							data-date-received="{{$date_received}}"
+							data-date-sent="{{$date_sent}}"
+							data-date-displayed="{{$date_displayed}}"
 							data-reason="{{$reason}}"
 							data-highlightkw="{{$highlightKW}}"
 							data-blurkw="{{$blurKW}}"
