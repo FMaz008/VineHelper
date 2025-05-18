@@ -395,6 +395,7 @@ class NotificationMonitor extends MonitorCore {
 		itemData.typeZeroETV = itemData.etv_min !== null && parseFloat(itemData.etv_min) === 0 ? 1 : 0;
 		itemData.title = unescapeHTML(unescapeHTML(itemData.title));
 		itemData.date = new Date(YMDHiStoISODate(itemData.date)); //Convert server date time to local date time
+		itemData.date_added = new Date(YMDHiStoISODate(itemData.date_added)); //Convert server date time to local date time
 		const {
 			asin,
 			queue,
@@ -414,7 +415,6 @@ class NotificationMonitor extends MonitorCore {
 			BlurKWsMatch,
 			unavailable,
 		} = itemData;
-
 		const recommendationType = getRecommendationTypeFromQueue(queue); //grid.js
 		const recommendationId = generateRecommendationString(recommendationType, asin, enrollment_guid); //grid.js
 
