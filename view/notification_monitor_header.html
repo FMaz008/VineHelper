@@ -26,24 +26,22 @@
 				</div>
 			</div>
 			<div style="display: flex; flex-wrap: wrap; gap: 5px; margin: 5px 0">
-				<table class="vh-notification-monitor-header-buttons">
-					<tr>
-						<th colspan="2">Clear</th>
-						<th colspan="2">Fetch</th>
-						<th>Feed control</th>
-					</tr>
-					<tr>
-						<td>
+				<div class="vh-notification-monitor-controls">
+					<div class="vh-control-group">
+						<div class="vh-control-header">Clear</div>
+						<div class="vh-control-buttons">
 							<label for="clear-monitor">
 								<input type="button" name="clear-monitor" id="clear-monitor" value="All" />
 							</label>
-						</td>
-						<td>
 							<label for="clear-unavailable">
 								<input type="button" name="clear-unavailable" id="clear-unavailable" value="Unavail." />
 							</label>
-						</td>
-						<td>
+						</div>
+					</div>
+					
+					<div class="vh-control-group">
+						<div class="vh-control-header">Fetch</div>
+						<div class="vh-control-buttons">
 							<label for="fetch-last-100">
 								<input
 									type="button"
@@ -52,37 +50,44 @@
 									value="last {{$fetchLimit}}"
 								/>
 							</label>
-						</td>
-						<td>
 							{{if TIER3}}
 							<label for="fetch-last-12hrs">
 								<input type="button" name="fetch-last-12hrs" id="fetch-last-12hrs" value="last 12hrs" />
 							</label>
 							{{endif}}
-						</td>
-						<td>
-							<label for="pauseFeed" style="margin-right: 5px">
+						</div>
+					</div>
+					
+					<div class="vh-control-group">
+						<div class="vh-control-header">Feed control</div>
+						<div class="vh-control-buttons">
+							<label for="pauseFeed">
 								<input type="button" name="pauseFeed" id="pauseFeed" value="Pause & Buffer Feed" />
 							</label>
-						</td>
-					</tr>
-				</table>
-
-				<label for="auto-truncate" style="align-self: center">
-					<input type="checkbox" name="auto-truncate" id="auto-truncate" checked />
-					<span>Auto truncate after </span>
-					<select name="auto-truncate-limit" id="auto-truncate-limit">
-						<option value="100">100</option>
-						<option value="200">200</option>
-						<option value="500">500</option>
-						<option value="1000">1000</option>
-						<option value="2000">2000</option>
-						<option value="3000">3000</option>
-						<option value="4000">4000</option>
-						<option value="5000">5000</option>
-					</select>
-					<span> items.</span>
-				</label>
+						</div>
+					</div>
+					
+					<div class="vh-control-group">
+						<div class="vh-control-header">Auto truncate</div>
+						<div class="vh-control-buttons">
+							<div style="width: 160px">
+								<input type="checkbox" name="auto-truncate" id="auto-truncate" checked />
+								after
+								<select name="auto-truncate-limit" id="auto-truncate-limit">
+									<option value="100">100</option>
+									<option value="200">200</option>
+									<option value="500">500</option>
+									<option value="1000">1000</option>
+									<option value="2000">2000</option>
+									<option value="3000">3000</option>
+									<option value="4000">4000</option>
+									<option value="5000">5000</option>
+								</select>
+								items
+							</div>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 

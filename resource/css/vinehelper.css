@@ -690,14 +690,25 @@ table.vh-table-variants tr:nth-child(odd) {
 }
 
 /* Notification Monitor */
-table.vh-notification-monitor-header-buttons {
-	width: 10px; /*As small as possible*/
-	border-collapse: separate;
-	border-spacing: 2px;
+
+.vh-notification-monitor-controls {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 5px 5px;
 }
 
-table.vh-notification-monitor-header-buttons th {
+.vh-control-header {
+	width: 100%;
+	white-space: nowrap;
 	background-color: #000;
 	color: #fff;
 	text-align: center;
+	height: 23px;
+}
+.vh-control-buttons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 5px;
+	text-align: center;
+	padding: 3px;
 }
