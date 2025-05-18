@@ -200,6 +200,7 @@ function connectWebSocket() {
 			type: "newItem",
 			domain: Settings.get("general.country"),
 			date: data.item.date,
+			date_added: data.item.date_added,
 			asin: data.item.asin,
 			title: data.item.title,
 			//search: data.item.search,
@@ -412,6 +413,7 @@ function processLast100Items(arrProducts) {
 		const {
 			title,
 			date,
+			date_added,
 			timestamp,
 			asin,
 			img_url,
@@ -437,6 +439,7 @@ function processLast100Items(arrProducts) {
 			type: "newItem",
 			domain: Settings.get("general.country"),
 			date: date,
+			date_added: date_added,
 			asin: asin,
 			title: title,
 			img_url: img_url,
