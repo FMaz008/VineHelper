@@ -74,6 +74,7 @@ function processBroadcastMessage(data) {
 		//Get the last 100 most recent items
 		if (socket?.connected) {
 			socket.emit("getLast100", {
+				app_version: chrome.runtime.getManifest().version,
 				uuid: Settings.get("general.uuid", false),
 				fid: Settings.get("general.fingerprint.id", false),
 				countryCode: i13n.getCountryCode(),
@@ -160,21 +161,6 @@ chrome.windows.onFocusChanged.addListener((windowId) => {
 	}
 });
 
-// Modify the existing code to use the tracked tab
-async function checkActiveTab() {
-	if (lastActiveTabId) {
-		try {
-			const tab = await chrome.tabs.get(lastActiveTabId);
-			if (tab && tab.url && tab.url.includes("#monitor")) {
-				return true;
-			}
-		} catch (e) {
-			console.error("Error getting tab:", e);
-		}
-	}
-	return false;
-}
-
 function connectWebSocket() {
 	if (!Settings.get("notification.active")) {
 		return;
@@ -195,6 +181,7 @@ function connectWebSocket() {
 			countryCode: DEBUG_MODE ? "com" : i13n.getCountryCode(),
 			uuid: Settings.get("general.uuid", false),
 			fid: Settings.get("general.fingerprint.id", false),
+			app_version: chrome.runtime.getManifest().version,
 		}, // Pass the country code as a query parameter
 		transports: ["websocket"],
 		reconnection: false, //Handled manually every 30 seconds.
