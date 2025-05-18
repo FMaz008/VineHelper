@@ -688,3 +688,16 @@ table.vh-table-variants tr:nth-child(even) {
 table.vh-table-variants tr:nth-child(odd) {
 	background-color: rgba(255, 255, 255, 0.03); /* Very subtle contrast */
 }
+
+/* Notification Monitor */
+table.vh-notification-monitor-header-buttons {
+	width: 10px; /*As small as possible*/
+	border-collapse: separate;
+	border-spacing: 2px;
+}
+
+table.vh-notification-monitor-header-buttons th {
+	background-color: #000;
+	color: #fff;
+	text-align: center;
+}

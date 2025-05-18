@@ -26,18 +26,48 @@
 				</div>
 			</div>
 			<div style="display: flex; flex-wrap: wrap; gap: 5px; margin: 5px 0">
-				<label for="clear-monitor">
-					<input type="button" name="clear-monitor" id="clear-monitor" value="Clear All" />
-				</label>
-				<label for="clear-unavailable">
-					<input type="button" name="clear-unavailable" id="clear-unavailable" value="Clear Unavail." />
-				</label>
-				<label for="fetch-last-100">
-					<input type="button" name="fetch-last-100" id="fetch-last-100" value="Fetch last {{$fetchLimit}}" />
-				</label>
-				<label for="pauseFeed" style="margin-right: 5px">
-					<input type="button" name="pauseFeed" id="pauseFeed" value="Pause & Buffer Feed" />
-				</label>
+				<table class="vh-notification-monitor-header-buttons">
+					<tr>
+						<th colspan="2">Clear</th>
+						<th colspan="2">Fetch</th>
+						<th>Feed control</th>
+					</tr>
+					<tr>
+						<td>
+							<label for="clear-monitor">
+								<input type="button" name="clear-monitor" id="clear-monitor" value="All" />
+							</label>
+						</td>
+						<td>
+							<label for="clear-unavailable">
+								<input type="button" name="clear-unavailable" id="clear-unavailable" value="Unavail." />
+							</label>
+						</td>
+						<td>
+							<label for="fetch-last-100">
+								<input
+									type="button"
+									name="fetch-last-100"
+									id="fetch-last-100"
+									value="last {{$fetchLimit}}"
+								/>
+							</label>
+						</td>
+						<td>
+							{{if TIER3}}
+							<label for="fetch-last-12hrs">
+								<input type="button" name="fetch-last-12hrs" id="fetch-last-12hrs" value="last 12hrs" />
+							</label>
+							{{endif}}
+						</td>
+						<td>
+							<label for="pauseFeed" style="margin-right: 5px">
+								<input type="button" name="pauseFeed" id="pauseFeed" value="Pause & Buffer Feed" />
+							</label>
+						</td>
+					</tr>
+				</table>
+
 				<label for="auto-truncate" style="align-self: center">
 					<input type="checkbox" name="auto-truncate" id="auto-truncate" checked />
 					<span>Auto truncate after </span>

@@ -20,6 +20,9 @@ class NotificationMonitorV2 extends NotificationMonitor {
 
 		const prom2 = await this._tpl.loadFile("view/notification_monitor_header.html");
 		this._tpl.setVar("fetchLimit", this._fetchLimit);
+		this._tpl.setIf("TIER3", this._settings.isPremiumUser(3));
+		this._tpl.setIf("TIER2", this._settings.isPremiumUser(2));
+		this._tpl.setIf("TIER1", this._settings.isPremiumUser(1));
 		const header = this._tpl.render(prom2, true);
 		parentContainer.appendChild(header);
 
