@@ -49,7 +49,13 @@ class MonitorCore {
 		this._dialogMgr = new ModalMgr();
 		this._soundPlayerMgr = new NotificationsSoundPlayer();
 
-		this._env.data.gridDOM.regular = document.getElementById("vvp-items-grid");
+		if (this._env.data.gridDOM) {
+			//v3
+			this._env.data.gridDOM.regular = document.getElementById("vvp-items-grid");
+		} else {
+			//v2
+			this._env.data.gridDOM = { regular: document.getElementById("vvp_items-grid") };
+		}
 
 		//Notification Monitor's specific classes
 		this._serverComMgr = new ServerCom();
@@ -58,7 +64,11 @@ class MonitorCore {
 		this._serverComMgr.setFetchRecentItemsEndCallback(this.fetchRecentItemsEnd.bind(this));
 		this._serverComMgr.setSetETVFromASINCallback(this.setETVFromASIN.bind(this));
 		this._serverComMgr.setSetTierFromASINCallback(this.setTierFromASIN.bind(this));
-		this._serverComMgr.setAddVariantCallback(this.addVariants.bind(this));
+		if (this._monitorV3) {
+			this._serverComMgr.setAddVariantCallback(this.addVariants.bind(this));
+		} else {
+			this._serverComMgr.setAddVariantCallback(() => {}); //Do nothing for v2
+		}
 
 		this._itemsMgr = new ItemsMgr(this._settings);
 

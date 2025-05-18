@@ -496,13 +496,15 @@ class NotificationMonitor extends MonitorCore {
 		this._tpl.setIf("pinned", this._settings.get("pinnedTab.active"));
 		this._tpl.setIf(
 			"variant",
-			this._settings.isPremiumUser() && this._settings.get("general.displayVariantIcon") && is_parent_asin
+			this._settings.isPremiumUser() &&
+				this._settings.get("general.displayVariantIcon") &&
+				is_parent_asin === "true"
 		);
 
 		const tileDOM = await this._tpl.render(prom2, true);
 		const tile = new Tile(tileDOM, null);
 
-		if (this._settings.isPremiumUser(2) && this._settings.get("general.displayVariantButton")) {
+		if (this._monitorV3 && this._settings.isPremiumUser(2) && this._settings.get("general.displayVariantButton")) {
 			if (is_parent_asin && itemData.variants) {
 				for (const variant of itemData.variants) {
 					await tile.addVariant(variant.asin, variant.title, variant.etv);
@@ -1098,9 +1100,8 @@ class NotificationMonitor extends MonitorCore {
 			<ul style="margin-bottom: 10px;">
 				<li>First seen: ${this._formatDate(new Date(dateAdded))}</li>
 				<li>Broadcast sent: ${this._formatDate(new Date(dateSent))}</li>
-				<li>Broadcast received: ${this._formatDate(new Date(dateReceived))}</li>
-				<li>Latency: ${Math.round((new Date(dateReceived) - new Date(dateSent)) / 1000)} second(s)</li>
 				<li>Broadcast reason: ${reason}</li>
+				<li>Data received: ${this._formatDate(new Date(dateReceived))}</li>
 				<li>Queue: ${queue}</li>
 				<li>Found in tier: ${tier}</li>
 				<li>Highlight Keyword: ${highlightKW}</li>
