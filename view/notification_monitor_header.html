@@ -4,25 +4,35 @@
 	<span id="user-tier-info" style="display: flex; align-items: flex-end"></span>
 	<div id="vh-notifications-monitor-header-ui" style="display: flex; gap: 10px; flex-wrap: wrap; clear: both">
 		<div style="flex-grow: 1">
-			<div style="display: flex; flex-wrap: wrap; gap: 5px">
-				<div style="width: 150px">
-					<strong>Loaded on: </strong>
-					<br /><span id="date_loaded"></span> <br /><strong>Most recent item: </strong> <br /><span
-						id="date_most_recent_item"
-						>(tba)</span
-					>
+			<div style="display: flex; flex-wrap: wrap; gap: 10px; width: 100%; max-width: 600px">
+				<div style="flex: 1 1 150px; min-width: 120px; margin-bottom: 5px; align-content: center">
+					<div class="vh_flex_column" style="gap: 5px">
+						<div style="display: flex; flex-wrap: wrap; align-items: baseline">
+							<strong style="margin-right: 5px">Loaded on:</strong>
+							<span id="date_loaded"></span>
+						</div>
+						<div style="display: flex; flex-wrap: wrap; align-items: baseline">
+							<strong style="margin-right: 5px">Most recent item:</strong>
+							<span id="date_most_recent_item">(tba)</span>
+						</div>
+					</div>
 				</div>
-				<div style="width: 200px">
-					<div class="notice" id="statusSW" style="display: flex">
-						<div class="vh-switch-32 vh-icon-switch-off" style="margin-right: 10px"></div>
-						<div>Service Worker:</div>
+				<div style="flex: 1 1 200px; min-width: 180px">
+					<div class="notice" id="statusSW" style="display: flex; align-items: center">
+						<div class="vh-switch-32 vh-icon-switch-off" style="margin-right: 10px; flex-shrink: 0"></div>
+						<div style="width: 200px">
+							Service Worker:
+							<br />
+							<div id="descriptionSW"></div>
+						</div>
 					</div>
-					<div id="descriptionSW"></div>
-					<div class="notice" id="statusWS" style="display: flex">
-						<div class="vh-switch-32 vh-icon-switch-off" style="margin-right: 10px"></div>
-						<div>Websocket Server:</div>
+					<div class="notice" id="statusWS" style="display: flex; align-items: center; margin-top: 5px">
+						<div class="vh-switch-32 vh-icon-switch-off" style="margin-right: 10px; flex-shrink: 0"></div>
+						<div style="width: 200px">
+							Websocket Server:
+							<div id="descriptionWS"></div>
+						</div>
 					</div>
-					<div id="descriptionWS"></div>
 				</div>
 			</div>
 			<div style="display: flex; flex-wrap: wrap; gap: 5px; margin: 5px 0">
@@ -38,7 +48,7 @@
 							</label>
 						</div>
 					</div>
-					
+
 					<div class="vh-control-group">
 						<div class="vh-control-header">Fetch</div>
 						<div class="vh-control-buttons">
@@ -57,7 +67,7 @@
 							{{endif}}
 						</div>
 					</div>
-					
+
 					<div class="vh-control-group">
 						<div class="vh-control-header">Feed control</div>
 						<div class="vh-control-buttons">
@@ -66,7 +76,7 @@
 							</label>
 						</div>
 					</div>
-					
+
 					<div class="vh-control-group">
 						<div class="vh-control-header">Auto truncate</div>
 						<div class="vh-control-buttons">
