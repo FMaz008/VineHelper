@@ -1217,6 +1217,13 @@ window.addEventListener("message", async function (event) {
 				dimensions: encodeURIComponent(JSON.stringify(variation.dimensions)),
 			};
 		});
+		//Get the tile from the ASINd
+		const tile = getTileByAsin(event.data.asin);
+		if (tile) {
+			for (const variation of arrVariations) {
+				await tile.addVariant(variation.asin, decodeURIComponent(variation.dimensions), null);
+			}
+		}
 	}
 
 	//If we got back a message after we found an ETV.
@@ -1498,29 +1505,6 @@ chrome.runtime.onMessage.addListener(async function (message, sender, sendRespon
 		}
 	}
 });
-
-// ##########################################
-// #### ANIMATIONS
-
-function fadeOut(element) {
-	element.style.transition = "opacity 0.5s ease-out";
-	element.style.opacity = "0";
-	return new Promise((resolve) => {
-		element.addEventListener(
-			"transitionend",
-			function handler() {
-				element.removeEventListener("transitionend", handler);
-				resolve();
-			},
-			{ once: true }
-		);
-	});
-}
-
-function fadeIn(element) {
-	element.style.transition = "opacity 0.5s ease-in";
-	element.style.opacity = "1";
-}
 
 //Key bindings/keyboard shortcuts for navigation
 window.addEventListener("keyup", async function (e) {

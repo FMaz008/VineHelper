@@ -103,10 +103,13 @@ window.fetch = async (...args) => {
 		if (result.variations !== undefined) {
 			//The item has variations and so is a parent, store it for later interceptions
 			extHelper_LastParentVariant = result;
-
+			regex = /^.+?#(.+?)#.+$/;
+			let arrMatchesP = result.recommendationId.match(regex);
+			result.parent_asin = arrMatchesP[1];
 			window.postMessage(
 				{
 					type: "variations",
+					asin: result.parent_asin,
 					data: result.variations,
 				},
 				"/" //message should be sent to the same origin as the current document.
