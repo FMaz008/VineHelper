@@ -167,7 +167,7 @@ class PinnedListMgr {
 			}
 		});
 
-		if (remoteSave && Settings.get("hiddenTab.remote")) {
+		if (remoteSave && Settings.get("pinnedTab.remote")) {
 			await this.notifyServerOfChangedItem();
 			this.arrChanges = [];
 		}

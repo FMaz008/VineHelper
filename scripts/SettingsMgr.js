@@ -251,6 +251,10 @@ class SettingsMgr {
 			this.#settings.general.blindLoading = false; //Reset the blind loading setting to false.
 			await this.#save();
 		}
+		if (this.#settings.pinnedTab.remote == undefined) {
+			this.#settings.pinnedTab.remote = this.#settings.hiddenTab.remote;
+			await this.#save();
+		}
 	}
 
 	#getDefaultSettings() {
@@ -406,6 +410,7 @@ class SettingsMgr {
 
 			pinnedTab: {
 				active: true,
+				remote: false,
 			},
 
 			discord: {

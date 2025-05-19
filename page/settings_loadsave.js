@@ -334,6 +334,7 @@ async function initiateSettings() {
 
 	//##TAB - SYSTEM
 	manageCheckboxSetting("hiddenTab.remote");
+	manageCheckboxSetting("pinnedTab.remote");
 	manageCheckboxSetting("general.versionInfoPopup", false);
 	manageCheckboxSetting("general.GDPRPopup", false);
 

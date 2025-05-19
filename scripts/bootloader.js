@@ -583,7 +583,7 @@ async function loadPinnedList() {
 	}
 
 	//Populate the Pinned tab
-	if (Settings.get("pinnedTab.active")) {
+	if (Settings.get("pinnedTab.active") && !Settings.get("pinnedTab.remote")) {
 		logger.add("GRID: Loading locally stored pinned list");
 		let mapPin = new Map();
 		mapPin = await PinnedList.getList();
@@ -1134,7 +1134,7 @@ async function serverProductsResponse(data) {
 	}
 
 	//Loading remote stored pinned items
-	if (Settings.isPremiumUser(1) && Settings.get("pinnedTab.active") && Settings.get("hiddenTab.remote")) {
+	if (Settings.isPremiumUser(1) && Settings.get("pinnedTab.active") && Settings.get("pinnedTab.remote")) {
 		if (data["pinned_products"] != undefined) {
 			logger.add("DRAW: Loading remote pinned products");
 			for (let i = 0; i < data["pinned_products"].length; i++) {
