@@ -561,7 +561,8 @@ async function initiateSettings() {
 	manageInputText("keyBindings.showAll");
 	manageInputText("keyBindings.hideAllNext");
 	manageInputText("keyBindings.debug");
-
+	manageInputText("keyBindings.firstPage");
+	
 	//##TAB - STYLES
 
 	manageCheckboxSetting("thorvarium.mobileios");

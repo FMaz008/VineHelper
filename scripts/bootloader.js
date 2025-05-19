@@ -1627,6 +1627,15 @@ window.addEventListener("keyup", async function (e) {
 				tab.click();
 			}
 		},
+		[Settings.get("keyBindings.firstPage")]: () => {
+			const currentUrl = window.location.href;
+			const regex = /&page=\d+$/;
+			const match = currentUrl.match(regex);
+			if (match) {
+				const newUrl = currentUrl.replace(regex, "&page=1");
+				window.location.href = newUrl;
+			}
+		},
 	};
 
 	//Only allow the hideAll, hideAllNext and showAll keybinding if the hiddenTab is activated.
