@@ -71,6 +71,10 @@ class Tile {
 		if (this.#variants.length === 0) {
 			await this.#addVariantButton();
 		}
+		//Check if the variant already exists
+		if (this.#variants.find((variant) => variant.asin === asin)) {
+			return;
+		}
 		this.#variants.push({ asin, title, etv });
 	}
 
