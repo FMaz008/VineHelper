@@ -1261,7 +1261,12 @@ function manageCheckboxSetting(key, def = null) {
 	});
 
 	//Clicking the label will check the checkbox
-	document.querySelector(`label[for='${keyE}']`).onclick = async function (event) {
+	const obj = document.querySelector(`label[for='${keyE}']`);
+	if (!obj) {
+		console.error("Label for '" + keyE + "' does not exist");
+		return;
+	}
+	obj.onclick = async function (event) {
 		if (event.target.nodeName == "INPUT") {
 			return false;
 		}
