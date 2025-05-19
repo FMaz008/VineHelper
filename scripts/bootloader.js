@@ -1148,9 +1148,10 @@ async function serverProductsResponse(data) {
 					data["pinned_products"][i]["asin"],
 					data["pinned_products"][i]["queue"],
 					data["pinned_products"][i]["title"],
-					data["pinned_products"][i]["thumbnail"],
+					data["pinned_products"][i]["img_url"],
 					data["pinned_products"][i]["is_parent_asin"],
-					data["pinned_products"][i]["enrollment_guid"]
+					data["pinned_products"][i]["enrollment_guid"],
+					data["pinned_products"][i]["unavailable"]
 				); //grid.js
 			}
 		}
@@ -1243,10 +1244,11 @@ window.addEventListener("message", async function (event) {
 		//Update the server with the new ETV
 		const content = {
 			api_version: 5,
-			version: env.data.appVersion,
+			app_version: env.data.appVersion,
 			action: "record_etv",
 			country: i13n.getCountryCode(),
-			uuid: Settings.get("general.uuid", false),
+			uuid: await Settings.get("general.uuid", false),
+			fid: await Settings.get("general.fingerprint.id", false),
 			asin: event.data.data.asin,
 			parent_asin: event.data.data.parent_asin,
 			queue: env.data.vineQueue,

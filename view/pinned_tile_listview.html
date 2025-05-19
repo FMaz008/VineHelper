@@ -9,14 +9,24 @@
 					<div class="vh-toolbar-icon vh-icon-unpin" data-asin="{{$asin}}"></div>
 				</a>
 				<a
-						href="/vine/vine-items?search={{$search_url_slug}}"
-						id="vh-search-link-{{$asin}}"
-						class="vh-floating-icon vh-search-link"
-						title="Search for this item"
-						target="_blank"
-					>
-						<div class="vh-toolbar-icon vh-icon-search"></div>
-					</a>
+					href="/vine/vine-items?search={{$search_url_slug}}"
+					id="vh-search-link-{{$asin}}"
+					class="vh-floating-icon vh-search-link"
+					title="Search for this item"
+					target="_blank"
+				>
+					<div class="vh-toolbar-icon vh-icon-search"></div>
+				</a>
+				{{if PINNEDTAB_REMOTE}}
+				<a
+					href="#"
+					class="vh-floating-icon pinned-reload-link"
+					title="Refresh all items' info from the database"
+					onclick="return false;"
+				>
+					<div class="vh-toolbar-icon vh-icon-reload"></div>
+				</a>
+				{{endif}}
 			</div>
 		</div>
 		<a href="https://amazon.{{$domain}}/dp/{{$asin}}" class="a-link-normal" target="_blank">{{$description}}</a>

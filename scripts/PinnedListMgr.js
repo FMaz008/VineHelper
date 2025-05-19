@@ -10,6 +10,9 @@ const i13n = new Internationalization();
 import { Environment } from "./Environment.js";
 const env = new Environment();
 
+import { CryptoKeys } from "./CryptoKeys.js";
+const cryptoKeys = new CryptoKeys();
+
 class PinnedListMgr {
 	static #instance = null;
 
@@ -167,7 +170,7 @@ class PinnedListMgr {
 			}
 		});
 
-		if (remoteSave && Settings.get("pinnedTab.remote")) {
+		if (remoteSave && Settings.isPremiumUser(1) && Settings.get("pinnedTab.remote")) {
 			await this.notifyServerOfChangedItem();
 			this.arrChanges = [];
 		}

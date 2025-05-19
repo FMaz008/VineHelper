@@ -15,6 +15,16 @@
 					>
 						<div class="vh-toolbar-icon vh-icon-search"></div>
 					</a>
+					{{if PINNEDTAB_REMOTE}}
+					<a
+						href="#"
+						class="vh-floating-icon pinned-reload-link"
+						title="Refresh all items' info from the database"
+						onclick="return false;"
+					>
+						<div class="vh-toolbar-icon vh-icon-reload"></div>
+					</a>
+					{{endif}}
 				</div>
 			</div>
 		</div>

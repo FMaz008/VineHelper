@@ -7,6 +7,9 @@ var Settings = new SettingsMgr();
 import { Environment } from "./Environment.js";
 var env = new Environment();
 
+import { CryptoKeys } from "./CryptoKeys.js";
+var cryptoKeys = new CryptoKeys();
+
 import { Internationalization } from "./Internationalization.js";
 var i13n = new Internationalization();
 
@@ -257,7 +260,7 @@ async function createGridInterface() {
 	selectCurrentTab(true);
 }
 
-async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enrollment_guid) {
+async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enrollment_guid, unavailable) {
 	if (!asin) {
 		return false;
 	}
@@ -292,12 +295,17 @@ async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enro
 	Tpl.setVar("is_parent_asin", is_parent_asin);
 	Tpl.setVar("enrollment_guid", enrollment_guid);
 	Tpl.setVar("recommendationType", recommendationType);
+	Tpl.setIf("PINNEDTAB_REMOTE", Settings.isPremiumUser(1) && Settings.get("pinnedTab.remote"));
 	Tpl.setVar("recommendationId", recommendationId);
 
 	let content = Tpl.render(prom2, true);
 	document.getElementById("tab-pinned").appendChild(content);
 
 	tileSizer.adjustAll(content);
+
+	if (unavailable) {
+		disableItem(content);
+	}
 
 	//Bind the click event for the unpin button
 	document.querySelector("#vh-pin-" + asin + " .unpin-link").onclick = (e) => {
@@ -307,6 +315,82 @@ async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enro
 
 		updateTileCounts();
 	};
+
+	//Bind the click event the the reload button
+	document.querySelector("#vh-pin-" + asin + " .pinned-reload-link").onclick = (e) => {
+		e.preventDefault();
+
+		if (!Settings.isPremiumUser(1) || !Settings.get("pinnedTab.remote")) {
+			return false;
+		}
+
+		//Reload all pinned tiles
+		reloadAllPinnedTile();
+	};
+}
+
+async function reloadAllPinnedTile() {
+	//Reload all pinned tiles
+	const content = {
+		api_version: 5,
+		app_version: env.data.appVersion,
+		action: "reload_pinned_items",
+		country: i13n.getCountryCode(),
+		uuid: await Settings.get("general.uuid", false),
+		fid: await Settings.get("general.fingerprint.id", false),
+	};
+	const s = await cryptoKeys.signData(content);
+	content.s = s;
+	content.pk = await cryptoKeys.getExportedPublicKey();
+
+	await fetch(env.getAPIUrl(), {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(content),
+	})
+		.then((response) => response.json())
+		.then(async (response) => {
+			console.log("Reloading all pinned tiles", response);
+			//Reload all pinned tiles
+			document.querySelectorAll(`#tab-pinned .pinned`).forEach((element) => {
+				console.log("Removing pinned tile", element);
+				element.remove();
+			});
+
+			//Add all pinned items
+			for (let i = 0; i < response["pinned_products"].length; i++) {
+				console.log("Adding pinned tile", response["pinned_products"][i]);
+				await addPinnedTile(
+					response["pinned_products"][i]["asin"],
+					response["pinned_products"][i]["queue"],
+					response["pinned_products"][i]["title"],
+					response["pinned_products"][i]["img_url"],
+					response["pinned_products"][i]["is_parent_asin"],
+					response["pinned_products"][i]["enrollment_guid"],
+					response["pinned_products"][i]["unavailable"]
+				); //grid.js
+			}
+		});
+}
+
+async function disableItem(notif) {
+	if (!notif) {
+		return false;
+	}
+
+	//Remove the banner if it already existed
+	notif.querySelector(".unavailable-banner")?.remove();
+
+	//Add a new banner
+	const banner = document.createElement("div");
+	banner.classList.add("unavailable-banner");
+	banner.innerText = "Unavailable";
+	banner.style.isolation = "isolate"; // This prevents the banner from inheriting the filter effects
+	const imgContainer = notif.querySelector(".vh-img-container");
+	imgContainer.insertBefore(banner, imgContainer.firstChild);
+
+	notif.style.opacity = "0.5";
+	notif.style.filter = "brightness(0.7)";
 }
 
 async function removePinnedTile(asin) {
