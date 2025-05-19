@@ -82,6 +82,11 @@ class Tile {
 		return this.#variants.find((variant) => variant.asin === asin);
 	}
 
+	updateVariantCount() {
+		const span = this.getDOM().querySelector(".vh-btn-variants-count");
+		span.textContent = this.#variants.length;
+	}
+
 	async #addVariantButton() {
 		//Create the drop down button
 		let prom = await Tpl.loadFile("view/btn_show_variants.html");

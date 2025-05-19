@@ -1129,6 +1129,7 @@ async function serverProductsResponse(data) {
 				for (const [k, val] of Object.entries(values.variants)) {
 					await tile.addVariant(val.asin, val.title, val.etv);
 				}
+				tile.updateVariantCount();
 			}
 		}
 	}
@@ -1224,6 +1225,7 @@ window.addEventListener("message", async function (event) {
 			for (const variation of arrVariations) {
 				await tile.addVariant(variation.asin, decodeURIComponent(variation.dimensions), null);
 			}
+			tile.updateVariantCount();
 		}
 	}
 

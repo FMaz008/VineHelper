@@ -509,6 +509,7 @@ class NotificationMonitor extends MonitorCore {
 				for (const variant of itemData.variants) {
 					await tile.addVariant(variant.asin, variant.title, variant.etv);
 				}
+				tile.updateVariantCount();
 			}
 		}
 
@@ -638,6 +639,7 @@ class NotificationMonitor extends MonitorCore {
 						for (const variant of data.variants) {
 							await tile.addVariant(variant.asin, variant.title, variant.etv);
 						}
+						tile.updateVariantCount();
 					}
 				}
 			}
