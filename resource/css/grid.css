@@ -49,7 +49,7 @@ body.darktheme #vvp-items-grid-container .vvp-item-tile a:active {
 }
 
 body.darktheme .vh-btn-variants-count {
-	color: var(--item-link-light); /* the element's color gets inverted in dark theme */
+	color: black; /* the element's color gets inverted in dark theme */
 }
 
 #vvp-items-grid.listview {
