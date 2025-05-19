@@ -947,7 +947,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		//Move the notification to the top
-		if (!this._fetchingRecentItems) {
+		if (!this._fetchingRecentItems && this._sortType !== TYPE_DATE_ASC) {
 			this._moveNotifToTop(notif);
 		}
 	}
