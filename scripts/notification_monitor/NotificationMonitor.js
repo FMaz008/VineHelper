@@ -502,16 +502,6 @@ class NotificationMonitor extends MonitorCore {
 		);
 
 		const tileDOM = await this._tpl.render(prom2, true);
-		const tile = new Tile(tileDOM, null);
-
-		if (this._monitorV3 && this._settings.isPremiumUser(2) && this._settings.get("general.displayVariantButton")) {
-			if (is_parent_asin && itemData.variants) {
-				for (const variant of itemData.variants) {
-					await tile.addVariant(variant.asin, variant.title, variant.etv);
-				}
-				tile.updateVariantCount();
-			}
-		}
 
 		// Create fragment and add the tile to it
 		const fragment = document.createDocumentFragment();
@@ -531,6 +521,17 @@ class NotificationMonitor extends MonitorCore {
 				this._gridContainer.insertBefore(fragment, this._gridContainer.firstChild);
 			}
 		});
+
+		const tile = new Tile(tileDOM, null);
+
+		if (this._monitorV3 && this._settings.isPremiumUser(2) && this._settings.get("general.displayVariantButton")) {
+			if (is_parent_asin && itemData.variants) {
+				for (const variant of itemData.variants) {
+					await tile.addVariant(variant.asin, variant.title, variant.etv);
+				}
+				tile.updateVariantCount();
+			}
+		}
 
 		// Store a reference to the DOM element
 		this._itemsMgr.storeItemDOMElement(asin, tileDOM);

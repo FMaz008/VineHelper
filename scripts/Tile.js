@@ -88,7 +88,9 @@ class Tile {
 
 	updateVariantCount() {
 		const span = this.getDOM().querySelector(".vh-btn-variants-count");
-		span.textContent = this.#variants.length;
+		if (span) {
+			span.textContent = this.#variants.length;
+		}
 	}
 
 	async #addVariantButton() {
