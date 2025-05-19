@@ -73,7 +73,7 @@ class ServerCom {
 
 		if (data.type == "pong") {
 			window.clearTimeout(this.#statusTimer);
-			this.#setServiceWorkerStatus(true, "Service worker is running.");
+			this.#setServiceWorkerStatus(true, "Running...");
 		}
 		if (data.type == "newETV") {
 			this.setETVFromASINCallback(data.asin, data.etv);
@@ -118,7 +118,7 @@ class ServerCom {
 		if (status) {
 			icon.classList.remove("vh-icon-switch-off");
 			icon.classList.add("vh-icon-switch-on");
-			description.innerText = "Listening for notifications...";
+			description.innerText = "Listening...";
 			this._wsErrorMessage = null;
 		} else {
 			icon.classList.remove("vh-icon-switch-on");
@@ -127,7 +127,7 @@ class ServerCom {
 				this._wsErrorMessage = message;
 				description.innerText = message;
 			} else if (this._wsErrorMessage == null) {
-				description.innerText = "Not connected. Retrying in 30 sec...";
+				description.innerText = "Not connected. Retrying in <30 sec...";
 			}
 		}
 	}

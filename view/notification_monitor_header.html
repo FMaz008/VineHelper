@@ -5,7 +5,15 @@
 	<div id="vh-notifications-monitor-header-ui" style="display: flex; gap: 10px; flex-wrap: wrap; clear: both">
 		<div style="flex-grow: 1">
 			<div style="display: flex; flex-wrap: wrap; gap: 10px; width: 100%; max-width: 600px">
-				<div style="flex: 1 1 150px; min-width: 120px; margin-bottom: 5px; align-content: center">
+				<div
+					style="
+						flex: 1 1 200px;
+						max-width: 270px;
+						min-width: 120px;
+						margin-bottom: 5px;
+						align-content: center;
+					"
+				>
 					<div class="vh_flex_column" style="gap: 5px">
 						<div style="display: flex; flex-wrap: wrap; align-items: baseline">
 							<strong style="margin-right: 5px">Loaded on:</strong>
@@ -17,20 +25,19 @@
 						</div>
 					</div>
 				</div>
-				<div style="flex: 1 1 200px; min-width: 180px">
+				<div style="flex: 1 1 300px; max-width: 300px; min-width: 180px">
 					<div class="notice" id="statusSW" style="display: flex; align-items: center">
 						<div class="vh-switch-32 vh-icon-switch-off" style="margin-right: 10px; flex-shrink: 0"></div>
-						<div style="width: 200px">
+						<div>
 							Service Worker:
-							<br />
-							<div id="descriptionSW"></div>
+							<span id="descriptionSW"></span>
 						</div>
 					</div>
 					<div class="notice" id="statusWS" style="display: flex; align-items: center; margin-top: 5px">
 						<div class="vh-switch-32 vh-icon-switch-off" style="margin-right: 10px; flex-shrink: 0"></div>
-						<div style="width: 200px">
+						<div>
 							Websocket Server:
-							<div id="descriptionWS"></div>
+							<span id="descriptionWS"></span>
 						</div>
 					</div>
 				</div>
@@ -101,7 +108,7 @@
 			</div>
 		</div>
 
-		<div style="align-self: flex-end; margin-bottom: 3px">
+		<div id="vh-nm-filters" style="align-self: flex-start; margin-bottom: 3px">
 			<div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0 5px">
 				<label style="justify-self: end"> Search: </label>
 				<input
@@ -138,6 +145,7 @@
 					<option value="price_asc">ETV (low-high)</option>
 				</select>
 			</div>
+			<div id="vh-nm-tile-size-container"></div>
 		</div>
 	</div>
 	<div style="clear: both"></div>

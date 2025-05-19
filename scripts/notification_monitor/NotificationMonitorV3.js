@@ -174,7 +174,7 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		if (this._settings.get("notification.monitor.listView")) {
 			return;
 		}
-		const container = document.querySelector("#vvp-items-grid-container");
+		const container = document.querySelector("#vh-nm-tile-size-container");
 		if (container) {
 			if (this._settings.get("general.tileSize.enabled")) {
 				//Inject the GUI for the tile sizer widget
