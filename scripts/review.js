@@ -199,6 +199,22 @@ async function boot_review() {
 		}
 	});
 
+	//Insert div after the review title (reviewTitle)
+	const reviewTitleInput = document.getElementById("reviewTitle");
+	if (reviewTitleInput) {
+		const div = document.createElement("div");
+		div.id = "reviewTitleDiv";
+		div.style.float = "right";
+		div.style.marginBottom = "20px";
+		div.innerText = "0 / 100";
+		reviewTitleInput.insertAdjacentElement("afterend", div);
+		reviewTitleInput.addEventListener("keyup", (e) => {
+			const chrCount = reviewTitleInput.value.length;
+			const reviewTitleDiv = document.getElementById("reviewTitleDiv");
+			reviewTitleDiv.innerText = chrCount + " / 100";
+		});
+	}
+
 	function getReviewTitleObject() {
 		let reviewTitle;
 		reviewTitle = document.getElementById("reviewTitle");
