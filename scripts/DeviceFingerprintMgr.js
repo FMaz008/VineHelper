@@ -69,6 +69,16 @@ class DeviceFingerprintMgr {
 
 	async updateDeviceName(uuid, deviceName) {
 		try {
+			if (!deviceName) {
+				throw new Error("Device name is required");
+			}
+			if (deviceName.length < 15) {
+				throw new Error("Device name must be at least 15 characters long");
+			}
+			if (deviceName.length > 100) {
+				throw new Error("Device name must be less than 100 characters long");
+			}
+
 			const fingerprintHashBase64 = await this.getFingerprintHash();
 			const signatureBase64 = await this._cryptoKeys.signData(fingerprintHashBase64);
 			const result = await this.#uploadFingerprint(uuid, fingerprintHashBase64, signatureBase64, deviceName);

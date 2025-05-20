@@ -458,7 +458,7 @@ async function initiateSettings() {
 			await fingerprintMgr.updateDeviceName(uuid, deviceName);
 			document.querySelector("#saveDeviceName").disabled = false;
 		} catch (error) {
-			console.error("Error saving device name:", error);
+			alert(error);
 			document.querySelector("#saveDeviceName").disabled = false;
 		}
 	};

@@ -622,8 +622,7 @@ class DeviceMgr {
 		const deviceName = `${randomAdjective} ${randomPrefix} ${randomNoun} ${modelSuffix}`; // Combine them to create a device name
 
 		if (save) {
-			await this.settings.set("general.deviceName", deviceName);
-			this.deviceName = deviceName;
+			await this.setDeviceName(deviceName);
 		}
 		return deviceName;
 	}
@@ -632,7 +631,12 @@ class DeviceMgr {
 		if (!name) {
 			throw new Error("Device name is required");
 		}
-
+		if (name.length < 15) {
+			throw new Error("Device name must be at least 15 characters long");
+		}
+		if (name.length > 100) {
+			throw new Error("Device name must be less than 100 characters long");
+		}
 		await this.settings.set("general.deviceName", name);
 		this.deviceName = name;
 		return name;
