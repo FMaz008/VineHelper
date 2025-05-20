@@ -2,7 +2,10 @@
 <br />
 The notification monitor was overhauled internally, a long overdue task required from the growing set of features
 complicating the code. VH now tries to tracks the vine tier availability of items and implemented a concept of devices
-to complement the UUID system.
+to complement the UUID system. Using the notification monitor also enable an auto-load feature which load some pages in
+the background. This is to ensure every user is minimally contributing if using the monitor as a lot of people were
+found to be watching the monitor, but never browsing listings. If you are not enabling the monitor, no auto load will
+happen.
 <br />
 <br />
 <br />
@@ -16,6 +19,11 @@ Change log:
 	</li>
 	<li>
 		NEW: <strong>Details icon</strong> in the toolbar. Clicking on it will open a popup with the item's details.
+	</li>
+	<li>NEW: <strong>Review title character count</strong> on the review page.</li>
+	<li>
+		NEW: <strong>Keybind to first page</strong>. Configurable keyboard shortcut to go to the first page of the
+		current, eh, page you're on.
 	</li>
 	<li>
 		CHANGE: <strong>Unavailable tab</strong> now regroup the items which have received an ITEM_NOT_IN_ENROLLMENT
@@ -42,9 +50,9 @@ Change log:
 		<strong>Notification Monitor:</strong>
 		<ul>
 			<li>
-				NEW: <strong>Auto-refresh</strong>. When using the notification monitor, VH will automatically load a
-				vine listing page every 5 to 10 minutes. You may see a tab opening and closing promptly in the
-				background when that occurs.
+				NEW: <strong>Auto-load</strong>. When using the notification monitor, VH will automatically load a vine
+				listing page every 5 to 10 minutes. You may see a tab opening and closing promptly in the background
+				when that occurs. This is only active if you are using the notification monitor.
 			</li>
 			<li>
 				NEW: If you are using Open in Place,<strong>CTRL+Click</strong> on a See Details button will open it in
@@ -83,7 +91,7 @@ Change log:
 			<li>IMPROVEMENT: <strong>Performance improvement</strong>. Auto truncation, and other stuff.</li>
 			<li>
 				IMPROVEMENT: <strong>header design</strong> improved to be more compact and scale better with mobile
-				view
+				views.
 			</li>
 			<li>FIX: <strong>Open in place</strong> now supported in Firefox.</li>
 			<li>
@@ -98,12 +106,42 @@ Change log:
 		<ul>
 			<li>
 				NEW: <strong>Variants button</strong>. Premium tier 2 and above; On the listing pages, adds a button to
-				view the known variants of an item and load the variant directly in the See Details' window. Bypass the
-				need for a spinner fix or to do the manual editing of the See Details button.
+				view all the known variants of an item and load the selected variant directly in the See Details'
+				window. Bypass the need for a spinner fix or to do the manual editing of the See Details button.
 			</li>
 			<li>
 				NEW: <strong>Fetch last 12hrs</strong>. Premium tier 3 and above; On the notification monitor, adds a
-				button to fetch the last 12 hours of notifications (uo to 1000 items)
+				button to fetch the last 12 hours of notifications (up to 1000 items)
+			</li>
+			<li>
+				CHANGE: <strong>Remote storage of pinned items</strong>. Premium tier 1 and above; The remote storage of
+				pinned items is now a separate setting from the hidden items. The option act as a toggle between using
+				the local storage or the remote storage. The old hybrid way was causing problem if device B unpinned an
+				item pinned by device A, in which case device A would not get its item unpinned. This is now fixed, but
+				means activating the remote storage option will not carry over the items which were pinned locally.
+			</li>
+		</ul>
+	</li>
+	<li>
+		<strong>Policy changes:</strong>
+		<ul>
+			<li>
+				Until now, VH was aiming at being backward compatible within major releases. Maintaining backward
+				compatibility with older minor versions of VH will no longer be a priority. As the number of users
+				grows, so are the abusive few modifying VH and causing issues. In an effort to keep VH anonymous,
+				various security measures were put in place and will be progressively be rolled out. Going forward,
+				older versions not supporting these may not be allowed to connect to the server.
+				<br />
+				<br />
+				What can I do? <br />
+				Just ensure VH is set to auto-update (enabled by default on most browsers) so you benefit from the
+				latest updates.
+			</li>
+			<li>
+				<strong
+					>GDPR policy updated clarifying certain elements being collected. You can access it via VH Settings
+					-> System tab -> Display GDPR. Then reload a Vine page.</strong
+				>
 			</li>
 		</ul>
 	</li>
