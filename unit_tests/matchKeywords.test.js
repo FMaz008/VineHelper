@@ -248,3 +248,9 @@ test("ETV_min_max_zero_values", () => {
 		"1Pc Silver Mini Adjustable Wrench Adjustable Spanner,Mini Repair Maintenance Hand Tool for Tightening or Loosening,Nuts and Bolts,Wrenches,Power and Hand Tools,Small Shifting Spanner";
 	expect(keywordMatch(arrKWs, str, 5.99, 5.99)).toBe(false);
 });
+
+test("ETV_min_max_zero_values", () => {
+	const arrKWs = [{ contains: "beer", without: "", etv_min: "0", etv_max: "0" }];
+	const str = "beer";
+	expect(keywordMatch(arrKWs, str, "", "")).toBe(false);
+});

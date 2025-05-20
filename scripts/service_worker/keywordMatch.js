@@ -48,8 +48,14 @@ function keywordMatchReturnFullObject(keywords, title, etv_min = null, etv_max =
 						//word.etv_min and word.etv_max are from the user.
 						//For the user's ETV min, match if any variations match (compare against highest ETV, etv_max.)
 						//For the user's ETV max, match if any variations match (compare against lowest ETV, etv_min.)
-						if (word.etv_min == "" || (etv_max !== null && etv_max >= parseFloat(word.etv_min))) {
-							if (word.etv_max == "" || (etv_min !== null && etv_min <= parseFloat(word.etv_max))) {
+						if (
+							word.etv_min == "" ||
+							(etv_max !== null && etv_max !== "" && etv_max >= parseFloat(word.etv_min))
+						) {
+							if (
+								word.etv_max == "" ||
+								(etv_min !== null && etv_min !== "" && etv_min <= parseFloat(word.etv_max))
+							) {
 								return true;
 							}
 						}
