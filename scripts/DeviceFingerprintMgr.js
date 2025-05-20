@@ -166,7 +166,7 @@ class DeviceFingerprintMgr {
 			performanceMemory: performance.memory,
 			canvasFingerprint: this.#getCanvasFingerprint(),
 			webglFingerprint: this.#getWebGLFingerprint(),
-			audioFingerprint: this.#getAudioFingerprint(),
+			//audioFingerprint: this.#getAudioFingerprint(),
 			fontsFingerprint: this.#getFontsFingerprint(),
 		});
 
