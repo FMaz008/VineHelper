@@ -176,6 +176,7 @@ async function init() {
 	let regex = /^[^#]+#monitor.*$/;
 	let arrMatches = currentUrl.match(regex);
 	if (arrMatches != null) {
+		env.data.monitorActive = true;
 		if (Settings.get("notification.monitor.listView")) {
 			logger.add("BOOT: Loading listView stylesheet");
 			loadStyleSheet("resource/css/listView.css");
@@ -1461,6 +1462,7 @@ chrome.runtime.onMessage.addListener(async function (message, sender, sendRespon
 			!notificationMonitor &&
 			data.index < 10 && //Limit the notification to the top 10 most recents
 			env.data.vineBrowsingListing && //Only show notification on listing pages
+			!env.data.monitorActive && //Do not display on screen notification in the notification monitor
 			Settings.get("notification.screen.active")
 		) {
 			let { date, asin, queue, title, search, img_url, domain, etv, is_parent_asin, enrollment_guid } = data;
