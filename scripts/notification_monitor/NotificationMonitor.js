@@ -1425,35 +1425,37 @@ class NotificationMonitor extends MonitorCore {
 
 		//Bind fetch-last-12hrs button
 		const btnLast12hrs = document.getElementById("fetch-last-12hrs");
-		btnLast12hrs.addEventListener("click", async (event) => {
-			btnLast12hrs.disabled = true;
+		if (btnLast12hrs) {
+			btnLast12hrs.addEventListener("click", async (event) => {
+				btnLast12hrs.disabled = true;
 
-			// Start 60 second countdown
-			let secondsLeft = 60;
-			const originalText = btnLast12hrs.value;
-			btnLast12hrs.value = `Wait ${secondsLeft}s`;
-
-			const countdown = setInterval(() => {
+				// Start 60 second countdown
+				let secondsLeft = 60;
+				const originalText = btnLast12hrs.value;
 				btnLast12hrs.value = `Wait ${secondsLeft}s`;
-				secondsLeft--;
 
-				if (secondsLeft < 0) {
-					clearInterval(countdown);
-					btnLast12hrs.value = originalText;
-					btnLast12hrs.disabled = false;
+				const countdown = setInterval(() => {
+					btnLast12hrs.value = `Wait ${secondsLeft}s`;
+					secondsLeft--;
+
+					if (secondsLeft < 0) {
+						clearInterval(countdown);
+						btnLast12hrs.value = originalText;
+						btnLast12hrs.disabled = false;
+					}
+				}, 1000);
+				//Buffer the feed
+				this._fetchingRecentItems = true;
+				if (!this._feedPaused) {
+					document.getElementById("pauseFeed").click();
 				}
-			}, 1000);
-			//Buffer the feed
-			this._fetchingRecentItems = true;
-			if (!this._feedPaused) {
-				document.getElementById("pauseFeed").click();
-			}
 
-			chrome.runtime.sendMessage({
-				type: "fetchLatestItems",
-				limit: "12hrs",
+				chrome.runtime.sendMessage({
+					type: "fetchLatestItems",
+					limit: "12hrs",
+				});
 			});
-		});
+		}
 
 		//Bind Pause Feed button
 		const btnPauseFeed = document.getElementById("pauseFeed");
