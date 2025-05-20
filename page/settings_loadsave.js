@@ -442,9 +442,9 @@ async function initiateSettings() {
 	};
 
 	manageInputText("general.deviceName");
-	document.querySelector("#generateDeviceName").onclick = function () {
+	document.querySelector("#generateDeviceName").onclick = async function () {
 		const key = CSS.escape("general.deviceName");
-		const deviceName = deviceMgr.generateDeviceName(false);
+		const deviceName = await deviceMgr.generateDeviceName(false);
 		document.querySelector("#" + key).value = deviceName;
 	};
 	document.querySelector("#saveDeviceName").onclick = async function () {
@@ -562,7 +562,7 @@ async function initiateSettings() {
 	manageInputText("keyBindings.hideAllNext");
 	manageInputText("keyBindings.debug");
 	manageInputText("keyBindings.firstPage");
-	
+
 	//##TAB - STYLES
 
 	manageCheckboxSetting("thorvarium.mobileios");
