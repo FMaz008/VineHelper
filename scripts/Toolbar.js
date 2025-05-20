@@ -294,8 +294,6 @@ class Toolbar {
 			return false;
 		}
 
-		this.processHighlight(etv1, etv2);
-
 		etv1 = new Intl.NumberFormat(i13n.getLocale(), {
 			style: "currency",
 			currency: i13n.getCurrency(),
@@ -305,7 +303,11 @@ class Toolbar {
 			currency: i13n.getCurrency(),
 		}).format(etv2);
 
-		span.textContent = etv1 === etv2 ? etv2 : `${etv1}-${etv2}`;
+		const oldETV = span.textContent;
+		const newETV = etv1 === etv2 ? etv2 : `${etv1}-${etv2}`;
+		span.textContent = newETV;
+
+		this.processHighlight(etv1, etv2);
 
 		// Trigger change event manually
 		let changeEvent = new Event("change", { bubbles: true });
@@ -326,6 +328,7 @@ class Toolbar {
 
 		let checkHideList = false;
 		let match;
+		const oldHighlight = this.#tile.getDOM().dataset.highlightedKeyword;
 		this.#tile.getDOM().dataset.highlightedKeyword = "";
 		if (Settings.get("general.highlightKeywords")?.length > 0) {
 			match = keywordMatch(Settings.get("general.highlightKeywords"), this.#tile.getTitle(), etv1, etv2);
@@ -341,7 +344,7 @@ class Toolbar {
 				this.#tile.getDOM().dataset.highlightedKeyword = escapeHTML(match);
 				this.#tile.getDOM().dataset.keywordHighlight = true;
 
-				if (Settings.get("general.highlightKWFirst")) {
+				if (Settings.get("general.highlightKWFirst") && !oldHighlight) {
 					logger.add("Toolbar: processHighlight: highlightKWFirst");
 					//Move the highlighted item to the top of the grid
 					this.#tile
