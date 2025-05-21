@@ -149,17 +149,20 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 });
 
 // Track window focus
-chrome.windows.onFocusChanged.addListener((windowId) => {
-	if (windowId !== chrome.windows.WINDOW_ID_NONE) {
-		lastActiveWindowId = windowId;
-		// Update lastActiveTabId for the focused window
-		chrome.tabs.query({ active: true, windowId: windowId }, (tabs) => {
-			if (tabs[0]) {
-				lastActiveTabId = tabs[0].id;
-			}
-		});
-	}
-});
+if (chrome.windows) {
+	//Firefox for Android does not support chrome.windows
+	chrome.windows.onFocusChanged.addListener((windowId) => {
+		if (windowId !== chrome.windows.WINDOW_ID_NONE) {
+			lastActiveWindowId = windowId;
+			// Update lastActiveTabId for the focused window
+			chrome.tabs.query({ active: true, windowId: windowId }, (tabs) => {
+				if (tabs[0]) {
+					lastActiveTabId = tabs[0].id;
+				}
+			});
+		}
+	});
+}
 
 function connectWebSocket() {
 	if (!Settings.get("notification.active")) {
