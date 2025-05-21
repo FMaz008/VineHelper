@@ -255,6 +255,10 @@ class SettingsMgr {
 			this.#settings.pinnedTab.remote = this.#settings.hiddenTab.remote;
 			await this.#save();
 		}
+		if (this.#settings.notification.monitor.sortType == "date") {
+			this.#settings.notification.monitor.sortType = "date_desc";
+			await this.#save();
+		}
 	}
 
 	#getDefaultSettings() {
@@ -356,7 +360,7 @@ class SettingsMgr {
 						sound: "0",
 						volume: 1,
 					},
-					sortType: "date",
+					sortType: "date_desc",
 					tileSize: {
 						fontSize: 14,
 						iconSize: 14,
