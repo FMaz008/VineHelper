@@ -30,11 +30,13 @@ class MonitorCore {
 
 	_fetchLimit = 100; //The fetch limit for the monitor
 
-	constructor() {
+	constructor(monitorV3 = false) {
 		// Prevent direct instantiation of the abstract class
 		if (this.constructor === MonitorCore) {
 			throw new TypeError('Abstract class "MonitorLib" cannot be instantiated directly.');
 		}
+
+		this._monitorV3 = monitorV3;
 
 		//General purpose classes
 		this._settings = new SettingsMgr();

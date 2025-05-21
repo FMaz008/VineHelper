@@ -5,7 +5,7 @@ import { TierMgr } from "./TierMgr.js";
 
 class NotificationMonitorV3 extends NotificationMonitor {
 	constructor() {
-		super();
+		super(true);
 		this._monitorV3 = true;
 		this._tileSizer = new TileSizer("notification.monitor.tileSize");
 		this._tierMgr = new TierMgr(this._env);

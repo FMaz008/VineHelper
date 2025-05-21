@@ -106,7 +106,6 @@ class ServerCom {
 				}
 			}
 		}
-
 		if (data.type == "newVariants") {
 			this.addVariantCallback(data);
 		}

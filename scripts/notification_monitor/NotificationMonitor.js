@@ -39,8 +39,8 @@ class NotificationMonitor extends MonitorCore {
 	_filterType = -1;
 	_sortType = TYPE_DATE_DESC;
 
-	constructor() {
-		super();
+	constructor(monitorV3 = false) {
+		super(monitorV3);
 
 		// Prevent direct instantiation of the abstract class
 		if (this.constructor === NotificationMonitor) {
@@ -488,6 +488,7 @@ class NotificationMonitor extends MonitorCore {
 		this._tpl.setVar("recommendationType", recommendationType);
 		this._tpl.setVar("recommendationId", recommendationId);
 		this._tpl.setVar("search_url", search_url);
+		this._tpl.setIf("is_parent_asin", is_parent_asin);
 		this._tpl.setIf("delayed", reason.includes("enrollement_guid") || reason.includes("queue"));
 		this._tpl.setIf(
 			"announce",
