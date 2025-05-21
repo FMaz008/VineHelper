@@ -19,7 +19,7 @@ notificationPushFunction(pushNotification);
 var i13n = new Internationalization();
 var Settings = new SettingsMgr();
 var notificationsData = {};
-var WSReconnectInterval = 0.3; //Firefox shutdown the background script after 30seconds.
+var WSReconnectInterval = 0.2; //Firefox shutdown the background script after 30seconds.
 var lastActivityUpdate = Date.now();
 
 if (typeof browser === "undefined") {
