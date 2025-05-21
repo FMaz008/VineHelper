@@ -7,6 +7,11 @@ var Settings = new SettingsMgr();
 import { Environment } from "./Environment.js";
 var env = new Environment();
 
+import { Internationalization } from "./Internationalization.js";
+var i13n = new Internationalization();
+
+import { CryptoKeys } from "./CryptoKeys.js";
+var cryptoKeys = new CryptoKeys();
 import { HiddenListMgr } from "./HiddenListMgr.js";
 var HiddenList = new HiddenListMgr();
 
@@ -123,7 +128,7 @@ class Tile {
 		//Find the asin from the data-asin attribute
 		const asin = this.#asin;
 
-		//Display a modal listing all the variants
+		// ### Display a modal listing all the variants
 		let m = modalMgr.newModal("item-variants-" + asin);
 		m.title = "Variants for item #" + asin;
 		m.style = "min-width: 600px;";
@@ -131,7 +136,7 @@ class Tile {
 		m.content += `<br />${this.getTitle()}<br /><br /><table class="vh-table-variants">`;
 		m.content += `<tr><th>Variant info</th><th>Action</th></tr>`;
 		for (let variant of this.#variants) {
-			m.content += `<tr><td>`;
+			m.content += `<tr id="vh-variant-${variant.asin}"><td>`;
 			try {
 				const json = JSON.parse(variant.title);
 				for (let key in json) {
@@ -166,6 +171,38 @@ class Tile {
 				clickDynamicSeeDetailsButton(variantAsin);
 			});
 		}
+
+		// ### Get the unavailable status for the variant items
+		const data = {
+			api_version: 5,
+			app_version: env.data.appVersion,
+			country: i13n.getCountryCode(),
+			uuid: Settings.get("general.uuid", false),
+			fid: Settings.get("general.fingerprint.id", false),
+			action: "get_unavailable",
+			items: this.#variants.map((variant) => variant.asin),
+		};
+		const s = await cryptoKeys.signData(data);
+		data.s = s;
+		data.pk = await cryptoKeys.getExportedPublicKey();
+
+		const options = {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(data),
+		};
+		fetch(env.getAPIUrl(), options)
+			.then((response) => response.json())
+			.then(async function (response) {
+				for (let variant of response.items) {
+					if (variant.unavailable == 1) {
+						const row = document.querySelector(`#vh-variant-${variant.asin}`);
+						if (row) {
+							row.style.textDecoration = "line-through";
+						}
+					}
+				}
+			});
 	}
 
 	isPinned() {
