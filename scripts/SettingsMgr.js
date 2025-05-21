@@ -247,17 +247,14 @@ class SettingsMgr {
 		}
 
 		//V3.4.0
-		if (this.#settings.general.deviceName == undefined) {
-			this.#settings.general.blindLoading = false; //Reset the blind loading setting to false.
-			await this.#save();
+		if (this.get("general.deviceName", false) == undefined) {
+			await this.set("general.blindLoading", false); //Reset the blind loading setting to false.
 		}
-		if (this.#settings.pinnedTab.remote == undefined) {
-			this.#settings.pinnedTab.remote = this.#settings.hiddenTab.remote;
-			await this.#save();
+		if (this.get("pinnedTab.remote", false) == undefined) {
+			await this.set("pinnedTab.remote", this.get("hiddenTab.remote", false));
 		}
-		if (this.#settings.notification.monitor.sortType == "date") {
-			this.#settings.notification.monitor.sortType = "date_desc";
-			await this.#save();
+		if (this.get("notification.monitor.sortType", false) == "date") {
+			await this.set("notification.monitor.sortType", "date_desc");
 		}
 	}
 
