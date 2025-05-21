@@ -249,8 +249,18 @@ test("ETV_min_max_zero_values", () => {
 	expect(keywordMatch(arrKWs, str, 5.99, 5.99)).toBe(false);
 });
 
-test("ETV_min_max_zero_values", () => {
+test("ETV_min_max_no_values", () => {
 	const arrKWs = [{ contains: "beer", without: "", etv_min: "0", etv_max: "0" }];
 	const str = "beer";
 	expect(keywordMatch(arrKWs, str, "", "")).toBe(false);
+});
+test("ETV_min_max_null_values", () => {
+	const arrKWs = [{ contains: "beer", without: "", etv_min: "0", etv_max: "0" }];
+	const str = "beer";
+	expect(keywordMatch(arrKWs, str, null, null)).toBe(false);
+});
+test("ETV_min_max_undefined_values", () => {
+	const arrKWs = [{ contains: "beer", without: "", etv_min: "0", etv_max: "0" }];
+	const str = "beer";
+	expect(keywordMatch(arrKWs, str, undefined, undefined)).toBe(false);
 });
