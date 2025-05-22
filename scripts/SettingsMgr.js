@@ -351,7 +351,7 @@ class SettingsMgr {
 					hideDuplicateThumbnail: false,
 					hideGoldNotificationsForSilverUser: false,
 					listView: false,
-					openLinksInNewTab: "0",
+					openLinksInNewTab: "1",
 					preventUnload: true,
 					regular: {
 						sound: "0",
