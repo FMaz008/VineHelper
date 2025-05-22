@@ -54,7 +54,7 @@ chrome.runtime.onMessage.addListener((data, sender, sendResponse) => {
 	processBroadcastMessage(data);
 });
 
-function processBroadcastMessage(data) {
+async function processBroadcastMessage(data) {
 	if (data.type == undefined) {
 		return false;
 	}
@@ -101,9 +101,51 @@ function processBroadcastMessage(data) {
 	//Close the auto-refresh tab
 	if (data.type == "closeARTab") {
 		if (currentTabId !== null) {
-			chrome.tabs.remove(currentTabId);
-			currentTabId = null;
+			try {
+				await closeTab(currentTabId);
+				currentTabId = null;
+			} catch (error) {
+				console.error("Unexpected error closing tab:", error);
+			}
 		}
+	}
+}
+
+async function closeTab(tabId) {
+	try {
+		// Firefox requires a different approach for tab removal
+		if (typeof browser !== "undefined") {
+			// Firefox
+			return new Promise(async (resolve) => {
+				try {
+					await browser.tabs.get(tabId);
+					await browser.tabs.remove(tabId);
+					resolve(true);
+				} catch (error) {
+					resolve(false);
+				}
+			});
+		} else {
+			// Chrome
+			return new Promise((resolve) => {
+				chrome.tabs.get(tabId, (tab) => {
+					if (chrome.runtime.lastError) {
+						resolve(false);
+						return;
+					}
+
+					chrome.tabs.remove(tabId, () => {
+						if (chrome.runtime.lastError) {
+							resolve(false);
+						} else {
+							resolve(true);
+						}
+					});
+				});
+			});
+		}
+	} catch (error) {
+		throw error;
 	}
 }
 
@@ -139,30 +181,6 @@ chrome.notifications.onClicked.addListener((notificationId) => {
 
 let socket;
 let currentTabId = null;
-let lastActiveTabId = null;
-let lastActiveWindowId = null;
-
-// Track tab activation
-chrome.tabs.onActivated.addListener((activeInfo) => {
-	lastActiveTabId = activeInfo.tabId;
-	lastActiveWindowId = activeInfo.windowId;
-});
-
-// Track window focus
-if (chrome.windows) {
-	//Firefox for Android does not support chrome.windows
-	chrome.windows.onFocusChanged.addListener((windowId) => {
-		if (windowId !== chrome.windows.WINDOW_ID_NONE) {
-			lastActiveWindowId = windowId;
-			// Update lastActiveTabId for the focused window
-			chrome.tabs.query({ active: true, windowId: windowId }, (tabs) => {
-				if (tabs[0]) {
-					lastActiveTabId = tabs[0].id;
-				}
-			});
-		}
-	});
-}
 
 function connectWebSocket() {
 	if (!Settings.get("notification.active")) {
@@ -267,9 +285,32 @@ function connectWebSocket() {
 			//Close tab id
 			chrome.tabs.remove(currentTabId);
 		}
-
-		const tab = await chrome.tabs.create({ url, active: false });
-		currentTabId = tab.id;
+		//Find the windows id containing the notification monitor with a url containing #monitor
+		if (chrome.windows) {
+			const windows = await chrome.windows.getAll();
+			outerLoop: for (const window of windows) {
+				//List all tabs in the window
+				const tabs = await chrome.tabs.query({ windowId: window.id });
+				for (const tab of tabs) {
+					if (tab.url.includes("#monitor")) {
+						if (typeof browser !== "undefined") {
+							// Firefox
+							browser.tabs
+								.create({ url, windowId: window.id, active: false })
+								.then((newTab) => {
+									currentTabId = newTab.id;
+								})
+								.catch((error) => {});
+						} else {
+							// Chrome
+							const newTab = chrome.tabs.create({ url, windowId: window.id, active: false });
+							currentTabId = newTab.id;
+						}
+						break outerLoop;
+					}
+				}
+			}
+		}
 	});
 
 	socket.on("connection_error", (error) => {
@@ -343,9 +384,9 @@ function setReloadTimer() {
 	}
 
 	//Create an interval between 5 and 10 minutes to check with the server if a page needs to be refreshed
+	//const timer = 30 * 1000; //1 minute
 	const timer = Math.floor(Math.random() * (10 * 60 * 1000 - 5 * 60 * 1000 + 1) + 5 * 60 * 1000); //In milliseconds
 
-	//const timer = 0.5; //30 seconds for testing
 	displayTimer = setTimeout(() => {
 		const timerInMinutes = Math.floor(timer / 60 / 1000);
 		const secondsLeft = Math.floor((timer - timerInMinutes * 60 * 1000) / 1000);
