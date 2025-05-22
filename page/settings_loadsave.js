@@ -658,6 +658,84 @@ async function initiateSettings() {
 			hideSaveButton.style.position = "relative";
 		}
 	});
+
+	//Import/Export JSON Settings
+	document.getElementById(`bulkImportJSONsettings`).addEventListener("click", async () => {
+		displayMultiLinePopup("", "Paste your JSON content here...", "Import JSON", async (data) => {
+			try {
+				if (data == "") {
+					throw new Error("Empty JSON data");
+				}
+				const json = JSON.parse(data);
+				if (!json.settings) {
+					throw new Error("Format Invalid");
+				}
+				await chrome.storage.local.set({ settings: json.settings });
+				return true; //Hide the popup
+			} catch (err) {
+				alert("JSON data incomplete or invalid.");
+				return false; //Keep the popup visible
+			}
+		});
+	});
+
+	//Export JSON
+	document.getElementById(`bulkExportJSONsettings`).addEventListener("click", async () => {
+		const json = await chrome.storage.local.get("settings");
+		displayMultiLinePopup(JSON.stringify(json));
+	});
+
+	//Import/Export JSON hidden items
+	document.getElementById(`bulkImportJSONhidden`).addEventListener("click", async () => {
+		displayMultiLinePopup("", "Paste your JSON content here...", "Import JSON", async (data) => {
+			try {
+				if (data == "") {
+					throw new Error("Empty JSON data");
+				}
+				const json = JSON.parse(data);
+				if (!json.hiddenItems) {
+					throw new Error("Format Invalid");
+				}
+				await chrome.storage.local.set({ hiddenItems: json.hiddenItems });
+				return true; //Hide the popup
+			} catch (err) {
+				alert("JSON data incomplete or invalid.");
+				return false; //Keep the popup visible
+			}
+		});
+	});
+
+	//Export JSON
+	document.getElementById(`bulkExportJSONhidden`).addEventListener("click", async () => {
+		const json = await chrome.storage.local.get("pinnedItems");
+		displayMultiLinePopup(JSON.stringify(json));
+	});
+
+	//Import/Export JSON pinned items
+	document.getElementById(`bulkImportJSONpinned`).addEventListener("click", async () => {
+		displayMultiLinePopup("", "Paste your JSON content here...", "Import JSON", async (data) => {
+			try {
+				if (data == "") {
+					throw new Error("Empty JSON data");
+				}
+				const json = JSON.parse(data);
+				if (!json.pinnedItems) {
+					throw new Error("Format Invalid");
+				}
+				await chrome.storage.local.set({ pinnedItems: json.pinnedItems });
+				return true; //Hide the popup
+			} catch (err) {
+				alert("JSON data incomplete or invalid.");
+				return false; //Keep the popup visible
+			}
+		});
+	});
+
+	//Export JSON
+	document.getElementById(`bulkExportJSONpinned`).addEventListener("click", async () => {
+		const json = await chrome.storage.local.get("pinnedItems");
+		displayMultiLinePopup(JSON.stringify(json));
+	});
 }
 
 //Determine if a query selector is visible in the scrolled area
@@ -980,7 +1058,7 @@ function manageKeywords(key) {
 		remoteLoadList(keywordType);
 	});
 
-	document.getElementById(`bulkDelete${keywordType}`).addEventListener("click", async () => {
+	document.getElementById(`bulkDelete${keywordType}keywords`).addEventListener("click", async () => {
 		if (await confirmPrompt("Delete all?")) {
 			//Remove all the existing lines
 			const rows = document.querySelectorAll(`#${keyE} table>tr`);
@@ -989,7 +1067,7 @@ function manageKeywords(key) {
 	});
 
 	//Import CSV
-	document.getElementById(`bulkImportCSV${keywordType}`).addEventListener("click", async () => {
+	document.getElementById(`bulkImportCSV${keywordType}keywords`).addEventListener("click", async () => {
 		displayMultiLinePopup("", "Paste your CSV content here...", "Import CSV", (data) => {
 			let arr = [];
 			arr = data
@@ -1004,7 +1082,7 @@ function manageKeywords(key) {
 	});
 
 	//Import JSON
-	document.getElementById(`bulkImportJSON${keywordType}`).addEventListener("click", async () => {
+	document.getElementById(`bulkImportJSON${keywordType}keywords`).addEventListener("click", async () => {
 		displayMultiLinePopup("", "Paste your JSON content here...", "Import JSON", (data) => {
 			try {
 				const json = JSON.parse(data);
@@ -1020,13 +1098,13 @@ function manageKeywords(key) {
 	});
 
 	//Export CSV
-	document.getElementById(`bulkExportCSV${keywordType}`).addEventListener("click", async () => {
+	document.getElementById(`bulkExportCSV${keywordType}keywords`).addEventListener("click", async () => {
 		const csv = keywordsToCSV(key);
 		displayMultiLinePopup(csv);
 	});
 
 	//Export JSON
-	document.getElementById(`bulkExportJSON${keywordType}`).addEventListener("click", async () => {
+	document.getElementById(`bulkExportJSON${keywordType}keywords`).addEventListener("click", async () => {
 		const json = keywordsToJSON(key);
 		displayMultiLinePopup(JSON.stringify(json));
 	});

@@ -51,7 +51,7 @@
 			from the moment you enable it.
 			<br />
 			<strong>Note:</strong> This option acts as a toggle between local and remote storage. One activated, your
-			local pinned items won't be loaded anymore (although not deleted, they will disapear)
+			local pinned items won't be loaded anymore (although not deleted, they will disappear)
 		</div>
 	</div>
 	<div class="setting-container">
@@ -134,6 +134,93 @@
 			<strong>Note:</strong> The higher the limit, the slower VH will be.
 		</div>
 	</div>
+	<fieldset>
+		<legend>Import/Export LocalSettings</legend>
+		<div class="setting-container" style="flex-wrap: wrap; justify-content: space-evenly">
+			<div
+				style="
+					width: 100%;
+					margin-bottom: 8px;
+					display: flex;
+					width: 100%;
+					margin-bottom: 8px;
+					flex-wrap: wrap;
+					justify-content: space-evenly;
+				"
+			>
+				<input
+					type="button"
+					id="bulkImportJSONsettings"
+					class="vh-button-icon vh-icon-import"
+					value="Import JSON"
+				/>
+				<input
+					type="button"
+					id="bulkExportJSONsettings"
+					class="vh-button-icon vh-icon-export"
+					value="Export JSON"
+				/>
+			</div>
+		</div>
+	</fieldset>
+	<fieldset>
+		<legend>Import/Export Local Hidden Items</legend>
+		<div class="setting-container" style="flex-wrap: wrap; justify-content: space-evenly">
+			<div
+				style="
+					width: 100%;
+					margin-bottom: 8px;
+					display: flex;
+					width: 100%;
+					margin-bottom: 8px;
+					flex-wrap: wrap;
+					justify-content: space-evenly;
+				"
+			>
+				<input
+					type="button"
+					id="bulkImportJSONhidden"
+					class="vh-button-icon vh-icon-import"
+					value="Import JSON"
+				/>
+				<input
+					type="button"
+					id="bulkExportJSONhidden"
+					class="vh-button-icon vh-icon-export"
+					value="Export JSON"
+				/>
+			</div>
+		</div>
+	</fieldset>
+	<fieldset>
+		<legend>Import/Export Local Pinned Items</legend>
+		<div class="setting-container" style="flex-wrap: wrap; justify-content: space-evenly">
+			<div
+				style="
+					width: 100%;
+					margin-bottom: 8px;
+					display: flex;
+					width: 100%;
+					margin-bottom: 8px;
+					flex-wrap: wrap;
+					justify-content: space-evenly;
+				"
+			>
+				<input
+					type="button"
+					id="bulkImportJSONpinned"
+					class="vh-button-icon vh-icon-import"
+					value="Import JSON"
+				/>
+				<input
+					type="button"
+					id="bulkExportJSONpinned"
+					class="vh-button-icon vh-icon-export"
+					value="Export JSON"
+				/>
+			</div>
+		</div>
+	</fieldset>
 	<br /><br />
 	<button id="fetchHiddenItems">Download Remote Hidden Items To Local Storage</button><br />
 </fieldset>
