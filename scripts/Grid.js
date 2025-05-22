@@ -317,16 +317,19 @@ async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enro
 	};
 
 	//Bind the click event the the reload button
-	document.querySelector("#vh-pin-" + asin + " .pinned-reload-link").onclick = (e) => {
-		e.preventDefault();
+	const pinnedReloadLink = document.querySelector("#vh-pin-" + asin + " .pinned-reload-link");
+	if (pinnedReloadLink) {
+		pinnedReloadLink.onclick = (e) => {
+			e.preventDefault();
 
-		if (!Settings.isPremiumUser(1) || !Settings.get("pinnedTab.remote")) {
-			return false;
-		}
+			if (!Settings.isPremiumUser(1) || !Settings.get("pinnedTab.remote")) {
+				return false;
+			}
 
-		//Reload all pinned tiles
-		reloadAllPinnedTile();
-	};
+			//Reload all pinned tiles
+			reloadAllPinnedTile();
+		};
+	}
 }
 
 async function reloadAllPinnedTile() {
