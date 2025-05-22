@@ -114,6 +114,28 @@ async function boot_review() {
 		}
 	}
 
+	//Resize the review box
+	const reviewTextarea = document.getElementById("reviewText");
+	if (reviewTextarea) {
+		// Use ResizeObserver to detect textarea size changes
+		const resizeObserver = new ResizeObserver((entries) => {
+			for (const entry of entries) {
+				if (entry.target === reviewTextarea) {
+					if (reviewTextarea.style.height.includes("em")) {
+						if (Settings.get("general.reviewTextareaHeight", false)) {
+							reviewTextarea.style.height = Settings.get("general.reviewTextareaHeight");
+						}
+					} else {
+						Settings.set("general.reviewTextareaHeight", reviewTextarea.style.height);
+					}
+				}
+			}
+		});
+
+		// Start observing the textarea
+		resizeObserver.observe(reviewTextarea);
+	}
+
 	//Add the template titles in the select box
 	let selectBox = document.getElementById("template_name");
 	let title = "";
