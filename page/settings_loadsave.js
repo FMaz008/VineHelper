@@ -682,6 +682,9 @@ async function initiateSettings() {
 	//Export JSON
 	document.getElementById(`bulkExportJSONsettings`).addEventListener("click", async () => {
 		const json = await chrome.storage.local.get("settings");
+		//Delete the settings.fingerprint.id
+		delete json.settings.general.fingerprint;
+		delete json.settings.crypto;
 		displayMultiLinePopup(JSON.stringify(json));
 	});
 
