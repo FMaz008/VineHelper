@@ -294,17 +294,17 @@ class Toolbar {
 			return false;
 		}
 
-		etv1 = new Intl.NumberFormat(i13n.getLocale(), {
+		const formattedETV1 = new Intl.NumberFormat(i13n.getLocale(), {
 			style: "currency",
 			currency: i13n.getCurrency(),
 		}).format(etv1);
-		etv2 = new Intl.NumberFormat(i13n.getLocale(), {
+		const formattedETV2 = new Intl.NumberFormat(i13n.getLocale(), {
 			style: "currency",
 			currency: i13n.getCurrency(),
 		}).format(etv2);
 
 		const oldETV = span.textContent;
-		const newETV = etv1 === etv2 ? etv2 : `${etv1}-${etv2}`;
+		const newETV = etv1 === etv2 ? formattedETV2 : `${formattedETV1}-${formattedETV2}`;
 		span.textContent = newETV;
 
 		this.processHighlight(etv1, etv2);
