@@ -584,7 +584,7 @@ async function loadPinnedList() {
 	}
 
 	//Populate the Pinned tab
-	if (Settings.get("pinnedTab.active") && !Settings.get("pinnedTab.remote")) {
+	if (Settings.get("pinnedTab.active") && (!Settings.get("pinnedTab.remote") || !Settings.isPremiumUser(1))) {
 		logger.add("GRID: Loading locally stored pinned list");
 		let mapPin = new Map();
 		mapPin = await PinnedList.getList();

@@ -32,10 +32,6 @@ div.vh-grid .vvp-item-tile .vvp-item-tile-content {
 	flex-direction: column;
 }
 
-.vvp-item-tile {
-	margin-bottom: 20px;
-}
-
 #vvp-items-grid-container .vvp-item-tile a,
 #vvp-items-grid-container .vvp-item-tile a:visited,
 #vvp-items-grid-container .vvp-item-tile a:active {
