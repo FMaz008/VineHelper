@@ -179,7 +179,7 @@ class Tile {
 			country: i13n.getCountryCode(),
 			uuid: Settings.get("general.uuid", false),
 			fid: Settings.get("general.fingerprint.id", false),
-			action: "get_unavailable",
+			action: "get_variants_info",
 			items: this.#variants.map((variant) => variant.asin),
 		};
 		const s = await cryptoKeys.signData(data);
