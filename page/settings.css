@@ -218,3 +218,45 @@ a.toggle {
 #patreonCharacterDescription {
 	font-style: italic;
 }
+
+/* Toggle switches */
+input:where([type="checkbox"][role="switch"]) {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	position: relative;
+	font-size: inherit;
+	width: 2em;
+	height: 1em;
+	box-sizing: content-box;
+	border: 1px solid;
+	border-radius: 1em;
+	vertical-align: text-bottom;
+	margin: auto;
+	color: inherit;
+}
+
+input:where([type="checkbox"][role="switch"])::before {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 0;
+	transform: translate(0, -50%);
+	box-sizing: border-box;
+	width: 0.7em;
+	height: 0.7em;
+	margin: 0 0.15em;
+	border: 1px solid;
+	border-radius: 50%;
+	background: currentcolor;
+}
+
+input:where([type="checkbox"][role="switch"]):checked::before {
+	left: 1em;
+}
+
+/* if the input is disabled, display the switch in gray */
+input:where([type="checkbox"][role="switch"]):disabled::before {
+	color: #ccc;
+	border-color: #ccc;
+}

@@ -19,11 +19,24 @@
 			Your unique user ID. If you have multiple devices, you may want to sync them up to the same value.
 		</div>
 	</div>
+	<br />
 	<div class="setting-container premium-feature-1">
 		<label for="hiddenTab.remote">
-			<input type="checkbox" name="hiddenTab.remote" value="1" />
-			Store Hidden Items Remotely.
-			<div class="vh-toolbar-icon vh-icon-premium" style="margin-left: 5px"></div>
+			<table style="width: 200px">
+				<tr>
+					<th colspan="3">
+						Hidden Items storage
+						<div class="vh-toolbar-icon vh-icon-premium" style="margin-left: 5px"></div>
+					</th>
+				</tr>
+				<tr>
+					<td style="width: 30px; padding-left: 10px; text-align: right">Local</td>
+					<td style="width: 30px; text-align: center">
+						<input type="checkbox" role="switch" name="hiddenTab.remote" value="1" />
+					</td>
+					<td>Hybrid Cloud</td>
+				</tr>
+			</table>
 		</label>
 		<div class="setting-summary">
 			<div class="vh-toolbar-icon vh-icon-question"></div>
@@ -38,9 +51,21 @@
 	</div>
 	<div class="setting-container premium-feature-1">
 		<label for="pinnedTab.remote">
-			<input type="checkbox" name="pinnedTab.remote" value="1" />
-			Store Pinned Items Remotely.
-			<div class="vh-toolbar-icon vh-icon-premium" style="margin-left: 5px"></div>
+			<table style="width: 200px">
+				<tr>
+					<th colspan="3">
+						Pinned Items storage
+						<div class="vh-toolbar-icon vh-icon-premium" style="margin-left: 5px"></div>
+					</th>
+				</tr>
+				<tr>
+					<td style="width: 30px; padding-left: 10px; text-align: right">Local</td>
+					<td style="width: 30px; text-align: center">
+						<input type="checkbox" role="switch" name="pinnedTab.remote" value="1" />
+					</td>
+					<td>Cloud</td>
+				</tr>
+			</table>
 		</label>
 		<div class="setting-summary">
 			<div class="vh-toolbar-icon vh-icon-question"></div>
@@ -54,9 +79,10 @@
 			local pinned items won't be loaded anymore (although not deleted, they will disappear)
 		</div>
 	</div>
+	<br />
 	<div class="setting-container">
 		<label for="general.deviceName">
-			<span style="display: inline-block; width: 200px">Devices linked to this UUID:</span>
+			<span style="display: inline-block; width: 200px; font-weight: bold">Devices linked to this UUID:</span>
 			<ul id="devicesLinkedToUUID"></ul>
 		</label>
 	</div>
@@ -191,6 +217,8 @@
 					value="Export JSON"
 				/>
 			</div>
+			<br />
+			<button id="fetchHiddenItems">Download items from Cloud to Local Storage</button><br />
 		</div>
 	</fieldset>
 	<fieldset>
@@ -222,14 +250,12 @@
 			</div>
 		</div>
 	</fieldset>
-	<br />
-	<button id="fetchHiddenItems">Download Remote Hidden Items To Local Storage</button><br />
 </fieldset>
 
 <fieldset>
 	<legend>DANGER ZONE</legend>
 
 	<p>The options below will lead to data loss.</p>
-	<button id="hiddenItemReset">DELETE ALL HIDDEN ITEMS</button><br />
+	<button id="hiddenItemReset">DELETE ALL HIDDEN ITEMS</button><br /><br />
 	<button id="factoryReset" style="background-color: #c33">/!\ FACTORY RESET /!\</button>
 </fieldset>
