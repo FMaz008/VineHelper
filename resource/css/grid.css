@@ -55,3 +55,12 @@ body.darktheme .vh-btn-variants-count {
 .vh-listview .vvp-details-btn {
 	width: 150px !important;
 }
+
+body.darktheme #vvp-items-grid-container .vvp-item-product-title-container {
+	text-shadow: 0 0 1px #000;
+}
+
+/* body without the class darktheme */
+body:not(.darktheme) #vvp-items-grid-container .vvp-item-product-title-container {
+	text-shadow: 0 0 1px #fff;
+}
