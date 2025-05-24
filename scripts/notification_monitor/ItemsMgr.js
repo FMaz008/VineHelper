@@ -1,3 +1,6 @@
+import { Tile } from "../Tile.js";
+
+
 const TYPE_DATE_ASC = "date_asc";
 const TYPE_DATE_DESC = "date_desc";
 const TYPE_PRICE_DESC = "price_desc";
@@ -6,6 +9,7 @@ const TYPE_PRICE_ASC = "price_asc";
 class ItemsMgr {
 	imageUrls = new Set(); // Set of image URLs used for duplicate thumbnail detection (kept separate for O(1) lookup performance)
 	items = new Map(); // Combined map to store both item data and DOM elements
+	tile = new Map();
 
 	constructor(settings) {
 		this._settings = settings;
@@ -206,6 +210,23 @@ class ItemsMgr {
 	 */
 	getItemDOMElement(asin) {
 		return this.items.get(asin)?.element;
+	}
+
+	/**
+	 * Set the tile DOM element
+	 * @param {object} tileDOMElement - The DOM element of the tile
+	 */
+	setTile(asin, tileDOMElement) {
+		this.tile.set(asin, new Tile(tileDOMElement, null));
+		return this.tile.get(asin);
+	}
+
+	/**
+	 * Get the tile
+	 * @returns {object} - The tile
+	 */
+	getTile(asin) {
+		return this.tile.get(asin);
 	}
 }
 

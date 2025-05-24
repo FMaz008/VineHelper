@@ -523,7 +523,7 @@ class NotificationMonitor extends MonitorCore {
 			}
 		});
 
-		const tile = new Tile(tileDOM, null);
+		const tile = this._itemsMgr.setTile(asin, tileDOM);
 
 		if (this._monitorV3 && this._settings.isPremiumUser(2) && this._settings.get("general.displayVariantButton")) {
 			if (is_parent_asin && itemData.variants) {
@@ -633,10 +633,8 @@ class NotificationMonitor extends MonitorCore {
 	async addVariants(data) {
 		if (this._settings.isPremiumUser(2) && this._settings.get("general.displayVariantButton")) {
 			if (this._itemsMgr.items.has(data.asin)) {
-				//Check if the tile exists
-				const tileDOM = await this._itemsMgr.getItemDOMElement(data.asin);
-				if (tileDOM) {
-					const tile = new Tile(tileDOM, null);
+				const tile = this._itemsMgr.getTile(data.asin);
+				if (tile) {
 					if (data.variants && data.variants.length > 0) {
 						for (const variant of data.variants) {
 							await tile.addVariant(variant.asin, variant.title, variant.etv);
