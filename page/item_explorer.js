@@ -114,7 +114,7 @@ function generateUrl() {
 	const etvMin = document.getElementById("search-etv-min").value;
 	const etvMax = document.getElementById("search-etv-max").value;
 	const queue = document.getElementById("vh-queue-select").value;
-	const excludeUnavailable = document.getElementById("search-exclude-unavailable").checked;
+	const unavailable = document.getElementById("unavailable-select").value;
 	return (
 		"/page/item_explorer.html?asin=" +
 		encodeURI(asin) +
@@ -128,8 +128,8 @@ function generateUrl() {
 		encodeURI(etvMax) +
 		"&queue=" +
 		encodeURI(queue) +
-		"&excludeUnavailable=" +
-		encodeURI(excludeUnavailable)
+		"&unavailable=" +
+		encodeURI(unavailable)
 	);
 }
 
@@ -140,7 +140,7 @@ function loadFormItemsStateFromURL() {
 	const etvMin = document.getElementById("search-etv-min");
 	const etvMax = document.getElementById("search-etv-max");
 	const queue = document.getElementById("vh-queue-select");
-	const excludeUnavailable = document.getElementById("search-exclude-unavailable");
+	const unavailable = document.getElementById("unavailable-select");
 	//If the URL contains the parameters, load them
 	if (window.location.search) {
 		const urlParams = new URLSearchParams(window.location.search);
@@ -150,7 +150,7 @@ function loadFormItemsStateFromURL() {
 		etvMin.value = urlParams.get("etvMin");
 		etvMax.value = urlParams.get("etvMax");
 		queue.value = urlParams.get("queue");
-		excludeUnavailable.checked = urlParams.get("excludeUnavailable") == "true";
+		unavailable.value = urlParams.get("unavailable");
 		queryDB(parseInt(urlParams.get("page")));
 	}
 }
@@ -162,7 +162,7 @@ function queryDB(page = 1) {
 	const queue = document.getElementById("vh-queue-select").value;
 	const etvMin = document.getElementById("search-etv-min").value;
 	const etvMax = document.getElementById("search-etv-max").value;
-	const excludeUnavailable = document.getElementById("search-exclude-unavailable").checked;
+	const unavailable = document.getElementById("unavailable-select").value;
 
 	const content = {
 		api_version: 5,
@@ -177,7 +177,7 @@ function queryDB(page = 1) {
 		page: page,
 		etvMin: etvMin,
 		etvMax: etvMax,
-		excludeUnavailable: excludeUnavailable,
+		unavailable: unavailable,
 	};
 
 	fetch(env.getAPIUrl(), {

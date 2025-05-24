@@ -69,8 +69,12 @@
 								<input type="number" id="search-etv-max" placeholder="ETV Max" />
 							</td>
 							<td colspan="2">
-								<input type="checkbox" id="search-exclude-unavailable" />
-								<label for="search-exclude-unavailable">Exclude unavailable</label>
+								Unavailable:
+								<select id="unavailable-select">
+									<option value="all" selected="selected">All</option>
+									<option value="available">Available</option>
+									<option value="unavailable">Unavailable</option>
+								</select>
 							</td>
 							<td colspan="2" style="text-align: right">
 								<input type="submit" id="search-button" value="Search" />
