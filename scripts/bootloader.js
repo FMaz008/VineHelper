@@ -1000,7 +1000,7 @@ async function fetchProductsDatav5() {
 		.then(serverProductsResponse)
 		.catch(function (err) {
 			if (err.name === "AbortError") {
-				logger.add("FETCH: Server request timed out after 10 seconds");
+				logger.add("FETCH: Server request timed out after 5 seconds");
 			} else {
 				logger.add("FETCH: Server request failed");
 			}

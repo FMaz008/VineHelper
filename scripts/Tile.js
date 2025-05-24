@@ -134,7 +134,7 @@ class Tile {
 		m.style = "min-width: 600px;";
 		m.content = `<img src="${this.getThumbnail()}" alt="Thumbnail" style="width: 100px; height: 100px;float: left;margin-right: 10px;margin-bottom: 10px;" />`;
 		m.content += `<br />${this.getTitle()}<br /><br /><table class="vh-table-variants">`;
-		m.content += `<tr><th>Variant info</th><th>Action</th></tr>`;
+		m.content += `<tr><th>Variant info</th><th>ETV</th><th>Action</th></tr>`;
 		for (let variant of this.#variants) {
 			m.content += `<tr id="vh-variant-${variant.asin}"><td>`;
 			try {
@@ -145,7 +145,7 @@ class Tile {
 			} catch (e) {
 				m.content += `(No info available)<br />`;
 			}
-			m.content += `</td><td width="150px">`;
+			m.content += `</td><td width="50px">${variant.etv === null ? "" : variant.etv}</td><td width="150px">`;
 			m.content += `<a href="#" class="vh-link-variant" data-asin="${variant.asin}">View ${variant.asin}</a>`;
 			m.content += `</td></tr>`;
 		}
