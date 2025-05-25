@@ -307,7 +307,49 @@
 		</div>
 	</fieldset>
 </fieldset>
-
+<fieldset>
+	<legend>Pages Auto-Load</legend>
+	<div class="setting-container">
+		<div class="range_container">
+			<div class="sliders_control">
+				<input id="fromSlider" class="dualslider" type="range" value="5" min="1" max="10" />
+				<input id="toSlider" class="dualslider" type="range" value="10" min="1" max="10" />
+			</div>
+			<div class="form_control">
+				<div class="form_control_container">
+					<label for="fromInput"
+						>Min:
+						<input
+							class="dualslider form_control_container__time__input"
+							type="number"
+							id="fromInput"
+							value="5"
+							min="1"
+							max="5"
+					/></label>
+				</div>
+				<div class="form_control_container">
+					<label for="toInput"
+						>Max:
+						<input
+							class="dualslider form_control_container__time__input"
+							type="number"
+							id="toInput"
+							value="10"
+							min="1"
+							max="10"
+					/></label>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="setting-summary">
+		<div class="vh-toolbar-icon vh-icon-question"></div>
+		Automatically load pages when the notification monitor is active. This allow you to define the intervals between
+		page load. The interval will be picked at random between the selected range. When triggered, VH will open and
+		close a Vine page in a separate tab automatically.
+	</div>
+</fieldset>
 <fieldset>
 	<legend>Misc</legend>
 	<div class="setting-container">

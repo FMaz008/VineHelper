@@ -334,6 +334,10 @@ class SettingsMgr {
 			notification: {
 				active: false,
 				hideList: true,
+				autoload: {
+					min: 5,
+					max: 10,
+				},
 				monitor: {
 					"24hrsFormat": false,
 					autoTruncate: true,
