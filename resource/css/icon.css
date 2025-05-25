@@ -502,3 +502,8 @@ div[role="navigation"] > ul > li {
 	background-position-x: 5px;
 	background-position-y: center;
 }
+
+.vh-disabled {
+	filter: opacity(0.3);
+	pointer-events: none;
+}

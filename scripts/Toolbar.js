@@ -33,6 +33,9 @@ class Toolbar {
 	#tile;
 	#toolbarDOM;
 
+	#pinDebounceTimer = null;
+	#pinDebounceClickable = true;
+
 	constructor(tileInstance) {
 		this.#tile = tileInstance;
 		this.#tile.setToolbar(this);
@@ -210,7 +213,19 @@ class Toolbar {
 
 			if (h2) {
 				h2.addEventListener("click", async (event) => {
-					//h2.style.opacity = 0.3;
+					const target = event.target;
+					//Debounce the pin click event
+					if (!this.#pinDebounceClickable) {
+						return false;
+					}
+					this.#pinDebounceClickable = false;
+					target.classList.add("vh-disabled"); //Visually disable the pin click
+					this.#pinDebounceTimer = setTimeout(async () => {
+						this.#pinDebounceClickable = true;
+						target.classList.remove("vh-disabled");
+						clearTimeout(this.#pinDebounceTimer);
+					}, 1000);
+					//End of debounce
 
 					// A hide/display item button was pressed
 					let asin = this.#tile.getAsin(); // Directly access ASIN

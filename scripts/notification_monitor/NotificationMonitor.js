@@ -39,6 +39,9 @@ class NotificationMonitor extends MonitorCore {
 	_filterType = -1;
 	_sortType = TYPE_DATE_DESC;
 
+	#pinDebounceTimer = null;
+	#pinDebounceClickable = true;
+
 	constructor(monitorV3 = false) {
 		super(monitorV3);
 
@@ -1045,6 +1048,19 @@ class NotificationMonitor extends MonitorCore {
 	 */
 	async #handlePinClick(e, target) {
 		e.preventDefault();
+
+		//Debounce the pin click event
+		if (!this.#pinDebounceClickable) {
+			return false;
+		}
+		this.#pinDebounceClickable = false;
+		target.classList.add("vh-disabled"); //Visually disable the pin click
+		this.#pinDebounceTimer = setTimeout(async () => {
+			this.#pinDebounceClickable = true;
+			target.classList.remove("vh-disabled");
+			clearTimeout(this.#pinDebounceTimer);
+		}, 1000);
+		//End of debounce
 
 		const asin = target.dataset.asin;
 		const isPinned = await this._pinMgr.checkIfPinned(asin);
