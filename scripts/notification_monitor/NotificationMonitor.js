@@ -1506,7 +1506,24 @@ class NotificationMonitor extends MonitorCore {
 				this._feedPausedAmountStored = 0;
 				document.getElementById("pauseFeed").value = "Resume Feed (0)";
 				document.getElementById("pauseFeed-fixed").value = "Resume Feed (0)";
+
+				if(this._settings.get("notification.monitor.pauseOverlay")){
+					//Create an overlay with a red background and a 5% opacity
+					const overlay = document.createElement("div");
+					overlay.id = "pauseFeedOverlay";
+					overlay.style.position = "fixed";
+					overlay.style.top = "0";
+					overlay.style.left = "0";
+					overlay.style.width = "100%";
+					overlay.style.height = "100%";
+					overlay.style.backgroundColor = "rgba(255, 0, 0, 0.10)";
+					overlay.style.pointerEvents = "none";
+					document.body.appendChild(overlay);
+				}
 			} else {
+				if (this._settings.get("notification.monitor.pauseOverlay")) {
+					document.body.removeChild(document.getElementById("pauseFeedOverlay"));
+				}
 				document.getElementById("pauseFeed").value = "Pause & Buffer Feed";
 				document.getElementById("pauseFeed-fixed").value = "Pause & Buffer Feed";
 				document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {

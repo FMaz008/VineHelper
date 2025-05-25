@@ -292,7 +292,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("notification.monitor.blockNonEssentialListeners");
 	manageCheckboxSetting("notification.monitor.bump0ETV");
 	manageCheckboxSetting("notification.monitor.mouseoverPause");
-
+	manageCheckboxSetting("notification.monitor.pauseOverlay");
 	//Sliders
 	manageSlider("notification.screen.regular.volume");
 	manageSlider("notification.monitor.highlight.volume");
