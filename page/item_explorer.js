@@ -234,7 +234,8 @@ function serverProductsResponse(data) {
 	html += "<th rowspan='2'>Title</th>";
 	html += "<th rowspan='2'>ETV</th>";
 	html += "<th rowspan='2'>Queue</th>";
-	html += "<th rowspan='2'><div class='vh-icon-32 vh-icon-declined'></div></th>";
+	html +=
+		"<th rowspan='2'><a href='#' title='Unavailable' style='cursor: default;'><div class='vh-icon-32 vh-icon-declined'></div></a></th>";
 	html += "<th colspan='2'>Orders</th>";
 	html += "<th rowspan='2'>Date created</th>";
 	html += "<th rowspan='2'>Last broadcast</th>";
@@ -311,7 +312,7 @@ function serverProductsResponse(data) {
 		html += "<td>" + queueToAbbr(values.queue) + "</td>";
 		html +=
 			"<td style='text-align: center;'>" +
-			(values.unavailable ? "<div class='vh-icon-16 vh-icon-declined'></div>" : "") +
+			(values.unavailable ? "<a href='#' title='Unavailable' style='cursor: default;'><div class='vh-icon-16 vh-icon-declined'></div></a>" : "") +
 			"</td>";
 		html += "<td style='text-align: center;'>" + values.order_success + "</td>";
 		html += "<td style='text-align: center;'>" + values.order_failed + "</td>";
@@ -421,7 +422,7 @@ function serverProductsResponse(data) {
 						<td>
 							${variant.title}`;
 							if (tr.getAttribute("data-queue") !== "potluck") {
-								html += `<span>(<a href='#' class='open-variant-see-details' data-asin='${tr.getAttribute("data-asin")}' data-variant-asin='${variant.asin}' data-queue='${tr.getAttribute("data-queue")}' data-is-parent-asin='false' data-enrollment-guid='${tr.getAttribute("data-enrollment-guid")}'>see details</a>)</span>`;
+								html += ` <span>(<a href='#' class='open-variant-see-details' data-asin='${tr.getAttribute("data-asin")}' data-variant-asin='${variant.asin}' data-queue='${tr.getAttribute("data-queue")}' data-is-parent-asin='false' data-enrollment-guid='${tr.getAttribute("data-enrollment-guid")}'>see details</a>)</span>`;
 							}
 							html += `</td>
 						<td style='text-align: right;'>${variant.etv}</td>
