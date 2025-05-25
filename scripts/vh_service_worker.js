@@ -11,14 +11,12 @@ import {
 	dataStream as myStream,
 	notificationPushFunction,
 } from "./service_worker/NewItemStreamProcessing.js";
-import { CryptoKeys } from "../scripts/CryptoKeys.js";
 
 //Bind/Inject the service worker's functions to the dataStream.
 broadcastFunction(dataBuffering);
 notificationPushFunction(pushNotification);
 
 var i13n = new Internationalization();
-var cryptoKeys = new CryptoKeys();
 var Settings = new SettingsMgr();
 var notificationsData = {};
 var WSReconnectInterval = 0.2; //Firefox shutdown the background script after 30seconds.
@@ -329,10 +327,7 @@ function setReloadTimer() {
 				if (monitorTab) {
 					// Check if the window containing the monitor tab is minimized/unfocused
 					const window = await chrome.windows.get(monitorTab.windowId);
-					if (window.state === "minimized" || !window.focused) {
-						console.log(
-							`${new Date().toLocaleString()} - Found monitor tab in minimized/unfocused window, sending reload request`
-						);
+					if (window.state === "minimized" || !window.focused || !Settings.get("notification.monitor.tab")) {
 						socket.emit("reloadRequest", {
 							uuid: Settings.get("general.uuid", false),
 							fid: Settings.get("general.fingerprint.id", false),
@@ -340,7 +335,7 @@ function setReloadTimer() {
 						});
 					} else {
 						console.log(
-							`${new Date().toLocaleString()} - Monitor tab not active and window not minimized/unfocused. Skipping.`
+							`${new Date().toLocaleString()} - Tab mode with monitor tab not active and window not minimized/unfocused. Skipping.`
 						);
 					}
 				} else {
