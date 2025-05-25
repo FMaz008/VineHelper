@@ -135,6 +135,8 @@ class Tile {
 		m.content = `<img src="${this.getThumbnail()}" alt="Thumbnail" style="width: 100px; height: 100px;float: left;margin-right: 10px;margin-bottom: 10px;" />`;
 		m.content += `<br />${this.getTitle()}<br /><br /><table class="vh-table-variants">`;
 		m.content += `<tr><th>Variant info</th><th>ETV</th><th>Action</th></tr>`;
+		//Sort the variants by title
+		this.#variants.sort((a, b) => a.title.localeCompare(b.title));
 		for (let variant of this.#variants) {
 			m.content += `<tr id="vh-variant-${variant.asin}"><td>`;
 			try {

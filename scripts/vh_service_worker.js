@@ -384,7 +384,7 @@ function setReloadTimer() {
 	}
 
 	//Create an interval between 5 and 10 minutes to check with the server if a page needs to be refreshed
-	//const timer = 30 * 1000; //1 minute
+	//const timer = 30 * 1000; //30 seconds
 	const timer = Math.floor(Math.random() * (10 * 60 * 1000 - 5 * 60 * 1000 + 1) + 5 * 60 * 1000); //In milliseconds
 
 	displayTimer = setTimeout(() => {
