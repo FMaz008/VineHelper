@@ -343,6 +343,7 @@ class SettingsMgr {
 					autoTruncate: true,
 					autoTruncateLimit: 1000,
 					blockNonEssentialListeners: false,
+					mouseoverPause: false,
 					bump0ETV: true,
 					filterQueue: -1,
 					filterType: -1,

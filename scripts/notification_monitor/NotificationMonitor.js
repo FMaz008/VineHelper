@@ -21,6 +21,7 @@ const TYPE_PRICE_ASC = "price_asc";
 
 class NotificationMonitor extends MonitorCore {
 	_feedPaused = false;
+	#pausedByMouseoverSeeDetails = false;
 	_feedPausedAmountStored = 0;
 	_fetchingRecentItems;
 	_waitTimer; //Timer which wait a short delay to see if anything new is about to happen
@@ -1183,6 +1184,50 @@ class NotificationMonitor extends MonitorCore {
 		}
 	}
 
+	#eventClosestElementLocator(e, iconSelector, handler) {
+		const icon = e.target.closest(iconSelector);
+		if (icon) {
+			e.preventDefault();
+			handler(e, icon);
+			return true;
+		}
+
+		// Check if clicked on a parent link containing this icon type
+		const parentLink = e.target.closest(`a:has(${iconSelector})`);
+		if (parentLink && !e.target.closest(iconSelector)) {
+			e.preventDefault();
+			// Find the actual icon and handle it
+			const containedIcon = parentLink.querySelector(iconSelector);
+			if (containedIcon) {
+				handler(e, containedIcon);
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	#mouseoverHandler(e) {
+		//Handle the See Details button
+		if (
+			this.#eventClosestElementLocator(e, ".vh-btn-container", (event, icon) => {
+				e.preventDefault();
+				if (!this._feedPaused) {
+					this.#pausedByMouseoverSeeDetails = true;
+					document.getElementById("pauseFeed").click();
+				}
+			})
+		)
+			return;
+
+		if (this.#pausedByMouseoverSeeDetails) {
+			this.#pausedByMouseoverSeeDetails = false;
+			if (this._feedPaused) {
+				document.getElementById("pauseFeed").click();
+			}
+		}
+	}
+
 	/**
 	 * Handle all click events in the monitor
 	 * @param {Event} e - The click event
@@ -1193,32 +1238,10 @@ class NotificationMonitor extends MonitorCore {
 		// matching the parent link elements and prevent default there (bubbling events)
 
 		// Helper function to handle icon clicks and their parent links
-		const handleIconClick = (iconSelector, handler) => {
-			const icon = e.target.closest(iconSelector);
-			if (icon) {
-				e.preventDefault();
-				handler(e, icon);
-				return true;
-			}
-
-			// Check if clicked on a parent link containing this icon type
-			const parentLink = e.target.closest(`a:has(${iconSelector})`);
-			if (parentLink && !e.target.closest(iconSelector)) {
-				e.preventDefault();
-				// Find the actual icon and handle it
-				const containedIcon = parentLink.querySelector(iconSelector);
-				if (containedIcon) {
-					handler(e, containedIcon);
-					return true;
-				}
-			}
-
-			return false;
-		};
 
 		// Handle search icon
 		if (
-			handleIconClick(".vh-icon-search", (event, icon) => {
+			this.#eventClosestElementLocator(e, ".vh-icon-search", (event, icon) => {
 				window.open(icon.closest("a").href, "_blank");
 			})
 		)
@@ -1226,7 +1249,7 @@ class NotificationMonitor extends MonitorCore {
 
 		// Handle report icon
 		if (
-			handleIconClick(".vh-icon-report", (event, icon) => {
+			this.#eventClosestElementLocator(e, ".vh-icon-report", (event, icon) => {
 				this.#handleReportClick(event, icon);
 			})
 		)
@@ -1234,7 +1257,7 @@ class NotificationMonitor extends MonitorCore {
 
 		// Handle announcement icon
 		if (
-			handleIconClick(".vh-icon-announcement", (event, icon) => {
+			this.#eventClosestElementLocator(e, ".vh-icon-announcement", (event, icon) => {
 				if (this._settings.get("discord.active") && this._settings.get("discord.guid", false) != null) {
 					this.#handleBrendaClick(event, icon);
 				}
@@ -1244,7 +1267,7 @@ class NotificationMonitor extends MonitorCore {
 
 		// Handle pin icon
 		if (
-			handleIconClick(".vh-icon-pin, .vh-icon-unpin", (event, icon) => {
+			this.#eventClosestElementLocator(e, ".vh-icon-pin, .vh-icon-unpin", (event, icon) => {
 				if (this._settings.get("pinnedTab.active")) {
 					this.#handlePinClick(event, icon);
 				}
@@ -1254,7 +1277,7 @@ class NotificationMonitor extends MonitorCore {
 
 		// Handle hide icon
 		if (
-			handleIconClick(".vh-icon-hide", (event, icon) => {
+			this.#eventClosestElementLocator(e, ".vh-icon-hide", (event, icon) => {
 				this.#handleHideClick(event, icon);
 			})
 		)
@@ -1262,7 +1285,7 @@ class NotificationMonitor extends MonitorCore {
 
 		// Handle details icon
 		if (
-			handleIconClick(".vh-icon-question", (event, icon) => {
+			this.#eventClosestElementLocator(e, ".vh-icon-question", (event, icon) => {
 				this.#handleDetailsClick(event, icon);
 			})
 		)
@@ -1316,6 +1339,9 @@ class NotificationMonitor extends MonitorCore {
 		// Bind the click handler to the instance and then add as event listener
 		this._gridContainer.addEventListener("click", (e) => this.#clickHandler(e));
 
+		if (this._settings.get("notification.monitor.mouseoverPause")) {
+			this._gridContainer.addEventListener("mouseover", (e) => this.#mouseoverHandler(e));
+		}
 		if (reattachGridContainerOnly) {
 			return;
 		}
