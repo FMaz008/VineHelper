@@ -385,8 +385,14 @@ function setReloadTimer() {
 
 	//Create an interval between 5 and 10 minutes to check with the server if a page needs to be refreshed
 	//const timer = 30 * 1000; //30 seconds
-	const min = Settings.get("notification.autoload.min");
-	const max = Settings.get("notification.autoload.max");
+	let min = Settings.get("notification.autoload.min");
+	let max = Settings.get("notification.autoload.max");
+	if (!min || min > 5) {
+		min = 5;
+	}
+	if (!max || max > 10) {
+		max = 10;
+	}
 	const timer = Math.floor(Math.random() * (max * 60 * 1000 - min * 60 * 1000 + 1) + min * 60 * 1000); //In milliseconds
 
 	displayTimer = setTimeout(() => {
