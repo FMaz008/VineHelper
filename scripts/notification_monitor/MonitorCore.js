@@ -316,7 +316,6 @@ class MonitorCore {
 	}
 
 	async fetchAutoLoadUrl(url, queue) {
-		console.log("fetchAutoLoadUrl", url);
 		//Fetch the url
 		const response = await fetch(url);
 		const html = await response.text();

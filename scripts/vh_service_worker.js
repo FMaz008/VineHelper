@@ -245,9 +245,9 @@ function connectWebSocket() {
 		console.log(`${new Date().toLocaleString()} - Reloading page: ${queue} page ${page}`);
 
 		if (Settings.get("notification.monitor.tab")) {
-			await openTab(url, queueTable[queue]);
+			await openTab(url);
 		} else {
-			await fetchUrl(url);
+			await fetchUrl(url, queueTable[queue]);
 		}
 	});
 
