@@ -197,7 +197,19 @@ function queryDB(page = 1) {
 			displayError("Error fetching data from server: " + error.message);
 		});
 }
-
+function openSeeDetails(asin, queue, isParentAsin, enrollmentGuid, variantAsin = null) {
+	if (variantAsin !== null) {
+		window.open(
+			`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${isParentAsin};${enrollmentGuid};${variantAsin}`,
+			"_blank"
+		);
+	} else {
+		window.open(
+			`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${isParentAsin};${enrollmentGuid}`,
+			"_blank"
+		);
+	}
+}
 function serverProductsResponse(data) {
 	if (data["invalid_uuid"] == true) {
 		displayError("Invalid UUID or Patreon subscription insufficient.");
@@ -268,7 +280,7 @@ function serverProductsResponse(data) {
 			searchUrl = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search_url_slug}`;
 		}
 
-		html = "<tr>";
+		html = `<tr data-asin='${values.asin}' data-queue='${values.queue}' data-is-parent-asin='${values.is_parent_asin}' data-enrollment-guid='${values.enrollment_guid}' data-title='${values.title}' data-thumbnail='${values.img_url}'>`;
 		html += "<td class='asin'>";
 		html += `<div class='thumbnailContainer'><img src='${values.img_url}'><div class='iconsContainer'>`;
 		html += `<a href='${searchUrl}' target='_blank'><div class='vh-icon-16 vh-icon-search' style='margin-left: 5px;${searchStyle}'></div></a>`;
@@ -291,6 +303,9 @@ function serverProductsResponse(data) {
 		html += "</td>";
 		html += "<td>";
 		html += values.title;
+		if (values.queue !== "potluck") {
+			html += `<br /><span>(<a href='#' class='open-see-details' data-asin='${values.asin}' data-queue='${values.queue}' data-is-parent-asin='${values.is_parent_asin}' data-enrollment-guid='${values.enrollment_guid}'>see details</a>)</span>`;
+		}
 		html += `</td>`;
 		html += "<td style='text-align: right;'>" + (values.etv == null ? "N/A" : values.etv) + "</td>";
 		html += "<td>" + queueToAbbr(values.queue) + "</td>";
@@ -334,6 +349,20 @@ function serverProductsResponse(data) {
 		});
 	}
 
+	//Add event listener to the see details link
+	const seeDetails = document.querySelectorAll(".open-see-details");
+	seeDetails.forEach((item) => {
+		item.addEventListener("click", (event) => {
+			event.preventDefault();
+			openSeeDetails(
+				item.getAttribute("data-asin"),
+				item.getAttribute("data-queue"),
+				item.getAttribute("data-is-parent-asin"),
+				item.getAttribute("data-enrollment-guid")
+			);
+		});
+	});
+
 	//Add event listener to the load variants link
 	const loadVariants = document.querySelectorAll(".load-variants");
 	loadVariants.forEach((item) => {
@@ -373,20 +402,57 @@ function serverProductsResponse(data) {
 						row.remove();
 					});
 
-					//Create the new rows.
-					for (const variant of data.variants) {
-						const html = `<tr class='variant-row-${asin}' style='font-size: 8pt;'>
+					//Sort the variants by title
+					data.variants.sort((a, b) => a.title.localeCompare(b.title));
+
+					if (data.variants.length === 0) {
+						tr.insertAdjacentHTML(
+							"afterend",
+							`<tr><td colspan='9' style='text-align: center;'>Variant(s) not discovered yet.</td></tr>`
+						);
+					} else {
+						//Create the new rows.
+						for (const variant of data.variants) {
+							let html = `<tr class='variant-row-${asin}' style='font-size: 8pt;'>
 						<td>
 							${variant.asin}
 							<a href='https://www.amazon.${i13n.getDomainTLD()}/dp/${variant.asin}' target='_blank'><div class='vh-icon-12 vh-icon-newtab' style='margin-left: 5px;'></div></a>	
 						</td>
-						<td>${variant.title}</td>
+						<td>
+							${variant.title}`;
+							if (tr.getAttribute("data-queue") !== "potluck") {
+								html += `<span>(<a href='#' class='open-variant-see-details' data-asin='${tr.getAttribute("data-asin")}' data-variant-asin='${variant.asin}' data-queue='${tr.getAttribute("data-queue")}' data-is-parent-asin='false' data-enrollment-guid='${tr.getAttribute("data-enrollment-guid")}'>see details</a>)</span>`;
+							}
+							html += `</td>
 						<td style='text-align: right;'>${variant.etv}</td>
 						<td colspan='6'></td>
 					</tr>`;
 
-						//Insert the HTML after the tr
-						tr.insertAdjacentHTML("afterend", html);
+							//Insert the HTML after the tr
+							tr.insertAdjacentHTML("afterend", html);
+						}
+
+						//Clear all existing event listeners
+						const seeDetailsVariants = document.querySelectorAll(".open-variant-see-details");
+						seeDetailsVariants.forEach((item) => {
+							item.removeEventListener("click", (event) => {
+								event.preventDefault();
+							});
+						});
+
+						//Add event listener to the see details link
+						seeDetailsVariants.forEach((item) => {
+							item.addEventListener("click", (event) => {
+								event.preventDefault();
+								openSeeDetails(
+									item.getAttribute("data-asin"),
+									item.getAttribute("data-queue"),
+									item.getAttribute("data-is-parent-asin"),
+									item.getAttribute("data-enrollment-guid"),
+									item.getAttribute("data-variant-asin")
+								);
+							});
+						});
 					}
 				});
 		});

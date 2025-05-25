@@ -1,7 +1,7 @@
 import { Environment } from "./Environment.js";
 var env = new Environment();
 
-async function openDynamicModal(asin, queue, isParent, enrollmentGUID, autoClick = true) {
+async function openDynamicModal(asin, queue, isParent, enrollmentGUID, variantAsin = null, autoClick = true) {
 	if (!env.data.marketplaceId || !env.data.customerId) {
 		console.error("Failed to fetch opts/vvp-context data");
 	}
@@ -22,7 +22,7 @@ async function openDynamicModal(asin, queue, isParent, enrollmentGUID, autoClick
 		recommendationId = env.data.marketplaceId + "#" + asin + "#vine.enrollment." + enrollmentGUID;
 	}
 
-	const btn = drawButton(asin, isParent, recommendationType, recommendationId);
+	const btn = drawButton(asin, isParent, recommendationType, recommendationId, variantAsin);
 
 	//Dispatch a click event on the button
 	if (autoClick) {
@@ -32,7 +32,7 @@ async function openDynamicModal(asin, queue, isParent, enrollmentGUID, autoClick
 	return btn;
 }
 
-function drawButton(asin, isParent, recommendationType, recommendationId) {
+function drawButton(asin, isParent, recommendationType, recommendationId, variantAsin = null) {
 	//Generate the dynamic modal button
 	const container1 = document.createElement("span");
 	env.data.gridDOM.regular.appendChild(container1);
@@ -44,8 +44,8 @@ function drawButton(asin, isParent, recommendationType, recommendationId) {
 	container2.appendChild(btn);
 	btn.type = "submit";
 	btn.id = "dynamicModalBtn-" + asin;
-	btn.dataset.asin = asin;
-	btn.dataset.isParentAsin = isParent;
+	btn.dataset.asin = variantAsin ? variantAsin : asin;
+	btn.dataset.isParentAsin = variantAsin ? false : isParent;
 	btn.dataset.recommendationType = recommendationType;
 	btn.dataset.recommendationId = recommendationId;
 

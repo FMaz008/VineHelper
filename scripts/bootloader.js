@@ -1403,7 +1403,7 @@ window.addEventListener("message", async function (event) {
 		//Check the current URL for the following pattern:
 		///vine/vine-items#openModal;${asin};${is_parent_asin};${enrollment_guid}
 		const currentUrl = window.location.href;
-		let regex = /^[^#]+#openModal;(.+);(.+);(.+);(.+)$/;
+		let regex = /^[^#]+#openModal;(.+?);(.+?);(.+?);(.+?)(?:;(.+))?$/;
 		let arrMatches = currentUrl.match(regex);
 		if (arrMatches != null) {
 			logger.add("BOOT: Open modal URL detected.");
@@ -1412,8 +1412,8 @@ window.addEventListener("message", async function (event) {
 			const queue = arrMatches[2];
 			const isParentAsin = arrMatches[3];
 			const enrollmentGUID = arrMatches[4];
-
-			openDynamicModal(asin, queue, isParentAsin, enrollmentGUID);
+			const variantAsin = arrMatches[5];
+			openDynamicModal(asin, queue, isParentAsin, enrollmentGUID, variantAsin);
 		}
 	}
 });
