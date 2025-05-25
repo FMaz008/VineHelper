@@ -337,6 +337,7 @@ class SettingsMgr {
 				autoload: {
 					min: 5,
 					max: 10,
+					tab: true,
 				},
 				monitor: {
 					"24hrsFormat": false,

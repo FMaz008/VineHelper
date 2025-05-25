@@ -332,7 +332,40 @@
 <fieldset>
 	<legend>Pages Auto-Load</legend>
 	<div class="setting-container">
-		<div class="range_container">
+		<label for="notification.autoLoad.tab">
+			<table style="width: 200px">
+				<tr>
+					<th colspan="3">
+						Auto-Load behavior
+						<div class="vh-toolbar-icon" style="margin-left: 5px"></div>
+					</th>
+				</tr>
+				<tr>
+					<td style="width: 30px; padding-left: 10px; text-align: right">Silent</td>
+					<td style="width: 30px; text-align: center">
+						<input type="checkbox" role="switch" name="notification.autoLoad.tab" value="1" />
+					</td>
+					<td>Open tab</td>
+				</tr>
+			</table>
+		</label>
+		<div class="setting-summary">
+			<div class="vh-toolbar-icon vh-icon-question"></div>
+			The auto-load behavior can either load a page in a new tab, which will be closed promptly, or load the page
+			in silent mode, in the background, without opening a tab.
+			<br />
+			<ul>
+				<li>Open tab ensure the load is genuine and allow Amazon's telemetry to work properly.</li>
+				<li>
+					Silent will simply get the data, but won't allow other scripts to load, which can be suspicious to
+					Amazon.
+				</li>
+			</ul>
+		</div>
+	</div>
+	<strong>Interval</strong><br /><br />
+	<div class="setting-container">
+		<div class="range_container" style="clear: both">
 			<div class="sliders_control">
 				<input id="fromSlider" class="dualslider" type="range" value="5" min="1" max="10" />
 				<input id="toSlider" class="dualslider" type="range" value="10" min="1" max="10" />

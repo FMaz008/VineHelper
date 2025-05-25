@@ -14,6 +14,7 @@ class ServerCom {
 	setETVFromASINCallback = null;
 	setTierFromASINCallback = null;
 	addVariantCallback = null;
+	fetchAutoLoadUrlCallback = null;
 
 	constructor() {
 		//Message from within the context of the extension
@@ -51,6 +52,10 @@ class ServerCom {
 
 	setAddVariantCallback(callback) {
 		this.addVariantCallback = callback;
+	}
+
+	setFetchAutoLoadUrlCallback(callback) {
+		this.fetchAutoLoadUrlCallback = callback;
 	}
 
 	/**
@@ -108,6 +113,9 @@ class ServerCom {
 		}
 		if (data.type == "newVariants") {
 			this.addVariantCallback(data);
+		}
+		if (data.type == "fetchAutoLoadUrl") {
+			this.fetchAutoLoadUrlCallback(data.url, data.queue);
 		}
 	}
 

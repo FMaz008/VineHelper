@@ -293,6 +293,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("notification.monitor.bump0ETV");
 	manageCheckboxSetting("notification.monitor.mouseoverPause");
 	manageCheckboxSetting("notification.monitor.pauseOverlay");
+	manageCheckboxSetting("notification.autoLoad.tab");
 	//Sliders
 	manageSlider("notification.screen.regular.volume");
 	manageSlider("notification.monitor.highlight.volume");

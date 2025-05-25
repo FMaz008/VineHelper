@@ -71,6 +71,7 @@ class MonitorCore {
 		} else {
 			this._serverComMgr.setAddVariantCallback(() => {}); //Do nothing for v2
 		}
+		this._serverComMgr.setFetchAutoLoadUrlCallback(this.fetchAutoLoadUrl.bind(this));
 
 		this._itemsMgr = new ItemsMgr(this._settings);
 
@@ -312,6 +313,66 @@ class MonitorCore {
 			// Insert the notification at the top
 			container.insertBefore(notif, container.firstChild);
 		});
+	}
+
+	async fetchAutoLoadUrl(url, queue) {
+		console.log("fetchAutoLoadUrl", url);
+		//Fetch the url
+		const response = await fetch(url);
+		const html = await response.text();
+
+		//Parse the HTML
+		const parser = new DOMParser();
+		const doc = parser.parseFromString(html, "text/html");
+
+		//Get all the tiles
+		const tiles = doc.querySelectorAll("#vvp-items-grid .vvp-item-tile");
+		const items = [];
+		for (const tile of tiles) {
+			const input = tile.querySelector("input");
+			const recommendationId = input.dataset.recommendationId;
+			//Match the string following vine.enrollment.
+			const enrollment_guid = recommendationId.match(/vine\.enrollment\.(.*)/)[1];
+			const asin = input.dataset.asin;
+			const title = tile.querySelector(".a-truncate-full").textContent;
+			const is_parent_asin = input.dataset.isParentAsin;
+			const thumbnail = tile.querySelector("img").src;
+
+			items.push({
+				asin: asin,
+				title: title,
+				is_parent_asin: is_parent_asin,
+				enrollment_guid: enrollment_guid,
+				thumbnail: thumbnail,
+			});
+		}
+
+		//Forward the items to the server
+		if (items.length > 0) {
+			const content = {
+				api_version: 5,
+				app_version: chrome.runtime.getManifest().version,
+				country: this._i13nMgr.getCountryCode(),
+				uuid: await this._settings.get("general.uuid", false),
+				fid: await this._settings.get("general.fingerprint.id", false),
+				action: "get_info",
+				tier: this._tierMgr.getTier(),
+				queue: queue,
+				items: items,
+				request_variants: false,
+				s2: await this._cryptoKeys.signData(items),
+			};
+			content.s = await this._cryptoKeys.signData(content);
+			content.pk = await this._cryptoKeys.getExportedPublicKey();
+
+			fetch(this._env.getAPIUrl(), {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(content),
+			}).finally(() => {
+				console.log(`${items.length} items relayed to the server.`);
+			});
+		}
 	}
 }
 

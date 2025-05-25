@@ -11,12 +11,14 @@ import {
 	dataStream as myStream,
 	notificationPushFunction,
 } from "./service_worker/NewItemStreamProcessing.js";
+import { CryptoKeys } from "../scripts/CryptoKeys.js";
 
 //Bind/Inject the service worker's functions to the dataStream.
 broadcastFunction(dataBuffering);
 notificationPushFunction(pushNotification);
 
 var i13n = new Internationalization();
+var cryptoKeys = new CryptoKeys();
 var Settings = new SettingsMgr();
 var notificationsData = {};
 var WSReconnectInterval = 0.2; //Firefox shutdown the background script after 30seconds.
@@ -108,44 +110,6 @@ async function processBroadcastMessage(data) {
 				console.error("Unexpected error closing tab:", error);
 			}
 		}
-	}
-}
-
-async function closeTab(tabId) {
-	try {
-		// Firefox requires a different approach for tab removal
-		if (typeof browser !== "undefined") {
-			// Firefox
-			return new Promise(async (resolve) => {
-				try {
-					await browser.tabs.get(tabId);
-					await browser.tabs.remove(tabId);
-					resolve(true);
-				} catch (error) {
-					resolve(false);
-				}
-			});
-		} else {
-			// Chrome
-			return new Promise((resolve) => {
-				chrome.tabs.get(tabId, (tab) => {
-					if (chrome.runtime.lastError) {
-						resolve(false);
-						return;
-					}
-
-					chrome.tabs.remove(tabId, () => {
-						if (chrome.runtime.lastError) {
-							resolve(false);
-						} else {
-							resolve(true);
-						}
-					});
-				});
-			});
-		}
-	} catch (error) {
-		throw error;
 	}
 }
 
@@ -281,35 +245,11 @@ function connectWebSocket() {
 		const queueTable = { AI: "encore", AFA: "last_chance", RFY: "potluck" };
 		const url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=${queueTable[queue]}&page=${page}#AR`;
 		console.log(`${new Date().toLocaleString()} - Reloading page: ${queue} page ${page}`);
-		if (currentTabId !== null) {
-			//Close tab id
-			chrome.tabs.remove(currentTabId);
-		}
-		//Find the windows id containing the notification monitor with a url containing #monitor
-		if (chrome.windows) {
-			const windows = await chrome.windows.getAll();
-			outerLoop: for (const window of windows) {
-				//List all tabs in the window
-				const tabs = await chrome.tabs.query({ windowId: window.id });
-				for (const tab of tabs) {
-					if (tab.url.includes("#monitor")) {
-						if (typeof browser !== "undefined") {
-							// Firefox
-							browser.tabs
-								.create({ url, windowId: window.id, active: false })
-								.then((newTab) => {
-									currentTabId = newTab.id;
-								})
-								.catch((error) => {});
-						} else {
-							// Chrome
-							const newTab = chrome.tabs.create({ url, windowId: window.id, active: false });
-							currentTabId = newTab.id;
-						}
-						break outerLoop;
-					}
-				}
-			}
+
+		if (Settings.get("notification.monitor.tab")) {
+			await openTab(url, queueTable[queue]);
+		} else {
+			await fetchUrl(url);
 		}
 	});
 
@@ -331,43 +271,8 @@ function connectWebSocket() {
 }
 
 //#####################################################
-//## BUSINESS LOGIC
+//## AUTO-LOAD
 //#####################################################
-
-init();
-
-//Load the settings, if no settings, try again in 10 sec
-async function init() {
-	await retrieveSettings();
-
-	// Clear any existing alarms first
-	await chrome.alarms.clearAll();
-
-	//Check for new items (if the option is disabled the method will return)
-	chrome.alarms.create("websocketReconnect", { periodInMinutes: WSReconnectInterval });
-
-	if (Settings.get("notification.active")) {
-		//Firefox sometimes re-initialize the background script.
-		//Do not attempt to recreate a new websocket if this method is called when
-		//a websocket already exist.
-		if (!socket?.connected) {
-			connectWebSocket();
-		}
-
-		setReloadTimer();
-	}
-}
-
-async function retrieveSettings() {
-	//Wait for the settings to be loaded.
-	await Settings.waitForLoad();
-
-	//Set the locale
-	const countryCode = Settings.get("general.country");
-	if (countryCode != null) {
-		i13n.setCountryCode(countryCode);
-	}
-}
 
 let displayTimer = null;
 let reloadTimer = null;
@@ -384,7 +289,6 @@ function setReloadTimer() {
 	}
 
 	//Create an interval between 5 and 10 minutes to check with the server if a page needs to be refreshed
-	//const timer = 30 * 1000; //30 seconds
 	let min = Settings.get("notification.autoload.min");
 	let max = Settings.get("notification.autoload.max");
 	if (!min || min > 5) {
@@ -393,6 +297,7 @@ function setReloadTimer() {
 	if (!max || max > 10) {
 		max = 10;
 	}
+	//const timer = 30 * 1000; //30 seconds
 	const timer = Math.floor(Math.random() * (max * 60 * 1000 - min * 60 * 1000 + 1) + min * 60 * 1000); //In milliseconds
 
 	displayTimer = setTimeout(() => {
@@ -452,6 +357,130 @@ function setReloadTimer() {
 		}
 		setReloadTimer(); //Create a new timer
 	}, timer);
+}
+
+//Open a tab with the given url
+async function openTab(url) {
+	if (currentTabId !== null) {
+		//Close tab id
+		chrome.tabs.remove(currentTabId);
+	}
+	//Find the windows id containing the notification monitor with a url containing #monitor
+	if (chrome.windows) {
+		const windows = await chrome.windows.getAll();
+		outerLoop: for (const window of windows) {
+			//List all tabs in the window
+			const tabs = await chrome.tabs.query({ windowId: window.id });
+			for (const tab of tabs) {
+				if (tab.url.includes("#monitor")) {
+					if (typeof browser !== "undefined") {
+						// Firefox
+						browser.tabs
+							.create({ url, windowId: window.id, active: false })
+							.then((newTab) => {
+								currentTabId = newTab.id;
+							})
+							.catch((error) => {});
+					} else {
+						// Chrome
+						const newTab = chrome.tabs.create({ url, windowId: window.id, active: false });
+						currentTabId = newTab.id;
+					}
+					break outerLoop;
+				}
+			}
+		}
+	}
+}
+
+async function closeTab(tabId) {
+	try {
+		// Firefox requires a different approach for tab removal
+		if (typeof browser !== "undefined") {
+			// Firefox
+			return new Promise(async (resolve) => {
+				try {
+					await browser.tabs.get(tabId);
+					await browser.tabs.remove(tabId);
+					resolve(true);
+				} catch (error) {
+					resolve(false);
+				}
+			});
+		} else {
+			// Chrome
+			return new Promise((resolve) => {
+				chrome.tabs.get(tabId, (tab) => {
+					if (chrome.runtime.lastError) {
+						resolve(false);
+						return;
+					}
+
+					chrome.tabs.remove(tabId, () => {
+						if (chrome.runtime.lastError) {
+							resolve(false);
+						} else {
+							resolve(true);
+						}
+					});
+				});
+			});
+		}
+	} catch (error) {
+		throw error;
+	}
+}
+
+//Fetch the url, read the items and forward them to the server
+async function fetchUrl(url, queue) {
+	//Fetch the tabid of a notification monitor tab
+	const allTabs = await chrome.tabs.query({});
+	const notificationMonitorTab = allTabs.find((tab) => tab.url && tab.url.includes("#monitor"));
+	const tabId = notificationMonitorTab ? notificationMonitorTab.id : null;
+
+	//Send a message to the notification monitor tab to fetch the url
+	if (tabId) {
+		chrome.tabs.sendMessage(tabId, { type: "fetchAutoLoadUrl", url: url, queue: queue });
+	}
+}
+
+//#####################################################
+//## BUSINESS LOGIC
+//#####################################################
+
+init();
+
+//Load the settings, if no settings, try again in 10 sec
+async function init() {
+	await retrieveSettings();
+
+	// Clear any existing alarms first
+	await chrome.alarms.clearAll();
+
+	//Check for new items (if the option is disabled the method will return)
+	chrome.alarms.create("websocketReconnect", { periodInMinutes: WSReconnectInterval });
+
+	if (Settings.get("notification.active")) {
+		//Firefox sometimes re-initialize the background script.
+		//Do not attempt to recreate a new websocket if this method is called when
+		//a websocket already exist.
+		if (!socket?.connected) {
+			connectWebSocket();
+		}
+
+		setReloadTimer();
+	}
+}
+
+async function retrieveSettings() {
+	//Wait for the settings to be loaded.
+	await Settings.waitForLoad();
+
+	//Set the locale
+	const countryCode = Settings.get("general.country");
+	if (countryCode != null) {
+		i13n.setCountryCode(countryCode);
+	}
 }
 
 function processLast100Items(arrProducts) {
