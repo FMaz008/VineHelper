@@ -27,19 +27,31 @@ window.fetch = async (...args) => {
 			lastParent = extHelper_LastParentVariant.recommendationId.match(regex)[1];
 		}
 
-		let data = {
-			status: "success",
-			error: null,
-			parent_asin: lastParent,
-			asin: asin,
-		};
+		let data = {};
 		if (extHelper_responseData.error !== null) {
 			data = {
 				status: "failed",
-				error: extHelper_responseData.error, //CROSS_BORDER_SHIPMENT, SCHEDULED_DELIVERY_REQUIRED, ITEM_NOT_IN_ENROLLMENT
+				error: extHelper_responseData.error, //CROSS_BORDER_SHIPMENT, SCHEDULED_DELIVERY_REQUIRED, ITEM_NOT_IN_ENROLLMENT, ITEM_ALREADY_ORDERED
 				parent_asin: lastParent,
 				asin: asin,
 			};
+		} else {
+			if (extHelper_responseData.result?.orderId) {
+				data = {
+					status: "success",
+					error: null,
+					//orderId: extHelper_responseData.result.orderId,
+					parent_asin: lastParent,
+					asin: asin,
+				};
+			} else {
+				data = {
+					status: "failed",
+					error: "No orderId received back",
+					parent_asin: lastParent,
+					asin: asin,
+				};
+			}
 		}
 
 		window.postMessage(
@@ -153,7 +165,7 @@ window.fetch = async (...args) => {
 				//If the country code is not jp or si:
 				if (countryCode !== "jp" && countryCode !== "sg") {
 					//Replace all non-standard characters
-					newValue = variation.dimensions[key].replace(/[^a-zA-Z0-9\][(){}/.,\-"'¼½¾+&%# ]/g, "?");
+					newValue = variation.dimensions[key].replace(/[^a-zA-Z0-9\][(){}/.,\-"'¼½¾+&%# ]/g, "_");
 					if (newValue !== variation.dimensions[key]) {
 						variation.dimensions[key] = newValue;
 						fixed++;
