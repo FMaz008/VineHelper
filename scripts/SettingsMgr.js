@@ -338,6 +338,8 @@ class SettingsMgr {
 					min: 5,
 					max: 10,
 					tab: true,
+					hourStart: "03:00",
+					hourEnd: "17:00",
 				},
 				monitor: {
 					"24hrsFormat": false,

@@ -293,7 +293,10 @@ async function initiateSettings() {
 	manageCheckboxSetting("notification.monitor.bump0ETV");
 	manageCheckboxSetting("notification.monitor.mouseoverPause");
 	manageCheckboxSetting("notification.monitor.pauseOverlay");
-	manageCheckboxSetting("notification.autoLoad.tab");
+	manageCheckboxSetting("notification.autoload.tab");
+	manageTimeSetting("notification.autoload.hourStart");
+	manageTimeSetting("notification.autoload.hourEnd");
+
 	//Sliders
 	manageSlider("notification.screen.regular.volume");
 	manageSlider("notification.monitor.highlight.volume");
@@ -1255,6 +1258,19 @@ function manageInputText(key) {
 		throw new Error("Keybinding input name='" + key + "' does not exist");
 	}
 	obj.value = val == null ? "" : val;
+
+	obj.addEventListener("change", async function () {
+		Settings.set(key, obj.value);
+	});
+}
+
+function manageTimeSetting(key) {
+	const val = Settings.get(key);
+	const obj = document.querySelector(`input[name='${key}']`);
+	if (obj == null) {
+		throw new Error("Time input name='" + key + "' does not exist");
+	}
+	obj.value = val == null ? "03:00" : val;
 
 	obj.addEventListener("change", async function () {
 		Settings.set(key, obj.value);

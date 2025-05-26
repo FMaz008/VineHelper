@@ -244,7 +244,7 @@ function connectWebSocket() {
 		const url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=${queueTable[queue]}&page=${page}#AR`;
 		console.log(`${new Date().toLocaleString()} - Reloading page: ${queue} page ${page}`);
 
-		if (Settings.get("notification.monitor.tab")) {
+		if (Settings.get("notification.autoload.tab")) {
 			await openTab(url);
 		} else {
 			await fetchUrl(url, queueTable[queue]);
@@ -284,6 +284,52 @@ function setReloadTimer() {
 	if (reloadTimer) {
 		clearTimeout(reloadTimer);
 		reloadTimer = null;
+	}
+
+	//Check if the current time is within the auto-load time range
+	const now = new Date();
+	const start = new Date();
+	const startTime = Settings.get("notification.autoload.hourStart"); //03:00
+	const [startHour, startMinute] = startTime.split(":").map(Number);
+	start.setHours(startHour);
+	start.setMinutes(startMinute);
+	start.setSeconds(0);
+
+	const end = new Date();
+	const endTime = Settings.get("notification.autoload.hourEnd"); //17:00
+	const [endHour, endMinute] = endTime.split(":").map(Number);
+	end.setHours(endHour);
+	end.setMinutes(endMinute);
+	end.setSeconds(0);
+
+	//Calculate the number of hours between the start and end times
+	const hoursBetween = end.getTime() - start.getTime();
+	const hours = Math.abs(hoursBetween / (1000 * 60 * 60));
+	if (hours < 8) {
+		console.log(
+			`${new Date().toLocaleString()} - Auto-load time range is less than 8 hours, setting to 3am to 17hrs`
+		);
+		//Make the start time 3am and the end time 17hrs
+		start.setHours(3);
+		end.setHours(17);
+	}
+
+	// Handle case where start time is in the previous day (e.g., 23:00 to 09:00)
+	if (start > end) {
+		// If current time is before end time, we're in the next day
+		if (now < end) {
+			start.setDate(start.getDate() - 1);
+		}
+		// If current time is after start time, we're still in the same day
+		else if (now >= start) {
+			end.setDate(end.getDate() + 1);
+		}
+	}
+
+	if (now < start || now > end) {
+		console.log(`${new Date().toLocaleString()} - Auto-load is not active at this time`);
+		reloadTimer = setTimeout(reloadTimer, 1000 * 60 * 15); //15 minutes
+		return;
 	}
 
 	//Create an interval between 5 and 10 minutes to check with the server if a page needs to be refreshed
