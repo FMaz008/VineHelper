@@ -169,7 +169,15 @@ function generateGraph(canvas, data) {
 					},
 				},
 			},
+			interaction: {
+				mode: "index", // Show tooltip for all elements at the same index (X-axis)
+				intersect: false, // Allow hover even if not directly intersecting the bar
+			},
 			plugins: {
+				tooltip: {
+					mode: "index",
+					intersect: false,
+				},
 				legend: {
 					display: true,
 				},
@@ -238,7 +246,15 @@ function generateStackedGraph(canvas, dataRFY, dataAFA, dataAI) {
 					},
 				},
 			},
+			interaction: {
+				mode: "index", // Show tooltip for all elements at the same index (X-axis)
+				intersect: false, // Allow hover even if not directly intersecting the bar
+			},
 			plugins: {
+				tooltip: {
+					mode: "index",
+					intersect: false,
+				},
 				legend: {
 					display: true,
 				},
