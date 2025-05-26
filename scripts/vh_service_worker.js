@@ -328,7 +328,13 @@ function setReloadTimer() {
 
 	if (now < start || now > end) {
 		console.log(`${new Date().toLocaleString()} - Auto-load is not active at this time`);
-		reloadTimer = setTimeout(reloadTimer, 1000 * 60 * 15); //15 minutes
+		reloadTimer = setTimeout(
+			() => {
+				reloadTimer = null;
+				setReloadTimer();
+			},
+			1000 * 60 * 15
+		); //15 minutes
 		return;
 	}
 
