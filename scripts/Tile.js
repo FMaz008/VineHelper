@@ -147,7 +147,7 @@ class Tile {
 			} catch (e) {
 				m.content += `(No info available)<br />`;
 			}
-			m.content += `</td><td width="50px">${variant.etv === null ? "" : variant.etv}</td><td width="150px">`;
+			m.content += `</td><td width="50px" class="etv">${variant.etv === null ? "" : variant.etv}</td><td width="150px">`;
 			m.content += `<a href="#" class="vh-link-variant" data-asin="${variant.asin}">View ${variant.asin}</a>`;
 			m.content += `</td></tr>`;
 		}
@@ -197,10 +197,16 @@ class Tile {
 			.then((response) => response.json())
 			.then(async function (response) {
 				for (let variant of response.items) {
-					if (variant.unavailable == 1) {
-						const row = document.querySelector(`#vh-variant-${variant.asin}`);
-						if (row) {
+					const row = document.querySelector(`#vh-variant-${variant.asin}`);
+					if (row) {
+						if (variant.unavailable == 1) {
 							row.style.textDecoration = "line-through";
+						}
+						if (variant.etv) {
+							const etv = row.querySelector(".etv");
+							if (etv) {
+								etv.textContent = variant.etv;
+							}
 						}
 					}
 				}
