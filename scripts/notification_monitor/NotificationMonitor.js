@@ -715,6 +715,13 @@ class NotificationMonitor extends MonitorCore {
 			etvObj.dataset.etvMax = etv;
 		}
 
+		// Ensure etvMin is always less than or equal to etvMax
+		if (parseFloat(etvObj.dataset.etvMin) > parseFloat(etvObj.dataset.etvMax)) {
+			const temp = etvObj.dataset.etvMin;
+			etvObj.dataset.etvMin = etvObj.dataset.etvMax;
+			etvObj.dataset.etvMax = temp;
+		}
+
 		//Display for formatted ETV in the toolbar
 		if (etvObj.dataset.etvMin != "" && etvObj.dataset.etvMax != "") {
 			etvObj.style.display = this._monitorV2 ? "inline-block" : "block";
@@ -1507,7 +1514,7 @@ class NotificationMonitor extends MonitorCore {
 				document.getElementById("pauseFeed").value = "Resume Feed (0)";
 				document.getElementById("pauseFeed-fixed").value = "Resume Feed (0)";
 
-				if(this._settings.get("notification.monitor.pauseOverlay")){
+				if (this._settings.get("notification.monitor.pauseOverlay")) {
 					//Create an overlay with a red background and a 5% opacity
 					const overlay = document.createElement("div");
 					overlay.id = "pauseFeedOverlay";
