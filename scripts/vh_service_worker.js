@@ -346,7 +346,7 @@ function isTimeWithinRange() {
 	return true;
 }
 
-function setReloadTimer() {
+async function setReloadTimer() {
 	// Clear any existing timers first
 	if (displayTimer) {
 		clearTimeout(displayTimer);
@@ -361,6 +361,26 @@ function setReloadTimer() {
 		console.log(`${new Date().toLocaleString()} - Auto-load is not active at this time`);
 		resetReloadTimer(1000 * 60 * 15); //15 minutes
 		return;
+	}
+
+	//Send a websocket request
+	if (
+		socket?.connected &&
+		i13n.getCountryCode() &&
+		!Settings.get("thorvarium.mobileandroid") &&
+		!Settings.get("thorvarium.mobileios") &&
+		chrome.windows //Mobile devices do not support chrome.windows
+	) {
+		const monitorTabWindowId = await findMonitorTab(Settings.get("notification.monitor.tab"));
+		if (monitorTabWindowId) {
+			socket.emit("reloadRequest", {
+				uuid: Settings.get("general.uuid", false),
+				fid: Settings.get("general.fingerprint.id", false),
+				countryCode: i13n.getCountryCode(),
+			});
+		} else {
+			console.log(`${new Date().toLocaleString()} - No eligiblemonitor tab found, skipping.`);
+		}
 	}
 
 	//Create an interval between 5 and 10 minutes to check with the server if a page needs to be refreshed
@@ -384,51 +404,28 @@ function setReloadTimer() {
 	}, 500);
 
 	reloadTimer = setTimeout(async () => {
-		//Send a websocket request
-		if (
-			socket?.connected &&
-			i13n.getCountryCode() &&
-			!Settings.get("thorvarium.mobileandroid") &&
-			!Settings.get("thorvarium.mobileios")
-		) {
-			// First check for active, focused monitor tab
-			const activeTabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-			const activeMonitorTab = activeTabs.find((tab) => tab.url && tab.url.includes("#monitor"));
-
-			// If no active monitor tab, check for any monitor tab in any window
-			if (!activeMonitorTab) {
-				//Check if there is a (non-active)monitor tab in any tab
-				const allTabs = await chrome.tabs.query({});
-				const monitorTab = allTabs.find((tab) => tab.url && tab.url.includes("#monitor"));
-
-				if (monitorTab) {
-					// Check if the window containing the monitor tab is minimized/unfocused
-					const window = await chrome.windows.get(monitorTab.windowId);
-					if (window.state === "minimized" || !window.focused || !Settings.get("notification.monitor.tab")) {
-						socket.emit("reloadRequest", {
-							uuid: Settings.get("general.uuid", false),
-							fid: Settings.get("general.fingerprint.id", false),
-							countryCode: i13n.getCountryCode(),
-						});
-					} else {
-						console.log(
-							`${new Date().toLocaleString()} - Tab mode with monitor tab not active and window not minimized/unfocused. Skipping.`
-						);
-					}
-				} else {
-					console.log(`${new Date().toLocaleString()} - No monitor tab found, skipping.`);
-				}
-			} else {
-				console.log(`${new Date().toLocaleString()} - Found active monitor tab, sending reload request`);
-				socket.emit("reloadRequest", {
-					uuid: Settings.get("general.uuid", false),
-					fid: Settings.get("general.fingerprint.id", false),
-					countryCode: i13n.getCountryCode(),
-				});
-			}
-		}
 		setReloadTimer(); //Create a new timer
 	}, timer);
+}
+
+async function findMonitorTab(inFocusOrBackgroundOnly = false) {
+	const activeTabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+	const activeMonitorTab = activeTabs.find((tab) => tab.url && tab.url.includes("#monitor"));
+	if (activeMonitorTab) {
+		//Monitor tab found, and in focus
+		return activeMonitorTab.windowId;
+	} else {
+		const allTabs = await chrome.tabs.query({});
+		const monitorTab = allTabs.find((tab) => tab.url && tab.url.includes("#monitor"));
+		if (monitorTab) {
+			//Monitor tab found, but not in focus
+			const window = await chrome.windows.get(monitorTab.windowId);
+			if (!inFocusOrBackgroundOnly || window.state === "minimized" || !window.focused) {
+				return monitorTab.windowId;
+			}
+		}
+	}
+	return false;
 }
 
 //Open a tab with the given url
@@ -439,29 +436,29 @@ async function openTab(url) {
 	}
 	//Find the windows id containing the notification monitor with a url containing #monitor
 	if (chrome.windows) {
-		const windows = await chrome.windows.getAll();
-		outerLoop: for (const window of windows) {
-			//List all tabs in the window
-			const tabs = await chrome.tabs.query({ windowId: window.id });
-			for (const tab of tabs) {
-				if (tab.url.includes("#monitor")) {
-					if (typeof browser !== "undefined") {
-						// Firefox
-						browser.tabs
-							.create({ url, windowId: window.id, active: false })
-							.then((newTab) => {
-								currentTabId = newTab.id;
-							})
-							.catch((error) => {});
-					} else {
-						// Chrome
-						const newTab = chrome.tabs.create({ url, windowId: window.id, active: false });
+		//Find the window containing the notification monitor
+		const monitorWindowId = await findMonitorTab(true);
+		if (monitorWindowId) {
+			if (typeof browser !== "undefined") {
+				// Firefox
+				browser.tabs
+					.create({ url, windowId: monitorWindowId, active: false })
+					.then((newTab) => {
 						currentTabId = newTab.id;
-					}
-					break outerLoop;
-				}
+					})
+					.catch((error) => {});
+			} else {
+				// Chrome
+				console.log(`${new Date().toLocaleString()} - Creating tab in window ${monitorWindowId}`);
+				const newTab = chrome.tabs.create({ url, windowId: monitorWindowId, active: false });
+				currentTabId = newTab.id;
+				console.log(`${new Date().toLocaleString()} - Tab created ${newTab.id}`);
 			}
+		} else {
+			console.log(`${new Date().toLocaleString()} - No monitor tab found in focus or in background, abort.`);
 		}
+	} else {
+		console.log(`${new Date().toLocaleString()} - Tab management not supported, abort.`);
 	}
 }
 
