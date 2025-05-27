@@ -1347,7 +1347,7 @@ class NotificationMonitor extends MonitorCore {
 		this._gridContainer.addEventListener("click", (e) => this.#clickHandler(e));
 
 		if (this._settings.get("notification.monitor.mouseoverPause")) {
-			this._gridContainer.addEventListener("mouseover", (e) => this.#mouseoverHandler(e));
+			document.addEventListener("mouseover", (e) => this.#mouseoverHandler(e));
 		}
 		if (reattachGridContainerOnly) {
 			return;
