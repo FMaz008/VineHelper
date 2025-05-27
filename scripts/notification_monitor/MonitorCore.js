@@ -324,6 +324,24 @@ class MonitorCore {
 		const parser = new DOMParser();
 		const doc = parser.parseFromString(html, "text/html");
 
+		//check if the page is a dogpage
+		if (isPageDog(doc)) {
+			chrome.runtime.sendMessage({ type: "dogpage" });
+			return;
+		}
+
+		//Check if the page is a captchapage
+		if (isPageCaptcha(doc)) {
+			chrome.runtime.sendMessage({ type: "captchapage" });
+			return;
+		}
+
+		//Check if the page is a loginpage
+		if (isPageLogin(doc)) {
+			chrome.runtime.sendMessage({ type: "loginpage" });
+			return;
+		}
+
 		//Get all the tiles
 		const tiles = doc.querySelectorAll("#vvp-items-grid .vvp-item-tile");
 		const items = [];

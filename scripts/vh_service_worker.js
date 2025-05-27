@@ -109,6 +109,19 @@ async function processBroadcastMessage(data) {
 			}
 		}
 	}
+
+	if (data.type == "dogpage") {
+		console.log("Dog page detected, halting auto-load timer for 24 hours");
+		resetReloadTimer(1000 * 60 * 60 * 24); //24 hours
+	}
+	if (data.type == "captchapage") {
+		console.log("Captcha page detected, halting auto-load timer for 1 hour");
+		resetReloadTimer(1000 * 60 * 60); //1 hour
+	}
+	if (data.type == "loginpage") {
+		console.log("Login page detected, halting auto-load timer for 1 hour");
+		resetReloadTimer(1000 * 60 * 60); //1 hour
+	}
 }
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
@@ -275,17 +288,18 @@ function connectWebSocket() {
 let displayTimer = null;
 let reloadTimer = null;
 
-function setReloadTimer() {
-	// Clear any existing timers first
-	if (displayTimer) {
-		clearTimeout(displayTimer);
-		displayTimer = null;
-	}
-	if (reloadTimer) {
-		clearTimeout(reloadTimer);
-		reloadTimer = null;
-	}
+function resetReloadTimer(interval) {
+	reloadTimer = setTimeout(
+		() => {
+			clearTimeout(reloadTimer);
+			reloadTimer = null;
+			setReloadTimer();
+		},
+		interval //in ms
+	);
+}
 
+function isTimeWithinRange() {
 	//Check if the current time is within the auto-load time range
 	const now = new Date();
 	const start = new Date();
@@ -327,14 +341,25 @@ function setReloadTimer() {
 	}
 
 	if (now < start || now > end) {
+		return false;
+	}
+	return true;
+}
+
+function setReloadTimer() {
+	// Clear any existing timers first
+	if (displayTimer) {
+		clearTimeout(displayTimer);
+		displayTimer = null;
+	}
+	if (reloadTimer) {
+		clearTimeout(reloadTimer);
+		reloadTimer = null;
+	}
+
+	if (!isTimeWithinRange()) {
 		console.log(`${new Date().toLocaleString()} - Auto-load is not active at this time`);
-		reloadTimer = setTimeout(
-			() => {
-				reloadTimer = null;
-				setReloadTimer();
-			},
-			1000 * 60 * 15
-		); //15 minutes
+		resetReloadTimer(1000 * 60 * 15); //15 minutes
 		return;
 	}
 
