@@ -163,7 +163,7 @@ function connectWebSocket() {
 	}
 
 	// If the socket is already connected, do not connect again
-	if (socket?.connected || socket?.connecting) {
+	if (socket?.connected) {
 		return;
 	}
 
@@ -530,7 +530,10 @@ async function init() {
 	await chrome.alarms.clearAll();
 
 	//Check for new items (if the option is disabled the method will return)
-	chrome.alarms.create("websocketReconnect", { periodInMinutes: WSReconnectInterval });
+	chrome.alarms.create("websocketReconnect", {
+		delayInMinutes: WSReconnectInterval, // adding this to delay first run
+		periodInMinutes: WSReconnectInterval,
+	});
 
 	if (Settings.get("notification.active")) {
 		//Firefox sometimes re-initialize the background script.
