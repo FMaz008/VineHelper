@@ -449,10 +449,8 @@ async function openTab(url) {
 					.catch((error) => {});
 			} else {
 				// Chrome
-				console.log(`${new Date().toLocaleString()} - Creating tab in window ${monitorWindowId}`);
 				const newTab = chrome.tabs.create({ url, windowId: monitorWindowId, active: false });
 				currentTabId = newTab.id;
-				console.log(`${new Date().toLocaleString()} - Tab created ${newTab.id}`);
 			}
 		} else {
 			console.log(`${new Date().toLocaleString()} - No monitor tab found in focus or in background, abort.`);
