@@ -51,7 +51,7 @@ Tpl.flushLocalStorage();
 	} else {
 		Tpl.setVar(
 			"monitor_link",
-			"https://www.amazon." + domainTLD + "/vine/vine-items?queue=encore#monitorLoadAllListerners"
+			"https://www.amazon." + domainTLD + "/vine/vine-items?queue=encore#monitorLoadAllListeners"
 		);
 	}
 

@@ -585,7 +585,7 @@ function initAddNotificationMonitorLink() {
 		if (Settings.get("notification.monitor.blockNonEssentialListeners")) {
 			a.href = "/vine/vine-items?queue=encore#monitor";
 		} else {
-			a.href = "/vine/vine-items?queue=encore#monitorLoadAllListerners";
+			a.href = "/vine/vine-items?queue=encore#monitorLoadAllListeners";
 		}
 		a.target = "_blank";
 		a.innerHTML = `<div class="vh-icon-16 vh-icon-vh"></div> Notifications Monitor`;
