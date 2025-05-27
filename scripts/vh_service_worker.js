@@ -163,7 +163,7 @@ function connectWebSocket() {
 	}
 
 	// If the socket is already connected, do not connect again
-	if (socket?.connected) {
+	if (socket?.connected || socket?.connecting) {
 		return;
 	}
 
