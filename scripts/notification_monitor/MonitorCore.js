@@ -315,6 +315,41 @@ class MonitorCore {
 		});
 	}
 
+	#isPageLogin(doc) {
+		const loginForm = doc.querySelector("body #authportal-main-section");
+		if (loginForm) {
+			return true;
+		}
+		const loginForm2 = doc.querySelector("body form.auth-validate-form");
+		if (loginForm2) {
+			if (loginForm2.name === "signIn") {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	#isPageCaptcha(doc) {
+		const captchaForm = doc.querySelector("body .a-section form");
+		if (captchaForm) {
+			const captcha = captchaForm.action.split("/")[4];
+			if (captcha === "validateCaptcha") {
+				return true;
+			}
+		}
+		return false;
+	}
+	#isPageDog(doc) {
+		const dogImg = doc.querySelector("body img#d");
+		if (dogImg) {
+			const dog = dogImg.alt;
+			if (dog === "Dogs of Amazon / Chiens d'Amazon") {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	async fetchAutoLoadUrl(url, queue) {
 		//Fetch the url
 		const response = await fetch(url);
@@ -325,19 +360,19 @@ class MonitorCore {
 		const doc = parser.parseFromString(html, "text/html");
 
 		//check if the page is a dogpage
-		if (isPageDog(doc)) {
+		if (this.#isPageDog(doc)) {
 			chrome.runtime.sendMessage({ type: "dogpage" });
 			return;
 		}
 
 		//Check if the page is a captchapage
-		if (isPageCaptcha(doc)) {
+		if (this.#isPageCaptcha(doc)) {
 			chrome.runtime.sendMessage({ type: "captchapage" });
 			return;
 		}
 
 		//Check if the page is a loginpage
-		if (isPageLogin(doc)) {
+		if (this.#isPageLogin(doc)) {
 			chrome.runtime.sendMessage({ type: "loginpage" });
 			return;
 		}
