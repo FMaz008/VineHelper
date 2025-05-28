@@ -716,7 +716,7 @@ async function initiateSettings() {
 
 	//Export JSON
 	document.getElementById(`bulkExportJSONhidden`).addEventListener("click", async () => {
-		const json = await chrome.storage.local.get("pinnedItems");
+		const json = await chrome.storage.local.get("hiddenItems");
 		displayMultiLinePopup(JSON.stringify(json));
 	});
 
