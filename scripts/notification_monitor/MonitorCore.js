@@ -10,7 +10,7 @@ import { Template } from "../Template.js";
 import { Environment } from "../Environment.js";
 import { Logger } from "../Logger.js";
 import { CryptoKeys } from "../CryptoKeys.js";
-
+import { isPageLogin, isPageCaptcha, isPageDog } from "../DOMHelper.js";
 import { PinMgr } from "./PinMgr.js";
 import { Internationalization } from "../Internationalization.js";
 import { ScreenNotifier, ScreenNotification } from "../ScreenNotifier.js";
@@ -315,40 +315,7 @@ class MonitorCore {
 		});
 	}
 
-	#isPageLogin(doc) {
-		const loginForm = doc.querySelector("body #authportal-main-section");
-		if (loginForm) {
-			return true;
-		}
-		const loginForm2 = doc.querySelector("body form.auth-validate-form");
-		if (loginForm2) {
-			if (loginForm2.name === "signIn") {
-				return true;
-			}
-		}
-		return false;
-	}
 
-	#isPageCaptcha(doc) {
-		const captchaForm = doc.querySelector("body .a-section form");
-		if (captchaForm) {
-			const captcha = captchaForm.action.split("/")[4];
-			if (captcha === "validateCaptcha") {
-				return true;
-			}
-		}
-		return false;
-	}
-	#isPageDog(doc) {
-		const dogImg = doc.querySelector("body img#d");
-		if (dogImg) {
-			const dog = dogImg.alt;
-			if (dog === "Dogs of Amazon / Chiens d'Amazon") {
-				return true;
-			}
-		}
-		return false;
-	}
 
 	async fetchAutoLoadUrl(url, queue) {
 		//Fetch the url
@@ -360,19 +327,19 @@ class MonitorCore {
 		const doc = parser.parseFromString(html, "text/html");
 
 		//check if the page is a dogpage
-		if (this.#isPageDog(doc)) {
+		if (isPageDog(doc)) {
 			chrome.runtime.sendMessage({ type: "dogpage" });
 			return;
 		}
 
 		//Check if the page is a captchapage
-		if (this.#isPageCaptcha(doc)) {
+		if (isPageCaptcha(doc)) {
 			chrome.runtime.sendMessage({ type: "captchapage" });
 			return;
 		}
 
 		//Check if the page is a loginpage
-		if (this.#isPageLogin(doc)) {
+		if (isPageLogin(doc)) {
 			chrome.runtime.sendMessage({ type: "loginpage" });
 			return;
 		}

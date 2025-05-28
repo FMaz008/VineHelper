@@ -123,6 +123,15 @@ class Environment {
 		if (this.data.vineQueue != null) {
 			this.data.vineQueueAbbr = arrQueues[this.data.vineQueue];
 		}
+
+		//Determine what page number we are on:
+		regex = /&page=(\d+)?/;
+		const match = currentUrl.match(regex);
+		if (match) {
+			this.data.vinePageNumber = match[1] ? parseInt(match[1]) : 1;
+		} else {
+			this.data.vinePageNumber = 1;
+		}
 	}
 
 	async #loadUUID() {

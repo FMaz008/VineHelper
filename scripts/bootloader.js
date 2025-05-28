@@ -34,6 +34,8 @@ import {
 	getTileByAsin,
 } from "./Grid.js";
 
+import { isPageLogin, isPageCaptcha, isPageDog } from "./DOMHelper.js";
+
 import { HiddenListMgr } from "./HiddenListMgr.js";
 var HiddenList = new HiddenListMgr();
 
@@ -999,6 +1001,7 @@ async function fetchProductsDatav5() {
 		items: arrProductsData,
 		request_variants: requestVariants,
 		s2: s,
+		p: env.data.vinePageNumber,
 	};
 	content.s = await cryptoKeys.signData(content);
 	content.pk = await cryptoKeys.getExportedPublicKey();
@@ -2001,39 +2004,4 @@ function showCustomPrompt(word, list, callback) {
 		callback(null, false);
 		promptOverlay.remove();
 	});
-}
-
-function isPageLogin(doc) {
-	const loginForm = doc.querySelector("body #authportal-main-section");
-	if (loginForm) {
-		return true;
-	}
-	const loginForm2 = doc.querySelector("body form.auth-validate-form");
-	if (loginForm2) {
-		if (loginForm2.name === "signIn") {
-			return true;
-		}
-	}
-	return false;
-}
-
-function isPageCaptcha(doc) {
-	const captchaForm = doc.querySelector("body .a-section form");
-	if (captchaForm) {
-		const captcha = captchaForm.action.split("/")[4];
-		if (captcha === "validateCaptcha") {
-			return true;
-		}
-	}
-	return false;
-}
-function isPageDog(doc) {
-	const dogImg = doc.querySelector("body img#d");
-	if (dogImg) {
-		const dog = dogImg.alt;
-		if (dog === "Dogs of Amazon / Chiens d'Amazon") {
-			return true;
-		}
-	}
-	return false;
 }
