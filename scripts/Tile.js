@@ -165,8 +165,8 @@ class Tile {
 
 				//Find the main See Details button
 				const seeDetails = this.#tileDOM.querySelector(".vvp-details-btn input");
+				
 				//Generate a See Details button
-
 				const recommendationId = seeDetails.dataset.recommendationId;
 				const recommendationType = seeDetails.dataset.recommendationType;
 				drawButton(variantAsin, false, recommendationType, recommendationId);

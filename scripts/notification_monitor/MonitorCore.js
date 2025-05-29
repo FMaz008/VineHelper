@@ -315,11 +315,24 @@ class MonitorCore {
 		});
 	}
 
-
-
 	async fetchAutoLoadUrl(url, queue) {
 		//Fetch the url
-		const response = await fetch(url);
+		const userAgent = navigator.userAgent;
+		const acceptLanguage = navigator.language || navigator.languages?.join(",") || "en-US,en;q=0.9";
+		const headers = {
+			"User-Agent": userAgent,
+			Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+			"Accept-Language": acceptLanguage,
+			"Accept-Encoding": "gzip, deflate, br",
+			"Cache-Control": "no-cache",
+			Pragma: "no-cache",
+			"Sec-Fetch-Dest": "document",
+			"Sec-Fetch-Mode": "navigate",
+			"Sec-Fetch-Site": "none",
+			"Sec-Fetch-User": "?1",
+			"Upgrade-Insecure-Requests": "1",
+		};
+		const response = await fetch(url, { headers: headers });
 		const html = await response.text();
 
 		//Parse the HTML
