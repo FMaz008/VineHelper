@@ -5396,7 +5396,7 @@ vary@^1:
 
 "vine-styling@github:FMaz008/vine-styling.git#main":
   version "0.0.0"
-  resolved "https://codeload.github.com/FMaz008/vine-styling/tar.gz/d534e90968fab33ce216c894f2abfd30daf305bf"
+  resolved "https://codeload.github.com/FMaz008/vine-styling/tar.gz/020ee5e30fd10932ee3b4b23b6ab21619ebf0658"
 
 walker@^1.0.8:
   version "1.0.8"
