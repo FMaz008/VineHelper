@@ -1200,8 +1200,8 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Check if clicked on a parent link containing this icon type
-		const parentLink = e.target.closest(`a:has(${iconSelector})`);
-		if (parentLink && !e.target.closest(iconSelector)) {
+		const parentLink = e.target.closest("a");
+		if (parentLink && parentLink.querySelector(iconSelector) && !e.target.closest(iconSelector)) {
 			e.preventDefault();
 			// Find the actual icon and handle it
 			const containedIcon = parentLink.querySelector(iconSelector);
