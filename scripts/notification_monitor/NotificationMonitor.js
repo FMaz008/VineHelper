@@ -1041,12 +1041,19 @@ class NotificationMonitor extends MonitorCore {
 	#handleBrendaClick(e, target) {
 		e.preventDefault();
 
+		if (target.classList.contains("vh-disabled")) {
+			return;
+		}
+
 		const asin = target.dataset.asin;
 		const queue = target.dataset.queue;
 
 		let etv = document.querySelector("#vh-notification-" + asin + " .etv").dataset.etvMax;
 
 		this._brendaMgr.announce(asin, etv, queue, this._i13nMgr.getDomainTLD());
+
+		//Make the announce icon gray
+		target.classList.add("vh-disabled");
 	}
 
 	/**
