@@ -1379,15 +1379,15 @@ window.addEventListener("message", async function (event) {
 		if (event.data.data.status == "success") {
 			//Show a notification
 			note.title = "Successful order detected!";
-			note.lifespan = 10;
-			note.content = "Detected item " + event.data.data.asin + " as orderable.";
+			note.lifespan = 15;
+			note.content = "Item " + event.data.data.asin + " ordered.";
 		} else {
 			//Show a notification
 
 			note.title = "Failed order detected.";
-			note.lifespan = 5;
+			note.lifespan = 15;
 			note.content =
-				"Detected item " + event.data.data.asin + " as not orderable with error " + event.data.data.error + ".";
+				"Item " + event.data.data.asin + " failed to order with error " + event.data.data.error + ".";
 		}
 		await Notifications.pushNotification(note);
 	}
