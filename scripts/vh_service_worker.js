@@ -155,6 +155,7 @@ chrome.notifications.onClicked.addListener((notificationId) => {
 //Websocket
 
 let socket;
+let socket_connecting = false;
 let currentTabId = null;
 
 function connectWebSocket() {
@@ -172,6 +173,12 @@ function connectWebSocket() {
 		return; //If the country is not known, do not connect
 	}
 
+	if (socket_connecting) {
+		console.log(`${new Date().toLocaleString()} - WS already connecting, skipping.`);
+		return;
+	}
+
+	socket_connecting = true;
 	socket = io.connect(VINE_HELPER_API_V5_WS_URL, {
 		query: {
 			countryCode: DEBUG_MODE ? "com" : i13n.getCountryCode(),
@@ -185,6 +192,7 @@ function connectWebSocket() {
 
 	// On connection success
 	socket.on("connect", () => {
+		socket_connecting = false;
 		console.log(`${new Date().toLocaleString()} - WS Connected`);
 		sendMessageToAllTabs({ type: "wsOpen" }, "Socket.IO server connected.");
 	});
@@ -271,12 +279,14 @@ function connectWebSocket() {
 
 	// On disconnection
 	socket.on("disconnect", () => {
+		socket_connecting = false;
 		console.log(`${new Date().toLocaleString()} - WS Disconnected`);
 		sendMessageToAllTabs({ type: "wsClosed" }, "Socket.IO server disconnected.");
 	});
 
 	// On error
 	socket.on("connect_error", (error) => {
+		socket_connecting = false;
 		console.error(`${new Date().toLocaleString()} - Socket.IO error: ${error.message}`);
 	});
 }
@@ -461,40 +471,34 @@ async function openTab(url) {
 }
 
 async function closeTab(tabId) {
-	try {
-		// Firefox requires a different approach for tab removal
-		if (typeof browser !== "undefined") {
-			// Firefox
-			return new Promise(async (resolve) => {
-				try {
-					await browser.tabs.get(tabId);
-					await browser.tabs.remove(tabId);
-					resolve(true);
-				} catch (error) {
+	// Firefox requires a different approach for tab removal
+	if (typeof browser !== "undefined") {
+		// Firefox
+		return new Promise((resolve) => {
+			browser.tabs
+				.get(tabId)
+				.then(() => browser.tabs.remove(tabId))
+				.then(() => resolve(true))
+				.catch(() => resolve(false));
+		});
+	} else {
+		// Chrome
+		return new Promise((resolve) => {
+			chrome.tabs.get(tabId, (tab) => {
+				if (chrome.runtime.lastError) {
 					resolve(false);
+					return;
 				}
-			});
-		} else {
-			// Chrome
-			return new Promise((resolve) => {
-				chrome.tabs.get(tabId, (tab) => {
+
+				chrome.tabs.remove(tabId, () => {
 					if (chrome.runtime.lastError) {
 						resolve(false);
-						return;
+					} else {
+						resolve(true);
 					}
-
-					chrome.tabs.remove(tabId, () => {
-						if (chrome.runtime.lastError) {
-							resolve(false);
-						} else {
-							resolve(true);
-						}
-					});
 				});
 			});
-		}
-	} catch (error) {
-		throw error;
+		});
 	}
 }
 
