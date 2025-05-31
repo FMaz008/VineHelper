@@ -314,8 +314,14 @@ class MonitorCore {
 		const container = document.getElementById("vvp-items-grid");
 
 		this._preserveScrollPosition(() => {
+			//Find the first child that is not a dummy tile
+			let firstChild = container.firstChild;
+			while (firstChild && firstChild.classList.contains("vh-dummy-tile")) {
+				firstChild = firstChild.nextSibling;
+			}
+
 			// Insert the notification at the top
-			container.insertBefore(notif, container.firstChild);
+			container.insertBefore(notif, firstChild);
 		});
 	}
 

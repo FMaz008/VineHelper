@@ -631,7 +631,49 @@ class NotificationMonitor extends MonitorCore {
 		//Autotruncate the items if there are too many
 		this.#autoTruncate();
 
+		//If the sort is by date DESC, make the grid element fix to their column
+		if (this._sortType === TYPE_DATE_DESC && !this._feedPaused) {
+			this.#insertDummyTiles();
+		}
 		return tileDOM; //Return the DOM element for the tile.
+	}
+
+	async #insertDummyTiles() {
+		//If tile sizer is not enabled, we don't need to do anything
+		if (!this._settings.get("general.tileSize.enabled")) {
+			return;
+		}
+
+		//Delete all dummy tiles
+		const dummyTiles = document.querySelectorAll(".vh-dummy-tile");
+		for (const dummyTile of dummyTiles) {
+			dummyTile.remove();
+		}
+
+		//Calculate the number of tiles per row
+		const tileWidth = this._settings.get("notification.monitor.tileSize.width") + 1;
+		const gridWidth = this._gridContainer.offsetWidth;
+		const tilesPerRow = Math.floor(gridWidth / tileWidth);
+
+		//Calculate the total number of items in the grid
+		const totalItems = this._gridContainer.querySelectorAll(".vvp-item-tile").length;
+
+		//Caculate the number of dummy tiles we need to insert
+		const numDummyTiles = (tilesPerRow - (totalItems % tilesPerRow)) % tilesPerRow;
+
+		//console.log(
+		//	`gridWidth: ${gridWidth}, tileWidth: ${tileWidth}, tilesPerRow: ${tilesPerRow}, totalItems: ${totalItems}, numDummyTiles: ${numDummyTiles}`
+		//);
+
+		//Insert the dummy tiles
+		for (let i = 0; i < numDummyTiles; i++) {
+			const dummyTile = document.createElement("div");
+			dummyTile.classList.add("vh-dummy-tile");
+			dummyTile.classList.add("vvp-item-tile");
+
+			//Add the tile to the beginning of the grid
+			this._gridContainer.insertBefore(dummyTile, this._gridContainer.firstChild);
+		}
 	}
 
 	async addVariants(data) {
@@ -1381,6 +1423,11 @@ class NotificationMonitor extends MonitorCore {
 			true
 		);
 
+		//Event listener for the resize of the client display area
+		window.addEventListener("resize", () => {
+			this.#insertDummyTiles();
+		});
+
 		// Add the fix toolbar with the pause button if we scroll past the original pause button
 		const scrollToTopBtn = document.getElementById("scrollToTop-fixed");
 		const originalPauseBtn = document.getElementById("pauseFeed");
@@ -1547,6 +1594,7 @@ class NotificationMonitor extends MonitorCore {
 					}
 				});
 				this._updateTabTitle();
+				this.#insertDummyTiles();
 			}
 		});
 
