@@ -165,7 +165,7 @@ class Tile {
 
 				//Find the main See Details button
 				const seeDetails = this.#tileDOM.querySelector(".vvp-details-btn input");
-				
+
 				//Generate a See Details button
 				const recommendationId = seeDetails.dataset.recommendationId;
 				const recommendationType = seeDetails.dataset.recommendationType;
@@ -457,11 +457,11 @@ class Tile {
 		this.#tileDOM.style.backgroundColor = "unset";
 		this.#tileDOM.style.background = "unset";
 
-		if (zeroETV && highlight) {
+		if (zeroETV && highlight && !Settings.get("general.highlightColor.ignore0ETVhighlight")) {
 			const color1 = Settings.get("general.zeroETVHighlight.color");
 			const color2 = Settings.get("general.highlightColor.color");
 			this.#tileDOM.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;
-		} else if (unknownETV && highlight) {
+		} else if (unknownETV && highlight && !Settings.get("general.highlightColor.ignoreUnknownETVhighlight")) {
 			const color1 = Settings.get("general.unknownETVHighlight.color");
 			const color2 = Settings.get("general.highlightColor.color");
 			this.#tileDOM.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;

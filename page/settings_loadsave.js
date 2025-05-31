@@ -265,6 +265,8 @@ async function initiateSettings() {
 	manageColorPicker("general.bookmarkColor");
 	manageCheckboxSetting("general.highlightColor.active");
 	manageColorPicker("general.highlightColor.color");
+	manageCheckboxSetting("general.highlightColor.ignore0ETVhighlight");
+	manageCheckboxSetting("general.highlightColor.ignoreUnknownETVhighlight");
 	manageCheckboxSetting("general.zeroETVHighlight.active");
 	manageColorPicker("general.zeroETVHighlight.color");
 	manageCheckboxSetting("general.unknownETVHighlight.active");
@@ -286,6 +288,8 @@ async function initiateSettings() {
 	manageCheckboxSetting("notification.monitor.zeroETV.colorActive");
 	manageCheckboxSetting("notification.monitor.highlight.colorActive");
 	manageCheckboxSetting("notification.monitor.unknownETV.colorActive");
+	manageCheckboxSetting("notification.monitor.highlight.ignore0ETVhighlight");
+	manageCheckboxSetting("notification.monitor.highlight.ignoreUnknownETVhighlight");
 	manageRadio("notification.monitor.openLinksInNewTab");
 	manageCheckboxSetting("notification.monitor.preventUnload");
 	manageCheckboxSetting("notification.monitor.24hrsFormat");

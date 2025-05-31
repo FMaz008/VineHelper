@@ -209,11 +209,15 @@ class MonitorCore {
 		const zeroETVColor = this._settings.get("notification.monitor.zeroETV.color");
 		const unknownETVColor = this._settings.get("notification.monitor.unknownETV.color");
 
-		if (isZeroETV && isHighlighted) {
+		if (isZeroETV && isHighlighted && !this._settings.get("notification.monitor.highlight.ignore0ETVhighlight")) {
 			const color1 = zeroETVColor;
 			const color2 = highlightColor;
 			notif.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;
-		} else if (isUnknownETV && isHighlighted) {
+		} else if (
+			isUnknownETV &&
+			isHighlighted &&
+			!this._settings.get("notification.monitor.highlight.ignoreUnknownETVhighlight")
+		) {
 			const color1 = unknownETVColor;
 			const color2 = highlightColor;
 			notif.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;

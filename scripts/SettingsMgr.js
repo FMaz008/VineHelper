@@ -293,6 +293,8 @@ class SettingsMgr {
 				highlightColor: {
 					active: true,
 					color: "#FFE815",
+					ignore0ETVhighlight: false,
+					ignoreUnknownETVhighlight: false,
 				},
 				highlightKeywords: [],
 				highlightKWFirst: true,
@@ -356,6 +358,8 @@ class SettingsMgr {
 						colorActive: true,
 						sound: "0",
 						volume: 1,
+						ignore0ETVhighlight: false,
+						ignoreUnknownETVhighlight: false,
 					},
 					hideDuplicateThumbnail: false,
 					hideGoldNotificationsForSilverUser: false,
