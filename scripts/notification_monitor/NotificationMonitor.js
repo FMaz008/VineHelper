@@ -632,31 +632,48 @@ class NotificationMonitor extends MonitorCore {
 		this.#autoTruncate();
 
 		//If the sort is by date DESC, make the grid element fix to their column
-		if (this._sortType === TYPE_DATE_DESC && !this._feedPaused) {
-			this.#insertDummyTiles();
-		}
+		this.#insertDummyTiles(true);
 		return tileDOM; //Return the DOM element for the tile.
 	}
 
-	async #insertDummyTiles() {
+	/**
+	 * Delete all dummy tiles from the grid
+	 */
+	#deleteDummyTiles() {
+		const dummyTiles = this._gridContainer.querySelectorAll(".vh-dummy-tile");
+		for (const dummyTile of dummyTiles) {
+			dummyTile.remove();
+		}
+	}
+
+	/**
+	 * Insert dummy tiles to the grid to keep the grid elements fixed to their column
+	 * @param {boolean} countVisibleItems - If true, do a fresh count of the visible items in the grid
+	 */
+	#insertDummyTiles(countVisibleItems = false) {
+		//If the sort is not by date DESC or the feed is paused, we don't need to do anything
+		if (this._sortType != TYPE_DATE_DESC || this._feedPaused) {
+			return;
+		}
+
 		//If tile sizer is not enabled, we don't need to do anything
 		if (!this._settings.get("general.tileSize.enabled")) {
 			return;
 		}
 
 		//Delete all dummy tiles
-		const dummyTiles = document.querySelectorAll(".vh-dummy-tile");
-		for (const dummyTile of dummyTiles) {
-			dummyTile.remove();
-		}
+		this.#deleteDummyTiles();
 
 		//Calculate the number of tiles per row
 		const tileWidth = this._settings.get("notification.monitor.tileSize.width") + 1;
 		const gridWidth = this._gridContainer.offsetWidth;
 		const tilesPerRow = Math.floor(gridWidth / tileWidth);
 
-		//Calculate the total number of items in the grid
-		const totalItems = this._gridContainer.querySelectorAll(".vvp-item-tile").length;
+		//Re-calculate the total number of items in the grid
+		if (countVisibleItems) {
+			this._countVisibleItems();
+		}
+		const totalItems = this._visibleItems; //The number of visible items in the grid
 
 		//Caculate the number of dummy tiles we need to insert
 		const numDummyTiles = (tilesPerRow - (totalItems % tilesPerRow)) % tilesPerRow;
@@ -1594,7 +1611,7 @@ class NotificationMonitor extends MonitorCore {
 					}
 				});
 				this._updateTabTitle();
-				this.#insertDummyTiles();
+				this.#insertDummyTiles(false);
 			}
 		});
 
@@ -1606,6 +1623,10 @@ class NotificationMonitor extends MonitorCore {
 			this.#processNotificationSorting();
 			// Force immediate truncate when sort type changes
 			this.#autoTruncate(true);
+
+			//Delete all dummy tiles and insert new ones if needed
+			this.#deleteDummyTiles();
+			this.#insertDummyTiles(false);
 		});
 
 		const filterType = document.querySelector("select[name='filter-type']");
@@ -1617,6 +1638,7 @@ class NotificationMonitor extends MonitorCore {
 				this.#processNotificationFiltering(node);
 			});
 			this._updateTabTitle();
+			this.#insertDummyTiles(false);
 		});
 
 		const filterQueue = document.querySelector("select[name='filter-queue']");
@@ -1628,6 +1650,7 @@ class NotificationMonitor extends MonitorCore {
 				this.#processNotificationFiltering(node);
 			});
 			this._updateTabTitle();
+			this.#insertDummyTiles(false);
 		});
 
 		const autoTruncateCheckbox = document.getElementById("auto-truncate");
@@ -1638,6 +1661,7 @@ class NotificationMonitor extends MonitorCore {
 			// Force immediate truncate when auto truncate is enabled
 			if (this._autoTruncateEnabled) {
 				this.#autoTruncate(true);
+				this.#insertDummyTiles(true);
 			}
 		});
 
@@ -1646,6 +1670,7 @@ class NotificationMonitor extends MonitorCore {
 			this._settings.set("notification.monitor.autoTruncateLimit", parseInt(autoTruncateLimitSelect.value));
 			// Force immediate truncate when limit changes
 			this.#autoTruncate(true);
+			this.#insertDummyTiles(true);
 		});
 	}
 }

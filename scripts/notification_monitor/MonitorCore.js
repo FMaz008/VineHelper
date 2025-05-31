@@ -29,6 +29,7 @@ class MonitorCore {
 	_tierMgr = null; //The tier manager object
 
 	_fetchLimit = 100; //The fetch limit for the monitor
+	_visibleItems = 0; //The number of visible items in the monitor
 
 	constructor(monitorV3 = false) {
 		// Prevent direct instantiation of the abstract class
@@ -276,23 +277,29 @@ class MonitorCore {
 		}
 	}
 
-	_updateTabTitle() {
-		// Count visible items based on current filters
-		let visibleCount = 0;
+	_countVisibleItems() {
+		this._visibleItems = 0;
+		let count = 0;
+		const items = this._itemsMgr.items;
+		const itemsArr = Array.from(items.values());
+		const len = itemsArr.length;
 
-		// Loop through all items
-		for (const [asin, item] of this._itemsMgr.items.entries()) {
-			// Skip items without DOM elements
+		for (let i = 0; i < len; i++) {
+			const item = itemsArr[i];
 			if (!item.element) continue;
-
-			// Skip items hidden by style
-			if (window.getComputedStyle(item.element).display === "none") continue;
-
-			visibleCount++;
+			// Cache computed style to avoid recalculating
+			const style = item.element.style.display;
+			if (style === "none") continue;
+			count++;
 		}
+		this._visibleItems = count;
+	}
+
+	_updateTabTitle() {
+		this._countVisibleItems();
 
 		// Update the tab title
-		document.title = "VHNM (" + visibleCount + ")";
+		document.title = "VHNM (" + this._visibleItems + ")";
 	}
 
 	// Helper method to preserve scroll position during DOM operations
