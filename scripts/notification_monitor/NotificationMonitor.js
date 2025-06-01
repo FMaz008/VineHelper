@@ -527,7 +527,9 @@ class NotificationMonitor extends MonitorCore {
 			}
 		});
 
-		const tile = this._itemsMgr.setTile(asin, tileDOM);
+		// Store a reference to the DOM element
+		this._itemsMgr.storeItemDOMElement(asin, tileDOM); //Store the DOM element
+		const tile = this._itemsMgr.getItemTile(asin);
 
 		if (this._monitorV3 && this._settings.isPremiumUser(2) && this._settings.get("general.displayVariantButton")) {
 			if (is_parent_asin && itemData.variants) {
@@ -537,9 +539,6 @@ class NotificationMonitor extends MonitorCore {
 				tile.updateVariantCount();
 			}
 		}
-
-		// Store a reference to the DOM element
-		this._itemsMgr.storeItemDOMElement(asin, tileDOM);
 
 		// Check if the item is already pinned and update the pin icon
 		if (this._settings.get("pinnedTab.active")) {
@@ -698,7 +697,7 @@ class NotificationMonitor extends MonitorCore {
 	async addVariants(data) {
 		if (this._settings.isPremiumUser(2) && this._settings.get("general.displayVariantButton")) {
 			if (this._itemsMgr.items.has(data.asin)) {
-				const tile = this._itemsMgr.getTile(data.asin);
+				const tile = this._itemsMgr.getItemTile(data.asin);
 				if (tile) {
 					if (data.variants && data.variants.length > 0) {
 						for (const variant of data.variants) {
@@ -733,7 +732,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Remove from data structures
-		this._itemsMgr.items.delete(asin);
+		this._itemsMgr.removeAsin(asin);
 
 		// Also remove the image URL from the set if duplicate detection is enabled
 		if (imgUrl && this._settings.get("notification.monitor.hideDuplicateThumbnail")) {
