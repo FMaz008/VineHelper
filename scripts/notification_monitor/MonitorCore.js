@@ -278,19 +278,15 @@ class MonitorCore {
 	}
 
 	_countVisibleItems() {
-		this._visibleItems = 0;
 		let count = 0;
-		const items = this._itemsMgr.items;
-		const itemsArr = Array.from(items.values());
-		const len = itemsArr.length;
-
-		for (let i = 0; i < len; i++) {
-			const item = itemsArr[i];
+		// Iterate directly over Map values to avoid Array conversion
+		for (const item of this._itemsMgr.items.values()) {
+			// Early continue if no element
 			if (!item.element) continue;
-			// Cache computed style to avoid recalculating
-			const style = item.element.style.display;
-			if (style === "none") continue;
-			count++;
+			// Check display style directly
+			if (item.element.style.display !== "none") {
+				count++;
+			}
 		}
 		this._visibleItems = count;
 	}
