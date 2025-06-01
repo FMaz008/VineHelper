@@ -647,7 +647,7 @@ class NotificationMonitor extends MonitorCore {
 	}
 
 	/**
-	 * Insert dummy tiles to the grid to keep the grid elements fixed to their column
+	 * Insert dummy tiles to the grid to keep the grid elements fixed to their column with in sort TYPE_DATE_DESC
 	 * @param {boolean} countVisibleItems - If true, do a fresh count of the visible items in the grid
 	 */
 	#insertDummyTiles(countVisibleItems = false) {
