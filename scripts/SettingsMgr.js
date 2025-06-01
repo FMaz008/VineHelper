@@ -339,7 +339,7 @@ class SettingsMgr {
 				autoload: {
 					min: 5,
 					max: 10,
-					tab: true,
+					tab: false,
 					hourStart: "03:00",
 					hourEnd: "17:00",
 				},
