@@ -34,6 +34,7 @@ class NotificationMonitorV2 extends NotificationMonitor {
 		parentContainer.appendChild(itemContainer);
 
 		this._gridContainer = document.querySelector("#vvp-items-grid");
+		//this._gridContainerWidth = this._gridContainer.offsetWidth;
 
 		//Monitor V2 does not run from an Amazon URL from which the country code is automatically detected,
 		// so we need to set the country code manually

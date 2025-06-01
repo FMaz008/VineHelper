@@ -26,6 +26,7 @@ class NotificationMonitor extends MonitorCore {
 	_fetchingRecentItems;
 	_waitTimer; //Timer which wait a short delay to see if anything new is about to happen
 	_gridContainer = null;
+	_gridContainerWidth = 0;
 	_wsErrorMessage = null;
 	_mostRecentItemDate = null;
 	_mostRecentItemDateDOM = null;
@@ -202,7 +203,7 @@ class NotificationMonitor extends MonitorCore {
 	fetchRecentItemsEnd() {
 		if (this._feedPaused) {
 			//Unbuffer the feed
-			document.getElementById("pauseFeed").click();
+			this.#handlePauseClick();
 		}
 		this._fetchingRecentItems = false;
 
@@ -314,7 +315,7 @@ class NotificationMonitor extends MonitorCore {
 	#clearAllVisibleItems() {
 		this._preserveScrollPosition(() => {
 			// Get the asin of all visible items
-			const visibleItems = document.querySelectorAll(".vvp-item-tile:not([style*='display: none'])");
+			const visibleItems = this._gridContainer.querySelectorAll(".vvp-item-tile:not([style*='display: none'])");
 			const asins = new Set();
 			visibleItems.forEach((item) => {
 				const asin = item.dataset.asin;
@@ -564,7 +565,7 @@ class NotificationMonitor extends MonitorCore {
 			document.getElementById("pauseFeed").value = `Resume Feed (${this._feedPausedAmountStored})`;
 			document.getElementById("pauseFeed-fixed").value = `Resume Feed (${this._feedPausedAmountStored})`;
 			//sleep for 5ms to allow the value to be updated
-			await new Promise((resolve) => setTimeout(resolve, 5));
+			//await new Promise((resolve) => setTimeout(resolve, 1));
 		}
 
 		//Process the item according to the notification type (highlight > 0etv > regular)
@@ -672,7 +673,7 @@ class NotificationMonitor extends MonitorCore {
 		const tileWidth = this._settings.get("notification.monitor.tileSize.width") + 1;
 
 		//Calculate the number of tiles per row
-		const gridWidth = this._gridContainer.offsetWidth;
+		const gridWidth = this._gridContainerWidth;
 		const tilesPerRow = Math.floor(gridWidth / tileWidth);
 
 		//Caculate the number of dummy tiles we need to insert
@@ -821,7 +822,7 @@ class NotificationMonitor extends MonitorCore {
 
 				if (val !== false) {
 					//We got a keyword match, highlight the item
-					const technicalBtn = document.querySelector("#vh-reason-link-" + asin + ">div");
+					const technicalBtn = this._gridContainer.querySelector("#vh-reason-link-" + asin + ">div");
 					if (technicalBtn) {
 						technicalBtn.dataset.highlightkw = val;
 					}
@@ -1043,7 +1044,7 @@ class NotificationMonitor extends MonitorCore {
 	 * Sort the DOM items according to the _items map
 	 */
 	async #processNotificationSorting() {
-		const container = document.getElementById("vvp-items-grid");
+		const container = this._gridContainer;
 		if (!container) return;
 
 		await this._preserveScrollPosition(async () => {
@@ -1289,7 +1290,7 @@ class NotificationMonitor extends MonitorCore {
 				e.preventDefault();
 				if (!this._feedPaused) {
 					this.#pausedByMouseoverSeeDetails = true;
-					document.getElementById("pauseFeed").click();
+					this.#handlePauseClick();
 				}
 			})
 		)
@@ -1298,7 +1299,7 @@ class NotificationMonitor extends MonitorCore {
 		if (this.#pausedByMouseoverSeeDetails) {
 			this.#pausedByMouseoverSeeDetails = false;
 			if (this._feedPaused) {
-				document.getElementById("pauseFeed").click();
+				this.#handlePauseClick();
 			}
 		}
 	}
@@ -1444,6 +1445,7 @@ class NotificationMonitor extends MonitorCore {
 
 		//Event listener for the resize of the client display area
 		window.addEventListener("resize", () => {
+			this._gridContainerWidth = this._gridContainer.offsetWidth;
 			this.#insertDummyTiles();
 		});
 
@@ -1470,7 +1472,7 @@ class NotificationMonitor extends MonitorCore {
 		});
 
 		fixedPauseBtn.addEventListener("click", () => {
-			originalPauseBtn.click();
+			this.#handlePauseClick();
 		});
 
 		// Search handler
@@ -1483,7 +1485,7 @@ class NotificationMonitor extends MonitorCore {
 				this._searchDebounceTimer = setTimeout(() => {
 					this._searchText = event.target.value;
 					// Apply search filter to all items
-					document.querySelectorAll(".vvp-item-tile").forEach((node) => {
+					this._gridContainer.querySelectorAll(".vvp-item-tile").forEach((node) => {
 						this.#processNotificationFiltering(node);
 					});
 					this._updateTabTitle();
@@ -1535,7 +1537,7 @@ class NotificationMonitor extends MonitorCore {
 			//Buffer the feed
 			this._fetchingRecentItems = true;
 			if (!this._feedPaused) {
-				document.getElementById("pauseFeed").click();
+				this.#handlePauseClick();
 			}
 
 			chrome.runtime.sendMessage({
@@ -1568,7 +1570,7 @@ class NotificationMonitor extends MonitorCore {
 				//Buffer the feed
 				this._fetchingRecentItems = true;
 				if (!this._feedPaused) {
-					document.getElementById("pauseFeed").click();
+					this.#handlePauseClick();
 				}
 
 				chrome.runtime.sendMessage({
@@ -1580,42 +1582,7 @@ class NotificationMonitor extends MonitorCore {
 
 		//Bind Pause Feed button
 		const btnPauseFeed = document.getElementById("pauseFeed");
-		btnPauseFeed.addEventListener("click", (event) => {
-			this._feedPaused = !this._feedPaused;
-			if (this._feedPaused) {
-				this._feedPausedAmountStored = 0;
-				document.getElementById("pauseFeed").value = "Resume Feed (0)";
-				document.getElementById("pauseFeed-fixed").value = "Resume Feed (0)";
-
-				if (this._settings.get("notification.monitor.pauseOverlay")) {
-					//Create an overlay with a red background and a 5% opacity
-					const overlay = document.createElement("div");
-					overlay.id = "pauseFeedOverlay";
-					overlay.style.position = "fixed";
-					overlay.style.top = "0";
-					overlay.style.left = "0";
-					overlay.style.width = "100%";
-					overlay.style.height = "100%";
-					overlay.style.backgroundColor = "rgba(255, 0, 0, 0.10)";
-					overlay.style.pointerEvents = "none";
-					document.body.appendChild(overlay);
-				}
-			} else {
-				if (this._settings.get("notification.monitor.pauseOverlay")) {
-					document.body.removeChild(document.getElementById("pauseFeedOverlay"));
-				}
-				document.getElementById("pauseFeed").value = "Pause & Buffer Feed";
-				document.getElementById("pauseFeed-fixed").value = "Pause & Buffer Feed";
-				document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
-					if (node.dataset.feedPaused == "true") {
-						node.dataset.feedPaused = "false";
-						this.#processNotificationFiltering(node);
-					}
-				});
-				this._updateTabTitle();
-				this.#insertDummyTiles(false);
-			}
-		});
+		btnPauseFeed.addEventListener("click", this.#handlePauseClick);
 
 		// Bind sort and filter controls
 		const sortQueue = document.querySelector("select[name='sort-queue']");
@@ -1636,7 +1603,7 @@ class NotificationMonitor extends MonitorCore {
 			this._filterType = filterType.value;
 			this._settings.set("notification.monitor.filterType", this._filterType);
 			//Display a specific type of notifications only
-			document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
+			this._gridContainer.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
 				this.#processNotificationFiltering(node);
 			});
 			this._updateTabTitle();
@@ -1648,7 +1615,7 @@ class NotificationMonitor extends MonitorCore {
 			this._filterQueue = filterQueue.value;
 			this._settings.set("notification.monitor.filterQueue", this._filterQueue);
 			//Display a specific type of notifications only
-			document.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
+			this._gridContainer.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
 				this.#processNotificationFiltering(node);
 			});
 			this._updateTabTitle();
@@ -1674,6 +1641,44 @@ class NotificationMonitor extends MonitorCore {
 			this.#autoTruncate(true);
 			this.#insertDummyTiles(true);
 		});
+	}
+
+	//Pause feed handler
+	#handlePauseClick() {
+		this._feedPaused = !this._feedPaused;
+		if (this._feedPaused) {
+			this._feedPausedAmountStored = 0;
+			document.getElementById("pauseFeed").value = "Resume Feed (0)";
+			document.getElementById("pauseFeed-fixed").value = "Resume Feed (0)";
+
+			if (this._settings.get("notification.monitor.pauseOverlay")) {
+				//Create an overlay with a red background and a 5% opacity
+				const overlay = document.createElement("div");
+				overlay.id = "pauseFeedOverlay";
+				overlay.style.position = "fixed";
+				overlay.style.top = "0";
+				overlay.style.left = "0";
+				overlay.style.width = "100%";
+				overlay.style.height = "100%";
+				overlay.style.backgroundColor = "rgba(255, 0, 0, 0.10)";
+				overlay.style.pointerEvents = "none";
+				document.body.appendChild(overlay);
+			}
+		} else {
+			if (this._settings.get("notification.monitor.pauseOverlay")) {
+				document.body.removeChild(document.getElementById("pauseFeedOverlay"));
+			}
+			document.getElementById("pauseFeed").value = "Pause & Buffer Feed";
+			document.getElementById("pauseFeed-fixed").value = "Pause & Buffer Feed";
+			this._gridContainer.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
+				if (node.dataset.feedPaused == "true") {
+					node.dataset.feedPaused = "false";
+					this.#processNotificationFiltering(node);
+				}
+			});
+			this._updateTabTitle();
+			this.#insertDummyTiles(false);
+		}
 	}
 }
 
