@@ -664,16 +664,17 @@ class NotificationMonitor extends MonitorCore {
 		//Delete all dummy tiles
 		this.#deleteDummyTiles();
 
-		//Calculate the number of tiles per row
-		const tileWidth = this._settings.get("notification.monitor.tileSize.width") + 1;
-		const gridWidth = this._gridContainer.offsetWidth;
-		const tilesPerRow = Math.floor(gridWidth / tileWidth);
-
 		//Re-calculate the total number of items in the grid
 		if (countVisibleItems) {
 			this._countVisibleItems();
 		}
 		const totalItems = this._visibleItems; //The number of visible items in the grid
+		//ToDo: Find a better way to precisely calculate the actual tile width (with 2 decimal places)
+		const tileWidth = this._settings.get("notification.monitor.tileSize.width") + 1;
+
+		//Calculate the number of tiles per row
+		const gridWidth = this._gridContainer.offsetWidth;
+		const tilesPerRow = Math.floor(gridWidth / tileWidth);
 
 		//Caculate the number of dummy tiles we need to insert
 		const numDummyTiles = (tilesPerRow - (totalItems % tilesPerRow)) % tilesPerRow;
@@ -687,6 +688,7 @@ class NotificationMonitor extends MonitorCore {
 			const dummyTile = document.createElement("div");
 			dummyTile.classList.add("vh-dummy-tile");
 			dummyTile.classList.add("vvp-item-tile");
+			dummyTile.classList.add("vh-logo-vh");
 
 			//Add the tile to the beginning of the grid
 			this._gridContainer.insertBefore(dummyTile, this._gridContainer.firstChild);
@@ -746,6 +748,7 @@ class NotificationMonitor extends MonitorCore {
 
 		if (countTotalTiles) {
 			this._updateTabTitle(); // Update the tab counter
+			this.#insertDummyTiles(false);
 		}
 	}
 

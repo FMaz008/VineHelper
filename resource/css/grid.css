@@ -52,8 +52,17 @@ body.darktheme .vh-btn-variants-count {
 	grid-template-columns: auto !important;
 }
 
+#vvp-items-grid-container {
+	margin: 0px !important;
+}
+
 #vvp-items-grid {
 	column-gap: 0px !important;
+}
+
+#vvp-items-grid .vh-dummy-tile {
+	opacity: 0.2;
+	background-position-y: center;
 }
 
 .vh-listview .vvp-details-btn {

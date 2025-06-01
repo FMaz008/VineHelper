@@ -21,6 +21,8 @@ class NotificationMonitorV3 extends NotificationMonitor {
 			this._itemTemplateFile = "tile_gridview.html";
 		}
 
+		document.querySelector("body").style.setProperty("padding-right", "0px", "important");
+
 		//Check if the user is in vine jail:
 		if (document.querySelector("#vvp-under-review-alert")) {
 			alert("You are in vine jail. Please get your account in good standing in order to access this feature.");
