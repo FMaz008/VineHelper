@@ -661,6 +661,10 @@ class NotificationMonitor extends MonitorCore {
 			return;
 		}
 
+		if (this._settings.get("notification.monitor.listView")) {
+			return;
+		}
+
 		//Delete all dummy tiles
 		this.#deleteDummyTiles();
 
