@@ -629,7 +629,7 @@ class NotificationMonitor extends MonitorCore {
 		}, 250);
 
 		//Autotruncate the items if there are too many
-		this.#autoTruncate();
+		this.#autoTruncate(!this._feedPaused);
 
 		//If the sort is by date DESC, make the grid element fix to their column
 		this.#insertDummyTiles(true);
