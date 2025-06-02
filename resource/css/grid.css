@@ -62,7 +62,9 @@ body.darktheme .vh-btn-variants-count {
 
 #vvp-items-grid .vh-placeholder-tile {
 	opacity: 0.1;
+	background-size: 80%;
 	background-position-y: center;
+	background-position-x: center;
 }
 
 .vh-listview .vvp-details-btn {
