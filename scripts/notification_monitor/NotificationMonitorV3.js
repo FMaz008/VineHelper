@@ -31,7 +31,6 @@ class NotificationMonitorV3 extends NotificationMonitor {
 
 		//Remove the existing items.
 		this._gridContainer = document.querySelector("#vvp-items-grid");
-		this._gridContainerWidth = this._gridContainer.offsetWidth;
 		this._gridContainer.innerHTML = "";
 
 		//Check if the user is a gold tier user
@@ -171,6 +170,8 @@ class NotificationMonitorV3 extends NotificationMonitor {
 
 		//Initial check of the status of services (service worker and WebSocket)
 		this._serverComMgr.updateServicesStatus();
+
+		this._gridContainerWidth = this._gridContainer.offsetWidth;
 	}
 
 	async #initTileSizeWidget() {

@@ -353,6 +353,7 @@ class SettingsMgr {
 					bump0ETV: true,
 					filterQueue: -1,
 					filterType: -1,
+					placeholders: true,
 					highlight: {
 						color: "#FFE815",
 						colorActive: true,

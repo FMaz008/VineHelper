@@ -60,8 +60,8 @@ body.darktheme .vh-btn-variants-count {
 	column-gap: 0px !important;
 }
 
-#vvp-items-grid .vh-dummy-tile {
-	opacity: 0.2;
+#vvp-items-grid .vh-placeholder-tile {
+	opacity: 0.1;
 	background-position-y: center;
 }
 

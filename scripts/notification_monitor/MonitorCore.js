@@ -317,9 +317,9 @@ class MonitorCore {
 		const container = document.getElementById("vvp-items-grid");
 
 		this._preserveScrollPosition(() => {
-			//Find the first child that is not a dummy tile
+			//Find the first child that is not a placeholder tile
 			let firstChild = container.firstChild;
-			while (firstChild && firstChild.classList.contains("vh-dummy-tile")) {
+			while (firstChild && firstChild.classList.contains("vh-placeholder-tile")) {
 				firstChild = firstChild.nextSibling;
 			}
 

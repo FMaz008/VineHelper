@@ -281,6 +281,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("notification.screen.active");
 	manageCheckboxSetting("notification.screen.thumbnail");
 	manageCheckboxSetting("notification.monitor.listView");
+	manageCheckboxSetting("notification.monitor.placeholders");
 	manageCheckboxSetting("notification.hideList");
 	manageCheckboxSetting("notification.monitor.hideGoldNotificationsForSilverUser");
 	manageCheckboxSetting("notification.monitor.hideDuplicateThumbnail");

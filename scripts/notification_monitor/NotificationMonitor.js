@@ -200,15 +200,18 @@ class NotificationMonitor extends MonitorCore {
 	 * When the fetch recent items is completed, this function is called.
 	 * It will unbuffer the feed if it is paused and sort the items.
 	 */
-	fetchRecentItemsEnd() {
+	async fetchRecentItemsEnd() {
 		if (this._feedPaused) {
 			//Unbuffer the feed
 			this.#handlePauseClick();
+		} else {
+			//Can happen if the user click unpause while the feed is filling.
+			this._updateTabTitle();
+			this.#insertPlaceholderTiles(false);
 		}
 		this._fetchingRecentItems = false;
 
-		this.#processNotificationSorting();
-		this._updateTabTitle();
+		await this.#processNotificationSorting();
 	}
 
 	/**
@@ -637,25 +640,25 @@ class NotificationMonitor extends MonitorCore {
 		this.#autoTruncate(!this._feedPaused);
 
 		//If the sort is by date DESC, make the grid element fix to their column
-		this.#insertDummyTiles(true);
+		this.#insertPlaceholderTiles(true);
 		return tileDOM; //Return the DOM element for the tile.
 	}
 
 	/**
-	 * Delete all dummy tiles from the grid
+	 * Delete all placeholder tiles from the grid
 	 */
-	#deleteDummyTiles() {
-		const dummyTiles = this._gridContainer.querySelectorAll(".vh-dummy-tile");
-		for (const dummyTile of dummyTiles) {
-			dummyTile.remove();
+	#deletePlaceholderTiles() {
+		const placeholderTiles = this._gridContainer.querySelectorAll(".vh-placeholder-tile");
+		for (const placeholderTile of placeholderTiles) {
+			placeholderTile.remove();
 		}
 	}
 
 	/**
-	 * Insert dummy tiles to the grid to keep the grid elements fixed to their column with in sort TYPE_DATE_DESC
+	 * Insert placeholder tiles to the grid to keep the grid elements fixed to their column with in sort TYPE_DATE_DESC
 	 * @param {boolean} countVisibleItems - If true, do a fresh count of the visible items in the grid
 	 */
-	#insertDummyTiles(countVisibleItems = false) {
+	#insertPlaceholderTiles(countVisibleItems = false) {
 		//If the sort is not by date DESC or the feed is paused, we don't need to do anything
 		if (this._sortType != TYPE_DATE_DESC || this._feedPaused) {
 			return;
@@ -670,8 +673,12 @@ class NotificationMonitor extends MonitorCore {
 			return;
 		}
 
-		//Delete all dummy tiles
-		this.#deleteDummyTiles();
+		if (!this._settings.get("notification.monitor.placeholders")) {
+			return;
+		}
+
+		//Delete all placeholder tiles
+		this.#deletePlaceholderTiles();
 
 		//Re-calculate the total number of items in the grid
 		if (countVisibleItems) {
@@ -685,22 +692,22 @@ class NotificationMonitor extends MonitorCore {
 		const gridWidth = this._gridContainerWidth;
 		const tilesPerRow = Math.floor(gridWidth / tileWidth);
 
-		//Caculate the number of dummy tiles we need to insert
-		const numDummyTiles = (tilesPerRow - (totalItems % tilesPerRow)) % tilesPerRow;
+		//Caculate the number of placeholder tiles we need to insert
+		const numPlaceholderTiles = (tilesPerRow - (totalItems % tilesPerRow)) % tilesPerRow;
 
 		//console.log(
-		//	`gridWidth: ${gridWidth}, tileWidth: ${tileWidth}, tilesPerRow: ${tilesPerRow}, totalItems: ${totalItems}, numDummyTiles: ${numDummyTiles}`
+		//	`gridWidth: ${gridWidth}, tileWidth: ${tileWidth}, tilesPerRow: ${tilesPerRow}, totalItems: ${totalItems}, numPlaceholderTiles: ${numPlaceholderTiles}`
 		//);
 
-		//Insert the dummy tiles
-		for (let i = 0; i < numDummyTiles; i++) {
-			const dummyTile = document.createElement("div");
-			dummyTile.classList.add("vh-dummy-tile");
-			dummyTile.classList.add("vvp-item-tile");
-			dummyTile.classList.add("vh-logo-vh");
+		//Insert the placeholder tiles
+		for (let i = 0; i < numPlaceholderTiles; i++) {
+			const placeholderTile = document.createElement("div");
+			placeholderTile.classList.add("vh-placeholder-tile");
+			placeholderTile.classList.add("vvp-item-tile");
+			placeholderTile.classList.add("vh-logo-vh");
 
 			//Add the tile to the beginning of the grid
-			this._gridContainer.insertBefore(dummyTile, this._gridContainer.firstChild);
+			this._gridContainer.insertBefore(placeholderTile, this._gridContainer.firstChild);
 		}
 	}
 
@@ -757,7 +764,7 @@ class NotificationMonitor extends MonitorCore {
 
 		if (countTotalTiles) {
 			this._updateTabTitle(); // Update the tab counter
-			this.#insertDummyTiles(false);
+			this.#insertPlaceholderTiles(false);
 		}
 	}
 
@@ -1455,7 +1462,7 @@ class NotificationMonitor extends MonitorCore {
 		//Event listener for the resize of the client display area
 		window.addEventListener("resize", () => {
 			this._gridContainerWidth = this._gridContainer.offsetWidth;
-			this.#insertDummyTiles();
+			this.#insertPlaceholderTiles();
 		});
 
 		// Add the fix toolbar with the pause button if we scroll past the original pause button
@@ -1602,9 +1609,9 @@ class NotificationMonitor extends MonitorCore {
 			// Force immediate truncate when sort type changes
 			this.#autoTruncate(true);
 
-			//Delete all dummy tiles and insert new ones if needed
-			this.#deleteDummyTiles();
-			this.#insertDummyTiles(false);
+			//Delete all placeholder tiles and insert new ones if needed
+			this.#deletePlaceholderTiles();
+			this.#insertPlaceholderTiles(false);
 		});
 
 		const filterType = document.querySelector("select[name='filter-type']");
@@ -1616,7 +1623,7 @@ class NotificationMonitor extends MonitorCore {
 				this.#processNotificationFiltering(node);
 			});
 			this._updateTabTitle();
-			this.#insertDummyTiles(false);
+			this.#insertPlaceholderTiles(false);
 		});
 
 		const filterQueue = document.querySelector("select[name='filter-queue']");
@@ -1628,7 +1635,7 @@ class NotificationMonitor extends MonitorCore {
 				this.#processNotificationFiltering(node);
 			});
 			this._updateTabTitle();
-			this.#insertDummyTiles(false);
+			this.#insertPlaceholderTiles(false);
 		});
 
 		const autoTruncateCheckbox = document.getElementById("auto-truncate");
@@ -1639,7 +1646,7 @@ class NotificationMonitor extends MonitorCore {
 			// Force immediate truncate when auto truncate is enabled
 			if (this._autoTruncateEnabled) {
 				this.#autoTruncate(true);
-				this.#insertDummyTiles(true);
+				this.#insertPlaceholderTiles(true);
 			}
 		});
 
@@ -1648,7 +1655,7 @@ class NotificationMonitor extends MonitorCore {
 			this._settings.set("notification.monitor.autoTruncateLimit", parseInt(autoTruncateLimitSelect.value));
 			// Force immediate truncate when limit changes
 			this.#autoTruncate(true);
-			this.#insertDummyTiles(true);
+			this.#insertPlaceholderTiles(true);
 		});
 	}
 
@@ -1686,7 +1693,7 @@ class NotificationMonitor extends MonitorCore {
 				}
 			});
 			this._updateTabTitle();
-			this.#insertDummyTiles(false);
+			this.#insertPlaceholderTiles(false);
 		}
 	}
 }
