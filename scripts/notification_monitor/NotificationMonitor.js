@@ -468,6 +468,11 @@ class NotificationMonitor extends MonitorCore {
 		} else {
 			let truncatedTitle = title.length > 40 ? title.substr(0, 40).split(" ").slice(0, -1).join(" ") : title;
 			truncatedTitle = removeSpecialHTML(truncatedTitle);
+			//Remove single letter words
+			truncatedTitle = truncatedTitle
+				.split(" ")
+				.filter((word) => word.length > 1)
+				.join(" ");
 			const search_url_slug = encodeURIComponent(truncatedTitle);
 			search_url = `https://www.amazon.${this._i13nMgr.getDomainTLD()}/vine/vine-items?search=${search_url_slug}`;
 		}

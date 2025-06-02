@@ -277,6 +277,11 @@ function serverProductsResponse(data) {
 			let truncatedTitle =
 				values.title.length > 40 ? values.title.substr(0, 40).split(" ").slice(0, -1).join(" ") : values.title;
 			truncatedTitle = removeSpecialHTML(truncatedTitle);
+			//Remove single letter words
+			truncatedTitle = truncatedTitle
+				.split(" ")
+				.filter((word) => word.length > 1)
+				.join(" ");
 			const search_url_slug = encodeURIComponent(truncatedTitle);
 			searchUrl = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search_url_slug}`;
 		}
@@ -312,7 +317,9 @@ function serverProductsResponse(data) {
 		html += "<td>" + queueToAbbr(values.queue) + "</td>";
 		html +=
 			"<td style='text-align: center;'>" +
-			(values.unavailable ? "<a href='#' title='Unavailable' style='cursor: default;'><div class='vh-icon-16 vh-icon-declined'></div></a>" : "") +
+			(values.unavailable
+				? "<a href='#' title='Unavailable' style='cursor: default;'><div class='vh-icon-16 vh-icon-declined'></div></a>"
+				: "") +
 			"</td>";
 		html += "<td style='text-align: center;'>" + values.order_success + "</td>";
 		html += "<td style='text-align: center;'>" + values.order_failed + "</td>";
