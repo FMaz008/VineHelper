@@ -1938,11 +1938,63 @@ function getCaretPositionFromPoint(x, y) {
 	return range;
 }
 
+// Custom dialog implementation
+function showCustomPrompt(word, list, callback) {
+	return new Promise((resolve) => {
+		// Remove existing prompt
+		const existingPrompt = document.querySelector("#custom-prompt");
+		if (existingPrompt) existingPrompt.remove();
+
+		// Create the dialog elements
+		const promptOverlay = document.createElement("div");
+		promptOverlay.id = "custom-prompt";
+		promptOverlay.style.position = "fixed";
+		promptOverlay.style.top = "0";
+		promptOverlay.style.left = "0";
+		promptOverlay.style.width = "100%";
+		promptOverlay.style.height = "100%";
+		promptOverlay.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+		promptOverlay.style.zIndex = "9999";
+		promptOverlay.style.display = "flex";
+		promptOverlay.style.alignItems = "center";
+		promptOverlay.style.justifyContent = "center";
+
+		const promptBox = document.createElement("div");
+		promptBox.style.backgroundColor = "#fff";
+		promptBox.style.padding = "20px";
+		promptBox.style.borderRadius = "8px";
+		promptBox.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.2)";
+		promptBox.style.textAlign = "center";
+		promptBox.innerHTML = `
+            <p style="margin-bottom: 20px;">Add the following word to the <strong>${list}</strong> list:</p>
+            <input id="word-input" type="text" value="${word}" style="width: 100%; padding: 8px; margin-bottom: 20px;" />
+            <button id="confirm-button" style="margin-right: 10px;">Confirm</button>
+            <button id="cancel-button">Cancel</button>
+        `;
+
+		promptOverlay.appendChild(promptBox);
+		document.body.appendChild(promptOverlay);
+
+		// Handle confirm and cancel buttons
+		document.getElementById("confirm-button").addEventListener("click", () => {
+			const editedWord = document.getElementById("word-input").value;
+			promptOverlay.remove();
+			resolve({ confirmed: true, word: editedWord });
+		});
+
+		document.getElementById("cancel-button").addEventListener("click", () => {
+			promptOverlay.remove();
+			resolve({ confirmed: false, word: null });
+		});
+	});
+}
+
 // Show a custom dialog when prompted by the background script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 	if (message.action === "showPrompt" && message.word) {
-		showCustomPrompt(message.word, message.list, (editedWord, confirmed) => {
-			sendResponse({ confirmed, word: editedWord });
+		showCustomPrompt(message.word, message.list).then((result) => {
+			// Send the word to the background script
+			chrome.runtime.sendMessage({ action: "addWord", word: result.word, list: message.list });
 		});
 		return true; // Keep the message channel open for the async response
 	}
@@ -1956,52 +2008,3 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 		}
 	}
 });
-
-// Custom dialog implementation
-function showCustomPrompt(word, list, callback) {
-	// Remove existing prompt
-	const existingPrompt = document.querySelector("#custom-prompt");
-	if (existingPrompt) existingPrompt.remove();
-
-	// Create the dialog elements
-	const promptOverlay = document.createElement("div");
-	promptOverlay.id = "custom-prompt";
-	promptOverlay.style.position = "fixed";
-	promptOverlay.style.top = "0";
-	promptOverlay.style.left = "0";
-	promptOverlay.style.width = "100%";
-	promptOverlay.style.height = "100%";
-	promptOverlay.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
-	promptOverlay.style.zIndex = "9999";
-	promptOverlay.style.display = "flex";
-	promptOverlay.style.alignItems = "center";
-	promptOverlay.style.justifyContent = "center";
-
-	const promptBox = document.createElement("div");
-	promptBox.style.backgroundColor = "#fff";
-	promptBox.style.padding = "20px";
-	promptBox.style.borderRadius = "8px";
-	promptBox.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.2)";
-	promptBox.style.textAlign = "center";
-	promptBox.innerHTML = `
-        <p style="margin-bottom: 20px;">Add the following word to the <strong>${list}</strong> list:</p>
-        <input id="word-input" type="text" value="${word}" style="width: 100%; padding: 8px; margin-bottom: 20px;" />
-        <button id="confirm-button" style="margin-right: 10px;">Confirm</button>
-        <button id="cancel-button">Cancel</button>
-    `;
-
-	promptOverlay.appendChild(promptBox);
-	document.body.appendChild(promptOverlay);
-
-	// Handle confirm and cancel buttons
-	document.getElementById("confirm-button").addEventListener("click", () => {
-		const editedWord = document.getElementById("word-input").value;
-		callback(editedWord, true);
-		promptOverlay.remove();
-	});
-
-	document.getElementById("cancel-button").addEventListener("click", () => {
-		callback(null, false);
-		promptOverlay.remove();
-	});
-}

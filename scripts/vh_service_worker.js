@@ -731,10 +731,47 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 // Store the word sent by the content script
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 	if (message.action === "setWord" && message.word) {
 		selectedWord = message.word; // Update the selected word
 	}
+	if (message.action === "addWord" && message.word) {
+		const confirmedWord = message.word;
+
+		const newKeyword = {
+			contains: confirmedWord,
+			without: "",
+			etv_min: "",
+			etv_max: "",
+		};
+
+		if (message.list === "Hide") {
+			const arrHide = await Settings.get("general.hideKeywords");
+			let newArrHide = [...arrHide, newKeyword];
+
+			//Sort the list
+			newArrHide.sort((a, b) => {
+				if (a.contains.toLowerCase() < b.contains.toLowerCase()) return -1;
+				if (a.contains.toLowerCase() > b.contains.toLowerCase()) return 1;
+				return 0;
+			});
+
+			Settings.set("general.hideKeywords", newArrHide);
+		} else if (message.list === "Highlight") {
+			const arrHighlight = await Settings.get("general.highlightKeywords");
+			let newArrHighlight = [...arrHighlight, newKeyword];
+
+			//Sort the list
+			newArrHighlight.sort((a, b) => {
+				if (a.contains.toLowerCase() < b.contains.toLowerCase()) return -1;
+				if (a.contains.toLowerCase() > b.contains.toLowerCase()) return 1;
+				return 0;
+			});
+
+			Settings.set("general.highlightKeywords", newArrHighlight);
+		}
+	}
+	sendResponse({ success: true });
 });
 
 // Handle context menu clicks and save the word
@@ -751,42 +788,5 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
 	const list = info.menuItemId === "add-to-hideKeywords" ? "Hide" : "Highlight";
 
-	chrome.tabs.sendMessage(tab.id, { action: "showPrompt", word: selectedWord, list: list }, async (response) => {
-		if (response && response.confirmed) {
-			const confirmedWord = response.word;
-
-			const newKeyword = {
-				contains: confirmedWord,
-				without: "",
-				etv_min: "",
-				etv_max: "",
-			};
-
-			if (list === "Hide") {
-				const arrHide = await Settings.get("general.hideKeywords");
-				let newArrHide = [...arrHide, newKeyword];
-
-				//Sort the list
-				newArrHide.sort((a, b) => {
-					if (a.contains.toLowerCase() < b.contains.toLowerCase()) return -1;
-					if (a.contains.toLowerCase() > b.contains.toLowerCase()) return 1;
-					return 0;
-				});
-
-				Settings.set("general.hideKeywords", newArrHide);
-			} else if (list === "Highlight") {
-				const arrHighlight = await Settings.get("general.highlightKeywords");
-				let newArrHighlight = [...arrHighlight, newKeyword];
-
-				//Sort the list
-				newArrHighlight.sort((a, b) => {
-					if (a.contains.toLowerCase() < b.contains.toLowerCase()) return -1;
-					if (a.contains.toLowerCase() > b.contains.toLowerCase()) return 1;
-					return 0;
-				});
-
-				Settings.set("general.highlightKeywords", newArrHighlight);
-			}
-		}
-	});
+	chrome.tabs.sendMessage(tab.id, { action: "showPrompt", word: selectedWord, list: list });
 });
