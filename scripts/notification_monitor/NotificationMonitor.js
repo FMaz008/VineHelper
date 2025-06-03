@@ -25,7 +25,6 @@ class NotificationMonitor extends MonitorCore {
 	_feedPausedAmountStored = 0;
 	#placeholderTilesEndCount = 0;
 	_fetchingRecentItems;
-	_waitTimer; //Timer which wait a short delay to see if anything new is about to happen
 	_gridContainer = null;
 	_gridContainerWidth = 0;
 	_wsErrorMessage = null;
@@ -210,7 +209,7 @@ class NotificationMonitor extends MonitorCore {
 			//Can happen if the user click unpause while the feed is filling.
 			this._updateTabTitle();
 			if (this._noShiftGrid) {
-				this._noShiftGrid.insertPlaceholderTiles(false);
+				this._noShiftGrid.insertPlaceholderTiles();
 			}
 		}
 		this._fetchingRecentItems = false;
@@ -280,7 +279,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Run immediately if forced, otherwise debounce
-		const runTruncate = () => {
+		const runTruncate = (feedPaused = false) => {
 			// Auto truncate
 			if (this._autoTruncateEnabled) {
 				const max = this._settings.get("notification.monitor.autoTruncateLimit");
@@ -312,18 +311,25 @@ class NotificationMonitor extends MonitorCore {
 
 					//insert placeholder tiles to keep the grid elements fixed to their column
 					if (this._noShiftGrid) {
-						this._noShiftGrid.insertEndPlaceholderTiles(itemsToRemoveCount, true);
-						this._noShiftGrid.insertPlaceholderTiles(true);
+						if (feedPaused) {
+							this._noShiftGrid.resetEndPlaceholdersCount();
+						} else {
+							this._noShiftGrid.insertEndPlaceholderTiles(itemsToRemoveCount);
+						}
+						this._noShiftGrid.insertPlaceholderTiles(); //Item count is calculated by the #bulkRemoveItems method calling this._updateTabTitle()
 					}
 				}
 			}
 		};
 
 		if (forceRun) {
-			runTruncate();
+			runTruncate(true);
 		} else {
 			// Set a new debounce timer
-			this._autoTruncateDebounceTimer = setTimeout(runTruncate, 500); // 500ms debounce delay
+			const feedPaused = this._feedPaused; //Store the feed status during the timer's delay
+			this._autoTruncateDebounceTimer = setTimeout(() => {
+				runTruncate(feedPaused);
+			}, 100); // 100ms debounce delay
 		}
 	}
 
@@ -644,20 +650,17 @@ class NotificationMonitor extends MonitorCore {
 		//Apply the filters
 		this.#processNotificationFiltering(tileDOM);
 
-		//Update the tab title:
-		//User a timer to avoid the Fetch Last 100 to call this 100 times, which slow things down.
-		window.clearTimeout(this._waitTimer);
-		this._waitTimer = window.setTimeout(() => {
+		//If we are paused, this will be called when unpausing the feed.
+		if (!this._feedPaused) {
 			this._updateTabTitle();
-		}, 250);
-
-		//If the sort is by date DESC, make the grid element fix to their column
-		if (this._noShiftGrid) {
-			this._noShiftGrid.insertPlaceholderTiles(true);
+			//If we are using the no-shift grid, make the grid element fix to their column
+			if (this._noShiftGrid) {
+				this._noShiftGrid.insertPlaceholderTiles();
+			}
 		}
 
 		//Autotruncate the items if there are too many
-		this.#autoTruncate(!this._feedPaused);
+		this.#autoTruncate(!this._feedPaused); //If we are paused, autotruncate will debounce itself.
 
 		return tileDOM; //Return the DOM element for the tile.
 	}
@@ -679,12 +682,13 @@ class NotificationMonitor extends MonitorCore {
 	}
 
 	/**
-	 * Remove an item from the monitor
+	 * Remove "one" item from the monitor.
+	 * not used by: the auto-truncate feature
+	 * used by: hide click handler, etv filtering.
 	 * @param {object} tile - The DOM element of the tile
 	 * @param {string} asin - The ASIN of the item
-	 * @param {boolean} countTotalTiles - If true, update the tab counter
 	 */
-	#removeTile(tile, asin, countTotalTiles = true) {
+	#removeTile(tile, asin) {
 		if (!tile || !asin) {
 			return;
 		}
@@ -713,11 +717,9 @@ class NotificationMonitor extends MonitorCore {
 		});
 		tile = null;
 
-		if (countTotalTiles) {
-			this._updateTabTitle(); // Update the tab counter
-			if (this._noShiftGrid) {
-				this._noShiftGrid.insertPlaceholderTiles(false);
-			}
+		this._updateTabTitle(); // Update the tab counter
+		if (this._noShiftGrid) {
+			this._noShiftGrid.insertPlaceholderTiles();
 		}
 	}
 
@@ -1016,7 +1018,7 @@ class NotificationMonitor extends MonitorCore {
 		const container = this._gridContainer;
 		if (!container) return;
 
-		await this._preserveScrollPosition(async () => {
+		this._preserveScrollPosition(() => {
 			// Sort the items - reuse the sorting logic from #sortItems
 			const sortedItems = this._itemsMgr.sortItems();
 
@@ -1040,11 +1042,6 @@ class NotificationMonitor extends MonitorCore {
 			// Append all items at once
 			container.appendChild(fragment);
 		});
-
-		//Update the end placeholder tiles
-		if (this._noShiftGrid) {
-			this._noShiftGrid.insertEndPlaceholderTiles(0, true);
-		}
 	}
 
 	//############################################################
@@ -1457,6 +1454,10 @@ class NotificationMonitor extends MonitorCore {
 						this.#processNotificationFiltering(node);
 					});
 					this._updateTabTitle();
+					if (this._noShiftGrid) {
+						this._noShiftGrid.resetEndPlaceholdersCount();
+						this._noShiftGrid.insertPlaceholderTiles();
+					}
 				}, 750); // 300ms debounce delay
 			});
 		}
@@ -1550,7 +1551,7 @@ class NotificationMonitor extends MonitorCore {
 
 		//Bind Pause Feed button
 		const btnPauseFeed = document.getElementById("pauseFeed");
-		btnPauseFeed.addEventListener("click", this.#handlePauseClick);
+		btnPauseFeed.addEventListener("click", () => this.#handlePauseClick());
 
 		// Bind sort and filter controls
 		const sortQueue = document.querySelector("select[name='sort-queue']");
@@ -1560,6 +1561,13 @@ class NotificationMonitor extends MonitorCore {
 			this.#processNotificationSorting();
 			// Force immediate truncate when sort type changes
 			this.#autoTruncate(true);
+			if (this._noShiftGrid) {
+				if (this._sortType == TYPE_DATE_DESC) {
+					this._noShiftGrid.insertPlaceholderTiles();
+				} else {
+					this._noShiftGrid.deletePlaceholderTiles();
+				}
+			}
 		});
 
 		const filterType = document.querySelector("select[name='filter-type']");
@@ -1572,7 +1580,8 @@ class NotificationMonitor extends MonitorCore {
 			});
 			this._updateTabTitle();
 			if (this._noShiftGrid) {
-				this._noShiftGrid.insertPlaceholderTiles(false);
+				this._noShiftGrid.resetEndPlaceholdersCount();
+				this._noShiftGrid.insertPlaceholderTiles();
 			}
 		});
 
@@ -1586,7 +1595,8 @@ class NotificationMonitor extends MonitorCore {
 			});
 			this._updateTabTitle();
 			if (this._noShiftGrid) {
-				this._noShiftGrid.insertPlaceholderTiles(false);
+				this._noShiftGrid.resetEndPlaceholdersCount();
+				this._noShiftGrid.insertPlaceholderTiles();
 			}
 		});
 
@@ -1644,7 +1654,7 @@ class NotificationMonitor extends MonitorCore {
 			});
 			this._updateTabTitle();
 			if (this._noShiftGrid) {
-				this._noShiftGrid.insertPlaceholderTiles(false);
+				this._noShiftGrid.insertPlaceholderTiles();
 			}
 		}
 	}
