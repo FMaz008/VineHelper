@@ -23,6 +23,7 @@ class NotificationMonitor extends MonitorCore {
 	_feedPaused = false;
 	#pausedByMouseoverSeeDetails = false;
 	_feedPausedAmountStored = 0;
+	#placeholderTilesEndCount = 0;
 	_fetchingRecentItems;
 	_waitTimer; //Timer which wait a short delay to see if anything new is about to happen
 	_gridContainer = null;
@@ -40,6 +41,7 @@ class NotificationMonitor extends MonitorCore {
 	_filterQueue = -1;
 	_filterType = -1;
 	_sortType = TYPE_DATE_DESC;
+	_noShiftGrid = null;
 
 	#pinDebounceTimer = null;
 	#pinDebounceClickable = true;
@@ -207,7 +209,9 @@ class NotificationMonitor extends MonitorCore {
 		} else {
 			//Can happen if the user click unpause while the feed is filling.
 			this._updateTabTitle();
-			this.#insertPlaceholderTiles(false);
+			if (this._noShiftGrid) {
+				this._noShiftGrid.insertPlaceholderTiles(false);
+			}
 		}
 		this._fetchingRecentItems = false;
 
@@ -248,6 +252,10 @@ class NotificationMonitor extends MonitorCore {
 			// Replace the old container with the new one
 			this._gridContainer.parentNode.replaceChild(newContainer, this._gridContainer);
 			this._gridContainer = newContainer;
+
+			if (this._noShiftGrid) {
+				this._noShiftGrid.updateGridContainer(this._gridContainer);
+			}
 
 			// Reattach event listeners to the new container
 			this._createListeners(true); //True to limit the creation of a listener to the grid container only.
@@ -295,11 +303,18 @@ class NotificationMonitor extends MonitorCore {
 					itemsArray.sort((a, b) => a.date - b.date); // Sort oldest first (default)
 
 					// Identify which items to keep and which to remove
-					const itemsToKeep = itemsArray.slice(itemsArray.length - max);
+					const itemsToRemoveCount = itemsArray.length - max;
+					const itemsToKeep = itemsArray.slice(itemsToRemoveCount);
 					const asinsToKeep = new Set(itemsToKeep.map((item) => item.asin));
 
 					// Use bulk removal method with the optimized approach for large sets
 					this.#bulkRemoveItems(asinsToKeep, true);
+
+					//insert placeholder tiles to keep the grid elements fixed to their column
+					if (this._noShiftGrid) {
+						this._noShiftGrid.insertEndPlaceholderTiles(itemsToRemoveCount, true);
+						this._noShiftGrid.insertPlaceholderTiles(true);
+					}
 				}
 			}
 		};
@@ -636,79 +651,15 @@ class NotificationMonitor extends MonitorCore {
 			this._updateTabTitle();
 		}, 250);
 
+		//If the sort is by date DESC, make the grid element fix to their column
+		if (this._noShiftGrid) {
+			this._noShiftGrid.insertPlaceholderTiles(true);
+		}
+
 		//Autotruncate the items if there are too many
 		this.#autoTruncate(!this._feedPaused);
 
-		//If the sort is by date DESC, make the grid element fix to their column
-		this.#insertPlaceholderTiles(true);
 		return tileDOM; //Return the DOM element for the tile.
-	}
-
-	/**
-	 * Delete all placeholder tiles from the grid
-	 */
-	#deletePlaceholderTiles() {
-		const placeholderTiles = this._gridContainer.querySelectorAll(".vh-placeholder-tile");
-		for (const placeholderTile of placeholderTiles) {
-			placeholderTile.remove();
-		}
-	}
-
-	/**
-	 * Insert placeholder tiles to the grid to keep the grid elements fixed to their column with in sort TYPE_DATE_DESC
-	 * @param {boolean} countVisibleItems - If true, do a fresh count of the visible items in the grid
-	 */
-	#insertPlaceholderTiles(countVisibleItems = false) {
-		//If the sort is not by date DESC or the feed is paused, we don't need to do anything
-		if (this._sortType != TYPE_DATE_DESC || this._feedPaused) {
-			return;
-		}
-
-		//If tile sizer is not enabled, we don't need to do anything
-		if (!this._settings.get("general.tileSize.enabled")) {
-			return;
-		}
-
-		if (this._settings.get("notification.monitor.listView")) {
-			return;
-		}
-
-		if (!this._settings.get("notification.monitor.placeholders")) {
-			return;
-		}
-
-		//Delete all placeholder tiles
-		this.#deletePlaceholderTiles();
-
-		//Re-calculate the total number of items in the grid
-		if (countVisibleItems) {
-			this._countVisibleItems();
-		}
-		const totalItems = this._visibleItems; //The number of visible items in the grid
-		//ToDo: Find a better way to precisely calculate the actual tile width (with 2 decimal places)
-		const tileWidth = this._settings.get("notification.monitor.tileSize.width") + 1;
-
-		//Calculate the number of tiles per row
-		const gridWidth = this._gridContainerWidth;
-		const tilesPerRow = Math.floor(gridWidth / tileWidth);
-
-		//Caculate the number of placeholder tiles we need to insert
-		const numPlaceholderTiles = (tilesPerRow - (totalItems % tilesPerRow)) % tilesPerRow;
-
-		//console.log(
-		//	`gridWidth: ${gridWidth}, tileWidth: ${tileWidth}, tilesPerRow: ${tilesPerRow}, totalItems: ${totalItems}, numPlaceholderTiles: ${numPlaceholderTiles}`
-		//);
-
-		//Insert the placeholder tiles
-		for (let i = 0; i < numPlaceholderTiles; i++) {
-			const placeholderTile = document.createElement("div");
-			placeholderTile.classList.add("vh-placeholder-tile");
-			placeholderTile.classList.add("vvp-item-tile");
-			placeholderTile.classList.add("vh-logo-vh");
-
-			//Add the tile to the beginning of the grid
-			this._gridContainer.insertBefore(placeholderTile, this._gridContainer.firstChild);
-		}
 	}
 
 	async addVariants(data) {
@@ -764,7 +715,9 @@ class NotificationMonitor extends MonitorCore {
 
 		if (countTotalTiles) {
 			this._updateTabTitle(); // Update the tab counter
-			this.#insertPlaceholderTiles(false);
+			if (this._noShiftGrid) {
+				this._noShiftGrid.insertPlaceholderTiles(false);
+			}
 		}
 	}
 
@@ -1079,7 +1032,7 @@ class NotificationMonitor extends MonitorCore {
 			// Add items to fragment in sorted order
 			validItems.forEach((item) => {
 				if (item.element.parentNode) {
-					item.element.remove();
+					item.element.remove(); //Remove the element from the DOM
 				}
 				fragment.appendChild(item.element);
 			});
@@ -1087,6 +1040,11 @@ class NotificationMonitor extends MonitorCore {
 			// Append all items at once
 			container.appendChild(fragment);
 		});
+
+		//Update the end placeholder tiles
+		if (this._noShiftGrid) {
+			this._noShiftGrid.insertEndPlaceholderTiles(0, true);
+		}
 	}
 
 	//############################################################
@@ -1459,12 +1417,6 @@ class NotificationMonitor extends MonitorCore {
 			true
 		);
 
-		//Event listener for the resize of the client display area
-		window.addEventListener("resize", () => {
-			this._gridContainerWidth = this._gridContainer.offsetWidth;
-			this.#insertPlaceholderTiles();
-		});
-
 		// Add the fix toolbar with the pause button if we scroll past the original pause button
 		const scrollToTopBtn = document.getElementById("scrollToTop-fixed");
 		const originalPauseBtn = document.getElementById("pauseFeed");
@@ -1608,10 +1560,6 @@ class NotificationMonitor extends MonitorCore {
 			this.#processNotificationSorting();
 			// Force immediate truncate when sort type changes
 			this.#autoTruncate(true);
-
-			//Delete all placeholder tiles and insert new ones if needed
-			this.#deletePlaceholderTiles();
-			this.#insertPlaceholderTiles(false);
 		});
 
 		const filterType = document.querySelector("select[name='filter-type']");
@@ -1623,7 +1571,9 @@ class NotificationMonitor extends MonitorCore {
 				this.#processNotificationFiltering(node);
 			});
 			this._updateTabTitle();
-			this.#insertPlaceholderTiles(false);
+			if (this._noShiftGrid) {
+				this._noShiftGrid.insertPlaceholderTiles(false);
+			}
 		});
 
 		const filterQueue = document.querySelector("select[name='filter-queue']");
@@ -1635,7 +1585,9 @@ class NotificationMonitor extends MonitorCore {
 				this.#processNotificationFiltering(node);
 			});
 			this._updateTabTitle();
-			this.#insertPlaceholderTiles(false);
+			if (this._noShiftGrid) {
+				this._noShiftGrid.insertPlaceholderTiles(false);
+			}
 		});
 
 		const autoTruncateCheckbox = document.getElementById("auto-truncate");
@@ -1646,7 +1598,6 @@ class NotificationMonitor extends MonitorCore {
 			// Force immediate truncate when auto truncate is enabled
 			if (this._autoTruncateEnabled) {
 				this.#autoTruncate(true);
-				this.#insertPlaceholderTiles(true);
 			}
 		});
 
@@ -1655,7 +1606,6 @@ class NotificationMonitor extends MonitorCore {
 			this._settings.set("notification.monitor.autoTruncateLimit", parseInt(autoTruncateLimitSelect.value));
 			// Force immediate truncate when limit changes
 			this.#autoTruncate(true);
-			this.#insertPlaceholderTiles(true);
 		});
 	}
 
@@ -1693,7 +1643,9 @@ class NotificationMonitor extends MonitorCore {
 				}
 			});
 			this._updateTabTitle();
-			this.#insertPlaceholderTiles(false);
+			if (this._noShiftGrid) {
+				this._noShiftGrid.insertPlaceholderTiles(false);
+			}
 		}
 	}
 }

@@ -2,6 +2,7 @@ import { NotificationMonitor } from "./NotificationMonitor.js";
 
 import { TileSizer } from "../TileSizer.js";
 import { TierMgr } from "./TierMgr.js";
+import { NoShiftGrid } from "./NoShiftGrid.js";
 
 class NotificationMonitorV3 extends NotificationMonitor {
 	constructor() {
@@ -171,7 +172,13 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		//Initial check of the status of services (service worker and WebSocket)
 		this._serverComMgr.updateServicesStatus();
 
-		this._gridContainerWidth = this._gridContainer.offsetWidth;
+		if (
+			this._settings.get("notification.monitor.placeholders") &&
+			!this._settings.get("notification.monitor.listView") &&
+			this._settings.get("general.tileSize.enabled")
+		) {
+			this._noShiftGrid = new NoShiftGrid(this);
+		}
 	}
 
 	async #initTileSizeWidget() {

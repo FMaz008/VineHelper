@@ -29,7 +29,7 @@ class MonitorCore {
 	_tierMgr = null; //The tier manager object
 
 	_fetchLimit = 100; //The fetch limit for the monitor
-	_visibleItems = 0; //The number of visible items in the monitor
+	_visibleItemsCount = 0;
 
 	constructor(monitorV3 = false) {
 		// Prevent direct instantiation of the abstract class
@@ -288,14 +288,15 @@ class MonitorCore {
 				count++;
 			}
 		}
-		this._visibleItems = count;
+		this._visibleItemsCount = count;
+		return count;
 	}
 
 	_updateTabTitle() {
-		this._countVisibleItems();
+		const itemsCount = this._countVisibleItems();
 
 		// Update the tab title
-		document.title = "VHNM (" + this._visibleItems + ")";
+		document.title = "VHNM (" + itemsCount + ")";
 	}
 
 	// Helper method to preserve scroll position during DOM operations
