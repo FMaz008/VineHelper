@@ -1,178 +1,49 @@
 <strong>Version {{$appVersion}} change notes:</strong>
 <br />
-The notification monitor was overhauled internally, a long overdue task required from the growing set of features
-complicating the code. VH now tries to tracks the vine tier availability of items and implemented a concept of devices
-to complement the UUID system. Using the notification monitor also enable an auto-load feature which load some pages in
-the background. This is to ensure every user is minimally contributing if using the monitor as a lot of people were
-found to be watching the monitor, but never browsing listings. If you are not enabling the monitor, no auto load will
-happen.
+The notification monitor has a new (optional) way of displaying the items to prevent items from shifting position during
+drops.
 <br />
 <br />
 <br />
 <h2>Change log:</h2>
 <h3>General:</h3>
 <ul>
-	<li><span style="color: #0066ff">NEW:</span> Added link next to the ASIN in the saved reviews list.</li>
+	<li><span style="color: #ff3333">FIX:</span> Exporting local hidden items would export pinned items</li>
 	<li>
-		<span style="color: #0066ff">NEW:</span> <strong>Device name and id</strong> VH now allow you to set a custom
-		device name, so you can identify which device are linked to a specific UUID. Additionally, each device now gets
-		a unique(-ish) id (an anonymous fingerprint containing no data) that is used to identify the device alongside
-		the UUID.
+		<span style="color: #ff3333">FIX:</span> Firefox context menu would not add keywords to their respective list.
 	</li>
 	<li>
-		<span style="color: #0066ff">NEW:</span> <strong>Details icon</strong> in the toolbar. Clicking on it will open
-		a popup with the item's details.
+		<span style="color: #ff3333">FIX:</span> Multiple connections to the websocket server could be opened at the
+		same time, causing duplicate on screen (toaster) notifications.
 	</li>
-	<li><span style="color: #0066ff">NEW:</span> <strong>Review title character count</strong> on the review page.</li>
-	<li>
-		<span style="color: #0066ff">NEW:</span> <strong>Keybind to first page</strong>. Configurable keyboard shortcut
-		to go to the first page of the current, eh, page you're on.
-	</li>
-	<li>
-		<span style="color: #ff9900">CHANGE:</span> <strong>Unavailable tab</strong> now regroup the items which have
-		received an ITEM_NOT_IN_ENROLLMENT error, and no longer rely on the successful/unsuccessful order counts. This
-		behavior is now in line with the notifications monitor.
-	</li>
-	<li>
-		<span style="color: #ff3333">FIX:</span> <strong>mobile view</strong>. The highlight toolbar was on the same
-		line as the RFY/AFA/AI buttons. It is now on a new line.
-	</li>
-	<li>
-		<span style="color: #ff3333">FIX:</span> <strong>Modal/popup closing logic</strong>. Modal/popup closing logic
-		has fixed so pressing ESC closes the top one.
-	</li>
-	<li>
-		<span style="color: #ff3333">FIX:</span> <strong>Rogue error</strong>. Rogue error on page without items (ie:
-		empty AFA)
-	</li>
-	<li>
-		<span style="color: #ff3333">FIX:</span> The Available tab had a <strong>column gap</strong> between items,
-		causing the grid to look different than the other tabs.
-	</li>
-	<li>
-		<span style="color: #ff3333">FIX:</span> <strong>Unescaping titles</strong> has been improved for vine searches
-		and tooltips.
-	</li>
-	<li>
-		<span style="color: #ff3333">FIX:</span> Display error message when trying to save a review without a title.
-	</li>
-	<li>
-		<span style="color: #ff9900">REMOVED:</span> <strong>Reliability score</strong>. User's reliability score is no
-		longer displayed.
-	</li>
-	<li>
-		<span style="color: #ff9900">REMOVED:</span> <strong>Spinner fix animation</strong>. The spinner fix animation
-		was removed.
-	</li>
+	<li><span style="color: #ff3333">FIX:</span> Backward support for Firefox pre-121.</li>
+	<li><span style="color: #ff3333">FIX:</span> Search bar too wide when using mobile stylesheets.</li>
+	<li><span style="color: #ff3333">FIX:</span> Ignore single letter words when clicking the search icons.</li>
 </ul>
 <br />
 <h3>Notification Monitor:</h3>
 <ul>
 	<li>
-		<span style="color: #0066ff">NEW:</span> <strong>Auto-load</strong>. When using the notification monitor, VH
-		will automatically load a vine listing page every 5 to 10 minutes. You may see a tab opening and closing
-		promptly in the background when that occurs. This is only active if you are using the notification monitor.
+		<span style="color: #0066ff">NEW:</span> <strong>Placeholders</strong>. Placeholders are used to prevent new
+		items from shifting the entire grid of items everytime something is added. With placeholders, items keep their
+		horizontal placement in the grid, making it easier to browse.
+		<br />
+		<br />Note: Placeholders are not "hidding" items.
 	</li>
 	<li>
-		<span style="color: #0066ff">NEW:</span> If you are using Open in Place,<strong>CTRL+Click</strong> on a See
-		Details button will open it in a new tab.
+		<span style="color: #0066ff">NEW:</span> Option to <strong>ignore unknown/0ETV coloring</strong> if the item
+		match with a highlight keyword.
 	</li>
 	<li>
-		<span style="color: #0066ff">NEW:</span> <strong>Highlight item with Unknown ETV.</strong> New option to
-		highlight items with an unknown ETV.
-	</li>
-	<li>
-		<span style="color: #0066ff">NEW:</span> <strong>Bump 0ETV</strong>. New option to bump 0ETV items to the top of
-		the list. (It was a default behavior before)
-	</li>
-	<li>
-		<span style="color: #0066ff">NEW:</span> <strong>Clear unavailable</strong> Notification Monitors now have a
-		button to clear unavailable items.
-	</li>
-	<li>
-		<span style="color: #0066ff">NEW:</span> <strong>Sort by ETV</strong>. Notification Monitors now have a sort by
-		ETV feature.
-	</li>
-	<li>
-		<span style="color: #0066ff">NEW:</span> <strong>Silver items detection</strong>. Items exceeding the silver
-		limit but still showing to silver members are now flagged as silver items and available to silver members.
-	</li>
-	<li>
-		<span style="color: #0066ff">NEW:</span> <strong>Hide gold notifications</strong>. Silver tier users can now
-		hide gold notifications from the notification monitor.
-	</li>
-	<li><span style="color: #ff9900">CHANGE:</span> <strong>Clear all</strong> now clear visible items only.</li>
-	<li>
-		<span style="color: #ff9900">CHANGE:</span> <strong>Notification monitor header design</strong>. Slight change
-		to the header design to make it more scalable with various screen sizes.
-	</li>
-	<li>
-		<span style="color: #ff9900">CHANGE:</span> <strong>Fetch last X items</strong>. The cooldown timer was changed
-		from 60 seconds to 30 seconds.
-	</li>
-	<li>
-		<span style="color: #ff9900">CHANGE:</span> <strong>Open in place</strong> now supported in *some* Firefox. The
-		feature is unlocked for users to try if it works for them.
-	</li>
-
-	<li>
-		<span style="color: #ff9900">IMPROVEMENT:</span> <strong>Performance improvement</strong>. Auto truncation, and
-		other stuff.
-	</li>
-	<li>
-		<span style="color: #ff9900">IMPROVEMENT:</span> <strong>header design</strong> improved to be more compact and
-		scale better with mobile views.
-	</li>
-	<li>
-		<span style="color: #ff3333">FIX:</span> <strong>Clarified error message</strong> when the notification monitor
-		is not activated in VH's settings.
-	</li>
-	<li>
-		<span style="color: #ff3333">FIX:</span> <strong>Unresponsive clicks</strong> after certain items were removed
-		in bulk.
+		<span style="color: #ff9900">CHANGE:</span> <strong>Auto-Load</strong> default mode is silent on new installs.
 	</li>
 </ul>
 <br />
 <h3>Premium feature(s):</h3>
 <ul>
-	<li>
-		<span style="color: #0066ff">NEW:</span> <strong>Variants button</strong>. Premium tier 2 and above; On the
-		listing pages, adds a button to view all the known variants of an item and load the selected variant directly in
-		the See Details' window. Bypass the need for a spinner fix or to do the manual editing of the See Details
-		button.
-	</li>
-	<li>
-		<span style="color: #0066ff">NEW:</span> <strong>Fetch last 12hrs</strong>. Premium tier 3 and above; On the
-		notification monitor, adds a button to fetch the last 12 hours of notifications (up to 1000 items)
-	</li>
-	<li>
-		<span style="color: #ff9900">CHANGE:</span> <strong>Remote storage of pinned items</strong>. Premium tier 1 and
-		above; The remote storage of pinned items is now a separate setting from the hidden items. The option act as a
-		toggle between using the local storage or the remote storage. The old hybrid way was causing problem if device B
-		unpinned an item pinned by device A, in which case device A would not get its item unpinned. This is now fixed,
-		but means activating the remote storage option will not carry over the items which were pinned locally.
-	</li>
+	<li>N/A</li>
 </ul>
 <br />
-<h3>Policy changes:</h3>
-<ul>
-	<li>
-		Until now, VH was aiming at being backward compatible within major releases. Maintaining backward compatibility
-		with older minor versions of VH will no longer be a priority. As the number of users grows, so are the abusive
-		few modifying VH and causing issues. In an effort to keep VH anonymous, various security measures were put in
-		place and will be progressively be rolled out. Going forward, older versions not supporting these may not be
-		allowed to connect to the server.
-		<br />
-		<br />
-		What can I do? <br />
-		Just ensure VH is set to auto-update (enabled by default on most browsers) so you benefit from the latest
-		updates.
-	</li>
-	<li>
-		<strong>GDPR policy updated</strong> clarifying certain elements being collected (ie.: device id). You can
-		access it via VH Settings -> System tab -> Display GDPR. Then reload a Vine page.
-	</li>
-</ul>
 
 <div class="support-links">
 	<div>
