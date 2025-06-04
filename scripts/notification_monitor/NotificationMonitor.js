@@ -323,7 +323,7 @@ class NotificationMonitor extends MonitorCore {
 		};
 
 		if (forceRun) {
-			runTruncate(true);
+			runTruncate(false);
 		} else {
 			// Set a new debounce timer
 			const feedPaused = this._feedPaused; //Store the feed status during the timer's delay
