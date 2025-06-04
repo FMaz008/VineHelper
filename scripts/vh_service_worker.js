@@ -314,14 +314,31 @@ function isTimeWithinRange() {
 	const now = new Date();
 	const start = new Date();
 	const startTime = Settings.get("notification.autoload.hourStart"); //03:00
-	const [startHour, startMinute] = startTime.split(":").map(Number);
+	let [startHour, startMinute] = startTime.split(":").map(Number);
+	if (startHour < 0 || startHour > 24) {
+		console.log(`${new Date().toLocaleString()} - Invalid start hour: ${startHour}, setting to 3am`);
+		startHour = 3;
+	}
+	if (startMinute < 0 || startMinute > 59) {
+		console.log(`${new Date().toLocaleString()} - Invalid start minute: ${startMinute}, setting to 0`);
+		startMinute = 0;
+	}
+
 	start.setHours(startHour);
 	start.setMinutes(startMinute);
 	start.setSeconds(0);
 
 	const end = new Date();
 	const endTime = Settings.get("notification.autoload.hourEnd"); //17:00
-	const [endHour, endMinute] = endTime.split(":").map(Number);
+	let [endHour, endMinute] = endTime.split(":").map(Number);
+	if (endHour < 0 || endHour > 24) {
+		console.log(`${new Date().toLocaleString()} - Invalid end hour: ${endHour}, setting to 17pm`);
+		endHour = 17;
+	}
+	if (endMinute < 0 || endMinute > 59) {
+		console.log(`${new Date().toLocaleString()} - Invalid end minute: ${endMinute}, setting to 0`);
+		endMinute = 0;
+	}
 	end.setHours(endHour);
 	end.setMinutes(endMinute);
 	end.setSeconds(0);
