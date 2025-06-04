@@ -4,6 +4,8 @@ class NoShiftGrid {
 	_monitor = null;
 	_gridWidth = 0;
 	_endPlaceholdersCount = 0;
+	_endPlaceholdersCountBuffer = 0;
+	_visibleItemsCount = 0;
 
 	constructor(monitorInstance) {
 		this._monitor = monitorInstance;
@@ -47,15 +49,19 @@ class NoShiftGrid {
 	 */
 	insertPlaceholderTiles() {
 		//If the sort is not by date DESC or the feed is paused, we don't need to do anything
-		if (this._monitor._sortType != TYPE_DATE_DESC || this._monitor._feedPaused) {
+		if (this._monitor._sortType != TYPE_DATE_DESC || this._monitor._fetchingRecentItems) {
 			return;
 		}
 
 		//Delete all placeholder tiles
 		this.deletePlaceholderTiles();
 
+		if (!this._monitor._feedPaused) {
+			this._visibleItemsCount = this._monitor._visibleItemsCount;
+		}
+
 		//Re-calculate the total number of items in the grid
-		const theoricalItemsCount = this._monitor._visibleItemsCount + this._endPlaceholdersCount;
+		const theoricalItemsCount = this._visibleItemsCount + this._endPlaceholdersCount;
 
 		//ToDo: Find a better way to precisely calculate the actual tile width (with 2 decimal places)
 		const tileWidth = this._monitor._settings.get("notification.monitor.tileSize.width") + 1;
@@ -69,6 +75,7 @@ class NoShiftGrid {
 		//console.log(
 		//	`gridWidth: ${this._gridWidth}, tileWidth: ${tileWidth}, tilesPerRow: ${tilesPerRow}, theoricalItemsCount: ${theoricalItemsCount}, numPlaceholderTiles: ${numPlaceholderTiles}`
 		//);
+		//console.trace();
 
 		//Insert the placeholder tiles
 		for (let i = 0; i < numPlaceholderTiles; i++) {
@@ -86,7 +93,7 @@ class NoShiftGrid {
 	}
 
 	insertEndPlaceholderTiles(tilesToInsert) {
-		if (this._monitor._sortType !== TYPE_DATE_DESC || this._monitor._feedPaused) {
+		if (this._monitor._sortType !== TYPE_DATE_DESC || this._monitor._fetchingRecentItems) {
 			return;
 		}
 
@@ -95,7 +102,11 @@ class NoShiftGrid {
 			this._gridWidth / this._monitor._settings.get("notification.monitor.tileSize.width")
 		);
 
-		this._endPlaceholdersCount = (this._endPlaceholdersCount + tilesToInsert) % tilesPerRow;
+		this._endPlaceholdersCountBuffer = (this._endPlaceholdersCountBuffer + tilesToInsert) % tilesPerRow;
+
+		if (!this._monitor._feedPaused) {
+			this._endPlaceholdersCount = this._endPlaceholdersCountBuffer;
+		}
 
 		//console.log("Adding ", this._endPlaceholdersCount, " imaginary placeholders tiles at the end of the grid");
 	}

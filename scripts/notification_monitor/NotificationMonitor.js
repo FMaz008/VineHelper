@@ -279,7 +279,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Run immediately if forced, otherwise debounce
-		const runTruncate = (feedPaused = false) => {
+		const runTruncate = (fetchingRecentItems = false) => {
 			// Auto truncate
 			if (this._autoTruncateEnabled) {
 				const max = this._settings.get("notification.monitor.autoTruncateLimit");
@@ -308,15 +308,15 @@ class NotificationMonitor extends MonitorCore {
 
 					// Use bulk removal method with the optimized approach for large sets
 					this.#bulkRemoveItems(asinsToKeep, true);
-
 					//insert placeholder tiles to keep the grid elements fixed to their column
 					if (this._noShiftGrid) {
-						if (feedPaused) {
+						if (fetchingRecentItems) {
 							this._noShiftGrid.resetEndPlaceholdersCount();
+							this._noShiftGrid.insertPlaceholderTiles(); //Item count is calculated by the #bulkRemoveItems method calling this._updateTabTitle()
 						} else {
 							this._noShiftGrid.insertEndPlaceholderTiles(itemsToRemoveCount);
+							this._noShiftGrid.insertPlaceholderTiles(); //Item count is calculated by the #bulkRemoveItems method calling this._updateTabTitle()
 						}
-						this._noShiftGrid.insertPlaceholderTiles(); //Item count is calculated by the #bulkRemoveItems method calling this._updateTabTitle()
 					}
 				}
 			}
@@ -326,9 +326,9 @@ class NotificationMonitor extends MonitorCore {
 			runTruncate(false);
 		} else {
 			// Set a new debounce timer
-			const feedPaused = this._feedPaused; //Store the feed status during the timer's delay
+			const fetchingRecentItems = this._fetchingRecentItems; //Store the feed status during the timer's delay
 			this._autoTruncateDebounceTimer = setTimeout(() => {
-				runTruncate(feedPaused);
+				runTruncate(fetchingRecentItems);
 			}, 100); // 100ms debounce delay
 		}
 	}
@@ -349,6 +349,7 @@ class NotificationMonitor extends MonitorCore {
 			});
 			// Remove each visible item
 			this.#bulkRemoveItems(asins, false);
+			this._noShiftGrid.resetEndPlaceholdersCount();
 		});
 	}
 
@@ -366,6 +367,7 @@ class NotificationMonitor extends MonitorCore {
 
 		// Use the bulk remove method, letting it decide the optimal approach
 		this.#bulkRemoveItems(unavailableAsins, false);
+		this._noShiftGrid.resetEndPlaceholdersCount();
 	}
 
 	/**
@@ -1654,6 +1656,7 @@ class NotificationMonitor extends MonitorCore {
 			});
 			this._updateTabTitle();
 			if (this._noShiftGrid) {
+				this._noShiftGrid.insertEndPlaceholderTiles(0);
 				this._noShiftGrid.insertPlaceholderTiles();
 			}
 		}
