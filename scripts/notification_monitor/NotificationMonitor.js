@@ -5,7 +5,7 @@ import { Tile } from "../Tile.js";
 
 import { YMDHiStoISODate } from "../DateHelper.js";
 import { keywordMatch } from "../service_worker/keywordMatch.js";
-import { unescapeHTML, removeSpecialHTML } from "../StringHelper.js";
+import { escapeHTML, unescapeHTML, removeSpecialHTML } from "../StringHelper.js";
 import { MonitorCore } from "./MonitorCore.js";
 
 //const TYPE_SHOW_ALL = -1;
@@ -515,7 +515,7 @@ class NotificationMonitor extends MonitorCore {
 		this._tpl.setVar("date_displayed", this._formatDate(date));
 		this._tpl.setVar("feedPaused", this._feedPaused);
 		this._tpl.setVar("queue", queue);
-		this._tpl.setVar("description", title);
+		this._tpl.setVar("description", escapeHTML(title));
 		this._tpl.setVar("reason", reason);
 		this._tpl.setVar("highlightKW", KW);
 		this._tpl.setVar("blurKW", BlurKW);
