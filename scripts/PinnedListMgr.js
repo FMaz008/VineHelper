@@ -62,8 +62,12 @@ class PinnedListMgr {
 		const data = await chrome.storage.local.get("pinnedItems");
 		if (data.pinnedItems) {
 			try {
-				// Try parsing the stored string as JSON
-				this.mapPin = new Map(JSON.parse(data.pinnedItems));
+				//Detect if the content is a string of JSON or an object
+				if (typeof data.pinnedItems === "string") {
+					this.mapPin = new Map(JSON.parse(data.pinnedItems));
+				} else {
+					this.mapPin = new Map(Object.entries(data.pinnedItems));
+				}
 			} catch (error) {
 				// If JSON parsing fails assume legacy format and convert to new format
 				// Once the migration period is over delete this section of code
@@ -154,7 +158,7 @@ class PinnedListMgr {
 	}
 
 	async saveList(remoteSave = true) {
-		let storableVal = JSON.stringify(Array.from(this.mapPin.entries()));
+		let storableVal = Object.fromEntries(this.mapPin);
 		await chrome.storage.local.set({ pinnedItems: storableVal }, () => {
 			if (chrome.runtime.lastError) {
 				const error = chrome.runtime.lastError;
@@ -176,10 +180,6 @@ class PinnedListMgr {
 		}
 	}
 
-	async wipe() {
-		let storableVal = JSON.stringify([]);
-		await chrome.storage.local.set({ pinnedItems: storableVal });
-	}
 	/**
 	 * Send new items on the server to be added or removed from the changed list.
 	 */
@@ -230,20 +230,6 @@ class PinnedListMgr {
 			await new Promise((r) => setTimeout(r, 50));
 		}
 		return this.mapPin;
-	}
-
-	serialize(map) {
-		//truncate ms to store as unix timestamp
-		const objToStore = Object.fromEntries(
-			Array.from(map.entries()).map(([key, value]) => [key, Math.floor(value.getTime() / 1000)])
-		);
-		return JSON.stringify(objToStore);
-	}
-
-	deserialize(jsonString) {
-		//multiply by 1000 to convert from unix timestamp to js Date
-		const retrievedObj = JSON.parse(jsonString);
-		return new Map(Object.entries(retrievedObj).map(([key, value]) => [key, value]));
 	}
 }
 

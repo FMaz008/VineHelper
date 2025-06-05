@@ -57,7 +57,11 @@ class HiddenListMgr {
 		if (data.hiddenItems) {
 			try {
 				// Try parsing the stored string as JSON
-				this.mapHidden = this.deserialize(data.hiddenItems);
+				if (typeof data.hiddenItems === "string") {
+					this.mapHidden = this.deserialize(data.hiddenItems);
+				} else {
+					this.mapHidden = new Map(Object.entries(data.hiddenItems));
+				}
 			} catch (error) {
 				// If JSON parsing fails assume legacy format and convert to new format
 				// Once the migration period is over delete this section of code
@@ -99,7 +103,7 @@ class HiddenListMgr {
 	async addItem(asin, save = true, broadcast = true) {
 		if (save) await this.loadFromLocalStorage(); //Load the list in case it was altered in a different tab
 
-		if (!(await this.isHidden(asin))) this.mapHidden.set(asin, new Date());
+		if (!(await this.isHidden(asin))) this.mapHidden.set(asin, Date.now());
 
 		//The server may not be in sync with the local list, and will deal with duplicate.
 		this.updateArrChange({ asin: asin, hidden: true });
@@ -113,7 +117,7 @@ class HiddenListMgr {
 	}
 
 	async saveList(remoteSave = true) {
-		let storableVal = this.serialize(this.mapHidden);
+		let storableVal = Object.fromEntries(this.mapHidden);
 		await chrome.storage.local.set({ hiddenItems: storableVal }, () => {
 			if (chrome.runtime.lastError) {
 				const error = chrome.runtime.lastError;
@@ -208,16 +212,10 @@ class HiddenListMgr {
 		}
 
 		if (Settings.get("hiddenTab.lastGC") < timestampNow - 24 * 60 * 60) {
-			let expiredDate = new Date();
-			expiredDate.setDate(expiredDate.getDate() - 90);
+			let expiredDate = Date.now() - 90 * 24 * 60 * 60 * 1000;
 
 			for (const [asin, date] of this.mapHidden.entries()) {
-				let itemDate = new Date(date);
-				if (isNaN(itemDate.getTime())) {
-					//missing date, set it
-					this.mapHidden.set(asin, new Date());
-					needsSave = true;
-				} else if (itemDate < expiredDate) {
+				if (date < expiredDate) {
 					//expired, delete entry
 					this.mapHidden.delete(asin);
 					needsSave = true;
@@ -268,7 +266,7 @@ class HiddenListMgr {
 					itemDeleted++;
 				}
 
-				let storableVal = this.serialize(this.mapHidden);
+				let storableVal = Object.fromEntries(this.mapHidden);
 				await chrome.storage.local.set({
 					hiddenItems: storableVal,
 				});
@@ -282,18 +280,10 @@ class HiddenListMgr {
 		}
 	}
 
-	serialize(map) {
-		//truncate ms to store as unix timestamp
-		const objToStore = Object.fromEntries(
-			Array.from(map.entries()).map(([key, value]) => [key, Math.floor(value.getTime() / 1000)])
-		);
-		return JSON.stringify(objToStore);
-	}
-
 	deserialize(jsonString) {
 		//multiply by 1000 to convert from unix timestamp to js Date
 		const retrievedObj = JSON.parse(jsonString);
-		return new Map(Object.entries(retrievedObj).map(([key, value]) => [key, new Date(value * 1000)]));
+		return new Map(Object.entries(retrievedObj).map(([key, value]) => [key, value]));
 	}
 }
 
