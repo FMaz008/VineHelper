@@ -282,6 +282,7 @@ class NotificationMonitor extends MonitorCore {
 		const runTruncate = (fetchingRecentItems = false) => {
 			// Auto truncate
 			if (this._autoTruncateEnabled) {
+				let visibleItemsRemovedCount = 0;
 				const max = this._settings.get("notification.monitor.autoTruncateLimit");
 				// Check if we need to truncate based on map size
 				if (this._itemsMgr.items.size > max) {
@@ -301,6 +302,13 @@ class NotificationMonitor extends MonitorCore {
 					//Truncate always clear the oldest items first, regardless of the selected sort type.
 					itemsArray.sort((a, b) => a.date - b.date); // Sort oldest first (default)
 
+					//Count how many of the items to be removed are visible
+					for (let i = max; i < itemsArray.length; i++) {
+						if (itemsArray[i].element.style.display !== "none") {
+							visibleItemsRemovedCount++;
+						}
+					}
+
 					// Identify which items to keep and which to remove
 					const itemsToRemoveCount = itemsArray.length - max;
 					const itemsToKeep = itemsArray.slice(itemsToRemoveCount);
@@ -314,7 +322,7 @@ class NotificationMonitor extends MonitorCore {
 							this._noShiftGrid.resetEndPlaceholdersCount();
 							this._noShiftGrid.insertPlaceholderTiles(); //Item count is calculated by the #bulkRemoveItems method calling this._updateTabTitle()
 						} else {
-							this._noShiftGrid.insertEndPlaceholderTiles(itemsToRemoveCount);
+							this._noShiftGrid.insertEndPlaceholderTiles(visibleItemsRemovedCount);
 							this._noShiftGrid.insertPlaceholderTiles(); //Item count is calculated by the #bulkRemoveItems method calling this._updateTabTitle()
 						}
 					}
