@@ -17,13 +17,9 @@ class DeviceFingerprintMgr {
 	}
 
 	async generateFingerprint(uuid, deviceName) {
-		try {
-			const fingerprintHashBase64 = await this.#generateFingerprintData(uuid);
-			const signatureBase64 = await this._cryptoKeys.signData(fingerprintHashBase64);
-			await this.#uploadFingerprint(uuid, fingerprintHashBase64, signatureBase64, deviceName);
-		} catch (error) {
-			throw error;
-		}
+		const fingerprintHashBase64 = await this.#generateFingerprintData(uuid);
+		const signatureBase64 = await this._cryptoKeys.signData(fingerprintHashBase64);
+		await this.#uploadFingerprint(uuid, fingerprintHashBase64, signatureBase64, deviceName);
 	}
 
 	async clearFingerprint() {
@@ -31,7 +27,12 @@ class DeviceFingerprintMgr {
 	}
 
 	async getFingerprintHash() {
-		return await this._settings.get("general.fingerprint.hash");
+		let hash = await this._settings.get("general.fingerprint.hash");
+		if (!hash) {
+			hash = await this.#generateFingerprintData(await this._settings.get("general.uuid"));
+			await this._settings.set("general.fingerprint.hash", hash);
+		}
+		return hash;
 	}
 
 	async getFingerprintId() {
@@ -46,51 +47,43 @@ class DeviceFingerprintMgr {
 	}
 
 	async updateUUID(uuid) {
-		try {
-			//Get the current device name
-			const deviceMgr = new DeviceMgr(this._settings);
-			const deviceName = await deviceMgr.getDeviceName();
+		//Get the current device name
+		const deviceMgr = new DeviceMgr(this._settings);
+		const deviceName = await deviceMgr.getDeviceName();
 
-			//Generate a signature for the fingerprint
-			const fingerprintHashBase64 = await this.getFingerprintHash();
-			const signatureBase64 = await this._cryptoKeys.signData(fingerprintHashBase64);
+		//Generate a signature for the fingerprint
+		const fingerprintHashBase64 = await this.getFingerprintHash();
+		const signatureBase64 = await this._cryptoKeys.signData(fingerprintHashBase64);
 
-			//Upload the fingerprint, which will validate the UUID and create an entry for the device for that user_id and fingerprint.
-			const result = await this.#uploadFingerprint(uuid, fingerprintHashBase64, signatureBase64, deviceName);
-			if (result) {
-				//Update the UUID in the settings
-				await this._settings.set("general.uuid", uuid);
-			}
-			return true;
-		} catch (error) {
-			throw error;
+		//Upload the fingerprint, which will validate the UUID and create an entry for the device for that user_id and fingerprint.
+		const result = await this.#uploadFingerprint(uuid, fingerprintHashBase64, signatureBase64, deviceName);
+		if (result) {
+			//Update the UUID in the settings
+			await this._settings.set("general.uuid", uuid);
 		}
+		return true;
 	}
 
 	async updateDeviceName(uuid, deviceName) {
-		try {
-			if (!deviceName) {
-				throw new Error("Device name is required");
-			}
-			if (deviceName.length < 15) {
-				throw new Error("Device name must be at least 15 characters long");
-			}
-			if (deviceName.length > 100) {
-				throw new Error("Device name must be less than 100 characters long");
-			}
-
-			const fingerprintHashBase64 = await this.getFingerprintHash();
-			const signatureBase64 = await this._cryptoKeys.signData(fingerprintHashBase64);
-			const result = await this.#uploadFingerprint(uuid, fingerprintHashBase64, signatureBase64, deviceName);
-			if (result) {
-				//Update the device name in the settings
-				const deviceMgr = new DeviceMgr(this._settings);
-				await deviceMgr.setDeviceName(deviceName);
-			}
-			return result;
-		} catch (error) {
-			throw error;
+		if (!deviceName) {
+			throw new Error("Device name is required");
 		}
+		if (deviceName.length < 15) {
+			throw new Error("Device name must be at least 15 characters long");
+		}
+		if (deviceName.length > 100) {
+			throw new Error("Device name must be less than 100 characters long");
+		}
+
+		const fingerprintHashBase64 = await this.getFingerprintHash();
+		const signatureBase64 = await this._cryptoKeys.signData(fingerprintHashBase64);
+		const result = await this.#uploadFingerprint(uuid, fingerprintHashBase64, signatureBase64, deviceName);
+		if (result) {
+			//Update the device name in the settings
+			const deviceMgr = new DeviceMgr(this._settings);
+			await deviceMgr.setDeviceName(deviceName);
+		}
+		return result;
 	}
 
 	async #uploadFingerprint(uuid, fingerprintHashBase64, signatureBase64, deviceName) {
