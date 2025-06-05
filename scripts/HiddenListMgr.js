@@ -266,10 +266,7 @@ class HiddenListMgr {
 					itemDeleted++;
 				}
 
-				let storableVal = Object.fromEntries(this.mapHidden);
-				await chrome.storage.local.set({
-					hiddenItems: storableVal,
-				});
+				await this.saveList(false);
 				bytes = await getStorageSizeFull();
 			}
 
