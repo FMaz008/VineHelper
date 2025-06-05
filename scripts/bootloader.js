@@ -518,6 +518,19 @@ async function initFlushTplCache() {
 			compareVersion(Settings.get("general.versionInfoPopup", false), env.data.appVersion) >
 			VERSION_REVISION_CHANGE
 		) {
+			//First installs don't need v3.5 warning.
+			if (!Settings.get("general.versionInfoPopup", false)) {
+				await Settings.set("general.warning350", true);
+			}
+			if (!Settings.get("general.warning350", false)) {
+				let warning = DialogMgr.newModal("warning");
+				warning.title = "/!\\ Warning";
+				warning.content =
+					"Vine Helper 3.5.0 requires a <strong><u>reload of ALL VINE RELATED TABS</u></strong>, incuding the notification monitor(s). <br /><br />Failure to do so will likely lead to a loss of all locally stored hidden and pinned items.";
+				warning.show();
+				Settings.set("general.warning350", true);
+				return;
+			}
 			const prom = await Tpl.loadFile("view/popup_changelog.html");
 			Tpl.setVar("appVersion", env.data.appVersion);
 			let content = Tpl.render(prom);

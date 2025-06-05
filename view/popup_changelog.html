@@ -1,4 +1,11 @@
-<strong>Version {{$appVersion}} change notes:</strong>
+<br />
+<span style="color: #ff3333">WARNING:</span> <u>Upgrading</u> to Vine Helper 3.5.0 requires a
+<strong><u>reload of ALL VINE RELATED TABS</u></strong
+>, incuding the notification monitor(s). <br /><br />Failure to do so will likely lead to a loss of all locally stored
+hidden and pinned items. (If you have already done so, or are performing a fresh installation, you can ignore this
+warning.)
+<br />
+<br /><strong>Version {{$appVersion}} change notes:</strong>
 <br />
 The notification monitor has a new (optional) way of displaying the items to prevent items from shifting position during
 drops.
@@ -19,6 +26,7 @@ drops.
 	<li><span style="color: #ff3333">FIX:</span> Backward support for Firefox pre-121.</li>
 	<li><span style="color: #ff3333">FIX:</span> Search bar too wide when using mobile stylesheets.</li>
 	<li><span style="color: #ff3333">FIX:</span> Ignore single letter words when clicking the search icons.</li>
+	<li><span style="color: #ff3333">FIX:</span> Format correction for local storage of hidden and pinned items.</li>
 </ul>
 <br />
 <h3>Notification Monitor:</h3>
@@ -51,6 +59,9 @@ drops.
 				</tr>
 			</tbody>
 		</table>
+		<br />
+		If you don't like the new grid, you can disable it under VH's settings: Notifications tab > Notification
+		monitor: Display placeholders to keep items from shifting.
 	</li>
 	<li>
 		<span style="color: #0066ff">NEW:</span> Option to <strong>ignore unknown/0ETV coloring</strong> if the item
