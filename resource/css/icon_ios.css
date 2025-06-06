@@ -1,0 +1,221 @@
+.vh-icon-info {
+	background-size: 100%;
+	background-image: url("../image/info.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-question {
+	background-size: 100%;
+	background-image: url("../image/question.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-bookmark {
+	background-size: 100%;
+	background-image: url("../image/bookmark.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-announcement {
+	background-size: 100%;
+	background-image: url("../image/announcement.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-report {
+	background-size: 100%;
+	background-image: url("../image/report.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-choice {
+	background-size: 100%;
+	background-image: url("../image/choice.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-delayed {
+	background-size: 100%;
+	background-image: url("../image/delayed.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-show {
+	background-size: 100%;
+	background-image: url("../image/show.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-hide {
+	background-size: 100%;
+	background-image: url("../image/hide.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-loading {
+	background-size: 100%;
+	background-image: url("../image/loading.gif");
+	background-repeat: no-repeat;
+}
+.vh-icon-etv {
+	background-size: 100%;
+	background-image: url("../image/etv.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-request {
+	background-size: 100%;
+	background-image: url("../image/request.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-order-success {
+	background-size: 100%;
+	background-image: url("../image/order-success.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-order-failed {
+	background-size: 100%;
+	background-image: url("../image/order-failed.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-search {
+	background-size: 100%;
+	background-image: url("../image/search.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-switch-on {
+	background-size: 100%;
+	background-image: url("../image/switch-on.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-switch-off {
+	background-size: 100%;
+	background-image: url("../image/switch-off.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-favourite {
+	background-size: 100%;
+	background-image: url("../image/favourite.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-unfavourite {
+	background-size: 100%;
+	background-image: url("../image/unfavourite.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-pin {
+	background-size: 100%;
+	background-image: url("../image/pin.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-unpin {
+	background-size: 100%;
+	background-image: url("../image/unpin.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-toggler-left {
+	background-size: 100%;
+	background-image: url("../image/caret-left.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-toggler-right {
+	background-size: 100%;
+	background-image: url("../image/caret-right.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-toggler-down {
+	background-size: 100%;
+	background-image: url("../image/caret-down.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-cogs {
+	background-size: 100%;
+	background-image: url("../image/cogs.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-premium {
+	background-size: 100%;
+	background-image: url("../image/premium.png");
+	background-repeat: no-repeat;
+	background-color: white;
+}
+.vh-icon-trash {
+	background-size: 100%;
+	background-image: url("../image/trash.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-add {
+	background-size: 100%;
+	background-image: url("../image/add.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-vh {
+	background-size: 100%;
+	background-image: url("../image/icon-32.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-vh-48 {
+	background-size: 100%;
+	background-image: url("../image/icon-48.png");
+	background-repeat: no-repeat;
+}
+.vh-logo-vh {
+	background-size: 100%;
+	background-image: url("../image/logo.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-chat {
+	background-size: 100%;
+	background-image: url("../image/chat.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-import {
+	background-size: 100%;
+	background-image: url("../image/import.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-export {
+	background-size: 100%;
+	background-image: url("../image/export.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-upload-server {
+	background-size: 100%;
+	background-image: url("../image/upload-server.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-download-server {
+	background-size: 100%;
+	background-image: url("../image/download-server.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-save {
+	background-size: 100%;
+	background-image: url("../image/save.png");
+	background-repeat: no-repeat;
+}
+.vh-new-corner {
+	background-size: 100%;
+	background-image: url("../image/new-corner.png");
+	background-repeat: no-repeat;
+}
+.vh-1st-medal {
+	background-size: 100%;
+	background-image: url("../image/1st-medal.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-newtab {
+	background-size: 100%;
+	background-image: url("../image/new-tab.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-declined {
+	background-size: 100%;
+	background-image: url("../image/declined.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-reload {
+	background-size: 100%;
+	background-image: url("../image/reload.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-medal-gold {
+	background-size: 100%;
+	background-image: url("../image/medal-gold.png");
+	background-repeat: no-repeat;
+}
+.vh-icon-medal-silver {
+	background-size: 100%;
+	background-image: url("../image/medal-silver.png");
+	background-repeat: no-repeat;
+}

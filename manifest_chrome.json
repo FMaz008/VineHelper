@@ -80,6 +80,7 @@
 			"css": [
 				"resource/css/grid.css",
 				"resource/css/icon.css",
+				"resource/css/icon_chrome.css",
 				"resource/css/main.css",
 				"resource/css/modal.css",
 				"resource/css/notification.css",

@@ -3,12 +3,7 @@
 	"name": "Amazon Vine Helper",
 	"description": "Improve the Amazon Vine experience.",
 	"version": "3.5.0",
-	"permissions": [
-		"alarms",
-		"contextMenus",
-		"storage",
-		"tabs"
-	],
+	"permissions": ["alarms", "contextMenus", "storage", "tabs"],
 	"content_security_policy": {
 		"extension_pages": "default-src 'self'; script-src 'self';  style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.vinehelper.ovh wss://api.vinehelper.ovh https://*.media-amazon.com https://api.llamastories.com https://*.amazon.com https://*.amazon.co.uk https://*.amazon.de https://*.amazon.fr https://*.amazon.es https://*.amazon.it https://*.amazon.co.jp https://*.amazon.com.au https://*.amazon.com.br https://*.amazon.com.mx https://*.amazon.sg https://*.amazon.ca; img-src 'self' https://*.media-amazon.com https://*.paypal.com https://*.paypalobjects.com;"
 	},
@@ -71,22 +66,22 @@
 		}
 	],
 	"background": {
-		"service_worker": "scripts/vh_service_worker_loader.js"
+		"service_worker": "scripts/vh_service_worker.js",
+		"type": "module"
 	},
 	"content_scripts": [
 		{
 			"css": [
 				"resource/css/grid.css",
 				"resource/css/icon.css",
+				"resource/css/icon_ios.css",
 				"resource/css/main.css",
 				"resource/css/modal.css",
 				"resource/css/notification.css",
 				"resource/css/toolbar.css",
 				"resource/css/vinehelper.css"
 			],
-			"js": [
-				"scripts/bootloaderLoader.js"
-			],
+			"js": ["scripts/bootloaderLoader.js"],
 			"matches": [
 				"*://*.amazon.ca/vine/*",
 				"*://*.amazon.it/vine/*",
@@ -106,10 +101,7 @@
 			"run_at": "document_end"
 		},
 		{
-			"js": [
-				"scripts/preboot_inj.js",
-				"scripts/prebootLoader.js"
-			],
+			"js": ["scripts/preboot_inj.js", "scripts/prebootLoader.js"],
 			"matches": [
 				"*://*.amazon.ca/vine/*",
 				"*://*.amazon.it/vine/*",
@@ -129,13 +121,8 @@
 			"run_at": "document_start"
 		},
 		{
-			"css": [
-				"resource/css/vinehelper.css",
-				"resource/css/main.css"
-			],
-			"js": [
-				"scripts/review.js"
-			],
+			"css": ["resource/css/vinehelper.css", "resource/css/main.css"],
+			"js": ["scripts/review.js"],
 			"matches": [
 				"*://*.amazon.ca/review/*",
 				"*://*.amazon.it/review/*",

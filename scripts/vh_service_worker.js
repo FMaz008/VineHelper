@@ -3,7 +3,7 @@ const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_WS_URL = "ws://127.0.0.1:3000";
 const channel = new BroadcastChannel("VineHelper");
 
-import "../node_modules/socket.io/client-dist/socket.io.min.js";
+import { io } from "../node_modules/socket.io/client-dist/socket.io.esm.min.js";
 import { Internationalization } from "../scripts/Internationalization.js";
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
 import {
@@ -139,16 +139,18 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 	}
 });
 
-chrome.notifications.onClicked.addListener((notificationId) => {
-	const { asin, queue, is_parent_asin, enrollment_guid, search } = notificationsData[notificationId];
-	let url;
-	if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
-		url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`;
-	} else {
-		url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search}`;
-	}
-	chrome.tabs.create({
-		url: url,
+chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
+	chrome.notifications.onClicked.addListener((notificationId) => {
+		const { asin, queue, is_parent_asin, enrollment_guid, search } = notificationsData[notificationId];
+		let url;
+		if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
+			url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`;
+		} else {
+			url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search}`;
+		}
+		chrome.tabs.create({
+			url: url,
+		});
 	});
 });
 

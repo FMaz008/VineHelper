@@ -12,12 +12,12 @@ const pkg = require("./package.json");
 	fs.cpSync("./view/", "./dist/view/", { recursive: true });
 	fs.mkdirSync("./dist/node_modules/socket.io/client-dist", { recursive: true });
 	fs.cpSync(
-		"./node_modules/socket.io/client-dist/socket.io.min.js",
-		"./dist/node_modules/socket.io/client-dist/socket.io.min.js"
+		"./node_modules/socket.io/client-dist/socket.io.esm.min.js",
+		"./dist/node_modules/socket.io/client-dist/socket.io.esm.min.js"
 	);
 	fs.cpSync(
-		"./node_modules/socket.io/client-dist/socket.io.min.js.map",
-		"./dist/node_modules/socket.io/client-dist/socket.io.min.js.map"
+		"./node_modules/socket.io/client-dist/socket.io.esm.min.js.map",
+		"./dist/node_modules/socket.io/client-dist/socket.io.esm.min.js.map"
 	);
 	fs.cpSync("./node_modules/vine-styling/", "./dist/node_modules/vine-styling/", { recursive: true });
 	fs.cpSync("./node_modules/@kurkle/color/", "./dist/node_modules/@kurkle\\color/", { recursive: true });
