@@ -528,7 +528,7 @@ async function initFlushTplCache() {
 				warning.content =
 					"Vine Helper 3.5.0 requires a <strong><u>reload of ALL VINE RELATED TABS</u></strong>, incuding the notification monitor(s). <br /><br />Failure to do so will likely lead to a loss of all locally stored hidden and pinned items.";
 				warning.show();
-				Settings.set("general.warning350", true);
+				await Settings.set("general.warning350", true);
 				return;
 			}
 			const prom = await Tpl.loadFile("view/popup_changelog.html");
@@ -541,7 +541,7 @@ async function initFlushTplCache() {
 			m.show();
 		}
 
-		Settings.set("general.versionInfoPopup", env.data.appVersion);
+		await Settings.set("general.versionInfoPopup", env.data.appVersion);
 	}
 }
 
