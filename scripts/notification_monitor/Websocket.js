@@ -81,7 +81,8 @@ class Websocket {
 		});
 
 		this.#socket.on("reloadPage", async (data) => {
-			chrome.runtime.sendMessage({ type: "reloadPage", data: data });
+			console.log(data);
+			chrome.runtime.sendMessage({ type: "reloadPage", queue: data.queue, page: data.page });
 		});
 
 		this.#socket.on("connection_error", (error) => {
@@ -150,7 +151,7 @@ class Websocket {
 	}
 
 	isConnected() {
-		return this.#socket?.connected;
+		return this.#socket?.connected || false;
 	}
 
 	emit(type, data) {

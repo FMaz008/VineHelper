@@ -63,9 +63,9 @@ class AutoLoad {
 			this.#ws.isConnected() &&
 			this._monitor._i13nMgr.getCountryCode() &&
 			!this._monitor._settings.get("thorvarium.mobileandroid") &&
-			!this._monitor._settings.get("thorvarium.mobileios") &&
-			chrome.windows //Mobile devices do not support chrome.windows
+			!this._monitor._settings.get("thorvarium.mobileios")
 		) {
+			console.log("sending Reload request");
 			this.#ws.emit("reloadRequest", {
 				uuid: this._monitor._settings.get("general.uuid", false),
 				fid: this._monitor._settings.get("general.fingerprint.id", false),

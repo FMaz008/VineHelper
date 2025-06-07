@@ -298,7 +298,8 @@ async function processBroadcastMessage(data) {
 		const url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=${queueTable[queue]}&page=${page}#AR`;
 		console.log(`${new Date().toLocaleString()} - Reloading page: ${queue} page ${page}`);
 
-		if (Settings.get("notification.autoload.tab")) {
+		if (Settings.get("notification.autoload.tab") && chrome.windows) {
+			//Mobile devices do not support chrome.windows
 			await openTab(url);
 		} else {
 			await fetchUrl(url, queueTable[queue]);
@@ -312,7 +313,7 @@ async function processBroadcastMessage(data) {
 				await closeTab(currentTabId);
 				currentTabId = null;
 			} catch (error) {
-				console.error("Unexpected error closing tab:", error);
+				console.error("Unexpected error closing tab:" + currentTabId, error);
 			}
 		}
 	}
@@ -356,7 +357,7 @@ async function openTab(url) {
 	//Find the windows id containing the notification monitor with a url containing #monitor
 	if (chrome.windows) {
 		//Find the window containing the notification monitor
-		const monitorWindowId = await findMonitorTab(true);
+		const monitorWindowId = await findMonitorWindow(true);
 		if (monitorWindowId) {
 			if (typeof browser !== "undefined") {
 				// Firefox
@@ -368,7 +369,7 @@ async function openTab(url) {
 					.catch((error) => {});
 			} else {
 				// Chrome
-				const newTab = chrome.tabs.create({ url, windowId: monitorWindowId, active: false });
+				const newTab = await chrome.tabs.create({ url, windowId: monitorWindowId, active: false });
 				currentTabId = newTab.id;
 			}
 		} else {
@@ -377,6 +378,26 @@ async function openTab(url) {
 	} else {
 		console.log(`${new Date().toLocaleString()} - Tab management not supported, abort.`);
 	}
+}
+
+async function findMonitorWindow(inFocusOrBackgroundOnly = false) {
+	const activeTabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+	const activeMonitorTab = activeTabs.find((tab) => tab.url && tab.url.includes("#monitor"));
+	if (activeMonitorTab) {
+		//Monitor tab found, and in focus
+		return activeMonitorTab.windowId;
+	} else {
+		const allTabs = await chrome.tabs.query({});
+		const monitorTab = allTabs.find((tab) => tab.url && tab.url.includes("#monitor"));
+		if (monitorTab) {
+			//Monitor tab found, but not in focus
+			const window = await chrome.windows.get(monitorTab.windowId);
+			if (!inFocusOrBackgroundOnly || window.state === "minimized" || !window.focused) {
+				return monitorTab.windowId;
+			}
+		}
+	}
+	return false;
 }
 
 async function closeTab(tabId) {
