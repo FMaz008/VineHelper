@@ -1,5 +1,5 @@
 /*global chrome*/
-const DEBUG_MODE = true;
+const DEBUG_MODE = false;
 const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_WS_URL = "ws://127.0.0.1:3000";
 const WSReconnectInterval = 12 * 1000; //12 seconds
