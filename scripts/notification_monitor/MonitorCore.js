@@ -1,3 +1,5 @@
+/*global chrome*/
+
 //This file serve the main purpose of reducing the size of the NotificationMonitor.js file.
 //It:
 // - contain the variables specific to V2 or V3
@@ -20,6 +22,8 @@ import { ModalMgr } from "../ModalMgr.js";
 import { NotificationsSoundPlayer } from "../NotificationsSoundPlayer.js";
 import { ServerCom } from "./ServerCom.js";
 import { ItemsMgr } from "./ItemsMgr.js";
+import { Websocket } from "./Websocket.js";
+import { AutoLoad } from "./AutoLoad.js";
 
 class MonitorCore {
 	//Variables linked to monitor V2 vs V3
@@ -27,6 +31,9 @@ class MonitorCore {
 	_monitorV3 = false; //True if the monitor is in V3 mode
 	_tileSizer = null; //The tile sizer tool for v3 monitor
 	_tierMgr = null; //The tier manager object
+	_ws = null; //The websocket object
+	_autoLoad = null; //The auto load object
+	_isMasterMonitor = false; //True if the monitor is the master monitor
 
 	_fetchLimit = 100; //The fetch limit for the monitor
 	_visibleItemsCount = 0;
@@ -80,6 +87,52 @@ class MonitorCore {
 		this._pinMgr.setGetItemDOMElementCallback(this._itemsMgr.getItemDOMElement.bind(this._itemsMgr));
 
 		this.#getFetchLimit();
+
+		//Ask the service worker if we should be the master Notification Monitor (the one in charge of running the websocket)
+		chrome.runtime.sendMessage({ type: "jobApplication" }, (response) => {
+			if (response.youAreTheMasterMonitor) {
+				console.log("We are the master monitor");
+				this.#setMasterMonitor();
+			} else {
+				this.#setSlaveMonitor;
+				console.log("We are a slave monitor");
+			}
+		});
+
+		chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+			if (message.type === "setMasterMonitor") {
+				console.log("We got promoted to the master monitor");
+				this.#setMasterMonitor();
+			}
+			if (message.type === "setSlaveMonitor") {
+				console.log("We got demoted from the master monitor position.");
+				this.#setSlaveMonitor();
+			}
+		});
+
+		window.addEventListener(
+			"beforeunload",
+			(event) => {
+				if (this._isMasterMonitor) {
+					chrome.runtime.sendMessage({ type: "thisIsMyResignationLetter" });
+				}
+			},
+			true
+		);
+	}
+
+	#setMasterMonitor() {
+		this._isMasterMonitor = true;
+		this._ws = new Websocket(this);
+		this._autoLoad = new AutoLoad(this, this._ws);
+	}
+	#setSlaveMonitor() {
+		this._isMasterMonitor = false;
+		if (this._ws !== null) {
+			this._ws.destroyInstance();
+		}
+		this._ws = null;
+		this._autoLoad = null;
 	}
 
 	_updateUserTierInfo() {

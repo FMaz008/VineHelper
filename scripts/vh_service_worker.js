@@ -1,9 +1,7 @@
-const DEBUG_MODE = false; //Will switch the notification countries to "com"
-const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
-//const VINE_HELPER_API_V5_WS_URL = "ws://127.0.0.1:3000";
+/*global chrome*/
+
 const channel = new BroadcastChannel("VineHelper");
 
-import { io } from "../node_modules/socket.io/client-dist/socket.io.esm.min.js";
 import { Internationalization } from "../scripts/Internationalization.js";
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
 import {
@@ -16,15 +14,12 @@ import {
 broadcastFunction(dataBuffering);
 notificationPushFunction(pushNotification);
 
-var i13n = new Internationalization();
 var Settings = new SettingsMgr();
+var i13n = new Internationalization();
 var notificationsData = {};
-var WSReconnectInterval = 0.2; //Firefox shutdown the background script after 30seconds.
 var lastActivityUpdate = Date.now();
-
-if (typeof browser === "undefined") {
-	var browser = chrome;
-}
+var masterMonitorTabId = null;
+var masterCheckInterval = 0.2; //Firefox shutdown the background script after 30seconds.
 
 var fetch100 = false;
 var dataBuffer = [];
@@ -48,11 +43,147 @@ channel.onmessage = (event) => {
 	processBroadcastMessage(event.data);
 };
 
-chrome.runtime.onMessage.addListener((data, sender, sendResponse) => {
-	sendResponse({ success: true });
+chrome.runtime.onMessage.addListener(async (data, sender, sendResponse) => {
+	if (["jobApplication", "thisIsMyResignationLetter"].includes(data.type)) {
+		return;
+	}
 
+	sendResponse({ success: true });
 	processBroadcastMessage(data);
 });
+
+//#####################################################
+//## SERVICE WORKERALARMS
+//#####################################################
+chrome.alarms.create("pingMasterMonitor", {
+	delayInMinutes: 0, // adding this to delay first run, run immediately
+	periodInMinutes: masterCheckInterval,
+});
+
+//#####################################################
+//## MASTER/SLAVE MONITOR HANDLING
+//#####################################################
+
+chrome.runtime.onMessage.addListener(async (data, sender, sendResponse) => {
+	if (data.type == "jobApplication") {
+		if (masterMonitorTabId === null) {
+			masterMonitorTabId = sender.tab.id;
+			console.log(
+				`Received job application ${masterMonitorTabId} for the vacant master monitor position. Hiring as master monitor.`
+			);
+			sendResponse({ youAreTheMasterMonitor: true });
+		} else {
+			if (sender.tab.id == masterMonitorTabId) {
+				console.log(
+					`Received job application ${sender.tab.id}, but he's already assigned the job. Remind him he already works for us.`
+				);
+				sendResponse({ youAreTheMasterMonitor: true });
+			} else {
+				console.log(`Received job application ${sender.tab.id}, but the job is taken.`);
+				sendResponse({ youAreTheMasterMonitor: false });
+			}
+		}
+		return;
+	}
+
+	if (data.type == "thisIsMyResignationLetter") {
+		console.log(`Master monitor gave his resignation letter. Looking for another candidate.`);
+
+		// Start the async operation
+		findMasterMonitorTab(masterMonitorTabId).then((newCandidate) => {
+			if (newCandidate !== null) {
+				console.log(`Demoting ${masterMonitorTabId} from master monitor to slave monitor.`);
+				try {
+					chrome.tabs.sendMessage(masterMonitorTabId, { type: "setSlaveMonitor" });
+				} catch (error) {
+					//Do nothing
+				}
+				masterMonitorTabId = newCandidate;
+			} else {
+				console.log(`No new candidate found, but master monitor might still show up to work.`);
+			}
+		});
+	}
+});
+
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+	//Reload the settings
+	await Settings.refresh();
+
+	const countryCode = Settings.get("general.country");
+	if (countryCode != null) {
+		i13n.setCountryCode(countryCode);
+	}
+
+	if (alarm.name == "pingMasterMonitor") {
+		let lastMasterMonitorTabId = null;
+		if (masterMonitorTabId !== null) {
+			masterMonitorTabId = await checkMasterMonitorStatus();
+		}
+
+		//Search if another monitor window is open
+		if (masterMonitorTabId === null) {
+			masterMonitorTabId = await findMasterMonitorTab(lastMasterMonitorTabId);
+		}
+	}
+});
+
+async function checkMasterMonitorStatus() {
+	return new Promise((resolve) => {
+		chrome.tabs.sendMessage(masterMonitorTabId, { type: "wsPing" }, (response) => {
+			if (chrome.runtime.lastError) {
+				if (masterMonitorTabId !== null) {
+					console.log(`Master monitor ${masterMonitorTabId} quit and didn't leave a 2 weeks notice.`);
+				}
+				resolve(null); //Master monitor is not working with us anymore
+			} else {
+				//console.log(`Master monitor ${masterMonitorTabId} is still working for us.`);
+				resolve(masterMonitorTabId); //Still working with us
+			}
+		});
+	});
+}
+
+async function findMasterMonitorTab(excludingId = null) {
+	const monitorTabId = await findMonitorTab(excludingId);
+	if (monitorTabId) {
+		//Send a message to the new master monitor tab
+		return await findMasterMonitorTabHelper(monitorTabId);
+	}
+	return null;
+}
+
+async function findMonitorTab(excludingId = null) {
+	const allTabs = await chrome.tabs.query({});
+	const monitorTab = allTabs.find((tab) => tab.id !== excludingId && tab.url && tab.url.includes("#monitor"));
+	if (monitorTab) {
+		//Monitor tab found, return its tab id
+		return monitorTab.id;
+	}
+	return null;
+}
+
+async function findMasterMonitorTabHelper(monitorTabId) {
+	return new Promise((resolve) => {
+		chrome.tabs.sendMessage(monitorTabId, { type: "setMasterMonitor" }, (response) => {
+			if (chrome.runtime.lastError) {
+				console.log(`Called back candidate ${monitorTabId}, no answer.`);
+				resolve(null);
+			} else {
+				console.log(`Monitor ${monitorTabId} found, promoting it to master.`);
+				resolve(monitorTabId);
+			}
+		});
+	});
+}
+
+function sendToMasterMonitor(data) {
+	chrome.tabs.sendMessage(masterMonitorTabId, data);
+}
+
+//#####################################################
+//## PROCESS BROADCAST MESSAGES
+//#####################################################
 
 async function processBroadcastMessage(data) {
 	if (data.type == undefined) {
@@ -70,137 +201,18 @@ async function processBroadcastMessage(data) {
 		}
 	}
 
+	//A notification monitor is requesting the latest items
 	if (data.type == "fetchLatestItems") {
-		//Get the last 100 most recent items
-		if (socket?.connected) {
-			socket.emit("getLast100", {
-				app_version: chrome.runtime.getManifest().version,
-				uuid: Settings.get("general.uuid", false),
-				fid: Settings.get("general.fingerprint.id", false),
-				countryCode: i13n.getCountryCode(),
-				limit: data.limit || 100,
-				request_variants: Settings.isPremiumUser(2) && Settings.get("general.displayVariantButton"),
-			});
-		} else {
-			console.warn("Socket not connected - cannot fetch last 100 items");
-		}
+		sendToMasterMonitor({ type: "fetchLatestItems", limit: data.limit });
 	}
 
-	if (data.type == "setCountryCode") {
-		i13n.setCountryCode(data.countryCode);
+	//Master monitor is reporting the fetch latest items
+	if (data.type == "last100") {
+		processLast100Items(data.products);
 	}
 
-	if (data.type == "wsStatus") {
-		if (socket?.connected) {
-			sendMessageToAllTabs({ type: "wsOpen" }, "Websocket server connected.");
-		} else {
-			sendMessageToAllTabs({ type: "wsClosed" }, "Websocket server disconnected.");
-		}
-	}
-
-	//Close the auto-refresh tab
-	if (data.type == "closeARTab") {
-		if (currentTabId !== null) {
-			try {
-				await closeTab(currentTabId);
-				currentTabId = null;
-			} catch (error) {
-				console.error("Unexpected error closing tab:", error);
-			}
-		}
-	}
-
-	if (data.type == "dogpage") {
-		console.log("Dog page detected, halting auto-load timer for 24 hours");
-		resetReloadTimer(1000 * 60 * 60 * 24); //24 hours
-	}
-	if (data.type == "captchapage") {
-		console.log("Captcha page detected, halting auto-load timer for 1 hour");
-		resetReloadTimer(1000 * 60 * 60); //1 hour
-	}
-	if (data.type == "loginpage") {
-		console.log("Login page detected, halting auto-load timer for 1 hour");
-		resetReloadTimer(1000 * 60 * 60); //1 hour
-	}
-}
-
-chrome.alarms.onAlarm.addListener(async (alarm) => {
-	//Reload the settings as a change to the keyword list would require the SW to be reloaded to
-	//be taken into consideration
-	await Settings.refresh();
-	await retrieveSettings();
-
-	if (alarm.name === "websocketReconnect") {
-		if (Settings.get("notification.active")) {
-			connectWebSocket(); //Check the status of the websocket, reconnect if closed.
-		} else {
-			socket?.disconnect();
-		}
-	}
-});
-
-chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
-	chrome.notifications.onClicked.addListener((notificationId) => {
-		const { asin, queue, is_parent_asin, enrollment_guid, search } = notificationsData[notificationId];
-		let url;
-		if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
-			url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`;
-		} else {
-			url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search}`;
-		}
-		chrome.tabs.create({
-			url: url,
-		});
-	});
-});
-
-//Websocket
-
-let socket;
-let socket_connecting = false;
-let currentTabId = null;
-
-function connectWebSocket() {
-	if (!Settings.get("notification.active")) {
-		return;
-	}
-
-	// If the socket is already connected, do not connect again
-	if (socket?.connected) {
-		return;
-	}
-
-	if (i13n.getCountryCode() === null) {
-		console.error("Country not known, refresh/load a vine page.");
-		return; //If the country is not known, do not connect
-	}
-
-	if (socket_connecting) {
-		console.log(`${new Date().toLocaleString()} - WS already connecting, skipping.`);
-		return;
-	}
-
-	socket_connecting = true;
-	socket = io.connect(VINE_HELPER_API_V5_WS_URL, {
-		query: {
-			countryCode: DEBUG_MODE ? "com" : i13n.getCountryCode(),
-			uuid: Settings.get("general.uuid", false),
-			fid: Settings.get("general.fingerprint.id", false),
-			app_version: chrome.runtime.getManifest().version,
-		}, // Pass the country code as a query parameter
-		transports: ["websocket"],
-		reconnection: false, //Handled manually every 30 seconds.
-	});
-
-	// On connection success
-	socket.on("connect", () => {
-		socket_connecting = false;
-		console.log(`${new Date().toLocaleString()} - WS Connected`);
-		sendMessageToAllTabs({ type: "wsOpen" }, "Socket.IO server connected.");
-	});
-
-	socket.on("newItem", (data) => {
-		// Assuming the server sends the data in the same format as before
+	//Master monitor is reporting the new item
+	if (data.type == "newItem") {
 		myStream.input({
 			index: 0,
 			type: "newItem",
@@ -219,12 +231,10 @@ function connectWebSocket() {
 			is_parent_asin: data.item.is_parent_asin,
 			enrollment_guid: data.item.enrollment_guid,
 		});
-	});
-	socket.on("last100", (data) => {
-		// Assuming the server sends the data in the same format as before
-		processLast100Items(data.products);
-	});
-	socket.on("newETV", (data) => {
+	}
+
+	//Master monitor is reporting the new ETV
+	if (data.type == "newETV") {
 		sendMessageToAllTabs(
 			{
 				type: "newETV",
@@ -240,23 +250,44 @@ function connectWebSocket() {
 		data1.asin = data.item.asin;
 		data1.etv = data.item.etv;
 		sendMessageToAllTabs(data1, "newItemETV");
-	});
+	}
 
-	socket.on("newVariants", (data) => {
-		data.type = "newVariants";
-		sendMessageToAllTabs(data, "newVariants");
-	});
-
-	socket.on("unavailableItem", (data) => {
+	//Master monitor is reporting an unavailable item
+	if (data.type == "unavailableItem") {
 		sendMessageToAllTabs({
 			type: "unavailableItem",
 			domain: Settings.get("general.country"),
 			asin: data.item.asin,
 			reason: data.item.reason,
 		});
-	});
+	}
 
-	socket.on("reloadPage", async (data) => {
+	//Master monitor is reporting the new variants
+	if (data.type == "newVariants") {
+		sendMessageToAllTabs(data, "newVariants");
+	}
+
+	//A notification monitor is requesting the websocket status.
+	if (data.type == "wsStatus" && data.status == null) {
+		sendToMasterMonitor({ type: "wsStatus" });
+	}
+
+	//The master monitor is reporting the websocket status.
+	if (data.type == "wsStatus" && data.status !== null) {
+		switch (data.status) {
+			case "wsOpen":
+				sendMessageToAllTabs({ type: "wsOpen" }, "Websocket server connected.");
+				break;
+			case "wsClosed":
+				sendMessageToAllTabs({ type: "wsClosed" }, "Websocket server disconnected.");
+				break;
+		}
+	}
+
+	//## AUTO-LOAD #########################################################
+
+	//A request from the master monitor to open a tab
+	if (data.type == "reloadPage") {
 		if (!data.queue || !data.page) {
 			return false;
 		}
@@ -272,191 +303,50 @@ function connectWebSocket() {
 		} else {
 			await fetchUrl(url, queueTable[queue]);
 		}
-	});
+	}
 
-	socket.on("connection_error", (error) => {
-		sendMessageToAllTabs({ type: "wsError", error: error }, "Socket.IO connection error");
-		console.error(`${new Date().toLocaleString()} - Socket.IO connection error: ${error}`);
-	});
+	//A tab has requested to be closed automatically.
+	if (data.type == "closeARTab") {
+		if (currentTabId !== null) {
+			try {
+				await closeTab(currentTabId);
+				currentTabId = null;
+			} catch (error) {
+				console.error("Unexpected error closing tab:", error);
+			}
+		}
+	}
 
-	// On disconnection
-	socket.on("disconnect", () => {
-		socket_connecting = false;
-		console.log(`${new Date().toLocaleString()} - WS Disconnected`);
-		sendMessageToAllTabs({ type: "wsClosed" }, "Socket.IO server disconnected.");
-	});
+	//A tab has reported to be a dog page.
+	//Tell the master monitor's auto-load timer to stop for 24 hours.
+	if (data.type == "dogpage") {
+		console.log("Dog page detected, halting auto-load timer for 24 hours");
+		sendToMasterMonitor({ type: "dogpage" });
+		resetReloadTimer(1000 * 60 * 60 * 24); //24 hours
+	}
 
-	// On error
-	socket.on("connect_error", (error) => {
-		socket_connecting = false;
-		console.error(`${new Date().toLocaleString()} - Socket.IO error: ${error.message}`);
-	});
+	//A tab has reported to be a captcha page.
+	//Tell the master monitor's auto-load timer to stop for 1 hour.
+	if (data.type == "captchapage") {
+		console.log("Captcha page detected, halting auto-load timer for 1 hour");
+		sendToMasterMonitor({ type: "captchapage" });
+		resetReloadTimer(1000 * 60 * 60); //1 hour
+	}
+
+	//A tab has reported to be a login page.
+	//Tell the master monitor's auto-load timer to stop for 1 hour.
+	if (data.type == "loginpage") {
+		console.log("Login page detected, halting auto-load timer for 1 hour");
+		sendToMasterMonitor({ type: "loginpage" });
+		resetReloadTimer(1000 * 60 * 60); //1 hour
+	}
 }
 
 //#####################################################
 //## AUTO-LOAD
 //#####################################################
 
-let displayTimer = null;
-let reloadTimer = null;
-
-function resetReloadTimer(interval) {
-	reloadTimer = setTimeout(
-		() => {
-			clearTimeout(reloadTimer);
-			reloadTimer = null;
-			setReloadTimer();
-		},
-		interval //in ms
-	);
-}
-
-function isTimeWithinRange() {
-	//Check if the current time is within the auto-load time range
-	const now = new Date();
-	const start = new Date();
-	const startTime = Settings.get("notification.autoload.hourStart"); //03:00
-	let [startHour, startMinute] = startTime.split(":").map(Number);
-	if (startHour < 0 || startHour > 24) {
-		console.log(`${new Date().toLocaleString()} - Invalid start hour: ${startHour}, setting to 3am`);
-		startHour = 3;
-	}
-	if (startMinute < 0 || startMinute > 59) {
-		console.log(`${new Date().toLocaleString()} - Invalid start minute: ${startMinute}, setting to 0`);
-		startMinute = 0;
-	}
-
-	start.setHours(startHour);
-	start.setMinutes(startMinute);
-	start.setSeconds(0);
-
-	const end = new Date();
-	const endTime = Settings.get("notification.autoload.hourEnd"); //17:00
-	let [endHour, endMinute] = endTime.split(":").map(Number);
-	if (endHour < 0 || endHour > 24) {
-		console.log(`${new Date().toLocaleString()} - Invalid end hour: ${endHour}, setting to 17pm`);
-		endHour = 17;
-	}
-	if (endMinute < 0 || endMinute > 59) {
-		console.log(`${new Date().toLocaleString()} - Invalid end minute: ${endMinute}, setting to 0`);
-		endMinute = 0;
-	}
-	end.setHours(endHour);
-	end.setMinutes(endMinute);
-	end.setSeconds(0);
-
-	//Calculate the number of hours between the start and end times
-	const hoursBetween = end.getTime() - start.getTime();
-	const hours = Math.abs(hoursBetween / (1000 * 60 * 60));
-	if (hours < 8) {
-		console.log(
-			`${new Date().toLocaleString()} - Auto-load time range is less than 8 hours, setting to 3am to 17hrs`
-		);
-		//Make the start time 3am and the end time 17hrs
-		start.setHours(3);
-		end.setHours(17);
-	}
-
-	// Handle case where start time is in the previous day (e.g., 23:00 to 09:00)
-	if (start > end) {
-		// If current time is before end time, we're in the next day
-		if (now < end) {
-			start.setDate(start.getDate() - 1);
-		}
-		// If current time is after start time, we're still in the same day
-		else if (now >= start) {
-			end.setDate(end.getDate() + 1);
-		}
-	}
-
-	if (now < start || now > end) {
-		return false;
-	}
-	return true;
-}
-
-async function setReloadTimer() {
-	// Clear any existing timers first
-	if (displayTimer) {
-		clearTimeout(displayTimer);
-		displayTimer = null;
-	}
-	if (reloadTimer) {
-		clearTimeout(reloadTimer);
-		reloadTimer = null;
-	}
-
-	if (!isTimeWithinRange()) {
-		console.log(`${new Date().toLocaleString()} - Auto-load is not active at this time`);
-		resetReloadTimer(1000 * 60 * 15); //15 minutes
-		return;
-	}
-
-	//Send a websocket request
-	if (
-		socket?.connected &&
-		i13n.getCountryCode() &&
-		!Settings.get("thorvarium.mobileandroid") &&
-		!Settings.get("thorvarium.mobileios") &&
-		chrome.windows //Mobile devices do not support chrome.windows
-	) {
-		const monitorTabWindowId = await findMonitorTab(Settings.get("notification.monitor.tab"));
-		if (monitorTabWindowId) {
-			socket.emit("reloadRequest", {
-				uuid: Settings.get("general.uuid", false),
-				fid: Settings.get("general.fingerprint.id", false),
-				countryCode: i13n.getCountryCode(),
-			});
-		} else {
-			console.log(`${new Date().toLocaleString()} - No eligiblemonitor tab found, skipping.`);
-		}
-	}
-
-	//Create an interval between 5 and 10 minutes to check with the server if a page needs to be refreshed
-	let min = Settings.get("notification.autoload.min");
-	let max = Settings.get("notification.autoload.max");
-	if (!min || min > 5) {
-		min = 5;
-	}
-	if (!max || max > 10) {
-		max = 10;
-	}
-	//const timer = 30 * 1000; //30 seconds
-	const timer = Math.floor(Math.random() * (max * 60 * 1000 - min * 60 * 1000 + 1) + min * 60 * 1000); //In milliseconds
-
-	displayTimer = setTimeout(() => {
-		const timerInMinutes = Math.floor(timer / 60 / 1000);
-		const secondsLeft = Math.floor((timer - timerInMinutes * 60 * 1000) / 1000);
-		console.log(
-			`${new Date().toLocaleString()} - Setting reload timer to ${timerInMinutes} minutes and ${secondsLeft} seconds`
-		);
-	}, 500);
-
-	reloadTimer = setTimeout(async () => {
-		setReloadTimer(); //Create a new timer
-	}, timer);
-}
-
-async function findMonitorTab(inFocusOrBackgroundOnly = false) {
-	const activeTabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-	const activeMonitorTab = activeTabs.find((tab) => tab.url && tab.url.includes("#monitor"));
-	if (activeMonitorTab) {
-		//Monitor tab found, and in focus
-		return activeMonitorTab.windowId;
-	} else {
-		const allTabs = await chrome.tabs.query({});
-		const monitorTab = allTabs.find((tab) => tab.url && tab.url.includes("#monitor"));
-		if (monitorTab) {
-			//Monitor tab found, but not in focus
-			const window = await chrome.windows.get(monitorTab.windowId);
-			if (!inFocusOrBackgroundOnly || window.state === "minimized" || !window.focused) {
-				return monitorTab.windowId;
-			}
-		}
-	}
-	return false;
-}
-
+let currentTabId = null;
 //Open a tab with the given url
 async function openTab(url) {
 	if (currentTabId !== null) {
@@ -538,44 +428,6 @@ async function fetchUrl(url, queue) {
 //## BUSINESS LOGIC
 //#####################################################
 
-init();
-
-//Load the settings, if no settings, try again in 10 sec
-async function init() {
-	await retrieveSettings();
-
-	// Clear any existing alarms first
-	await chrome.alarms.clearAll();
-
-	//Check for new items (if the option is disabled the method will return)
-	chrome.alarms.create("websocketReconnect", {
-		delayInMinutes: WSReconnectInterval, // adding this to delay first run
-		periodInMinutes: WSReconnectInterval,
-	});
-
-	if (Settings.get("notification.active")) {
-		//Firefox sometimes re-initialize the background script.
-		//Do not attempt to recreate a new websocket if this method is called when
-		//a websocket already exist.
-		if (!socket?.connected) {
-			connectWebSocket();
-		}
-
-		setReloadTimer();
-	}
-}
-
-async function retrieveSettings() {
-	//Wait for the settings to be loaded.
-	await Settings.waitForLoad();
-
-	//Set the locale
-	const countryCode = Settings.get("general.country");
-	if (countryCode != null) {
-		i13n.setCountryCode(countryCode);
-	}
-}
-
 function processLast100Items(arrProducts) {
 	arrProducts.sort((a, b) => {
 		const dateA = new Date(a.date);
@@ -631,6 +483,53 @@ function processLast100Items(arrProducts) {
 	myStream.input({ type: "fetchRecentItemsEnd" });
 }
 
+async function sendMessageToAllTabs(data, debugInfo) {
+	channel.postMessage(data);
+	try {
+		const tabs = await chrome.tabs.query({});
+		const regex = /^.+?amazon\.([a-z.]+).*\/vine\/.*$/;
+		tabs.forEach((tab) => {
+			if (tab) {
+				//Check to make sure this is a VineHelper tab:
+				const match = regex.exec(tab.url);
+				if (tab.url != undefined && match) {
+					try {
+						chrome.tabs.sendMessage(tab.id, data, (response) => {
+							if (chrome.runtime.lastError) {
+								//console.log(tab);
+								//console.error("Error sending message to tab:", chrome.runtime.lastError.message);
+							}
+						});
+					} catch (e) {
+						console.error("Error sending message to tab:", e);
+					}
+				}
+			}
+		});
+	} catch (error) {
+		console.error("Error querying tabs:", error);
+	}
+}
+
+//#####################################################
+//## PUSH NOTIFICATIONS
+//#####################################################
+
+chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
+	chrome.notifications.onClicked.addListener((notificationId) => {
+		const { asin, queue, is_parent_asin, enrollment_guid, search } = notificationsData[notificationId];
+		let url;
+		if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
+			url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`;
+		} else {
+			url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search}`;
+		}
+		chrome.tabs.create({
+			url: url,
+		});
+	});
+});
+
 function pushNotification(asin, queue, is_parent_asin, enrollment_guid, search_string, title, description, img_url) {
 	chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
 		if (result) {
@@ -671,42 +570,9 @@ function pushNotification(asin, queue, is_parent_asin, enrollment_guid, search_s
 	});
 }
 
-async function sendMessageToAllTabs(data, debugInfo) {
-	channel.postMessage(data);
-	try {
-		const tabs = await chrome.tabs.query({});
-		const regex = /^.+?amazon\.([a-z.]+).*\/vine\/.*$/;
-		tabs.forEach((tab) => {
-			if (tab) {
-				//Check to make sure this is a VineHelper tab:
-				const match = regex.exec(tab.url);
-				if (tab.url != undefined && match) {
-					if (DEBUG_MODE) {
-						//console.log("Sending message to tab " + tab.url);
-						//console.log(tab.url);
-					}
-
-					try {
-						chrome.tabs.sendMessage(tab.id, data, (response) => {
-							if (chrome.runtime.lastError) {
-								//console.log(tab);
-								//console.error("Error sending message to tab:", chrome.runtime.lastError.message);
-							}
-						});
-					} catch (e) {
-						if (DEBUG_MODE) {
-							console.error("Error sending message to tab:", e);
-						}
-					}
-				}
-			}
-		});
-	} catch (error) {
-		if (DEBUG_MODE) {
-			console.error("Error querying tabs:", error);
-		}
-	}
-}
+//#####################################################
+//## CONTEXT MENU
+//#####################################################
 
 let selectedWord = "";
 // Create static context menu items
@@ -753,6 +619,7 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 	if (message.action === "setWord" && message.word) {
 		selectedWord = message.word; // Update the selected word
+		sendResponse({ success: true });
 	}
 	if (message.action === "addWord" && message.word) {
 		const confirmedWord = message.word;
@@ -789,8 +656,8 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 
 			Settings.set("general.highlightKeywords", newArrHighlight);
 		}
+		sendResponse({ success: true });
 	}
-	sendResponse({ success: true });
 });
 
 // Handle context menu clicks and save the word
