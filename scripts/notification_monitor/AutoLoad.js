@@ -61,7 +61,7 @@ class AutoLoad {
 		//Send a websocket request
 		if (
 			this.#ws.isConnected() &&
-			this._monitor._i13n.getCountryCode() &&
+			this._monitor._i13nMgr.getCountryCode() &&
 			!this._monitor._settings.get("thorvarium.mobileandroid") &&
 			!this._monitor._settings.get("thorvarium.mobileios") &&
 			chrome.windows //Mobile devices do not support chrome.windows
@@ -69,7 +69,7 @@ class AutoLoad {
 			this.#ws.emit("reloadRequest", {
 				uuid: this._monitor._settings.get("general.uuid", false),
 				fid: this._monitor._settings.get("general.fingerprint.id", false),
-				countryCode: this._monitor._i13n.getCountryCode(),
+				countryCode: this._monitor._i13nMgr.getCountryCode(),
 			});
 		}
 
