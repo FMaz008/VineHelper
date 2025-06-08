@@ -680,7 +680,8 @@ async function sendMessageToAllTabs(data, debugInfo) {
 			if (tab) {
 				//Check to make sure this is a VineHelper tab:
 				const match = regex.exec(tab.url);
-				if (tab.url != undefined && match) {
+				if (match || tab.url == undefined) {
+					//Edge's edge case: tab.url is undefined, broadcast to all tabs.
 					if (DEBUG_MODE) {
 						//console.log("Sending message to tab " + tab.url);
 						//console.log(tab.url);
