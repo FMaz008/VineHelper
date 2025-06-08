@@ -30,7 +30,7 @@ const pkg = require("./package.json");
 			const stat = fs.statSync(path);
 			if (stat.isDirectory()) {
 				deleteCsjFiles(path);
-			} else if (file.endsWith(".csj")) {
+			} else if (file.endsWith(".cjs")) {
 				fs.rmSync(path);
 			}
 		}
