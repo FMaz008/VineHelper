@@ -1,6 +1,3 @@
-
-
-
 .invert {
 	filter: invert(1);
 }
@@ -45,14 +42,14 @@ div[role="navigation"] > ul > li {
 
 .vh-button-icon {
 	padding-left: 25px;
-	background-size: 15px;
+	background-size: 15px !important;
 	background-position-x: 5px;
 	background-position-y: center;
 }
 
 .vh-icon-only-button {
 	width: 25px;
-	background-size: 12px;
+	background-size: 12px !important;
 	background-position-x: 5px;
 	background-position-y: center;
 }
