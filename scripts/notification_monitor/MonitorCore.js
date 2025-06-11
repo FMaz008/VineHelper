@@ -103,14 +103,10 @@ class MonitorCore {
 		});
 
 		chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-			if (message.type === "setMasterMonitor") {
-				//console.log("We got promoted to the master monitor");
-				this.#setMasterMonitor();
-			}
-			if (message.type === "setSlaveMonitor") {
-				//console.log("We got demoted from the master monitor position.");
-				this.#setSlaveMonitor();
-			}
+			this.#processMessage(message);
+		});
+		window.addEventListener("message", (event) => {
+			this.#processMessage(event.data);
 		});
 
 		//Tell the service worker that we are (potentially) leaving the page and seek another master monitor.
@@ -125,6 +121,14 @@ class MonitorCore {
 		);
 	}
 
+	#processMessage(message) {
+		if (message.type === "setMasterMonitor") {
+			this.#setMasterMonitor();
+		}
+		if (message.type === "setSlaveMonitor") {
+			this.#setSlaveMonitor();
+		}
+	}
 	#setMasterMonitor() {
 		this._isMasterMonitor = true;
 		this._ws = new Websocket(this);

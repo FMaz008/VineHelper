@@ -1463,19 +1463,26 @@ async function recordUnavailableProduct(asin, reason) {
 //Messages sent via: chrome.tabs.sendMessage(tab.id, data);
 //In this case, all messages are coming from the service_worker file.
 chrome.runtime.onMessage.addListener(async function (message, sender, sendResponse) {
-	let data = message;
+	processMessage(message);
+});
+
+window.addEventListener("message", (event) => {
+	processMessage(event.data);
+});
+
+async function processMessage(data) {
 	if (data.type == undefined) {
 		return false;
 	}
 
-	sendResponse({ success: true });
-
 	//If we received a request for a hook execution
 	if (data.type == "hookExecute") {
+		sendResponse({ success: true });
 		hookMgr.hookExecute(data.hookname, data);
 	}
 
 	if (data.type == "newItem") {
+		sendResponse({ success: true });
 		if (
 			!notificationMonitor &&
 			data.index < 10 && //Limit the notification to the top 10 most recents
@@ -1528,7 +1535,24 @@ chrome.runtime.onMessage.addListener(async function (message, sender, sendRespon
 			Notifications.pushNotification(note2);
 		}
 	}
-});
+	if (message.action === "showPrompt" && message.word) {
+		showCustomPrompt(message.word, message.list).then((result) => {
+			// Send the word to the background script
+			chrome.runtime.sendMessage({ action: "addWord", word: result.word, list: message.list });
+		});
+		return true; // Keep the message channel open for the async response
+	}
+
+	if (message.action === "copyASIN") {
+		sendResponse({ success: true });
+		if (selectedASIN) {
+			navigator.clipboard.writeText(selectedASIN);
+			alert("ASIN " + selectedASIN + " copied to clipboard");
+		} else {
+			alert("No ASIN detected. :(");
+		}
+	}
+}
 
 //Key bindings/keyboard shortcuts for navigation
 window.addEventListener("keyup", async function (e) {
@@ -1987,23 +2011,3 @@ function showCustomPrompt(word, list, callback) {
 		});
 	});
 }
-
-// Show a custom dialog when prompted by the background script
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-	if (message.action === "showPrompt" && message.word) {
-		showCustomPrompt(message.word, message.list).then((result) => {
-			// Send the word to the background script
-			chrome.runtime.sendMessage({ action: "addWord", word: result.word, list: message.list });
-		});
-		return true; // Keep the message channel open for the async response
-	}
-
-	if (message.action === "copyASIN") {
-		if (selectedASIN) {
-			navigator.clipboard.writeText(selectedASIN);
-			alert("ASIN " + selectedASIN + " copied to clipboard");
-		} else {
-			alert("No ASIN detected. :(");
-		}
-	}
-});

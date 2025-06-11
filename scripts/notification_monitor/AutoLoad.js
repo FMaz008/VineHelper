@@ -27,18 +27,25 @@ class AutoLoad {
 	#createListener() {
 		//The SW is reporting that a tab was detected to be a dog page, delay the auto-load timer for 24 hours.
 		chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-			if (message.type === "dogpage") {
-				this.resetReloadTimer(1000 * 60 * 60 * 24); //24 hours
-			}
-			//The SW is reporting that a tab was detected to be a captcha page, delay the auto-load timer for 1 hour.
-			if (message.type === "captchapage") {
-				this.resetReloadTimer(1000 * 60 * 60); //1 hour
-			}
-			//The SW is reporting that a tab was detected to be a login page, delay the auto-load timer for 1 hour.
-			if (message.type === "loginpage") {
-				this.resetReloadTimer(1000 * 60 * 60); //1 hour
-			}
+			this.processMessage(message);
 		});
+		window.addEventListener("message", (event) => {
+			this.processMessage(event.data);
+		});
+	}
+
+	processMessage(message) {
+		if (message.type === "dogpage") {
+			this.resetReloadTimer(1000 * 60 * 60 * 24); //24 hours
+		}
+		//The SW is reporting that a tab was detected to be a captcha page, delay the auto-load timer for 1 hour.
+		if (message.type === "captchapage") {
+			this.resetReloadTimer(1000 * 60 * 60); //1 hour
+		}
+		//The SW is reporting that a tab was detected to be a login page, delay the auto-load timer for 1 hour.
+		if (message.type === "loginpage") {
+			this.resetReloadTimer(1000 * 60 * 60); //1 hour
+		}
 	}
 
 	async #setReloadTimer() {
