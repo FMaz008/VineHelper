@@ -68,7 +68,7 @@ class MonitorCore {
 		}
 
 		//Notification Monitor's specific classes
-		this._serverComMgr = ServerCom.getInstance();
+		this._serverComMgr = new ServerCom();
 		this._serverComMgr.setMarkUnavailableCallback(this.markItemUnavailable.bind(this));
 		this._serverComMgr.setAddTileInGridCallback(this.addTileInGrid.bind(this));
 		this._serverComMgr.setFetchRecentItemsEndCallback(this.fetchRecentItemsEnd.bind(this));

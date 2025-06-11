@@ -4,20 +4,8 @@ const Settings = new SettingsMgr();
 import { Internationalization } from "../Internationalization.js";
 const i13n = new Internationalization();
 
-//For everyone but Safari
-chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-	ServerCom.getInstance().processBroadcastMessage(message);
-	return true;
-});
-
-//For Safari
-window.addEventListener("message", (event) => {
-	ServerCom.getInstance().processBroadcastMessage(event.data);
-});
-
 class ServerCom {
 	static #instance = null;
-	static #initialized = false;
 
 	#serviceWorkerStatusTimer = null;
 	#statusTimer = null;
@@ -31,22 +19,30 @@ class ServerCom {
 	fetchAutoLoadUrlCallback = null;
 
 	constructor() {
-		if (ServerCom.#initialized) {
-			throw new Error("ServerCom is a singleton. Use getInstance() instead.");
+		if (ServerCom.#instance) {
+			return ServerCom.#instance;
 		}
-		ServerCom.#initialized = true;
+		ServerCom.#instance = this;
 
 		//Create a timer to check if the service worker is still running
 		this.#serviceWorkerStatusTimer = window.setInterval(() => {
 			this.#updateServiceWorkerStatus();
 		}, 10000);
+
+		this.#createEventListeners();
 	}
 
-	static getInstance() {
-		if (!this.#instance) {
-			this.#instance = new ServerCom();
-		}
-		return this.#instance;
+	#createEventListeners() {
+		//For everyone but Safari
+		chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+			this.processBroadcastMessage(message);
+			return true;
+		});
+
+		//For Safari
+		window.addEventListener("message", (event) => {
+			this.processBroadcastMessage(event.data);
+		});
 	}
 
 	setMarkUnavailableCallback(callback) {
