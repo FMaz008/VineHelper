@@ -23,6 +23,9 @@ var masterCheckInterval = 0.2; //Firefox shutdown the background script after 30
 
 var fetch100 = false;
 var dataBuffer = [];
+
+var wsPingStatus = 0;
+
 function dataBuffering(data) {
 	if (!fetch100) {
 		sendMessageToAllTabs(data);
@@ -130,17 +133,40 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 
 async function checkMasterMonitorStatus() {
 	return new Promise((resolve) => {
-		chrome.tabs.sendMessage(masterMonitorTabId, { type: "wsPing" }, (response) => {
-			if (chrome.runtime.lastError) {
-				if (masterMonitorTabId !== null) {
-					console.log(`Master monitor ${masterMonitorTabId} quit and didn't leave a 2 weeks notice.`);
-				}
-				resolve(null); //Master monitor is not working with us anymore
-			} else {
-				//console.log(`Master monitor ${masterMonitorTabId} is still working for us.`);
-				resolve(masterMonitorTabId); //Still working with us
+		// Set up listener for wsPong response
+		const tabMsgListener = (message) => {
+			if (message.type === "wsPong") {
+				pongReceived(masterMonitorTabId);
 			}
-		});
+		};
+		chrome.runtime.onMessage.addListener(tabMsgListener);
+
+		const pongReceived = (tabId) => {
+			wsPingStatus = !!tabId;
+			chrome.runtime.onMessage.removeListener(tabMsgListener);
+			resolve(tabId);
+		};
+
+		// Send ping message
+		wsPingStatus = false;
+		if (chrome.permissions.contains({ permissions: ["scripting"] })) {
+			chrome.scripting.executeScript({
+				target: { tabId: masterMonitorTabId },
+				func: () => {
+					window.postMessage({ type: "wsPing" }, "*");
+				},
+			});
+		} else {
+			chrome.tabs.sendMessage(masterMonitorTabId, { type: "wsPing" });
+		}
+
+		// Set timeout to resolve false if no response in 1 second
+		setTimeout(() => {
+			if (!wsPingStatus) {
+				pongReceived(null);
+			}
+			wsPingStatus = false;
+		}, 500);
 	});
 }
 
@@ -178,22 +204,8 @@ async function findMasterMonitorTabHelper(monitorTabId) {
 }
 
 function sendToMasterMonitor(data) {
-	chrome.permissions.contains({ permissions: ["scripting"] }, (result) => {
-		if (result) {
-			//Try sending message via scripting (new method, as Safari does not support tab messaging)
-			console.log("Sending to master tab:", data);
-			chrome.scripting.executeScript({
-				target: { tabId: tab.id },
-				func: (data) => {
-					window.postMessage(data, "*");
-				},
-				args: [data],
-			});
-		} else {
-			//Try sending a message via tab (classic method)
-			chrome.tabs.sendMessage(masterMonitorTabId, data);
-		}
-	});
+	console.log("Sending to master monitor:", data);
+	sendMessageToTab(masterMonitorTabId, data);
 }
 
 //#####################################################
@@ -520,7 +532,7 @@ function processLast100Items(arrProducts) {
 	myStream.input({ type: "fetchRecentItemsEnd" });
 }
 
-async function sendMessageToAllTabs(data, debugInfo) {
+async function sendMessageToAllTabs(data) {
 	channel.postMessage(data);
 	try {
 		const tabs = await chrome.tabs.query({});
@@ -532,39 +544,44 @@ async function sendMessageToAllTabs(data, debugInfo) {
 				//Edge Canari Mobile does not support tab.url
 				if (tab.url == undefined || match) {
 					console.log("Sending to tab id " + tab.id, data);
-					//Check if the scripting permissiong is enabled
-					chrome.permissions.contains({ permissions: ["scripting"] }, (result) => {
-						if (result) {
-							//Try sending message via scripting (new method, as Safari does not support tab messaging)
-							chrome.scripting.executeScript({
-								target: { tabId: tab.id },
-								func: (data) => {
-									window.postMessage(data, "*");
-								},
-								args: [data],
-							});
-						} else {
-							// Try sending message via tab messaging (classic method)
-							try {
-								chrome.tabs.sendMessage(tab.id, data, (response) => {
-									if (chrome.runtime.lastError) {
-										console.error(
-											"Error sending message to tab:",
-											chrome.runtime.lastError.message
-										);
-									}
-								});
-							} catch (e) {
-								console.error("Error sending message to tab:", e);
-							}
-						}
-					});
+					sendMessageToTab(tab.id, data);
 				} //end if tab.url == undefined || match
 			}
 		});
 	} catch (error) {
 		console.error("Error querying tabs:", error);
 	}
+}
+
+function sendMessageToTab(tabId, data) {
+	//Check if the scripting permission is enabled
+	chrome.permissions.contains({ permissions: ["scripting"] }, (result) => {
+		if (result) {
+			//Try sending message via scripting (new method, as Safari does not support tab messaging)
+			try {
+				chrome.scripting.executeScript({
+					target: { tabId: tabId },
+					func: (data) => {
+						window.postMessage(data, "*");
+					},
+					args: [data],
+				});
+			} catch (e) {
+				console.error("Error sending message to tab via scripting:", e);
+			}
+		} else {
+			//Try sending a message via tab (classic method)
+			try {
+				chrome.tabs.sendMessage(tabId, data, (response) => {
+					if (chrome.runtime.lastError) {
+						console.error("Error sending message to tab:", chrome.runtime.lastError.message);
+					}
+				});
+			} catch (e) {
+				console.error("Error sending message to tab:", e);
+			}
+		}
+	});
 }
 
 //#####################################################

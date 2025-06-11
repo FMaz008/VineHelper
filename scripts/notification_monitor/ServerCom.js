@@ -6,19 +6,18 @@ const i13n = new Internationalization();
 
 //For everyone but Safari
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-	const serverCom = new ServerCom();
-	serverCom.processBroadcastMessage(message);
+	ServerCom.getInstance().processBroadcastMessage(message);
 	return true;
 });
 
 //For Safari
 window.addEventListener("message", (event) => {
-	const serverCom = new ServerCom();
-	serverCom.processBroadcastMessage(event.data);
+	ServerCom.getInstance().processBroadcastMessage(event.data);
 });
 
 class ServerCom {
-	#instance = null;
+	static #instance = null;
+	static #initialized = false;
 
 	#serviceWorkerStatusTimer = null;
 	#statusTimer = null;
@@ -32,15 +31,22 @@ class ServerCom {
 	fetchAutoLoadUrlCallback = null;
 
 	constructor() {
-		if (this.#instance) {
-			return this.#instance;
+		if (ServerCom.#initialized) {
+			throw new Error("ServerCom is a singleton. Use getInstance() instead.");
 		}
-		this.#instance = this;
+		ServerCom.#initialized = true;
 
 		//Create a timer to check if the service worker is still running
 		this.#serviceWorkerStatusTimer = window.setInterval(() => {
 			this.#updateServiceWorkerStatus();
 		}, 10000);
+	}
+
+	static getInstance() {
+		if (!this.#instance) {
+			this.#instance = new ServerCom();
+		}
+		return this.#instance;
 	}
 
 	setMarkUnavailableCallback(callback) {
@@ -73,6 +79,7 @@ class ServerCom {
 
 	/**
 	 * Check the status of the service worker and the WebSocket connection.
+	 * Called once upon loading the monitor V2 or V3.
 	 */
 	updateServicesStatus() {
 		//Check the status of the service worker.

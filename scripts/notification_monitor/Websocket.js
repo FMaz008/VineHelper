@@ -116,17 +116,19 @@ class Websocket {
 
 	#createListener() {
 		chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-			this.#processMessage(message);
+			this.#processMessage(message, sender, sendResponse);
 		});
 		window.addEventListener("message", (event) => {
 			this.#processMessage(event.data);
 		});
 	}
 
-	#processMessage(message) {
+	#processMessage(message, sender, sendResponse) {
 		//If the service worker wsPing the master monitor, confirm we are still alive
 		if (message.type === "wsPing") {
-			sendResponse({ success: true });
+			chrome.runtime.sendMessage({
+				type: "wsPong",
+			});
 		}
 
 		//The service worker is passing along a request to fetch the latest items
