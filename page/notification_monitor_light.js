@@ -11,5 +11,5 @@ if (navigator.userAgent.includes("Chrome") || navigator.userAgent.includes("Chro
 	document.head.innerHTML += `<link rel="stylesheet" type="text/css" href="../resource/css/icon_chrome.css" />`;
 }
 if (navigator.userAgent.includes("Safari")) {
-	document.head.innerHTML += `<link rel="stylesheet" type="text/css" href="../resource/css/icon_safari.css" />`;
+	document.head.innerHTML += `<link rel="stylesheet" type="text/css" href="../resource/css/icon_ios.css" />`;
 }
