@@ -1290,6 +1290,14 @@ class NotificationMonitor extends MonitorCore {
 	 * @param {Event} e - The click event
 	 */
 	#clickHandler(e) {
+		//If we are using the mouseover pause feature, and the user clicks, we need to unpause the feed
+		if (this.#pausedByMouseoverSeeDetails) {
+			this.#pausedByMouseoverSeeDetails = false;
+			if (this._feedPaused) {
+				this.#handlePauseClick();
+			}
+		}
+
 		// If a user clicks on the link wrapper around an icon, it would navigate to the
 		// default href (which is usually #) which breaks several things. We'll fix this by
 		// matching the parent link elements and prevent default there (bubbling events)
