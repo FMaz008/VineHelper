@@ -1535,15 +1535,15 @@ async function processMessage(data) {
 			Notifications.pushNotification(note2);
 		}
 	}
-	if (message.action === "showPrompt" && message.word) {
-		showCustomPrompt(message.word, message.list).then((result) => {
+	if (data.action === "showPrompt" && data.word) {
+		showCustomPrompt(data.word, data.list).then((result) => {
 			// Send the word to the background script
-			chrome.runtime.sendMessage({ action: "addWord", word: result.word, list: message.list });
+			chrome.runtime.sendMessage({ action: "addWord", word: result.word, list: data.list });
 		});
 		return true; // Keep the message channel open for the async response
 	}
 
-	if (message.action === "copyASIN") {
+	if (data.action === "copyASIN") {
 		sendResponse({ success: true });
 		if (selectedASIN) {
 			navigator.clipboard.writeText(selectedASIN);
