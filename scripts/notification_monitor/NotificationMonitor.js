@@ -202,6 +202,8 @@ class NotificationMonitor extends MonitorCore {
 	 * It will unbuffer the feed if it is paused and sort the items.
 	 */
 	async fetchRecentItemsEnd() {
+		this._fetchingRecentItems = false;
+
 		if (this._feedPaused) {
 			//Unbuffer the feed
 			this.#handlePauseClick();
@@ -212,7 +214,6 @@ class NotificationMonitor extends MonitorCore {
 				this._noShiftGrid.insertPlaceholderTiles();
 			}
 		}
-		this._fetchingRecentItems = false;
 
 		await this.#processNotificationSorting();
 	}

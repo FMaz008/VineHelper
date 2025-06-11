@@ -43,6 +43,9 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		//Remove the navigation
 		this._hideSelector("#vvp-items-grid-container > div[role=navigation]");
 
+		//Remove the pagination:
+		this._hideSelector("#vvp-items-grid-container > nav");
+
 		//Remove the categories
 		this._hideSelector("#vvp-browse-nodes-container");
 
