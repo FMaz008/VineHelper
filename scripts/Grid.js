@@ -465,11 +465,9 @@ async function hideAllItemsNext() {
 	hideAllItems();
 
 	try {
-		const pagination = document.querySelector("ul.a-pagination");
-		const currentLi = pagination.querySelector("li.a-selected");
-		const nextLi = currentLi.nextElementSibling;
+		const nextLi = document.querySelector("#vvp-items-grid-container nav ul li:last-child a");
 		if (nextLi) {
-			const nextPage = nextLi.querySelector("a").getAttribute("href");
+			const nextPage = nextLi.getAttribute("href");
 			window.location = nextPage;
 		}
 	} catch (e) {

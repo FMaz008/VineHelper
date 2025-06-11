@@ -1606,9 +1606,9 @@ window.addEventListener("keyup", async function (e) {
 		[Settings.get("keyBindings.showAll")]: showAllItems,
 		[Settings.get("keyBindings.hideAllNext")]: hideAllItemsNext,
 		[Settings.get("keyBindings.nextPage")]: () =>
-			document.querySelector("#vvp-items-grid-container>div>ul.a-pagination li:last-child a")?.click(),
+			document.querySelector("#vvp-items-grid-container nav ul li:last-child a")?.click(),
 		[Settings.get("keyBindings.previousPage")]: () =>
-			document.querySelector("#vvp-items-grid-container>div>ul.a-pagination li:first-child a")?.click(),
+			document.querySelector("#vvp-items-grid-container nav ul li:first-child a")?.click(),
 		[Settings.get("keyBindings.debug")]: async () => {
 			let content = await logger.getContent();
 			let regex = /\s*{<br\/>\n\s*"time": ([0-9]+),<br\/>\n\s*"event": "(.+?)"<br\/>\n\s*}(?:,<br\/>\n)?/gm;
