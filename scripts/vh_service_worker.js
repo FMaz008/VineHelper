@@ -33,7 +33,7 @@ function dataBuffering(data) {
 	}
 	dataBuffer.push(data);
 	if (data.type == "fetchRecentItemsEnd") {
-		sendMessageToAllTabs({ type: "fetch100", data: dataBuffer });
+		sendMessageToAllTabs({ type: "fetch100", data: JSON.stringify(dataBuffer) });
 		dataBuffer = [];
 		fetch100 = false;
 	}

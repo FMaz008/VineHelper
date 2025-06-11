@@ -426,6 +426,7 @@ class NotificationMonitor extends MonitorCore {
 	 * @returns {false|object} - Return the DOM element of the tile if added, false otherwise
 	 */
 	async addTileInGrid(itemData) {
+		console.log("Adding item to grid", itemData);
 		if (!itemData) {
 			return false;
 		}

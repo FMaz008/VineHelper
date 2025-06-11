@@ -41,6 +41,7 @@ class ServerCom {
 
 		//For Safari
 		window.addEventListener("message", (event) => {
+			console.log(event.data);
 			this.processBroadcastMessage(event.data);
 		});
 	}
@@ -120,7 +121,8 @@ class ServerCom {
 			await this.addTileInGridCallback(data);
 		}
 		if (data.type == "fetch100") {
-			for (const item of data.data) {
+			console.log("Fetch last received.");
+			for (const item of JSON.parse(data.data)) {
 				if (item.type == "newItem") {
 					await this.addTileInGridCallback(item);
 				} else if (item.type == "fetchRecentItemsEnd") {
