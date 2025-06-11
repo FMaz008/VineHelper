@@ -619,6 +619,8 @@ async function loadPinnedList() {
 		logger.add("GRID: Loading locally stored pinned list");
 		let mapPin = new Map();
 		mapPin = await PinnedList.getList();
+		//Sort the map by date_added descending
+		mapPin = new Map([...mapPin].sort((a, b) => a[1].date_added - b[1].date_added));
 		mapPin.forEach(async (value, key) => {
 			const tile = getTileByAsin(key);
 			if (tile) {

@@ -513,7 +513,8 @@ async function sendMessageToAllTabs(data, debugInfo) {
 			if (tab) {
 				//Check to make sure this is a VineHelper tab:
 				const match = regex.exec(tab.url);
-				if (tab.url != undefined && match) {
+				//Edge Canari Mobile does not support tab.url
+				if (tab.url == undefined || match) {
 					try {
 						chrome.tabs.sendMessage(tab.id, data, (response) => {
 							if (chrome.runtime.lastError) {

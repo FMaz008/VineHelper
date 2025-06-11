@@ -123,6 +123,7 @@ class PinnedListMgr {
 		if (save) await this.loadFromLocalStorage(); //Load the list in case it was altered in a different tab
 
 		this.mapPin.set(asin, {
+			date_added: Date.now(),
 			title: title,
 			queue: queue,
 			thumbnail: thumbnail,

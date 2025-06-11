@@ -22,6 +22,20 @@ const pkg = require("./package.json");
 	fs.cpSync("./node_modules/vine-styling/", "./dist/node_modules/vine-styling/", { recursive: true });
 	fs.cpSync("./node_modules/@kurkle/color/", "./dist/node_modules/@kurkle\\color/", { recursive: true });
 	fs.cpSync("./node_modules/canvas-confetti/", "./dist/node_modules/canvas-confetti/", { recursive: true });
+	console.log("Removing .csj files...");
+	const deleteCsjFiles = (dir) => {
+		const files = fs.readdirSync(dir);
+		for (const file of files) {
+			const path = `${dir}/${file}`;
+			const stat = fs.statSync(path);
+			if (stat.isDirectory()) {
+				deleteCsjFiles(path);
+			} else if (file.endsWith(".cjs")) {
+				fs.rmSync(path);
+			}
+		}
+	};
+	deleteCsjFiles("./dist");
 	const platforms = ["firefox", "chrome", "ios"];
 	for (const platform of platforms) {
 		console.log(`Building ${platform} extension...`);
