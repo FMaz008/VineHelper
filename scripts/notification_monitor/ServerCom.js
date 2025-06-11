@@ -4,17 +4,6 @@ const Settings = new SettingsMgr();
 import { Internationalization } from "../Internationalization.js";
 const i13n = new Internationalization();
 
-// Create a static instance holder
-let serverComInstance = null;
-
-// Register message listener at root level, a restriction with Safari.
-chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-	if (serverComInstance) {
-		serverComInstance.processBroadcastMessage(message);
-	}
-	return true; // Keep the message channel open for async responses
-});
-
 class ServerCom {
 	#serviceWorkerStatusTimer = null;
 	#statusTimer = null;
@@ -28,13 +17,21 @@ class ServerCom {
 	fetchAutoLoadUrlCallback = null;
 
 	constructor() {
-		// Store instance reference
-		serverComInstance = this;
-
 		//Create a timer to check if the service worker is still running
 		this.#serviceWorkerStatusTimer = window.setInterval(() => {
 			this.#updateServiceWorkerStatus();
 		}, 10000);
+
+		//For everyone but Safari
+		chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+			this.processBroadcastMessage(message);
+			return true;
+		});
+
+		//For Safari
+		window.addEventListener("message", (event) => {
+			this.processBroadcastMessage(event.data);
+		});
 	}
 
 	setMarkUnavailableCallback(callback) {

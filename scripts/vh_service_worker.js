@@ -515,17 +515,33 @@ async function sendMessageToAllTabs(data, debugInfo) {
 				const match = regex.exec(tab.url);
 				//Edge Canari Mobile does not support tab.url
 				if (tab.url == undefined || match) {
-					try {
-						chrome.tabs.sendMessage(tab.id, data, (response) => {
-							if (chrome.runtime.lastError) {
-								//console.log(tab);
-								//console.error("Error sending message to tab:", chrome.runtime.lastError.message);
+					//Check if the scripting permissiong is enabled
+					chrome.permissions.contains({ permissions: ["scripting"] }, (result) => {
+						if (result) {
+							//Try sending message via scripting (new method, as Safari does not support tab messaging)
+							chrome.scripting.executeScript({
+								target: { tabId: tab.id },
+								func: () => {
+									chrome.runtime.sendMessage(data);
+								},
+							});
+						} else {
+							// Try sending message via tab messaging (classic method)
+							try {
+								chrome.tabs.sendMessage(tab.id, data, (response) => {
+									if (chrome.runtime.lastError) {
+										console.error(
+											"Error sending message to tab:",
+											chrome.runtime.lastError.message
+										);
+									}
+								});
+							} catch (e) {
+								console.error("Error sending message to tab:", e);
 							}
-						});
-					} catch (e) {
-						console.error("Error sending message to tab:", e);
-					}
-				}
+						}
+					});
+				} //end if tab.url == undefined || match
 			}
 		});
 	} catch (error) {
