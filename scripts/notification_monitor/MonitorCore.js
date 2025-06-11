@@ -88,28 +88,32 @@ class MonitorCore {
 
 		this.#getFetchLimit();
 
+		//###############################################
+		//## Master/Slave logic
+		//###############################################
 		//Ask the service worker if we should be the master Notification Monitor (the one in charge of running the websocket)
 		chrome.runtime.sendMessage({ type: "jobApplication" }, (response) => {
 			if (response.youAreTheMasterMonitor) {
-				console.log("We are the master monitor");
+				//console.log("We are the master monitor");
 				this.#setMasterMonitor();
 			} else {
-				this.#setSlaveMonitor;
-				console.log("We are a slave monitor");
+				//console.log("We are a slave monitor");
+				this.#setSlaveMonitor();
 			}
 		});
 
 		chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 			if (message.type === "setMasterMonitor") {
-				console.log("We got promoted to the master monitor");
+				//console.log("We got promoted to the master monitor");
 				this.#setMasterMonitor();
 			}
 			if (message.type === "setSlaveMonitor") {
-				console.log("We got demoted from the master monitor position.");
+				//console.log("We got demoted from the master monitor position.");
 				this.#setSlaveMonitor();
 			}
 		});
 
+		//Tell the service worker that we are (potentially) leaving the page and seek another master monitor.
 		window.addEventListener(
 			"beforeunload",
 			(event) => {
@@ -125,6 +129,9 @@ class MonitorCore {
 		this._isMasterMonitor = true;
 		this._ws = new Websocket(this);
 		this._autoLoad = new AutoLoad(this, this._ws);
+
+		//Update the master/slave test
+		this.#setMonitorModeLabel("Master");
 	}
 	#setSlaveMonitor() {
 		this._isMasterMonitor = false;
@@ -133,7 +140,24 @@ class MonitorCore {
 		}
 		this._ws = null;
 		this._autoLoad = null;
+
+		//Update the master/slave test
+		this.#setMonitorModeLabel("Slave");
 	}
+
+	async #setMonitorModeLabel(mode) {
+		const masterSlaveText = document.getElementById("vh-monitor-masterslave");
+		let t = 0;
+		do {
+			masterSlaveText.innerText = `[Monitor Mode: ${mode}]`;
+			t++;
+			await new Promise((resolve) => setTimeout(resolve, 20));
+		} while (!masterSlaveText && t < 5);
+	}
+
+	//###############################################
+	//## UI update functions
+	//###############################################
 
 	_updateUserTierInfo() {
 		const userTierInfo = document.getElementById("user-tier-info");
