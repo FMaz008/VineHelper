@@ -116,38 +116,45 @@ class Websocket {
 
 	#createListener() {
 		chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-			//If the service worker wsPing the master monitor, confirm we are still alive
-			if (message.type === "wsPing") {
-				sendResponse({ success: true });
-			}
-
-			//The service worker is passing along a request to fetch the latest items
-			if (message.type === "fetchLatestItems") {
-				//Get the last 100 most recent items
-				if (this.#socket?.connected) {
-					this.#socket.emit("getLast100", {
-						app_version: chrome.runtime.getManifest().version,
-						uuid: this._monitor._settings.get("general.uuid", false),
-						fid: this._monitor._settings.get("general.fingerprint.id", false),
-						countryCode: DEBUG_MODE ? "com" : this._monitor._i13nMgr.getCountryCode(),
-						limit: message.limit || 100,
-						request_variants:
-							this._monitor._settings.isPremiumUser(2) &&
-							this._monitor._settings.get("general.displayVariantButton"),
-					});
-				} else {
-					console.warn("Socket not connected - cannot fetch last 100 items");
-				}
-			}
-
-			//The service worker is passing along a request to report the websocket status
-			if (message.type === "wsStatus") {
-				chrome.runtime.sendMessage({
-					type: "wsStatus",
-					status: this.#socket?.connected ? "wsOpen" : "wsClosed",
-				});
-			}
+			this.#processMessage(message);
 		});
+		window.addEventListener("message", (event) => {
+			this.#processMessage(event.data);
+		});
+	}
+
+	#processMessage(message) {
+		//If the service worker wsPing the master monitor, confirm we are still alive
+		if (message.type === "wsPing") {
+			sendResponse({ success: true });
+		}
+
+		//The service worker is passing along a request to fetch the latest items
+		if (message.type === "fetchLatestItems") {
+			//Get the last 100 most recent items
+			if (this.#socket?.connected) {
+				this.#socket.emit("getLast100", {
+					app_version: chrome.runtime.getManifest().version,
+					uuid: this._monitor._settings.get("general.uuid", false),
+					fid: this._monitor._settings.get("general.fingerprint.id", false),
+					countryCode: DEBUG_MODE ? "com" : this._monitor._i13nMgr.getCountryCode(),
+					limit: message.limit || 100,
+					request_variants:
+						this._monitor._settings.isPremiumUser(2) &&
+						this._monitor._settings.get("general.displayVariantButton"),
+				});
+			} else {
+				console.warn("Socket not connected - cannot fetch last 100 items");
+			}
+		}
+
+		//The service worker is passing along a request to report the websocket status
+		if (message.type === "wsStatus") {
+			chrome.runtime.sendMessage({
+				type: "wsStatus",
+				status: this.#socket?.connected ? "wsOpen" : "wsClosed",
+			});
+		}
 	}
 
 	isConnected() {

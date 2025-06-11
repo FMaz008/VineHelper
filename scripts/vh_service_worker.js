@@ -178,7 +178,22 @@ async function findMasterMonitorTabHelper(monitorTabId) {
 }
 
 function sendToMasterMonitor(data) {
-	chrome.tabs.sendMessage(masterMonitorTabId, data);
+	chrome.permissions.contains({ permissions: ["scripting"] }, (result) => {
+		if (result) {
+			//Try sending message via scripting (new method, as Safari does not support tab messaging)
+			console.log("Sending to master tab:", data);
+			chrome.scripting.executeScript({
+				target: { tabId: tab.id },
+				func: (data) => {
+					window.postMessage(data, "*");
+				},
+				args: [data],
+			});
+		} else {
+			//Try sending a message via tab (classic method)
+			chrome.tabs.sendMessage(masterMonitorTabId, data);
+		}
+	});
 }
 
 //#####################################################
@@ -190,6 +205,7 @@ async function processBroadcastMessage(data) {
 		return false;
 	}
 
+	console.log("Received data:", data);
 	if (data.type == "ping") {
 		sendMessageToAllTabs({ type: "pong" }, "Service worker is running.");
 
@@ -515,15 +531,17 @@ async function sendMessageToAllTabs(data, debugInfo) {
 				const match = regex.exec(tab.url);
 				//Edge Canari Mobile does not support tab.url
 				if (tab.url == undefined || match) {
+					console.log("Sending to tab id " + tab.id, data);
 					//Check if the scripting permissiong is enabled
 					chrome.permissions.contains({ permissions: ["scripting"] }, (result) => {
 						if (result) {
 							//Try sending message via scripting (new method, as Safari does not support tab messaging)
 							chrome.scripting.executeScript({
 								target: { tabId: tab.id },
-								func: () => {
-									chrome.runtime.sendMessage(data);
+								func: (data) => {
+									window.postMessage(data, "*");
 								},
+								args: [data],
 							});
 						} else {
 							// Try sending message via tab messaging (classic method)

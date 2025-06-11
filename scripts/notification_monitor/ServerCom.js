@@ -4,7 +4,22 @@ const Settings = new SettingsMgr();
 import { Internationalization } from "../Internationalization.js";
 const i13n = new Internationalization();
 
+//For everyone but Safari
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+	const serverCom = new ServerCom();
+	serverCom.processBroadcastMessage(message);
+	return true;
+});
+
+//For Safari
+window.addEventListener("message", (event) => {
+	const serverCom = new ServerCom();
+	serverCom.processBroadcastMessage(event.data);
+});
+
 class ServerCom {
+	#instance = null;
+
 	#serviceWorkerStatusTimer = null;
 	#statusTimer = null;
 
@@ -17,21 +32,15 @@ class ServerCom {
 	fetchAutoLoadUrlCallback = null;
 
 	constructor() {
+		if (this.#instance) {
+			return this.#instance;
+		}
+		this.#instance = this;
+
 		//Create a timer to check if the service worker is still running
 		this.#serviceWorkerStatusTimer = window.setInterval(() => {
 			this.#updateServiceWorkerStatus();
 		}, 10000);
-
-		//For everyone but Safari
-		chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-			this.processBroadcastMessage(message);
-			return true;
-		});
-
-		//For Safari
-		window.addEventListener("message", (event) => {
-			this.processBroadcastMessage(event.data);
-		});
 	}
 
 	setMarkUnavailableCallback(callback) {
@@ -82,6 +91,7 @@ class ServerCom {
 
 		if (data.type == "pong") {
 			window.clearTimeout(this.#statusTimer);
+			this.#statusTimer = null;
 			this.#setServiceWorkerStatus(true, "Running...");
 		}
 		if (data.type == "newETV") {
