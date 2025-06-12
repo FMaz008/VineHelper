@@ -1,6 +1,6 @@
 {
 	"manifest_version": 3,
-	"name": "Amazon Vine Helper",
+	"name": "Vine Helper",
 	"description": "Improve the Amazon Vine experience.",
 	"version": "3.5.1",
 	"permissions": [
