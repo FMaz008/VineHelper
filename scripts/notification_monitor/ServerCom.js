@@ -41,7 +41,6 @@ class ServerCom {
 
 		//For Safari
 		window.addEventListener("message", (event) => {
-			console.log(event.data);
 			this.processBroadcastMessage(event.data);
 		});
 	}

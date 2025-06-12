@@ -1471,7 +1471,7 @@ window.addEventListener("message", (event) => {
 });
 
 async function processMessage(data, sender = null, sendResponse = null) {
-	if (data.type == undefined) {
+	if (data.type == undefined && data.action == undefined) {
 		return false;
 	}
 
@@ -1539,6 +1539,7 @@ async function processMessage(data, sender = null, sendResponse = null) {
 			Notifications.pushNotification(note2);
 		}
 	}
+
 	if (data.action === "showPrompt" && data.word) {
 		showCustomPrompt(data.word, data.list).then((result) => {
 			// Send the word to the background script

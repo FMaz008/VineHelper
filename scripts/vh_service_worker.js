@@ -217,7 +217,7 @@ async function processBroadcastMessage(data) {
 		return false;
 	}
 
-	console.log("Received data:", data);
+	//console.log("Received data:", data);
 	if (data.type == "ping") {
 		sendMessageToAllTabs({ type: "pong" }, "Service worker is running.");
 
@@ -736,7 +736,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 // Handle context menu clicks and save the word
 chrome.contextMenus.onClicked.addListener((info, tab) => {
 	if (info.menuItemId === "copy-asin") {
-		chrome.tabs.sendMessage(tab.id, { action: "copyASIN" });
+		sendMessageToTab(tab.id, { action: "copyASIN" });
 		return;
 	}
 
@@ -747,5 +747,5 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
 	const list = info.menuItemId === "add-to-hideKeywords" ? "Hide" : "Highlight";
 
-	chrome.tabs.sendMessage(tab.id, { action: "showPrompt", word: selectedWord, list: list });
+	sendMessageToTab(tab.id, { action: "showPrompt", word: selectedWord, list: list });
 });
