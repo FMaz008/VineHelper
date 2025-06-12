@@ -1470,19 +1470,23 @@ window.addEventListener("message", (event) => {
 	processMessage(event.data);
 });
 
-async function processMessage(data) {
+async function processMessage(data, sender = null, sendResponse = null) {
 	if (data.type == undefined) {
 		return false;
 	}
 
 	//If we received a request for a hook execution
 	if (data.type == "hookExecute") {
-		sendResponse({ success: true });
+		if (sendResponse) {
+			sendResponse({ success: true });
+		}
 		hookMgr.hookExecute(data.hookname, data);
 	}
 
 	if (data.type == "newItem") {
-		sendResponse({ success: true });
+		if (sendResponse) {
+			sendResponse({ success: true });
+		}
 		if (
 			!notificationMonitor &&
 			data.index < 10 && //Limit the notification to the top 10 most recents
@@ -1544,7 +1548,9 @@ async function processMessage(data) {
 	}
 
 	if (data.action === "copyASIN") {
-		sendResponse({ success: true });
+		if (sendResponse) {
+			sendResponse({ success: true });
+		}
 		if (selectedASIN) {
 			navigator.clipboard.writeText(selectedASIN);
 			alert("ASIN " + selectedASIN + " copied to clipboard");
