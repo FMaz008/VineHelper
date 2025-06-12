@@ -133,7 +133,7 @@ class ServerCom {
 			this.addVariantCallback(data);
 		}
 		if (data.type == "fetchAutoLoadUrl") {
-			this.fetchAutoLoadUrlCallback(data.url, data.queue);
+			this.fetchAutoLoadUrlCallback(data.url, data.queue, data.page);
 		}
 	}
 

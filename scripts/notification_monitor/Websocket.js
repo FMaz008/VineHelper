@@ -7,12 +7,19 @@ const WSReconnectInterval = 12 * 1000; //12 seconds
 import { io } from "../../node_modules/socket.io/client-dist/socket.io.esm.min.js";
 
 class Websocket {
+	static #instance = null;
+
 	_monitor = null;
 	#socket = null;
 	#socket_connecting = false;
 	#reconnectTimer = null;
 
 	constructor(monitor) {
+		if (Websocket.#instance) {
+			return Websocket.#instance;
+		}
+		Websocket.#instance = this;
+
 		this._monitor = monitor;
 		this.#init();
 		this.#createReconnectTimer();
@@ -81,7 +88,6 @@ class Websocket {
 		});
 
 		this.#socket.on("reloadPage", async (data) => {
-			console.log(data);
 			chrome.runtime.sendMessage({ type: "reloadPage", queue: data.queue, page: data.page });
 		});
 

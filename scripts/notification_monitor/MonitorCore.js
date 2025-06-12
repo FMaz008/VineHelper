@@ -12,7 +12,6 @@ import { Template } from "../Template.js";
 import { Environment } from "../Environment.js";
 import { Logger } from "../Logger.js";
 import { CryptoKeys } from "../CryptoKeys.js";
-import { isPageLogin, isPageCaptcha, isPageDog } from "../DOMHelper.js";
 import { PinMgr } from "./PinMgr.js";
 import { Internationalization } from "../Internationalization.js";
 import { ScreenNotifier, ScreenNotification } from "../ScreenNotifier.js";
@@ -161,6 +160,11 @@ class MonitorCore {
 		} while (!masterSlaveText && t < 5);
 	}
 
+	fetchAutoLoadUrl(url, queue, page) {
+		if (this._autoLoad) {
+			this._autoLoad.fetchAutoLoadUrl(url, queue, page);
+		}
+	}
 	//###############################################
 	//## UI update functions
 	//###############################################
@@ -410,98 +414,6 @@ class MonitorCore {
 			// Insert the notification at the top
 			container.insertBefore(notif, firstChild);
 		});
-	}
-
-	async fetchAutoLoadUrl(url, queue) {
-		//Fetch the url
-		const userAgent = navigator.userAgent;
-		const acceptLanguage = navigator.language || navigator.languages?.join(",") || "en-US,en;q=0.9";
-		const headers = {
-			"User-Agent": userAgent,
-			Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
-			"Accept-Language": acceptLanguage,
-			"Accept-Encoding": "gzip, deflate, br",
-			"Cache-Control": "no-cache",
-			Pragma: "no-cache",
-			"Sec-Fetch-Dest": "document",
-			"Sec-Fetch-Mode": "navigate",
-			"Sec-Fetch-Site": "none",
-			"Sec-Fetch-User": "?1",
-			"Upgrade-Insecure-Requests": "1",
-		};
-		const response = await fetch(url, { headers: headers });
-		const html = await response.text();
-
-		//Parse the HTML
-		const parser = new DOMParser();
-		const doc = parser.parseFromString(html, "text/html");
-
-		//check if the page is a dogpage
-		if (isPageDog(doc)) {
-			chrome.runtime.sendMessage({ type: "dogpage" });
-			return;
-		}
-
-		//Check if the page is a captchapage
-		if (isPageCaptcha(doc)) {
-			chrome.runtime.sendMessage({ type: "captchapage" });
-			return;
-		}
-
-		//Check if the page is a loginpage
-		if (isPageLogin(doc)) {
-			chrome.runtime.sendMessage({ type: "loginpage" });
-			return;
-		}
-
-		//Get all the tiles
-		const tiles = doc.querySelectorAll("#vvp-items-grid .vvp-item-tile");
-		const items = [];
-		for (const tile of tiles) {
-			const input = tile.querySelector("input");
-			const recommendationId = input.dataset.recommendationId;
-			//Match the string following vine.enrollment.
-			const enrollment_guid = recommendationId.match(/vine\.enrollment\.(.*)/)[1];
-			const asin = input.dataset.asin;
-			const title = tile.querySelector(".a-truncate-full").textContent;
-			const is_parent_asin = input.dataset.isParentAsin;
-			const thumbnail = tile.querySelector("img").src;
-
-			items.push({
-				asin: asin,
-				title: title,
-				is_parent_asin: is_parent_asin,
-				enrollment_guid: enrollment_guid,
-				thumbnail: thumbnail,
-			});
-		}
-
-		//Forward the items to the server
-		if (items.length > 0) {
-			const content = {
-				api_version: 5,
-				app_version: chrome.runtime.getManifest().version,
-				country: this._i13nMgr.getCountryCode(),
-				uuid: await this._settings.get("general.uuid", false),
-				fid: await this._settings.get("general.fingerprint.id", false),
-				action: "get_info",
-				tier: this._tierMgr.getTier(),
-				queue: queue,
-				items: items,
-				request_variants: false,
-				s2: await this._cryptoKeys.signData(items),
-			};
-			content.s = await this._cryptoKeys.signData(content);
-			content.pk = await this._cryptoKeys.getExportedPublicKey();
-
-			fetch(this._env.getAPIUrl(), {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(content),
-			}).finally(() => {
-				console.log(`${items.length} items relayed to the server.`);
-			});
-		}
 	}
 }
 

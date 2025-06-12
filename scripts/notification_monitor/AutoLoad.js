@@ -1,5 +1,10 @@
 /*global chrome*/
+
+import { isPageLogin, isPageCaptcha, isPageDog } from "../DOMHelper.js";
+
 class AutoLoad {
+	static #instance = null;
+
 	_monitor = null;
 	#ws = null;
 
@@ -7,6 +12,11 @@ class AutoLoad {
 	#reloadTimer = null;
 
 	constructor(monitor, ws) {
+		if (AutoLoad.#instance) {
+			return AutoLoad.#instance;
+		}
+		AutoLoad.#instance = this;
+
 		this._monitor = monitor;
 		this.#ws = ws;
 		this.#setReloadTimer();
@@ -167,6 +177,103 @@ class AutoLoad {
 			return false;
 		}
 		return true;
+	}
+
+	async fetchAutoLoadUrl(url, queue, page) {
+		//Fetch the url
+		const userAgent = navigator.userAgent;
+		const acceptLanguage = navigator.language || navigator.languages?.join(",") || "en-US,en;q=0.9";
+		const headers = {
+			"User-Agent": userAgent,
+			Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+			"Accept-Language": acceptLanguage,
+			"Accept-Encoding": "gzip, deflate, br",
+			"Cache-Control": "no-cache",
+			Pragma: "no-cache",
+			"Sec-Fetch-Dest": "document",
+			"Sec-Fetch-Mode": "navigate",
+			"Sec-Fetch-Site": "none",
+			"Sec-Fetch-User": "?1",
+			"Upgrade-Insecure-Requests": "1",
+		};
+		const response = await fetch(url, { headers: headers });
+		const html = await response.text();
+
+		//Parse the HTML
+		const parser = new DOMParser();
+		const doc = parser.parseFromString(html, "text/html");
+
+		//check if the page is a dogpage
+		if (isPageDog(doc)) {
+			console.log(`${new Date().toLocaleString()} - Dog page detected.`);
+			this.resetReloadTimer(1000 * 60 * 60 * 24); //24 hours
+			return;
+		}
+
+		//Check if the page is a captchapage
+		if (isPageCaptcha(doc)) {
+			console.log(`${new Date().toLocaleString()} - Captcha page detected.`);
+			this.resetReloadTimer(1000 * 60 * 60); //1 hour
+			return;
+		}
+
+		//Check if the page is a loginpage
+		if (isPageLogin(doc)) {
+			console.log(`${new Date().toLocaleString()} - Login page detected.`);
+			chrome.runtime.sendMessage({ type: "loginpage" });
+			return;
+		}
+
+		//Get all the tiles
+		const tiles = doc.querySelectorAll("#vvp-items-grid .vvp-item-tile");
+		const items = [];
+		for (const tile of tiles) {
+			const input = tile.querySelector("input");
+			const recommendationId = input.dataset.recommendationId;
+			//Match the string following vine.enrollment.
+			const enrollment_guid = recommendationId.match(/vine\.enrollment\.(.*)/)[1];
+			const asin = input.dataset.asin;
+			const title = tile.querySelector(".a-truncate-full").textContent;
+			const is_parent_asin = input.dataset.isParentAsin;
+			const thumbnail = tile.querySelector("img").src;
+
+			items.push({
+				asin: asin,
+				title: title,
+				is_parent_asin: is_parent_asin,
+				enrollment_guid: enrollment_guid,
+				thumbnail: thumbnail,
+			});
+		}
+
+		//Forward the items to the server
+		if (items.length > 0) {
+			const content = {
+				api_version: 5,
+				app_version: chrome.runtime.getManifest().version,
+				country: this._monitor._i13nMgr.getCountryCode(),
+				uuid: await this._monitor._settings.get("general.uuid", false),
+				fid: await this._monitor._settings.get("general.fingerprint.id", false),
+				action: "get_info",
+				tier: this._monitor._tierMgr.getTier(),
+				queue: queue,
+				items: items,
+				request_variants: false,
+				s2: await this._monitor._cryptoKeys.signData(items),
+			};
+			content.s = await this._monitor._cryptoKeys.signData(content);
+			content.pk = await this._monitor._cryptoKeys.getExportedPublicKey();
+
+			fetch(this._monitor._env.getAPIUrl(), {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(content),
+			}).finally(() => {
+				console.log(
+					`${new Date().toLocaleString()} - ${items.length} items from ${queue}:${page} sent to the server.`
+				);
+			});
+		}
 	}
 }
 

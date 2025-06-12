@@ -134,6 +134,7 @@ async function init() {
 		return;
 	}
 	if (isPageLogin(document)) {
+		console.log("loginpage detected");
 		chrome.runtime.sendMessage({ type: "loginpage" });
 		return;
 	}

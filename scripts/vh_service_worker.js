@@ -330,7 +330,7 @@ async function processBroadcastMessage(data) {
 			//Mobile devices do not support chrome.windows
 			await openTab(url);
 		} else {
-			await fetchUrl(url, queueTable[queue]);
+			sendToMasterMonitor({ type: "fetchAutoLoadUrl", url: url, queue: queueTable[queue], page: page });
 		}
 	}
 
@@ -351,7 +351,6 @@ async function processBroadcastMessage(data) {
 	if (data.type == "dogpage") {
 		console.log("Dog page detected, halting auto-load timer for 24 hours");
 		sendToMasterMonitor({ type: "dogpage" });
-		resetReloadTimer(1000 * 60 * 60 * 24); //24 hours
 	}
 
 	//A tab has reported to be a captcha page.
@@ -359,7 +358,6 @@ async function processBroadcastMessage(data) {
 	if (data.type == "captchapage") {
 		console.log("Captcha page detected, halting auto-load timer for 1 hour");
 		sendToMasterMonitor({ type: "captchapage" });
-		resetReloadTimer(1000 * 60 * 60); //1 hour
 	}
 
 	//A tab has reported to be a login page.
@@ -367,7 +365,6 @@ async function processBroadcastMessage(data) {
 	if (data.type == "loginpage") {
 		console.log("Login page detected, halting auto-load timer for 1 hour");
 		sendToMasterMonitor({ type: "loginpage" });
-		resetReloadTimer(1000 * 60 * 60); //1 hour
 	}
 }
 
@@ -457,19 +454,6 @@ async function closeTab(tabId) {
 				});
 			});
 		});
-	}
-}
-
-//Fetch the url, read the items and forward them to the server
-async function fetchUrl(url, queue) {
-	//Fetch the tabid of a notification monitor tab
-	const allTabs = await chrome.tabs.query({});
-	const notificationMonitorTab = allTabs.find((tab) => tab.url && tab.url.includes("#monitor"));
-	const tabId = notificationMonitorTab ? notificationMonitorTab.id : null;
-
-	//Send a message to the notification monitor tab to fetch the url
-	if (tabId) {
-		chrome.tabs.sendMessage(tabId, { type: "fetchAutoLoadUrl", url: url, queue: queue });
 	}
 }
 
