@@ -153,7 +153,9 @@ class MonitorCore {
 		const masterSlaveText = document.getElementById("vh-monitor-masterslave");
 		let t = 0;
 		do {
-			masterSlaveText.innerText = `[Monitor Mode: ${mode}]`;
+			if (masterSlaveText) {
+				masterSlaveText.innerText = `[Monitor Mode: ${mode}]`;
+			}
 			t++;
 			await new Promise((resolve) => setTimeout(resolve, 20));
 		} while (!masterSlaveText && t < 5);
