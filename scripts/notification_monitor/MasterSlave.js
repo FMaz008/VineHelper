@@ -40,7 +40,7 @@ class MasterSlave {
 				event.data.type !== "masterMonitorPing" &&
 				event.data.type !== "masterMonitorPong"
 			) {
-				console.log("MasterSlave: Non-ImAlive message", event.data);
+				console.log("MasterSlave: Received message:", event.data);
 			}
 
 			// Handle broadcast messages (no destination required)

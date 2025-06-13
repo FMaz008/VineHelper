@@ -20,7 +20,6 @@ class Websocket {
 			return Websocket.#instance;
 		}
 		Websocket.#instance = this;
-
 		this._monitor = monitor;
 		this.#init();
 		this.#createReconnectTimer();
@@ -93,7 +92,7 @@ class Websocket {
 		});
 
 		this.#socket.on("connection_error", (error) => {
-			this.#relayMessage({ type: "connection_error", data: data });
+			this.#relayMessage({ type: "wsStatus", status: "wsError", error: error });
 		});
 
 		// On disconnection
@@ -192,6 +191,7 @@ class Websocket {
 		}
 
 		this.#socket_connecting = false;
+		Websocket.#instance = null;
 	}
 }
 
