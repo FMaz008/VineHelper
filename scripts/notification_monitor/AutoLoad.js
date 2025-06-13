@@ -245,6 +245,8 @@ class AutoLoad {
 
 		//Forward the items to the server
 		if (items.length > 0) {
+			const arrQueue = { AI: "encore", RFY: "potluck", AFA: "last_chance" };
+
 			const content = {
 				api_version: 5,
 				app_version: chrome.runtime.getManifest().version,
@@ -253,14 +255,13 @@ class AutoLoad {
 				fid: await this._monitor._settings.get("general.fingerprint.id", false),
 				action: "get_info",
 				tier: this._monitor._tierMgr.getTier(),
-				queue: queue,
+				queue: arrQueue[queue],
 				items: items,
 				request_variants: false,
 				s2: await this._monitor._cryptoKeys.signData(items),
 			};
 			content.s = await this._monitor._cryptoKeys.signData(content);
 			content.pk = await this._monitor._cryptoKeys.getExportedPublicKey();
-
 			fetch(this._monitor._env.getAPIUrl(), {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
