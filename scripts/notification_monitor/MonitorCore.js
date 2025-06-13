@@ -210,6 +210,10 @@ class MonitorCore {
 		const zeroETVColor = this._settings.get("notification.monitor.zeroETV.color");
 		const unknownETVColor = this._settings.get("notification.monitor.unknownETV.color");
 
+		// Clear both background properties first to ensure clean state
+		notif.style.background = "";
+		notif.style.backgroundColor = "";
+
 		if (isZeroETV && isHighlighted && !this._settings.get("notification.monitor.highlight.ignore0ETVhighlight")) {
 			const color1 = zeroETVColor;
 			const color2 = highlightColor;
@@ -228,8 +232,6 @@ class MonitorCore {
 			notif.style.backgroundColor = zeroETVColor;
 		} else if (isUnknownETV) {
 			notif.style.backgroundColor = unknownETVColor;
-		} else {
-			notif.style.backgroundColor = "unset";
 		}
 	}
 
