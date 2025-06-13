@@ -12,11 +12,20 @@
 			this._listeners[type] = this._listeners[type] || [];
 			this._listeners[type].push(listener);
 			*/
-			//If we are on the monitor page, only allow the document click listeners (there are 4)
-			//with options === false (there are 2), and prevent the other listeners from being added
-			//as they cause resource usage issues when thousands of items are in the monitor
-			//and can't get garbage collected because they have listeners on them.
-			if (type == "click" && (this == document || this instanceof HTMLInputElement)) {
+			// On the monitor page, we selectively allow event listeners to prevent memory leaks:
+			// - Click handlers are restricted to: document, input elements, and #vvp-items-grid (for VineHelper)
+			// - All non-click events are allowed (needed for page initialization, WebSocket, etc.)
+			// This prevents Amazon from attaching click handlers to thousands of individual items,
+			// which would prevent garbage collection and cause memory usage to grow continuously.
+
+			// Check if this is the grid container (VineHelper uses event delegation on this element)
+			const isGridContainer =
+				this.id === "vvp-items-grid" || (this.getAttribute && this.getAttribute("id") === "vvp-items-grid");
+
+			if (type == "click" && (this == document || this instanceof HTMLInputElement || isGridContainer)) {
+				originalAddEventListener.call(this, type, listener, options);
+			} else if (type !== "click") {
+				// Allow non-click event listeners
 				originalAddEventListener.call(this, type, listener, options);
 			}
 		};
