@@ -506,6 +506,7 @@ async function initFlushTplCache() {
 			compareVersion(Settings.get("general.versionInfoPopup", false), env.data.appVersion) >
 			VERSION_REVISION_CHANGE
 		) {
+			/*
 			//First installs don't need v3.5 warning.
 			if (!Settings.get("general.versionInfoPopup", false)) {
 				await Settings.set("general.warning350", true);
@@ -519,6 +520,7 @@ async function initFlushTplCache() {
 				await Settings.set("general.warning350", true);
 				return;
 			}
+			*/
 			const prom = await Tpl.loadFile("view/popup_changelog.html");
 			Tpl.setVar("appVersion", env.data.appVersion);
 			let content = Tpl.render(prom);
