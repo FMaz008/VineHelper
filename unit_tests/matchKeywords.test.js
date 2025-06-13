@@ -1,4 +1,4 @@
-import { keywordMatch } from "../scripts/service_worker/keywordMatch.js";
+import { keywordMatch } from "../scripts/keywordMatch.js";
 
 //Text based keywords
 test("match array of string", () => {
