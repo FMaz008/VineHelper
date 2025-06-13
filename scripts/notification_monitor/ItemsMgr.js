@@ -171,6 +171,7 @@ class ItemsMgr {
 	 * Store the DOM element reference on the items map
 	 * @param {string} asin - The ASIN of the item
 	 * @param {object} element - The DOM element to store
+	 * @returns {boolean} - Returns true if the item was marked as unavailable
 	 */
 	storeItemDOMElement(asin, element) {
 		if (this.items.has(asin)) {
@@ -178,6 +179,9 @@ class ItemsMgr {
 			item.element = element;
 			item.tile = new Tile(element, null);
 			this.items.set(asin, item);
+
+			// Check if this item was marked as unavailable before its DOM was ready
+			return item.data.unavailable === true;
 		} else {
 			throw new Error(`Item ${asin} not found in items map`);
 		}

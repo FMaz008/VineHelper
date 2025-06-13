@@ -569,8 +569,13 @@ class NotificationMonitor extends MonitorCore {
 		});
 
 		// Store a reference to the DOM element
-		this._itemsMgr.storeItemDOMElement(asin, tileDOM); //Store the DOM element
+		const wasMarkedUnavailable = this._itemsMgr.storeItemDOMElement(asin, tileDOM); //Store the DOM element
 		const tile = this._itemsMgr.getItemTile(asin);
+
+		// If the item was marked as unavailable before its DOM was ready, apply the unavailable visual state now
+		if (wasMarkedUnavailable) {
+			this._disableItem(tileDOM);
+		}
 
 		if (this._monitorV3 && this._settings.isPremiumUser(2) && this._settings.get("general.displayVariantButton")) {
 			if (is_parent_asin && itemData.variants) {
