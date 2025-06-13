@@ -18,7 +18,7 @@ class HookMgr {
 		arrBinding.push(func);
 		this.#mapHook.set(hookname, arrBinding);
 	}
-	hookExecute(hookname, variables) {
+	hookExecute(hookname, variables = null) {
 		let arrBinding = this.#mapHook.get(hookname);
 		if (arrBinding == undefined) return false;
 		arrBinding.forEach(function (func) {

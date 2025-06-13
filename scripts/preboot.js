@@ -1,3 +1,5 @@
+/*global chrome*/
+
 import { Logger } from "./Logger.js";
 var logger = new Logger();
 
@@ -78,23 +80,6 @@ async function loadStyleSheets() {
 	}
 
 	logger.add("PREBOOT: Thorvarium country-specific stylesheets injected");
-}
-
-//Send the country code to the Service Worker
-if (Settings.get("general.country") != i13n.getCountryCode()) {
-	Settings.set("general.country", i13n.getCountryCode());
-
-	chrome.runtime.sendMessage(
-		{
-			type: "setCountryCode",
-			countryCode: i13n.getCountryCode(),
-		},
-		function (response) {
-			if (chrome.runtime.lastError) {
-				console.error("Error sending message:", chrome.runtime.lastError.message);
-			}
-		}
-	);
 }
 
 //#################################################3

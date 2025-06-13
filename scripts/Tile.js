@@ -21,7 +21,7 @@ var modalMgr = new ModalMgr();
 import { Template } from "./Template.js";
 var Tpl = new Template();
 
-import { keywordMatch } from "./service_worker/keywordMatch.js";
+import { keywordMatch } from "./keywordMatch.js";
 import { YMDHiStoISODate } from "./DateHelper.js";
 import { getTileByAsin, updateTileCounts } from "./Grid.js";
 import { unescapeHTML, escapeHTML } from "./StringHelper.js";

@@ -1,4 +1,5 @@
 /*global chrome*/
+
 const DEBUG_MODE = false;
 const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_WS_URL = "ws://127.0.0.1:3000";
@@ -60,53 +61,60 @@ class Websocket {
 			reconnection: false, //Handled manually every 30 seconds.
 		});
 
-		//## PASS ALL RECEIVED DATA TO THE SERVICE WORKER #########################
+		//## PASS ALL RECEIVED DATA TO THE MESSAGING CHANNEL #########################
+
 		// On connection success
 		this.#socket.on("connect", () => {
 			this.#socket_connecting = false;
 			console.log(`${new Date().toLocaleString()} - WS Connected`);
-			chrome.runtime.sendMessage({ type: "wsStatus", status: "wsOpen" });
+			this.#relayMessage({ type: "wsStatus", status: "wsOpen" });
 		});
 
 		this.#socket.on("newItem", (data) => {
-			console.log(data);
-			chrome.runtime.sendMessage({ type: "newItem", item: data.item });
+			this.#relayMessage({ type: "newPreprocessedItem", item: data.item });
 		});
 		this.#socket.on("last100", (data) => {
-			chrome.runtime.sendMessage({ type: "last100", products: data.products });
+			this.#relayMessage({ type: "last100", products: data.products });
 		});
 		this.#socket.on("newETV", (data) => {
-			chrome.runtime.sendMessage({ type: "newETV", item: data.item });
+			this.#relayMessage({ type: "newETV", item: data.item });
 		});
 
 		this.#socket.on("newVariants", (data) => {
-			chrome.runtime.sendMessage({ type: "newVariants", data: data });
+			this.#relayMessage({ type: "newVariants", item: data });
 		});
 
 		this.#socket.on("unavailableItem", (data) => {
-			chrome.runtime.sendMessage({ type: "unavailableItem", item: data.item });
+			this.#relayMessage({ type: "unavailableItem", item: data.item });
 		});
 
 		this.#socket.on("reloadPage", async (data) => {
-			chrome.runtime.sendMessage({ type: "reloadPage", queue: data.queue, page: data.page });
+			this.#relayMessage({ type: "fetchAutoLoadUrl", queue: data.queue, page: data.page });
 		});
 
 		this.#socket.on("connection_error", (error) => {
-			chrome.runtime.sendMessage({ type: "connection_error", data: data });
+			this.#relayMessage({ type: "connection_error", data: data });
 		});
 
 		// On disconnection
 		this.#socket.on("disconnect", () => {
 			this.#socket_connecting = false;
 			console.log(`${new Date().toLocaleString()} - Socket.IO Disconnected`);
-			chrome.runtime.sendMessage({ type: "wsStatus", status: "wsClosed" });
+			this.#relayMessage({ type: "wsStatus", status: "wsClosed" });
 		});
 
 		// On error
 		this.#socket.on("connect_error", (error) => {
 			this.#socket_connecting = false;
+			this.#relayMessage({ type: "wsStatus", status: "wsError", error: error.message });
 			console.error(`${new Date().toLocaleString()} - Socket.IO error: ${error.message}`);
 		});
+	}
+
+	#relayMessage(message) {
+		console.log("Relaying message", message);
+		this._monitor._channel.postMessage(message);
+		this._monitor._serverComMgr.processBroadcastMessage(message);
 	}
 
 	#createReconnectTimer() {
@@ -121,22 +129,12 @@ class Websocket {
 	}
 
 	#createListener() {
-		chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-			this.#processMessage(message, sender, sendResponse);
-		});
-		window.addEventListener("message", (event) => {
-			this.#processMessage(event.data);
+		this._monitor._channel.addEventListener("message", (event) => {
+			this.processMessage(event.data);
 		});
 	}
 
-	#processMessage(message, sender, sendResponse) {
-		//If the service worker wsPing the master monitor, confirm we are still alive
-		if (message.type === "wsPing") {
-			chrome.runtime.sendMessage({
-				type: "wsPong",
-			});
-		}
-
+	processMessage(message) {
 		//The service worker is passing along a request to fetch the latest items
 		if (message.type === "fetchLatestItems") {
 			//Get the last 100 most recent items
@@ -158,10 +156,12 @@ class Websocket {
 
 		//The service worker is passing along a request to report the websocket status
 		if (message.type === "wsStatus") {
-			chrome.runtime.sendMessage({
-				type: "wsStatus",
-				status: this.#socket?.connected ? "wsOpen" : "wsClosed",
-			});
+			if (this._monitor._isMasterMonitor) {
+				this.#relayMessage({
+					type: "wsStatus",
+					status: this.#socket?.connected ? "wsOpen" : "wsClosed",
+				});
+			}
 		}
 	}
 

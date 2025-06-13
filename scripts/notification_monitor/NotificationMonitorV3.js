@@ -1,3 +1,5 @@
+/*global chrome*/
+
 import { NotificationMonitor } from "./NotificationMonitor.js";
 
 import { TileSizer } from "../TileSizer.js";
@@ -203,6 +205,7 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		window.addEventListener(
 			"beforeunload",
 			(event) => {
+				this._hookMgr.hookExecute("beforeunload");
 				event.stopPropagation();
 				event.preventDefault();
 				event.returnValue = "";

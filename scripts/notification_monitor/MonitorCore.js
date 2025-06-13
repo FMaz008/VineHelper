@@ -13,6 +13,7 @@ import { Environment } from "../Environment.js";
 import { Logger } from "../Logger.js";
 import { CryptoKeys } from "../CryptoKeys.js";
 import { PinMgr } from "./PinMgr.js";
+import { HookMgr } from "../HookMgr.js";
 import { Internationalization } from "../Internationalization.js";
 import { ScreenNotifier, ScreenNotification } from "../ScreenNotifier.js";
 import { Tooltip } from "../Tooltip.js";
@@ -23,6 +24,7 @@ import { ServerCom } from "./ServerCom.js";
 import { ItemsMgr } from "./ItemsMgr.js";
 import { Websocket } from "./Websocket.js";
 import { AutoLoad } from "./AutoLoad.js";
+import { MasterSlave } from "./MasterSlave.js";
 
 class MonitorCore {
 	//Variables linked to monitor V2 vs V3
@@ -37,12 +39,15 @@ class MonitorCore {
 	_fetchLimit = 100; //The fetch limit for the monitor
 	_visibleItemsCount = 0;
 
+	_channel = null;
+
 	constructor(monitorV3 = false) {
 		// Prevent direct instantiation of the abstract class
 		if (this.constructor === MonitorCore) {
 			throw new TypeError('Abstract class "MonitorLib" cannot be instantiated directly.');
 		}
 
+		this._channel = new BroadcastChannel("vinehelper-notification-monitor");
 		this._monitorV3 = monitorV3;
 
 		//General purpose classes
@@ -57,6 +62,8 @@ class MonitorCore {
 		this._brendaMgr = new BrendaAnnounceQueue();
 		this._dialogMgr = new ModalMgr();
 		this._soundPlayerMgr = new NotificationsSoundPlayer();
+		this._hookMgr = new HookMgr();
+		this._masterSlave = new MasterSlave(this);
 
 		if (this._env.data.gridDOM) {
 			//v3
@@ -67,18 +74,7 @@ class MonitorCore {
 		}
 
 		//Notification Monitor's specific classes
-		this._serverComMgr = new ServerCom();
-		this._serverComMgr.setMarkUnavailableCallback(this.markItemUnavailable.bind(this));
-		this._serverComMgr.setAddTileInGridCallback(this.addTileInGrid.bind(this));
-		this._serverComMgr.setFetchRecentItemsEndCallback(this.fetchRecentItemsEnd.bind(this));
-		this._serverComMgr.setSetETVFromASINCallback(this.setETVFromASIN.bind(this));
-		this._serverComMgr.setSetTierFromASINCallback(this.setTierFromASIN.bind(this));
-		if (this._monitorV3) {
-			this._serverComMgr.setAddVariantCallback(this.addVariants.bind(this));
-		} else {
-			this._serverComMgr.setAddVariantCallback(() => {}); //Do nothing for v2
-		}
-		this._serverComMgr.setFetchAutoLoadUrlCallback(this.fetchAutoLoadUrl.bind(this));
+		this._serverComMgr = new ServerCom(this);
 
 		this._itemsMgr = new ItemsMgr(this._settings);
 
@@ -86,57 +82,17 @@ class MonitorCore {
 		this._pinMgr.setGetItemDOMElementCallback(this._itemsMgr.getItemDOMElement.bind(this._itemsMgr));
 
 		this.#getFetchLimit();
-
-		//###############################################
-		//## Master/Slave logic
-		//###############################################
-		//Ask the service worker if we should be the master Notification Monitor (the one in charge of running the websocket)
-		chrome.runtime.sendMessage({ type: "jobApplication" }, (response) => {
-			if (response.youAreTheMasterMonitor) {
-				//console.log("We are the master monitor");
-				this.#setMasterMonitor();
-			} else {
-				//console.log("We are a slave monitor");
-				this.#setSlaveMonitor();
-			}
-		});
-
-		chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-			this.#processMessage(message);
-		});
-		window.addEventListener("message", (event) => {
-			this.#processMessage(event.data);
-		});
-
-		//Tell the service worker that we are (potentially) leaving the page and seek another master monitor.
-		window.addEventListener(
-			"beforeunload",
-			(event) => {
-				if (this._isMasterMonitor) {
-					chrome.runtime.sendMessage({ type: "thisIsMyResignationLetter" });
-				}
-			},
-			true
-		);
 	}
 
-	#processMessage(message) {
-		if (message.type === "setMasterMonitor") {
-			this.#setMasterMonitor();
-		}
-		if (message.type === "setSlaveMonitor") {
-			this.#setSlaveMonitor();
-		}
-	}
-	#setMasterMonitor() {
+	setMasterMonitor() {
 		this._isMasterMonitor = true;
 		this._ws = new Websocket(this);
 		this._autoLoad = new AutoLoad(this, this._ws);
 
 		//Update the master/slave test
-		this.#setMonitorModeLabel("Master");
+		this.#setMonitorModeLabel();
 	}
-	#setSlaveMonitor() {
+	setSlaveMonitor() {
 		this._isMasterMonitor = false;
 		if (this._ws !== null) {
 			this._ws.destroyInstance();
@@ -145,18 +101,19 @@ class MonitorCore {
 		this._autoLoad = null;
 
 		//Update the master/slave test
-		this.#setMonitorModeLabel("Slave");
+		this.#setMonitorModeLabel();
 	}
 
-	async #setMonitorModeLabel(mode) {
-		const masterSlaveText = document.getElementById("vh-monitor-masterslave");
+	async #setMonitorModeLabel() {
+		let masterSlaveText = null;
 		let t = 0;
 		do {
+			masterSlaveText = document.getElementById("vh-monitor-masterslave");
 			if (masterSlaveText) {
-				masterSlaveText.innerText = `[Monitor Mode: ${mode}]`;
+				masterSlaveText.innerText = `[Monitor Mode: ${this._isMasterMonitor ? "Master" : "Slave"}]`;
 			}
 			t++;
-			await new Promise((resolve) => setTimeout(resolve, 20));
+			await new Promise((resolve) => setTimeout(resolve, 100));
 		} while (!masterSlaveText && t < 5);
 	}
 

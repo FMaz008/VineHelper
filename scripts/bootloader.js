@@ -1,3 +1,5 @@
+/*global chrome*/
+
 import { Logger } from "./Logger.js";
 var logger = new Logger();
 
@@ -112,6 +114,7 @@ env.data.marketplaceId = null;
 env.data.customerId = null;
 
 var notificationMonitor = null;
+var channel = new BroadcastChannel("vinehelper-notification-monitor");
 
 //Do not run the extension if ultraviner is running
 if (!ultraviner) {
@@ -126,16 +129,16 @@ async function init() {
 	//if (window.location.href.endsWith("#AR")) {
 	//Check if page is dogpage
 	if (isPageDog(document)) {
-		chrome.runtime.sendMessage({ type: "dogpage" });
+		channel.postMessage({ type: "dogpage" });
 		return;
 	}
 	if (isPageCaptcha(document)) {
-		chrome.runtime.sendMessage({ type: "captchapage" });
+		channel.postMessage({ type: "captchapage" });
 		return;
 	}
 	if (isPageLogin(document)) {
 		console.log("loginpage detected");
-		chrome.runtime.sendMessage({ type: "loginpage" });
+		channel.postMessage({ type: "loginpage" });
 		return;
 	}
 	//}
@@ -1030,7 +1033,7 @@ async function fetchProductsDatav5() {
 
 			//If the page URL ends with #AR, send a message to the service worker to close the page
 			if (window.location.href.endsWith("#AR")) {
-				chrome.runtime.sendMessage({ type: "closeARTab" });
+				channel.postMessage({ type: "closeARTab" });
 			}
 		});
 }
@@ -1460,13 +1463,18 @@ async function recordUnavailableProduct(asin, reason) {
 	});
 }
 
+//#####################################################
+//## MESSAGES LISTENERS
+//#####################################################
 //Message from within the context of the extension
 //Messages sent via: chrome.tabs.sendMessage(tab.id, data);
-//In this case, all messages are coming from the service_worker file.
-chrome.runtime.onMessage.addListener(async function (message, sender, sendResponse) {
-	processMessage(message);
+//In this case, all messages are coming from the service_worker or notification_monitor files.
+channel.addEventListener("message", (event) => {
+	processMessage(event.data);
 });
-
+chrome.runtime.onMessage.addListener(async (data, sender, sendResponse) => {
+	processMessage(data, sender, sendResponse);
+});
 window.addEventListener("message", (event) => {
 	processMessage(event.data);
 });
@@ -1544,15 +1552,15 @@ async function processMessage(data, sender = null, sendResponse = null) {
 	if (data.action === "showPrompt" && data.word) {
 		showCustomPrompt(data.word, data.list).then((result) => {
 			// Send the word to the background script
-			chrome.runtime.sendMessage({ action: "addWord", word: result.word, list: data.list });
+			channel.postMessage({ action: "addWord", word: result.word, list: data.list });
 		});
 		return true; // Keep the message channel open for the async response
 	}
 
 	if (data.action === "copyASIN") {
-		if (sendResponse) {
-			sendResponse({ success: true });
-		}
+		//if (sendResponse) {
+		//sendResponse({ success: true });
+		//}
 		if (selectedASIN) {
 			navigator.clipboard.writeText(selectedASIN);
 			alert("ASIN " + selectedASIN + " copied to clipboard");
@@ -1895,6 +1903,10 @@ async function handleModalNavigation(event) {
 	logger.add("[DEBUG] Updated the current index to: " + modalNavigatorCurrentIndex);
 }
 
+//#####################################################
+//## STYLESHEETS
+//#####################################################
+
 async function loadStyleSheet(path, injected = true) {
 	if (injected) {
 		const prom = await Tpl.loadFile(path);
@@ -1912,6 +1924,11 @@ function loadStyleSheetContent(content, path = "injected") {
 		document.head.appendChild(style);
 	}
 }
+
+//#####################################################
+//## CONTEXT MENU
+//#####################################################
+
 let selectedASIN = null;
 document.addEventListener("contextmenu", async (event) => {
 	// Try to obtain the word that was right clicked on

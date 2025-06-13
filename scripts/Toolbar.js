@@ -21,7 +21,7 @@ import { getTileByAsin, addPinnedTile, removePinnedTile, updateTileCounts } from
 import { Template } from "./Template.js";
 var Tpl = new Template();
 
-import { keywordMatch } from "./service_worker/keywordMatch.js";
+import { keywordMatch } from "./keywordMatch.js";
 import { escapeHTML } from "./StringHelper.js";
 import { BrendaAnnounceQueue } from "./BrendaAnnounce.js";
 var brendaAnnounceQueue = new BrendaAnnounceQueue();

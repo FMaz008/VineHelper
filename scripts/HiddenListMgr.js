@@ -1,3 +1,5 @@
+/*global chrome*/
+
 import { Logger } from "./Logger.js";
 var logger = new Logger();
 
@@ -37,7 +39,7 @@ class HiddenListMgr {
 		this.loadFromLocalStorage(); //Can't be awaited
 
 		//Handle the reception of broadcasts:
-		this.broadcast.onmessage = (ev) => {
+		this.broadcast.addEventListener("message", (ev) => {
 			if (ev.data.type == undefined) return;
 
 			if (ev.data.type == "hideItem") {
@@ -48,7 +50,7 @@ class HiddenListMgr {
 				logger.add("Broadcast received: show item " + ev.data.asin);
 				this.removeItem(ev.data.asin, false, false);
 			}
-		};
+		});
 	}
 
 	async loadFromLocalStorage() {

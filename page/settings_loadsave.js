@@ -298,7 +298,6 @@ async function initiateSettings() {
 	manageCheckboxSetting("notification.monitor.bump0ETV");
 	manageCheckboxSetting("notification.monitor.mouseoverPause");
 	manageCheckboxSetting("notification.monitor.pauseOverlay");
-	manageCheckboxSetting("notification.autoload.tab");
 	manageTimeSetting("notification.autoload.hourStart");
 	manageTimeSetting("notification.autoload.hourEnd");
 
@@ -818,7 +817,7 @@ function initiateTestKeywords() {
 	});
 }
 
-import { keywordMatch } from "../scripts/service_worker/keywordMatch.js";
+import { keywordMatch } from "../scripts/keywordMatch.js";
 function testKeyword(key, title) {
 	const keyE = CSS.escape(key);
 

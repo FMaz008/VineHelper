@@ -1,112 +1,27 @@
 /*global chrome*/
 
-const channel = new BroadcastChannel("VineHelper");
-
 import { Internationalization } from "../scripts/Internationalization.js";
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
-import {
-	broadcastFunction,
-	dataStream as myStream,
-	notificationPushFunction,
-} from "./service_worker/NewItemStreamProcessing.js";
-
-//Bind/Inject the service worker's functions to the dataStream.
-broadcastFunction(dataBuffering);
-notificationPushFunction(pushNotification);
 
 var Settings = new SettingsMgr();
 var i13n = new Internationalization();
 var notificationsData = {};
-var lastActivityUpdate = Date.now();
-var masterMonitorTabId = null;
 var masterCheckInterval = 0.2; //Firefox shutdown the background script after 30seconds.
-
-var fetch100 = false;
-var dataBuffer = [];
-
-var wsPingStatus = 0;
-
-function dataBuffering(data) {
-	if (!fetch100) {
-		sendMessageToAllTabs(data);
-		return;
-	}
-	dataBuffer.push(data);
-	if (data.type == "fetchRecentItemsEnd") {
-		sendMessageToAllTabs({ type: "fetch100", data: JSON.stringify(dataBuffer) });
-		dataBuffer = [];
-		fetch100 = false;
-	}
-}
 
 //#####################################################
 //## LISTENERS
 //#####################################################
-channel.onmessage = (event) => {
-	processBroadcastMessage(event.data);
-};
 
 chrome.runtime.onMessage.addListener(async (data, sender, sendResponse) => {
-	if (["jobApplication", "thisIsMyResignationLetter"].includes(data.type)) {
-		return;
-	}
-
-	sendResponse({ success: true });
 	processBroadcastMessage(data);
 });
 
 //#####################################################
-//## SERVICE WORKERALARMS
+//## SERVICE WORKER KEEP ALIVE ALARM
 //#####################################################
-chrome.alarms.create("pingMasterMonitor", {
+chrome.alarms.create("keepAlive", {
 	delayInMinutes: 0, // adding this to delay first run, run immediately
 	periodInMinutes: masterCheckInterval,
-});
-
-//#####################################################
-//## MASTER/SLAVE MONITOR HANDLING
-//#####################################################
-
-chrome.runtime.onMessage.addListener(async (data, sender, sendResponse) => {
-	if (data.type == "jobApplication") {
-		if (masterMonitorTabId === null) {
-			masterMonitorTabId = sender.tab.id;
-			console.log(
-				`Received job application ${masterMonitorTabId} for the vacant master monitor position. Hiring as master monitor.`
-			);
-			sendResponse({ youAreTheMasterMonitor: true });
-		} else {
-			if (sender.tab.id == masterMonitorTabId) {
-				console.log(
-					`Received job application ${sender.tab.id}, but he's already assigned the job. Remind him he already works for us.`
-				);
-				sendResponse({ youAreTheMasterMonitor: true });
-			} else {
-				console.log(`Received job application ${sender.tab.id}, but the job is taken.`);
-				sendResponse({ youAreTheMasterMonitor: false });
-			}
-		}
-		return;
-	}
-
-	if (data.type == "thisIsMyResignationLetter") {
-		console.log(`Master monitor gave his resignation letter. Looking for another candidate.`);
-
-		// Start the async operation
-		findMasterMonitorTab(masterMonitorTabId).then((newCandidate) => {
-			if (newCandidate !== null) {
-				console.log(`Demoting ${masterMonitorTabId} from master monitor to slave monitor.`);
-				try {
-					chrome.tabs.sendMessage(masterMonitorTabId, { type: "setSlaveMonitor" });
-				} catch (error) {
-					//Do nothing
-				}
-				masterMonitorTabId = newCandidate;
-			} else {
-				console.log(`No new candidate found, but master monitor might still show up to work.`);
-			}
-		});
-	}
 });
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
@@ -117,96 +32,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 	if (countryCode != null) {
 		i13n.setCountryCode(countryCode);
 	}
-
-	if (alarm.name == "pingMasterMonitor") {
-		let lastMasterMonitorTabId = null;
-		if (masterMonitorTabId !== null) {
-			masterMonitorTabId = await checkMasterMonitorStatus();
-		}
-
-		//Search if another monitor window is open
-		if (masterMonitorTabId === null) {
-			masterMonitorTabId = await findMasterMonitorTab(lastMasterMonitorTabId);
-		}
-	}
 });
-
-async function checkMasterMonitorStatus() {
-	return new Promise((resolve) => {
-		// Set up listener for wsPong response
-		const tabMsgListener = (message) => {
-			if (message.type === "wsPong") {
-				pongReceived(masterMonitorTabId);
-			}
-		};
-		chrome.runtime.onMessage.addListener(tabMsgListener);
-
-		const pongReceived = (tabId) => {
-			wsPingStatus = !!tabId;
-			chrome.runtime.onMessage.removeListener(tabMsgListener);
-			resolve(tabId);
-		};
-
-		// Send ping message
-		wsPingStatus = false;
-		if (chrome.permissions.contains({ permissions: ["scripting"] })) {
-			chrome.scripting.executeScript({
-				target: { tabId: masterMonitorTabId },
-				func: () => {
-					window.postMessage({ type: "wsPing" }, "*");
-				},
-			});
-		} else {
-			chrome.tabs.sendMessage(masterMonitorTabId, { type: "wsPing" });
-		}
-
-		// Set timeout to resolve false if no response in 1 second
-		setTimeout(() => {
-			if (!wsPingStatus) {
-				pongReceived(null);
-			}
-			wsPingStatus = false;
-		}, 500);
-	});
-}
-
-async function findMasterMonitorTab(excludingId = null) {
-	const monitorTabId = await findMonitorTab(excludingId);
-	if (monitorTabId) {
-		//Send a message to the new master monitor tab
-		return await findMasterMonitorTabHelper(monitorTabId);
-	}
-	return null;
-}
-
-async function findMonitorTab(excludingId = null) {
-	const allTabs = await chrome.tabs.query({});
-	const monitorTab = allTabs.find((tab) => tab.id !== excludingId && tab.url && tab.url.includes("#monitor"));
-	if (monitorTab) {
-		//Monitor tab found, return its tab id
-		return monitorTab.id;
-	}
-	return null;
-}
-
-async function findMasterMonitorTabHelper(monitorTabId) {
-	return new Promise((resolve) => {
-		chrome.tabs.sendMessage(monitorTabId, { type: "setMasterMonitor" }, (response) => {
-			if (chrome.runtime.lastError) {
-				console.log(`Called back candidate ${monitorTabId}, no answer.`);
-				resolve(null);
-			} else {
-				console.log(`Monitor ${monitorTabId} found, promoting it to master.`);
-				resolve(monitorTabId);
-			}
-		});
-	});
-}
-
-function sendToMasterMonitor(data) {
-	console.log("Sending to master monitor:", data);
-	sendMessageToTab(masterMonitorTabId, data);
-}
 
 //#####################################################
 //## PROCESS BROADCAST MESSAGES
@@ -217,243 +43,17 @@ async function processBroadcastMessage(data) {
 		return false;
 	}
 
-	//console.log("Received data:", data);
-	if (data.type == "ping") {
-		sendMessageToAllTabs({ type: "pong" }, "Service worker is running.");
-
-		//Update the last activity time as a unix timestamp
-		if (Date.now() - lastActivityUpdate >= 1 * 60 * 1000) {
-			let minutesUsed = parseInt(Settings.get("metrics.minutesUsed"));
-			Settings.set("metrics.minutesUsed", minutesUsed + 1);
-			lastActivityUpdate = Date.now();
-		}
-	}
-
-	//A notification monitor is requesting the latest items
-	if (data.type == "fetchLatestItems") {
-		sendToMasterMonitor({ type: "fetchLatestItems", limit: data.limit });
-	}
-
-	//Master monitor is reporting the fetch latest items
-	if (data.type == "last100") {
-		processLast100Items(data.products);
-	}
-
-	//Master monitor is reporting the new item
-	if (data.type == "newItem") {
-		myStream.input({
-			index: 0,
-			type: "newItem",
-			domain: Settings.get("general.country"),
-			date: data.item.date,
-			date_added: data.item.date_added,
-			asin: data.item.asin,
-			title: data.item.title,
-			//search: data.item.search,
-			img_url: data.item.img_url,
-			etv_min: data.item.etv_min, //null
-			etv_max: data.item.etv_max, //null
-			reason: data.item.reason,
-			queue: data.item.queue,
-			tier: data.item.tier,
-			is_parent_asin: data.item.is_parent_asin,
-			enrollment_guid: data.item.enrollment_guid,
-		});
-	}
-
-	//Master monitor is reporting the new ETV
-	if (data.type == "newETV") {
-		sendMessageToAllTabs(
-			{
-				type: "newETV",
-				asin: data.item.asin,
-				etv: data.item.etv,
-			},
-			"ETV update"
+	if (data.type == "pushNotification") {
+		pushNotification(
+			data.asin,
+			data.queue,
+			data.is_parent_asin,
+			data.enrollment_guid,
+			data.search_string,
+			data.title,
+			data.description,
+			data.img_url
 		);
-
-		let data1 = {};
-		data1.type = "hookExecute";
-		data1.hookname = "newItemETV";
-		data1.asin = data.item.asin;
-		data1.etv = data.item.etv;
-		sendMessageToAllTabs(data1, "newItemETV");
-	}
-
-	//Master monitor is reporting an unavailable item
-	if (data.type == "unavailableItem") {
-		sendMessageToAllTabs({
-			type: "unavailableItem",
-			domain: Settings.get("general.country"),
-			asin: data.item.asin,
-			reason: data.item.reason,
-		});
-	}
-
-	//Master monitor is reporting the new variants
-	if (data.type == "newVariants") {
-		sendMessageToAllTabs(data, "newVariants");
-	}
-
-	//A notification monitor is requesting the websocket status.
-	if (data.type == "wsStatus" && data.status == null) {
-		sendToMasterMonitor({ type: "wsStatus" });
-	}
-
-	//The master monitor is reporting the websocket status.
-	if (data.type == "wsStatus" && data.status !== null) {
-		switch (data.status) {
-			case "wsOpen":
-				sendMessageToAllTabs({ type: "wsOpen" }, "Websocket server connected.");
-				break;
-			case "wsClosed":
-				sendMessageToAllTabs({ type: "wsClosed" }, "Websocket server disconnected.");
-				break;
-		}
-	}
-
-	//## AUTO-LOAD #########################################################
-
-	//A request from the master monitor to open a tab
-	if (data.type == "reloadPage") {
-		if (!data.queue || !data.page) {
-			return false;
-		}
-		const queue = data.queue;
-		const page = data.page;
-
-		const queueTable = { AI: "encore", AFA: "last_chance", RFY: "potluck" };
-		const url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=${queueTable[queue]}&page=${page}#AR`;
-		console.log(`${new Date().toLocaleString()} - Reloading page: ${queue} page ${page}`);
-
-		if (Settings.get("notification.autoload.tab") && chrome.windows) {
-			//Mobile devices do not support chrome.windows
-			await openTab(url);
-		} else {
-			sendToMasterMonitor({ type: "fetchAutoLoadUrl", url: url, queue: queueTable[queue], page: page });
-		}
-	}
-
-	//A tab has requested to be closed automatically.
-	if (data.type == "closeARTab") {
-		if (currentTabId !== null) {
-			try {
-				await closeTab(currentTabId);
-				currentTabId = null;
-			} catch (error) {
-				console.error("Unexpected error closing tab:" + currentTabId, error);
-			}
-		}
-	}
-
-	//A tab has reported to be a dog page.
-	//Tell the master monitor's auto-load timer to stop for 24 hours.
-	if (data.type == "dogpage") {
-		console.log("Dog page detected, halting auto-load timer for 24 hours");
-		sendToMasterMonitor({ type: "dogpage" });
-	}
-
-	//A tab has reported to be a captcha page.
-	//Tell the master monitor's auto-load timer to stop for 1 hour.
-	if (data.type == "captchapage") {
-		console.log("Captcha page detected, halting auto-load timer for 1 hour");
-		sendToMasterMonitor({ type: "captchapage" });
-	}
-
-	//A tab has reported to be a login page.
-	//Tell the master monitor's auto-load timer to stop for 1 hour.
-	if (data.type == "loginpage") {
-		console.log("Login page detected, halting auto-load timer for 1 hour");
-		sendToMasterMonitor({ type: "loginpage" });
-	}
-}
-
-//#####################################################
-//## AUTO-LOAD
-//#####################################################
-
-let currentTabId = null;
-//Open a tab with the given url
-async function openTab(url) {
-	if (currentTabId !== null) {
-		//Close tab id
-		chrome.tabs.remove(currentTabId);
-	}
-	//Find the windows id containing the notification monitor with a url containing #monitor
-	if (chrome.windows) {
-		//Find the window containing the notification monitor
-		const monitorWindowId = await findMonitorWindow(true);
-		if (monitorWindowId) {
-			if (typeof browser !== "undefined") {
-				// Firefox
-				browser.tabs
-					.create({ url, windowId: monitorWindowId, active: false })
-					.then((newTab) => {
-						currentTabId = newTab.id;
-					})
-					.catch((error) => {});
-			} else {
-				// Chrome
-				const newTab = await chrome.tabs.create({ url, windowId: monitorWindowId, active: false });
-				currentTabId = newTab.id;
-			}
-		} else {
-			console.log(`${new Date().toLocaleString()} - No monitor tab found in focus or in background, abort.`);
-		}
-	} else {
-		console.log(`${new Date().toLocaleString()} - Tab management not supported, abort.`);
-	}
-}
-
-async function findMonitorWindow(inFocusOrBackgroundOnly = false) {
-	const activeTabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-	const activeMonitorTab = activeTabs.find((tab) => tab.url && tab.url.includes("#monitor"));
-	if (activeMonitorTab) {
-		//Monitor tab found, and in focus
-		return activeMonitorTab.windowId;
-	} else {
-		const allTabs = await chrome.tabs.query({});
-		const monitorTab = allTabs.find((tab) => tab.url && tab.url.includes("#monitor"));
-		if (monitorTab) {
-			//Monitor tab found, but not in focus
-			const window = await chrome.windows.get(monitorTab.windowId);
-			if (!inFocusOrBackgroundOnly || window.state === "minimized" || !window.focused) {
-				return monitorTab.windowId;
-			}
-		}
-	}
-	return false;
-}
-
-async function closeTab(tabId) {
-	// Firefox requires a different approach for tab removal
-	if (typeof browser !== "undefined") {
-		// Firefox
-		return new Promise((resolve) => {
-			browser.tabs
-				.get(tabId)
-				.then(() => browser.tabs.remove(tabId))
-				.then(() => resolve(true))
-				.catch(() => resolve(false));
-		});
-	} else {
-		// Chrome
-		return new Promise((resolve) => {
-			chrome.tabs.get(tabId, (tab) => {
-				if (chrome.runtime.lastError) {
-					resolve(false);
-					return;
-				}
-
-				chrome.tabs.remove(tabId, () => {
-					if (chrome.runtime.lastError) {
-						resolve(false);
-					} else {
-						resolve(true);
-					}
-				});
-			});
-		});
 	}
 }
 
@@ -461,63 +61,7 @@ async function closeTab(tabId) {
 //## BUSINESS LOGIC
 //#####################################################
 
-function processLast100Items(arrProducts) {
-	arrProducts.sort((a, b) => {
-		const dateA = new Date(a.date);
-		const dateB = new Date(b.date);
-		return dateB - dateA;
-	});
-	fetch100 = true;
-	for (let i = arrProducts.length - 1; i >= 0; i--) {
-		const {
-			title,
-			date,
-			date_added,
-			timestamp,
-			asin,
-			img_url,
-			etv_min,
-			etv_max,
-			queue,
-			tier,
-			is_parent_asin,
-			enrollment_guid,
-			unavailable,
-			variants,
-		} = arrProducts[i];
-
-		//Only display notification for products with a title and image url
-		//And that are more recent than the latest notification received.
-		if (img_url == "" || title == "") {
-			console.log("FETCH LATEST: item without title or image url: " + asin);
-			continue;
-		}
-
-		myStream.input({
-			index: i,
-			type: "newItem",
-			domain: Settings.get("general.country"),
-			date: date,
-			date_added: date_added,
-			asin: asin,
-			title: title,
-			img_url: img_url,
-			etv_min: etv_min,
-			etv_max: etv_max,
-			queue: queue,
-			tier: tier,
-			reason: "Fetch latest new items",
-			is_parent_asin: is_parent_asin,
-			enrollment_guid: enrollment_guid,
-			unavailable: unavailable,
-			variants: variants,
-		});
-	}
-	myStream.input({ type: "fetchRecentItemsEnd" });
-}
-
 async function sendMessageToAllTabs(data) {
-	channel.postMessage(data);
 	try {
 		const tabs = await chrome.tabs.query({});
 		const regex = /^.+?amazon\.([a-z.]+).*\/vine\/.*$/;
@@ -529,7 +73,7 @@ async function sendMessageToAllTabs(data) {
 				if (tab.url == undefined || match) {
 					console.log("Sending to tab id " + tab.id, data);
 					sendMessageToTab(tab.id, data);
-				} //end if tab.url == undefined || match
+				}
 			}
 		});
 	} catch (error) {

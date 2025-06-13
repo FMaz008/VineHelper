@@ -1,3 +1,4 @@
+/*global chrome*/
 import { Tile } from "../Tile.js";
 
 const TYPE_DATE_ASC = "date_asc";

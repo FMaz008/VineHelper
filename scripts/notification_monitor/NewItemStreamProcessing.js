@@ -1,6 +1,8 @@
+/*global chrome*/
+
 import { Streamy } from "../Streamy.js";
 import { SettingsMgr } from "../SettingsMgr.js";
-import { keywordMatch } from "./keywordMatch.js";
+import { keywordMatch } from "../keywordMatch.js";
 
 var Settings = new SettingsMgr();
 var outputFunctions = {
@@ -78,9 +80,8 @@ const transformPostNotification = dataStream.transformer(function (data) {
 			data.title,
 			data.img_url
 		);
-	}
-	//If the new item match in AFA queue, push a real notification.
-	else if (Settings.get("notification.pushNotificationsAFA") && data.queue == "last_chance") {
+		//If the new item match in AFA queue, push a real notification.
+	} else if (Settings.get("notification.pushNotificationsAFA") && data.queue == "last_chance") {
 		outputFunctions.push(
 			data.asin,
 			data.queue,

@@ -36,10 +36,7 @@ class AutoLoad {
 
 	#createListener() {
 		//The SW is reporting that a tab was detected to be a dog page, delay the auto-load timer for 24 hours.
-		chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-			this.processMessage(message);
-		});
-		window.addEventListener("message", (event) => {
+		this._monitor._channel.addEventListener("message", (event) => {
 			this.processMessage(event.data);
 		});
 	}
@@ -220,7 +217,7 @@ class AutoLoad {
 		//Check if the page is a loginpage
 		if (isPageLogin(doc)) {
 			console.log(`${new Date().toLocaleString()} - Login page detected.`);
-			chrome.runtime.sendMessage({ type: "loginpage" });
+			this.resetReloadTimer(1000 * 60 * 60); //1 hour
 			return;
 		}
 

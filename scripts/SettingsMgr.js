@@ -1,3 +1,5 @@
+/*global chrome*/
+
 import { Logger } from "./Logger.js";
 var logger = new Logger();
 
@@ -339,7 +341,6 @@ class SettingsMgr {
 				autoload: {
 					min: 5,
 					max: 10,
-					tab: false,
 					hourStart: "03:00",
 					hourEnd: "17:00",
 				},

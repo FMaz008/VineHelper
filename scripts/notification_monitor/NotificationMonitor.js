@@ -1,10 +1,12 @@
+/*global chrome*/
+
 //Todo: insertTileAccordingToETV and ETVChangeRepositioning are very similar. Could we merge some logic?
 
 import { getRecommendationTypeFromQueue, generateRecommendationString } from "../Grid.js";
 import { Tile } from "../Tile.js";
 
 import { YMDHiStoISODate } from "../DateHelper.js";
-import { keywordMatch } from "../service_worker/keywordMatch.js";
+import { keywordMatch } from "../keywordMatch.js";
 import { escapeHTML, unescapeHTML, removeSpecialHTML } from "../StringHelper.js";
 import { MonitorCore } from "./MonitorCore.js";
 
@@ -426,7 +428,7 @@ class NotificationMonitor extends MonitorCore {
 	 * @returns {false|object} - Return the DOM element of the tile if added, false otherwise
 	 */
 	async addTileInGrid(itemData) {
-		console.log("Adding item to grid", itemData);
+		//console.log("Adding item to grid", itemData);
 		if (!itemData) {
 			return false;
 		}
@@ -678,7 +680,7 @@ class NotificationMonitor extends MonitorCore {
 	}
 
 	async addVariants(data) {
-		if (this._settings.isPremiumUser(2) && this._settings.get("general.displayVariantButton")) {
+		if (this._monitorV3 && this._settings.isPremiumUser(2) && this._settings.get("general.displayVariantButton")) {
 			if (this._itemsMgr.items.has(data.asin)) {
 				const tile = this._itemsMgr.getItemTile(data.asin);
 				if (tile) {
@@ -1529,10 +1531,17 @@ class NotificationMonitor extends MonitorCore {
 				this.#handlePauseClick();
 			}
 
-			chrome.runtime.sendMessage({
-				type: "fetchLatestItems",
-				limit: this._fetchLimit,
-			});
+			if (this._isMasterMonitor) {
+				this._ws.processMessage({
+					type: "fetchLatestItems",
+					limit: this._fetchLimit,
+				});
+			} else {
+				this._channel.postMessage({
+					type: "fetchLatestItems",
+					limit: this._fetchLimit,
+				});
+			}
 		});
 
 		//Bind fetch-last-12hrs button
@@ -1562,10 +1571,17 @@ class NotificationMonitor extends MonitorCore {
 					this.#handlePauseClick();
 				}
 
-				chrome.runtime.sendMessage({
-					type: "fetchLatestItems",
-					limit: "12hrs",
-				});
+				if (this._isMasterMonitor) {
+					this._ws.processMessage({
+						type: "fetchLatestItems",
+						limit: "12hrs",
+					});
+				} else {
+					this._channel.postMessage({
+						type: "fetchLatestItems",
+						limit: "12hrs",
+					});
+				}
 			});
 		}
 
