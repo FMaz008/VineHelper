@@ -4,6 +4,8 @@
 	"description": "Improve the Amazon Vine experience.",
 	"scripts": {
 		"test": "jest",
+		"test:coverage": "jest --coverage",
+		"test:watch": "jest --watch",
 		"lint": "eslint .",
 		"build:release": "node build.js",
 		"prepare": "husky"
@@ -82,5 +84,6 @@
 		"extends": [
 			"@commitlint/config-conventional"
 		]
-	}
+	},
+	"packageManager": "yarn@3.6.4"
 }
