@@ -214,7 +214,14 @@ class ItemsMgr {
 	 * @returns {object} - The tile
 	 */
 	getItemTile(asin) {
-		return this.items.get(asin)?.tile;
+		let item = this.items.get(asin);
+		if (item) {
+			if (!item.tile) {
+				item.tile = new Tile(item.element, null);
+			}
+			return item.tile;
+		}
+		return null;
 	}
 
 	removeAsin(asin) {
