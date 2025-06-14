@@ -8,3 +8,7 @@
 *.zip
 node_modules
 .DS_Store
+
+# Yarn Berry
+.yarn/
+.yarnrc.yml

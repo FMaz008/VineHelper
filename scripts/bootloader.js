@@ -5,7 +5,14 @@ var logger = new Logger();
 
 logger.add("BOOT: Bootloader starting.");
 
-import { SettingsMgr } from "./SettingsMgr.js";
+// TODO: This bootloader needs refactoring to use dependency injection
+// Currently using compatibility layer for SettingsMgr as first step
+// Future work:
+// - Create a DI container instance at the top
+// - Register all services in the container
+// - Use container.resolve() instead of direct instantiation
+// See scripts/infrastructure/DIContainer.js for the DI implementation
+import { SettingsMgr } from "./SettingsMgrCompat.js";
 var Settings = new SettingsMgr();
 
 import { Internationalization } from "./Internationalization.js";
