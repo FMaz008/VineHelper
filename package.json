@@ -1,6 +1,6 @@
 {
 	"name": "vinehelper",
-	"version": "3.5.2",
+	"version": "3.5.3",
 	"description": "Improve the Amazon Vine experience.",
 	"scripts": {
 		"test": "jest",
