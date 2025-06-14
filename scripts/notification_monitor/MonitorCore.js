@@ -329,8 +329,9 @@ class MonitorCore {
 		for (const item of this._itemsMgr.items.values()) {
 			// Early continue if no element
 			if (!item.element) continue;
-			// Check display style directly
-			if (item.element.style.display !== "none") {
+			// Use getComputedStyle for better Safari compatibility
+			const computedStyle = window.getComputedStyle(item.element);
+			if (computedStyle.display !== "none") {
 				count++;
 			}
 		}
