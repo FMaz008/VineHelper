@@ -272,6 +272,7 @@ class SettingsMgr {
 				bookmarkDate: 0,
 				blindLoading: false,
 				blurKeywords: [],
+				unblurImageOnHover: false,
 				country: null,
 				customCSS: "",
 				detailsIcon: true,

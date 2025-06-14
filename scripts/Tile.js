@@ -431,7 +431,14 @@ class Tile {
 			let match = keywordMatch(Settings.get("general.blurKeywords"), this.getTitle(), null, null);
 			if (match) {
 				logger.add("TILE: The item match the keyword '" + match + "', blur it");
-				this.#tileDOM.querySelector("img")?.classList.add("blur");
+				const img = this.#tileDOM.querySelector("img");
+				if (img) {
+					if (Settings.get("general.unblurImageOnHover")) {
+						img.classList.add("dynamic-blur");
+					} else {
+						img.classList.add("blur");
+					}
+				}
 				this.#tileDOM.querySelector(".vvp-item-product-title-container")?.classList.add("dynamic-blur");
 				this.#tileDOM.dataset.blurredKeyword = escapeHTML(match);
 			}
