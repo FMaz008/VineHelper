@@ -285,7 +285,14 @@ class MonitorCore {
 		}
 
 		//Blur the thumbnail and title
-		notif.querySelector(".vh-img-container>img")?.classList.add("blur");
+		const img = notif.querySelector(".vh-img-container>img");
+		if (img) {
+			if (this._settings.get("general.unblurImageOnHover")) {
+				img.classList.add("dynamic-blur");
+			} else {
+				img.classList.add("blur");
+			}
+		}
 		notif.querySelector(".vvp-item-product-title-container>a")?.classList.add("dynamic-blur");
 	}
 

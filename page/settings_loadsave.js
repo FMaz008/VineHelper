@@ -518,6 +518,7 @@ async function initiateSettings() {
 	manageKeywords("general.highlightKeywords");
 	manageKeywords("general.hideKeywords");
 	manageTextareaCSK("general.blurKeywords");
+	manageCheckboxSetting("general.unblurImageOnHover");
 	initiateTogglers();
 	initiateTestKeywords();
 
