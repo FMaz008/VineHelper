@@ -121,7 +121,8 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		//Queue filter
-		if (node.style.display == "flex" || node.style.display == "block") {
+		const style = window.getComputedStyle(node);
+		if (style && (style.display == "flex" || style.display == "block")) {
 			if (this._filterQueue == "-1") {
 				return true;
 			} else {
@@ -307,7 +308,8 @@ class NotificationMonitor extends MonitorCore {
 
 					//Count how many of the items to be removed are visible
 					for (let i = max; i < itemsArray.length; i++) {
-						if (itemsArray[i].element.style.display !== "none") {
+						const style = window.getComputedStyle(itemsArray[i].element);
+						if (style && style.display !== "none") {
 							visibleItemsRemovedCount++;
 						}
 					}
