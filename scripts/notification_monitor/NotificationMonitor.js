@@ -121,8 +121,13 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		//Queue filter
-		const style = window.getComputedStyle(node);
-		if (style && (style.display == "flex" || style.display == "block")) {
+		let styleDisplay;
+		if (this._env.isSafari()) {
+			styleDisplay = window.getComputedStyle(node);
+		} else {
+			styleDisplay = node.style.display;
+		}
+		if (styleDisplay == "flex" || styleDisplay == "block") {
 			if (this._filterQueue == "-1") {
 				return true;
 			} else {
@@ -308,8 +313,14 @@ class NotificationMonitor extends MonitorCore {
 
 					//Count how many of the items to be removed are visible
 					for (let i = max; i < itemsArray.length; i++) {
-						const style = window.getComputedStyle(itemsArray[i].element);
-						if (style && style.display !== "none") {
+						let displayStyle;
+						if (this._env.isSafari()) {
+							const computedStyle = window.getComputedStyle(itemsArray[i].element);
+							displayStyle = computedStyle.display;
+						} else {
+							displayStyle = itemsArray[i].element.style.display;
+						}
+						if (displayStyle !== "none") {
 							visibleItemsRemovedCount++;
 						}
 					}
@@ -766,13 +777,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		if (etvObj.dataset.etvMax == "" || etv > etvObj.dataset.etvMax) {
-			//Ensure we wait for the DOM to be updated before continuing the execution.
-			await new Promise((resolve) =>
-				requestAnimationFrame(() => {
-					etvObj.dataset.etvMax = etv;
-					resolve();
-				})
-			);
+			etvObj.dataset.etvMax = etv;
 		}
 
 		// Ensure etvMin is always less than or equal to etvMax

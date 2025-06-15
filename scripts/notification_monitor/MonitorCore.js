@@ -336,9 +336,16 @@ class MonitorCore {
 		for (const item of this._itemsMgr.items.values()) {
 			// Early continue if no element
 			if (!item.element) continue;
-			// Use getComputedStyle for better Safari compatibility
-			const computedStyle = window.getComputedStyle(item.element);
-			if (computedStyle.display !== "none") {
+
+			let displayStyle;
+			if (this._env.isSafari()) {
+				// For Safari, use computed style (which is slower and cause reflow) as it can't read style.display reliably.
+				const computedStyle = window.getComputedStyle(item.element);
+				displayStyle = computedStyle.display;
+			} else {
+				displayStyle = item.element.style.display;
+			}
+			if (displayStyle !== "none") {
 				count++;
 			}
 		}

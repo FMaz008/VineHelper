@@ -267,6 +267,10 @@ class Environment {
 		return navigator.userAgent.includes("Firefox");
 	}
 
+	isSafari() {
+		return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+	}
+
 	//getWSSUrl() {
 	//	return "wss://api.vinehelper.ovh";
 	//}
