@@ -45,17 +45,26 @@ async function processBroadcastMessage(data) {
 	}
 
 	if (data.type == "pushNotification") {
-		const item = new Item({
-			asin: data.asin,
-			queue: data.queue,
-			is_parent_asin: data.is_parent_asin,
-			is_pre_release: data.is_pre_release,
-			enrollment_guid: data.enrollment_guid,
-		});
-		item.setTitle(data.title);
-		item.setImgUrl(data.img_url);
-		item.setSearch(data.search_string);
-		pushNotification(item);
+		try {
+			const item = new Item({
+				asin: data.asin,
+				queue: data.queue,
+				is_parent_asin: data.is_parent_asin,
+				is_pre_release: data.is_pre_release,
+				enrollment_guid: data.enrollment_guid,
+			});
+			item.setTitle(data.title);
+			item.setImgUrl(data.img_url);
+			item.setSearch(data.search_string);
+			pushNotification(item);
+		} catch (error) {
+			console.error("[ServiceWorker] Cannot create item for push notification -", error.message, {
+				asin: data.asin,
+				queue: data.queue,
+				enrollment_guid: data.enrollment_guid,
+				source: "pushNotification message",
+			});
+		}
 	}
 }
 
@@ -124,15 +133,26 @@ chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
 			notificationsData[notificationId];
 		let url;
 		if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
-			const item = new Item({
-				asin: asin,
-				queue: queue,
-				is_parent_asin: is_parent_asin,
-				is_pre_release: is_pre_release,
-				enrollment_guid: enrollment_guid,
-			});
-			const options = item.getCoreInfoWithVariant();
-			url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${encodeURIComponent(JSON.stringify(options))}`;
+			try {
+				const item = new Item({
+					asin: asin,
+					queue: queue,
+					is_parent_asin: is_parent_asin,
+					is_pre_release: is_pre_release,
+					enrollment_guid: enrollment_guid,
+				});
+				const options = item.getCoreInfoWithVariant();
+				url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${encodeURIComponent(JSON.stringify(options))}`;
+			} catch (error) {
+				console.error("[ServiceWorker] Cannot create item for notification click -", error.message, {
+					asin: asin,
+					queue: queue,
+					enrollment_guid: enrollment_guid,
+					source: "notification click handler",
+				});
+				// Fall back to search URL
+				url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search}`;
+			}
 		} else {
 			url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search}`;
 		}

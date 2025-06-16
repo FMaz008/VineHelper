@@ -253,17 +253,26 @@ class Toolbar {
 								/#vine\.enrollment\.([a-f0-9-]+)/i
 							)[1];
 
-							const item = new Item({
-								asin: asin,
-								queue: env.data.vineQueue,
-								title: title,
-								img_url: thumbnail,
-								is_parent_asin: is_parent_asin,
-								enrollment_guid: enrollment_guid,
-							});
-							PinnedList.addItem(item);
-
-							await addPinnedTile(item); // grid.js
+							try {
+								const item = new Item({
+									asin: asin,
+									queue: env.data.vineQueue,
+									title: title,
+									img_url: thumbnail,
+									is_parent_asin: is_parent_asin,
+									enrollment_guid: enrollment_guid,
+								});
+								PinnedList.addItem(item);
+								await addPinnedTile(item); // grid.js
+							} catch (error) {
+								console.error("[Toolbar] Cannot create item for pinning -", error.message, {
+									source: "pin button click",
+									asin: asin,
+									queue: env.data.vineQueue,
+									is_parent_asin: is_parent_asin,
+									enrollment_guid: enrollment_guid,
+								});
+							}
 						}
 
 						updateTileCounts();

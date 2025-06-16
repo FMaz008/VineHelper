@@ -368,9 +368,21 @@ async function reloadAllPinnedTile() {
 			//Add all pinned items
 			for (let i = 0; i < response["pinned_products"].length; i++) {
 				console.log("Adding pinned tile", response["pinned_products"][i]);
-				const item = new Item(response["pinned_products"][i]);
 
-				await addPinnedTile(item); //grid.js
+				const productData = response["pinned_products"][i];
+				try {
+					const item = new Item(productData);
+					await addPinnedTile(item); //grid.js
+				} catch (error) {
+					console.error("[Grid] Cannot create item for pinned tile -", error.message, {
+						source: "pinned products from server response",
+						index: i,
+						total_pinned_items: response["pinned_products"].length,
+						product_data: productData,
+						has_asin: productData?.asin !== undefined,
+						has_enrollment_guid: productData?.enrollment_guid !== undefined,
+					});
+				}
 			}
 		});
 }
