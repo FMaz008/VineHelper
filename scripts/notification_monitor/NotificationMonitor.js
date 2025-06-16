@@ -445,6 +445,7 @@ class NotificationMonitor extends MonitorCore {
 			title,
 			img_url,
 			is_parent_asin,
+			is_pre_release,
 			enrollment_guid,
 			etv_min,
 			etv_max,
@@ -529,6 +530,7 @@ class NotificationMonitor extends MonitorCore {
 		this._tpl.setVar("highlightKW", KW);
 		this._tpl.setVar("blurKW", BlurKW);
 		this._tpl.setVar("is_parent_asin", is_parent_asin); //"true" or "false"
+		this._tpl.setVar("is_pre_release", is_pre_release); //"true" or "false"
 		this._tpl.setVar("enrollment_guid", enrollment_guid);
 		this._tpl.setVar("recommendationType", recommendationType);
 		this._tpl.setVar("recommendationId", recommendationId);

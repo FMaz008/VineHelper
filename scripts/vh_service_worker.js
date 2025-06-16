@@ -141,10 +141,11 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 
 chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
 	chrome.notifications.onClicked.addListener((notificationId) => {
-		const { asin, queue, is_parent_asin, enrollment_guid, search } = notificationsData[notificationId];
+		const { asin, queue, is_parent_asin, is_pre_release, enrollment_guid, search } =
+			notificationsData[notificationId];
 		let url;
 		if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
-			url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`;
+			url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${is_pre_release ? "true" : "false"};${enrollment_guid}`;
 		} else {
 			url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search}`;
 		}
@@ -217,6 +218,7 @@ function connectWebSocket() {
 			queue: data.item.queue,
 			tier: data.item.tier,
 			is_parent_asin: data.item.is_parent_asin,
+			is_pre_release: data.item.is_pre_release,
 			enrollment_guid: data.item.enrollment_guid,
 		});
 	});
@@ -596,6 +598,7 @@ function processLast100Items(arrProducts) {
 			queue,
 			tier,
 			is_parent_asin,
+			is_pre_release,
 			enrollment_guid,
 			unavailable,
 			variants,
@@ -623,6 +626,7 @@ function processLast100Items(arrProducts) {
 			tier: tier,
 			reason: "Fetch latest new items",
 			is_parent_asin: is_parent_asin,
+			is_pre_release: is_pre_release,
 			enrollment_guid: enrollment_guid,
 			unavailable: unavailable,
 			variants: variants,
@@ -631,13 +635,24 @@ function processLast100Items(arrProducts) {
 	myStream.input({ type: "fetchRecentItemsEnd" });
 }
 
-function pushNotification(asin, queue, is_parent_asin, enrollment_guid, search_string, title, description, img_url) {
+function pushNotification(
+	asin,
+	queue,
+	is_parent_asin,
+	is_pre_release,
+	enrollment_guid,
+	search_string,
+	title,
+	description,
+	img_url
+) {
 	chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
 		if (result) {
 			notificationsData["item-" + asin] = {
 				asin: asin,
 				queue: queue,
 				is_parent_asin: is_parent_asin,
+				is_pre_release: is_pre_release,
 				enrollment_guid: enrollment_guid,
 				search: search_string,
 			};

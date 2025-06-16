@@ -197,15 +197,15 @@ function queryDB(page = 1) {
 			displayError("Error fetching data from server: " + error.message);
 		});
 }
-function openSeeDetails(asin, queue, isParentAsin, enrollmentGuid, variantAsin = null) {
+function openSeeDetails(asin, queue, isParentAsin, isPreRelease, enrollmentGuid, variantAsin = null) {
 	if (variantAsin !== null) {
 		window.open(
-			`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${isParentAsin};${enrollmentGuid};${variantAsin}`,
+			`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${isParentAsin};${isPreRelease};${enrollmentGuid};${variantAsin}`,
 			"_blank"
 		);
 	} else {
 		window.open(
-			`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${isParentAsin};${enrollmentGuid}`,
+			`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${isParentAsin};${isPreRelease};${enrollmentGuid}`,
 			"_blank"
 		);
 	}
@@ -366,6 +366,7 @@ function serverProductsResponse(data) {
 				item.getAttribute("data-asin"),
 				item.getAttribute("data-queue"),
 				item.getAttribute("data-is-parent-asin"),
+				item.getAttribute("data-is-pre-release"),
 				item.getAttribute("data-enrollment-guid")
 			);
 		});
@@ -456,6 +457,7 @@ function serverProductsResponse(data) {
 									item.getAttribute("data-asin"),
 									item.getAttribute("data-queue"),
 									item.getAttribute("data-is-parent-asin"),
+									item.getAttribute("data-is-pre-release"),
 									item.getAttribute("data-enrollment-guid"),
 									item.getAttribute("data-variant-asin")
 								);

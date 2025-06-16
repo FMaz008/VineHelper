@@ -1437,7 +1437,7 @@ window.addEventListener("message", async function (event) {
 		//Check the current URL for the following pattern:
 		///vine/vine-items#openModal;${asin};${is_parent_asin};${enrollment_guid}
 		const currentUrl = window.location.href;
-		let regex = /^[^#]+#openModal;(.+?);(.+?);(.+?);(.+?)(?:;(.+))?$/;
+		let regex = /^[^#]+#openModal;(.+?);(.+?);(.+?);(.+?);(.+?)(?:;(.+))?$/;
 		let arrMatches = currentUrl.match(regex);
 		if (arrMatches != null) {
 			logger.add("BOOT: Open modal URL detected.");
@@ -1445,9 +1445,10 @@ window.addEventListener("message", async function (event) {
 			const asin = arrMatches[1];
 			const queue = arrMatches[2];
 			const isParentAsin = arrMatches[3];
-			const enrollmentGUID = arrMatches[4];
-			const variantAsin = arrMatches[5];
-			openDynamicModal(asin, queue, isParentAsin, enrollmentGUID, variantAsin);
+			const isPreRelease = arrMatches[4];
+			const enrollmentGUID = arrMatches[5];
+			const variantAsin = arrMatches[6];
+			openDynamicModal(asin, queue, isParentAsin, isPreRelease, enrollmentGUID, variantAsin);
 		}
 	}
 });
@@ -1499,7 +1500,19 @@ chrome.runtime.onMessage.addListener(async function (message, sender, sendRespon
 			!env.data.monitorActive && //Do not display on screen notification in the notification monitor
 			Settings.get("notification.screen.active")
 		) {
-			let { date, asin, queue, title, search, img_url, domain, etv, is_parent_asin, enrollment_guid } = data;
+			let {
+				date,
+				asin,
+				queue,
+				title,
+				search,
+				img_url,
+				domain,
+				etv,
+				is_parent_asin,
+				is_pre_release,
+				enrollment_guid,
+			} = data;
 
 			//Generate the content to be displayed in the notification
 			const prom = await Tpl.loadFile("/view/notification_new_item.html");
@@ -1512,7 +1525,7 @@ chrome.runtime.onMessage.addListener(async function (message, sender, sendRespon
 			) {
 				Tpl.setVar(
 					"url",
-					`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`
+					`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${is_pre_release ? "true" : "false"};${enrollment_guid}`
 				);
 			} else {
 				Tpl.setVar("url", `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search}`);
