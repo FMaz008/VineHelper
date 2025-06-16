@@ -763,13 +763,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		if (etvObj.dataset.etvMax == "" || etv > etvObj.dataset.etvMax) {
-			//Ensure we wait for the DOM to be updated before continuing the execution.
-			await new Promise((resolve) =>
-				requestAnimationFrame(() => {
-					etvObj.dataset.etvMax = etv;
-					resolve();
-				})
-			);
+			etvObj.dataset.etvMax = etv;
 		}
 
 		// Ensure etvMin is always less than or equal to etvMax
