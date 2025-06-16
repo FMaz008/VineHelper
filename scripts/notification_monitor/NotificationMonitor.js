@@ -2,13 +2,13 @@
 
 //Todo: insertTileAccordingToETV and ETVChangeRepositioning are very similar. Could we merge some logic?
 
-import { getRecommendationTypeFromQueue, generateRecommendationString } from "../Grid.js";
 import { Tile } from "../Tile.js";
 
 import { YMDHiStoISODate } from "../DateHelper.js";
 import { keywordMatch } from "../keywordMatch.js";
 import { escapeHTML, unescapeHTML, removeSpecialHTML } from "../StringHelper.js";
 import { MonitorCore } from "./MonitorCore.js";
+import { Item } from "../Item.js";
 
 //const TYPE_SHOW_ALL = -1;
 const TYPE_REGULAR = 0;
@@ -437,21 +437,19 @@ class NotificationMonitor extends MonitorCore {
 
 	/**
 	 * Add a tile to the monitor
-	 * @param {object} itemData - JSON object containing the item data
+	 * @param {object} item - Item object containing the item data
 	 * @returns {false|object} - Return the DOM element of the tile if added, false otherwise
 	 */
-	async addTileInGrid(itemData) {
-		//console.log("Adding item to grid", itemData);
-		if (!itemData) {
-			return false;
+	async addTileInGrid(item, reason = "") {
+		if (!(item instanceof Item)) {
+			throw new Error("item is not an instance of Item");
 		}
 
-		itemData.unavailable = itemData.unavailable == 1;
-		itemData.typeHighlight = itemData.KWsMatch ? 1 : 0;
-		itemData.typeZeroETV = itemData.etv_min !== null && parseFloat(itemData.etv_min) === 0 ? 1 : 0;
-		itemData.title = unescapeHTML(unescapeHTML(itemData.title));
-		itemData.date = YMDHiStoISODate(itemData.date); //Convert server date time to local date time
-		itemData.date_added = YMDHiStoISODate(itemData.date_added); //Convert server date time to local date time
+		item.setUnavailable(item.data.unavailable == 1);
+		item.setTitle(unescapeHTML(unescapeHTML(item.data.title)));
+		item.setDate(YMDHiStoISODate(item.data.date)); //Convert server date time to local date time
+		item.setDateAdded(YMDHiStoISODate(item.data.date_added)); //Convert server date time to local date time
+
 		const {
 			asin,
 			queue,
@@ -461,18 +459,18 @@ class NotificationMonitor extends MonitorCore {
 			title,
 			img_url,
 			is_parent_asin,
+			is_pre_release,
 			enrollment_guid,
 			etv_min,
 			etv_max,
-			reason,
 			KW,
 			KWsMatch,
 			BlurKW,
 			BlurKWsMatch,
 			unavailable,
-		} = itemData;
-		const recommendationType = getRecommendationTypeFromQueue(queue); //grid.js
-		const recommendationId = generateRecommendationString(recommendationType, asin, enrollment_guid); //grid.js
+		} = item.data; //Todo: Actually use the item object
+		const recommendationType = item.getRecommendationType();
+		const recommendationId = item.getRecommendationString(this._env);
 
 		// If the notification already exists, update the data and return the existing DOM element
 		if (this._itemsMgr.items.has(asin)) {
@@ -480,7 +478,7 @@ class NotificationMonitor extends MonitorCore {
 			if (element) {
 				this._log.add(`NOTIF: Item ${asin} already exists, updating RecommendationId.`);
 				// Update the data
-				this._itemsMgr.addItemData(asin, itemData);
+				this._itemsMgr.addItemData(asin, item.data);
 
 				// Update recommendationId in the DOM
 				// it's possible that the input element was removed as part of the de-duplicate image process or the gold tier check
@@ -490,7 +488,7 @@ class NotificationMonitor extends MonitorCore {
 					inputElement.dataset.recommendationId = recommendationId;
 				}
 
-				if (!itemData.unavailable) {
+				if (!item.data.unavailable) {
 					this._enableItem(element); //Return the DOM element of the tile.
 				}
 				return element;
@@ -505,7 +503,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Store the item data
-		this._itemsMgr.addItemData(asin, itemData);
+		this._itemsMgr.addItemData(asin, item.data);
 
 		// Generate the search URL
 		let search_url;
@@ -515,7 +513,15 @@ class NotificationMonitor extends MonitorCore {
 			is_parent_asin != null &&
 			enrollment_guid != null
 		) {
-			search_url = `https://www.amazon.${this._i13nMgr.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`;
+			const options = {
+				asin: asin,
+				queue: queue,
+				isParentAsin: is_parent_asin,
+				enrollmentGUID: enrollment_guid,
+				isPreRelease: is_pre_release,
+				variantAsin: null,
+			};
+			search_url = `https://www.amazon.${this._i13nMgr.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${encodeURIComponent(JSON.stringify(options))}`;
 		} else {
 			let truncatedTitle = title.length > 40 ? title.substr(0, 40).split(" ").slice(0, -1).join(" ") : title;
 			truncatedTitle = removeSpecialHTML(truncatedTitle);
@@ -594,8 +600,8 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		if (this._monitorV3 && this._settings.isPremiumUser(2) && this._settings.get("general.displayVariantButton")) {
-			if (is_parent_asin && itemData.variants) {
-				for (const variant of itemData.variants) {
+			if (is_parent_asin && item.data.variants) {
+				for (const variant of item.data.variants) {
 					await tile.addVariant(variant.asin, variant.title, variant.etv);
 				}
 				tile.updateVariantCount();
@@ -606,7 +612,7 @@ class NotificationMonitor extends MonitorCore {
 		if (this._settings.get("pinnedTab.active")) {
 			const isPinned = await this._pinMgr.checkIfPinned(asin);
 			if (isPinned) {
-				this._pinMgr.pinItem(asin, queue, title, img_url, is_parent_asin ? "true" : "false", enrollment_guid);
+				this._pinMgr.pinItem(item);
 			}
 		}
 
@@ -1157,14 +1163,16 @@ class NotificationMonitor extends MonitorCore {
 				content: title,
 			});
 		} else {
+			const item = new Item({
+				asin: asin,
+				queue: target.dataset.queue,
+				title: title,
+				img_url: target.dataset.thumbnail,
+				is_parent_asin: target.dataset.isParentAsin,
+				enrollment_guid: target.dataset.enrollmentGuid,
+			});
 			// Pin the item
-			const isParentAsin = target.dataset.isParentAsin;
-			const enrollmentGUID = target.dataset.enrollmentGuid;
-			const queue = target.dataset.queue;
-			const thumbnail = target.dataset.thumbnail;
-
-			// Update the icon
-			this._pinMgr.pinItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID);
+			this._pinMgr.pinItem(item);
 
 			this._displayToasterNotification({
 				title: `Item ${asin} pinned.`,
@@ -1392,14 +1400,17 @@ class NotificationMonitor extends MonitorCore {
 				if (btnContainer) {
 					btnContainer.classList.remove("vvp-details-btn");
 				}
-				const asin = seeDetailsBtn.dataset.asin;
-				const queue = seeDetailsBtn.dataset.queue;
-				const is_parent_asin = seeDetailsBtn.dataset.isParentAsin;
-				const enrollment_guid = seeDetailsBtn.dataset.enrollmentGuid;
 
-				//Store the function reference as a property on the element
+				const options = {
+					asin: seeDetailsBtn.dataset.asin,
+					queue: seeDetailsBtn.dataset.queue,
+					isParentAsin: seeDetailsBtn.dataset.isParentAsin,
+					enrollmentGUID: seeDetailsBtn.dataset.enrollmentGuid,
+					isPreRelease: seeDetailsBtn.dataset.isPreRelease,
+					variantAsin: seeDetailsBtn.dataset.variantAsin,
+				};
 				window.open(
-					`https://www.amazon.${this._i13nMgr.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`,
+					`https://www.amazon.${this._i13nMgr.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${encodeURIComponent(JSON.stringify(options))}`,
 					"_blank"
 				);
 

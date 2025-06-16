@@ -1,8 +1,7 @@
 import { PinnedListMgr } from "../PinnedListMgr.js";
 
 class PinMgr {
-
-    #getItemDOMElementCallback = null;
+	#getItemDOMElementCallback = null;
 
 	constructor() {
 		this._pinnedListMgr = new PinnedListMgr();
@@ -34,14 +33,14 @@ class PinMgr {
 		}
 	}
 
-	async pinItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID) {
+	async pinItem(item) {
 		// Pin the item
-		this._pinnedListMgr.addItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID);
+		this._pinnedListMgr.addItem(item);
 
 		// Update pin icon if this item was unpinned from another tab
-		const notif = this.#getItemDOMElementCallback(asin);
+		const notif = this.#getItemDOMElementCallback(item.data.asin);
 		if (notif) {
-			const pinIcon = notif.querySelector("#vh-pin-link-" + asin + ">div");
+			const pinIcon = notif.querySelector("#vh-pin-link-" + item.data.asin + ">div");
 			if (pinIcon) {
 				pinIcon.classList.remove("vh-icon-pin");
 				pinIcon.classList.add("vh-icon-unpin");

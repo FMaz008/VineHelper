@@ -28,6 +28,8 @@ var tileSizer = new TileSizer();
 import { Template } from "./Template.js";
 var Tpl = new Template();
 
+import { Item } from "./Item.js";
+
 var currentTab = "vvp-items-grid";
 var arrTile = [];
 class Grid {
@@ -260,10 +262,12 @@ async function createGridInterface() {
 	selectCurrentTab(true);
 }
 
-async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enrollment_guid, unavailable) {
-	if (!asin) {
-		return false;
+async function addPinnedTile(item) {
+	if (!(item instanceof Item)) {
+		throw new Error("item is not an instance of Item");
 	}
+
+	const { asin, title, img_url, is_parent_asin, is_pre_release, enrollment_guid, unavailable } = item.data;
 
 	//Check if the pin already exist:
 	if (document.getElementById("vh-pin-" + asin) != undefined) return false;
@@ -283,16 +287,17 @@ async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enro
 
 	const search_url_slug = encodeURIComponent(truncatedTitle);
 
-	const recommendationType = getRecommendationTypeFromQueue(queue);
-	const recommendationId = generateRecommendationString(recommendationType, asin, enrollment_guid);
+	const recommendationType = item.getRecommendationType();
+	const recommendationId = item.getRecommendationString(env);
 
 	Tpl.setVar("id", asin);
 	Tpl.setVar("domain", i13n.getDomainTLD());
 	Tpl.setVar("search_url_slug", search_url_slug);
-	Tpl.setVar("img_url", thumbnail);
+	Tpl.setVar("img_url", img_url);
 	Tpl.setVar("asin", asin);
 	Tpl.setVar("description", title);
 	Tpl.setVar("is_parent_asin", is_parent_asin);
+	Tpl.setVar("is_pre_release", is_pre_release);
 	Tpl.setVar("enrollment_guid", enrollment_guid);
 	Tpl.setVar("recommendationType", recommendationType);
 	Tpl.setIf("PINNEDTAB_REMOTE", Settings.isPremiumUser(1) && Settings.get("pinnedTab.remote"));
@@ -363,15 +368,9 @@ async function reloadAllPinnedTile() {
 			//Add all pinned items
 			for (let i = 0; i < response["pinned_products"].length; i++) {
 				console.log("Adding pinned tile", response["pinned_products"][i]);
-				await addPinnedTile(
-					response["pinned_products"][i]["asin"],
-					response["pinned_products"][i]["queue"],
-					response["pinned_products"][i]["title"],
-					response["pinned_products"][i]["img_url"],
-					response["pinned_products"][i]["is_parent_asin"],
-					response["pinned_products"][i]["enrollment_guid"],
-					response["pinned_products"][i]["unavailable"]
-				); //grid.js
+				const item = new Item(response["pinned_products"][i]);
+
+				await addPinnedTile(item); //grid.js
 			}
 		});
 }
@@ -408,26 +407,6 @@ async function removePinnedTile(asin) {
 	if (tile) {
 		tile.setPinned(false);
 	}
-}
-
-function getRecommendationTypeFromQueue(queue) {
-	const recommendationTypes = {
-		potluck: "VENDOR_TARGETED",
-		last_chance: "VENDOR_VINE_FOR_ALL",
-		encore: "VINE_FOR_ALL",
-	};
-
-	return recommendationTypes[queue] || null;
-}
-
-function generateRecommendationString(recommendationType, asin, enrollment_guid) {
-	//marketplaceId is global from bootload.js
-	//customerId is global from bootloader.js
-
-	if (recommendationType == "VENDOR_TARGETED") {
-		return env.data.marketplaceId + "#" + asin + "#" + env.data.customerId + "#vine.enrollment." + enrollment_guid;
-	}
-	return env.data.marketplaceId + "#" + asin + "#vine.enrollment." + enrollment_guid;
 }
 
 async function hideAllItems() {
@@ -534,8 +513,6 @@ export {
 	createGridInterface,
 	addPinnedTile,
 	removePinnedTile,
-	getRecommendationTypeFromQueue,
-	generateRecommendationString,
 	hideAllItems,
 	hideAllItemsNext,
 	showAllItems,

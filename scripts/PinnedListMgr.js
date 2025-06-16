@@ -15,6 +15,8 @@ const env = new Environment();
 import { CryptoKeys } from "./CryptoKeys.js";
 const cryptoKeys = new CryptoKeys();
 
+import { Item } from "./Item.js";
+
 class PinnedListMgr {
 	static #instance = null;
 
@@ -42,16 +44,16 @@ class PinnedListMgr {
 
 			if (ev.data.type == "pinnedItem") {
 				logger.add("Broadcast received: pinned item " + ev.data.asin);
-				this.addItem(
-					ev.data.asin,
-					ev.data.queue,
-					ev.data.title,
-					ev.data.thumbnail,
-					ev.data.is_parent_asin,
-					ev.data.enrollment_guid,
-					false,
-					false
-				);
+				const item = new Item({
+					asin: ev.data.asin,
+					queue: ev.data.queue,
+					title: ev.data.title,
+					img_url: ev.data.thumbnail,
+					is_parent_asin: ev.data.is_parent_asin,
+					enrollment_guid: ev.data.enrollment_guid,
+					is_pre_release: ev.data.is_pre_release,
+				});
+				this.addItem(item, false, false);
 			}
 			if (ev.data.type == "unpinnedItem") {
 				logger.add("Broadcast received: unpinned item " + ev.data.asin);
@@ -81,6 +83,7 @@ class PinnedListMgr {
 							thumbnail: product.thumbnail,
 							is_parent_asin: product.is_parent_asin,
 							enrollment_guid: product.enrollment_guid,
+							is_pre_release: product.is_pre_release ? true : false,
 						});
 						return map;
 					}, new Map());
@@ -114,11 +117,16 @@ class PinnedListMgr {
 		}
 	}
 
-	async addItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID, save = true, broadcast = true) {
+	async addItem(item, save = true, broadcast = true) {
+		if (!(item instanceof Item)) {
+			throw new Error("item is not an instance of Item");
+		}
+
+		let { asin, queue, title, img_url, is_parent_asin, enrollment_guid, is_pre_release } = item.data;
 		if (!queue) {
 			queue = "encore"; //Not really a good fix but if there is no known queue, assume it's AI.
 		}
-		if (!asin || !title || !thumbnail || !isParentAsin || !enrollmentGUID) {
+		if (!asin || !title || !img_url || is_parent_asin == undefined || !enrollment_guid) {
 			throw new Error("Invalid data");
 		}
 
@@ -128,9 +136,10 @@ class PinnedListMgr {
 			date_added: Date.now(),
 			title: title,
 			queue: queue,
-			thumbnail: thumbnail,
-			is_parent_asin: isParentAsin,
-			enrollment_guid: enrollmentGUID,
+			thumbnail: img_url,
+			is_parent_asin: is_parent_asin,
+			enrollment_guid: enrollment_guid,
+			is_pre_release: is_pre_release,
 		});
 
 		//The server may not be in sync with the local list, and will deal with duplicate.
@@ -139,9 +148,10 @@ class PinnedListMgr {
 			pinned: true,
 			queue: queue,
 			title: title,
-			thumbnail: thumbnail,
-			is_parent_asin: isParentAsin,
-			enrollment_guid: enrollmentGUID,
+			thumbnail: img_url,
+			is_parent_asin: is_parent_asin,
+			enrollment_guid: enrollment_guid,
+			is_pre_release: is_pre_release,
 		});
 
 		if (save) this.saveList();
@@ -153,9 +163,10 @@ class PinnedListMgr {
 				asin: asin,
 				queue: queue,
 				title: title,
-				thumbnail: thumbnail,
-				is_parent_asin: isParentAsin,
-				enrollment_guid: enrollmentGUID,
+				thumbnail: img_url,
+				is_parent_asin: is_parent_asin,
+				enrollment_guid: enrollment_guid,
+				is_pre_release: is_pre_release,
 			});
 		}
 	}

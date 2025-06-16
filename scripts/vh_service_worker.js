@@ -2,6 +2,7 @@
 
 import { Internationalization } from "../scripts/Internationalization.js";
 import { SettingsMgr } from "../scripts/SettingsMgr.js";
+import { Item } from "../scripts/Item.js";
 
 var Settings = new SettingsMgr();
 var i13n = new Internationalization();
@@ -44,16 +45,17 @@ async function processBroadcastMessage(data) {
 	}
 
 	if (data.type == "pushNotification") {
-		pushNotification(
-			data.asin,
-			data.queue,
-			data.is_parent_asin,
-			data.enrollment_guid,
-			data.search_string,
-			data.title,
-			data.description,
-			data.img_url
-		);
+		const item = new Item({
+			asin: data.asin,
+			queue: data.queue,
+			is_parent_asin: data.is_parent_asin,
+			is_pre_release: data.is_pre_release,
+			enrollment_guid: data.enrollment_guid,
+		});
+		item.setTitle(data.title);
+		item.setImgUrl(data.img_url);
+		item.setSearch(data.search_string);
+		pushNotification(item);
 	}
 }
 
@@ -118,10 +120,19 @@ function sendMessageToTab(tabId, data) {
 
 chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
 	chrome.notifications.onClicked.addListener((notificationId) => {
-		const { asin, queue, is_parent_asin, enrollment_guid, search } = notificationsData[notificationId];
+		const { asin, queue, is_parent_asin, enrollment_guid, search, is_pre_release } =
+			notificationsData[notificationId];
 		let url;
 		if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
-			url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`;
+			const item = new Item({
+				asin: asin,
+				queue: queue,
+				is_parent_asin: is_parent_asin,
+				is_pre_release: is_pre_release,
+				enrollment_guid: enrollment_guid,
+			});
+			const options = item.getCoreInfoWithVariant();
+			url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${encodeURIComponent(JSON.stringify(options))}`;
 		} else {
 			url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search}`;
 		}
@@ -131,23 +142,17 @@ chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
 	});
 });
 
-function pushNotification(asin, queue, is_parent_asin, enrollment_guid, search_string, title, description, img_url) {
+function pushNotification(notificationTitle, item) {
 	chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
 		if (result) {
-			notificationsData["item-" + asin] = {
-				asin: asin,
-				queue: queue,
-				is_parent_asin: is_parent_asin,
-				enrollment_guid: enrollment_guid,
-				search: search_string,
-			};
+			notificationsData["item-" + item.asin] = item.getAllInfo();
 			chrome.notifications.create(
-				"item-" + asin,
+				"item-" + item.asin,
 				{
 					type: "basic",
-					iconUrl: img_url,
-					title: title,
-					message: description,
+					iconUrl: item.img_url,
+					title: notificationTitle,
+					message: item.getTitle(),
 					priority: 2,
 					silent: false,
 					//requireInteraction: true

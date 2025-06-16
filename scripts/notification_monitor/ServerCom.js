@@ -1,7 +1,7 @@
 /*global chrome*/
 
 import { broadcastFunction, dataStream as myStream, notificationPushFunction } from "./NewItemStreamProcessing.js";
-
+import { Item } from "../Item.js";
 class ServerCom {
 	static #instance = null;
 
@@ -84,39 +84,31 @@ class ServerCom {
 		}
 
 		if (data.type == "newPreprocessedItem") {
+			console.log("newPreprocessedItem", data);
+			const item = new Item(data.item);
 			myStream.input({
 				index: 0,
 				type: "newItem",
 				domain: this._monitor._settings.get("general.country"),
-				date: data.item.date,
-				date_added: data.item.date_added,
-				asin: data.item.asin,
-				title: data.item.title,
-				//search: data.item.search,
-				img_url: data.item.img_url,
-				etv_min: data.item.etv_min, //null
-				etv_max: data.item.etv_max, //null
+				item: item,
 				reason: data.item.reason,
-				queue: data.item.queue,
-				tier: data.item.tier,
-				is_parent_asin: data.item.is_parent_asin,
-				enrollment_guid: data.item.enrollment_guid,
 			});
 		}
 
 		if (data.type == "newItem") {
-			await this._monitor.addTileInGrid(data);
+			console.log("newItem", data);
+			await this._monitor.addTileInGrid(data.item, data.reason);
 		}
 
 		if (data.type == "last100") {
 			this.#processLast100Items(data.products);
 		}
 		if (data.type == "fetch100") {
-			console.log("Fetch last received.");
-			for (const item of JSON.parse(data.data)) {
-				if (item.type == "newItem") {
-					await this._monitor.addTileInGrid(item);
-				} else if (item.type == "fetchRecentItemsEnd") {
+			for (const itemData of JSON.parse(data.data)) {
+				if (itemData.type == "newItem") {
+					const item = new Item(itemData.item.data);
+					await this._monitor.addTileInGrid(item, "Fetch latest");
+				} else if (itemData.type == "fetchRecentItemsEnd") {
 					this._monitor.fetchRecentItemsEnd();
 				}
 			}
@@ -230,27 +222,12 @@ class ServerCom {
 		});
 		this.fetch100 = true;
 		for (let i = arrProducts.length - 1; i >= 0; i--) {
-			const {
-				title,
-				date,
-				date_added,
-				timestamp,
-				asin,
-				img_url,
-				etv_min,
-				etv_max,
-				queue,
-				tier,
-				is_parent_asin,
-				enrollment_guid,
-				unavailable,
-				variants,
-			} = arrProducts[i];
+			const item = new Item(arrProducts[i]);
 
 			//Only display notification for products with a title and image url
 			//And that are more recent than the latest notification received.
-			if (img_url == "" || title == "") {
-				console.log("FETCH LATEST: item without title or image url: " + asin);
+			if (item.data.img_url == "" || item.data.title == "") {
+				console.log("FETCH LATEST: item without title or image url: " + item.data.asin);
 				continue;
 			}
 
@@ -258,20 +235,7 @@ class ServerCom {
 				index: i,
 				type: "newItem",
 				domain: this._monitor._settings.get("general.country"),
-				date: date,
-				date_added: date_added,
-				asin: asin,
-				title: title,
-				img_url: img_url,
-				etv_min: etv_min,
-				etv_max: etv_max,
-				queue: queue,
-				tier: tier,
-				reason: "Fetch latest new items",
-				is_parent_asin: is_parent_asin,
-				enrollment_guid: enrollment_guid,
-				unavailable: unavailable,
-				variants: variants,
+				item: item,
 			});
 		}
 		myStream.input({ type: "fetchRecentItemsEnd" });
@@ -281,28 +245,14 @@ class ServerCom {
 	//## PUSH NOTIFICATIONS
 	//#####################################################
 
-	#pushNotification(asin, queue, is_parent_asin, enrollment_guid, search_string, title, description, img_url) {
-		console.log(
-			"pushNotification",
-			asin,
-			queue,
-			is_parent_asin,
-			enrollment_guid,
-			search_string,
-			title,
-			description,
-			img_url
-		);
+	#pushNotification(notificationTitle, item) {
+		if (!(item instanceof Item)) {
+			throw new Error("item is not an instance of Item");
+		}
 		chrome.runtime.sendMessage({
 			type: "pushNotification",
-			asin: asin,
-			queue: queue,
-			is_parent_asin: is_parent_asin,
-			enrollment_guid: enrollment_guid,
-			search_string: search_string,
-			title: title,
-			description: description,
-			img_url: img_url,
+			item: item.getAllInfo(),
+			title: notificationTitle,
 		});
 	}
 }

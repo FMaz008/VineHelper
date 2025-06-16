@@ -1,38 +1,28 @@
 import { Environment } from "./Environment.js";
 var env = new Environment();
 
-async function openDynamicModal(asin, queue, isParent, enrollmentGUID, variantAsin = null, autoClick = true) {
+import { Item } from "./Item.js";
+
+async function openDynamicModal(options, autoClick = true) {
 	if (!env.data.marketplaceId || !env.data.customerId) {
 		console.error("Failed to fetch opts/vvp-context data");
 	}
 
-	const recommendationTypes = {
-		potluck: "VENDOR_TARGETED",
-		last_chance: "VENDOR_VINE_FOR_ALL",
-		encore: "VINE_FOR_ALL",
-	};
+	const item = new Item(options);
 
-	const recommendationType = recommendationTypes[queue] || null;
-
-	let recommendationId = null;
-	if (recommendationType == "VENDOR_TARGETED") {
-		recommendationId =
-			env.data.marketplaceId + "#" + asin + "#" + env.data.customerId + "#vine.enrollment." + enrollmentGUID;
-	} else {
-		recommendationId = env.data.marketplaceId + "#" + asin + "#vine.enrollment." + enrollmentGUID;
-	}
-
-	const btn = drawButton(asin, isParent, recommendationType, recommendationId, variantAsin);
+	const btn = drawButton(item);
 
 	//Dispatch a click event on the button
 	if (autoClick) {
-		clickDynamicSeeDetailsButton(asin);
+		clickDynamicSeeDetailsButton(item.data.asin);
 	}
 
 	return btn;
 }
 
-function drawButton(asin, isParent, recommendationType, recommendationId, variantAsin = null) {
+function drawButton(item) {
+	const { asin, queue, is_parent_asin, is_pre_release, enrollment_guid, variant_asin } = item.data;
+
 	//Generate the dynamic modal button
 	const container1 = document.createElement("span");
 	env.data.gridDOM.regular.appendChild(container1);
@@ -44,10 +34,11 @@ function drawButton(asin, isParent, recommendationType, recommendationId, varian
 	container2.appendChild(btn);
 	btn.type = "submit";
 	btn.id = "dynamicModalBtn-" + asin;
-	btn.dataset.asin = variantAsin ? variantAsin : asin;
-	btn.dataset.isParentAsin = variantAsin ? false : isParent;
-	btn.dataset.recommendationType = recommendationType;
-	btn.dataset.recommendationId = recommendationId;
+	btn.dataset.asin = variant_asin ? variant_asin : asin;
+	btn.dataset.isParentAsin = variant_asin ? false : is_parent_asin;
+	btn.dataset.recommendationType = item.getRecommendationType();
+	btn.dataset.recommendationId = item.getRecommendationString(env);
+	btn.dataset.isPreRelease = is_pre_release ? true : false;
 
 	return btn;
 }

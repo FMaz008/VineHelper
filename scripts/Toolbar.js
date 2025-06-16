@@ -13,6 +13,8 @@ var dialogMgr = new ModalMgr();
 import { Internationalization } from "./Internationalization.js";
 var i13n = new Internationalization();
 
+import { Item } from "./Item.js";
+
 import { PinnedListMgr } from "./PinnedListMgr.js";
 var PinnedList = new PinnedListMgr();
 
@@ -246,28 +248,22 @@ class Toolbar {
 						} else {
 							//Pin the item
 							tile.setPinned(true);
-							const isParentAsin = btn.dataset.isParentAsin;
-							const enrollmentGUID = btn.dataset.recommendationId.match(
+							const is_parent_asin = btn.dataset.isParentAsin;
+							const enrollment_guid = btn.dataset.recommendationId.match(
 								/#vine\.enrollment\.([a-f0-9-]+)/i
 							)[1];
 
-							PinnedList.addItem(
-								asin,
-								env.data.vineQueue,
-								title,
-								thumbnail,
-								isParentAsin,
-								enrollmentGUID
-							);
+							const item = new Item({
+								asin: asin,
+								queue: env.data.vineQueue,
+								title: title,
+								img_url: thumbnail,
+								is_parent_asin: is_parent_asin,
+								enrollment_guid: enrollment_guid,
+							});
+							PinnedList.addItem(item);
 
-							await addPinnedTile(
-								asin,
-								env.data.vineQueue,
-								title,
-								thumbnail,
-								isParentAsin,
-								enrollmentGUID
-							); // grid.js
+							await addPinnedTile(item); // grid.js
 						}
 
 						updateTileCounts();

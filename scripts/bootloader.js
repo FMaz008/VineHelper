@@ -44,6 +44,7 @@ var HiddenList = new HiddenListMgr();
 import { HookMgr } from "./HookMgr.js";
 var hookMgr = new HookMgr();
 
+import { Item } from "./Item.js";
 import { ModalMgr } from "./ModalMgr.js";
 var DialogMgr = new ModalMgr();
 
@@ -616,7 +617,17 @@ async function loadPinnedList() {
 			if (tile) {
 				tile.setPinned(true);
 			}
-			addPinnedTile(key, value.queue, value.title, value.thumbnail, value.is_parent_asin, value.enrollment_guid);
+			const item = new Item({
+				asin: key,
+				queue: value.queue,
+				title: value.title,
+				img_url: value.thumbnail,
+				is_parent_asin: value.is_parent_asin,
+				enrollment_guid: value.enrollment_guid,
+				unavailable: value.unavailable,
+				is_pre_release: value.is_pre_release ? true : false,
+			});
+			addPinnedTile(item);
 		});
 	}
 }
@@ -876,6 +887,7 @@ async function getAllProductsData() {
 		const asin = tile.getAsin();
 		const btn = arrObj[i].querySelector(`input[data-asin="${asin}"]`);
 		const isParent = btn.dataset.isParentAsin == "true";
+		const isPreRelease = btn.dataset.isPreRelease == "true";
 		const enrollmentGUID = btn.dataset.recommendationId.match(/#vine\.enrollment\.([a-f0-9-]+)/i)[1];
 		const title = tile.getTitle();
 		const thumbnail = tile.getThumbnail();
@@ -888,6 +900,7 @@ async function getAllProductsData() {
 				thumbnail: thumbnail,
 				is_parent_asin: isParent,
 				enrollment_guid: enrollmentGUID,
+				is_pre_release: isPreRelease,
 			});
 		}
 	}
@@ -1170,15 +1183,17 @@ async function serverProductsResponse(data) {
 					tile.setPinned(true);
 				}
 
-				await addPinnedTile(
-					data["pinned_products"][i]["asin"],
-					data["pinned_products"][i]["queue"],
-					data["pinned_products"][i]["title"],
-					data["pinned_products"][i]["img_url"],
-					data["pinned_products"][i]["is_parent_asin"],
-					data["pinned_products"][i]["enrollment_guid"],
-					data["pinned_products"][i]["unavailable"]
-				); //grid.js
+				const item = new Item({
+					asin: data["pinned_products"][i]["asin"],
+					queue: data["pinned_products"][i]["queue"],
+					title: data["pinned_products"][i]["title"],
+					img_url: data["pinned_products"][i]["img_url"],
+					is_parent_asin: data["pinned_products"][i]["is_parent_asin"],
+					is_pre_release: data["pinned_products"][i]["is_pre_release"] ? true : false,
+					enrollment_guid: data["pinned_products"][i]["enrollment_guid"],
+					unavailable: data["pinned_products"][i]["unavailable"],
+				});
+				await addPinnedTile(item); //grid.js
 			}
 		}
 	}
@@ -1427,17 +1442,13 @@ window.addEventListener("message", async function (event) {
 		//Check the current URL for the following pattern:
 		///vine/vine-items#openModal;${asin};${is_parent_asin};${enrollment_guid}
 		const currentUrl = window.location.href;
-		let regex = /^[^#]+#openModal;(.+?);(.+?);(.+?);(.+?)(?:;(.+))?$/;
+		let regex = /^[^#]+#openModal;(.+?)$/;
 		let arrMatches = currentUrl.match(regex);
 		if (arrMatches != null) {
 			logger.add("BOOT: Open modal URL detected.");
 			//We have an open modal URL
-			const asin = arrMatches[1];
-			const queue = arrMatches[2];
-			const isParentAsin = arrMatches[3];
-			const enrollmentGUID = arrMatches[4];
-			const variantAsin = arrMatches[5];
-			openDynamicModal(asin, queue, isParentAsin, enrollmentGUID, variantAsin);
+			const options = JSON.parse(decodeURIComponent(arrMatches[1]));
+			openDynamicModal(options);
 		}
 	}
 });
@@ -1505,7 +1516,19 @@ async function processMessage(data, sender = null, sendResponse = null) {
 			!env.data.monitorActive && //Do not display on screen notification in the notification monitor
 			Settings.get("notification.screen.active")
 		) {
-			let { date, asin, queue, title, search, img_url, domain, etv, is_parent_asin, enrollment_guid } = data;
+			let {
+				date,
+				asin,
+				queue,
+				title,
+				search,
+				img_url,
+				domain,
+				etv,
+				is_parent_asin,
+				is_pre_release,
+				enrollment_guid,
+			} = data.item.data;
 
 			//Generate the content to be displayed in the notification
 			const prom = await Tpl.loadFile("/view/notification_new_item.html");
@@ -1516,9 +1539,10 @@ async function processMessage(data, sender = null, sendResponse = null) {
 				is_parent_asin != null &&
 				enrollment_guid != null
 			) {
+				const options = data.item.getCoreInfo();
 				Tpl.setVar(
 					"url",
-					`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`
+					`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${encodeURIComponent(JSON.stringify(options))}`
 				);
 			} else {
 				Tpl.setVar("url", `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search}`);
@@ -1531,6 +1555,7 @@ async function processMessage(data, sender = null, sendResponse = null) {
 			Tpl.setVar("img_url", img_url);
 			Tpl.setVar("queue", queue);
 			Tpl.setVar("is_parent_asin", is_parent_asin);
+			Tpl.setVar("is_pre_release", is_pre_release);
 			Tpl.setVar("enrollment_guid", enrollment_guid);
 
 			//Generate the notification
