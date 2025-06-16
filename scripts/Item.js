@@ -10,20 +10,30 @@ class Item {
 	data = {};
 
 	constructor(coreAttributes) {
-		if (coreAttributes.asin == undefined) {
-			throw new Error("ASIN is required");
-		}
-		if (coreAttributes.is_parent_asin == undefined) {
-			throw new Error("is_parent_asin is required");
-		}
-		if (coreAttributes.enrollment_guid == undefined) {
-			throw new Error("enrollment_guid is required");
-		}
-		if (coreAttributes.queue == undefined) {
-			throw new Error("queue is required");
+		// Validate input exists
+		if (!coreAttributes) {
+			console.error("[Item] Constructor called with invalid data");
+			throw new Error("Item constructor requires data object");
 		}
 
-		//Core information
+		// Validate required fields
+		const requiredFields = {
+			asin: coreAttributes.asin,
+			queue: coreAttributes.queue,
+			is_parent_asin: coreAttributes.is_parent_asin,
+			enrollment_guid: coreAttributes.enrollment_guid,
+		};
+
+		const missingFields = Object.entries(requiredFields)
+			.filter(([, value]) => value === undefined)
+			.map(([field]) => field);
+
+		if (missingFields.length > 0) {
+			console.error(`[Item] Missing required fields: ${missingFields.join(", ")}`, coreAttributes);
+			throw new Error(`Missing required fields: ${missingFields.join(", ")}`);
+		}
+
+		// Core information
 		this.data.asin = coreAttributes.asin;
 		this.data.queue = coreAttributes.queue;
 		this.data.is_parent_asin = coreAttributes.is_parent_asin;

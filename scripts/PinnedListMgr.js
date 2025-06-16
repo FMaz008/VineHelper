@@ -44,16 +44,24 @@ class PinnedListMgr {
 
 			if (ev.data.type == "pinnedItem") {
 				logger.add("Broadcast received: pinned item " + ev.data.asin);
-				const item = new Item({
-					asin: ev.data.asin,
-					queue: ev.data.queue,
-					title: ev.data.title,
-					img_url: ev.data.thumbnail,
-					is_parent_asin: ev.data.is_parent_asin,
-					enrollment_guid: ev.data.enrollment_guid,
-					is_pre_release: ev.data.is_pre_release,
-				});
-				this.addItem(item, false, false);
+				try {
+					const item = new Item({
+						asin: ev.data.asin,
+						queue: ev.data.queue,
+						title: ev.data.title,
+						img_url: ev.data.thumbnail,
+						is_parent_asin: ev.data.is_parent_asin,
+						enrollment_guid: ev.data.enrollment_guid,
+						is_pre_release: ev.data.is_pre_release,
+					});
+					this.addItem(item, false, false);
+				} catch (error) {
+					logger.add("PINNEDMGR: Failed to create Item from broadcast - " + error.message);
+					console.error("[PinnedListMgr] Cannot create item from broadcast -", error.message, {
+						source: "broadcast pinnedItem",
+						broadcast_data: ev.data,
+					});
+				}
 			}
 			if (ev.data.type == "unpinnedItem") {
 				logger.add("Broadcast received: unpinned item " + ev.data.asin);
