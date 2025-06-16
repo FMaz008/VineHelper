@@ -34,6 +34,7 @@ class PinnedListMgr {
 		this.listLoaded = false;
 		this.arrChanges = [];
 		this.broadcast = new BroadcastChannel("VineHelper");
+		this.broadcastObservers = [];
 
 		logger.add("PINNEDMGR: Loading list");
 		this.loadFromLocalStorage(); //Can't be awaited
@@ -54,10 +55,22 @@ class PinnedListMgr {
 					is_pre_release: ev.data.is_pre_release,
 				});
 				this.addItem(item, false, false);
+				// Notify observers about the broadcast event
+				this.broadcastObservers.forEach((observer) => {
+					if (observer.onPinnedBroadcast) {
+						observer.onPinnedBroadcast(item);
+					}
+				});
 			}
 			if (ev.data.type == "unpinnedItem") {
 				logger.add("Broadcast received: unpinned item " + ev.data.asin);
 				this.removeItem(ev.data.asin, false, false);
+				// Notify observers about the broadcast event
+				this.broadcastObservers.forEach((observer) => {
+					if (observer.onUnpinnedBroadcast) {
+						observer.onUnpinnedBroadcast(ev.data.asin);
+					}
+				});
 			}
 		});
 	}
@@ -244,6 +257,11 @@ class PinnedListMgr {
 			await new Promise((r) => setTimeout(r, 50));
 		}
 		return this.mapPin;
+	}
+
+	// Register an observer to be notified of broadcast events
+	addBroadcastObserver(observer) {
+		this.broadcastObservers.push(observer);
 	}
 }
 

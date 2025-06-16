@@ -5,6 +5,18 @@ class PinMgr {
 
 	constructor() {
 		this._pinnedListMgr = new PinnedListMgr();
+
+		// Register this PinMgr as an observer for broadcast events
+		this._pinnedListMgr.addBroadcastObserver({
+			onPinnedBroadcast: (item) => {
+				// Handle pin events from other tabs
+				this.pinItem(item);
+			},
+			onUnpinnedBroadcast: (asin) => {
+				// Handle unpin events from other tabs
+				this.unpinItem(asin);
+			},
+		});
 	}
 
 	setGetItemDOMElementCallback(callback) {
@@ -21,30 +33,35 @@ class PinMgr {
 		// Unpin the item
 		this._pinnedListMgr.removeItem(asin);
 
-		// Update pin icon if this item was unpinned from another tab
-		const notif = this.#getItemDOMElementCallback(asin);
-		if (notif) {
-			const pinIcon = notif.querySelector("#vh-pin-link-" + asin + ">div");
-			if (pinIcon) {
-				pinIcon.classList.remove("vh-icon-unpin");
-				pinIcon.classList.add("vh-icon-pin");
-				pinIcon.title = "Pin this item";
-			}
-		}
+		// Update the icon to reflect unpinned state
+		this.#updatePinIcon(asin, false);
 	}
 
 	async pinItem(item) {
 		// Pin the item
 		this._pinnedListMgr.addItem(item);
 
-		// Update pin icon if this item was unpinned from another tab
-		const notif = this.#getItemDOMElementCallback(item.data.asin);
+		// Update the icon to reflect pinned state
+		this.#updatePinIcon(item.data.asin, true);
+	}
+
+	// Update the pin icon for an item
+	#updatePinIcon(asin, isPinned) {
+		const notif = this.#getItemDOMElementCallback(asin);
 		if (notif) {
-			const pinIcon = notif.querySelector("#vh-pin-link-" + item.data.asin + ">div");
+			const pinIcon = notif.querySelector("#vh-pin-link-" + asin + ">div");
 			if (pinIcon) {
-				pinIcon.classList.remove("vh-icon-pin");
-				pinIcon.classList.add("vh-icon-unpin");
-				pinIcon.title = "Unpin this item";
+				if (isPinned) {
+					// Item is pinned - show unpin icon (red)
+					pinIcon.classList.remove("vh-icon-pin");
+					pinIcon.classList.add("vh-icon-unpin");
+					pinIcon.title = "Unpin this item";
+				} else {
+					// Item is unpinned - show pin icon (gray)
+					pinIcon.classList.remove("vh-icon-unpin");
+					pinIcon.classList.add("vh-icon-pin");
+					pinIcon.title = "Pin this item";
+				}
 			}
 		}
 	}
