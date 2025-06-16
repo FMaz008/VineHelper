@@ -500,7 +500,7 @@ class NotificationMonitor extends MonitorCore {
 			is_parent_asin != null &&
 			enrollment_guid != null
 		) {
-			search_url = `https://www.amazon.${this._i13nMgr.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${enrollment_guid}`;
+			search_url = `https://www.amazon.${this._i13nMgr.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${is_pre_release ? "true" : "false"};${enrollment_guid}`;
 		} else {
 			let truncatedTitle = title.length > 40 ? title.substr(0, 40).split(" ").slice(0, -1).join(" ") : title;
 			truncatedTitle = removeSpecialHTML(truncatedTitle);
@@ -1387,11 +1387,12 @@ class NotificationMonitor extends MonitorCore {
 				const asin = seeDetailsBtn.dataset.asin;
 				const queue = seeDetailsBtn.dataset.queue;
 				const is_parent_asin = seeDetailsBtn.dataset.isParentAsin;
+				const is_pre_release = seeDetailsBtn.dataset.isPreRelease;
 				const enrollment_guid = seeDetailsBtn.dataset.enrollmentGuid;
 
 				//Store the function reference as a property on the element
 				window.open(
-					`https://www.amazon.${this._i13nMgr.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${enrollment_guid}`,
+					`https://www.amazon.${this._i13nMgr.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin};${is_pre_release};${enrollment_guid}`,
 					"_blank"
 				);
 

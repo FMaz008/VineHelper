@@ -1435,7 +1435,7 @@ window.addEventListener("message", async function (event) {
 		logger.add("BOOT: Opts data obtained from inj.js.");
 
 		//Check the current URL for the following pattern:
-		///vine/vine-items#openModal;${asin};${is_parent_asin};${enrollment_guid}
+		///vine/vine-items#openModal;${asin};${is_parent_asin};${is_pre_release};${enrollment_guid}
 		const currentUrl = window.location.href;
 		let regex = /^[^#]+#openModal;(.+?);(.+?);(.+?);(.+?);(.+?)(?:;(.+))?$/;
 		let arrMatches = currentUrl.match(regex);
