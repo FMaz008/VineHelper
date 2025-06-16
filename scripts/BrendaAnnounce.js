@@ -1,4 +1,4 @@
-import { SettingsMgr } from "./SettingsMgr.js";
+import { SettingsMgr } from "./SettingsMgrCompat.js";
 var Settings = new SettingsMgr();
 
 import { ScreenNotifier, ScreenNotification } from "./ScreenNotifier.js";

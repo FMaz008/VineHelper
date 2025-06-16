@@ -1,4 +1,4 @@
-import { SettingsMgr } from "../scripts/SettingsMgr.js";
+import { SettingsMgr } from "../scripts/SettingsMgrCompat.js";
 const Settings = new SettingsMgr();
 
 import { Internationalization } from "../scripts/Internationalization.js";

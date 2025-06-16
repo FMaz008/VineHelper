@@ -4,7 +4,7 @@ var env = new Environment();
 import { Internationalization } from "../scripts/Internationalization.js";
 const i13n = new Internationalization();
 
-import { SettingsMgr } from "../scripts/SettingsMgr.js";
+import { SettingsMgr } from "../scripts/SettingsMgrCompat.js";
 const Settings = new SettingsMgr();
 
 import { Chart, registerables } from "../scripts/chart.js/dist/chart.js";

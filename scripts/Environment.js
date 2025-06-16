@@ -4,7 +4,7 @@ var logger = new Logger();
 import { Internationalization } from "./Internationalization.js";
 var i13n = new Internationalization();
 
-import { SettingsMgr } from "./SettingsMgr.js";
+import { SettingsMgr } from "./SettingsMgrCompat.js";
 var Settings = new SettingsMgr();
 
 import { DeviceFingerprintMgr } from "./DeviceFingerprintMgr.js";

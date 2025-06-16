@@ -7,7 +7,7 @@
 // - instanciate the general purpose classes
 // - contains some basic functions that are used by the NotificationMonitor that where good to get out of the way.
 
-import { SettingsMgr } from "../SettingsMgr.js";
+import { SettingsMgr } from "../SettingsMgrCompat.js";
 import { Template } from "../Template.js";
 import { Environment } from "../Environment.js";
 import { Logger } from "../Logger.js";

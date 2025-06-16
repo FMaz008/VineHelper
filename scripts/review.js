@@ -9,7 +9,7 @@ var Tpl = null;
 	try {
 		let module = null;
 		//Load the SettingMgr.
-		module = await import(chrome.runtime.getURL("../scripts/SettingsMgr.js"));
+		module = await import(chrome.runtime.getURL("../scripts/SettingsMgrCompat.js"));
 		Settings = new module.SettingsMgr();
 
 		//Load the Template manager

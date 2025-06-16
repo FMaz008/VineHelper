@@ -12,7 +12,7 @@ const pagination = new Pagination();
 import { PinnedListMgr } from "../scripts/PinnedListMgr.js";
 var PinnedList = new PinnedListMgr();
 
-import { SettingsMgr } from "../scripts/SettingsMgr.js";
+import { SettingsMgr } from "../scripts/SettingsMgrCompat.js";
 const Settings = new SettingsMgr();
 
 import { unescapeHTML, removeSpecialHTML } from "../scripts/StringHelper.js";

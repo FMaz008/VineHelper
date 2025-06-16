@@ -1,7 +1,7 @@
 import { Logger } from "./Logger.js";
 var logger = new Logger();
 
-import { SettingsMgr } from "./SettingsMgr.js";
+import { SettingsMgr } from "./SettingsMgrCompat.js";
 const Settings = new SettingsMgr();
 
 import { Template } from "./Template.js";

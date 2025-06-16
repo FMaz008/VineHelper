@@ -1,7 +1,7 @@
 /*global chrome*/
 
 import { Streamy } from "../Streamy.js";
-import { SettingsMgr } from "../SettingsMgr.js";
+import { SettingsMgr } from "../SettingsMgrCompat.js";
 import { keywordMatch } from "../keywordMatch.js";
 import { Item } from "../Item.js";
 var Settings = new SettingsMgr();

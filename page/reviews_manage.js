@@ -1,7 +1,7 @@
 import { Internationalization } from "../scripts/Internationalization.js";
 const i13n = new Internationalization();
 
-import { SettingsMgr } from "../scripts/SettingsMgr.js";
+import { SettingsMgr } from "../scripts/SettingsMgrCompat.js";
 const Settings = new SettingsMgr();
 
 var scriptName = "reviews_manages.js";

@@ -1,4 +1,4 @@
-import { SettingsMgr } from "./SettingsMgr.js";
+import { SettingsMgr } from "./SettingsMgrCompat.js";
 var Settings = new SettingsMgr();
 
 class CryptoKeysError extends Error {

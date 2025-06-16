@@ -1,7 +1,7 @@
 /*global chrome*/
 
 import { Internationalization } from "../scripts/Internationalization.js";
-import { SettingsMgr } from "../scripts/SettingsMgr.js";
+import { SettingsMgr } from "../scripts/SettingsMgrCompat.js";
 import { Item } from "../scripts/Item.js";
 
 var Settings = new SettingsMgr();

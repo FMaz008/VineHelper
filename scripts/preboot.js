@@ -3,7 +3,7 @@
 import { Logger } from "./Logger.js";
 var logger = new Logger();
 
-import { SettingsMgr } from "./SettingsMgr.js";
+import { SettingsMgr } from "./SettingsMgrCompat.js";
 var Settings = new SettingsMgr();
 
 import { Internationalization } from "./Internationalization.js";
