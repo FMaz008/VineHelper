@@ -269,7 +269,7 @@ function serverProductsResponse(data) {
 			values.enrollment_guid != null &&
 			values.queue != "potluck"
 		) {
-			searchUrl = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${values.asin};${values.queue};${values.is_parent_asin ? "true" : "false"};${values.enrollment_guid}`;
+			searchUrl = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${values.asin};${values.queue};${values.is_parent_asin ? "true" : "false"};${values.is_pre_release ? "true" : "false"};${values.enrollment_guid}`;
 		} else {
 			if (values.queue == "potluck") {
 				searchStyle = "opacity: 0.4;";
@@ -366,7 +366,7 @@ function serverProductsResponse(data) {
 				item.getAttribute("data-asin"),
 				item.getAttribute("data-queue"),
 				item.getAttribute("data-is-parent-asin"),
-				item.getAttribute("data-is-pre-release"),
+				item.getAttribute("data-is-pre-release") ? true : false,
 				item.getAttribute("data-enrollment-guid")
 			);
 		});
@@ -457,7 +457,7 @@ function serverProductsResponse(data) {
 									item.getAttribute("data-asin"),
 									item.getAttribute("data-queue"),
 									item.getAttribute("data-is-parent-asin"),
-									item.getAttribute("data-is-pre-release"),
+									item.getAttribute("data-is-pre-release") ? true : false,
 									item.getAttribute("data-enrollment-guid"),
 									item.getAttribute("data-variant-asin")
 								);

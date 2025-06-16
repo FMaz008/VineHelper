@@ -886,6 +886,7 @@ async function getAllProductsData() {
 		const asin = tile.getAsin();
 		const btn = arrObj[i].querySelector(`input[data-asin="${asin}"]`);
 		const isParent = btn.dataset.isParentAsin == "true";
+		const isPreRelease = btn.dataset.isPreRelease == "true";
 		const enrollmentGUID = btn.dataset.recommendationId.match(/#vine\.enrollment\.([a-f0-9-]+)/i)[1];
 		const title = tile.getTitle();
 		const thumbnail = tile.getThumbnail();
@@ -897,6 +898,7 @@ async function getAllProductsData() {
 				title: title,
 				thumbnail: thumbnail,
 				is_parent_asin: isParent,
+				is_pre_release: isPreRelease,
 				enrollment_guid: enrollmentGUID,
 			});
 		}
