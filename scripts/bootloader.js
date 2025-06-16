@@ -1587,7 +1587,7 @@ async function processMessage(data, sender = null, sendResponse = null) {
 	if (data.action === "showPrompt" && data.word) {
 		showCustomPrompt(data.word, data.list).then((result) => {
 			// Send the word to the background script
-			channel.postMessage({ action: "addWord", word: result.word, list: data.list });
+			chrome.runtime.sendMessage({ action: "addWord", word: result.word, list: data.list });
 		});
 		return true; // Keep the message channel open for the async response
 	}
