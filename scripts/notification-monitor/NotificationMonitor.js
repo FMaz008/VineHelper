@@ -549,6 +549,7 @@ class NotificationMonitor extends MonitorCore {
 		this._tpl.setVar("recommendationId", recommendationId);
 		this._tpl.setVar("search_url", search_url);
 		this._tpl.setIf("is_parent_asin", is_parent_asin == "true" || is_parent_asin === true);
+		this._tpl.setVar("is_pre_release", is_pre_release == "true" || is_pre_release === true);
 		this._tpl.setIf("delayed", reason.includes("enrollement_guid") || reason.includes("queue"));
 		this._tpl.setIf(
 			"announce",
