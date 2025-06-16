@@ -54,7 +54,7 @@ function drawButton(asin, isParent, isPreRelease, recommendationType, recommenda
 	btn.id = "dynamicModalBtn-" + asin;
 	btn.dataset.asin = variantAsin ? variantAsin : asin;
 	btn.dataset.isParentAsin = variantAsin ? false : isParent;
-	btn.dataset.isPreRelease = isPreRelease ? true : false;
+	btn.dataset.isPreRelease = isPreRelease === "true" ? true : false;
 	btn.dataset.recommendationType = recommendationType;
 	btn.dataset.recommendationId = recommendationId;
 
