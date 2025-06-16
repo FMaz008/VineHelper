@@ -513,14 +513,7 @@ class NotificationMonitor extends MonitorCore {
 			is_parent_asin != null &&
 			enrollment_guid != null
 		) {
-			const options = {
-				asin: asin,
-				queue: queue,
-				isParentAsin: is_parent_asin,
-				enrollmentGUID: enrollment_guid,
-				isPreRelease: is_pre_release,
-				variantAsin: null,
-			};
+			const options = item.getCoreInfo();
 			search_url = `https://www.amazon.${this._i13nMgr.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${encodeURIComponent(JSON.stringify(options))}`;
 		} else {
 			let truncatedTitle = title.length > 40 ? title.substr(0, 40).split(" ").slice(0, -1).join(" ") : title;
@@ -1401,14 +1394,14 @@ class NotificationMonitor extends MonitorCore {
 					btnContainer.classList.remove("vvp-details-btn");
 				}
 
-				const options = {
+				const item = new Item({
 					asin: seeDetailsBtn.dataset.asin,
 					queue: seeDetailsBtn.dataset.queue,
-					isParentAsin: seeDetailsBtn.dataset.isParentAsin,
-					enrollmentGUID: seeDetailsBtn.dataset.enrollmentGuid,
-					isPreRelease: seeDetailsBtn.dataset.isPreRelease,
-					variantAsin: seeDetailsBtn.dataset.variantAsin,
-				};
+					is_parent_asin: seeDetailsBtn.dataset.isParentAsin,
+					is_pre_release: seeDetailsBtn.dataset.isPreRelease,
+					enrollment_guid: seeDetailsBtn.dataset.enrollmentGuid,
+				});
+				const options = item.getCoreInfo();
 				window.open(
 					`https://www.amazon.${this._i13nMgr.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${encodeURIComponent(JSON.stringify(options))}`,
 					"_blank"
