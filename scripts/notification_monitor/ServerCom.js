@@ -83,6 +83,9 @@ class ServerCom {
 			this._monitor.markItemUnavailable(data.item.asin);
 		}
 
+		// Process the item as received from the websocket
+		// Send the item to the stream processing, to come out to the #dataBuffering function,
+		// which will pass them to the processBroadcastMessage as newItem, as the type is set by this function.
 		if (data.type == "newPreprocessedItem") {
 			console.log("newPreprocessedItem", data);
 			const item = new Item(data.item);
@@ -95,8 +98,13 @@ class ServerCom {
 			});
 		}
 
+		// Received from #dataBuffering function, the data is the result of the output of the stream processing.
 		if (data.type == "newItem") {
 			console.log("newItem", data);
+			//The broadcastChannel will pass the item as an object, not an instance of Item.
+			if (!(data.item instanceof Item)) {
+				data.item = new Item(data.item.data);
+			}
 			await this._monitor.addTileInGrid(data.item, data.reason);
 		}
 

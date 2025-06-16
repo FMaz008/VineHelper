@@ -1546,7 +1546,8 @@ async function processMessage(data, sender = null, sendResponse = null) {
 				is_parent_asin != null &&
 				enrollment_guid != null
 			) {
-				const options = data.item.getCoreInfo();
+				const item = new Item(data.item.data);
+				const options = item.getCoreInfo();
 				Tpl.setVar(
 					"url",
 					`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${encodeURIComponent(JSON.stringify(options))}`
