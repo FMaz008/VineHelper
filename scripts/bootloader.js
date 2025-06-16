@@ -1446,8 +1446,8 @@ window.addEventListener("message", async function (event) {
 			//We have an open modal URL
 			const asin = arrMatches[1];
 			const queue = arrMatches[2];
-			const isParentAsin = arrMatches[3];
-			const isPreRelease = arrMatches[4];
+			const isParentAsin = arrMatches[3] === "true";
+			const isPreRelease = arrMatches[4] === "true";
 			const enrollmentGUID = arrMatches[5];
 			const variantAsin = arrMatches[6];
 			openDynamicModal(asin, queue, isParentAsin, isPreRelease, enrollmentGUID, variantAsin);
