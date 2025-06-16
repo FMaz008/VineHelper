@@ -546,7 +546,7 @@ class NotificationMonitor extends MonitorCore {
 			"variant",
 			this._settings.isPremiumUser() &&
 				this._settings.get("general.displayVariantIcon") &&
-				is_parent_asin === "true"
+				(is_parent_asin === "true" || is_parent_asin === true)
 		);
 
 		const tileDOM = await this._tpl.render(prom2, true);
