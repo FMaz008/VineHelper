@@ -1538,7 +1538,7 @@ async function processMessage(data, sender = null, sendResponse = null) {
 			} = data.item.data;
 
 			//Generate the content to be displayed in the notification
-			const prom = await Tpl.loadFile("/view/notification_new_item.html");
+			const prom = await Tpl.loadFile("scripts/ui/templates/notification_new_item.html");
 
 			if (
 				Settings.isPremiumUser() &&

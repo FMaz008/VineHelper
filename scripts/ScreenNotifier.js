@@ -25,7 +25,7 @@ class ScreenNotification {
 		this.volume = 1;
 		this.template = null; //relative URL of the template file to use
 		this.title_only = false;
-		this.template = "view/notification_default.html";
+		this.template = "scripts/ui/templates/notification_default.html";
 
 		if (typeof params === "object") {
 			for (const key in params) {
