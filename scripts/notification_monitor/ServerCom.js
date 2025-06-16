@@ -32,6 +32,28 @@ class ServerCom {
 		notificationPushFunction(this.#pushNotification);
 	}
 
+	/**
+	 * Helper method to safely create and validate Item instances
+	 * @param {Object} data - The data to create the Item from
+	 * @param {string} context - Context for error logging
+	 * @returns {Item|null} Valid Item instance or null if invalid
+	 */
+	#createValidatedItem(data, context) {
+		if (!data) {
+			console.error(`[ServerCom] ${context}: No data provided`);
+			return null;
+		}
+
+		try {
+			const item = new Item(data);
+			return item;
+		} catch (error) {
+			// Item constructor already logs the specific error with data
+			console.error(`[ServerCom] ${context}: ${error.message}`);
+			return null;
+		}
+	}
+
 	#createEventListeners() {
 		//For everyone but Safari
 		this._monitor._channel.addEventListener("message", (event) => {
@@ -88,14 +110,16 @@ class ServerCom {
 		// which will pass them to the processBroadcastMessage as newItem, as the type is set by this function.
 		if (data.type == "newPreprocessedItem") {
 			console.log("newPreprocessedItem", data);
-			const item = new Item(data.item);
-			myStream.input({
-				index: 0,
-				type: "newItem",
-				domain: this._monitor._settings.get("general.country"),
-				item: item,
-				reason: data.item.reason,
-			});
+			const item = this.#createValidatedItem(data.item, "newPreprocessedItem from WebSocket");
+			if (item) {
+				myStream.input({
+					index: 0,
+					type: "newItem",
+					domain: this._monitor._settings.get("general.country"),
+					item: item,
+					reason: data.item.reason,
+				});
+			}
 		}
 
 		// Received from #dataBuffering function, the data is the result of the output of the stream processing.
@@ -103,7 +127,11 @@ class ServerCom {
 			console.log("newItem", data);
 			//The broadcastChannel will pass the item as an object, not an instance of Item.
 			if (!(data.item instanceof Item)) {
-				data.item = new Item(data.item.data);
+				data.item = this.#createValidatedItem(
+					data.item?.data,
+					`newItem from BroadcastChannel (reason: ${data.reason || "unknown"})`
+				);
+				if (!data.item) return;
 			}
 			await this._monitor.addTileInGrid(data.item, data.reason);
 		}
@@ -112,10 +140,14 @@ class ServerCom {
 			this.#processLast100Items(data.products);
 		}
 		if (data.type == "fetch100") {
+			let itemIndex = 0;
 			for (const itemData of JSON.parse(data.data)) {
 				if (itemData.type == "newItem") {
-					const item = new Item(itemData.item.data);
-					await this._monitor.addTileInGrid(item, "Fetch latest");
+					const item = this.#createValidatedItem(itemData.item?.data, `fetch100 batch item ${itemIndex}`);
+					if (item) {
+						await this._monitor.addTileInGrid(item, "Fetch latest");
+					}
+					itemIndex++;
 				} else if (itemData.type == "fetchRecentItemsEnd") {
 					this._monitor.fetchRecentItemsEnd();
 				}
@@ -230,7 +262,8 @@ class ServerCom {
 		});
 		this.fetch100 = true;
 		for (let i = arrProducts.length - 1; i >= 0; i--) {
-			const item = new Item(arrProducts[i]);
+			const item = this.#createValidatedItem(arrProducts[i], `processLast100Items at index ${i}`);
+			if (!item) continue;
 
 			//Only display notification for products with a title and image url
 			//And that are more recent than the latest notification received.

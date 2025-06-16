@@ -1156,22 +1156,41 @@ class NotificationMonitor extends MonitorCore {
 				content: title,
 			});
 		} else {
-			const item = new Item({
-				asin: asin,
-				queue: target.dataset.queue,
-				title: title,
-				img_url: target.dataset.thumbnail,
-				is_parent_asin: target.dataset.isParentAsin,
-				enrollment_guid: target.dataset.enrollmentGuid,
-			});
-			// Pin the item
-			this._pinMgr.pinItem(item);
+			try {
+				const item = new Item({
+					asin: asin,
+					queue: target.dataset.queue,
+					title: title,
+					img_url: target.dataset.thumbnail,
+					is_parent_asin: target.dataset.isParentAsin,
+					enrollment_guid: target.dataset.enrollmentGuid,
+				});
 
-			this._displayToasterNotification({
-				title: `Item ${asin} pinned.`,
-				lifespan: 3,
-				content: title,
-			});
+				// Pin the item
+				this._pinMgr.pinItem(item);
+
+				this._displayToasterNotification({
+					title: `Item ${asin} pinned.`,
+					lifespan: 3,
+					content: title,
+				});
+			} catch (error) {
+				console.error("[NotificationMonitor] Cannot create item for pinning -", error.message, {
+					source: "pin button click",
+					asin: asin,
+					queue: target.dataset.queue,
+					enrollment_guid: target.dataset.enrollmentGuid,
+					is_parent_asin: target.dataset.isParentAsin,
+					raw_dataset: target.dataset,
+				});
+
+				this._displayToasterNotification({
+					title: `Failed to pin item ${asin}`,
+					lifespan: 3,
+					content: "Missing required data",
+					type: "error",
+				});
+			}
 		}
 	}
 
@@ -1394,18 +1413,32 @@ class NotificationMonitor extends MonitorCore {
 					btnContainer.classList.remove("vvp-details-btn");
 				}
 
-				const item = new Item({
-					asin: seeDetailsBtn.dataset.asin,
-					queue: seeDetailsBtn.dataset.queue,
-					is_parent_asin: seeDetailsBtn.dataset.isParentAsin,
-					is_pre_release: seeDetailsBtn.dataset.isPreRelease,
-					enrollment_guid: seeDetailsBtn.dataset.enrollmentGuid,
-				});
-				const options = item.getCoreInfo();
-				window.open(
-					`https://www.amazon.${this._i13nMgr.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${encodeURIComponent(JSON.stringify(options))}`,
-					"_blank"
-				);
+				try {
+					const item = new Item({
+						asin: seeDetailsBtn.dataset.asin,
+						queue: seeDetailsBtn.dataset.queue,
+						is_parent_asin: seeDetailsBtn.dataset.isParentAsin,
+						is_pre_release: seeDetailsBtn.dataset.isPreRelease,
+						enrollment_guid: seeDetailsBtn.dataset.enrollmentGuid,
+					});
+
+					// Get core info and open modal
+					const options = item.getCoreInfo();
+					window.open(
+						`https://www.amazon.${this._i13nMgr.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${encodeURIComponent(JSON.stringify(options))}`,
+						"_blank"
+					);
+				} catch (error) {
+					console.error("[NotificationMonitor] Cannot create item for modal -", error.message, {
+						source: "see details button click",
+						asin: seeDetailsBtn.dataset.asin,
+						queue: seeDetailsBtn.dataset.queue,
+						enrollment_guid: seeDetailsBtn.dataset.enrollmentGuid,
+						is_parent_asin: seeDetailsBtn.dataset.isParentAsin,
+						is_pre_release: seeDetailsBtn.dataset.isPreRelease,
+						raw_dataset: seeDetailsBtn.dataset,
+					});
+				}
 
 				//The release key will not be captured by the event listener when the new window/tab is opened.
 				if (this._ctrlPress) {
