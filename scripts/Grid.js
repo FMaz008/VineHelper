@@ -21,7 +21,7 @@ var HiddenList = new HiddenListMgr();
 
 import { getAsinFromDom } from "./Tile.js";
 
-import { unescapeHTML } from "./StringHelper.js";
+import { unescapeHTML } from "./core/utils/StringHelper.js";
 import { TileSizer } from "./TileSizer.js";
 var tileSizer = new TileSizer();
 
@@ -176,7 +176,7 @@ async function createGridInterface() {
 	itemsGrid.classList.add("tab-grid");
 	tabs.appendChild(itemsGrid);
 
-	let tplTabs = await Tpl.loadFile("view/tabs.html");
+	let tplTabs = await Tpl.loadFile("scripts/ui/templates/tabs.html");
 
 	Tpl.setIf("not_mobile", true);
 	if (Settings.get("thorvarium.mobileandroid") || Settings.get("thorvarium.mobileios")) {
@@ -208,7 +208,7 @@ async function createGridInterface() {
 		removeElements("#vh-tabs .hidden-toolbar");
 
 		//Generate the html for the hide all and show all widget
-		let prom = await Tpl.loadFile("view/widget_hideall.html");
+		let prom = await Tpl.loadFile("scripts/ui/templates/widget_hideall.html");
 		Tpl.setVar("class", Settings.get("thorvarium.darktheme") ? "invert" : "");
 		if (Settings.get("thorvarium.mobileandroid") || Settings.get("thorvarium.mobileios")) {
 			Tpl.setIf("not_mobile", false);
@@ -278,7 +278,7 @@ async function addPinnedTile(item) {
 	} else {
 		templateFile = "pinned_tile_gridview.html";
 	}
-	let prom2 = await Tpl.loadFile("view/" + templateFile);
+	let prom2 = await Tpl.loadFile("scripts/ui/templates/" + templateFile);
 
 	let truncatedTitle = title.length > 40 ? title.substr(0, 40).split(" ").slice(0, -1).join(" ") : title;
 

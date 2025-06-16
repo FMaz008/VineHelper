@@ -21,6 +21,19 @@
 			"env": {
 				"jest": true
 			}
+		},
+		{
+			"files": ["**/scripts/vendor/**/*.js"],
+			"rules": {
+				"no-console": "off",
+				"no-undef": "off",
+				"no-unsafe-finally": "off",
+				"no-unused-vars": "off",
+				"no-self-assign": "off",
+				"no-empty": "off",
+				"no-fallthrough": "off"
+			}
 		}
-	]
+	],
+	"ignorePatterns": ["**/scripts/vendor/**/*"]
 }

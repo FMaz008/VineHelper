@@ -1,7 +1,7 @@
-import { Environment } from "./Environment.js";
+import { Environment } from "../../Environment.js";
 var env = new Environment();
 
-import { Item } from "./Item.js";
+import { Item } from "../../Item.js";
 
 async function openDynamicModal(options, autoClick = true) {
 	if (!env.data.marketplaceId || !env.data.customerId) {

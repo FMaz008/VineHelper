@@ -81,7 +81,7 @@ class ScreenNotifier {
 	}
 
 	async #injectContainer() {
-		const prom = await Tpl.loadFile("view/notification_container.html");
+		const prom = await Tpl.loadFile("scripts/ui/templates/notification_container.html");
 		document.body.append(Tpl.render(prom, true));
 	}
 	async pushNotification(note) {

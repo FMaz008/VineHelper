@@ -17,15 +17,15 @@
 
 All the links point to the new version 4 of the lib.
 
-* [Introduction](https://www.chartjs.org/docs/latest/)
-* [Getting Started](https://www.chartjs.org/docs/latest/getting-started/index)
-* [General](https://www.chartjs.org/docs/latest/general/data-structures)
-* [Configuration](https://www.chartjs.org/docs/latest/configuration/index)
-* [Charts](https://www.chartjs.org/docs/latest/charts/line)
-* [Axes](https://www.chartjs.org/docs/latest/axes/index)
-* [Developers](https://www.chartjs.org/docs/latest/developers/index)
-* [Popular Extensions](https://github.com/chartjs/awesome)
-* [Samples](https://www.chartjs.org/samples/)
+- [Introduction](https://www.chartjs.org/docs/latest/)
+- [Getting Started](https://www.chartjs.org/docs/latest/getting-started/index)
+- [General](https://www.chartjs.org/docs/latest/general/data-structures)
+- [Configuration](https://www.chartjs.org/docs/latest/configuration/index)
+- [Charts](https://www.chartjs.org/docs/latest/charts/line)
+- [Axes](https://www.chartjs.org/docs/latest/axes/index)
+- [Developers](https://www.chartjs.org/docs/latest/developers/index)
+- [Popular Extensions](https://github.com/chartjs/awesome)
+- [Samples](https://www.chartjs.org/samples/)
 
 In case you are looking for an older version of the docs, you will have to specify the specific version in the url like this: [https://www.chartjs.org/docs/2.9.4/](https://www.chartjs.org/docs/2.9.4/)
 

@@ -45,7 +45,6 @@
 			"resources": [
 				"resource/image/*",
 				"resource/css/*",
-				"view/*",
 				"resource/sound/*",
 				"page/*",
 				"node_modules/vine-styling/desktop/*",

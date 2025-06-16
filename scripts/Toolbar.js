@@ -24,7 +24,7 @@ import { Template } from "./Template.js";
 var Tpl = new Template();
 
 import { keywordMatch } from "./keywordMatch.js";
-import { escapeHTML } from "./StringHelper.js";
+import { escapeHTML } from "./core/utils/StringHelper.js";
 import { BrendaAnnounceQueue } from "./BrendaAnnounce.js";
 var brendaAnnounceQueue = new BrendaAnnounceQueue();
 
@@ -50,7 +50,7 @@ class Toolbar {
 
 		//Load the toolbar template
 		logger.add("DRAW: Creating #" + toolbarId);
-		const prom = await Tpl.loadFile("view/toolbar.html");
+		const prom = await Tpl.loadFile("scripts/ui/templates/toolbar.html");
 		Tpl.setVar("toolbarId", toolbarId);
 		Tpl.setVar("asin", this.#tile.getAsin());
 		Tpl.setIf(
@@ -423,7 +423,7 @@ class Toolbar {
 		}
 
 		// Generate the HTML for the widget
-		let prom = await Tpl.loadFile("view/widget_order.html");
+		let prom = await Tpl.loadFile("scripts/ui/templates/widget_order.html");
 		Tpl.setVar("order_success", "-");
 		Tpl.setVar("order_failed", "-");
 		let content = Tpl.render(prom, false);

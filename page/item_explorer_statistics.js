@@ -7,7 +7,7 @@ const i13n = new Internationalization();
 import { SettingsMgr } from "../scripts/SettingsMgrCompat.js";
 const Settings = new SettingsMgr();
 
-import { Chart, registerables } from "../scripts/chart.js/dist/chart.js";
+import { Chart, registerables } from "../scripts/vendor/chart.js/dist/chart.js";
 // Register required components
 Chart.register(...registerables);
 

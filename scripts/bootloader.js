@@ -24,9 +24,9 @@ var env = new Environment();
 import { Template } from "./Template.js";
 var Tpl = new Template();
 
-import { YMDHiStoISODate } from "./DateHelper.js";
+import { YMDHiStoISODate } from "./core/utils/DateHelper.js";
 
-import { openDynamicModal } from "./DynamicModalHelper.js";
+import { openDynamicModal } from "./core/utils/DynamicModalHelper.js";
 
 import { CryptoKeys } from "./CryptoKeys.js";
 var cryptoKeys = new CryptoKeys();
@@ -43,7 +43,7 @@ import {
 	getTileByAsin,
 } from "./Grid.js";
 
-import { isPageLogin, isPageCaptcha, isPageDog } from "./DOMHelper.js";
+import { isPageLogin, isPageCaptcha, isPageDog } from "./core/utils/DOMHelper.js";
 
 import { HiddenListMgr } from "./HiddenListMgr.js";
 var HiddenList = new HiddenListMgr();
@@ -57,7 +57,7 @@ var DialogMgr = new ModalMgr();
 
 import { News } from "./News.js";
 
-import { NotificationMonitorV3 } from "./notification_monitor/NotificationMonitorV3.js";
+import { NotificationMonitorV3 } from "./notification-monitor/NotificationMonitorV3.js";
 
 import { Pagination } from "./Pagination.js";
 var pagination = new Pagination();
@@ -75,7 +75,7 @@ var tileSizer = new TileSizer();
 import { Toolbar } from "./Toolbar.js";
 
 import { Tooltip } from "./Tooltip.js";
-import { unescapeHTML } from "./StringHelper.js";
+import { unescapeHTML } from "./core/utils/StringHelper.js";
 
 var tooltip = new Tooltip();
 
@@ -482,7 +482,7 @@ function displayAccountDataEvaluationMetrics() {
 
 async function showGDPRPopup() {
 	if (Settings.get("general.GDPRPopup", false) == true || Settings.get("general.GDPRPopup", false) == undefined) {
-		const prom = await Tpl.loadFile("view/popup_gdpr.html");
+		const prom = await Tpl.loadFile("scripts/ui/templates/popup_gdpr.html");
 		let content = Tpl.render(prom);
 
 		let m = DialogMgr.newModal("gdpr");
@@ -529,7 +529,7 @@ async function initFlushTplCache() {
 				return;
 			}
 			*/
-			const prom = await Tpl.loadFile("view/popup_changelog.html");
+			const prom = await Tpl.loadFile("scripts/ui/templates/popup_changelog.html");
 			Tpl.setVar("appVersion", env.data.appVersion);
 			let content = Tpl.render(prom);
 
@@ -770,7 +770,7 @@ async function initInsertBookmarkButton() {
 	//Insert bookmark button
 	if (Settings.get("general.displayFirstSeen") && Settings.get("general.bookmark")) {
 		removeElements("button.bookmark");
-		const prom = await Tpl.loadFile("view/bookmark.html");
+		const prom = await Tpl.loadFile("scripts/ui/templates/bookmark.html");
 		Tpl.setVar("date", Settings.get("general.bookmarkDate"));
 		let bookmarkContent = Tpl.render(prom);
 		document
@@ -1488,7 +1488,7 @@ async function recordUnavailableProduct(asin, reason) {
 //#####################################################
 //Message from within the context of the extension
 //Messages sent via: chrome.tabs.sendMessage(tab.id, data);
-//In this case, all messages are coming from the service_worker or notification_monitor files.
+//In this case, all messages are coming from the service_worker or notification-monitor files.
 channel.addEventListener("message", (event) => {
 	processMessage(event.data);
 });

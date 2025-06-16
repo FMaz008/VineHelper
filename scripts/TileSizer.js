@@ -15,7 +15,7 @@ class TileSizer {
 
 	injectGUI = async function (container) {
 		//Insert the template
-		const prom = await Tpl.loadFile("view/widget_tilesize.html");
+		const prom = await Tpl.loadFile("scripts/ui/templates/widget_tilesize.html");
 		let content = Tpl.render(prom, true);
 		container.insertBefore(content, container.firstChild);
 

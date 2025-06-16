@@ -4,9 +4,9 @@
 
 import { Tile } from "../Tile.js";
 
-import { YMDHiStoISODate } from "../DateHelper.js";
+import { YMDHiStoISODate } from "../core/utils/DateHelper.js";
 import { keywordMatch } from "../keywordMatch.js";
-import { escapeHTML, unescapeHTML, removeSpecialHTML } from "../StringHelper.js";
+import { escapeHTML, unescapeHTML, removeSpecialHTML } from "../core/utils/StringHelper.js";
 import { MonitorCore } from "./MonitorCore.js";
 import { Item } from "../Item.js";
 
@@ -527,7 +527,7 @@ class NotificationMonitor extends MonitorCore {
 			search_url = `https://www.amazon.${this._i13nMgr.getDomainTLD()}/vine/vine-items?search=${search_url_slug}`;
 		}
 
-		let prom2 = await this._tpl.loadFile("view/" + this._itemTemplateFile);
+		let prom2 = await this._tpl.loadFile("scripts/ui/templates/" + this._itemTemplateFile);
 		this._tpl.setVar("id", asin);
 		this._tpl.setVar("domain", this._i13nMgr.getDomainTLD());
 		this._tpl.setVar("img_url", img_url);

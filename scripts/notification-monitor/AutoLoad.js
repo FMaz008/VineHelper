@@ -1,6 +1,6 @@
 /*global chrome*/
 
-import { isPageLogin, isPageCaptcha, isPageDog } from "../DOMHelper.js";
+import { isPageLogin, isPageCaptcha, isPageDog } from "../core/utils/DOMHelper.js";
 
 class AutoLoad {
 	static #instance = null;

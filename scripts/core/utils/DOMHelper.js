@@ -33,5 +33,4 @@ function isPageDog(doc) {
 	return false;
 }
 
-
 export { isPageLogin, isPageCaptcha, isPageDog };

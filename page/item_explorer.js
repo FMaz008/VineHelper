@@ -1,4 +1,4 @@
-import { ISODatetoYMDHiS } from "../scripts/DateHelper.js";
+import { ISODatetoYMDHiS } from "../scripts/core/utils/DateHelper.js";
 
 import { Environment } from "../scripts/Environment.js";
 var env = new Environment();
@@ -15,7 +15,7 @@ var PinnedList = new PinnedListMgr();
 import { SettingsMgr } from "../scripts/SettingsMgrCompat.js";
 const Settings = new SettingsMgr();
 
-import { unescapeHTML, removeSpecialHTML } from "../scripts/StringHelper.js";
+import { unescapeHTML, removeSpecialHTML } from "../scripts/core/utils/StringHelper.js";
 
 import { Item } from "../scripts/Item.js";
 

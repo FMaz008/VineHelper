@@ -4,7 +4,7 @@ var logger = new Logger();
 import { SettingsMgr } from "./SettingsMgrCompat.js";
 const Settings = new SettingsMgr();
 
-import { UnixTimeStampToDate } from "./DateHelper.js";
+import { UnixTimeStampToDate } from "./core/utils/DateHelper.js";
 
 import { Template } from "./Template.js";
 var Tpl = new Template();
@@ -44,7 +44,7 @@ export class News {
 
 	async #createBasicElement() {
 		//Add a news icon
-		const iconTpl = await Tpl.loadFile("view/news.html");
+		const iconTpl = await Tpl.loadFile("scripts/ui/templates/news.html");
 		Tpl.setIf("isUnread", this.#isUnreadNews());
 		const iconContent = Tpl.render(iconTpl, true);
 		document.body.appendChild(iconContent);
@@ -79,7 +79,7 @@ export class News {
 
 	async #loadNewsFeed() {
 		this.#data.forEach(async (news) => {
-			const newsTpl = await Tpl.loadFile("view/news_container.html");
+			const newsTpl = await Tpl.loadFile("scripts/ui/templates/news_container.html");
 			Tpl.setVar("date", UnixTimeStampToDate(news.date));
 			Tpl.setVar("title", news.title);
 			Tpl.setVar("content", news.content.replaceAll("\n", "<br />"));

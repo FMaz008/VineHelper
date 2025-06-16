@@ -22,10 +22,10 @@ import { Template } from "./Template.js";
 var Tpl = new Template();
 
 import { keywordMatch } from "./keywordMatch.js";
-import { YMDHiStoISODate } from "./DateHelper.js";
+import { YMDHiStoISODate } from "./core/utils/DateHelper.js";
 import { getTileByAsin, updateTileCounts } from "./Grid.js";
-import { unescapeHTML, escapeHTML } from "./StringHelper.js";
-import { clickDynamicSeeDetailsButton, drawButton } from "./DynamicModalHelper.js";
+import { unescapeHTML, escapeHTML } from "./core/utils/StringHelper.js";
+import { clickDynamicSeeDetailsButton, drawButton } from "./core/utils/DynamicModalHelper.js";
 
 import "../node_modules/canvas-confetti/dist/confetti.browser.js";
 
@@ -100,7 +100,7 @@ class Tile {
 
 	async #addVariantButton() {
 		//Create the drop down button
-		let prom = await Tpl.loadFile("view/btn_show_variants.html");
+		let prom = await Tpl.loadFile("scripts/ui/templates/btn_show_variants.html");
 		let content = Tpl.render(prom, true);
 
 		//Insert a span to contain both buttons
