@@ -8,13 +8,66 @@ var Settings = new SettingsMgr();
 var i13n = new Internationalization();
 var notificationsData = {};
 var masterCheckInterval = 0.2; //Firefox shutdown the background script after 30seconds.
+var selectedWord = ""; // For context menu functionality
 
 //#####################################################
 //## LISTENERS
 //#####################################################
 
-chrome.runtime.onMessage.addListener(async (data, sender, sendResponse) => {
-	processBroadcastMessage(data);
+// Consolidated message handler for all runtime messages
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+	// Handle broadcast messages (including pushNotification)
+	if (message.type !== undefined) {
+		processBroadcastMessage(message);
+		return;
+	}
+
+	// Handle context menu word selection
+	if (message.action === "setWord" && message.word) {
+		selectedWord = message.word; // Update the selected word
+		sendResponse({ success: true });
+		return;
+	}
+
+	// Handle adding word to hide/highlight lists
+	if (message.action === "addWord" && message.word) {
+		const confirmedWord = message.word;
+
+		const newKeyword = {
+			contains: confirmedWord,
+			without: "",
+			etv_min: "",
+			etv_max: "",
+		};
+
+		if (message.list === "Hide") {
+			const arrHide = await Settings.get("general.hideKeywords");
+			let newArrHide = [...arrHide, newKeyword];
+
+			//Sort the list
+			newArrHide.sort((a, b) => {
+				if (a.contains.toLowerCase() < b.contains.toLowerCase()) return -1;
+				if (a.contains.toLowerCase() > b.contains.toLowerCase()) return 1;
+				return 0;
+			});
+
+			Settings.set("general.hideKeywords", newArrHide);
+		} else if (message.list === "Highlight") {
+			const arrHighlight = await Settings.get("general.highlightKeywords");
+			let newArrHighlight = [...arrHighlight, newKeyword];
+
+			//Sort the list
+			newArrHighlight.sort((a, b) => {
+				if (a.contains.toLowerCase() < b.contains.toLowerCase()) return -1;
+				if (a.contains.toLowerCase() > b.contains.toLowerCase()) return 1;
+				return 0;
+			});
+
+			Settings.set("general.highlightKeywords", newArrHighlight);
+		}
+		sendResponse({ success: true });
+		return;
+	}
 });
 
 //#####################################################
@@ -46,22 +99,26 @@ async function processBroadcastMessage(data) {
 
 	if (data.type == "pushNotification") {
 		try {
+			// ServerCom sends { type: "pushNotification", item: {...}, title: ... }
+			// where item contains all the item data from item.getAllInfo()
+			if (!data.item) {
+				throw new Error("pushNotification message missing item data");
+			}
+
 			const item = new Item({
-				asin: data.asin,
-				queue: data.queue,
-				is_parent_asin: data.is_parent_asin,
-				is_pre_release: data.is_pre_release,
-				enrollment_guid: data.enrollment_guid,
+				asin: data.item.asin,
+				queue: data.item.queue,
+				is_parent_asin: data.item.is_parent_asin,
+				is_pre_release: data.item.is_pre_release,
+				enrollment_guid: data.item.enrollment_guid,
 			});
-			item.setTitle(data.title);
-			item.setImgUrl(data.img_url);
-			item.setSearch(data.search_string);
-			pushNotification(item);
+			item.setTitle(data.item.title);
+			item.setImgUrl(data.item.img_url);
+			item.setSearch(data.item.search_string);
+			pushNotification(data.title, item);
 		} catch (error) {
 			console.error("[ServiceWorker] Cannot create item for push notification -", error.message, {
-				asin: data.asin,
-				queue: data.queue,
-				enrollment_guid: data.enrollment_guid,
+				data: data,
 				source: "pushNotification message",
 			});
 		}
@@ -165,14 +222,15 @@ chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
 function pushNotification(notificationTitle, item) {
 	chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
 		if (result) {
-			notificationsData["item-" + item.asin] = item.getAllInfo();
+			const itemInfo = item.getAllInfo();
+			notificationsData["item-" + itemInfo.asin] = itemInfo;
 			chrome.notifications.create(
-				"item-" + item.asin,
+				"item-" + itemInfo.asin,
 				{
 					type: "basic",
-					iconUrl: item.img_url,
+					iconUrl: itemInfo.img_url,
 					title: notificationTitle,
-					message: item.getTitle(),
+					message: itemInfo.title,
 					priority: 2,
 					silent: false,
 					//requireInteraction: true
@@ -200,7 +258,6 @@ function pushNotification(notificationTitle, item) {
 //## CONTEXT MENU
 //#####################################################
 
-let selectedWord = "";
 // Create static context menu items
 chrome.runtime.onInstalled.addListener(() => {
 	// Clear existing menu items before creating new ones
@@ -241,50 +298,7 @@ chrome.runtime.onInstalled.addListener(() => {
 	});
 });
 
-// Store the word sent by the content script
-chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-	if (message.action === "setWord" && message.word) {
-		selectedWord = message.word; // Update the selected word
-		sendResponse({ success: true });
-	}
-	if (message.action === "addWord" && message.word) {
-		const confirmedWord = message.word;
-
-		const newKeyword = {
-			contains: confirmedWord,
-			without: "",
-			etv_min: "",
-			etv_max: "",
-		};
-
-		if (message.list === "Hide") {
-			const arrHide = await Settings.get("general.hideKeywords");
-			let newArrHide = [...arrHide, newKeyword];
-
-			//Sort the list
-			newArrHide.sort((a, b) => {
-				if (a.contains.toLowerCase() < b.contains.toLowerCase()) return -1;
-				if (a.contains.toLowerCase() > b.contains.toLowerCase()) return 1;
-				return 0;
-			});
-
-			Settings.set("general.hideKeywords", newArrHide);
-		} else if (message.list === "Highlight") {
-			const arrHighlight = await Settings.get("general.highlightKeywords");
-			let newArrHighlight = [...arrHighlight, newKeyword];
-
-			//Sort the list
-			newArrHighlight.sort((a, b) => {
-				if (a.contains.toLowerCase() < b.contains.toLowerCase()) return -1;
-				if (a.contains.toLowerCase() > b.contains.toLowerCase()) return 1;
-				return 0;
-			});
-
-			Settings.set("general.highlightKeywords", newArrHighlight);
-		}
-		sendResponse({ success: true });
-	}
-});
+// Note: Message handling has been consolidated into the single listener above
 
 // Handle context menu clicks and save the word
 chrome.contextMenus.onClicked.addListener((info, tab) => {
