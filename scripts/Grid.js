@@ -260,7 +260,16 @@ async function createGridInterface() {
 	selectCurrentTab(true);
 }
 
-async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enrollment_guid, unavailable) {
+async function addPinnedTile(
+	asin,
+	queue,
+	title,
+	thumbnail,
+	is_parent_asin,
+	is_pre_release,
+	enrollment_guid,
+	unavailable
+) {
 	if (!asin) {
 		return false;
 	}
@@ -293,6 +302,7 @@ async function addPinnedTile(asin, queue, title, thumbnail, is_parent_asin, enro
 	Tpl.setVar("asin", asin);
 	Tpl.setVar("description", title);
 	Tpl.setVar("is_parent_asin", is_parent_asin);
+	Tpl.setVar("is_pre_release", is_pre_release);
 	Tpl.setVar("enrollment_guid", enrollment_guid);
 	Tpl.setVar("recommendationType", recommendationType);
 	Tpl.setIf("PINNEDTAB_REMOTE", Settings.isPremiumUser(1) && Settings.get("pinnedTab.remote"));
@@ -369,6 +379,7 @@ async function reloadAllPinnedTile() {
 					response["pinned_products"][i]["title"],
 					response["pinned_products"][i]["img_url"],
 					response["pinned_products"][i]["is_parent_asin"],
+					response["pinned_products"][i]["is_pre_release"],
 					response["pinned_products"][i]["enrollment_guid"],
 					response["pinned_products"][i]["unavailable"]
 				); //grid.js

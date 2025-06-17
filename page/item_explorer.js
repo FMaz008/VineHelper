@@ -358,11 +358,12 @@ function serverProductsResponse(data) {
 				const asin = item.getAttribute("data-asin");
 				const queue = item.getAttribute("data-queue");
 				const isParentAsin = item.getAttribute("data-is-parent-asin");
+				const isPreRelease = item.getAttribute("data-is-pre-release");
 				const enrollmentGuid = item.getAttribute("data-enrollment-guid");
 				const title = item.getAttribute("data-title");
 				const thumbnail = item.getAttribute("data-thumbnail");
 
-				PinnedList.addItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGuid);
+				PinnedList.addItem(asin, queue, title, thumbnail, isParentAsin, isPreRelease, enrollmentGuid);
 
 				item.style.opacity = "0.4";
 			});

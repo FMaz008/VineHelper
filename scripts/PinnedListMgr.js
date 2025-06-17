@@ -46,6 +46,7 @@ class PinnedListMgr {
 					ev.data.title,
 					ev.data.thumbnail,
 					ev.data.is_parent_asin,
+					ev.data.is_pre_release,
 					ev.data.enrollment_guid,
 					false,
 					false
@@ -78,6 +79,7 @@ class PinnedListMgr {
 							title: product.title,
 							thumbnail: product.thumbnail,
 							is_parent_asin: product.is_parent_asin,
+							is_pre_release: product.is_pre_release,
 							enrollment_guid: product.enrollment_guid,
 						});
 						return map;
@@ -112,11 +114,28 @@ class PinnedListMgr {
 		}
 	}
 
-	async addItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID, save = true, broadcast = true) {
+	async addItem(
+		asin,
+		queue,
+		title,
+		thumbnail,
+		isParentAsin,
+		isPreRelease,
+		enrollmentGUID,
+		save = true,
+		broadcast = true
+	) {
 		if (!queue) {
 			queue = "encore"; //Not really a good fix but if there is no known queue, assume it's AI.
 		}
-		if (!asin || !title || !thumbnail || !isParentAsin || !enrollmentGUID) {
+		if (
+			!asin ||
+			!title ||
+			!thumbnail ||
+			isParentAsin === undefined ||
+			isPreRelease === undefined ||
+			!enrollmentGUID
+		) {
 			throw new Error("Invalid data");
 		}
 
@@ -128,6 +147,7 @@ class PinnedListMgr {
 			queue: queue,
 			thumbnail: thumbnail,
 			is_parent_asin: isParentAsin,
+			is_pre_release: isPreRelease,
 			enrollment_guid: enrollmentGUID,
 		});
 
@@ -139,6 +159,7 @@ class PinnedListMgr {
 			title: title,
 			thumbnail: thumbnail,
 			is_parent_asin: isParentAsin,
+			is_pre_release: isPreRelease,
 			enrollment_guid: enrollmentGUID,
 		});
 
@@ -153,6 +174,7 @@ class PinnedListMgr {
 				title: title,
 				thumbnail: thumbnail,
 				is_parent_asin: isParentAsin,
+				is_pre_release: isPreRelease,
 				enrollment_guid: enrollmentGUID,
 			});
 		}

@@ -247,6 +247,7 @@ class Toolbar {
 							//Pin the item
 							tile.setPinned(true);
 							const isParentAsin = btn.dataset.isParentAsin;
+							const isPreRelease = btn.dataset.isPreRelease;
 							const enrollmentGUID = btn.dataset.recommendationId.match(
 								/#vine\.enrollment\.([a-f0-9-]+)/i
 							)[1];
@@ -257,6 +258,7 @@ class Toolbar {
 								title,
 								thumbnail,
 								isParentAsin,
+								isPreRelease,
 								enrollmentGUID
 							);
 
@@ -266,6 +268,7 @@ class Toolbar {
 								title,
 								thumbnail,
 								isParentAsin,
+								isPreRelease,
 								enrollmentGUID
 							); // grid.js
 						}

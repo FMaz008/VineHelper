@@ -626,7 +626,15 @@ async function loadPinnedList() {
 			if (tile) {
 				tile.setPinned(true);
 			}
-			addPinnedTile(key, value.queue, value.title, value.thumbnail, value.is_parent_asin, value.enrollment_guid);
+			addPinnedTile(
+				key,
+				value.queue,
+				value.title,
+				value.thumbnail,
+				value.is_parent_asin,
+				!!value.is_pre_release,
+				value.enrollment_guid
+			);
 		});
 	}
 }
@@ -1188,6 +1196,7 @@ async function serverProductsResponse(data) {
 					data["pinned_products"][i]["title"],
 					data["pinned_products"][i]["img_url"],
 					data["pinned_products"][i]["is_parent_asin"],
+					data["pinned_products"][i]["is_pre_release"],
 					data["pinned_products"][i]["enrollment_guid"],
 					data["pinned_products"][i]["unavailable"]
 				); //grid.js
