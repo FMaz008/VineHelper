@@ -1418,8 +1418,8 @@ class NotificationMonitor extends MonitorCore {
 					const item = new Item({
 						asin: seeDetailsBtn.dataset.asin,
 						queue: seeDetailsBtn.dataset.queue,
-						is_parent_asin: seeDetailsBtn.dataset.isParentAsin,
-						is_pre_release: seeDetailsBtn.dataset.isPreRelease,
+						is_parent_asin: seeDetailsBtn.dataset.isParentAsin === "true",
+						is_pre_release: seeDetailsBtn.dataset.isPreRelease === "true",
 						enrollment_guid: seeDetailsBtn.dataset.enrollmentGuid,
 					});
 
