@@ -1,8 +1,8 @@
 /*global chrome*/
 
-import { Internationalization } from "../scripts/Internationalization.js";
-import { SettingsMgr } from "../scripts/SettingsMgrCompat.js";
-import { Item } from "../scripts/Item.js";
+import { Internationalization } from "/scripts/core/services/Internationalization.js";
+import { SettingsMgr } from "/scripts/core/services/SettingsMgrCompat.js";
+import { Item } from "/scripts/core/models/Item.js";
 
 var Settings = new SettingsMgr();
 var i13n = new Internationalization();

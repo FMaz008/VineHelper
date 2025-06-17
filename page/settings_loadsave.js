@@ -1,22 +1,22 @@
-import { SettingsMgr } from "../scripts/SettingsMgrCompat.js";
+import { SettingsMgr } from "/scripts/core/services/SettingsMgrCompat.js";
 const Settings = new SettingsMgr();
 
-import { Environment } from "../scripts/Environment.js";
+import { Environment } from "/scripts/core/services/Environment.js";
 const env = new Environment();
 
-import { Internationalization } from "../scripts/Internationalization.js";
+import { Internationalization } from "/scripts/core/services/Internationalization.js";
 const i13n = new Internationalization();
 
-import { HiddenListMgr } from "../scripts/HiddenListMgr.js";
+import { HiddenListMgr } from "/scripts/core/services/HiddenListMgr.js";
 var HiddenList = new HiddenListMgr();
 
-import { DeviceFingerprintMgr } from "../scripts/DeviceFingerprintMgr.js";
+import { DeviceFingerprintMgr } from "/scripts/core/services/DeviceFingerprintMgr.js";
 var fingerprintMgr = new DeviceFingerprintMgr(Settings);
 
-import { DeviceMgr } from "../scripts/DeviceMgr.js";
+import { DeviceMgr } from "/scripts/core/services/DeviceMgr.js";
 var deviceMgr = new DeviceMgr(Settings);
 
-import { CryptoKeys } from "../scripts/CryptoKeys.js";
+import { CryptoKeys } from "/scripts/core/utils/CryptoKeys.js";
 var cryptoKeys = new CryptoKeys();
 
 async function drawDiscord() {
@@ -818,7 +818,7 @@ function initiateTestKeywords() {
 	});
 }
 
-import { keywordMatch } from "../scripts/keywordMatch.js";
+import { keywordMatch } from "../scripts/core/utils/KeywordMatch.js";
 function testKeyword(key, title) {
 	const keyE = CSS.escape(key);
 

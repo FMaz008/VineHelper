@@ -6,9 +6,9 @@
  * maintaining backward compatibility.
  */
 
-import { SettingsMgrDI } from "../SettingsMgrDI.js";
-import { ChromeStorageAdapter } from "./StorageAdapter.js";
-import { container } from "./DIContainer.js";
+import { SettingsMgrDI } from "/scripts/core/services/SettingsMgrDI.js";
+import { ChromeStorageAdapter } from "/scripts/infrastructure/StorageAdapter.js";
+import { container } from "/scripts/infrastructure/DIContainer.js";
 
 // Register the storage adapter in the DI container
 container.register("storageAdapter", () => new ChromeStorageAdapter("local"), {
@@ -20,7 +20,7 @@ container.register(
 	"logger",
 	() => {
 		// Dynamic import to avoid circular dependencies
-		return import("../Logger.js").then((module) => new module.Logger());
+		return import("/scripts/core/utils/Logger.js").then((module) => new module.Logger());
 	},
 	{
 		singleton: true,

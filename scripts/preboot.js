@@ -1,15 +1,15 @@
 /*global chrome*/
 
-import { Logger } from "./Logger.js";
+import { Logger } from "/scripts/core/utils/Logger.js";
 var logger = new Logger();
 
-import { SettingsMgr } from "./SettingsMgrCompat.js";
+import { SettingsMgr } from "/scripts/core/services/SettingsMgrCompat.js";
 var Settings = new SettingsMgr();
 
-import { Internationalization } from "./Internationalization.js";
+import { Internationalization } from "/scripts/core/services/Internationalization.js";
 var i13n = new Internationalization();
 
-import { Template } from "./Template.js";
+import { Template } from "/scripts/core/utils/Template.js";
 const Tpl = new Template();
 
 //###############################################33

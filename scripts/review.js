@@ -9,11 +9,11 @@ var Tpl = null;
 	try {
 		let module = null;
 		//Load the SettingMgr.
-		module = await import(chrome.runtime.getURL("../scripts/SettingsMgrCompat.js"));
+		module = await import(chrome.runtime.getURL("/scripts/core/services/SettingsMgrCompat.js"));
 		Settings = new module.SettingsMgr();
 
 		//Load the Template manager
-		module = await import(chrome.runtime.getURL("../scripts/Template.js"));
+		module = await import(chrome.runtime.getURL("/scripts/core/utils/Template.js"));
 		Tpl = new module.Template();
 	} catch (error) {
 		console.error("Error loading module:", error);
@@ -79,9 +79,9 @@ function init_review() {
 
 async function boot_review() {
 	//Load the toolbar template
-	const prom = await Tpl.loadFile("/view/review_toolbar.html");
-	Tpl.setVar("tpl_manage_url", chrome.runtime.getURL("page/reviews_templates.html"));
-	Tpl.setVar("review_manage_url", chrome.runtime.getURL("page/reviews_manage.html"));
+	const prom = await Tpl.loadFile("/scripts/ui/templates/review_toolbar.html");
+	Tpl.setVar("tpl_manage_url", chrome.runtime.getURL("/page/reviews_templates.html"));
+	Tpl.setVar("review_manage_url", chrome.runtime.getURL("/page/reviews_manage.html"));
 	Tpl.setVar("asin", asin);
 
 	//Firefox seems to execute this script before the content (presumably loaded from a fetch request)

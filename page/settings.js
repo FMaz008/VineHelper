@@ -1,12 +1,12 @@
-import { SettingsMgr } from "../scripts/SettingsMgrCompat.js";
+import { SettingsMgr } from "/scripts/core/services/SettingsMgrCompat.js";
 const Settings = new SettingsMgr();
 
-import { Internationalization } from "../scripts/Internationalization.js";
+import { Internationalization } from "/scripts/core/services/Internationalization.js";
 const i13n = new Internationalization();
 
-import { initiateSettings } from "../page/settings_loadsave.js";
+import { initiateSettings } from "/page/settings_loadsave.js";
 
-import { Template } from "../scripts/Template.js";
+import { Template } from "/scripts/core/utils/Template.js";
 var Tpl = new Template();
 
 // Clear template cache and variables when opening settings

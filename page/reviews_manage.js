@@ -1,10 +1,26 @@
-import { Internationalization } from "../scripts/Internationalization.js";
+import { Internationalization } from "/scripts/core/services/Internationalization.js";
 const i13n = new Internationalization();
 
-import { SettingsMgr } from "../scripts/SettingsMgrCompat.js";
+import { SettingsMgr } from "/scripts/core/services/SettingsMgrCompat.js";
 const Settings = new SettingsMgr();
 
+import { Environment } from "/scripts/core/services/Environment.js";
+const env = new Environment();
+
 var scriptName = "reviews_manages.js";
+
+//Insert the icon stylesheet based on the browser being used
+//If browser is firefox, load icon_firefox.css
+if (navigator.userAgent.includes("Firefox")) {
+	document.head.innerHTML += `<link rel="stylesheet" type="text/css" href="/resource/css/icon_firefox.css" />`;
+}
+//If the browser is chrome, load icon_chrome.css
+if (navigator.userAgent.includes("Chrome") || navigator.userAgent.includes("Chromium")) {
+	document.head.innerHTML += `<link rel="stylesheet" type="text/css" href="/resource/css/icon_chrome.css" />`;
+}
+if (navigator.userAgent.includes("Safari")) {
+	document.head.innerHTML += `<link rel="stylesheet" type="text/css" href="/resource/css/icon_ios.css" />`;
+}
 
 function logError(errorArray) {
 	const [functionName, scriptName, error] = errorArray;

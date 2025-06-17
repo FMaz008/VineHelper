@@ -1,13 +1,13 @@
-import { Environment } from "../scripts/Environment.js";
+import { Environment } from "/scripts/core/services/Environment.js";
 var env = new Environment();
 
-import { Internationalization } from "../scripts/Internationalization.js";
+import { Internationalization } from "/scripts/core/services/Internationalization.js";
 const i13n = new Internationalization();
 
-import { SettingsMgr } from "../scripts/SettingsMgrCompat.js";
+import { SettingsMgr } from "/scripts/core/services/SettingsMgrCompat.js";
 const Settings = new SettingsMgr();
 
-import { Chart, registerables } from "../scripts/vendor/chart.js/dist/chart.js";
+import { Chart, registerables } from "/scripts/vendor/chart.js/dist/chart.js";
 // Register required components
 Chart.register(...registerables);
 

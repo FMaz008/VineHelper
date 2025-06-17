@@ -1,23 +1,23 @@
-import { ISODatetoYMDHiS } from "../scripts/core/utils/DateHelper.js";
+import { ISODatetoYMDHiS } from "/scripts/core/utils/DateHelper.js";
 
-import { Environment } from "../scripts/Environment.js";
+import { Environment } from "/scripts/core/services/Environment.js";
 var env = new Environment();
 
-import { Internationalization } from "../scripts/Internationalization.js";
+import { Internationalization } from "/scripts/core/services/Internationalization.js";
 const i13n = new Internationalization();
 
-import { Pagination } from "../scripts/Pagination.js";
+import { Pagination } from "/scripts/ui/controllers/Pagination.js";
 const pagination = new Pagination();
 
-import { PinnedListMgr } from "../scripts/PinnedListMgr.js";
+import { PinnedListMgr } from "/scripts/core/services/PinnedListMgr.js";
 var PinnedList = new PinnedListMgr();
 
-import { SettingsMgr } from "../scripts/SettingsMgrCompat.js";
+import { SettingsMgr } from "/scripts/core/services/SettingsMgrCompat.js";
 const Settings = new SettingsMgr();
 
-import { unescapeHTML, removeSpecialHTML } from "../scripts/core/utils/StringHelper.js";
+import { unescapeHTML, removeSpecialHTML } from "/scripts/core/utils/StringHelper.js";
 
-import { Item } from "../scripts/Item.js";
+import { Item } from "/scripts/core/models/Item.js";
 
 let secondsLeft = 10;
 

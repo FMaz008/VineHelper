@@ -1,6 +1,6 @@
 /*global chrome*/
 
-import { Logger } from "./Logger.js";
+import { Logger } from "/scripts/core/utils/Logger.js";
 var logger = new Logger();
 
 logger.add("BOOT: Bootloader starting.");
@@ -12,23 +12,23 @@ logger.add("BOOT: Bootloader starting.");
 // - Register all services in the container
 // - Use container.resolve() instead of direct instantiation
 // See scripts/infrastructure/DIContainer.js for the DI implementation
-import { SettingsMgr } from "./SettingsMgrCompat.js";
+import { SettingsMgr } from "/scripts/core/services/SettingsMgrCompat.js";
 var Settings = new SettingsMgr();
 
-import { Internationalization } from "./Internationalization.js";
+import { Internationalization } from "/scripts/core/services/Internationalization.js";
 var i13n = new Internationalization();
 
-import { Environment } from "./Environment.js";
+import { Environment } from "/scripts/core/services/Environment.js";
 var env = new Environment();
 
-import { Template } from "./Template.js";
+import { Template } from "/scripts/core/utils/Template.js";
 var Tpl = new Template();
 
-import { YMDHiStoISODate } from "./core/utils/DateHelper.js";
+import { YMDHiStoISODate } from "/scripts/core/utils/DateHelper.js";
 
-import { openDynamicModal } from "./core/utils/DynamicModalHelper.js";
+import { openDynamicModal } from "/scripts/core/utils/DynamicModalHelper.js";
 
-import { CryptoKeys } from "./CryptoKeys.js";
+import { CryptoKeys } from "/scripts/core/utils/CryptoKeys.js";
 var cryptoKeys = new CryptoKeys();
 
 //Grid
@@ -41,41 +41,41 @@ import {
 	showAllItems,
 	updateTileCounts,
 	getTileByAsin,
-} from "./Grid.js";
+} from "/scripts/ui/components/Grid.js";
 
-import { isPageLogin, isPageCaptcha, isPageDog } from "./core/utils/DOMHelper.js";
+import { isPageLogin, isPageCaptcha, isPageDog } from "/scripts/core/utils/DOMHelper.js";
 
-import { HiddenListMgr } from "./HiddenListMgr.js";
+import { HiddenListMgr } from "/scripts/core/services/HiddenListMgr.js";
 var HiddenList = new HiddenListMgr();
 
-import { HookMgr } from "./HookMgr.js";
+import { HookMgr } from "/scripts/core/utils/HookMgr.js";
 var hookMgr = new HookMgr();
 
-import { Item } from "./Item.js";
-import { ModalMgr } from "./ModalMgr.js";
+import { Item } from "/scripts/core/models/Item.js";
+import { ModalMgr } from "/scripts/ui/controllers/ModalMgr.js";
 var DialogMgr = new ModalMgr();
 
-import { News } from "./News.js";
+import { News } from "/scripts/ui/controllers/News.js";
 
-import { NotificationMonitorV3 } from "./notification-monitor/NotificationMonitorV3.js";
+import { NotificationMonitorV3 } from "/scripts/notification-monitor/core/NotificationMonitorV3.js";
 
-import { Pagination } from "./Pagination.js";
+import { Pagination } from "/scripts/ui/controllers/Pagination.js";
 var pagination = new Pagination();
-import { PinnedListMgr } from "./PinnedListMgr.js";
+import { PinnedListMgr } from "/scripts/core/services/PinnedListMgr.js";
 var PinnedList = new PinnedListMgr();
 
-import { ScreenNotification, ScreenNotifier } from "./ScreenNotifier.js";
+import { ScreenNotification, ScreenNotifier } from "/scripts/ui/components/ScreenNotifier.js";
 var Notifications = new ScreenNotifier();
 
-import { Tile, getTileFromDom } from "./Tile.js";
+import { Tile, getTileFromDom } from "/scripts/ui/components/Tile.js";
 
-import { TileSizer } from "./TileSizer.js";
+import { TileSizer } from "/scripts/ui/controllers/TileSizer.js";
 var tileSizer = new TileSizer();
 
-import { Toolbar } from "./Toolbar.js";
+import { Toolbar } from "/scripts/ui/components/Toolbar.js";
 
-import { Tooltip } from "./Tooltip.js";
-import { unescapeHTML } from "./core/utils/StringHelper.js";
+import { Tooltip } from "/scripts/ui/components/Tooltip.js";
+import { unescapeHTML } from "/scripts/core/utils/StringHelper.js";
 
 var tooltip = new Tooltip();
 

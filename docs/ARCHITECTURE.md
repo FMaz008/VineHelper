@@ -107,7 +107,8 @@ scripts/
 │   ├── controllers/     # UI logic
 │   └── templates/       # View templates
 ├── notification-monitor/
-│   ├── core/           # Monitor business logic
+│   ├── core/           # Monitor main business logic
+|   ├── services/       # Monitor business logic services/managers
 │   ├── stream/         # Stream processing
 │   └── coordination/   # Master/Slave logic
 ├── infrastructure/
