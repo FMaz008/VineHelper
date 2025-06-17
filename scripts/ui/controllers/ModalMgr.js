@@ -10,7 +10,7 @@ class ModalElement {
 		this.style = "";
 	}
 
-	async show(template = "view/modal.html") {
+	async show(template = "/scripts/ui/templates/modal.html") {
 		const modal = document.getElementById(`modal-${this.id}`);
 		if (modal && modal.style.display !== "none") {
 			this.close();
