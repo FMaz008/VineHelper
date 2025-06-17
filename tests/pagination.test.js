@@ -1,4 +1,4 @@
-import { Pagination } from "../scripts/Pagination.js";
+import { Pagination } from "../scripts/ui/controllers/Pagination.js";
 const pagination = new Pagination();
 
 var buffer = "";
