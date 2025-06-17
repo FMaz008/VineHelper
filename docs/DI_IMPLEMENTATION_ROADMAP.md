@@ -10,6 +10,7 @@ This document provides a detailed roadmap for completing the dependency injectio
 - [x] Compatibility layer for gradual migration
 - [x] Unit tests for infrastructure
 - [x] Migration documentation
+- [x] ErrorAlertManager as example of piecemeal migration (see NotificationMonitorV3)
 
 ## Phase 1: Core Services (Next 2 PRs)
 

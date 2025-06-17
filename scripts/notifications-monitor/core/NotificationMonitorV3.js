@@ -5,13 +5,45 @@ import { NotificationMonitor } from "/scripts/notifications-monitor/core/Notific
 import { TileSizer } from "/scripts/ui/controllers/TileSizer.js";
 import { TierMgr } from "/scripts/notifications-monitor/services/TierMgr.js";
 import { NoShiftGrid } from "/scripts/notifications-monitor/services/NoShiftGrid.js";
+import { ErrorAlertManager } from "/scripts/notifications-monitor/services/ErrorAlertManager.js";
+import { DIContainer } from "/scripts/infrastructure/DIContainer.js";
 
 class NotificationMonitorV3 extends NotificationMonitor {
+	#container;
+
 	constructor() {
 		super(true);
 		this._monitorV3 = true;
+
+		// Initialize DI container for this component
+		// This demonstrates how we can gradually migrate to DI
+		this.#container = new DIContainer();
+		this.#registerServices();
+
+		// Existing services still use direct instantiation (for now)
 		this._tileSizer = new TileSizer("notification.monitor.tileSize");
 		this._tierMgr = new TierMgr(this._env);
+
+		// New service uses DI
+		this._errorAlertManager = this.#container.resolve("errorAlertManager");
+	}
+
+	/**
+	 * Register services in the DI container
+	 * This is where we define how services are created and their dependencies
+	 */
+	#registerServices() {
+		// Register ErrorAlertManager as a singleton
+		// No dependencies for now, but this makes it easy to add them later
+		this.#container.register("errorAlertManager", () => new ErrorAlertManager(), {
+			singleton: true,
+		});
+
+		// Future services can be registered here as we migrate them
+		// Example for when TileSizer is migrated:
+		// this.#container.register('tileSizer', () => new TileSizer("notification.monitor.tileSize"), {
+		//     singleton: true
+		// });
 	}
 
 	async initialize() {
@@ -176,6 +208,9 @@ class NotificationMonitorV3 extends NotificationMonitor {
 
 		//Initial check of the status of services (service worker and WebSocket)
 		this._serverComMgr.updateServicesStatus();
+
+		// Initialize the error alert manager
+		this._errorAlertManager.initialize();
 
 		if (
 			this._settings.get("notification.monitor.placeholders") &&
