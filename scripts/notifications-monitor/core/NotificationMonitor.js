@@ -7,7 +7,7 @@ import { Tile } from "/scripts/ui/components/Tile.js";
 import { YMDHiStoISODate } from "/scripts/core/utils/DateHelper.js";
 import { keywordMatch } from "/scripts/core/utils/KeywordMatch.js";
 import { escapeHTML, unescapeHTML, removeSpecialHTML } from "/scripts/core/utils/StringHelper.js";
-import { MonitorCore } from "/scripts/notification-monitor/core/MonitorCore.js";
+import { MonitorCore } from "/scripts/notifications-monitor/core/MonitorCore.js";
 import { Item } from "/scripts/core/models/Item.js";
 
 //const TYPE_SHOW_ALL = -1;

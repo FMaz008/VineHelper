@@ -4,7 +4,7 @@ import {
 	broadcastFunction,
 	dataStream as myStream,
 	notificationPushFunction,
-} from "/scripts/notification-monitor/stream/NewItemStreamProcessing.js";
+} from "/scripts/notifications-monitor/stream/NewItemStreamProcessing.js";
 import { Item } from "/scripts/core/models/Item.js";
 class ServerCom {
 	static #instance = null;

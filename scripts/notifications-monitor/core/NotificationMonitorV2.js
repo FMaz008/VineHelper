@@ -1,4 +1,4 @@
-import { NotificationMonitor } from "/scripts/notification-monitor/core/NotificationMonitor.js";
+import { NotificationMonitor } from "/scripts/notifications-monitor/core/NotificationMonitor.js";
 
 class NotificationMonitorV2 extends NotificationMonitor {
 	#channel = null; //Broadcast channel for light mode

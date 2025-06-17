@@ -15,7 +15,7 @@ VineHelper is a browser extension that enhances the Amazon Vine experience. The 
     - Creates grid instances and manages tabs
     - Heavy coupling with global state
 
-2. **Notification Monitor** (`scripts/notification_monitor/`)
+2. **Notifications Monitor** (`scripts/notification_monitor/`)
 
     - Complex subsystem with multiple components
     - Master/Slave architecture for multi-tab coordination
@@ -161,7 +161,7 @@ scripts/
     - Gradually migrate files
     - Update imports incrementally
 
-2. **Refactor Notification Monitor**
+2. **Refactor Notifications Monitor**
     - Extract stream processing logic
     - Separate coordination from business logic
     - Create testable components

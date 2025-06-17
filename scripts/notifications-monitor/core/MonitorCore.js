@@ -12,7 +12,7 @@ import { Template } from "/scripts/core/utils/Template.js";
 import { Environment } from "/scripts/core/services/Environment.js";
 import { Logger } from "/scripts/core/utils/Logger.js";
 import { CryptoKeys } from "/scripts/core/utils/CryptoKeys.js";
-import { PinMgr } from "/scripts/notification-monitor/services/PinMgr.js";
+import { PinMgr } from "/scripts/notifications-monitor/services/PinMgr.js";
 import { HookMgr } from "/scripts/core/utils/HookMgr.js";
 import { Internationalization } from "/scripts/core/services/Internationalization.js";
 import { ScreenNotifier, ScreenNotification } from "/scripts/ui/components/ScreenNotifier.js";
@@ -20,11 +20,11 @@ import { Tooltip } from "/scripts/ui/components/Tooltip.js";
 import { BrendaAnnounceQueue } from "/scripts/core/services/BrendaAnnounce.js";
 import { ModalMgr } from "/scripts/ui/controllers/ModalMgr.js";
 import { NotificationsSoundPlayer } from "/scripts/ui/components/NotificationsSoundPlayer.js";
-import { ServerCom } from "/scripts/notification-monitor/stream/ServerCom.js";
-import { ItemsMgr } from "/scripts/notification-monitor/services/ItemsMgr.js";
-import { Websocket } from "/scripts/notification-monitor/stream/Websocket.js";
-import { AutoLoad } from "/scripts/notification-monitor/stream/AutoLoad.js";
-import { MasterSlave } from "/scripts/notification-monitor/coordination/MasterSlave.js";
+import { ServerCom } from "/scripts/notifications-monitor/stream/ServerCom.js";
+import { ItemsMgr } from "/scripts/notifications-monitor/services/ItemsMgr.js";
+import { Websocket } from "/scripts/notifications-monitor/stream/Websocket.js";
+import { AutoLoad } from "/scripts/notifications-monitor/stream/AutoLoad.js";
+import { MasterSlave } from "/scripts/notifications-monitor/coordination/MasterSlave.js";
 
 class MonitorCore {
 	//Variables linked to monitor V2 vs V3
@@ -73,7 +73,7 @@ class MonitorCore {
 			this._env.data.gridDOM = { regular: document.getElementById("vvp_items-grid") };
 		}
 
-		//Notification Monitor's specific classes
+		//Notifications Monitor's specific classes
 		this._serverComMgr = new ServerCom(this);
 
 		this._itemsMgr = new ItemsMgr(this._settings);

@@ -189,7 +189,7 @@ For a detailed implementation roadmap with code examples and specific tasks, see
 
 1. **Next PR**: Refactor Logger with DI
 2. **Next Sprint**: Create browser API adapters and refactor list managers
-3. **Next Month**: Extract business logic and refactor notification monitor
+3. **Next Month**: Extract business logic and refactor notifications monitor
 4. **Next Quarter**: Complete bootloader refactoring
 
 ## External Resources

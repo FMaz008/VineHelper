@@ -57,7 +57,7 @@ var DialogMgr = new ModalMgr();
 
 import { News } from "/scripts/ui/controllers/News.js";
 
-import { NotificationMonitorV3 } from "/scripts/notification-monitor/core/NotificationMonitorV3.js";
+import { NotificationMonitorV3 } from "/scripts/notifications-monitor/core/NotificationMonitorV3.js";
 
 import { Pagination } from "/scripts/ui/controllers/Pagination.js";
 var pagination = new Pagination();
@@ -201,7 +201,7 @@ async function init() {
 	await initFlushTplCache(); //And display the version changelog popup
 	initInjectScript();
 
-	//Check if we want to display the notification monitor
+	//Check if we want to display the notifications monitor
 	const currentUrl = window.location.href;
 	let regex = /^[^#]+#monitor.*$/;
 	let arrMatches = currentUrl.match(regex);
@@ -212,7 +212,7 @@ async function init() {
 			loadStyleSheet("resource/css/listView.css");
 		}
 
-		//Initate the notification monitor
+		//Initate the notifications monitor
 		notificationMonitor = new NotificationMonitorV3();
 		await notificationMonitor.initialize();
 
@@ -523,7 +523,7 @@ async function initFlushTplCache() {
 				let warning = DialogMgr.newModal("warning");
 				warning.title = "/!\\ Warning";
 				warning.content =
-					"Vine Helper 3.5.0 requires a <strong><u>reload of ALL VINE RELATED TABS</u></strong>, incuding the notification monitor(s). <br /><br />Failure to do so will likely lead to a loss of all locally stored hidden and pinned items.";
+					"Vine Helper 3.5.0 requires a <strong><u>reload of ALL VINE RELATED TABS</u></strong>, incuding the notifications monitor(s). <br /><br />Failure to do so will likely lead to a loss of all locally stored hidden and pinned items.";
 				warning.show();
 				await Settings.set("general.warning350", true);
 				return;
@@ -1316,7 +1316,7 @@ window.addEventListener("message", async function (event) {
 			body: JSON.stringify(content),
 		});
 
-		//The notification monitor does not instanciate a grid as there is no tabs.
+		//The notifications monitors does not instanciate a grid as there is no tabs.
 		//But the ETV will be received from the server
 		if (!notificationMonitor) {
 			//Update the product tile ETV in the Toolbar
@@ -1389,7 +1389,7 @@ window.addEventListener("message", async function (event) {
 				body: JSON.stringify(content),
 			});
 
-			//The notification monitor does not implement the regularGrid
+			//The notifications monitors does not implement the regularGrid
 			if (!notificationMonitor) {
 				//Update the product tile ETV in the Toolbar
 				let tile = getTileByAsin(tileASIN);
@@ -1520,7 +1520,7 @@ async function processMessage(data, sender = null, sendResponse = null) {
 			!notificationMonitor &&
 			data.index < 10 && //Limit the notification to the top 10 most recents
 			env.data.vineBrowsingListing && //Only show notification on listing pages
-			!env.data.monitorActive && //Do not display on screen notification in the notification monitor
+			!env.data.monitorActive && //Do not display on screen notification in the notifications monitor
 			Settings.get("notification.screen.active")
 		) {
 			let {

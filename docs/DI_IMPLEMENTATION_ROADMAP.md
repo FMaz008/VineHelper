@@ -173,7 +173,7 @@ class NotificationSoundPlayer {
 
 ## Phase 4: Major Refactoring (Next Quarter)
 
-### Notification Monitor Decomposition
+### Notifications Monitor Decomposition
 
 Break down into:
 

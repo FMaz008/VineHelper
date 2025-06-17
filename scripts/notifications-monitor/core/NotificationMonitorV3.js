@@ -1,10 +1,10 @@
 /*global chrome*/
 
-import { NotificationMonitor } from "/scripts/notification-monitor/core/NotificationMonitor.js";
+import { NotificationMonitor } from "/scripts/notifications-monitor/core/NotificationMonitor.js";
 
 import { TileSizer } from "/scripts/ui/controllers/TileSizer.js";
-import { TierMgr } from "/scripts/notification-monitor/services/TierMgr.js";
-import { NoShiftGrid } from "/scripts/notification-monitor/services/NoShiftGrid.js";
+import { TierMgr } from "/scripts/notifications-monitor/services/TierMgr.js";
+import { NoShiftGrid } from "/scripts/notifications-monitor/services/NoShiftGrid.js";
 
 class NotificationMonitorV3 extends NotificationMonitor {
 	constructor() {
