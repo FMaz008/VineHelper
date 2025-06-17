@@ -37,7 +37,8 @@ class Item {
 		this.data.asin = coreAttributes.asin;
 		this.data.queue = coreAttributes.queue;
 		this.data.is_parent_asin = coreAttributes.is_parent_asin;
-		this.data.is_pre_release = coreAttributes.is_pre_release ? true : false; //Default to false if undefined
+		this.data.is_pre_release =
+			coreAttributes.is_pre_release === true || coreAttributes.is_pre_release === "true" ? true : false; //Default to false if undefined
 		this.data.enrollment_guid = coreAttributes.enrollment_guid;
 
 		//Optional data
