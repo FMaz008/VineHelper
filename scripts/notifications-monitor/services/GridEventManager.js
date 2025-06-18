@@ -20,6 +20,11 @@ class GridEventManager {
 	#visibilityStateManager;
 	#isEnabled = true;
 
+	// Event batching properties
+	#batchedUpdates = new Map();
+	#batchTimer = null;
+	#batchDelay = 50; // milliseconds
+
 	constructor(hookMgr, noShiftGrid, monitor, visibilityStateManager) {
 		this.#hookMgr = hookMgr;
 		this.#noShiftGrid = noShiftGrid;
@@ -40,7 +45,11 @@ class GridEventManager {
 		this.#hookMgr.hookBind("grid:items-filtered", (data) => this.#handleGridFiltered(data));
 		this.#hookMgr.hookBind("grid:truncated", (data) => this.#handleTruncation(data));
 		this.#hookMgr.hookBind("grid:sorted", (data) => this.#handleGridSorted(data));
+		this.#hookMgr.hookBind("grid:sort-needed", () => this.#handleSortNeeded());
 		this.#hookMgr.hookBind("grid:unpaused", () => this.#handleGridUnpaused());
+		this.#hookMgr.hookBind("grid:fetch-complete", (data) => this.#handleFetchComplete(data));
+		this.#hookMgr.hookBind("grid:resized", () => this.#handleGridResized());
+		this.#hookMgr.hookBind("grid:initialized", () => this.#handleGridInitialized());
 	}
 
 	/**
@@ -64,7 +73,7 @@ class GridEventManager {
 
 		// Only update placeholders for operations that affect grid layout
 		if (this.#shouldUpdatePlaceholders(operation)) {
-			this.#noShiftGrid.insertPlaceholderTiles();
+			this.#updatePlaceholders();
 		}
 	}
 
@@ -81,14 +90,14 @@ class GridEventManager {
 
 		if (fetchingRecentItems) {
 			this.#noShiftGrid.resetEndPlaceholdersCount();
-			this.#noShiftGrid.insertPlaceholderTiles();
+			this.#updatePlaceholders();
 		} else if (visibleItemsRemovedCount > 0) {
 			// Decrement visibility count by removed items
 			if (this.#visibilityStateManager) {
 				this.#visibilityStateManager.decrement(visibleItemsRemovedCount);
 			}
 			this.#noShiftGrid.insertEndPlaceholderTiles(visibleItemsRemovedCount);
-			this.#noShiftGrid.insertPlaceholderTiles();
+			this.#updatePlaceholders();
 		}
 	}
 
@@ -109,7 +118,7 @@ class GridEventManager {
 		// Reset end placeholders count and update placeholders
 		this.#noShiftGrid.resetEndPlaceholdersCount();
 		if (this.#shouldUpdatePlaceholders("clear")) {
-			this.#noShiftGrid.insertPlaceholderTiles();
+			this.#updatePlaceholders();
 		}
 	}
 
@@ -130,7 +139,7 @@ class GridEventManager {
 		// Reset end placeholders count and update placeholders
 		this.#noShiftGrid.resetEndPlaceholdersCount();
 		if (this.#shouldUpdatePlaceholders("filter")) {
-			this.#noShiftGrid.insertPlaceholderTiles();
+			this.#updatePlaceholders();
 		}
 	}
 
@@ -149,8 +158,58 @@ class GridEventManager {
 		if (sortType && sortType !== "date_desc") {
 			this.#noShiftGrid.deletePlaceholderTiles();
 		} else if (this.#shouldUpdatePlaceholders("sort")) {
-			this.#noShiftGrid.insertPlaceholderTiles();
+			this.#updatePlaceholders();
 		}
+	}
+
+	/**
+	 * Handle sort needed event - performs the actual sorting while preserving placeholders
+	 */
+	#handleSortNeeded() {
+		if (!this.#isEnabled || !this.#monitor) {
+			return;
+		}
+
+		const container = this.#monitor._gridContainer;
+		if (!container) return;
+		// Get current placeholder tiles before sorting
+		const placeholderTiles = Array.from(container.querySelectorAll(".vh-placeholder-tile"));
+
+		this.#monitor._preserveScrollPosition(() => {
+			// Sort the items - reuse the sorting logic from ItemsMgr
+			const sortedItems = this.#monitor._itemsMgr.sortItems();
+
+			// Only proceed if we have items
+			if (!sortedItems || sortedItems.length === 0) return;
+
+			// Filter out any items without DOM elements
+			const validItems = sortedItems.filter((item) => item.element);
+
+			// Create a DocumentFragment for better performance
+			const fragment = document.createDocumentFragment();
+
+			// Add items to fragment in sorted order
+			validItems.forEach((item) => {
+				if (item.element.parentNode) {
+					item.element.remove();
+				}
+				fragment.appendChild(item.element);
+			});
+
+			// Re-add placeholder tiles at the end
+			placeholderTiles.forEach((placeholder) => {
+				if (placeholder.parentNode) {
+					placeholder.remove();
+				}
+				fragment.appendChild(placeholder);
+			});
+
+			// Append all items and placeholders at once
+			container.appendChild(fragment);
+		});
+
+		// Emit sorted event to trigger any additional handling
+		this.#hookMgr.hookExecute("grid:sorted", { sortType: this.#monitor._sortType });
 	}
 
 	/**
@@ -164,7 +223,60 @@ class GridEventManager {
 		// Insert end placeholder tiles when unpaused
 		this.#noShiftGrid.insertEndPlaceholderTiles(0);
 		if (this.#shouldUpdatePlaceholders("unpause")) {
-			this.#noShiftGrid.insertPlaceholderTiles();
+			this.#updatePlaceholders();
+		}
+	}
+
+	/**
+	 * Handle fetch complete event
+	 * @param {Object} data - Fetch complete event data containing visible count
+	 */
+	#handleFetchComplete(data = {}) {
+		if (!this.#isEnabled || !this.#noShiftGrid) {
+			return;
+		}
+
+		// Update visibility count if provided
+		if (this.#visibilityStateManager && data.visibleCount !== undefined) {
+			this.#visibilityStateManager.setCount(data.visibleCount);
+		}
+
+		// Reset end placeholders count after fetch completes
+		// This prevents accumulation of removed items affecting placeholder calculations
+		this.#noShiftGrid.resetEndPlaceholdersCount();
+
+		// Update placeholders after fetch completes
+		if (this.#shouldUpdatePlaceholders("fetch")) {
+			this.#updatePlaceholders();
+		}
+	}
+
+	/**
+	 * Handle grid resized event (window resize)
+	 */
+	#handleGridResized() {
+		if (!this.#isEnabled || !this.#noShiftGrid) {
+			return;
+		}
+
+		// Update placeholders after grid resize
+		// The resize event is already debounced in NoShiftGrid
+		if (this.#shouldUpdatePlaceholders("resize")) {
+			this.#updatePlaceholders();
+		}
+	}
+
+	/**
+	 * Handle grid initialized event (initial load)
+	 */
+	#handleGridInitialized() {
+		if (!this.#isEnabled || !this.#noShiftGrid) {
+			return;
+		}
+
+		// Insert initial placeholders
+		if (this.#shouldUpdatePlaceholders("init")) {
+			this.#updatePlaceholders();
 		}
 	}
 
@@ -178,7 +290,7 @@ class GridEventManager {
 		// and the operation affects grid layout
 		return (
 			this.#monitor._sortType === "date_desc" &&
-			["add", "remove", "clear", "filter", "sort", "unpause"].includes(operation)
+			["add", "remove", "clear", "filter", "sort", "unpause", "fetch"].includes(operation)
 		);
 	}
 
@@ -205,6 +317,53 @@ class GridEventManager {
 	 */
 	isEnabled() {
 		return this.#isEnabled;
+	}
+
+	/**
+	 * Batch an update to prevent rapid consecutive updates
+	 * @param {string} updateType - Type of update (e.g., 'placeholder', 'visibility')
+	 * @param {Function} updateFn - Function to execute
+	 */
+	#batchUpdate(updateType, updateFn) {
+		// Store the update function
+		this.#batchedUpdates.set(updateType, updateFn);
+
+		// Clear existing timer
+		if (this.#batchTimer) {
+			clearTimeout(this.#batchTimer);
+		}
+
+		// Set new timer to process batch
+		this.#batchTimer = setTimeout(() => {
+			this.#processBatch();
+		}, this.#batchDelay);
+	}
+
+	/**
+	 * Process all batched updates
+	 */
+	#processBatch() {
+		// Execute all batched updates
+		for (const [updateType, updateFn] of this.#batchedUpdates) {
+			try {
+				updateFn();
+			} catch (error) {
+				console.error(`[GridEventManager] Error processing batched update '${updateType}':`, error);
+			}
+		}
+
+		// Clear the batch
+		this.#batchedUpdates.clear();
+		this.#batchTimer = null;
+	}
+
+	/**
+	 * Update placeholder tiles with batching
+	 */
+	#updatePlaceholders() {
+		this.#batchUpdate("placeholder", () => {
+			this.#noShiftGrid.insertPlaceholderTiles();
+		});
 	}
 }
 

@@ -171,7 +171,15 @@ class NotificationMonitorV3 extends NotificationMonitor {
 			grid.style.gridTemplateColumns = `repeat(auto-fill,minmax(${width}px,auto))`;
 		}
 
-		this._updateTabTitle();
+		// Initialize the VisibilityStateManager with the current count
+		// This ensures placeholders show correctly on initial load
+		const initialCount = this._countVisibleItems();
+		if (this._visibilityStateManager && initialCount > 0) {
+			this._visibilityStateManager.setCount(initialCount);
+		}
+
+		// Initialize event-driven tab title updates
+		this._initializeTabTitleListener();
 
 		//Insert the header
 		const parentContainer = document.querySelector("div.vvp-tab-content");
@@ -254,6 +262,15 @@ class NotificationMonitorV3 extends NotificationMonitor {
 
 			// Use DI container to resolve GridEventManager with its dependencies
 			this._gridEventManager = this.#container.resolve("gridEventManager");
+
+			// Insert initial placeholders after DOM is ready and grid has width
+			// Use setTimeout to ensure the grid container has been rendered and has width
+			setTimeout(() => {
+				if (this._noShiftGrid && this._gridContainer && this._gridContainer.offsetWidth > 0) {
+					// Emit event instead of direct call
+					this._hookMgr.hookExecute("grid:initialized");
+				}
+			}, 100);
 		}
 	}
 
