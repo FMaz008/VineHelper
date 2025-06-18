@@ -44,6 +44,7 @@ class NotificationMonitor extends MonitorCore {
 	_sortType = TYPE_DATE_DESC;
 	_noShiftGrid = null;
 	_gridEventManager = null;
+	_visibilityStateManager = null;
 
 	#pinDebounceTimer = null;
 	#pinDebounceClickable = true;
@@ -387,19 +388,33 @@ class NotificationMonitor extends MonitorCore {
 	 * Clear all unavailable items from the monitor
 	 */
 	#clearUnavailableItems() {
-		// Get all unavailable ASINs
+		// Get all unavailable ASINs and count visible ones being removed
 		const unavailableAsins = new Set();
+		let visibleRemovedCount = 0;
+
 		this._itemsMgr.items.forEach((item, asin) => {
 			if (item.data.unavailable) {
 				unavailableAsins.add(asin);
+				// Check if this item is currently visible
+				if (item.element) {
+					let displayStyle;
+					if (this._env.isSafari()) {
+						displayStyle = window.getComputedStyle(item.element).display;
+					} else {
+						displayStyle = item.element.style.display;
+					}
+					if (displayStyle !== "none") {
+						visibleRemovedCount++;
+					}
+				}
 			}
 		});
 
 		// Use the bulk remove method, letting it decide the optimal approach
 		this.#bulkRemoveItems(unavailableAsins, false);
 
-		// Emit event for placeholder update
-		this.#emitGridEvent("grid:items-cleared");
+		// Emit event for placeholder update with count of visible items removed
+		this.#emitGridEvent("grid:items-cleared", { count: visibleRemovedCount });
 	}
 
 	/**
@@ -688,13 +703,13 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		//Apply the filters
-		this.#processNotificationFiltering(tileDOM);
+		const isVisible = this.#processNotificationFiltering(tileDOM);
 
 		//If we are paused, this will be called when unpausing the feed.
 		if (!this._feedPaused) {
 			this._updateTabTitle();
-			// Emit event for grid modification
-			this.#emitGridEvent("grid:items-added");
+			// Emit event for grid modification with count
+			this.#emitGridEvent("grid:items-added", { count: isVisible ? 1 : 0 });
 		}
 
 		//Autotruncate the items if there are too many
@@ -731,6 +746,9 @@ class NotificationMonitor extends MonitorCore {
 			return;
 		}
 
+		// Check if tile was visible before removal
+		const wasVisible = tile.style.display !== "none";
+
 		// Get the item data to access its image URL
 		const item = this._itemsMgr.items.get(asin);
 		const imgUrl = item?.data?.img_url;
@@ -756,8 +774,8 @@ class NotificationMonitor extends MonitorCore {
 		tile = null;
 
 		this._updateTabTitle(); // Update the tab counter
-		// Emit event for item removal
-		this.#emitGridEvent("grid:items-removed");
+		// Emit event for item removal with count
+		this.#emitGridEvent("grid:items-removed", { count: wasVisible ? 1 : 0 });
 	}
 
 	/**
@@ -1548,8 +1566,8 @@ class NotificationMonitor extends MonitorCore {
 					this._searchText = event.target.value;
 					// Apply search filter to all items
 					this.#applyFilteringToAllItems();
-					// Emit event for filter change
-					this.#emitGridEvent("grid:items-filtered");
+					// Emit event for filter change with visible count
+					this.#emitGridEvent("grid:items-filtered", { visibleCount: this._visibleItemsCount });
 				}, 750); // 300ms debounce delay
 			});
 		}
@@ -1677,8 +1695,8 @@ class NotificationMonitor extends MonitorCore {
 			this._settings.set("notification.monitor.filterType", this._filterType);
 			//Display a specific type of notifications only
 			this.#applyFilteringToAllItems();
-			// Emit event for filter change
-			this.#emitGridEvent("grid:items-filtered");
+			// Emit event for filter change with visible count
+			this.#emitGridEvent("grid:items-filtered", { visibleCount: this._visibleItemsCount });
 		});
 
 		const filterQueue = document.querySelector("select[name='filter-queue']");
@@ -1687,8 +1705,8 @@ class NotificationMonitor extends MonitorCore {
 			this._settings.set("notification.monitor.filterQueue", this._filterQueue);
 			//Display a specific type of notifications only
 			this.#applyFilteringToAllItems();
-			// Emit event for filter change
-			this.#emitGridEvent("grid:items-filtered");
+			// Emit event for filter change with visible count
+			this.#emitGridEvent("grid:items-filtered", { visibleCount: this._visibleItemsCount });
 		});
 
 		const autoTruncateCheckbox = document.getElementById("auto-truncate");

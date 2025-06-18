@@ -17,12 +17,14 @@ class GridEventManager {
 	#hookMgr;
 	#noShiftGrid;
 	#monitor;
+	#visibilityStateManager;
 	#isEnabled = true;
 
-	constructor(hookMgr, noShiftGrid, monitor) {
+	constructor(hookMgr, noShiftGrid, monitor, visibilityStateManager) {
 		this.#hookMgr = hookMgr;
 		this.#noShiftGrid = noShiftGrid;
 		this.#monitor = monitor;
+		this.#visibilityStateManager = visibilityStateManager;
 
 		this.#setupEventListeners();
 	}
@@ -32,10 +34,10 @@ class GridEventManager {
 	 */
 	#setupEventListeners() {
 		// Listen for grid modification events
-		this.#hookMgr.hookBind("grid:items-added", () => this.#handleGridModification("add"));
-		this.#hookMgr.hookBind("grid:items-removed", () => this.#handleGridModification("remove"));
-		this.#hookMgr.hookBind("grid:items-cleared", () => this.#handleGridClear());
-		this.#hookMgr.hookBind("grid:items-filtered", () => this.#handleGridFiltered());
+		this.#hookMgr.hookBind("grid:items-added", (data) => this.#handleGridModification("add", data));
+		this.#hookMgr.hookBind("grid:items-removed", (data) => this.#handleGridModification("remove", data));
+		this.#hookMgr.hookBind("grid:items-cleared", (data) => this.#handleGridClear(data));
+		this.#hookMgr.hookBind("grid:items-filtered", (data) => this.#handleGridFiltered(data));
 		this.#hookMgr.hookBind("grid:truncated", (data) => this.#handleTruncation(data));
 		this.#hookMgr.hookBind("grid:sorted", (data) => this.#handleGridSorted(data));
 		this.#hookMgr.hookBind("grid:unpaused", () => this.#handleGridUnpaused());
@@ -44,10 +46,20 @@ class GridEventManager {
 	/**
 	 * Handle grid modification events
 	 * @param {string} operation - The type of operation performed
+	 * @param {Object} data - Event data containing count information
 	 */
-	#handleGridModification(operation) {
+	#handleGridModification(operation, data = {}) {
 		if (!this.#isEnabled || !this.#noShiftGrid) {
 			return;
+		}
+
+		// Update visibility count based on operation
+		if (this.#visibilityStateManager) {
+			if (operation === "add" && data.count) {
+				this.#visibilityStateManager.increment(data.count);
+			} else if (operation === "remove" && data.count) {
+				this.#visibilityStateManager.decrement(data.count);
+			}
 		}
 
 		// Only update placeholders for operations that affect grid layout
@@ -71,6 +83,10 @@ class GridEventManager {
 			this.#noShiftGrid.resetEndPlaceholdersCount();
 			this.#noShiftGrid.insertPlaceholderTiles();
 		} else if (visibleItemsRemovedCount > 0) {
+			// Decrement visibility count by removed items
+			if (this.#visibilityStateManager) {
+				this.#visibilityStateManager.decrement(visibleItemsRemovedCount);
+			}
 			this.#noShiftGrid.insertEndPlaceholderTiles(visibleItemsRemovedCount);
 			this.#noShiftGrid.insertPlaceholderTiles();
 		}
@@ -78,10 +94,16 @@ class GridEventManager {
 
 	/**
 	 * Handle grid clear event
+	 * @param {Object} data - Clear event data containing count of visible items removed
 	 */
-	#handleGridClear() {
+	#handleGridClear(data = {}) {
 		if (!this.#isEnabled || !this.#noShiftGrid) {
 			return;
+		}
+
+		// Update visibility count based on items removed
+		if (this.#visibilityStateManager && data.count) {
+			this.#visibilityStateManager.decrement(data.count);
 		}
 
 		// Reset end placeholders count and update placeholders
@@ -93,10 +115,16 @@ class GridEventManager {
 
 	/**
 	 * Handle grid filtered event
+	 * @param {Object} data - Filter event data containing new visible count
 	 */
-	#handleGridFiltered() {
+	#handleGridFiltered(data = {}) {
 		if (!this.#isEnabled || !this.#noShiftGrid) {
 			return;
+		}
+
+		// Update visibility count to new filtered count
+		if (this.#visibilityStateManager && data.visibleCount !== undefined) {
+			this.#visibilityStateManager.setCount(data.visibleCount);
 		}
 
 		// Reset end placeholders count and update placeholders

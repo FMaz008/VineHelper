@@ -7,6 +7,7 @@ describe("GridEventManager", () => {
 	let mockHookMgr;
 	let mockNoShiftGrid;
 	let mockMonitor;
+	let mockVisibilityStateManager;
 
 	beforeEach(() => {
 		// Create a new DI container for each test
@@ -29,18 +30,28 @@ describe("GridEventManager", () => {
 			_sortType: "date_desc",
 		};
 
+		mockVisibilityStateManager = {
+			increment: jest.fn(),
+			decrement: jest.fn(),
+			setCount: jest.fn(),
+			getCount: jest.fn().mockReturnValue(0),
+			reset: jest.fn(),
+		};
+
 		// Register mocks in the DI container
 		container.register("hookMgr", () => mockHookMgr);
 		container.register("noShiftGrid", () => mockNoShiftGrid);
 		container.register("monitor", () => mockMonitor);
+		container.register("visibilityStateManager", () => mockVisibilityStateManager);
 
 		// Register GridEventManager with its dependencies
 		container.register(
 			"gridEventManager",
-			(hookMgr, noShiftGrid, monitor) => new GridEventManager(hookMgr, noShiftGrid, monitor),
+			(hookMgr, noShiftGrid, monitor, visibilityStateManager) =>
+				new GridEventManager(hookMgr, noShiftGrid, monitor, visibilityStateManager),
 			{
 				singleton: true,
-				dependencies: ["hookMgr", "noShiftGrid", "monitor"],
+				dependencies: ["hookMgr", "noShiftGrid", "monitor", "visibilityStateManager"],
 			}
 		);
 
@@ -89,6 +100,22 @@ describe("GridEventManager", () => {
 			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
 		});
 
+		it("should increment visibility count when items are added", () => {
+			const addHandler = mockHookMgr.hookBind.mock.calls.find((call) => call[0] === "grid:items-added")[1];
+			addHandler({ count: 5 });
+
+			expect(mockVisibilityStateManager.increment).toHaveBeenCalledWith(5);
+			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
+		});
+
+		it("should decrement visibility count when items are removed", () => {
+			const removeHandler = mockHookMgr.hookBind.mock.calls.find((call) => call[0] === "grid:items-removed")[1];
+			removeHandler({ count: 3 });
+
+			expect(mockVisibilityStateManager.decrement).toHaveBeenCalledWith(3);
+			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
+		});
+
 		it("should not update placeholders for add operation in non-date_desc sort", () => {
 			mockMonitor._sortType = "price_asc";
 
@@ -115,6 +142,15 @@ describe("GridEventManager", () => {
 			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
 		});
 
+		it("should decrement visibility count when truncating visible items", () => {
+			const truncateHandler = mockHookMgr.hookBind.mock.calls.find((call) => call[0] === "grid:truncated")[1];
+			truncateHandler({ visibleItemsRemovedCount: 5 });
+
+			expect(mockVisibilityStateManager.decrement).toHaveBeenCalledWith(5);
+			expect(mockNoShiftGrid.insertEndPlaceholderTiles).toHaveBeenCalledWith(5);
+			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
+		});
+
 		it("should reset end placeholders count for filter operation", () => {
 			const filterHandler = mockHookMgr.hookBind.mock.calls.find((call) => call[0] === "grid:items-filtered")[1];
 			filterHandler();
@@ -123,10 +159,28 @@ describe("GridEventManager", () => {
 			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
 		});
 
+		it("should update visibility count when items are filtered", () => {
+			const filterHandler = mockHookMgr.hookBind.mock.calls.find((call) => call[0] === "grid:items-filtered")[1];
+			filterHandler({ visibleCount: 10 });
+
+			expect(mockVisibilityStateManager.setCount).toHaveBeenCalledWith(10);
+			expect(mockNoShiftGrid.resetEndPlaceholdersCount).toHaveBeenCalled();
+			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
+		});
+
 		it("should reset end placeholders count for clear operation", () => {
 			const clearHandler = mockHookMgr.hookBind.mock.calls.find((call) => call[0] === "grid:items-cleared")[1];
 			clearHandler();
 
+			expect(mockNoShiftGrid.resetEndPlaceholdersCount).toHaveBeenCalled();
+			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
+		});
+
+		it("should decrement visibility count when items are cleared", () => {
+			const clearHandler = mockHookMgr.hookBind.mock.calls.find((call) => call[0] === "grid:items-cleared")[1];
+			clearHandler({ count: 3 });
+
+			expect(mockVisibilityStateManager.decrement).toHaveBeenCalledWith(3);
 			expect(mockNoShiftGrid.resetEndPlaceholdersCount).toHaveBeenCalled();
 			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
 		});
