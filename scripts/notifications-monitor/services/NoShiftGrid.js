@@ -2,13 +2,14 @@ const TYPE_DATE_DESC = "date_desc";
 
 class NoShiftGrid {
 	_monitor = null;
+	_visibilityStateManager = null;
 	_gridWidth = 0;
 	_endPlaceholdersCount = 0;
 	_endPlaceholdersCountBuffer = 0;
-	_visibleItemsCount = 0;
 
-	constructor(monitorInstance) {
+	constructor(monitorInstance, visibilityStateManager) {
 		this._monitor = monitorInstance;
+		this._visibilityStateManager = visibilityStateManager;
 		this.#setupEventListener();
 		this.#calculateGridWidth();
 	}
@@ -56,12 +57,12 @@ class NoShiftGrid {
 		//Delete all placeholder tiles
 		this.deletePlaceholderTiles();
 
-		if (!this._monitor._feedPaused) {
-			this._visibleItemsCount = this._monitor._visibleItemsCount;
-		}
+		//Get the current visible items count
+		const visibleItemsCount =
+			!this._monitor._feedPaused && this._visibilityStateManager ? this._visibilityStateManager.getCount() : 0;
 
 		//Re-calculate the total number of items in the grid
-		const theoricalItemsCount = this._visibleItemsCount + this._endPlaceholdersCount;
+		const theoricalItemsCount = visibleItemsCount + this._endPlaceholdersCount;
 
 		//ToDo: Find a better way to precisely calculate the actual tile width (with 2 decimal places)
 		const tileWidth = this._monitor._settings.get("notification.monitor.tileSize.width") + 1;

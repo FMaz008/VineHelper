@@ -7,6 +7,7 @@ import { TierMgr } from "/scripts/notifications-monitor/services/TierMgr.js";
 import { NoShiftGrid } from "/scripts/notifications-monitor/services/NoShiftGrid.js";
 import { ErrorAlertManager } from "/scripts/notifications-monitor/services/ErrorAlertManager.js";
 import { GridEventManager } from "/scripts/notifications-monitor/services/GridEventManager.js";
+import { VisibilityStateManager } from "/scripts/notifications-monitor/services/VisibilityStateManager.js";
 import { DIContainer } from "/scripts/infrastructure/DIContainer.js";
 
 class NotificationMonitorV3 extends NotificationMonitor {
@@ -27,6 +28,9 @@ class NotificationMonitorV3 extends NotificationMonitor {
 
 		// New service uses DI
 		this._errorAlertManager = this.#container.resolve("errorAlertManager");
+
+		// Initialize VisibilityStateManager
+		this._visibilityStateManager = this.#container.resolve("visibilityStateManager");
 	}
 
 	/**
@@ -40,14 +44,22 @@ class NotificationMonitorV3 extends NotificationMonitor {
 			singleton: true,
 		});
 
+		// Register VisibilityStateManager as a singleton
+		// Manages visible items count with incremental updates
+		this.#container.register("visibilityStateManager", (hookMgr) => new VisibilityStateManager(hookMgr), {
+			singleton: true,
+			dependencies: ["hookMgr"],
+		});
+
 		// Register GridEventManager with its dependencies
 		// This demonstrates proper DI with dependency injection
 		this.#container.register(
 			"gridEventManager",
-			(hookMgr, noShiftGrid, monitor) => new GridEventManager(hookMgr, noShiftGrid, monitor),
+			(hookMgr, noShiftGrid, monitor, visibilityStateManager) =>
+				new GridEventManager(hookMgr, noShiftGrid, monitor, visibilityStateManager),
 			{
 				singleton: true,
-				dependencies: ["hookMgr", "noShiftGrid", "monitor"],
+				dependencies: ["hookMgr", "noShiftGrid", "monitor", "visibilityStateManager"],
 			}
 		);
 
@@ -235,7 +247,7 @@ class NotificationMonitorV3 extends NotificationMonitor {
 			!this._settings.get("notification.monitor.listView") &&
 			this._settings.get("general.tileSize.enabled")
 		) {
-			this._noShiftGrid = new NoShiftGrid(this);
+			this._noShiftGrid = new NoShiftGrid(this, this._visibilityStateManager);
 
 			// Update the dependency registrations with the actual instances
 			this.#container.register("noShiftGrid", () => this._noShiftGrid);
@@ -296,6 +308,18 @@ class NotificationMonitorV3 extends NotificationMonitor {
 				return obj[prop];
 			},
 		});
+	}
+
+	/**
+	 * Update the tab title with the current visible items count
+	 * @override
+	 */
+	_updateTabTitle() {
+		// Get the current visible items count from VisibilityStateManager
+		const itemsCount = this._visibilityStateManager ? this._visibilityStateManager.getCount() : 0;
+
+		// Update the tab title to match parent implementation
+		document.title = "VHNM (" + itemsCount + ")";
 	}
 }
 
