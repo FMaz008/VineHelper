@@ -6,6 +6,7 @@ import { TileSizer } from "/scripts/ui/controllers/TileSizer.js";
 import { TierMgr } from "/scripts/notifications-monitor/services/TierMgr.js";
 import { NoShiftGrid } from "/scripts/notifications-monitor/services/NoShiftGrid.js";
 import { ErrorAlertManager } from "/scripts/notifications-monitor/services/ErrorAlertManager.js";
+import { GridEventManager } from "/scripts/notifications-monitor/services/GridEventManager.js";
 import { DIContainer } from "/scripts/infrastructure/DIContainer.js";
 
 class NotificationMonitorV3 extends NotificationMonitor {
@@ -218,6 +219,19 @@ class NotificationMonitorV3 extends NotificationMonitor {
 			this._settings.get("general.tileSize.enabled")
 		) {
 			this._noShiftGrid = new NoShiftGrid(this);
+
+			// Register GridEventManager with DI container
+			this.#container.register(
+				"gridEventManager",
+				(hookMgr, noShiftGrid, monitor) => new GridEventManager(hookMgr, noShiftGrid, monitor),
+				{
+					singleton: true,
+					dependencies: [],
+				}
+			);
+
+			// Initialize GridEventManager to set up event listeners
+			this._gridEventManager = new GridEventManager(this._hookMgr, this._noShiftGrid, this);
 		}
 	}
 

@@ -43,6 +43,7 @@ class NotificationMonitor extends MonitorCore {
 	_filterType = -1;
 	_sortType = TYPE_DATE_DESC;
 	_noShiftGrid = null;
+	_gridEventManager = null;
 
 	#pinDebounceTimer = null;
 	#pinDebounceClickable = true;
@@ -218,8 +219,9 @@ class NotificationMonitor extends MonitorCore {
 		} else {
 			//Can happen if the user click unpause while the feed is filling.
 			this._updateTabTitle();
-			if (this._noShiftGrid) {
-				this._noShiftGrid.insertPlaceholderTiles();
+			// Emit event instead of direct call
+			if (this._gridEventManager) {
+				this._gridEventManager.emitGridEvent("grid:paused");
 			}
 		}
 
@@ -332,15 +334,13 @@ class NotificationMonitor extends MonitorCore {
 
 					// Use bulk removal method with the optimized approach for large sets
 					this.#bulkRemoveItems(asinsToKeep, true);
-					//insert placeholder tiles to keep the grid elements fixed to their column
-					if (this._noShiftGrid) {
-						if (fetchingRecentItems) {
-							this._noShiftGrid.resetEndPlaceholdersCount();
-							this._noShiftGrid.insertPlaceholderTiles(); //Item count is calculated by the #bulkRemoveItems method calling this._updateTabTitle()
-						} else {
-							this._noShiftGrid.insertEndPlaceholderTiles(visibleItemsRemovedCount);
-							this._noShiftGrid.insertPlaceholderTiles(); //Item count is calculated by the #bulkRemoveItems method calling this._updateTabTitle()
-						}
+
+					// Emit truncation event with context
+					if (this._gridEventManager) {
+						this._gridEventManager.emitGridEvent("grid:truncated", {
+							fetchingRecentItems,
+							visibleItemsRemovedCount,
+						});
 					}
 				}
 			}
@@ -391,11 +391,13 @@ class NotificationMonitor extends MonitorCore {
 
 		// Use the bulk remove method, letting it decide the optimal approach
 		this.#bulkRemoveItems(unavailableAsins, false);
-		this._noShiftGrid.resetEndPlaceholdersCount();
 
-		// Re-insert placeholder tiles if the feature is enabled
+		// Reset count and emit event for placeholder update
 		if (this._noShiftGrid) {
-			this._noShiftGrid.insertPlaceholderTiles();
+			this._noShiftGrid.resetEndPlaceholdersCount();
+		}
+		if (this._gridEventManager) {
+			this._gridEventManager.emitGridEvent("grid:items-cleared");
 		}
 	}
 
@@ -690,9 +692,9 @@ class NotificationMonitor extends MonitorCore {
 		//If we are paused, this will be called when unpausing the feed.
 		if (!this._feedPaused) {
 			this._updateTabTitle();
-			//If we are using the no-shift grid, make the grid element fix to their column
-			if (this._noShiftGrid) {
-				this._noShiftGrid.insertPlaceholderTiles();
+			// Emit event for grid modification
+			if (this._gridEventManager) {
+				this._gridEventManager.emitGridEvent("grid:items-added");
 			}
 		}
 
@@ -755,8 +757,9 @@ class NotificationMonitor extends MonitorCore {
 		tile = null;
 
 		this._updateTabTitle(); // Update the tab counter
-		if (this._noShiftGrid) {
-			this._noShiftGrid.insertPlaceholderTiles();
+		// Emit event for item removal
+		if (this._gridEventManager) {
+			this._gridEventManager.emitGridEvent("grid:items-removed");
 		}
 	}
 
@@ -1537,9 +1540,12 @@ class NotificationMonitor extends MonitorCore {
 						this.#processNotificationFiltering(node);
 					});
 					this._updateTabTitle();
+					// Reset count and emit event for filter change
 					if (this._noShiftGrid) {
 						this._noShiftGrid.resetEndPlaceholdersCount();
-						this._noShiftGrid.insertPlaceholderTiles();
+					}
+					if (this._gridEventManager) {
+						this._gridEventManager.emitGridEvent("grid:items-filtered");
 					}
 				}, 750); // 300ms debounce delay
 			});
@@ -1658,12 +1664,15 @@ class NotificationMonitor extends MonitorCore {
 			this.#processNotificationSorting();
 			// Force immediate truncate when sort type changes
 			this.#autoTruncate(true);
+			// Handle placeholder tiles based on sort type
 			if (this._noShiftGrid) {
-				if (this._sortType == TYPE_DATE_DESC) {
-					this._noShiftGrid.insertPlaceholderTiles();
-				} else {
+				if (this._sortType != TYPE_DATE_DESC) {
 					this._noShiftGrid.deletePlaceholderTiles();
 				}
+			}
+			// Emit sort event
+			if (this._gridEventManager) {
+				this._gridEventManager.emitGridEvent("grid:sorted");
 			}
 		});
 
@@ -1676,9 +1685,12 @@ class NotificationMonitor extends MonitorCore {
 				this.#processNotificationFiltering(node);
 			});
 			this._updateTabTitle();
+			// Reset count and emit event for filter change
 			if (this._noShiftGrid) {
 				this._noShiftGrid.resetEndPlaceholdersCount();
-				this._noShiftGrid.insertPlaceholderTiles();
+			}
+			if (this._gridEventManager) {
+				this._gridEventManager.emitGridEvent("grid:items-filtered");
 			}
 		});
 
@@ -1691,9 +1703,12 @@ class NotificationMonitor extends MonitorCore {
 				this.#processNotificationFiltering(node);
 			});
 			this._updateTabTitle();
+			// Reset count and emit event for filter change
 			if (this._noShiftGrid) {
 				this._noShiftGrid.resetEndPlaceholdersCount();
-				this._noShiftGrid.insertPlaceholderTiles();
+			}
+			if (this._gridEventManager) {
+				this._gridEventManager.emitGridEvent("grid:items-filtered");
 			}
 		});
 
@@ -1750,9 +1765,12 @@ class NotificationMonitor extends MonitorCore {
 				}
 			});
 			this._updateTabTitle();
+			// Handle pause state change
 			if (this._noShiftGrid) {
 				this._noShiftGrid.insertEndPlaceholderTiles(0);
-				this._noShiftGrid.insertPlaceholderTiles();
+			}
+			if (this._gridEventManager) {
+				this._gridEventManager.emitGridEvent("grid:paused");
 			}
 		}
 	}
