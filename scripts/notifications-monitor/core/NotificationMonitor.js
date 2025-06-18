@@ -380,7 +380,6 @@ class NotificationMonitor extends MonitorCore {
 			});
 			// Remove each visible item
 			this.#bulkRemoveItems(asins, false);
-			this._noShiftGrid.resetEndPlaceholdersCount();
 		});
 	}
 
@@ -399,10 +398,7 @@ class NotificationMonitor extends MonitorCore {
 		// Use the bulk remove method, letting it decide the optimal approach
 		this.#bulkRemoveItems(unavailableAsins, false);
 
-		// Reset count and emit event for placeholder update
-		if (this._noShiftGrid) {
-			this._noShiftGrid.resetEndPlaceholdersCount();
-		}
+		// Emit event for placeholder update
 		this.#emitGridEvent("grid:items-cleared");
 	}
 
@@ -1316,6 +1312,30 @@ class NotificationMonitor extends MonitorCore {
 		return false;
 	}
 
+	/**
+	 * Handle hover pause end - when mouse leaves or clicks occur
+	 * @private
+	 */
+	#handleHoverPauseEnd() {
+		if (this.#pausedByMouseoverSeeDetails) {
+			this.#pausedByMouseoverSeeDetails = false;
+			if (this._feedPaused) {
+				this.#handlePauseClick(true); // true = hover pause
+			}
+		}
+	}
+
+	/**
+	 * Apply filtering to all grid items
+	 * @private
+	 */
+	#applyFilteringToAllItems() {
+		this._gridContainer.querySelectorAll(".vvp-item-tile").forEach((node) => {
+			this.#processNotificationFiltering(node);
+		});
+		this._updateTabTitle();
+	}
+
 	#mouseoverHandler(e) {
 		//Handle the See Details button
 		if (
@@ -1323,20 +1343,13 @@ class NotificationMonitor extends MonitorCore {
 				e.preventDefault();
 				if (!this._feedPaused) {
 					this.#pausedByMouseoverSeeDetails = true;
-					this.#handlePauseClick();
+					this.#handlePauseClick(true); // true = hover pause
 				}
 			})
 		)
 			return;
 
-		if (this.#pausedByMouseoverSeeDetails) {
-			this.#pausedByMouseoverSeeDetails = false;
-			// Don't toggle pause state if there's a manual pause active
-			// The hover pause should not interfere with manual pause
-			if (!this._feedPaused) {
-				this.#handlePauseClick();
-			}
-		}
+		this.#handleHoverPauseEnd();
 	}
 
 	/**
@@ -1345,14 +1358,7 @@ class NotificationMonitor extends MonitorCore {
 	 */
 	#clickHandler(e) {
 		//If we are using the mouseover pause feature, and the user clicks, we need to unpause the feed
-		if (this.#pausedByMouseoverSeeDetails) {
-			this.#pausedByMouseoverSeeDetails = false;
-			// Don't toggle pause state if there's a manual pause active
-			// The hover pause should not interfere with manual pause
-			if (!this._feedPaused) {
-				this.#handlePauseClick();
-			}
-		}
+		this.#handleHoverPauseEnd();
 
 		// If a user clicks on the link wrapper around an icon, it would navigate to the
 		// default href (which is usually #) which breaks several things. We'll fix this by
@@ -1541,14 +1547,8 @@ class NotificationMonitor extends MonitorCore {
 				this._searchDebounceTimer = setTimeout(() => {
 					this._searchText = event.target.value;
 					// Apply search filter to all items
-					this._gridContainer.querySelectorAll(".vvp-item-tile").forEach((node) => {
-						this.#processNotificationFiltering(node);
-					});
-					this._updateTabTitle();
-					// Reset count and emit event for filter change
-					if (this._noShiftGrid) {
-						this._noShiftGrid.resetEndPlaceholdersCount();
-					}
+					this.#applyFilteringToAllItems();
+					// Emit event for filter change
 					this.#emitGridEvent("grid:items-filtered");
 				}, 750); // 300ms debounce delay
 			});
@@ -1667,14 +1667,8 @@ class NotificationMonitor extends MonitorCore {
 			this.#processNotificationSorting();
 			// Force immediate truncate when sort type changes
 			this.#autoTruncate(true);
-			// Handle placeholder tiles based on sort type
-			if (this._noShiftGrid) {
-				if (this._sortType != TYPE_DATE_DESC) {
-					this._noShiftGrid.deletePlaceholderTiles();
-				}
-			}
-			// Emit sort event
-			this.#emitGridEvent("grid:sorted");
+			// Emit sort event with sort type
+			this.#emitGridEvent("grid:sorted", { sortType: this._sortType });
 		});
 
 		const filterType = document.querySelector("select[name='filter-type']");
@@ -1682,14 +1676,8 @@ class NotificationMonitor extends MonitorCore {
 			this._filterType = filterType.value;
 			this._settings.set("notification.monitor.filterType", this._filterType);
 			//Display a specific type of notifications only
-			this._gridContainer.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
-				this.#processNotificationFiltering(node);
-			});
-			this._updateTabTitle();
-			// Reset count and emit event for filter change
-			if (this._noShiftGrid) {
-				this._noShiftGrid.resetEndPlaceholdersCount();
-			}
+			this.#applyFilteringToAllItems();
+			// Emit event for filter change
 			this.#emitGridEvent("grid:items-filtered");
 		});
 
@@ -1698,14 +1686,8 @@ class NotificationMonitor extends MonitorCore {
 			this._filterQueue = filterQueue.value;
 			this._settings.set("notification.monitor.filterQueue", this._filterQueue);
 			//Display a specific type of notifications only
-			this._gridContainer.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
-				this.#processNotificationFiltering(node);
-			});
-			this._updateTabTitle();
-			// Reset count and emit event for filter change
-			if (this._noShiftGrid) {
-				this._noShiftGrid.resetEndPlaceholdersCount();
-			}
+			this.#applyFilteringToAllItems();
+			// Emit event for filter change
 			this.#emitGridEvent("grid:items-filtered");
 		});
 
@@ -1729,7 +1711,7 @@ class NotificationMonitor extends MonitorCore {
 	}
 
 	//Pause feed handler
-	#handlePauseClick() {
+	#handlePauseClick(isHoverPause = false) {
 		this._feedPaused = !this._feedPaused;
 		if (this._feedPaused) {
 			this._feedPausedAmountStored = 0;
@@ -1762,12 +1744,10 @@ class NotificationMonitor extends MonitorCore {
 				}
 			});
 			this._updateTabTitle();
-			// Handle pause state change
-			if (this._noShiftGrid) {
-				this._noShiftGrid.insertEndPlaceholderTiles(0);
+			// Only emit unpause event for manual unpause, not hover unpause
+			if (!isHoverPause) {
+				this.#emitGridEvent("grid:unpaused");
 			}
-			// Only emit pause event for manual pause, not hover pause
-			this.#emitGridEvent("grid:paused");
 		}
 	}
 }
