@@ -34,11 +34,11 @@ class GridEventManager {
 		// Listen for grid modification events
 		this.#hookMgr.hookBind("grid:items-added", () => this.#handleGridModification("add"));
 		this.#hookMgr.hookBind("grid:items-removed", () => this.#handleGridModification("remove"));
-		this.#hookMgr.hookBind("grid:items-cleared", () => this.#handleGridModification("clear"));
-		this.#hookMgr.hookBind("grid:items-filtered", () => this.#handleGridModification("filter"));
+		this.#hookMgr.hookBind("grid:items-cleared", () => this.#handleGridClear());
+		this.#hookMgr.hookBind("grid:items-filtered", () => this.#handleGridFiltered());
 		this.#hookMgr.hookBind("grid:truncated", (data) => this.#handleTruncation(data));
-		this.#hookMgr.hookBind("grid:sorted", () => this.#handleGridModification("sort"));
-		this.#hookMgr.hookBind("grid:paused", () => this.#handleGridModification("pause"));
+		this.#hookMgr.hookBind("grid:sorted", (data) => this.#handleGridSorted(data));
+		this.#hookMgr.hookBind("grid:unpaused", () => this.#handleGridUnpaused());
 	}
 
 	/**
@@ -77,6 +77,70 @@ class GridEventManager {
 	}
 
 	/**
+	 * Handle grid clear event
+	 */
+	#handleGridClear() {
+		if (!this.#isEnabled || !this.#noShiftGrid) {
+			return;
+		}
+
+		// Reset end placeholders count and update placeholders
+		this.#noShiftGrid.resetEndPlaceholdersCount();
+		if (this.#shouldUpdatePlaceholders("clear")) {
+			this.#noShiftGrid.insertPlaceholderTiles();
+		}
+	}
+
+	/**
+	 * Handle grid filtered event
+	 */
+	#handleGridFiltered() {
+		if (!this.#isEnabled || !this.#noShiftGrid) {
+			return;
+		}
+
+		// Reset end placeholders count and update placeholders
+		this.#noShiftGrid.resetEndPlaceholdersCount();
+		if (this.#shouldUpdatePlaceholders("filter")) {
+			this.#noShiftGrid.insertPlaceholderTiles();
+		}
+	}
+
+	/**
+	 * Handle grid sorted event
+	 * @param {Object} data - Sort event data containing sortType
+	 */
+	#handleGridSorted(data) {
+		if (!this.#isEnabled || !this.#noShiftGrid) {
+			return;
+		}
+
+		const { sortType } = data || {};
+
+		// Delete placeholder tiles if not in date descending sort
+		if (sortType && sortType !== "date_desc") {
+			this.#noShiftGrid.deletePlaceholderTiles();
+		} else if (this.#shouldUpdatePlaceholders("sort")) {
+			this.#noShiftGrid.insertPlaceholderTiles();
+		}
+	}
+
+	/**
+	 * Handle grid unpaused event
+	 */
+	#handleGridUnpaused() {
+		if (!this.#isEnabled || !this.#noShiftGrid) {
+			return;
+		}
+
+		// Insert end placeholder tiles when unpaused
+		this.#noShiftGrid.insertEndPlaceholderTiles(0);
+		if (this.#shouldUpdatePlaceholders("unpause")) {
+			this.#noShiftGrid.insertPlaceholderTiles();
+		}
+	}
+
+	/**
 	 * Determine if placeholders should be updated for the given operation
 	 * @param {string} operation - The operation type
 	 * @returns {boolean}
@@ -86,7 +150,7 @@ class GridEventManager {
 		// and the operation affects grid layout
 		return (
 			this.#monitor._sortType === "date_desc" &&
-			["add", "remove", "clear", "filter", "sort", "pause"].includes(operation)
+			["add", "remove", "clear", "filter", "sort", "unpause"].includes(operation)
 		);
 	}
 
