@@ -37,9 +37,20 @@ class MonitorCore {
 	_isMasterMonitor = false; //True if the monitor is the master monitor
 
 	_fetchLimit = 100; //The fetch limit for the monitor
-	_visibleItemsCount = 0;
+	// Removed _visibleItemsCount - now using getter that delegates to VisibilityStateManager
+	_tabTitleTimer = null; // Timer for batching tab title updates
 
 	_channel = null;
+
+	// Single source of truth - delegate to VisibilityStateManager
+	get _visibleItemsCount() {
+		// For V3, use VisibilityStateManager; for V2, fall back to counting
+		if (this._visibilityStateManager) {
+			return this._visibilityStateManager.getCount();
+		}
+		// Fallback for V2 monitors that don't have VisibilityStateManager
+		return this._countVisibleItems();
+	}
 
 	constructor(monitorV3 = false) {
 		// Prevent direct instantiation of the abstract class
@@ -349,15 +360,38 @@ class MonitorCore {
 				count++;
 			}
 		}
-		this._visibleItemsCount = count;
+
+		// Update the single source of truth if available
+		if (this._visibilityStateManager) {
+			this._visibilityStateManager.setCount(count);
+		}
+
 		return count;
 	}
 
-	_updateTabTitle() {
-		const itemsCount = this._countVisibleItems();
+	/**
+	 * Initialize event listeners for tab title updates
+	 * This should be called after HookMgr is available
+	 */
+	_initializeTabTitleListener() {
+		if (this._hookMgr) {
+			// Listen to visibility count changes
+			this._hookMgr.hookBind("visibility:count-changed", (data) => {
+				this._updateTabTitle(data.count);
+			});
+		}
+	}
 
-		// Update the tab title
-		document.title = "VHNM (" + itemsCount + ")";
+	_updateTabTitle(count) {
+		// Batch tab title updates to avoid excessive DOM operations
+		clearTimeout(this._tabTitleTimer);
+		this._tabTitleTimer = setTimeout(() => {
+			// Use provided count or fall back to counting
+			const itemsCount = count !== undefined ? count : this._countVisibleItems();
+
+			// Update the tab title
+			document.title = "VHNM (" + itemsCount + ")";
+		}, 100); // 100ms delay for UI updates
 	}
 
 	// Helper method to preserve scroll position during DOM operations

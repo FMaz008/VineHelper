@@ -231,11 +231,13 @@ class NotificationMonitor extends MonitorCore {
 			this.#handlePauseClick();
 		} else {
 			//Can happen if the user click unpause while the feed is filling.
-			this._updateTabTitle();
-			// Don't emit event for hover pause - it's temporary and shouldn't affect placeholders
 		}
 
-		await this.#processNotificationSorting();
+		// Always emit event to update placeholders after fetching recent items
+		this.#emitGridEvent("grid:fetch-complete", { visibleCount: this._visibleItemsCount });
+
+		// Emit event to trigger sorting instead of calling directly
+		this.#emitGridEvent("grid:sort-needed");
 	}
 
 	/**
@@ -284,9 +286,6 @@ class NotificationMonitor extends MonitorCore {
 			this._itemsMgr.items = newItems;
 			this._itemsMgr.imageUrls = newImageUrls;
 		});
-
-		// Update the tab counter
-		this._updateTabTitle();
 	}
 
 	/**
@@ -560,7 +559,9 @@ class NotificationMonitor extends MonitorCore {
 		this._tpl.setVar("date_received", new Date());
 		this._tpl.setVar("date_sent", date);
 		this._tpl.setVar("date_displayed", this._formatDate(date));
-		this._tpl.setVar("feedPaused", this._feedPaused);
+		// Don't mark items as paused if we're fetching recent items
+		// This ensures they can be properly counted as visible
+		this._tpl.setVar("feedPaused", this._feedPaused && !this._fetchingRecentItems);
 		this._tpl.setVar("queue", queue);
 		this._tpl.setVar("description", escapeHTML(title));
 		this._tpl.setVar("reason", reason);
@@ -705,9 +706,9 @@ class NotificationMonitor extends MonitorCore {
 		//Apply the filters
 		const isVisible = this.#processNotificationFiltering(tileDOM);
 
-		//If we are paused, this will be called when unpausing the feed.
-		if (!this._feedPaused) {
-			this._updateTabTitle();
+		// Emit grid events during normal operation or when fetching recent items
+		// This ensures visibility counts are updated even when paused during fetch
+		if (!this._feedPaused || this._fetchingRecentItems) {
 			// Emit event for grid modification with count
 			this.#emitGridEvent("grid:items-added", { count: isVisible ? 1 : 0 });
 		}
@@ -773,7 +774,6 @@ class NotificationMonitor extends MonitorCore {
 		});
 		tile = null;
 
-		this._updateTabTitle(); // Update the tab counter
 		// Emit event for item removal with count
 		this.#emitGridEvent("grid:items-removed", { count: wasVisible ? 1 : 0 });
 	}
@@ -1028,8 +1028,8 @@ class NotificationMonitor extends MonitorCore {
 			if (this._sortType === TYPE_DATE_DESC && this._settings.get("notification.monitor.bump0ETV")) {
 				this._moveNotifToTop(notif);
 			} else {
-				// If sorting by price is active, just resort after identifying as zero ETV
-				this.#processNotificationSorting();
+				// If sorting by price is active, emit event to resort after identifying as zero ETV
+				this.#emitGridEvent("grid:sort-needed");
 			}
 		}
 	}
@@ -1351,7 +1351,6 @@ class NotificationMonitor extends MonitorCore {
 		this._gridContainer.querySelectorAll(".vvp-item-tile").forEach((node) => {
 			this.#processNotificationFiltering(node);
 		});
-		this._updateTabTitle();
 	}
 
 	#mouseoverHandler(e) {
@@ -1566,8 +1565,14 @@ class NotificationMonitor extends MonitorCore {
 					this._searchText = event.target.value;
 					// Apply search filter to all items
 					this.#applyFilteringToAllItems();
+					// Recalculate visible count after filtering
+					const newCount = this._countVisibleItems();
+					// Update the visibility state manager with new count
+					if (this._visibilityStateManager) {
+						this._visibilityStateManager.setCount(newCount);
+					}
 					// Emit event for filter change with visible count
-					this.#emitGridEvent("grid:items-filtered", { visibleCount: this._visibleItemsCount });
+					this.#emitGridEvent("grid:items-filtered", { visibleCount: newCount });
 				}, 750); // 300ms debounce delay
 			});
 		}
@@ -1580,7 +1585,6 @@ class NotificationMonitor extends MonitorCore {
 				this._preserveScrollPosition(() => {
 					this.#clearAllVisibleItems();
 				});
-				this._updateTabTitle();
 			}
 		});
 
@@ -1589,7 +1593,6 @@ class NotificationMonitor extends MonitorCore {
 		btnClearUnavailable.addEventListener("click", async (event) => {
 			if (confirm("Clear unavailable items?")) {
 				this.#clearUnavailableItems();
-				this._updateTabTitle();
 			}
 		});
 
@@ -1682,7 +1685,8 @@ class NotificationMonitor extends MonitorCore {
 		sortQueue.addEventListener("change", async (event) => {
 			this._sortType = sortQueue.value;
 			await this._settings.set("notification.monitor.sortType", this._sortType);
-			this.#processNotificationSorting();
+			// Emit event to trigger sorting instead of calling directly
+			this.#emitGridEvent("grid:sort-needed");
 			// Force immediate truncate when sort type changes
 			this.#autoTruncate(true);
 			// Emit sort event with sort type
@@ -1695,8 +1699,14 @@ class NotificationMonitor extends MonitorCore {
 			this._settings.set("notification.monitor.filterType", this._filterType);
 			//Display a specific type of notifications only
 			this.#applyFilteringToAllItems();
+			// Recalculate visible count after filtering
+			const newCount = this._countVisibleItems();
+			// Update the visibility state manager with new count
+			if (this._visibilityStateManager) {
+				this._visibilityStateManager.setCount(newCount);
+			}
 			// Emit event for filter change with visible count
-			this.#emitGridEvent("grid:items-filtered", { visibleCount: this._visibleItemsCount });
+			this.#emitGridEvent("grid:items-filtered", { visibleCount: newCount });
 		});
 
 		const filterQueue = document.querySelector("select[name='filter-queue']");
@@ -1705,8 +1715,14 @@ class NotificationMonitor extends MonitorCore {
 			this._settings.set("notification.monitor.filterQueue", this._filterQueue);
 			//Display a specific type of notifications only
 			this.#applyFilteringToAllItems();
+			// Recalculate visible count after filtering
+			const newCount = this._countVisibleItems();
+			// Update the visibility state manager with new count
+			if (this._visibilityStateManager) {
+				this._visibilityStateManager.setCount(newCount);
+			}
 			// Emit event for filter change with visible count
-			this.#emitGridEvent("grid:items-filtered", { visibleCount: this._visibleItemsCount });
+			this.#emitGridEvent("grid:items-filtered", { visibleCount: newCount });
 		});
 
 		const autoTruncateCheckbox = document.getElementById("auto-truncate");
@@ -1761,7 +1777,6 @@ class NotificationMonitor extends MonitorCore {
 					this.#processNotificationFiltering(node);
 				}
 			});
-			this._updateTabTitle();
 			// Only emit unpause event for manual unpause, not hover unpause
 			if (!isHoverPause) {
 				this.#emitGridEvent("grid:unpaused");

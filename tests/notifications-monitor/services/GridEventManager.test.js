@@ -9,7 +9,14 @@ describe("GridEventManager", () => {
 	let mockMonitor;
 	let mockVisibilityStateManager;
 
+	// Helper to flush pending timers for batched updates
+	const flushBatch = () => {
+		jest.runAllTimers();
+	};
+
 	beforeEach(() => {
+		// Use fake timers for testing batching
+		jest.useFakeTimers();
 		// Create a new DI container for each test
 		container = new DIContainer();
 
@@ -59,6 +66,18 @@ describe("GridEventManager", () => {
 		gridEventManager = container.resolve("gridEventManager");
 	});
 
+	afterEach(() => {
+		// Clear all timers after each test
+		jest.clearAllTimers();
+		jest.useRealTimers();
+	});
+
+	afterEach(() => {
+		// Clear all timers after each test
+		jest.clearAllTimers();
+		jest.useRealTimers();
+	});
+
 	describe("Event Registration", () => {
 		it("should register all grid event listeners on initialization", () => {
 			expect(mockHookMgr.hookBind).toHaveBeenCalledWith("grid:items-added", expect.any(Function));
@@ -68,7 +87,11 @@ describe("GridEventManager", () => {
 			expect(mockHookMgr.hookBind).toHaveBeenCalledWith("grid:truncated", expect.any(Function));
 			expect(mockHookMgr.hookBind).toHaveBeenCalledWith("grid:sorted", expect.any(Function));
 			expect(mockHookMgr.hookBind).toHaveBeenCalledWith("grid:unpaused", expect.any(Function));
-			expect(mockHookMgr.hookBind).toHaveBeenCalledTimes(7);
+			expect(mockHookMgr.hookBind).toHaveBeenCalledWith("grid:fetch-complete", expect.any(Function));
+			expect(mockHookMgr.hookBind).toHaveBeenCalledWith("grid:sort-needed", expect.any(Function));
+			expect(mockHookMgr.hookBind).toHaveBeenCalledWith("grid:resized", expect.any(Function));
+			expect(mockHookMgr.hookBind).toHaveBeenCalledWith("grid:initialized", expect.any(Function));
+			expect(mockHookMgr.hookBind).toHaveBeenCalledTimes(11);
 		});
 	});
 
@@ -97,6 +120,9 @@ describe("GridEventManager", () => {
 			const addHandler = mockHookMgr.hookBind.mock.calls.find((call) => call[0] === "grid:items-added")[1];
 			addHandler();
 
+			// Flush the batch timer
+			flushBatch();
+
 			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
 		});
 
@@ -105,6 +131,10 @@ describe("GridEventManager", () => {
 			addHandler({ count: 5 });
 
 			expect(mockVisibilityStateManager.increment).toHaveBeenCalledWith(5);
+
+			// Flush the batch timer
+			flushBatch();
+
 			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
 		});
 
@@ -113,6 +143,10 @@ describe("GridEventManager", () => {
 			removeHandler({ count: 3 });
 
 			expect(mockVisibilityStateManager.decrement).toHaveBeenCalledWith(3);
+
+			// Flush the batch timer
+			flushBatch();
+
 			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
 		});
 
@@ -131,6 +165,10 @@ describe("GridEventManager", () => {
 			truncateHandler({ fetchingRecentItems: true });
 
 			expect(mockNoShiftGrid.resetEndPlaceholdersCount).toHaveBeenCalled();
+
+			// Flush the batch timer
+			flushBatch();
+
 			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
 		});
 
@@ -139,6 +177,10 @@ describe("GridEventManager", () => {
 			truncateHandler({ visibleItemsRemovedCount: 10 });
 
 			expect(mockNoShiftGrid.insertEndPlaceholderTiles).toHaveBeenCalledWith(10);
+
+			// Flush the batch timer
+			flushBatch();
+
 			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
 		});
 
@@ -148,6 +190,10 @@ describe("GridEventManager", () => {
 
 			expect(mockVisibilityStateManager.decrement).toHaveBeenCalledWith(5);
 			expect(mockNoShiftGrid.insertEndPlaceholderTiles).toHaveBeenCalledWith(5);
+
+			// Flush the batch timer
+			flushBatch();
+
 			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
 		});
 
@@ -156,6 +202,10 @@ describe("GridEventManager", () => {
 			filterHandler();
 
 			expect(mockNoShiftGrid.resetEndPlaceholdersCount).toHaveBeenCalled();
+
+			// Flush the batch timer
+			flushBatch();
+
 			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
 		});
 
@@ -165,6 +215,10 @@ describe("GridEventManager", () => {
 
 			expect(mockVisibilityStateManager.setCount).toHaveBeenCalledWith(10);
 			expect(mockNoShiftGrid.resetEndPlaceholdersCount).toHaveBeenCalled();
+
+			// Flush the batch timer
+			flushBatch();
+
 			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
 		});
 
@@ -173,6 +227,10 @@ describe("GridEventManager", () => {
 			clearHandler();
 
 			expect(mockNoShiftGrid.resetEndPlaceholdersCount).toHaveBeenCalled();
+
+			// Flush the batch timer
+			flushBatch();
+
 			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
 		});
 
@@ -182,6 +240,10 @@ describe("GridEventManager", () => {
 
 			expect(mockVisibilityStateManager.decrement).toHaveBeenCalledWith(3);
 			expect(mockNoShiftGrid.resetEndPlaceholdersCount).toHaveBeenCalled();
+
+			// Flush the batch timer
+			flushBatch();
+
 			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
 		});
 
@@ -190,6 +252,57 @@ describe("GridEventManager", () => {
 			unpauseHandler();
 
 			expect(mockNoShiftGrid.insertEndPlaceholderTiles).toHaveBeenCalledWith(0);
+
+			// Flush the batch timer
+			flushBatch();
+
+			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
+		});
+
+		it("should update placeholders when fetch completes", () => {
+			const fetchCompleteHandler = mockHookMgr.hookBind.mock.calls.find(
+				(call) => call[0] === "grid:fetch-complete"
+			)[1];
+			fetchCompleteHandler({ visibleCount: 10 });
+
+			expect(mockVisibilityStateManager.setCount).toHaveBeenCalledWith(10);
+
+			// Flush the batch timer
+			flushBatch();
+
+			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
+		});
+
+		it("should handle fetch complete without visible count", () => {
+			const fetchCompleteHandler = mockHookMgr.hookBind.mock.calls.find(
+				(call) => call[0] === "grid:fetch-complete"
+			)[1];
+			fetchCompleteHandler({});
+
+			expect(mockVisibilityStateManager.setCount).not.toHaveBeenCalled();
+
+			// Flush the batch timer
+			flushBatch();
+
+			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
+		});
+
+		it("should reset end placeholders count on fetch complete", () => {
+			const fetchCompleteHandler = mockHookMgr.hookBind.mock.calls.find(
+				(call) => call[0] === "grid:fetch-complete"
+			)[1];
+
+			// Simulate accumulated end placeholders
+			mockNoShiftGrid._endPlaceholdersCount = 9;
+
+			fetchCompleteHandler({ visibleCount: 10 });
+
+			expect(mockNoShiftGrid.resetEndPlaceholdersCount).toHaveBeenCalled();
+			expect(mockVisibilityStateManager.setCount).toHaveBeenCalledWith(10);
+
+			// Flush the batch timer
+			flushBatch();
+
 			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
 		});
 
@@ -206,6 +319,10 @@ describe("GridEventManager", () => {
 			sortHandler({ sortType: "date_desc" });
 
 			expect(mockNoShiftGrid.deletePlaceholderTiles).not.toHaveBeenCalled();
+
+			// Flush the batch timer
+			flushBatch();
+
 			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
 		});
 	});
