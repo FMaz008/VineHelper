@@ -1,8 +1,7 @@
 import { PinnedListMgr } from "../PinnedListMgr.js";
 
 class PinMgr {
-
-    #getItemDOMElementCallback = null;
+	#getItemDOMElementCallback = null;
 
 	constructor() {
 		this._pinnedListMgr = new PinnedListMgr();
@@ -34,9 +33,9 @@ class PinMgr {
 		}
 	}
 
-	async pinItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID) {
+	async pinItem(asin, queue, title, thumbnail, isParentAsin, isPreRelease, enrollmentGUID) {
 		// Pin the item
-		this._pinnedListMgr.addItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID);
+		this._pinnedListMgr.addItem(asin, queue, title, thumbnail, isParentAsin, isPreRelease, enrollmentGUID);
 
 		// Update pin icon if this item was unpinned from another tab
 		const notif = this.#getItemDOMElementCallback(asin);

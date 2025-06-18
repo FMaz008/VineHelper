@@ -592,7 +592,15 @@ class NotificationMonitor extends MonitorCore {
 		if (this._settings.get("pinnedTab.active")) {
 			const isPinned = await this._pinMgr.checkIfPinned(asin);
 			if (isPinned) {
-				this._pinMgr.pinItem(asin, queue, title, img_url, is_parent_asin ? "true" : "false", enrollment_guid);
+				this._pinMgr.pinItem(
+					asin,
+					queue,
+					title,
+					img_url,
+					is_parent_asin ? "true" : "false",
+					is_pre_release ? "true" : "false",
+					enrollment_guid
+				);
 			}
 		}
 
@@ -1144,13 +1152,14 @@ class NotificationMonitor extends MonitorCore {
 			});
 		} else {
 			// Pin the item
-			const isParentAsin = target.dataset.isParentAsin;
+			const isParentAsin = target.dataset.isParentAsin === "true";
+			const isPreRelease = target.dataset.isPreRelease === "true";
 			const enrollmentGUID = target.dataset.enrollmentGuid;
 			const queue = target.dataset.queue;
 			const thumbnail = target.dataset.thumbnail;
 
 			// Update the icon
-			this._pinMgr.pinItem(asin, queue, title, thumbnail, isParentAsin, enrollmentGUID);
+			this._pinMgr.pinItem(asin, queue, title, thumbnail, isParentAsin, isPreRelease, enrollmentGUID);
 
 			this._displayToasterNotification({
 				title: `Item ${asin} pinned.`,
