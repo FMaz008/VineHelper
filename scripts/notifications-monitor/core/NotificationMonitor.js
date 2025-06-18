@@ -43,6 +43,8 @@ class NotificationMonitor extends MonitorCore {
 	_filterType = -1;
 	_sortType = TYPE_DATE_DESC;
 	_noShiftGrid = null;
+	_gridEventManager = null;
+	_visibilityStateManager = null;
 
 	#pinDebounceTimer = null;
 	#pinDebounceClickable = true;
@@ -53,6 +55,18 @@ class NotificationMonitor extends MonitorCore {
 		// Prevent direct instantiation of the abstract class
 		if (this.constructor === NotificationMonitor) {
 			throw new TypeError('Abstract class "NotificationMonitor" cannot be instantiated directly.');
+		}
+	}
+
+	/**
+	 * Emit a grid event if GridEventManager is available
+	 * @private
+	 * @param {string} eventName - The event name
+	 * @param {Object} data - Optional event data
+	 */
+	#emitGridEvent(eventName, data = null) {
+		if (this._gridEventManager) {
+			this._gridEventManager.emitGridEvent(eventName, data);
 		}
 	}
 
@@ -217,13 +231,13 @@ class NotificationMonitor extends MonitorCore {
 			this.#handlePauseClick();
 		} else {
 			//Can happen if the user click unpause while the feed is filling.
-			this._updateTabTitle();
-			if (this._noShiftGrid) {
-				this._noShiftGrid.insertPlaceholderTiles();
-			}
 		}
 
-		await this.#processNotificationSorting();
+		// Always emit event to update placeholders after fetching recent items
+		this.#emitGridEvent("grid:fetch-complete", { visibleCount: this._visibleItemsCount });
+
+		// Emit event to trigger sorting instead of calling directly
+		this.#emitGridEvent("grid:sort-needed");
 	}
 
 	/**
@@ -272,9 +286,6 @@ class NotificationMonitor extends MonitorCore {
 			this._itemsMgr.items = newItems;
 			this._itemsMgr.imageUrls = newImageUrls;
 		});
-
-		// Update the tab counter
-		this._updateTabTitle();
 	}
 
 	/**
@@ -332,16 +343,12 @@ class NotificationMonitor extends MonitorCore {
 
 					// Use bulk removal method with the optimized approach for large sets
 					this.#bulkRemoveItems(asinsToKeep, true);
-					//insert placeholder tiles to keep the grid elements fixed to their column
-					if (this._noShiftGrid) {
-						if (fetchingRecentItems) {
-							this._noShiftGrid.resetEndPlaceholdersCount();
-							this._noShiftGrid.insertPlaceholderTiles(); //Item count is calculated by the #bulkRemoveItems method calling this._updateTabTitle()
-						} else {
-							this._noShiftGrid.insertEndPlaceholderTiles(visibleItemsRemovedCount);
-							this._noShiftGrid.insertPlaceholderTiles(); //Item count is calculated by the #bulkRemoveItems method calling this._updateTabTitle()
-						}
-					}
+
+					// Emit truncation event with context
+					this.#emitGridEvent("grid:truncated", {
+						fetchingRecentItems,
+						visibleItemsRemovedCount,
+					});
 				}
 			}
 		};
@@ -373,7 +380,6 @@ class NotificationMonitor extends MonitorCore {
 			});
 			// Remove each visible item
 			this.#bulkRemoveItems(asins, false);
-			this._noShiftGrid.resetEndPlaceholdersCount();
 		});
 	}
 
@@ -381,22 +387,33 @@ class NotificationMonitor extends MonitorCore {
 	 * Clear all unavailable items from the monitor
 	 */
 	#clearUnavailableItems() {
-		// Get all unavailable ASINs
+		// Get all unavailable ASINs and count visible ones being removed
 		const unavailableAsins = new Set();
+		let visibleRemovedCount = 0;
+
 		this._itemsMgr.items.forEach((item, asin) => {
 			if (item.data.unavailable) {
 				unavailableAsins.add(asin);
+				// Check if this item is currently visible
+				if (item.element) {
+					let displayStyle;
+					if (this._env.isSafari()) {
+						displayStyle = window.getComputedStyle(item.element).display;
+					} else {
+						displayStyle = item.element.style.display;
+					}
+					if (displayStyle !== "none") {
+						visibleRemovedCount++;
+					}
+				}
 			}
 		});
 
 		// Use the bulk remove method, letting it decide the optimal approach
 		this.#bulkRemoveItems(unavailableAsins, false);
-		this._noShiftGrid.resetEndPlaceholdersCount();
 
-		// Re-insert placeholder tiles if the feature is enabled
-		if (this._noShiftGrid) {
-			this._noShiftGrid.insertPlaceholderTiles();
-		}
+		// Emit event for placeholder update with count of visible items removed
+		this.#emitGridEvent("grid:items-cleared", { count: visibleRemovedCount });
 	}
 
 	/**
@@ -542,7 +559,9 @@ class NotificationMonitor extends MonitorCore {
 		this._tpl.setVar("date_received", new Date());
 		this._tpl.setVar("date_sent", date);
 		this._tpl.setVar("date_displayed", this._formatDate(date));
-		this._tpl.setVar("feedPaused", this._feedPaused);
+		// Don't mark items as paused if we're fetching recent items
+		// This ensures they can be properly counted as visible
+		this._tpl.setVar("feedPaused", this._feedPaused && !this._fetchingRecentItems);
 		this._tpl.setVar("queue", queue);
 		this._tpl.setVar("description", escapeHTML(title));
 		this._tpl.setVar("reason", reason);
@@ -685,15 +704,13 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		//Apply the filters
-		this.#processNotificationFiltering(tileDOM);
+		const isVisible = this.#processNotificationFiltering(tileDOM);
 
-		//If we are paused, this will be called when unpausing the feed.
-		if (!this._feedPaused) {
-			this._updateTabTitle();
-			//If we are using the no-shift grid, make the grid element fix to their column
-			if (this._noShiftGrid) {
-				this._noShiftGrid.insertPlaceholderTiles();
-			}
+		// Emit grid events during normal operation or when fetching recent items
+		// This ensures visibility counts are updated even when paused during fetch
+		if (!this._feedPaused || this._fetchingRecentItems) {
+			// Emit event for grid modification with count
+			this.#emitGridEvent("grid:items-added", { count: isVisible ? 1 : 0 });
 		}
 
 		//Autotruncate the items if there are too many
@@ -730,6 +747,9 @@ class NotificationMonitor extends MonitorCore {
 			return;
 		}
 
+		// Check if tile was visible before removal
+		const wasVisible = tile.style.display !== "none";
+
 		// Get the item data to access its image URL
 		const item = this._itemsMgr.items.get(asin);
 		const imgUrl = item?.data?.img_url;
@@ -754,10 +774,8 @@ class NotificationMonitor extends MonitorCore {
 		});
 		tile = null;
 
-		this._updateTabTitle(); // Update the tab counter
-		if (this._noShiftGrid) {
-			this._noShiftGrid.insertPlaceholderTiles();
-		}
+		// Emit event for item removal with count
+		this.#emitGridEvent("grid:items-removed", { count: wasVisible ? 1 : 0 });
 	}
 
 	/**
@@ -1010,8 +1028,8 @@ class NotificationMonitor extends MonitorCore {
 			if (this._sortType === TYPE_DATE_DESC && this._settings.get("notification.monitor.bump0ETV")) {
 				this._moveNotifToTop(notif);
 			} else {
-				// If sorting by price is active, just resort after identifying as zero ETV
-				this.#processNotificationSorting();
+				// If sorting by price is active, emit event to resort after identifying as zero ETV
+				this.#emitGridEvent("grid:sort-needed");
 			}
 		}
 	}
@@ -1312,6 +1330,29 @@ class NotificationMonitor extends MonitorCore {
 		return false;
 	}
 
+	/**
+	 * Handle hover pause end - when mouse leaves or clicks occur
+	 * @private
+	 */
+	#handleHoverPauseEnd() {
+		if (this.#pausedByMouseoverSeeDetails) {
+			this.#pausedByMouseoverSeeDetails = false;
+			if (this._feedPaused) {
+				this.#handlePauseClick(true); // true = hover pause
+			}
+		}
+	}
+
+	/**
+	 * Apply filtering to all grid items
+	 * @private
+	 */
+	#applyFilteringToAllItems() {
+		this._gridContainer.querySelectorAll(".vvp-item-tile").forEach((node) => {
+			this.#processNotificationFiltering(node);
+		});
+	}
+
 	#mouseoverHandler(e) {
 		//Handle the See Details button
 		if (
@@ -1319,18 +1360,13 @@ class NotificationMonitor extends MonitorCore {
 				e.preventDefault();
 				if (!this._feedPaused) {
 					this.#pausedByMouseoverSeeDetails = true;
-					this.#handlePauseClick();
+					this.#handlePauseClick(true); // true = hover pause
 				}
 			})
 		)
 			return;
 
-		if (this.#pausedByMouseoverSeeDetails) {
-			this.#pausedByMouseoverSeeDetails = false;
-			if (this._feedPaused) {
-				this.#handlePauseClick();
-			}
-		}
+		this.#handleHoverPauseEnd();
 	}
 
 	/**
@@ -1339,12 +1375,7 @@ class NotificationMonitor extends MonitorCore {
 	 */
 	#clickHandler(e) {
 		//If we are using the mouseover pause feature, and the user clicks, we need to unpause the feed
-		if (this.#pausedByMouseoverSeeDetails) {
-			this.#pausedByMouseoverSeeDetails = false;
-			if (this._feedPaused) {
-				this.#handlePauseClick();
-			}
-		}
+		this.#handleHoverPauseEnd();
 
 		// If a user clicks on the link wrapper around an icon, it would navigate to the
 		// default href (which is usually #) which breaks several things. We'll fix this by
@@ -1533,14 +1564,15 @@ class NotificationMonitor extends MonitorCore {
 				this._searchDebounceTimer = setTimeout(() => {
 					this._searchText = event.target.value;
 					// Apply search filter to all items
-					this._gridContainer.querySelectorAll(".vvp-item-tile").forEach((node) => {
-						this.#processNotificationFiltering(node);
-					});
-					this._updateTabTitle();
-					if (this._noShiftGrid) {
-						this._noShiftGrid.resetEndPlaceholdersCount();
-						this._noShiftGrid.insertPlaceholderTiles();
+					this.#applyFilteringToAllItems();
+					// Recalculate visible count after filtering
+					const newCount = this._countVisibleItems();
+					// Update the visibility state manager with new count
+					if (this._visibilityStateManager) {
+						this._visibilityStateManager.setCount(newCount);
 					}
+					// Emit event for filter change with visible count
+					this.#emitGridEvent("grid:items-filtered", { visibleCount: newCount });
 				}, 750); // 300ms debounce delay
 			});
 		}
@@ -1553,7 +1585,6 @@ class NotificationMonitor extends MonitorCore {
 				this._preserveScrollPosition(() => {
 					this.#clearAllVisibleItems();
 				});
-				this._updateTabTitle();
 			}
 		});
 
@@ -1562,7 +1593,6 @@ class NotificationMonitor extends MonitorCore {
 		btnClearUnavailable.addEventListener("click", async (event) => {
 			if (confirm("Clear unavailable items?")) {
 				this.#clearUnavailableItems();
-				this._updateTabTitle();
 			}
 		});
 
@@ -1655,16 +1685,12 @@ class NotificationMonitor extends MonitorCore {
 		sortQueue.addEventListener("change", async (event) => {
 			this._sortType = sortQueue.value;
 			await this._settings.set("notification.monitor.sortType", this._sortType);
-			this.#processNotificationSorting();
+			// Emit event to trigger sorting instead of calling directly
+			this.#emitGridEvent("grid:sort-needed");
 			// Force immediate truncate when sort type changes
 			this.#autoTruncate(true);
-			if (this._noShiftGrid) {
-				if (this._sortType == TYPE_DATE_DESC) {
-					this._noShiftGrid.insertPlaceholderTiles();
-				} else {
-					this._noShiftGrid.deletePlaceholderTiles();
-				}
-			}
+			// Emit sort event with sort type
+			this.#emitGridEvent("grid:sorted", { sortType: this._sortType });
 		});
 
 		const filterType = document.querySelector("select[name='filter-type']");
@@ -1672,14 +1698,15 @@ class NotificationMonitor extends MonitorCore {
 			this._filterType = filterType.value;
 			this._settings.set("notification.monitor.filterType", this._filterType);
 			//Display a specific type of notifications only
-			this._gridContainer.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
-				this.#processNotificationFiltering(node);
-			});
-			this._updateTabTitle();
-			if (this._noShiftGrid) {
-				this._noShiftGrid.resetEndPlaceholdersCount();
-				this._noShiftGrid.insertPlaceholderTiles();
+			this.#applyFilteringToAllItems();
+			// Recalculate visible count after filtering
+			const newCount = this._countVisibleItems();
+			// Update the visibility state manager with new count
+			if (this._visibilityStateManager) {
+				this._visibilityStateManager.setCount(newCount);
 			}
+			// Emit event for filter change with visible count
+			this.#emitGridEvent("grid:items-filtered", { visibleCount: newCount });
 		});
 
 		const filterQueue = document.querySelector("select[name='filter-queue']");
@@ -1687,14 +1714,15 @@ class NotificationMonitor extends MonitorCore {
 			this._filterQueue = filterQueue.value;
 			this._settings.set("notification.monitor.filterQueue", this._filterQueue);
 			//Display a specific type of notifications only
-			this._gridContainer.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
-				this.#processNotificationFiltering(node);
-			});
-			this._updateTabTitle();
-			if (this._noShiftGrid) {
-				this._noShiftGrid.resetEndPlaceholdersCount();
-				this._noShiftGrid.insertPlaceholderTiles();
+			this.#applyFilteringToAllItems();
+			// Recalculate visible count after filtering
+			const newCount = this._countVisibleItems();
+			// Update the visibility state manager with new count
+			if (this._visibilityStateManager) {
+				this._visibilityStateManager.setCount(newCount);
 			}
+			// Emit event for filter change with visible count
+			this.#emitGridEvent("grid:items-filtered", { visibleCount: newCount });
 		});
 
 		const autoTruncateCheckbox = document.getElementById("auto-truncate");
@@ -1717,7 +1745,7 @@ class NotificationMonitor extends MonitorCore {
 	}
 
 	//Pause feed handler
-	#handlePauseClick() {
+	#handlePauseClick(isHoverPause = false) {
 		this._feedPaused = !this._feedPaused;
 		if (this._feedPaused) {
 			this._feedPausedAmountStored = 0;
@@ -1749,10 +1777,9 @@ class NotificationMonitor extends MonitorCore {
 					this.#processNotificationFiltering(node);
 				}
 			});
-			this._updateTabTitle();
-			if (this._noShiftGrid) {
-				this._noShiftGrid.insertEndPlaceholderTiles(0);
-				this._noShiftGrid.insertPlaceholderTiles();
+			// Only emit unpause event for manual unpause, not hover unpause
+			if (!isHoverPause) {
+				this.#emitGridEvent("grid:unpaused");
 			}
 		}
 	}

@@ -1,0 +1,370 @@
+/**
+ * GridEventManager - Manages grid modification events and automatically handles placeholder tiles
+ *
+ * This service implements an event-driven architecture to eliminate the need for manual
+ * insertPlaceholderTiles() calls scattered throughout the codebase.
+ *
+ * Events emitted:
+ * - 'grid:items-added' - When items are added to the grid
+ * - 'grid:items-removed' - When items are removed from the grid
+ * - 'grid:items-cleared' - When items are cleared from the grid
+ * - 'grid:items-filtered' - When items are filtered (search, type, queue)
+ * - 'grid:truncated' - When the grid is auto-truncated
+ * - 'grid:sorted' - When the grid sort order changes
+ * - 'grid:paused' - When the feed is paused/unpaused
+ */
+class GridEventManager {
+	#hookMgr;
+	#noShiftGrid;
+	#monitor;
+	#visibilityStateManager;
+	#isEnabled = true;
+
+	// Event batching properties
+	#batchedUpdates = new Map();
+	#batchTimer = null;
+	#batchDelay = 50; // milliseconds
+
+	constructor(hookMgr, noShiftGrid, monitor, visibilityStateManager) {
+		this.#hookMgr = hookMgr;
+		this.#noShiftGrid = noShiftGrid;
+		this.#monitor = monitor;
+		this.#visibilityStateManager = visibilityStateManager;
+
+		this.#setupEventListeners();
+	}
+
+	/**
+	 * Set up event listeners for grid modifications
+	 */
+	#setupEventListeners() {
+		// Listen for grid modification events
+		this.#hookMgr.hookBind("grid:items-added", (data) => this.#handleGridModification("add", data));
+		this.#hookMgr.hookBind("grid:items-removed", (data) => this.#handleGridModification("remove", data));
+		this.#hookMgr.hookBind("grid:items-cleared", (data) => this.#handleGridClear(data));
+		this.#hookMgr.hookBind("grid:items-filtered", (data) => this.#handleGridFiltered(data));
+		this.#hookMgr.hookBind("grid:truncated", (data) => this.#handleTruncation(data));
+		this.#hookMgr.hookBind("grid:sorted", (data) => this.#handleGridSorted(data));
+		this.#hookMgr.hookBind("grid:sort-needed", () => this.#handleSortNeeded());
+		this.#hookMgr.hookBind("grid:unpaused", () => this.#handleGridUnpaused());
+		this.#hookMgr.hookBind("grid:fetch-complete", (data) => this.#handleFetchComplete(data));
+		this.#hookMgr.hookBind("grid:resized", () => this.#handleGridResized());
+		this.#hookMgr.hookBind("grid:initialized", () => this.#handleGridInitialized());
+	}
+
+	/**
+	 * Handle grid modification events
+	 * @param {string} operation - The type of operation performed
+	 * @param {Object} data - Event data containing count information
+	 */
+	#handleGridModification(operation, data = {}) {
+		if (!this.#isEnabled || !this.#noShiftGrid) {
+			return;
+		}
+
+		// Update visibility count based on operation
+		if (this.#visibilityStateManager) {
+			if (operation === "add" && data.count) {
+				this.#visibilityStateManager.increment(data.count);
+			} else if (operation === "remove" && data.count) {
+				this.#visibilityStateManager.decrement(data.count);
+			}
+		}
+
+		// Only update placeholders for operations that affect grid layout
+		if (this.#shouldUpdatePlaceholders(operation)) {
+			this.#updatePlaceholders();
+		}
+	}
+
+	/**
+	 * Handle truncation events with special logic
+	 * @param {Object} data - Truncation event data
+	 */
+	#handleTruncation(data) {
+		if (!this.#isEnabled || !this.#noShiftGrid) {
+			return;
+		}
+
+		const { fetchingRecentItems, visibleItemsRemovedCount } = data || {};
+
+		if (fetchingRecentItems) {
+			this.#noShiftGrid.resetEndPlaceholdersCount();
+			this.#updatePlaceholders();
+		} else if (visibleItemsRemovedCount > 0) {
+			// Decrement visibility count by removed items
+			if (this.#visibilityStateManager) {
+				this.#visibilityStateManager.decrement(visibleItemsRemovedCount);
+			}
+			this.#noShiftGrid.insertEndPlaceholderTiles(visibleItemsRemovedCount);
+			this.#updatePlaceholders();
+		}
+	}
+
+	/**
+	 * Handle grid clear event
+	 * @param {Object} data - Clear event data containing count of visible items removed
+	 */
+	#handleGridClear(data = {}) {
+		if (!this.#isEnabled || !this.#noShiftGrid) {
+			return;
+		}
+
+		// Update visibility count based on items removed
+		if (this.#visibilityStateManager && data.count) {
+			this.#visibilityStateManager.decrement(data.count);
+		}
+
+		// Reset end placeholders count and update placeholders
+		this.#noShiftGrid.resetEndPlaceholdersCount();
+		if (this.#shouldUpdatePlaceholders("clear")) {
+			this.#updatePlaceholders();
+		}
+	}
+
+	/**
+	 * Handle grid filtered event
+	 * @param {Object} data - Filter event data containing new visible count
+	 */
+	#handleGridFiltered(data = {}) {
+		if (!this.#isEnabled || !this.#noShiftGrid) {
+			return;
+		}
+
+		// Update visibility count to new filtered count
+		if (this.#visibilityStateManager && data.visibleCount !== undefined) {
+			this.#visibilityStateManager.setCount(data.visibleCount);
+		}
+
+		// Reset end placeholders count and update placeholders
+		this.#noShiftGrid.resetEndPlaceholdersCount();
+		if (this.#shouldUpdatePlaceholders("filter")) {
+			this.#updatePlaceholders();
+		}
+	}
+
+	/**
+	 * Handle grid sorted event
+	 * @param {Object} data - Sort event data containing sortType
+	 */
+	#handleGridSorted(data) {
+		if (!this.#isEnabled || !this.#noShiftGrid) {
+			return;
+		}
+
+		const { sortType } = data || {};
+
+		// Delete placeholder tiles if not in date descending sort
+		if (sortType && sortType !== "date_desc") {
+			this.#noShiftGrid.deletePlaceholderTiles();
+		} else if (this.#shouldUpdatePlaceholders("sort")) {
+			this.#updatePlaceholders();
+		}
+	}
+
+	/**
+	 * Handle sort needed event - performs the actual sorting while preserving placeholders
+	 */
+	#handleSortNeeded() {
+		if (!this.#isEnabled || !this.#monitor) {
+			return;
+		}
+
+		const container = this.#monitor._gridContainer;
+		if (!container) return;
+		// Get current placeholder tiles before sorting
+		const placeholderTiles = Array.from(container.querySelectorAll(".vh-placeholder-tile"));
+
+		this.#monitor._preserveScrollPosition(() => {
+			// Sort the items - reuse the sorting logic from ItemsMgr
+			const sortedItems = this.#monitor._itemsMgr.sortItems();
+
+			// Only proceed if we have items
+			if (!sortedItems || sortedItems.length === 0) return;
+
+			// Filter out any items without DOM elements
+			const validItems = sortedItems.filter((item) => item.element);
+
+			// Create a DocumentFragment for better performance
+			const fragment = document.createDocumentFragment();
+
+			// Add items to fragment in sorted order
+			validItems.forEach((item) => {
+				if (item.element.parentNode) {
+					item.element.remove();
+				}
+				fragment.appendChild(item.element);
+			});
+
+			// Re-add placeholder tiles at the end
+			placeholderTiles.forEach((placeholder) => {
+				if (placeholder.parentNode) {
+					placeholder.remove();
+				}
+				fragment.appendChild(placeholder);
+			});
+
+			// Append all items and placeholders at once
+			container.appendChild(fragment);
+		});
+
+		// Emit sorted event to trigger any additional handling
+		this.#hookMgr.hookExecute("grid:sorted", { sortType: this.#monitor._sortType });
+	}
+
+	/**
+	 * Handle grid unpaused event
+	 */
+	#handleGridUnpaused() {
+		if (!this.#isEnabled || !this.#noShiftGrid) {
+			return;
+		}
+
+		// Insert end placeholder tiles when unpaused
+		this.#noShiftGrid.insertEndPlaceholderTiles(0);
+		if (this.#shouldUpdatePlaceholders("unpause")) {
+			this.#updatePlaceholders();
+		}
+	}
+
+	/**
+	 * Handle fetch complete event
+	 * @param {Object} data - Fetch complete event data containing visible count
+	 */
+	#handleFetchComplete(data = {}) {
+		if (!this.#isEnabled || !this.#noShiftGrid) {
+			return;
+		}
+
+		// Update visibility count if provided
+		if (this.#visibilityStateManager && data.visibleCount !== undefined) {
+			this.#visibilityStateManager.setCount(data.visibleCount);
+		}
+
+		// Reset end placeholders count after fetch completes
+		// This prevents accumulation of removed items affecting placeholder calculations
+		this.#noShiftGrid.resetEndPlaceholdersCount();
+
+		// Update placeholders after fetch completes
+		if (this.#shouldUpdatePlaceholders("fetch")) {
+			this.#updatePlaceholders();
+		}
+	}
+
+	/**
+	 * Handle grid resized event (window resize)
+	 */
+	#handleGridResized() {
+		if (!this.#isEnabled || !this.#noShiftGrid) {
+			return;
+		}
+
+		// Update placeholders after grid resize
+		// The resize event is already debounced in NoShiftGrid
+		if (this.#shouldUpdatePlaceholders("resize")) {
+			this.#updatePlaceholders();
+		}
+	}
+
+	/**
+	 * Handle grid initialized event (initial load)
+	 */
+	#handleGridInitialized() {
+		if (!this.#isEnabled || !this.#noShiftGrid) {
+			return;
+		}
+
+		// Insert initial placeholders
+		if (this.#shouldUpdatePlaceholders("init")) {
+			this.#updatePlaceholders();
+		}
+	}
+
+	/**
+	 * Determine if placeholders should be updated for the given operation
+	 * @param {string} operation - The operation type
+	 * @returns {boolean}
+	 */
+	#shouldUpdatePlaceholders(operation) {
+		// Only update placeholders if we're in date descending sort
+		// and the operation affects grid layout
+		return (
+			this.#monitor._sortType === "date_desc" &&
+			["add", "remove", "clear", "filter", "sort", "unpause", "fetch"].includes(operation)
+		);
+	}
+
+	/**
+	 * Emit a grid event
+	 * @param {string} eventName - The event name
+	 * @param {Object} data - Optional event data
+	 */
+	emitGridEvent(eventName, data = null) {
+		this.#hookMgr.hookExecute(eventName, data);
+	}
+
+	/**
+	 * Enable or disable automatic placeholder management
+	 * @param {boolean} enabled
+	 */
+	setEnabled(enabled) {
+		this.#isEnabled = enabled;
+	}
+
+	/**
+	 * Check if automatic placeholder management is enabled
+	 * @returns {boolean}
+	 */
+	isEnabled() {
+		return this.#isEnabled;
+	}
+
+	/**
+	 * Batch an update to prevent rapid consecutive updates
+	 * @param {string} updateType - Type of update (e.g., 'placeholder', 'visibility')
+	 * @param {Function} updateFn - Function to execute
+	 */
+	#batchUpdate(updateType, updateFn) {
+		// Store the update function
+		this.#batchedUpdates.set(updateType, updateFn);
+
+		// Clear existing timer
+		if (this.#batchTimer) {
+			clearTimeout(this.#batchTimer);
+		}
+
+		// Set new timer to process batch
+		this.#batchTimer = setTimeout(() => {
+			this.#processBatch();
+		}, this.#batchDelay);
+	}
+
+	/**
+	 * Process all batched updates
+	 */
+	#processBatch() {
+		// Execute all batched updates
+		for (const [updateType, updateFn] of this.#batchedUpdates) {
+			try {
+				updateFn();
+			} catch (error) {
+				console.error(`[GridEventManager] Error processing batched update '${updateType}':`, error);
+			}
+		}
+
+		// Clear the batch
+		this.#batchedUpdates.clear();
+		this.#batchTimer = null;
+	}
+
+	/**
+	 * Update placeholder tiles with batching
+	 */
+	#updatePlaceholders() {
+		this.#batchUpdate("placeholder", () => {
+			this.#noShiftGrid.insertPlaceholderTiles();
+		});
+	}
+}
+
+export { GridEventManager };

@@ -6,6 +6,8 @@ import { TileSizer } from "/scripts/ui/controllers/TileSizer.js";
 import { TierMgr } from "/scripts/notifications-monitor/services/TierMgr.js";
 import { NoShiftGrid } from "/scripts/notifications-monitor/services/NoShiftGrid.js";
 import { ErrorAlertManager } from "/scripts/notifications-monitor/services/ErrorAlertManager.js";
+import { GridEventManager } from "/scripts/notifications-monitor/services/GridEventManager.js";
+import { VisibilityStateManager } from "/scripts/notifications-monitor/services/VisibilityStateManager.js";
 import { DIContainer } from "/scripts/infrastructure/DIContainer.js";
 
 class NotificationMonitorV3 extends NotificationMonitor {
@@ -26,6 +28,9 @@ class NotificationMonitorV3 extends NotificationMonitor {
 
 		// New service uses DI
 		this._errorAlertManager = this.#container.resolve("errorAlertManager");
+
+		// Initialize VisibilityStateManager
+		this._visibilityStateManager = this.#container.resolve("visibilityStateManager");
 	}
 
 	/**
@@ -38,6 +43,31 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		this.#container.register("errorAlertManager", () => new ErrorAlertManager(), {
 			singleton: true,
 		});
+
+		// Register VisibilityStateManager as a singleton
+		// Manages visible items count with incremental updates
+		this.#container.register("visibilityStateManager", (hookMgr) => new VisibilityStateManager(hookMgr), {
+			singleton: true,
+			dependencies: ["hookMgr"],
+		});
+
+		// Register GridEventManager with its dependencies
+		// This demonstrates proper DI with dependency injection
+		this.#container.register(
+			"gridEventManager",
+			(hookMgr, noShiftGrid, monitor, visibilityStateManager) =>
+				new GridEventManager(hookMgr, noShiftGrid, monitor, visibilityStateManager),
+			{
+				singleton: true,
+				dependencies: ["hookMgr", "noShiftGrid", "monitor", "visibilityStateManager"],
+			}
+		);
+
+		// Register dependencies that GridEventManager needs
+		// These are registered as factories (not singletons) since they're provided externally
+		this.#container.register("hookMgr", () => this._hookMgr);
+		this.#container.register("noShiftGrid", () => this._noShiftGrid);
+		this.#container.register("monitor", () => this);
 
 		// Future services can be registered here as we migrate them
 		// Example for when TileSizer is migrated:
@@ -141,7 +171,15 @@ class NotificationMonitorV3 extends NotificationMonitor {
 			grid.style.gridTemplateColumns = `repeat(auto-fill,minmax(${width}px,auto))`;
 		}
 
-		this._updateTabTitle();
+		// Initialize the VisibilityStateManager with the current count
+		// This ensures placeholders show correctly on initial load
+		const initialCount = this._countVisibleItems();
+		if (this._visibilityStateManager && initialCount > 0) {
+			this._visibilityStateManager.setCount(initialCount);
+		}
+
+		// Initialize event-driven tab title updates
+		this._initializeTabTitleListener();
 
 		//Insert the header
 		const parentContainer = document.querySelector("div.vvp-tab-content");
@@ -217,7 +255,22 @@ class NotificationMonitorV3 extends NotificationMonitor {
 			!this._settings.get("notification.monitor.listView") &&
 			this._settings.get("general.tileSize.enabled")
 		) {
-			this._noShiftGrid = new NoShiftGrid(this);
+			this._noShiftGrid = new NoShiftGrid(this, this._visibilityStateManager);
+
+			// Update the dependency registrations with the actual instances
+			this.#container.register("noShiftGrid", () => this._noShiftGrid);
+
+			// Use DI container to resolve GridEventManager with its dependencies
+			this._gridEventManager = this.#container.resolve("gridEventManager");
+
+			// Insert initial placeholders after DOM is ready and grid has width
+			// Use setTimeout to ensure the grid container has been rendered and has width
+			setTimeout(() => {
+				if (this._noShiftGrid && this._gridContainer && this._gridContainer.offsetWidth > 0) {
+					// Emit event instead of direct call
+					this._hookMgr.hookExecute("grid:initialized");
+				}
+			}, 100);
 		}
 	}
 
@@ -272,6 +325,18 @@ class NotificationMonitorV3 extends NotificationMonitor {
 				return obj[prop];
 			},
 		});
+	}
+
+	/**
+	 * Update the tab title with the current visible items count
+	 * @override
+	 */
+	_updateTabTitle() {
+		// Get the current visible items count from VisibilityStateManager
+		const itemsCount = this._visibilityStateManager ? this._visibilityStateManager.getCount() : 0;
+
+		// Update the tab title to match parent implementation
+		document.title = "VHNM (" + itemsCount + ")";
 	}
 }
 

@@ -2,13 +2,14 @@ const TYPE_DATE_DESC = "date_desc";
 
 class NoShiftGrid {
 	_monitor = null;
+	_visibilityStateManager = null;
 	_gridWidth = 0;
 	_endPlaceholdersCount = 0;
 	_endPlaceholdersCountBuffer = 0;
-	_visibleItemsCount = 0;
 
-	constructor(monitorInstance) {
+	constructor(monitorInstance, visibilityStateManager) {
 		this._monitor = monitorInstance;
+		this._visibilityStateManager = visibilityStateManager;
 		this.#setupEventListener();
 		this.#calculateGridWidth();
 	}
@@ -19,9 +20,17 @@ class NoShiftGrid {
 	}
 
 	#setupEventListener() {
+		// Debounce resize events to avoid calculation during resize animation
+		let resizeTimer;
 		window.addEventListener("resize", () => {
-			this.#calculateGridWidth();
-			this.insertPlaceholderTiles(false);
+			clearTimeout(resizeTimer);
+			resizeTimer = setTimeout(() => {
+				this.#calculateGridWidth();
+				// Emit event instead of direct call to ensure proper batching
+				if (this._monitor && this._monitor._hookMgr) {
+					this._monitor._hookMgr.hookExecute("grid:resized");
+				}
+			}, 150); // Wait for resize animation to complete
 		});
 	}
 
@@ -53,15 +62,22 @@ class NoShiftGrid {
 			return;
 		}
 
+		// Ensure we have the current grid width
+		this.#calculateGridWidth();
+
+		// Don't proceed if grid has no width
+		if (this._gridWidth <= 0) {
+			return;
+		}
+
 		//Delete all placeholder tiles
 		this.deletePlaceholderTiles();
 
-		if (!this._monitor._feedPaused) {
-			this._visibleItemsCount = this._monitor._visibleItemsCount;
-		}
+		//Get the current visible items count
+		const visibleItemsCount = this._visibilityStateManager ? this._visibilityStateManager.getCount() : 0;
 
 		//Re-calculate the total number of items in the grid
-		const theoricalItemsCount = this._visibleItemsCount + this._endPlaceholdersCount;
+		const theoricalItemsCount = visibleItemsCount + this._endPlaceholdersCount;
 
 		//ToDo: Find a better way to precisely calculate the actual tile width (with 2 decimal places)
 		const tileWidth = this._monitor._settings.get("notification.monitor.tileSize.width") + 1;
@@ -71,11 +87,6 @@ class NoShiftGrid {
 
 		//Caculate the number of placeholder tiles we need to insert
 		const numPlaceholderTiles = (tilesPerRow - (theoricalItemsCount % tilesPerRow)) % tilesPerRow;
-
-		//console.log(
-		//	`gridWidth: ${this._gridWidth}, tileWidth: ${tileWidth}, tilesPerRow: ${tilesPerRow}, theoricalItemsCount: ${theoricalItemsCount}, numPlaceholderTiles: ${numPlaceholderTiles}`
-		//);
-		//console.trace();
 
 		//Insert the placeholder tiles
 		for (let i = 0; i < numPlaceholderTiles; i++) {

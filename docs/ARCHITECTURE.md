@@ -47,6 +47,8 @@ VineHelper is a browser extension that enhances the Amazon Vine experience. The 
     - Hook system for extensibility
     - Browser message passing
     - DOM event handling
+    - **GridEventManager** for centralized grid modifications (NEW)
+    - Event batching for performance optimization
 
 3. **Stream Processing**
     - `Streamy.js` provides functional stream processing
@@ -238,8 +240,21 @@ Based on the developer's wishlist and codebase analysis:
 - Monitoring the implementation in production
 - Gathering feedback on the DI approach
 
+### Completed (Phase 2)
+
+- Implemented event-driven architecture for notification monitor grid operations
+- Created GridEventManager service for centralized grid modification handling
+- Created VisibilityStateManager as single source of truth for item counts
+- Eliminated 10+ scattered `insertPlaceholderTiles()` calls
+- Added event batching for performance (50ms for placeholders, 100ms for tab title)
+- Fixed race conditions in visibility count management
+- Added comprehensive unit tests for new services
+- Made tab title updates fully event-driven (listens to `visibility:count-changed`)
+- Removed all direct `_updateTabTitle()` calls from NotificationMonitor
+
 ### Next Priority
 
 - Refactor Logger to use DI
 - Create adapters for other browser APIs
 - Update HiddenListMgr and PinnedListMgr
+- Add integration tests for grid operations

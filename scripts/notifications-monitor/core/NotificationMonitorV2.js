@@ -47,7 +47,15 @@ class NotificationMonitorV2 extends NotificationMonitor {
 
 		this.#broadcastChannel();
 
-		this._updateTabTitle();
+		// Initialize event-driven tab title updates
+		this._initializeTabTitleListener();
+
+		// Trigger initial tab title update via event
+		if (this._visibilityStateManager) {
+			// For V2, we need to count visible items and update the state
+			const initialCount = this._countVisibleItems();
+			this._visibilityStateManager.setCount(initialCount);
+		}
 
 		//Initial check of the status of services (service worker and WebSocket)
 		this._serverComMgr.updateServicesStatus();
