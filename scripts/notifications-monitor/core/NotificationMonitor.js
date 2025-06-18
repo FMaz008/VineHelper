@@ -231,8 +231,7 @@ class NotificationMonitor extends MonitorCore {
 		} else {
 			//Can happen if the user click unpause while the feed is filling.
 			this._updateTabTitle();
-			// Emit event instead of direct call
-			this.#emitGridEvent("grid:paused");
+			// Don't emit event for hover pause - it's temporary and shouldn't affect placeholders
 		}
 
 		await this.#processNotificationSorting();
@@ -1332,7 +1331,9 @@ class NotificationMonitor extends MonitorCore {
 
 		if (this.#pausedByMouseoverSeeDetails) {
 			this.#pausedByMouseoverSeeDetails = false;
-			if (this._feedPaused) {
+			// Don't toggle pause state if there's a manual pause active
+			// The hover pause should not interfere with manual pause
+			if (!this._feedPaused) {
 				this.#handlePauseClick();
 			}
 		}
@@ -1346,7 +1347,9 @@ class NotificationMonitor extends MonitorCore {
 		//If we are using the mouseover pause feature, and the user clicks, we need to unpause the feed
 		if (this.#pausedByMouseoverSeeDetails) {
 			this.#pausedByMouseoverSeeDetails = false;
-			if (this._feedPaused) {
+			// Don't toggle pause state if there's a manual pause active
+			// The hover pause should not interfere with manual pause
+			if (!this._feedPaused) {
 				this.#handlePauseClick();
 			}
 		}
@@ -1763,6 +1766,7 @@ class NotificationMonitor extends MonitorCore {
 			if (this._noShiftGrid) {
 				this._noShiftGrid.insertEndPlaceholderTiles(0);
 			}
+			// Only emit pause event for manual pause, not hover pause
 			this.#emitGridEvent("grid:paused");
 		}
 	}
