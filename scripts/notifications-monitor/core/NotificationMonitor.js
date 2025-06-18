@@ -392,6 +392,11 @@ class NotificationMonitor extends MonitorCore {
 		// Use the bulk remove method, letting it decide the optimal approach
 		this.#bulkRemoveItems(unavailableAsins, false);
 		this._noShiftGrid.resetEndPlaceholdersCount();
+
+		// Re-insert placeholder tiles if the feature is enabled
+		if (this._noShiftGrid) {
+			this._noShiftGrid.insertPlaceholderTiles();
+		}
 	}
 
 	/**
