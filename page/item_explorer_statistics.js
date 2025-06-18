@@ -8,6 +8,19 @@ import { SettingsMgr } from "/scripts/core/services/SettingsMgrCompat.js";
 const Settings = new SettingsMgr();
 
 import { Chart, registerables } from "/scripts/vendor/chart.js/dist/chart.js";
+
+//If browser is firefox, load icon_firefox.css
+if (navigator.userAgent.includes("Firefox")) {
+	document.head.innerHTML += `<link rel="stylesheet" type="text/css" href="../resource/css/icon_firefox.css" />`;
+}
+//If the browser is chrome, load icon_chrome.css
+if (navigator.userAgent.includes("Chrome") || navigator.userAgent.includes("Chromium")) {
+	document.head.innerHTML += `<link rel="stylesheet" type="text/css" href="../resource/css/icon_chrome.css" />`;
+}
+if (navigator.userAgent.includes("Safari")) {
+	document.head.innerHTML += `<link rel="stylesheet" type="text/css" href="../resource/css/icon_ios.css" />`;
+}
+
 // Register required components
 Chart.register(...registerables);
 
