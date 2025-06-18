@@ -57,6 +57,18 @@ class NotificationMonitor extends MonitorCore {
 		}
 	}
 
+	/**
+	 * Emit a grid event if GridEventManager is available
+	 * @private
+	 * @param {string} eventName - The event name
+	 * @param {Object} data - Optional event data
+	 */
+	#emitGridEvent(eventName, data = null) {
+		if (this._gridEventManager) {
+			this._gridEventManager.emitGridEvent(eventName, data);
+		}
+	}
+
 	//###################################################################
 	// DOM element related methods
 	//###################################################################
@@ -220,9 +232,7 @@ class NotificationMonitor extends MonitorCore {
 			//Can happen if the user click unpause while the feed is filling.
 			this._updateTabTitle();
 			// Emit event instead of direct call
-			if (this._gridEventManager) {
-				this._gridEventManager.emitGridEvent("grid:paused");
-			}
+			this.#emitGridEvent("grid:paused");
 		}
 
 		await this.#processNotificationSorting();
@@ -336,12 +346,10 @@ class NotificationMonitor extends MonitorCore {
 					this.#bulkRemoveItems(asinsToKeep, true);
 
 					// Emit truncation event with context
-					if (this._gridEventManager) {
-						this._gridEventManager.emitGridEvent("grid:truncated", {
-							fetchingRecentItems,
-							visibleItemsRemovedCount,
-						});
-					}
+					this.#emitGridEvent("grid:truncated", {
+						fetchingRecentItems,
+						visibleItemsRemovedCount,
+					});
 				}
 			}
 		};
@@ -396,9 +404,7 @@ class NotificationMonitor extends MonitorCore {
 		if (this._noShiftGrid) {
 			this._noShiftGrid.resetEndPlaceholdersCount();
 		}
-		if (this._gridEventManager) {
-			this._gridEventManager.emitGridEvent("grid:items-cleared");
-		}
+		this.#emitGridEvent("grid:items-cleared");
 	}
 
 	/**
@@ -693,9 +699,7 @@ class NotificationMonitor extends MonitorCore {
 		if (!this._feedPaused) {
 			this._updateTabTitle();
 			// Emit event for grid modification
-			if (this._gridEventManager) {
-				this._gridEventManager.emitGridEvent("grid:items-added");
-			}
+			this.#emitGridEvent("grid:items-added");
 		}
 
 		//Autotruncate the items if there are too many
@@ -758,9 +762,7 @@ class NotificationMonitor extends MonitorCore {
 
 		this._updateTabTitle(); // Update the tab counter
 		// Emit event for item removal
-		if (this._gridEventManager) {
-			this._gridEventManager.emitGridEvent("grid:items-removed");
-		}
+		this.#emitGridEvent("grid:items-removed");
 	}
 
 	/**
@@ -1544,9 +1546,7 @@ class NotificationMonitor extends MonitorCore {
 					if (this._noShiftGrid) {
 						this._noShiftGrid.resetEndPlaceholdersCount();
 					}
-					if (this._gridEventManager) {
-						this._gridEventManager.emitGridEvent("grid:items-filtered");
-					}
+					this.#emitGridEvent("grid:items-filtered");
 				}, 750); // 300ms debounce delay
 			});
 		}
@@ -1671,9 +1671,7 @@ class NotificationMonitor extends MonitorCore {
 				}
 			}
 			// Emit sort event
-			if (this._gridEventManager) {
-				this._gridEventManager.emitGridEvent("grid:sorted");
-			}
+			this.#emitGridEvent("grid:sorted");
 		});
 
 		const filterType = document.querySelector("select[name='filter-type']");
@@ -1689,9 +1687,7 @@ class NotificationMonitor extends MonitorCore {
 			if (this._noShiftGrid) {
 				this._noShiftGrid.resetEndPlaceholdersCount();
 			}
-			if (this._gridEventManager) {
-				this._gridEventManager.emitGridEvent("grid:items-filtered");
-			}
+			this.#emitGridEvent("grid:items-filtered");
 		});
 
 		const filterQueue = document.querySelector("select[name='filter-queue']");
@@ -1707,9 +1703,7 @@ class NotificationMonitor extends MonitorCore {
 			if (this._noShiftGrid) {
 				this._noShiftGrid.resetEndPlaceholdersCount();
 			}
-			if (this._gridEventManager) {
-				this._gridEventManager.emitGridEvent("grid:items-filtered");
-			}
+			this.#emitGridEvent("grid:items-filtered");
 		});
 
 		const autoTruncateCheckbox = document.getElementById("auto-truncate");
@@ -1769,9 +1763,7 @@ class NotificationMonitor extends MonitorCore {
 			if (this._noShiftGrid) {
 				this._noShiftGrid.insertEndPlaceholderTiles(0);
 			}
-			if (this._gridEventManager) {
-				this._gridEventManager.emitGridEvent("grid:paused");
-			}
+			this.#emitGridEvent("grid:paused");
 		}
 	}
 }
