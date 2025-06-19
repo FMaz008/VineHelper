@@ -75,6 +75,58 @@ class NotificationMonitor extends MonitorCore {
 	//###################################################################
 
 	/**
+	 * Get the appropriate display style for tiles based on monitor version
+	 * @returns {string} - "block" for V2, "flex" for V3
+	 */
+	#getTileDisplayStyle() {
+		return this._monitorV2 ? "block" : "flex";
+	}
+
+	/**
+	 * Check if an element is visible, handling Safari compatibility
+	 * @param {HTMLElement} element - The element to check
+	 * @returns {boolean} - True if the element is visible, false otherwise
+	 */
+	#isElementVisible(element) {
+		if (!element) return false;
+
+		if (this._env.isSafari()) {
+			return window.getComputedStyle(element).display !== "none";
+		} else {
+			return element.style.display !== "none";
+		}
+	}
+
+	/**
+	 * Handle visibility change detection and emit appropriate grid events
+	 * @param {HTMLElement} element - The element to check and process
+	 * @param {boolean} wasVisible - The visibility state before the change
+	 */
+	#handleVisibilityChange(element, wasVisible) {
+		// Re-apply filtering and check if visibility changed
+		const isNowVisible = this.#processNotificationFiltering(element);
+
+		// Emit grid event if visibility changed
+		if (wasVisible !== isNowVisible) {
+			this.#emitGridEvent(isNowVisible ? "grid:items-added" : "grid:items-removed", { count: 1 });
+		}
+
+		return isNowVisible;
+	}
+
+	/**
+	 * Update visible count after filtering and emit appropriate events
+	 */
+	#updateVisibleCountAfterFiltering() {
+		// Recalculate visible count after filtering
+		const newCount = this._countVisibleItems();
+		// Update the visibility state manager with new count (V3 only)
+		this._visibilityStateManager?.setCount(newCount);
+		// Emit event for filter change with visible count
+		this.#emitGridEvent("grid:items-filtered", { visibleCount: newCount });
+	}
+
+	/**
 	 * Determine if the item should be displayed based on the filters settings. Will hide the item if it doesn't match the filters.
 	 * @param {object} node - The DOM element of the tile
 	 * @returns {boolean} - Doesn't mean anything.
@@ -120,18 +172,18 @@ class NotificationMonitor extends MonitorCore {
 			}
 		}
 
+		const displayStyle = this.#getTileDisplayStyle();
+
 		if (this._filterType == -1) {
-			node.style.display = this._monitorV2 ? "block" : "flex";
+			node.style.display = displayStyle;
 		} else if (this._filterType == TYPE_HIGHLIGHT_OR_ZEROETV) {
-			node.style.display =
-				notificationTypeZeroETV || notificationTypeHighlight ? (this._monitorV2 ? "block" : "flex") : "none";
+			node.style.display = notificationTypeZeroETV || notificationTypeHighlight ? displayStyle : "none";
 		} else if (this._filterType == TYPE_HIGHLIGHT) {
-			node.style.display = notificationTypeHighlight ? (this._monitorV2 ? "block" : "flex") : "none";
+			node.style.display = notificationTypeHighlight ? displayStyle : "none";
 		} else if (this._filterType == TYPE_ZEROETV) {
-			node.style.display = notificationTypeZeroETV ? (this._monitorV2 ? "block" : "flex") : "none";
+			node.style.display = notificationTypeZeroETV ? displayStyle : "none";
 		} else if (this._filterType == TYPE_REGULAR) {
-			node.style.display =
-				!notificationTypeZeroETV && !notificationTypeHighlight ? (this._monitorV2 ? "block" : "flex") : "none";
+			node.style.display = !notificationTypeZeroETV && !notificationTypeHighlight ? displayStyle : "none";
 		}
 
 		//Queue filter
@@ -145,7 +197,7 @@ class NotificationMonitor extends MonitorCore {
 			if (this._filterQueue == "-1") {
 				return true;
 			} else {
-				node.style.display = queueType == this._filterQueue ? (this._monitorV2 ? "block" : "flex") : "none";
+				node.style.display = queueType == this._filterQueue ? this.#getTileDisplayStyle() : "none";
 				return queueType == this._filterQueue;
 			}
 		} else {
@@ -246,6 +298,9 @@ class NotificationMonitor extends MonitorCore {
 	 * @param {boolean} isKeepSet - If true, keep the items in the array and delete all other items, otherwise remove them
 	 */
 	#bulkRemoveItems(arrASINs, isKeepSet = false) {
+		// Count visible items being removed before the operation
+		let visibleRemovedCount = 0;
+
 		this._preserveScrollPosition(() => {
 			// Always use the optimized container replacement approach
 			// Create a new empty container
@@ -255,7 +310,7 @@ class NotificationMonitor extends MonitorCore {
 			const newItems = new Map();
 			const newImageUrls = new Set();
 
-			// Efficiently process all items
+			// Efficiently process all items in a single loop
 			this._itemsMgr.items.forEach((item, asin) => {
 				const shouldKeep = isKeepSet ? arrASINs.has(asin) : !arrASINs.has(asin);
 
@@ -267,6 +322,11 @@ class NotificationMonitor extends MonitorCore {
 					// Keep track of the image URL for duplicate detection
 					if (item.data.img_url && this._settings.get("notification.monitor.hideDuplicateThumbnail")) {
 						newImageUrls.add(item.data.img_url);
+					}
+				} else if (!shouldKeep && item.element) {
+					// Count visible items being removed
+					if (this.#isElementVisible(item.element)) {
+						visibleRemovedCount++;
 					}
 				}
 			});
@@ -286,6 +346,11 @@ class NotificationMonitor extends MonitorCore {
 			this._itemsMgr.items = newItems;
 			this._itemsMgr.imageUrls = newImageUrls;
 		});
+
+		// Emit event if any visible items were removed
+		if (visibleRemovedCount > 0) {
+			this.#emitGridEvent("grid:items-removed", { count: visibleRemovedCount });
+		}
 	}
 
 	/**
@@ -324,14 +389,7 @@ class NotificationMonitor extends MonitorCore {
 
 					//Count how many of the items to be removed are visible
 					for (let i = max; i < itemsArray.length; i++) {
-						let displayStyle;
-						if (this._env.isSafari()) {
-							const computedStyle = window.getComputedStyle(itemsArray[i].element);
-							displayStyle = computedStyle.display;
-						} else {
-							displayStyle = itemsArray[i].element.style.display;
-						}
-						if (displayStyle !== "none") {
+						if (this.#isElementVisible(itemsArray[i].element)) {
 							visibleItemsRemovedCount++;
 						}
 					}
@@ -368,52 +426,34 @@ class NotificationMonitor extends MonitorCore {
 	 * Clear all visible items from the monitor
 	 */
 	#clearAllVisibleItems() {
-		this._preserveScrollPosition(() => {
-			// Get the asin of all visible items
-			const visibleItems = this._gridContainer.querySelectorAll(".vvp-item-tile:not([style*='display: none'])");
-			const asins = new Set();
-			visibleItems.forEach((item) => {
-				const asin = item.dataset.asin;
-				if (asin) {
-					asins.add(asin);
-				}
-			});
-			// Remove each visible item
-			this.#bulkRemoveItems(asins, false);
+		// Get the asin of all visible items
+		const visibleItems = this._gridContainer.querySelectorAll(".vvp-item-tile:not([style*='display: none'])");
+		const asins = new Set();
+		visibleItems.forEach((item) => {
+			const asin = item.dataset.asin;
+			if (asin) {
+				asins.add(asin);
+			}
 		});
+		// Remove each visible item - bulkRemoveItems handles scroll preservation and event emission
+		this.#bulkRemoveItems(asins, false);
 	}
 
 	/**
 	 * Clear all unavailable items from the monitor
 	 */
 	#clearUnavailableItems() {
-		// Get all unavailable ASINs and count visible ones being removed
+		// Get all unavailable ASINs
 		const unavailableAsins = new Set();
-		let visibleRemovedCount = 0;
 
 		this._itemsMgr.items.forEach((item, asin) => {
 			if (item.data.unavailable) {
 				unavailableAsins.add(asin);
-				// Check if this item is currently visible
-				if (item.element) {
-					let displayStyle;
-					if (this._env.isSafari()) {
-						displayStyle = window.getComputedStyle(item.element).display;
-					} else {
-						displayStyle = item.element.style.display;
-					}
-					if (displayStyle !== "none") {
-						visibleRemovedCount++;
-					}
-				}
 			}
 		});
 
-		// Use the bulk remove method, letting it decide the optimal approach
+		// Use the bulk remove method - it will handle counting and event emission
 		this.#bulkRemoveItems(unavailableAsins, false);
-
-		// Emit event for placeholder update with count of visible items removed
-		this.#emitGridEvent("grid:items-cleared", { count: visibleRemovedCount });
 	}
 
 	/**
@@ -499,6 +539,10 @@ class NotificationMonitor extends MonitorCore {
 			const element = this._itemsMgr.getItemDOMElement(asin);
 			if (element) {
 				this._log.add(`NOTIF: Item ${asin} already exists, updating RecommendationId.`);
+
+				// Check visibility before update
+				const wasVisible = this.#isElementVisible(element);
+
 				// Update the data
 				this._itemsMgr.addItemData(asin, item.data);
 
@@ -513,6 +557,10 @@ class NotificationMonitor extends MonitorCore {
 				if (!item.data.unavailable) {
 					this._enableItem(element); //Return the DOM element of the tile.
 				}
+
+				// Handle visibility change and emit events if needed
+				this.#handleVisibilityChange(element, wasVisible);
+
 				return element;
 			}
 		}
@@ -748,7 +796,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Check if tile was visible before removal
-		const wasVisible = tile.style.display !== "none";
+		const wasVisible = this.#isElementVisible(tile);
 
 		// Get the item data to access its image URL
 		const item = this._itemsMgr.items.get(asin);
@@ -907,6 +955,9 @@ class NotificationMonitor extends MonitorCore {
 			return false;
 		}
 
+		// Check visibility before update
+		const wasVisible = this.#isElementVisible(notif);
+
 		// Update the DOM element
 		notif.dataset.tier = tier;
 		const vvpDetailsBtn = notif.querySelector(".vvp-details-btn");
@@ -914,7 +965,8 @@ class NotificationMonitor extends MonitorCore {
 			vvpDetailsBtn.dataset.tier = tier;
 		}
 
-		this.#processNotificationFiltering(notif);
+		// Handle visibility change and emit events if needed
+		this.#handleVisibilityChange(notif, wasVisible);
 
 		return true;
 	}
@@ -1565,14 +1617,8 @@ class NotificationMonitor extends MonitorCore {
 					this._searchText = event.target.value;
 					// Apply search filter to all items
 					this.#applyFilteringToAllItems();
-					// Recalculate visible count after filtering
-					const newCount = this._countVisibleItems();
-					// Update the visibility state manager with new count
-					if (this._visibilityStateManager) {
-						this._visibilityStateManager.setCount(newCount);
-					}
-					// Emit event for filter change with visible count
-					this.#emitGridEvent("grid:items-filtered", { visibleCount: newCount });
+					// Update visible count and emit events
+					this.#updateVisibleCountAfterFiltering();
 				}, 750); // 300ms debounce delay
 			});
 		}
@@ -1699,30 +1745,18 @@ class NotificationMonitor extends MonitorCore {
 			this._settings.set("notification.monitor.filterType", this._filterType);
 			//Display a specific type of notifications only
 			this.#applyFilteringToAllItems();
-			// Recalculate visible count after filtering
-			const newCount = this._countVisibleItems();
-			// Update the visibility state manager with new count
-			if (this._visibilityStateManager) {
-				this._visibilityStateManager.setCount(newCount);
-			}
-			// Emit event for filter change with visible count
-			this.#emitGridEvent("grid:items-filtered", { visibleCount: newCount });
+			// Update visible count and emit events
+			this.#updateVisibleCountAfterFiltering();
 		});
 
 		const filterQueue = document.querySelector("select[name='filter-queue']");
 		filterQueue.addEventListener("change", (event) => {
 			this._filterQueue = filterQueue.value;
 			this._settings.set("notification.monitor.filterQueue", this._filterQueue);
-			//Display a specific type of notifications only
+			//Display a specific queue only
 			this.#applyFilteringToAllItems();
-			// Recalculate visible count after filtering
-			const newCount = this._countVisibleItems();
-			// Update the visibility state manager with new count
-			if (this._visibilityStateManager) {
-				this._visibilityStateManager.setCount(newCount);
-			}
-			// Emit event for filter change with visible count
-			this.#emitGridEvent("grid:items-filtered", { visibleCount: newCount });
+			// Update visible count and emit events
+			this.#updateVisibleCountAfterFiltering();
 		});
 
 		const autoTruncateCheckbox = document.getElementById("auto-truncate");
@@ -1771,12 +1805,20 @@ class NotificationMonitor extends MonitorCore {
 			}
 			document.getElementById("pauseFeed").value = "Pause & Buffer Feed";
 			document.getElementById("pauseFeed-fixed").value = "Pause & Buffer Feed";
+			// Check if any items were actually marked as paused (legacy code path)
+			// In current implementation, items don't get marked with feedPaused="true"
 			this._gridContainer.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
 				if (node.dataset.feedPaused == "true") {
 					node.dataset.feedPaused = "false";
 					this.#processNotificationFiltering(node);
 				}
 			});
+
+			// Update visibility count after unpause
+			// The original code called _updateTabTitle() which would recalculate counts
+			const newCount = this._countVisibleItems();
+			this._visibilityStateManager?.setCount(newCount);
+
 			// Only emit unpause event for manual unpause, not hover unpause
 			if (!isHoverPause) {
 				this.#emitGridEvent("grid:unpaused");
