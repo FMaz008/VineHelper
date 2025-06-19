@@ -66,7 +66,9 @@ class NotificationMonitorV3 extends NotificationMonitor {
 
 		//Delete all the scripts
 		document.querySelectorAll("head script, body script").forEach((elem) => {
-			elem.remove();
+			if (!elem.matches('script[data-a-state=\'{"key":"vvp-context"}\']')) {
+				elem.remove();
+			}
 		});
 
 		//Remove any pre-existing VH header if the extension was reloaded
