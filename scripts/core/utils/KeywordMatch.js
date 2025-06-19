@@ -25,6 +25,7 @@ function compileKeyword(word) {
 			return {
 				regex: new RegExp(pattern, "iu"),
 				withoutRegex: null,
+				hasEtvCondition: false, // String keywords never have ETV conditions
 			};
 		} else if (typeof word === "object" && word.contains) {
 			// New data format where keywords are objects
@@ -40,6 +41,7 @@ function compileKeyword(word) {
 			return {
 				regex: containsRegex,
 				withoutRegex: withoutRegex,
+				hasEtvCondition: word.etv_min !== "" || word.etv_max !== "",
 			};
 		}
 	} catch (error) {
@@ -187,4 +189,31 @@ function keywordMatch(keywords, title, etv_min = null, etv_max = null) {
 	return found === undefined ? false : found;
 }
 
-export { keywordMatch, keywordMatchReturnFullObject, precompileKeywords };
+/**
+ * Checks if any keywords in the array have ETV conditions
+ * @param {Array} keywords - The keywords array
+ * @returns {boolean} True if any keyword has ETV conditions
+ */
+function hasAnyEtvConditions(keywords) {
+	// Check if already compiled
+	if (!compiledKeywordCache.has(keywords)) {
+		// Not compiled yet, do a quick check on raw keywords
+		return keywords.some((word) => {
+			return typeof word === "object" && (word.etv_min !== "" || word.etv_max !== "");
+		});
+	}
+
+	// Check compiled cache
+	const cache = compiledKeywordCache.get(keywords);
+	if (!cache) return false;
+
+	// Check if any compiled keyword has ETV conditions
+	for (const compiled of cache.values()) {
+		if (compiled.hasEtvCondition) {
+			return true;
+		}
+	}
+	return false;
+}
+
+export { keywordMatch, keywordMatchReturnFullObject, precompileKeywords, hasAnyEtvConditions };

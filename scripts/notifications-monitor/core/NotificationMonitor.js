@@ -5,7 +5,7 @@
 import { Tile } from "/scripts/ui/components/Tile.js";
 
 import { YMDHiStoISODate } from "/scripts/core/utils/DateHelper.js";
-import { keywordMatch } from "/scripts/core/utils/KeywordMatch.js";
+import { keywordMatch, hasAnyEtvConditions } from "/scripts/core/utils/KeywordMatch.js";
 import { escapeHTML, unescapeHTML, removeSpecialHTML } from "/scripts/core/utils/StringHelper.js";
 import { MonitorCore } from "/scripts/notifications-monitor/core/MonitorCore.js";
 import { Item } from "/scripts/core/models/Item.js";
@@ -754,7 +754,7 @@ class NotificationMonitor extends MonitorCore {
 		this._tpl.setVar("date_displayed", this._formatDate(date));
 		// Don't mark items as paused if we're fetching recent items
 		// This ensures they can be properly counted as visible
-		this._tpl.setVar("feedPaused", this._feedPaused);
+		this._tpl.setVar("feedPaused", this._feedPaused && !this._fetchingRecentItems);
 		this._tpl.setVar("queue", queue);
 		this._tpl.setVar("description", escapeHTML(title));
 		this._tpl.setVar("reason", reason);
@@ -847,12 +847,8 @@ class NotificationMonitor extends MonitorCore {
 			this._feedPausedAmountStored++;
 			document.getElementById("pauseFeed").value = `Resume Feed (${this._feedPausedAmountStored})`;
 			document.getElementById("pauseFeed-fixed").value = `Resume Feed (${this._feedPausedAmountStored})`;
-
-			//Sleep for 1 frame to allow the value to be updated
-			if (this._feedPausedAmountStored % 20 == 0) {
-				await new Promise((resolve) => requestAnimationFrame(resolve));
-				//await new Promise((resolve) => setTimeout(resolve, 1));
-			}
+			//sleep for 5ms to allow the value to be updated
+			//await new Promise((resolve) => setTimeout(resolve, 1));
 		}
 
 		//Process the item according to the notification type (highlight > 0etv > regular)
@@ -910,7 +906,7 @@ class NotificationMonitor extends MonitorCore {
 
 		// Emit grid events during normal operation or when fetching recent items
 		// This ensures visibility counts are updated even when paused during fetch
-		if (!this._feedPaused) {
+		if (!this._feedPaused || this._fetchingRecentItems) {
 			// Emit event for grid modification with count
 			this.#emitGridEvent("grid:items-added", { count: isVisible ? 1 : 0 });
 		}
@@ -1032,40 +1028,62 @@ class NotificationMonitor extends MonitorCore {
 			}
 		}
 
-		//If a new ETV came in, we want to check if the item now match a keywords with an ETV condition.
-		//If the item is already highlighted, we don't need to check if we need to highlight it or hide it.
-		let skipHighlightCheck = notif.dataset.typeHighlight == 1;
-		if (!skipHighlightCheck) {
-			//No need to re-highlight if the item is already highlighted.
-			//We don't want to highlight an item that is getting its ETV set initially (processAsZeroETVFound==false) before another pass of highlighting will be done shortly after.
+		//If a new ETV came in, we want to check if the item now matches keywords with an ETV condition.
+		//Only re-evaluate keyword matches if there are keywords with ETV conditions
+		const highlightKeywords = this._settings.get("general.highlightKeywords");
+		const hideKeywords = this._settings.get("general.hideKeywords");
+		const hasHighlightEtvConditions = hasAnyEtvConditions(highlightKeywords);
+		const hasHideEtvConditions = hasAnyEtvConditions(hideKeywords);
+
+		// Skip keyword evaluation if no keywords have ETV conditions and item already evaluated
+		if (!hasHighlightEtvConditions && !hasHideEtvConditions && oldMaxValue !== "") {
+			// No keywords have ETV conditions, skip re-evaluation
+		} else {
 			const title = notif.querySelector(".a-truncate-full").innerText;
 			if (title) {
-				//Check if we need to highlight the item now what we have an ETV
-				const val = await keywordMatch(
-					this._settings.get("general.highlightKeywords"),
-					title,
-					etvObj.dataset.etvMin,
-					etvObj.dataset.etvMax
-				);
-
-				if (val !== false) {
-					//We got a keyword match, highlight the item
-					const technicalBtn = this._gridContainer.querySelector("#vh-reason-link-" + asin + ">div");
-					if (technicalBtn) {
-						technicalBtn.dataset.highlightkw = val;
-					}
-					this.#highlightedItemFound(
-						notif,
-						this._settings.get("notification.monitor.highlight.sound") != "0"
-					);
-				} else if (this._settings.get("notification.hideList")) {
-					//Check if we need to hide the item
-					const val2 = await keywordMatch(
-						this._settings.get("general.hideKeywords"),
+				// Only check highlight keywords if they have ETV conditions or this is first evaluation
+				if (hasHighlightEtvConditions || oldMaxValue === "") {
+					//Check if we need to highlight the item now that we have an ETV
+					const val = await keywordMatch(
+						highlightKeywords,
 						title,
 						etvObj.dataset.etvMin,
 						etvObj.dataset.etvMax
 					);
+
+					if (val !== false) {
+						//We got a keyword match, highlight the item
+						const technicalBtn = this._gridContainer.querySelector("#vh-reason-link-" + asin + ">div");
+						if (technicalBtn) {
+							technicalBtn.dataset.highlightkw = val;
+						}
+						// Only call highlightedItemFound if not already highlighted to avoid duplicate sounds
+						if (notif.dataset.typeHighlight != 1) {
+							this.#highlightedItemFound(
+								notif,
+								this._settings.get("notification.monitor.highlight.sound") != "0" && oldMaxValue == ""
+							);
+						} else {
+							// Already highlighted, just ensure the flag is set
+							notif.dataset.typeHighlight = 1;
+						}
+					} else {
+						// No keyword match, clear highlight flag if it was set
+						if (notif.dataset.typeHighlight == 1) {
+							notif.dataset.typeHighlight = 0;
+							// Clear the technical button highlight data
+							const technicalBtn = this._gridContainer.querySelector("#vh-reason-link-" + asin + ">div");
+							if (technicalBtn) {
+								delete technicalBtn.dataset.highlightkw;
+							}
+						}
+					}
+				}
+
+				// Only check hide keywords if enabled and they have ETV conditions or first evaluation
+				if (this._settings.get("notification.hideList") && (hasHideEtvConditions || oldMaxValue === "")) {
+					//Check if we need to hide the item
+					const val2 = await keywordMatch(hideKeywords, title, etvObj.dataset.etvMin, etvObj.dataset.etvMax);
 					if (val2 !== false) {
 						//Remove (permanently "hide") the tile
 						this._log.add(`NOTIF: Item ${asin} matched hide keyword ${val2}. Hidding it.`);
@@ -1075,9 +1093,18 @@ class NotificationMonitor extends MonitorCore {
 			}
 		}
 
-		//zero ETV found, highlight the item accordingly
-		if (oldMaxValue == "" && parseFloat(etvObj.dataset.etvMin) == 0) {
-			this.#zeroETVItemFound(notif, this._settings.get("notification.monitor.zeroETV.sound") != "0");
+		//zero ETV found, update the type accordingly
+		if (parseFloat(etvObj.dataset.etvMin) == 0) {
+			// Always mark as zero ETV when we detect it, regardless of previous state
+			notif.dataset.typeZeroETV = 1;
+
+			// Only play sound and move to top if this is the first time we're detecting zero ETV
+			if (oldMaxValue == "") {
+				this.#zeroETVItemFound(notif, this._settings.get("notification.monitor.zeroETV.sound") != "0");
+			}
+		} else {
+			// Not zero ETV, ensure the flag is cleared
+			notif.dataset.typeZeroETV = 0;
 		}
 
 		//Set the highlight color as needed
