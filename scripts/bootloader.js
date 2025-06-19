@@ -1498,6 +1498,10 @@ window.addEventListener("message", async function (event) {
 			const params = JSON.parse(decodeURIComponent(arrMatches2[1]));
 			generateCheckoutForm(params.asin, params.promotionId, params.offerListingId);
 		}
+
+		if (Settings.isPremiumUser(2) && Settings.get("general.forceTango")) {
+			window.postMessage({ type: "forceTango" }, "/"); //Post to inj.js
+		}
 	}
 });
 

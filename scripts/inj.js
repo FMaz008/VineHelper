@@ -2,6 +2,7 @@ const origFetch = window.fetch;
 var extHelper_LastParentVariant = null;
 var extHelper_responseData = {};
 var extHelper_postData = {};
+var forceTango = false;
 
 const scriptTag = document.currentScript;
 const countryCode = scriptTag.getAttribute("data-country-code");
@@ -12,6 +13,8 @@ window.fetch = async (...args) => {
 	let regex = null;
 
 	const url = args[0] || "";
+
+	//Voice Orders API
 	if (url.startsWith("api/voiceOrders")) {
 		extHelper_postData = JSON.parse(args[1].body);
 		const asin = extHelper_postData.itemAsin;
@@ -75,6 +78,7 @@ window.fetch = async (...args) => {
 		return response;
 	}
 
+	//See Details modal window
 	regex = /^api\/recommendations\/.*$/;
 	if (url.startsWith("api/recommendations")) {
 		try {
@@ -156,6 +160,11 @@ window.fetch = async (...args) => {
 				},
 				"/" //message should be sent to the same origin as the current document.
 			);
+		}
+
+		//isTangoEligible workaround
+		if (forceTango && result.asinTangoEligible !== undefined) {
+			extHelper_responseData.result.asinTangoEligible = false; //Forcing to false use the classic checkout process.
 		}
 
 		//Amazon checkout process
@@ -278,3 +287,10 @@ if (typeof opts !== "undefined") {
 	let opts = { obfuscatedMarketId: ue_mid, customerId: fwcimData.customerId };
 	window.postMessage({ type: "websiteOpts", data: opts }, "/");
 }
+
+//Listen for a message from the content script
+window.addEventListener("message", (event) => {
+	if (event.data.type == "forceTango") {
+		forceTango = true;
+	}
+});
