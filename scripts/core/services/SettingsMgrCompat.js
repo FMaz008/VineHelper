@@ -9,7 +9,8 @@
  * 2. With:import { SettingsMgr } from "./SettingsMgrCompat.js"
  */
 
-import { getSettingsManager } from "/scripts/infrastructure/SettingsFactory.js";
+// Use relative import for better testability
+import { getSettingsManager } from "../../infrastructure/SettingsFactory.js";
 
 // Create a singleton-like class that delegates to the DI instance
 class SettingsMgr {

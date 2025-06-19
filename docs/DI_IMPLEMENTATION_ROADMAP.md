@@ -136,6 +136,10 @@ class ListRepository {
 
 ### PR 4: Keyword Matching Service
 
+**Note:** The keyword matching logic has already been optimized with pre-compilation
+(see [KEYWORD_PRECOMPILATION.md](./KEYWORD_PRECOMPILATION.md)). This PR would focus
+on wrapping the existing optimized implementation in a DI-friendly service.
+
 ```javascript
 // Extract from various components
 class KeywordMatchingService {
@@ -144,11 +148,14 @@ class KeywordMatchingService {
 	}
 
 	matches(text, keywords) {
-		// Pure business logic, easily testable
+		// Wraps the existing keywordMatch function
+		// Already optimized with automatic pre-compilation
+		return keywordMatch(keywords, text);
 	}
 
 	getMatchType(text, keywords) {
 		// Returns 'title', 'description', 'both', or null
+		// Can leverage the existing keywordMatchReturnFullObject
 	}
 }
 ```

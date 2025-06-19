@@ -44,6 +44,19 @@ Consolidated tracking of planned improvements and optimizations:
 - Code quality improvements and technical debt
 - Feature enhancements and implementation priorities
 
+### [KEYWORD_PRECOMPILATION.md](./KEYWORD_PRECOMPILATION.md)
+
+Implementation details for keyword optimization system:
+
+- Regex pre-compilation for performance
+- Settings array caching to prevent memory allocations
+- WeakMap caching strategy
+- Performance improvements and testing
+- Automatic pre-compilation on first use
+- Manual pre-compilation for startup optimization
+- Architecture decisions and rationale
+- Testing strategies and code examples
+
 ## Related Documentation
 
 - **Infrastructure Components**: See [`../scripts/infrastructure/README.md`](../scripts/infrastructure/README.md) for detailed documentation on the DI container and storage adapters

@@ -3,8 +3,14 @@
 import { Streamy } from "/scripts/core/utils/Streamy.js";
 import { SettingsMgr } from "/scripts/core/services/SettingsMgrCompat.js";
 import { keywordMatch } from "/scripts/core/utils/KeywordMatch.js";
+import { precompileAllKeywords } from "/scripts/core/utils/KeywordPrecompiler.js";
 import { Item } from "/scripts/core/models/Item.js";
 var Settings = new SettingsMgr();
+
+// Pre-compile keywords when settings are loaded
+Settings.waitForLoad().then(() => {
+	precompileAllKeywords(Settings, "NewItemStreamProcessing");
+});
 var outputFunctions = {
 	broadcast: () => {},
 	push: () => {},

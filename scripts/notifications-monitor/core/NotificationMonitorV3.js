@@ -80,6 +80,10 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		// Wait for settings to load before proceeding
 		await this._settings.waitForLoad();
 
+		// Pre-compile all keyword regex patterns after settings are loaded
+		const { precompileAllKeywords } = await import("/scripts/core/utils/KeywordPrecompiler.js");
+		precompileAllKeywords(this._settings, "NotificationMonitorV3");
+
 		if (this._settings.get("notification.monitor.listView")) {
 			this._itemTemplateFile = "tile_listview.html";
 		} else {
