@@ -26,6 +26,7 @@ class Environment {
 	data = {};
 
 	#UUIDRequestFailed = false;
+	#vvpContext = null;
 
 	constructor() {
 		if (Environment.#instance) {
@@ -236,15 +237,25 @@ class Environment {
 	#readTierLevel() {
 		let status;
 		try {
-			status =
-				JSON.parse(document.querySelector(`script[data-a-state='{"key":"vvp-context"}']`).innerHTML)
-					?.voiceDetails.tierStatus == "TIER2"
-					? "gold"
-					: "silver";
+			const vvpContext = this.#readVVPContext();
+			status = vvpContext?.voiceDetails.tierStatus == "TIER2" ? "gold" : "silver";
 		} catch (err) {
 			status = null;
 		}
 		return status;
+	}
+
+	#readVVPContext() {
+		try {
+			if (this.#vvpContext === null) {
+				this.#vvpContext = JSON.parse(
+					document.querySelector(`script[data-a-state='{"key":"vvp-context"}']`).innerHTML
+				);
+			}
+			return this.#vvpContext;
+		} catch (err) {
+			return {};
+		}
 	}
 
 	getSilverTierLimit() {
@@ -260,6 +271,15 @@ class Environment {
 		const match = rawText.match(regex);
 		if (match) {
 			return parseFloat(match[1]);
+		}
+	}
+
+	isAmazonCheckoutEnabled() {
+		try {
+			const vvpContext = this.#readVVPContext();
+			return vvpContext?.isCheckoutEnabled;
+		} catch (err) {
+			return false;
 		}
 	}
 
