@@ -754,7 +754,7 @@ class NotificationMonitor extends MonitorCore {
 		this._tpl.setVar("date_displayed", this._formatDate(date));
 		// Don't mark items as paused if we're fetching recent items
 		// This ensures they can be properly counted as visible
-		this._tpl.setVar("feedPaused", this._feedPaused && !this._fetchingRecentItems);
+		this._tpl.setVar("feedPaused", this._feedPaused);
 		this._tpl.setVar("queue", queue);
 		this._tpl.setVar("description", escapeHTML(title));
 		this._tpl.setVar("reason", reason);
@@ -847,8 +847,12 @@ class NotificationMonitor extends MonitorCore {
 			this._feedPausedAmountStored++;
 			document.getElementById("pauseFeed").value = `Resume Feed (${this._feedPausedAmountStored})`;
 			document.getElementById("pauseFeed-fixed").value = `Resume Feed (${this._feedPausedAmountStored})`;
-			//sleep for 5ms to allow the value to be updated
-			//await new Promise((resolve) => setTimeout(resolve, 1));
+
+			//Sleep for 1 frame to allow the value to be updated
+			if (this._feedPausedAmountStored % 20 == 0) {
+				await new Promise((resolve) => requestAnimationFrame(resolve));
+				//await new Promise((resolve) => setTimeout(resolve, 1));
+			}
 		}
 
 		//Process the item according to the notification type (highlight > 0etv > regular)
@@ -906,7 +910,7 @@ class NotificationMonitor extends MonitorCore {
 
 		// Emit grid events during normal operation or when fetching recent items
 		// This ensures visibility counts are updated even when paused during fetch
-		if (!this._feedPaused || this._fetchingRecentItems) {
+		if (!this._feedPaused) {
 			// Emit event for grid modification with count
 			this.#emitGridEvent("grid:items-added", { count: isVisible ? 1 : 0 });
 		}
