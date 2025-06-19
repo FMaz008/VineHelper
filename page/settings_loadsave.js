@@ -250,6 +250,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("general.modalNavigation");
 	manageCheckboxSetting("general.searchOpenModal");
 	manageCheckboxSetting("general.listView");
+	manageCheckboxSetting("general.forceTango");
 	manageCheckboxSetting("general.scrollToRFY");
 	manageCheckboxSetting("general.hideOptOutButton");
 	manageCheckboxSetting("general.hideRecommendations");

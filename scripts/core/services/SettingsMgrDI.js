@@ -280,6 +280,7 @@ export class SettingsMgrDI {
 				displayVariantIcon: false,
 				displayVariantButton: false,
 				fingerprint: null,
+				forceTango: false, //if true, force isTangoEligible to false
 				GDPRPopup: true,
 				hiddenItemsCacheSize: 4,
 				hideCategoriesRFYAFA: false,
