@@ -15,6 +15,7 @@ Comprehensive overview of the VineHelper architecture, including:
 - Event-driven architecture patterns
 - Visibility state management guidelines
 - Safari compatibility requirements
+- **Memory leak prevention patterns and guidelines**
 
 ### [DEPENDENCY_INJECTION_MIGRATION.md](./DEPENDENCY_INJECTION_MIGRATION.md)
 
@@ -34,9 +35,19 @@ Detailed roadmap for completing the DI refactoring:
 - Code examples for each phase
 - Success metrics and review checklist
 
+### [FUTURE_IMPROVEMENTS.md](./FUTURE_IMPROVEMENTS.md)
+
+Consolidated tracking of planned improvements and optimizations:
+
+- Performance optimizations (visibility caching, event batching)
+- Architectural improvements (DI completion, refactoring plans)
+- Code quality improvements and technical debt
+- Feature enhancements and implementation priorities
+
 ## Related Documentation
 
 - **Infrastructure Components**: See [`../scripts/infrastructure/README.md`](../scripts/infrastructure/README.md) for detailed documentation on the DI container and storage adapters
+- **Memory Debugging**: See [`../scripts/notifications-monitor/debug/README.md`](../scripts/notifications-monitor/debug/README.md) for memory debugger usage
 - **Project README**: See the root [`../README.md`](../README.md) for general project information and setup instructions
 
 ## Documentation Standards

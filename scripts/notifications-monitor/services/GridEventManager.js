@@ -365,6 +365,30 @@ class GridEventManager {
 			this.#noShiftGrid.insertPlaceholderTiles();
 		});
 	}
+
+	/**
+	 * Clean up resources and remove event listeners
+	 */
+	destroy() {
+		// Clear any pending batch timer
+		if (this.#batchTimer) {
+			clearTimeout(this.#batchTimer);
+			this.#batchTimer = null;
+		}
+
+		// Clear batched updates
+		this.#batchedUpdates.clear();
+
+		// Note: We don't unbind hooks here because HookMgr doesn't provide
+		// an unbind method. This is a limitation that should be addressed
+		// in HookMgr itself. For now, we'll clear our references.
+
+		// Clear references
+		this.#hookMgr = null;
+		this.#noShiftGrid = null;
+		this.#monitor = null;
+		this.#visibilityStateManager = null;
+	}
 }
 
 export { GridEventManager };

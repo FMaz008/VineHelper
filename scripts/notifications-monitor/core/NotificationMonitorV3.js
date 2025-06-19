@@ -290,19 +290,16 @@ class NotificationMonitorV3 extends NotificationMonitor {
 	#preventRedirections() {
 		//Prevent redirections
 		//This is working but will display a popup in the browser
-		window.addEventListener(
-			"beforeunload",
-			(event) => {
-				this._hookMgr.hookExecute("beforeunload");
-				event.stopPropagation();
-				event.preventDefault();
-				event.returnValue = "";
+		this._beforeUnloadHandler = (event) => {
+			this._hookMgr.hookExecute("beforeunload");
+			event.stopPropagation();
+			event.preventDefault();
+			event.returnValue = "";
 
-				console.log("Page unload prevented");
-				return false;
-			},
-			true
-		);
+			console.log("Page unload prevented");
+			return false;
+		};
+		window.addEventListener("beforeunload", this._beforeUnloadHandler, true);
 
 		// Create a proxy for window.location
 		// Not sure this is working at all.
@@ -337,6 +334,25 @@ class NotificationMonitorV3 extends NotificationMonitor {
 
 		// Update the tab title to match parent implementation
 		document.title = "VHNM (" + itemsCount + ")";
+	}
+
+	/**
+	 * Clean up all event listeners and references
+	 * @override
+	 */
+	destroy() {
+		console.log("🧹 Destroying NotificationMonitorV3...");
+
+		// Remove V3-specific beforeunload listener
+		if (this._beforeUnloadHandler) {
+			window.removeEventListener("beforeunload", this._beforeUnloadHandler, true);
+			this._beforeUnloadHandler = null;
+		}
+
+		// Call parent destroy to clean up all inherited event listeners
+		super.destroy();
+
+		console.log("✅ NotificationMonitorV3 cleanup complete");
 	}
 }
 
