@@ -8,7 +8,8 @@
  * - Can be gradually adopted throughout the codebase
  */
 
-import { Logger } from "/scripts/core/utils/Logger.js";
+// Use relative import for better testability
+import { Logger } from "../utils/Logger.js";
 
 export class SettingsMgrDI {
 	#storageAdapter;
@@ -17,6 +18,7 @@ export class SettingsMgrDI {
 	#settings;
 	#isLoaded = false;
 	#loadPromise;
+	#arrayCache = new Map();
 
 	constructor(storageAdapter, logger = new Logger()) {
 		this.#storageAdapter = storageAdapter;
@@ -58,11 +60,26 @@ export class SettingsMgrDI {
 	}
 
 	get(settingPath, undefinedReturnDefault = true) {
+		// Check if this is a keyword array that should be cached
+		const keywordPaths = ["general.highlightKeywords", "general.hideKeywords", "general.blurKeywords"];
+
+		if (keywordPaths.includes(settingPath)) {
+			// Return cached array reference if available
+			if (this.#arrayCache.has(settingPath)) {
+				return this.#arrayCache.get(settingPath);
+			}
+		}
+
 		let answer = this.#getFromObject(this.#settings, settingPath);
 
 		// If the value is not found in the settings, check if we should return the default value
 		if (answer == undefined && undefinedReturnDefault) {
 			answer = this.#getFromObject(this.#defaultSettings, settingPath);
+		}
+
+		// Cache keyword arrays to ensure same reference is returned
+		if (keywordPaths.includes(settingPath) && Array.isArray(answer)) {
+			this.#arrayCache.set(settingPath, answer);
 		}
 
 		return answer;
@@ -98,6 +115,12 @@ export class SettingsMgrDI {
 		// Set the final value
 		current[lastKey] = value;
 
+		// Clear array cache for keyword paths when they are updated
+		const keywordPaths = ["general.highlightKeywords", "general.hideKeywords", "general.blurKeywords"];
+		if (keywordPaths.includes(settingPath)) {
+			this.#arrayCache.delete(settingPath);
+		}
+
 		await this.#save();
 		return true;
 	}
@@ -121,6 +144,15 @@ export class SettingsMgrDI {
 
 	async #loadSettingsFromStorage(skipMigration = false) {
 		const settings = await this.#storageAdapter.get("settings");
+
+		// Only clear array cache if settings actually changed
+		const settingsChanged = JSON.stringify(settings) !== JSON.stringify(this.#settings);
+		if (settingsChanged) {
+			if (typeof process === "undefined" || process.env.NODE_ENV !== "test") {
+				console.log(`[SettingsMgrDI] Settings changed, clearing array cache`);
+			}
+			this.#arrayCache.clear();
+		}
 
 		// If no settings exist already, create the default ones
 		if (!settings || Object.keys(settings).length === 0) {
