@@ -39,6 +39,19 @@ body {
 	font-family: "Segoe UI", Tahoma, sans-serif;
 	font-size: 75%;
 }
+
+/* Screen reader only - for accessibility */
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
 /* #################################### */
 /* TABS */
 /* #################################### */
@@ -293,7 +306,7 @@ input.dualslider[type="range"]::-webkit-slider-thumb {
 }
 
 input.dualslider[type="range"]::-moz-range-thumb {
-	-webkit-appearance: none;
+	-moz-appearance: none;
 	pointer-events: all;
 	width: 16px;
 	height: 16px;
@@ -308,10 +321,10 @@ input.dualslider[type="range"]::-webkit-slider-thumb:hover {
 }
 
 input.dualslider[type="range"]::-webkit-slider-thumb:active {
-	box-shadow:
+	-webkit-box-shadow:
 		inset 0 0 3px #387bbe,
 		0 0 9px #387bbe;
-	-webkit-box-shadow:
+	box-shadow:
 		inset 0 0 3px #387bbe,
 		0 0 9px #387bbe;
 }
