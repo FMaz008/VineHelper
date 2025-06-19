@@ -112,6 +112,8 @@ env.data.marketplaceId = null;
 env.data.customerId = null;
 
 var notificationMonitor = null;
+var promotionId = null; //Amazon checkout process
+var checkoutAsin = null; //Amazon checkout process
 
 //Do not run the extension if ultraviner is running
 if (!ultraviner) {
@@ -518,6 +520,7 @@ async function initFlushTplCache() {
 			compareVersion(Settings.get("general.versionInfoPopup", false), env.data.appVersion) >
 			VERSION_REVISION_CHANGE
 		) {
+			/*
 			//First installs don't need v3.5 warning.
 			if (!Settings.get("general.versionInfoPopup", false)) {
 				await Settings.set("general.warning350", true);
@@ -526,11 +529,12 @@ async function initFlushTplCache() {
 				let warning = DialogMgr.newModal("warning");
 				warning.title = "/!\\ Warning";
 				warning.content =
-					"Vine Helper 3.5.0 requires a <strong><u>reload of ALL VINE RELATED TABS</u></strong>, incuding the notification monitor(s). <br /><br />Failure to do so will likely lead to a loss of all locally stored hidden and pinned items.";
+					"Vine Helper 3.5.0 requires a <strong><u>reload of ALL VINE RELATED TABS</u></strong>, incuding the notifications monitor(s). <br /><br />Failure to do so will likely lead to a loss of all locally stored hidden and pinned items.";
 				warning.show();
 				await Settings.set("general.warning350", true);
 				return;
 			}
+			*/
 			const prom = await Tpl.loadFile("view/popup_changelog.html");
 			Tpl.setVar("appVersion", env.data.appVersion);
 			let content = Tpl.render(prom);
@@ -1235,6 +1239,29 @@ window.addEventListener("message", async function (event) {
 		return false;
 	}
 
+	//Amazon checkout process
+	if (event.data.type == "promotionId") {
+		promotionId = event.data.promotionId;
+		checkoutAsin = event.data.asin;
+	}
+
+	if (event.data.type == "offerListingId" && env.isAmazonCheckoutEnabled()) {
+		const offerListingId = event.data.offerListingId;
+
+		//Open a new tab to the form generating url
+		const params = {
+			asin: checkoutAsin,
+			promotionId: promotionId,
+			offerListingId: offerListingId,
+		};
+		window.open(
+			`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items#checkoutForm;${encodeURIComponent(
+				JSON.stringify(params)
+			)}`,
+			"_blank"
+		);
+	}
+
 	//Sometime, mostly for debugging purpose, the Service worker can try to display notifications.
 	if (event.data.type == "rawNotification") {
 		let note = new ScreenNotification();
@@ -1461,6 +1488,15 @@ window.addEventListener("message", async function (event) {
 			const variantAsin = arrMatches[6];
 			openDynamicModal(asin, queue, isParentAsin, isPreRelease, enrollmentGUID, variantAsin);
 		}
+
+		//Why here? No reason, it's just near the other URL check.
+		let regex2 = /^[^#]+#checkoutForm;(.+?)$/;
+		let arrMatches2 = currentUrl.match(regex2);
+		if (arrMatches2 != null && env.isAmazonCheckoutEnabled()) {
+			logger.add("BOOT: Checkout form URL detected.");
+			const params = JSON.parse(decodeURIComponent(arrMatches2[1]));
+			generateCheckoutForm(params.asin, params.promotionId, params.offerListingId);
+		}
 	}
 });
 
@@ -1487,6 +1523,29 @@ async function recordUnavailableProduct(asin, reason) {
 	});
 }
 
+//Generate the checkout form for the Amazon checkout process
+async function generateCheckoutForm(asin, promotionId, offerListingId) {
+	const form = document.createElement("form");
+	form.method = "POST";
+	form.action = `https://www.amazon.${i13n.getDomainTLD()}/checkout/entry/buynow?pipelineType=Chewbacca`;
+	form.target = "_blank";
+	form.style.display = "none";
+	form.innerHTML = `
+		<input type="hidden" name="offerListingID" value="${offerListingId}" />
+		<input type="hidden" name="promotionId" value="${promotionId}" />
+		<input type="hidden" name="asin" value="${asin}" />
+		<input type="hidden" name="skipCart" value="1" />
+		<input type="hidden" name="quantity" value="1" />
+		<input type="hidden" name="vineProgramType" value="VINE" />
+	`;
+	document.body.appendChild(form);
+	form.submit();
+	form.remove();
+}
+
+//#####################################################
+//## MESSAGES LISTENERS
+//#####################################################
 //Message from within the context of the extension
 //Messages sent via: chrome.tabs.sendMessage(tab.id, data);
 //In this case, all messages are coming from the service_worker file.

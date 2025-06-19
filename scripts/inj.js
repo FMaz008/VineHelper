@@ -28,32 +28,40 @@ window.fetch = async (...args) => {
 		}
 
 		let data = {};
-		if (extHelper_responseData.error !== null) {
+		if (extHelper_responseData.result?.offerListingId !== undefined) {
+			//Amazon checkout process
 			data = {
-				status: "failed",
-				error: extHelper_responseData.error, //CROSS_BORDER_SHIPMENT, SCHEDULED_DELIVERY_REQUIRED, ITEM_NOT_IN_ENROLLMENT, ITEM_ALREADY_ORDERED
-				parent_asin: lastParent,
-				asin: asin,
+				type: "offerListingId",
+				offerListingId: extHelper_responseData.result.offerListingId,
 			};
 		} else {
-			if (extHelper_responseData.result?.orderId) {
+			//Vine checkout process
+			if (extHelper_responseData.error !== null) {
 				data = {
-					status: "success",
-					error: null,
-					//orderId: extHelper_responseData.result.orderId,
+					status: "failed",
+					error: extHelper_responseData.error, //CROSS_BORDER_SHIPMENT, SCHEDULED_DELIVERY_REQUIRED, ITEM_NOT_IN_ENROLLMENT, ITEM_ALREADY_ORDERED
 					parent_asin: lastParent,
 					asin: asin,
 				};
 			} else {
-				data = {
-					status: "failed",
-					error: "No orderId received back",
-					parent_asin: lastParent,
-					asin: asin,
-				};
+				if (extHelper_responseData.result?.orderId) {
+					data = {
+						status: "success",
+						error: null,
+						//orderId: extHelper_responseData.result.orderId,
+						parent_asin: lastParent,
+						asin: asin,
+					};
+				} else {
+					data = {
+						status: "failed",
+						error: "No orderId received back",
+						parent_asin: lastParent,
+						asin: asin,
+					};
+				}
 			}
 		}
-
 		window.postMessage(
 			{
 				type: "order",
@@ -145,6 +153,18 @@ window.fetch = async (...args) => {
 				{
 					type: "etv",
 					data,
+				},
+				"/" //message should be sent to the same origin as the current document.
+			);
+		}
+
+		//Amazon checkout process
+		if (result.promotionId !== undefined) {
+			window.postMessage(
+				{
+					type: "promotionId",
+					promotionId: result.promotionId,
+					asin: result.asin,
 				},
 				"/" //message should be sent to the same origin as the current document.
 			);
