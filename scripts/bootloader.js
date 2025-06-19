@@ -1244,7 +1244,8 @@ window.addEventListener("message", async function (event) {
 		checkoutAsin = event.data.asin;
 	}
 
-	if (event.data.type == "offerListingId" && env.isAmazonCheckoutEnabled()) {
+	//Amazon checkout process (only use if the notification monitor is loaded)
+	if (event.data.type == "offerListingId" && env.isAmazonCheckoutEnabled() && notificationMonitor !== null) {
 		const offerListingId = event.data.offerListingId;
 
 		//Open a new tab to the form generating url
