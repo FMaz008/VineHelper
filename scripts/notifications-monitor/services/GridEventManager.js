@@ -73,7 +73,7 @@ class GridEventManager {
 
 		// Only update placeholders for operations that affect grid layout
 		if (this.#shouldUpdatePlaceholders(operation)) {
-			this.#updatePlaceholders();
+			this.#updatePlaceholders(data.fetchingRecentItems);
 		}
 	}
 
@@ -360,10 +360,14 @@ class GridEventManager {
 	/**
 	 * Update placeholder tiles with batching
 	 */
-	#updatePlaceholders() {
-		this.#batchUpdate("placeholder", () => {
+	#updatePlaceholders(fetchingRecentItems) {
+		if (fetchingRecentItems) {
+			this.#batchUpdate("placeholder", () => {
+				this.#noShiftGrid.insertPlaceholderTiles();
+			});
+		} else {
 			this.#noShiftGrid.insertPlaceholderTiles();
-		});
+		}
 	}
 
 	/**
