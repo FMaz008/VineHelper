@@ -12,6 +12,9 @@ Comprehensive overview of the VineHelper architecture, including:
 - Identified issues and technical debt
 - Refactoring recommendations and priorities
 - Implementation status tracking
+- Event-driven architecture patterns
+- Visibility state management guidelines
+- Safari compatibility requirements
 
 ### [DEPENDENCY_INJECTION_MIGRATION.md](./DEPENDENCY_INJECTION_MIGRATION.md)
 

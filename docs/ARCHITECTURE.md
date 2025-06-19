@@ -240,17 +240,62 @@ Based on the developer's wishlist and codebase analysis:
 - Monitoring the implementation in production
 - Gathering feedback on the DI approach
 
-### Completed (Phase 2)
+### Completed (Phase 2) - Event-Driven Architecture
 
-- Implemented event-driven architecture for notification monitor grid operations
-- Created GridEventManager service for centralized grid modification handling
-- Created VisibilityStateManager as single source of truth for item counts
-- Eliminated 10+ scattered `insertPlaceholderTiles()` calls
-- Added event batching for performance (50ms for placeholders, 100ms for tab title)
-- Fixed race conditions in visibility count management
-- Added comprehensive unit tests for new services
-- Made tab title updates fully event-driven (listens to `visibility:count-changed`)
-- Removed all direct `_updateTabTitle()` calls from NotificationMonitor
+#### Core Services Implemented
+
+- **GridEventManager**: Centralized grid modification handling
+- **VisibilityStateManager**: Single source of truth for item counts
+- **Event Batching**: 50ms for placeholders, 100ms for tab title updates
+
+#### Visibility Count Synchronization Fixes
+
+Fixed the bug where tab title showed incorrect item counts (e.g., "12 items" when 13 were visible):
+
+1. **Root Cause**: Operations changing item visibility without notifying VisibilityStateManager
+2. **Fixed Operations**:
+
+    - `addTileInGrid()` - Now tracks visibility changes when updating existing items
+    - `setTierFromASIN()` - Tracks visibility changes when tier updates affect visibility
+    - `#bulkRemoveItems()` - Counts visible items being removed (optimized to single loop)
+    - `#clearAllVisibleItems()` - Properly delegates to bulk remove with event emission
+    - `#clearUnavailableItems()` - Fixed double-counting issue
+    - `#handlePauseClick()` - Recalculates count after unpause
+
+3. **Safari Compatibility**: Added `getComputedStyle()` checks for Safari browsers
+4. **Performance**: Minimal impact - bulk operations have zero additional cost due to optimization
+
+#### Code Quality Improvements (DRY)
+
+- **`#isElementVisible()`**: Centralized Safari compatibility (5 duplications removed)
+- **`#handleVisibilityChange()`**: Consolidated visibility change pattern (2 duplications removed)
+- **`#getTileDisplayStyle()`**: Replaced repeated ternary expressions (6 duplications removed)
+- **`#updateVisibleCountAfterFiltering()`**: Consolidated filter update pattern (3 duplications removed)
+- **Optional Chaining**: Modernized null checks with `?.` operator
+
+#### Testing
+
+- Comprehensive test suite: 17 tests covering all visibility operations
+- Edge cases included: missing DOM elements, Safari compatibility
+- Focus on behavior over implementation details
+
+### Key Architectural Patterns
+
+#### Event-Driven State Management
+
+- **Pattern**: When modifying items that affect visibility, always:
+    1. Check visibility state before the change
+    2. Apply the change
+    3. Check visibility state after the change
+    4. Emit appropriate events if visibility changed
+- **Example**: See `addTileInGrid()` and `setTierFromASIN()` implementations
+
+#### Testing Best Practices
+
+- Focus on behavior rather than implementation details
+- Avoid brittle string matching and formatting dependencies
+- Include edge cases (missing DOM elements, browser differences)
+- Structure tests with clear describe blocks for organization
 
 ### Next Priority
 
@@ -258,3 +303,48 @@ Based on the developer's wishlist and codebase analysis:
 - Create adapters for other browser APIs
 - Update HiddenListMgr and PinnedListMgr
 - Add integration tests for grid operations
+- Extract FilteringService to centralize all filtering logic with event-driven updates
+- Implement StateManager with proper state machine for monitor states (INITIALIZING, RUNNING, PAUSED, etc.)
+- Create DOMService for centralized DOM operations with batch updates
+- Enhance SettingsService to make settings reactive with events
+
+### Critical Implementation Guidelines
+
+1. **Visibility State Changes**: Any operation that might change item visibility MUST:
+
+    - Track the visibility state before and after the operation
+    - Emit appropriate grid events when visibility changes
+    - Update the VisibilityStateManager count accordingly
+
+    **Operations requiring visibility tracking:**
+
+    - `addTileInGrid()` - when updating existing items
+    - `setTierFromASIN()` - when tier changes affect visibility
+    - `#bulkRemoveItems()` - count visible items being removed
+    - `#clearAllVisibleItems()` - remove only visible items
+    - `#clearUnavailableItems()` - delegates to bulkRemoveItems for proper counting
+    - `#handlePauseClick()` - recalculate count after unpause (matches original behavior)
+    - Any filtering operations (search, type, queue filters)
+
+    **Note:**
+
+    - `markItemUnavailable()` does NOT change visibility - it only adds an "Unavailable" banner. Items remain visible until explicitly cleared.
+    - During pause, items remain visible but grid events aren't emitted for new items
+
+2. **Event Batching**: Use batching for performance-sensitive operations:
+
+    - Placeholder updates: 50ms batch delay
+    - Tab title updates: 100ms batch delay
+    - Prevents UI thrashing during rapid updates
+
+3. **Testing Strategy**:
+
+    - Write tests that verify behavior, not implementation
+    - Include edge cases and browser-specific scenarios
+    - Ensure tests remain maintainable as implementation evolves
+    - Test visibility state changes for all critical operations
+
+4. **Safari Compatibility**:
+    - Use `window.getComputedStyle()` for Safari
+    - Use `element.style.display` for other browsers
+    - Always check browser type when accessing display styles
