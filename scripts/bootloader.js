@@ -123,6 +123,8 @@ env.data.customerId = null;
 
 var notificationMonitor = null;
 var channel = new BroadcastChannel("vinehelper-notification-monitor");
+var promotionId = null; //Amazon checkout process
+var checkoutAsin = null; //Amazon checkout process
 
 //Do not run the extension if ultraviner is running
 if (!ultraviner) {
@@ -1236,6 +1238,29 @@ window.addEventListener("message", async function (event) {
 		return false;
 	}
 
+	//Amazon checkout process
+	if (event.data.type == "promotionId") {
+		promotionId = event.data.promotionId;
+		checkoutAsin = event.data.asin;
+	}
+
+	if (event.data.type == "offerListingId" && env.isAmazonCheckoutEnabled()) {
+		const offerListingId = event.data.offerListingId;
+
+		//Open a new tab to the form generating url
+		const params = {
+			asin: checkoutAsin,
+			promotionId: promotionId,
+			offerListingId: offerListingId,
+		};
+		window.open(
+			`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items#checkoutForm;${encodeURIComponent(
+				JSON.stringify(params)
+			)}`,
+			"_blank"
+		);
+	}
+
 	//Sometime, mostly for debugging purpose, the Service worker can try to display notifications.
 	if (event.data.type == "rawNotification") {
 		let note = new ScreenNotification();
@@ -1457,6 +1482,15 @@ window.addEventListener("message", async function (event) {
 			const options = JSON.parse(decodeURIComponent(arrMatches[1]));
 			openDynamicModal(options);
 		}
+
+		//Why here? No reason, it's just near the other URL check.
+		let regex2 = /^[^#]+#checkoutForm;(.+?)$/;
+		let arrMatches2 = currentUrl.match(regex2);
+		if (arrMatches2 != null && env.isAmazonCheckoutEnabled()) {
+			logger.add("BOOT: Checkout form URL detected.");
+			const params = JSON.parse(decodeURIComponent(arrMatches2[1]));
+			generateCheckoutForm(params.asin, params.promotionId, params.offerListingId);
+		}
 	}
 });
 
@@ -1481,6 +1515,26 @@ async function recordUnavailableProduct(asin, reason) {
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(content),
 	});
+}
+
+//Generate the checkout form for the Amazon checkout process
+async function generateCheckoutForm(asin, promotionId, offerListingId) {
+	const form = document.createElement("form");
+	form.method = "POST";
+	form.action = `https://www.amazon.${i13n.getDomainTLD()}/checkout/entry/buynow?pipelineType=Chewbacca`;
+	form.target = "_blank";
+	form.style.display = "none";
+	form.innerHTML = `
+		<input type="hidden" name="offerListingID" value="${offerListingId}" />
+		<input type="hidden" name="promotionId" value="${promotionId}" />
+		<input type="hidden" name="asin" value="${asin}" />
+		<input type="hidden" name="skipCart" value="1" />
+		<input type="hidden" name="quantity" value="1" />
+		<input type="hidden" name="vineProgramType" value="VINE" />
+	`;
+	document.body.appendChild(form);
+	form.submit();
+	form.remove();
 }
 
 //#####################################################
