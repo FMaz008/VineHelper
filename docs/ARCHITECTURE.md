@@ -14,6 +14,11 @@ VineHelper is a browser extension that enhances the Amazon Vine experience. The 
     - Sets up the environment and dependencies
     - Creates grid instances and manages tabs
     - Heavy coupling with global state
+    - **Enhances Amazon Vine pages** (RFY, AFA, AI tabs) with:
+        - Tile and Toolbar components
+        - Order status tracking (success/failed counts)
+        - Hidden/Pinned item management
+        - Direct DOM manipulation of existing Amazon elements
 
 2. **Notifications Monitor** (`scripts/notification_monitor/`)
 
@@ -21,6 +26,11 @@ VineHelper is a browser extension that enhances the Amazon Vine experience. The 
     - Master/Slave architecture for multi-tab coordination
     - Stream-based processing for new items
     - Version-specific implementations (V2, V3)
+    - **Separate from bootloader system** - creates its own:
+        - Custom tile rendering system
+        - Independent grid management
+        - No order status tracking (by design)
+        - Complete UI replacement, not enhancement
 
 3. **Settings Management** (`scripts/SettingsMgr.js`)
 
@@ -31,8 +41,31 @@ VineHelper is a browser extension that enhances the Amazon Vine experience. The 
 4. **UI Components**
     - **Grid System**: Manages product tiles across different tabs
     - **Tile System**: Individual product representation
+        - Bootloader tiles: Enhance existing Amazon tiles
+        - Monitor tiles: Custom-built from scratch
     - **Toolbar**: Product-specific actions
+        - Only used in bootloader-enhanced pages
+        - Contains order widget when unavailable tab is active
     - **Modal Management**: Dynamic modal creation
+
+### System Boundaries
+
+**Important Distinction**: VineHelper operates in two distinct modes:
+
+1. **Page Enhancement Mode** (Bootloader):
+
+    - Runs on Amazon Vine pages (RFY, AFA, AI)
+    - Enhances existing Amazon UI elements
+    - Adds toolbars with order tracking, pinning, hiding
+    - Preserves Amazon's tile structure
+
+2. **Custom Interface Mode** (Notification Monitor):
+    - Completely custom UI
+    - Independent tile rendering system
+    - No integration with Amazon's DOM structure
+    - Focused on real-time notifications
+
+These systems share some services (Settings, Environment) but have separate rendering pipelines and feature sets.
 
 ### Architectural Patterns
 
@@ -348,3 +381,105 @@ Fixed the bug where tab title showed incorrect item counts (e.g., "12 items" whe
     - Use `window.getComputedStyle()` for Safari
     - Use `element.style.display` for other browsers
     - Always check browser type when accessing display styles
+
+## Memory Leak Prevention
+
+### Overview
+
+The notification monitor had significant memory leak issues with 24 event listeners being added but never removed. These have been comprehensively fixed.
+
+### Issues Fixed
+
+1. **Event Listener Memory Leaks**
+
+    - **Problem**: Anonymous functions in addEventListener couldn't be removed
+    - **Solution**: Added `#eventHandlers` property to store all handler references
+    - **Impact**: All 24 event listeners now have proper cleanup
+
+2. **Bulk Remove Operations**
+
+    - **Problem**: Container replacement wasn't cleaning up old container's listeners
+    - **Solution**: Proper cleanup in bulk remove operations before replacing grid container
+
+3. **V3-Specific Cleanup**
+
+    - **Problem**: NotificationMonitorV3 had additional beforeunload listener
+    - **Solution**: Store handler reference and clean up in destroy() override
+
+4. **GridEventManager Memory Leaks**
+
+    - **Problem**: No cleanup method for event listeners via `hookBind()`
+    - **Solution**: Added destroy() method to clear timers and references
+    - **Note**: HookMgr limitation - cannot unbind hooks (architectural issue)
+
+5. **NoShiftGrid Memory Leaks**
+
+    - **Problem**: Window resize listener never removed
+    - **Solution**: Added destroy() method to remove listener and clear timer
+
+6. **MemoryDebugger False Positives**
+    - **Problem**: Reported removed listeners as leaks
+    - **Solution**: Added untrackListener() method to track removals
+
+### Implementation Pattern
+
+```javascript
+// Event handler storage pattern
+#eventHandlers = {
+    window: [],
+    document: [],
+    elements: new WeakMap()
+};
+
+// Store handlers before adding
+const handler = (e) => this.#handleClick(e);
+this.#eventHandlers.window.push({ event: 'click', handler });
+window.addEventListener('click', handler);
+
+// Comprehensive cleanup
+destroy() {
+    // Remove all window listeners
+    this.#eventHandlers.window.forEach(({ event, handler }) => {
+        window.removeEventListener(event, handler);
+    });
+    // Clear references
+    this.#eventHandlers = { window: [], document: [], elements: new WeakMap() };
+}
+```
+
+### Memory Debugging
+
+Enable memory debugging for development:
+
+```javascript
+localStorage.setItem("vh_debug_memory", "true");
+// Reload page
+```
+
+The MemoryDebugger tracks:
+
+- Tile creation and removal
+- Event listener lifecycle
+- Detached DOM nodes
+- Memory growth patterns
+
+### Prevention Guidelines
+
+1. **Always store handler references** - Never use anonymous functions in addEventListener
+2. **Always remove listeners** - Implement destroy() methods in all services
+3. **Use event delegation** - For dynamic content like tiles
+4. **Clear references** - Null out data and handlers when removing elements
+5. **Clear timers** - Store and clear all setInterval/setTimeout IDs
+6. **Test memory usage** - Use Chrome DevTools Memory profiler
+7. **Use WeakMap/WeakSet** - For DOM references where possible
+
+### Known Limitations
+
+1. **HookMgr** - No unbind method for event listeners (requires architectural change)
+2. **Other Services** - Potential timer leaks in MasterSlave.js, Websocket.js, ServerCom.js
+
+### Testing Strategy
+
+- Manual: Add/remove items and check for detached nodes
+- Automated: Verify listener cleanup in destroy()
+- Monitor: Use MemoryDebugger in development

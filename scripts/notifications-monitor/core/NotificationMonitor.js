@@ -10,6 +10,98 @@ import { escapeHTML, unescapeHTML, removeSpecialHTML } from "/scripts/core/utils
 import { MonitorCore } from "/scripts/notifications-monitor/core/MonitorCore.js";
 import { Item } from "/scripts/core/models/Item.js";
 
+// Memory debugging - only load if debug mode is enabled
+let MemoryDebugger = null;
+
+// Create a promise that resolves when the debugger is ready
+window.MEMORY_DEBUGGER_READY = new Promise((resolve) => {
+	if (window.DEBUG_MEMORY || localStorage.getItem("vh_debug_memory") === "true") {
+		import("/scripts/notifications-monitor/debug/MemoryDebugger.js")
+			.then((module) => {
+				MemoryDebugger = module.default || module.MemoryDebugger || module;
+				console.log("🔍 Memory Debugger loaded. Use window.MEMORY_DEBUGGER to access.");
+
+				// Create the global instance immediately after loading
+				if (!window.MEMORY_DEBUGGER && MemoryDebugger) {
+					try {
+						const debuggerInstance = new MemoryDebugger();
+
+						// Try multiple ways to expose it globally
+						window.MEMORY_DEBUGGER = debuggerInstance;
+						globalThis.MEMORY_DEBUGGER = debuggerInstance;
+
+						// If we're in a content script, try to expose to the page
+						if (typeof unsafeWindow !== "undefined") {
+							unsafeWindow.MEMORY_DEBUGGER = debuggerInstance;
+						}
+
+						console.log("🔍 Memory Debugger initialized. Starting monitoring...");
+
+						// Also expose common methods directly for convenience
+						const takeSnapshotFunc = function (name) {
+							return debuggerInstance.takeSnapshot(name);
+						};
+						const generateReportFunc = function () {
+							return debuggerInstance.generateReport();
+						};
+
+						window.takeSnapshot = takeSnapshotFunc;
+						window.generateMemoryReport = generateReportFunc;
+						globalThis.takeSnapshot = takeSnapshotFunc;
+						globalThis.generateMemoryReport = generateReportFunc;
+
+						// Double-check they're set
+						if (typeof window.takeSnapshot !== "function") {
+							console.error("Failed to set window.takeSnapshot");
+						}
+						if (typeof window.generateMemoryReport !== "function") {
+							console.error("Failed to set window.generateMemoryReport");
+						}
+
+						console.log("📊 Quick access methods available:");
+						console.log("  - takeSnapshot(name)");
+						console.log("  - generateMemoryReport()");
+
+						// Debug: Check if it's really set
+						console.log("Debug: window.MEMORY_DEBUGGER is:", window.MEMORY_DEBUGGER);
+						console.log("Debug: typeof window.MEMORY_DEBUGGER:", typeof window.MEMORY_DEBUGGER);
+
+						// Provide instructions for accessing via promise
+						console.log("📌 If direct access doesn't work, use:");
+						console.log("   await window.MEMORY_DEBUGGER_READY");
+						console.log("   // Then use the returned debugger instance");
+
+						resolve(debuggerInstance);
+					} catch (error) {
+						console.error("Failed to create MemoryDebugger instance:", error);
+						resolve(null);
+					}
+				} else {
+					console.log("Debug: MEMORY_DEBUGGER already exists or MemoryDebugger not loaded");
+					resolve(window.MEMORY_DEBUGGER || null);
+				}
+			})
+			.catch((error) => {
+				console.error("Failed to load Memory Debugger:", error);
+				resolve(null);
+			});
+	} else {
+		console.log("Memory debugging not enabled");
+		resolve(null);
+	}
+});
+
+// Also create a simple getter function that works after page load
+window.getMemoryDebugger = function () {
+	if (window.MEMORY_DEBUGGER) {
+		return window.MEMORY_DEBUGGER;
+	}
+	console.log(
+		'Memory debugger not available. Enable with: localStorage.setItem("vh_debug_memory", "true") and reload'
+	);
+	return null;
+};
+
 //const TYPE_SHOW_ALL = -1;
 const TYPE_REGULAR = 0;
 const TYPE_ZEROETV = 1;
@@ -49,6 +141,21 @@ class NotificationMonitor extends MonitorCore {
 	#pinDebounceTimer = null;
 	#pinDebounceClickable = true;
 
+	// Store event handler references for cleanup
+	#eventHandlers = {
+		grid: null,
+		document: null,
+		window: {
+			keydown: null,
+			keyup: null,
+			scroll: null,
+		},
+		buttons: new Map(),
+	};
+
+	// Cache for computed styles (Safari performance optimization)
+	#computedStyleCache = new WeakMap();
+
 	constructor(monitorV3 = false) {
 		super(monitorV3);
 
@@ -56,6 +163,8 @@ class NotificationMonitor extends MonitorCore {
 		if (this.constructor === NotificationMonitor) {
 			throw new TypeError('Abstract class "NotificationMonitor" cannot be instantiated directly.');
 		}
+
+		// Memory debugger is initialized in the import callback above
 	}
 
 	/**
@@ -91,10 +200,24 @@ class NotificationMonitor extends MonitorCore {
 		if (!element) return false;
 
 		if (this._env.isSafari()) {
-			return window.getComputedStyle(element).display !== "none";
+			// Safari optimization: cache computed styles to avoid repeated expensive calls
+			let cachedStyle = this.#computedStyleCache.get(element);
+			if (!cachedStyle) {
+				cachedStyle = window.getComputedStyle(element);
+				this.#computedStyleCache.set(element, cachedStyle);
+			}
+			return cachedStyle.display !== "none";
 		} else {
 			return element.style.display !== "none";
 		}
+	}
+
+	/**
+	 * Clear the computed style cache when styles might have changed
+	 * Call this when filters change or bulk style operations occur
+	 */
+	#invalidateComputedStyleCache() {
+		this.#computedStyleCache = new WeakMap();
 	}
 
 	/**
@@ -115,9 +238,31 @@ class NotificationMonitor extends MonitorCore {
 	}
 
 	/**
+	 * Wraps an operation with automatic visibility tracking
+	 * This DRY helper ensures consistent visibility change detection across operations
+	 * @param {HTMLElement} element - The element to track
+	 * @param {Function} operation - The operation to perform
+	 * @returns {*} The result of the operation
+	 */
+	#withVisibilityTracking(element, operation) {
+		if (!element) return operation();
+
+		const wasVisible = this.#isElementVisible(element);
+		const result = operation();
+		this.#handleVisibilityChange(element, wasVisible);
+
+		return result;
+	}
+
+	/**
 	 * Update visible count after filtering and emit appropriate events
 	 */
 	#updateVisibleCountAfterFiltering() {
+		// Invalidate Safari computed style cache after bulk filtering
+		if (this._env.isSafari()) {
+			this.#invalidateComputedStyleCache();
+		}
+
 		// Recalculate visible count after filtering
 		const newCount = this._countVisibleItems();
 		// Update the visibility state manager with new count (V3 only)
@@ -286,7 +431,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Always emit event to update placeholders after fetching recent items
-		this.#emitGridEvent("grid:fetch-complete", { visibleCount: this._visibleItemsCount });
+		this.#emitGridEvent("grid:fetch-complete", { visibleCount: this._visibilityStateManager.getCount() });
 
 		// Emit event to trigger sorting instead of calling directly
 		this.#emitGridEvent("grid:sort-needed");
@@ -660,6 +805,11 @@ class NotificationMonitor extends MonitorCore {
 		const wasMarkedUnavailable = this._itemsMgr.storeItemDOMElement(asin, tileDOM); //Store the DOM element
 		const tile = this._itemsMgr.getItemTile(asin);
 
+		// Track tile creation for memory debugging
+		if (window.MEMORY_DEBUGGER) {
+			window.MEMORY_DEBUGGER.trackTile(tileDOM, asin);
+		}
+
 		// If the item was marked as unavailable before its DOM was ready, apply the unavailable visual state now
 		if (wasMarkedUnavailable) {
 			this._disableItem(tileDOM);
@@ -993,8 +1143,16 @@ class NotificationMonitor extends MonitorCore {
 			return false;
 		}
 
+		// CRITICAL: Check visibility BEFORE updating ETV
+		// This captures items that might become visible when they receive a zero ETV value
+		const wasVisible = this.#isElementVisible(notif);
+
 		// Update the DOM element
 		this.#setETV(notif, etv);
+
+		// CRITICAL: Check if visibility changed due to ETV update
+		// For example: item with unknown ETV -> zero ETV with Zero ETV filter active
+		this.#handleVisibilityChange(notif, wasVisible);
 
 		// Re-position the item if using price sort and the value changed significantly
 		if (this._sortType === TYPE_PRICE_DESC || this._sortType === TYPE_PRICE_ASC) {
@@ -1549,36 +1707,67 @@ class NotificationMonitor extends MonitorCore {
 	 * @param {boolean} reattachGridContainerOnly - If true, only the grid container will be reattached
 	 */
 	_createListeners(reattachGridContainerOnly = false) {
+		// Remove old grid handler if exists (important for bulk operations)
+		if (this.#eventHandlers.grid && this._gridContainer) {
+			// Try to remove the old listener if the container still exists
+			try {
+				this._gridContainer.removeEventListener("click", this.#eventHandlers.grid);
+
+				// Track removal for memory debugging
+				if (window.MEMORY_DEBUGGER && typeof window.MEMORY_DEBUGGER.untrackListener === "function") {
+					window.MEMORY_DEBUGGER.untrackListener(this._gridContainer, "click", this.#eventHandlers.grid);
+				}
+			} catch (e) {
+				// Container might be gone, just clear the reference
+			}
+			this.#eventHandlers.grid = null;
+		}
+
 		// Bind the click handler to the instance and then add as event listener
-		this._gridContainer.addEventListener("click", (e) => this.#clickHandler(e));
+		this.#eventHandlers.grid = (e) => this.#clickHandler(e);
+		this._gridContainer.addEventListener("click", this.#eventHandlers.grid);
+
+		// Track event listener for memory debugging
+		if (window.MEMORY_DEBUGGER && typeof window.MEMORY_DEBUGGER.trackListener === "function") {
+			window.MEMORY_DEBUGGER.trackListener(this._gridContainer, "click", this.#eventHandlers.grid);
+		}
 
 		if (this._settings.get("notification.monitor.mouseoverPause")) {
-			document.addEventListener("mouseover", (e) => this.#mouseoverHandler(e));
+			// Only add if not already added
+			if (!this.#eventHandlers.document) {
+				this.#eventHandlers.document = (e) => this.#mouseoverHandler(e);
+				document.addEventListener("mouseover", this.#eventHandlers.document);
+
+				// Track event listener for memory debugging
+				if (window.MEMORY_DEBUGGER) {
+					window.MEMORY_DEBUGGER.trackListener(document, "mouseover", this.#eventHandlers.document);
+				}
+			}
 		}
 		if (reattachGridContainerOnly) {
 			return;
 		}
 
 		//Track the control key, used to open SeeDetails in new tab
-		window.addEventListener(
-			"keydown",
-			(event) => {
-				if (event.key === "Control") {
-					this._ctrlPress = true;
-				}
-			},
-			true
-		);
+		this.#eventHandlers.window.keydown = (event) => {
+			if (event.key === "Control") {
+				this._ctrlPress = true;
+			}
+		};
+		this.#eventHandlers.window.keyup = (event) => {
+			if (event.key === "Control") {
+				this._ctrlPress = false;
+			}
+		};
 
-		window.addEventListener(
-			"keyup",
-			(event) => {
-				if (event.key === "Control") {
-					this._ctrlPress = false;
-				}
-			},
-			true
-		);
+		window.addEventListener("keydown", this.#eventHandlers.window.keydown, true);
+		window.addEventListener("keyup", this.#eventHandlers.window.keyup, true);
+
+		// Track event listeners for memory debugging
+		if (window.MEMORY_DEBUGGER) {
+			window.MEMORY_DEBUGGER.trackListener(window, "keydown", this.#eventHandlers.window.keydown);
+			window.MEMORY_DEBUGGER.trackListener(window, "keyup", this.#eventHandlers.window.keyup);
+		}
 
 		// Add the fix toolbar with the pause button if we scroll past the original pause button
 		const scrollToTopBtn = document.getElementById("scrollToTop-fixed");
@@ -1587,29 +1776,42 @@ class NotificationMonitor extends MonitorCore {
 		const originalBtnPosition = originalPauseBtn.getBoundingClientRect().top + window.scrollY;
 
 		// Handle scroll
-		window.addEventListener("scroll", () => {
+		this.#eventHandlers.window.scroll = () => {
 			if (window.scrollY > originalBtnPosition) {
 				document.getElementById("fixed-toolbar").style.display = "block";
 			} else {
 				document.getElementById("fixed-toolbar").style.display = "none";
 			}
-		});
+		};
+		window.addEventListener("scroll", this.#eventHandlers.window.scroll);
 
-		scrollToTopBtn.addEventListener("click", () => {
+		// Store button handlers
+		const scrollToTopHandler = () => {
 			window.scrollTo({
 				top: 0,
 				behavior: "smooth",
 			});
-		});
+		};
+		scrollToTopBtn.addEventListener("click", scrollToTopHandler);
+		this.#eventHandlers.buttons.set(scrollToTopBtn, { event: "click", handler: scrollToTopHandler });
 
-		fixedPauseBtn.addEventListener("click", () => {
+		const fixedPauseHandler = () => {
 			this.#handlePauseClick();
-		});
+		};
+		fixedPauseBtn.addEventListener("click", fixedPauseHandler);
+		this.#eventHandlers.buttons.set(fixedPauseBtn, { event: "click", handler: fixedPauseHandler });
+
+		// Track event listeners for memory debugging
+		if (window.MEMORY_DEBUGGER) {
+			window.MEMORY_DEBUGGER.trackListener(window, "scroll", this.#eventHandlers.window.scroll);
+			window.MEMORY_DEBUGGER.trackListener(scrollToTopBtn, "click", scrollToTopHandler);
+			window.MEMORY_DEBUGGER.trackListener(fixedPauseBtn, "click", fixedPauseHandler);
+		}
 
 		// Search handler
 		const searchInput = document.getElementById("search-input");
 		if (searchInput) {
-			searchInput.addEventListener("input", (event) => {
+			const searchHandler = (event) => {
 				if (this._searchDebounceTimer) {
 					clearTimeout(this._searchDebounceTimer);
 				}
@@ -1620,31 +1822,49 @@ class NotificationMonitor extends MonitorCore {
 					// Update visible count and emit events
 					this.#updateVisibleCountAfterFiltering();
 				}, 750); // 300ms debounce delay
-			});
+			};
+			searchInput.addEventListener("input", searchHandler);
+			this.#eventHandlers.buttons.set(searchInput, { event: "input", handler: searchHandler });
+
+			if (window.MEMORY_DEBUGGER) {
+				window.MEMORY_DEBUGGER.trackListener(searchInput, "input", searchHandler);
+			}
 		}
 
 		//Bind clear-monitor button
 		const btnClearMonitor = document.getElementById("clear-monitor");
-		btnClearMonitor.addEventListener("click", async (event) => {
+		const clearMonitorHandler = async (event) => {
 			//Delete all items from the grid
 			if (confirm("Clear all visible items?")) {
 				this._preserveScrollPosition(() => {
 					this.#clearAllVisibleItems();
 				});
 			}
-		});
+		};
+		btnClearMonitor.addEventListener("click", clearMonitorHandler);
+		this.#eventHandlers.buttons.set(btnClearMonitor, { event: "click", handler: clearMonitorHandler });
+
+		if (window.MEMORY_DEBUGGER) {
+			window.MEMORY_DEBUGGER.trackListener(btnClearMonitor, "click", clearMonitorHandler);
+		}
 
 		//Bind clear-unavailable button
 		const btnClearUnavailable = document.getElementById("clear-unavailable");
-		btnClearUnavailable.addEventListener("click", async (event) => {
+		const clearUnavailableHandler = async (event) => {
 			if (confirm("Clear unavailable items?")) {
 				this.#clearUnavailableItems();
 			}
-		});
+		};
+		btnClearUnavailable.addEventListener("click", clearUnavailableHandler);
+		this.#eventHandlers.buttons.set(btnClearUnavailable, { event: "click", handler: clearUnavailableHandler });
+
+		if (window.MEMORY_DEBUGGER) {
+			window.MEMORY_DEBUGGER.trackListener(btnClearUnavailable, "click", clearUnavailableHandler);
+		}
 
 		//Bind fetch-last-100 button
 		const btnLast100 = document.getElementById("fetch-last-100");
-		btnLast100.addEventListener("click", async (event) => {
+		const fetchLast100Handler = async (event) => {
 			btnLast100.disabled = true;
 
 			// Start 30 second countdown
@@ -1679,12 +1899,18 @@ class NotificationMonitor extends MonitorCore {
 					limit: this._fetchLimit,
 				});
 			}
-		});
+		};
+		btnLast100.addEventListener("click", fetchLast100Handler);
+		this.#eventHandlers.buttons.set(btnLast100, { event: "click", handler: fetchLast100Handler });
+
+		if (window.MEMORY_DEBUGGER) {
+			window.MEMORY_DEBUGGER.trackListener(btnLast100, "click", fetchLast100Handler);
+		}
 
 		//Bind fetch-last-12hrs button
 		const btnLast12hrs = document.getElementById("fetch-last-12hrs");
 		if (btnLast12hrs) {
-			btnLast12hrs.addEventListener("click", async (event) => {
+			const fetchLast12hrsHandler = async (event) => {
 				btnLast12hrs.disabled = true;
 
 				// Start 60 second countdown
@@ -1719,16 +1945,28 @@ class NotificationMonitor extends MonitorCore {
 						limit: "12hrs",
 					});
 				}
-			});
+			};
+			btnLast12hrs.addEventListener("click", fetchLast12hrsHandler);
+			this.#eventHandlers.buttons.set(btnLast12hrs, { event: "click", handler: fetchLast12hrsHandler });
+
+			if (window.MEMORY_DEBUGGER) {
+				window.MEMORY_DEBUGGER.trackListener(btnLast12hrs, "click", fetchLast12hrsHandler);
+			}
 		}
 
 		//Bind Pause Feed button
 		const btnPauseFeed = document.getElementById("pauseFeed");
-		btnPauseFeed.addEventListener("click", () => this.#handlePauseClick());
+		const pauseFeedHandler = () => this.#handlePauseClick();
+		btnPauseFeed.addEventListener("click", pauseFeedHandler);
+		this.#eventHandlers.buttons.set(btnPauseFeed, { event: "click", handler: pauseFeedHandler });
+
+		if (window.MEMORY_DEBUGGER) {
+			window.MEMORY_DEBUGGER.trackListener(btnPauseFeed, "click", pauseFeedHandler);
+		}
 
 		// Bind sort and filter controls
 		const sortQueue = document.querySelector("select[name='sort-queue']");
-		sortQueue.addEventListener("change", async (event) => {
+		const sortQueueHandler = async (event) => {
 			this._sortType = sortQueue.value;
 			await this._settings.set("notification.monitor.sortType", this._sortType);
 			// Emit event to trigger sorting instead of calling directly
@@ -1737,45 +1975,78 @@ class NotificationMonitor extends MonitorCore {
 			this.#autoTruncate(true);
 			// Emit sort event with sort type
 			this.#emitGridEvent("grid:sorted", { sortType: this._sortType });
-		});
+		};
+		sortQueue.addEventListener("change", sortQueueHandler);
+		this.#eventHandlers.buttons.set(sortQueue, { event: "change", handler: sortQueueHandler });
+
+		if (window.MEMORY_DEBUGGER) {
+			window.MEMORY_DEBUGGER.trackListener(sortQueue, "change", sortQueueHandler);
+		}
 
 		const filterType = document.querySelector("select[name='filter-type']");
-		filterType.addEventListener("change", (event) => {
+		const filterTypeHandler = (event) => {
 			this._filterType = filterType.value;
 			this._settings.set("notification.monitor.filterType", this._filterType);
 			//Display a specific type of notifications only
 			this.#applyFilteringToAllItems();
 			// Update visible count and emit events
 			this.#updateVisibleCountAfterFiltering();
-		});
+		};
+		filterType.addEventListener("change", filterTypeHandler);
+		this.#eventHandlers.buttons.set(filterType, { event: "change", handler: filterTypeHandler });
+
+		if (window.MEMORY_DEBUGGER) {
+			window.MEMORY_DEBUGGER.trackListener(filterType, "change", filterTypeHandler);
+		}
 
 		const filterQueue = document.querySelector("select[name='filter-queue']");
-		filterQueue.addEventListener("change", (event) => {
+		const filterQueueHandler = (event) => {
 			this._filterQueue = filterQueue.value;
 			this._settings.set("notification.monitor.filterQueue", this._filterQueue);
 			//Display a specific queue only
 			this.#applyFilteringToAllItems();
 			// Update visible count and emit events
 			this.#updateVisibleCountAfterFiltering();
-		});
+		};
+		filterQueue.addEventListener("change", filterQueueHandler);
+		this.#eventHandlers.buttons.set(filterQueue, { event: "change", handler: filterQueueHandler });
+
+		if (window.MEMORY_DEBUGGER) {
+			window.MEMORY_DEBUGGER.trackListener(filterQueue, "change", filterQueueHandler);
+		}
 
 		const autoTruncateCheckbox = document.getElementById("auto-truncate");
 		autoTruncateCheckbox.checked = this._autoTruncateEnabled;
-		autoTruncateCheckbox.addEventListener("change", (event) => {
+		const autoTruncateHandler = (event) => {
 			this._autoTruncateEnabled = autoTruncateCheckbox.checked;
 			this._settings.set("notification.monitor.autoTruncate", this._autoTruncateEnabled);
 			// Force immediate truncate when auto truncate is enabled
 			if (this._autoTruncateEnabled) {
 				this.#autoTruncate(true);
 			}
-		});
+		};
+		autoTruncateCheckbox.addEventListener("change", autoTruncateHandler);
+		this.#eventHandlers.buttons.set(autoTruncateCheckbox, { event: "change", handler: autoTruncateHandler });
+
+		if (window.MEMORY_DEBUGGER) {
+			window.MEMORY_DEBUGGER.trackListener(autoTruncateCheckbox, "change", autoTruncateHandler);
+		}
 
 		const autoTruncateLimitSelect = document.getElementById("auto-truncate-limit");
-		autoTruncateLimitSelect.addEventListener("change", (event) => {
+		const autoTruncateLimitHandler = (event) => {
 			this._settings.set("notification.monitor.autoTruncateLimit", parseInt(autoTruncateLimitSelect.value));
 			// Force immediate truncate when limit changes
 			this.#autoTruncate(true);
+		};
+		autoTruncateLimitSelect.addEventListener("change", autoTruncateLimitHandler);
+		this.#eventHandlers.buttons.set(autoTruncateLimitSelect, {
+			event: "change",
+			handler: autoTruncateLimitHandler,
 		});
+
+		if (window.MEMORY_DEBUGGER) {
+			window.MEMORY_DEBUGGER.trackListener(autoTruncateLimitSelect, "change", autoTruncateLimitHandler);
+		}
 	}
 
 	//Pause feed handler
@@ -1824,6 +2095,86 @@ class NotificationMonitor extends MonitorCore {
 				this.#emitGridEvent("grid:unpaused");
 			}
 		}
+	}
+	/**
+	 * Clean up all event listeners and references
+	 * This method should be called when the monitor is being destroyed
+	 * to prevent memory leaks
+	 */
+	destroy() {
+		console.log("🧹 Destroying NotificationMonitor and cleaning up event listeners...");
+
+		// Remove grid container listener
+		if (this.#eventHandlers.grid && this._gridContainer) {
+			this._gridContainer.removeEventListener("click", this.#eventHandlers.grid);
+
+			// Track removal for memory debugging
+			if (window.MEMORY_DEBUGGER && typeof window.MEMORY_DEBUGGER.untrackListener === "function") {
+				window.MEMORY_DEBUGGER.untrackListener(this._gridContainer, "click", this.#eventHandlers.grid);
+			}
+
+			this.#eventHandlers.grid = null;
+		}
+
+		// Remove document listener
+		if (this.#eventHandlers.document) {
+			document.removeEventListener("mouseover", this.#eventHandlers.document);
+			this.#eventHandlers.document = null;
+		}
+
+		// Remove window listeners
+		if (this.#eventHandlers.window.keydown) {
+			window.removeEventListener("keydown", this.#eventHandlers.window.keydown, true);
+			this.#eventHandlers.window.keydown = null;
+		}
+		if (this.#eventHandlers.window.keyup) {
+			window.removeEventListener("keyup", this.#eventHandlers.window.keyup, true);
+			this.#eventHandlers.window.keyup = null;
+		}
+		if (this.#eventHandlers.window.scroll) {
+			window.removeEventListener("scroll", this.#eventHandlers.window.scroll);
+			this.#eventHandlers.window.scroll = null;
+		}
+
+		// Remove all button/element listeners
+		for (const [element, { event, handler }] of this.#eventHandlers.buttons) {
+			if (element && handler) {
+				element.removeEventListener(event, handler);
+			}
+		}
+		this.#eventHandlers.buttons.clear();
+
+		// Clear any timers
+		if (this._searchDebounceTimer) {
+			clearTimeout(this._searchDebounceTimer);
+			this._searchDebounceTimer = null;
+		}
+		if (this._autoTruncateDebounceTimer) {
+			clearTimeout(this._autoTruncateDebounceTimer);
+			this._autoTruncateDebounceTimer = null;
+		}
+		if (this.#pinDebounceTimer) {
+			clearTimeout(this.#pinDebounceTimer);
+			this.#pinDebounceTimer = null;
+		}
+
+		// Destroy GridEventManager if it exists
+		if (this._gridEventManager && typeof this._gridEventManager.destroy === "function") {
+			this._gridEventManager.destroy();
+			this._gridEventManager = null;
+		}
+
+		// Destroy NoShiftGrid if it exists
+		if (this._noShiftGrid && typeof this._noShiftGrid.destroy === "function") {
+			this._noShiftGrid.destroy();
+			this._noShiftGrid = null;
+		}
+
+		// Clear references
+		this._gridContainer = null;
+		this._visibilityStateManager = null;
+
+		console.log("✅ NotificationMonitor cleanup complete");
 	}
 }
 

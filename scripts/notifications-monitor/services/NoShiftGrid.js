@@ -10,6 +10,8 @@ class NoShiftGrid {
 	constructor(monitorInstance, visibilityStateManager) {
 		this._monitor = monitorInstance;
 		this._visibilityStateManager = visibilityStateManager;
+		this._resizeHandler = null;
+		this._resizeTimer = null;
 		this.#setupEventListener();
 		this.#calculateGridWidth();
 	}
@@ -21,17 +23,18 @@ class NoShiftGrid {
 
 	#setupEventListener() {
 		// Debounce resize events to avoid calculation during resize animation
-		let resizeTimer;
-		window.addEventListener("resize", () => {
-			clearTimeout(resizeTimer);
-			resizeTimer = setTimeout(() => {
+		this._resizeHandler = () => {
+			clearTimeout(this._resizeTimer);
+			this._resizeTimer = setTimeout(() => {
 				this.#calculateGridWidth();
 				// Emit event instead of direct call to ensure proper batching
 				if (this._monitor && this._monitor._hookMgr) {
 					this._monitor._hookMgr.hookExecute("grid:resized");
 				}
 			}, 150); // Wait for resize animation to complete
-		});
+		};
+
+		window.addEventListener("resize", this._resizeHandler);
 	}
 
 	#calculateGridWidth() {
@@ -120,6 +123,27 @@ class NoShiftGrid {
 		}
 
 		//console.log("Adding ", this._endPlaceholdersCount, " imaginary placeholders tiles at the end of the grid");
+	}
+
+	/**
+	 * Clean up resources and remove event listeners
+	 */
+	destroy() {
+		// Remove resize event listener
+		if (this._resizeHandler) {
+			window.removeEventListener("resize", this._resizeHandler);
+			this._resizeHandler = null;
+		}
+
+		// Clear resize timer if active
+		if (this._resizeTimer) {
+			clearTimeout(this._resizeTimer);
+			this._resizeTimer = null;
+		}
+
+		// Clear references
+		this._monitor = null;
+		this._visibilityStateManager = null;
 	}
 }
 
