@@ -414,7 +414,11 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Always emit event to update placeholders after fetching recent items
-		this.#emitGridEvent("grid:fetch-complete", { visibleCount: this._visibilityStateManager.getCount() });
+		// Get the count from VisibilityStateManager if available, otherwise count manually
+		const visibleCount = this._visibilityStateManager
+			? this._visibilityStateManager.getCount()
+			: this._countVisibleItems();
+		this.#emitGridEvent("grid:fetch-complete", { visibleCount });
 
 		// Emit event to trigger sorting instead of calling directly
 		this.#emitGridEvent("grid:sort-needed");
@@ -2134,13 +2138,16 @@ class NotificationMonitor extends MonitorCore {
 				}
 			});
 
-			// Update visibility count after unpause only if we don't have a visibility state manager
-			// If we have one, trust the incremental updates that happened during fetch
-			if (!this._visibilityStateManager) {
+			// Update visibility count after unpause
+			// If we have a VisibilityStateManager, use its count; otherwise recount
+			if (this._visibilityStateManager) {
+				// Trust the incremental updates that happened during fetch
+				const currentCount = this._visibilityStateManager.getCount();
+				this._updateTabTitle(currentCount);
+			} else {
 				// Fallback for monitors without VisibilityStateManager
 				const newCount = this._countVisibleItems();
-				// Update title directly since we don't have state manager
-				this._updateTabTitle();
+				this._updateTabTitle(newCount);
 			}
 
 			// Only emit unpause event for manual unpause, not hover unpause
