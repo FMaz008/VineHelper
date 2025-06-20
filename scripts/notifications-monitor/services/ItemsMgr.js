@@ -232,6 +232,19 @@ class ItemsMgr {
 	}
 
 	removeAsin(asin) {
+		const item = this.items.get(asin);
+		if (item) {
+			// Clean up DOM references to prevent memory leaks
+			if (item.element) {
+				item.element = null;
+			}
+
+			// Clean up Tile instance if it exists
+			// Note: Tile class doesn't have a destroy method, but we should still clear the reference
+			if (item.tile) {
+				item.tile = null;
+			}
+		}
 		this.items.delete(asin);
 	}
 }
