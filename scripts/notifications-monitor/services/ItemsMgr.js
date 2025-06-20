@@ -23,23 +23,13 @@ class ItemsMgr {
 
 		const sortType = this._settings.get("notification.monitor.sortType");
 
-		// Only sort the Map if we're using price-based sorting
-		// Date-based sorting is handled by DOM insertion order
-		if (sortType !== TYPE_PRICE_ASC && sortType !== TYPE_PRICE_DESC) {
-			// Return array without modifying the Map order
-			return Array.from(this.items.entries()).map(([asin, item]) => ({
-				asin,
-				data: item.data,
-				element: item.element,
-			}));
-		}
-
 		// Convert Map to array for sorting
 		const itemsArray = Array.from(this.items.entries()).map(([asin, item]) => {
 			return {
 				asin,
 				data: item.data,
 				element: item.element,
+				tile: item.tile,
 			};
 		});
 
@@ -51,25 +41,39 @@ class ItemsMgr {
 				const aPrice = parseFloat(a.data.etv_min || 99999999); // || will match null/undefined/""/false
 				const bPrice = parseFloat(b.data.etv_min || 99999999);
 				return aPrice - bPrice;
-			} else {
-				// Default: sort by price (TYPE_PRICE_DESC), highest first
+			} else if (sortType === TYPE_PRICE_DESC) {
+				// Sort by price, highest first
 				// Treat null/undefined as -1 so actual 0 values rank higher
 				const aPrice = parseFloat(a.data.etv_min || -1); // || will match null/undefined/""/false
 				const bPrice = parseFloat(b.data.etv_min || -1);
 				return bPrice - aPrice;
+			} else if (sortType === TYPE_DATE_ASC) {
+				// Sort by date, oldest first
+				const aDate = a.data.timestamp || 0;
+				const bDate = b.data.timestamp || 0;
+				return aDate - bDate;
+			} else {
+				// Default: sort by date (TYPE_DATE_DESC), newest first
+				const aDate = a.data.timestamp || 0;
+				const bDate = b.data.timestamp || 0;
+				return bDate - aDate;
 			}
 		});
 
-		// Transform the sorted array back to [key, value] pairs for the Map constructor
-		this.items = new Map(
-			itemsArray.map((item) => [
-				item.asin,
-				{
-					data: item.data,
-					element: item.element,
-				},
-			])
-		);
+		// For price-based sorting, update the Map order
+		if (sortType === TYPE_PRICE_ASC || sortType === TYPE_PRICE_DESC) {
+			// Transform the sorted array back to [key, value] pairs for the Map constructor
+			this.items = new Map(
+				itemsArray.map((item) => [
+					item.asin,
+					{
+						data: item.data,
+						element: item.element,
+						tile: item.tile,
+					},
+				])
+			);
+		}
 
 		return itemsArray;
 	}
@@ -232,6 +236,19 @@ class ItemsMgr {
 	}
 
 	removeAsin(asin) {
+		const item = this.items.get(asin);
+		if (item) {
+			// Clean up DOM references to prevent memory leaks
+			if (item.element) {
+				item.element = null;
+			}
+
+			// Clean up Tile instance if it exists
+			// Note: Tile class doesn't have a destroy method, but we should still clear the reference
+			if (item.tile) {
+				item.tile = null;
+			}
+		}
 		this.items.delete(asin);
 	}
 }

@@ -14,6 +14,8 @@ class Websocket {
 	#socket = null;
 	#socket_connecting = false;
 	#reconnectTimer = null;
+	#channelMessageHandler = null;
+	#socketHandlers = null;
 
 	constructor(monitor) {
 		if (Websocket.#instance) {
@@ -62,51 +64,64 @@ class Websocket {
 
 		//## PASS ALL RECEIVED DATA TO THE MESSAGING CHANNEL #########################
 
-		// On connection success
-		this.#socket.on("connect", () => {
-			this.#socket_connecting = false;
-			console.log(`${new Date().toLocaleString()} - WS Connected`);
-			this.#relayMessage({ type: "wsStatus", status: "wsOpen" });
-		});
+		// Clean up any existing listeners before adding new ones
+		this.#cleanupSocketListeners();
 
-		this.#socket.on("newItem", (data) => {
-			this.#relayMessage({ type: "newPreprocessedItem", item: data.item });
-		});
-		this.#socket.on("last100", (data) => {
-			this.#relayMessage({ type: "last100", products: data.products });
-		});
-		this.#socket.on("newETV", (data) => {
-			this.#relayMessage({ type: "newETV", item: data.item });
-		});
+		// Define named handlers to reduce memory overhead and improve debugging
+		this.#socketHandlers = {
+			connect: () => {
+				this.#socket_connecting = false;
+				console.log(`${new Date().toLocaleString()} - WS Connected`);
+				this.#relayMessage({ type: "wsStatus", status: "wsOpen" });
+			},
 
-		this.#socket.on("newVariants", (data) => {
-			this.#relayMessage({ type: "newVariants", item: data });
-		});
+			newItem: (data) => {
+				this.#relayMessage({ type: "newPreprocessedItem", item: data.item });
+			},
 
-		this.#socket.on("unavailableItem", (data) => {
-			this.#relayMessage({ type: "unavailableItem", item: data.item });
-		});
+			last100: (data) => {
+				this.#relayMessage({ type: "last100", products: data.products });
+			},
 
-		this.#socket.on("reloadPage", async (data) => {
-			this.#relayMessage({ type: "fetchAutoLoadUrl", queue: data.queue, page: data.page });
-		});
+			newETV: (data) => {
+				this.#relayMessage({ type: "newETV", item: data.item });
+			},
 
-		this.#socket.on("connection_error", (error) => {
-			this.#relayMessage({ type: "wsStatus", status: "wsError", error: error });
-		});
+			newVariants: (data) => {
+				this.#relayMessage({ type: "newVariants", item: data });
+			},
 
-		// On disconnection
-		this.#socket.on("disconnect", () => {
-			this.#socket_connecting = false;
-			console.log(`${new Date().toLocaleString()} - Socket.IO Disconnected`);
-			this.#relayMessage({ type: "wsStatus", status: "wsClosed" });
-		});
+			unavailableItem: (data) => {
+				this.#relayMessage({ type: "unavailableItem", item: data.item });
+			},
 
-		// On error
-		this.#socket.on("connect_error", (error) => {
-			this.#socket_connecting = false;
-			this.#relayMessage({ type: "wsStatus", status: "wsError", error: error.message });
-			console.error(`${new Date().toLocaleString()} - Socket.IO error: ${error.message}`);
+			reloadPage: async (data) => {
+				this.#relayMessage({ type: "fetchAutoLoadUrl", queue: data.queue, page: data.page });
+			},
+
+			connection_error: (error) => {
+				// Only pass minimal error info to prevent retaining large error objects
+				this.#relayMessage({ type: "wsStatus", status: "wsError", error: error.message || "Connection error" });
+			},
+
+			disconnect: () => {
+				this.#socket_connecting = false;
+				console.log(`${new Date().toLocaleString()} - Socket.IO Disconnected`);
+				this.#relayMessage({ type: "wsStatus", status: "wsClosed" });
+			},
+
+			connect_error: (error) => {
+				this.#socket_connecting = false;
+				// Extract only the message to avoid retaining the full error object
+				const errorMessage = error.message || "Unknown error";
+				this.#relayMessage({ type: "wsStatus", status: "wsError", error: errorMessage });
+				console.error(`${new Date().toLocaleString()} - Socket.IO error: ${errorMessage}`);
+			},
+		};
+
+		// Attach all handlers
+		Object.entries(this.#socketHandlers).forEach(([event, handler]) => {
+			this.#socket.on(event, handler);
 		});
 	}
 
@@ -128,9 +143,11 @@ class Websocket {
 	}
 
 	#createListener() {
-		this._monitor._channel.addEventListener("message", (event) => {
+		// Store the handler reference for cleanup
+		this.#channelMessageHandler = (event) => {
 			this.processMessage(event.data);
-		});
+		};
+		this._monitor._channel.addEventListener("message", this.#channelMessageHandler);
 	}
 
 	processMessage(message) {
@@ -183,6 +200,12 @@ class Websocket {
 			this.#reconnectTimer = null;
 		}
 
+		// Remove channel listener
+		if (this._monitor._channel) {
+			this._monitor._channel.removeEventListener("message", this.#channelMessageHandler);
+			this.#channelMessageHandler = null;
+		}
+
 		// Remove all event listeners
 		if (this.#socket) {
 			this.#socket.removeAllListeners();
@@ -192,6 +215,20 @@ class Websocket {
 
 		this.#socket_connecting = false;
 		Websocket.#instance = null;
+	}
+
+	/**
+	 * Clean up socket event listeners before re-adding them
+	 */
+	#cleanupSocketListeners() {
+		if (this.#socket && this.#socketHandlers) {
+			// Remove all handlers using the same references
+			Object.entries(this.#socketHandlers).forEach(([event, handler]) => {
+				this.#socket.off(event, handler);
+			});
+		}
+		// Clear the handlers object to free memory
+		this.#socketHandlers = null;
 	}
 }
 

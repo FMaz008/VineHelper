@@ -472,11 +472,16 @@ The MemoryDebugger tracks:
 5. **Clear timers** - Store and clear all setInterval/setTimeout IDs
 6. **Test memory usage** - Use Chrome DevTools Memory profiler
 7. **Use WeakMap/WeakSet** - For DOM references where possible
+8. **Trust incremental updates** - Avoid full recounts after operations that track changes incrementally
+9. **Emit events consistently** - Ensure count events are emitted even during "paused" states
 
 ### Known Limitations
 
 1. **HookMgr** - No unbind method for event listeners (requires architectural change)
-2. **Other Services** - Potential timer leaks in MasterSlave.js, Websocket.js, ServerCom.js
+2. ~~**Other Services** - Potential timer leaks in MasterSlave.js, Websocket.js, ServerCom.js~~ ✅ **FIXED**
+    - MasterSlave.js: Fixed uncleared 1-second interval in `#keepAlive()`
+    - ServerCom.js: Fixed uncleared 10-second interval and added proper destroy()
+    - Websocket.js: Confirmed proper cleanup already existed
 
 ### Testing Strategy
 
