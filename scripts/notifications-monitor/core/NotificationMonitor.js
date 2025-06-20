@@ -118,7 +118,6 @@ class NotificationMonitor extends MonitorCore {
 	_feedPaused = false;
 	#pausedByMouseoverSeeDetails = false;
 	_feedPausedAmountStored = 0;
-	#placeholderTilesEndCount = 0;
 	_fetchingRecentItems;
 	_gridContainer = null;
 	_gridContainerWidth = 0;
@@ -236,23 +235,6 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		return isNowVisible;
-	}
-
-	/**
-	 * Wraps an operation with automatic visibility tracking
-	 * This DRY helper ensures consistent visibility change detection across operations
-	 * @param {HTMLElement} element - The element to track
-	 * @param {Function} operation - The operation to perform
-	 * @returns {*} The result of the operation
-	 */
-	#withVisibilityTracking(element, operation) {
-		if (!element) return operation();
-
-		const wasVisible = this.#isElementVisible(element);
-		const result = operation();
-		this.#handleVisibilityChange(element, wasVisible);
-
-		return result;
 	}
 
 	/**
@@ -456,15 +438,13 @@ class NotificationMonitor extends MonitorCore {
 			const newItems = new Map();
 			const newImageUrls = new Set();
 
-			// Efficiently process all items in a single loop
+			// First, collect items to keep and items to remove
+			const itemsToKeep = [];
 			this._itemsMgr.items.forEach((item, asin) => {
 				const shouldKeep = isKeepSet ? arrASINs.has(asin) : !arrASINs.has(asin);
 
 				if (shouldKeep && item.element) {
-					// Add this item to the new container
-					newContainer.appendChild(item.element);
-					newItems.set(asin, item);
-
+					itemsToKeep.push({ asin, item });
 					// Keep track of the image URL for duplicate detection
 					if (item.data.img_url && this._settings.get("notification.monitor.hideDuplicateThumbnail")) {
 						newImageUrls.add(item.data.img_url);
@@ -481,6 +461,19 @@ class NotificationMonitor extends MonitorCore {
 					if (item.tile) {
 						item.tile = null;
 					}
+				}
+			});
+
+			// Sort the items to keep according to current sort type
+			const sortedItems = this._itemsMgr.sortItems();
+
+			// Add items to new container in sorted order
+			sortedItems.forEach((sortedItem) => {
+				// Find this item in our itemsToKeep
+				const keepItem = itemsToKeep.find((k) => k.asin === sortedItem.asin);
+				if (keepItem && keepItem.item.element) {
+					newContainer.appendChild(keepItem.item.element);
+					newItems.set(keepItem.asin, keepItem.item);
 				}
 			});
 
@@ -504,6 +497,9 @@ class NotificationMonitor extends MonitorCore {
 		if (visibleRemovedCount > 0) {
 			this.#emitGridEvent("grid:items-removed", { count: visibleRemovedCount });
 		}
+
+		// Trigger a re-sort to ensure proper ordering and placeholder management
+		this.#emitGridEvent("grid:sort-needed");
 	}
 
 	/**
@@ -1328,13 +1324,14 @@ class NotificationMonitor extends MonitorCore {
 		// Handle moving to top or sorting
 		if (!this._fetchingRecentItems) {
 			if (itemType === TYPE_ZEROETV) {
-				// Only move to top if we're NOT using price sort
-				if (this._sortType === TYPE_DATE_DESC && this._settings.get("notification.monitor.bump0ETV")) {
-					this._moveNotifToTop(notif);
-				} else {
-					// If sorting by price is active, emit event to resort after identifying as zero ETV
+				// For price-based sorting, always trigger a re-sort
+				if (this._sortType === TYPE_PRICE_DESC || this._sortType === TYPE_PRICE_ASC) {
 					this.#emitGridEvent("grid:sort-needed");
+				} else if (this._sortType === TYPE_DATE_DESC && this._settings.get("notification.monitor.bump0ETV")) {
+					// Only move to top for date descending sort if bump0ETV is enabled
+					this._moveNotifToTop(notif);
 				}
+				// For date ascending, do nothing - maintain insertion order
 			} else if (itemType === TYPE_HIGHLIGHT && this._sortType !== TYPE_DATE_ASC) {
 				this._moveNotifToTop(notif);
 			}
@@ -1359,39 +1356,6 @@ class NotificationMonitor extends MonitorCore {
 
 	#regularItemFound(notif, playSoundEffect = true) {
 		return this.#handleItemFound(notif, TYPE_REGULAR, playSoundEffect);
-	}
-
-	/**
-	 * Sort the DOM items according to the _items map
-	 */
-	async #processNotificationSorting() {
-		const container = this._gridContainer;
-		if (!container) return;
-
-		this._preserveScrollPosition(() => {
-			// Sort the items - reuse the sorting logic from #sortItems
-			const sortedItems = this._itemsMgr.sortItems();
-
-			// Only proceed if we have items
-			if (!sortedItems || sortedItems.length === 0) return;
-
-			// Filter out any items without DOM elements
-			const validItems = sortedItems.filter((item) => item.element);
-
-			// Create a DocumentFragment for better performance
-			const fragment = document.createDocumentFragment();
-
-			// Add items to fragment in sorted order
-			validItems.forEach((item) => {
-				if (item.element.parentNode) {
-					item.element.remove(); //Remove the element from the DOM
-				}
-				fragment.appendChild(item.element);
-			});
-
-			// Append all items at once
-			container.appendChild(fragment);
-		});
 	}
 
 	//############################################################
@@ -2253,6 +2217,18 @@ class NotificationMonitor extends MonitorCore {
 		if (this._noShiftGrid && typeof this._noShiftGrid.destroy === "function") {
 			this._noShiftGrid.destroy();
 			this._noShiftGrid = null;
+		}
+
+		// Destroy MasterSlave to clear interval
+		if (this._masterSlave && typeof this._masterSlave.destroy === "function") {
+			this._masterSlave.destroy();
+			this._masterSlave = null;
+		}
+
+		// Destroy ServerCom to clear intervals
+		if (this._serverComMgr && typeof this._serverComMgr.destroy === "function") {
+			this._serverComMgr.destroy();
+			this._serverComMgr = null;
 		}
 
 		// Clear references

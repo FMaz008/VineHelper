@@ -13,6 +13,7 @@ class ServerCom {
 
 	#serviceWorkerStatusTimer = null;
 	#statusTimer = null;
+	#channelMessageHandler = null;
 	fetch100 = false;
 	#dataBuffer = [];
 
@@ -60,9 +61,10 @@ class ServerCom {
 
 	#createEventListeners() {
 		//For everyone but Safari
-		this._monitor._channel.addEventListener("message", (event) => {
+		this.#channelMessageHandler = (event) => {
 			this.processBroadcastMessage(event.data);
-		});
+		};
+		this._monitor._channel.addEventListener("message", this.#channelMessageHandler);
 	}
 
 	/**
@@ -299,6 +301,29 @@ class ServerCom {
 			item: item.getAllInfo(),
 			title: notificationTitle,
 		});
+	}
+
+	destroy() {
+		// Clear the service worker status timer to prevent memory leak
+		if (this.#serviceWorkerStatusTimer) {
+			window.clearInterval(this.#serviceWorkerStatusTimer);
+			this.#serviceWorkerStatusTimer = null;
+		}
+
+		// Clear the status timer if it exists
+		if (this.#statusTimer) {
+			window.clearTimeout(this.#statusTimer);
+			this.#statusTimer = null;
+		}
+
+		// Remove channel event listener
+		if (this._monitor._channel && this.#channelMessageHandler) {
+			this._monitor._channel.removeEventListener("message", this.#channelMessageHandler);
+			this.#channelMessageHandler = null;
+		}
+
+		// Clear static instance reference
+		ServerCom.#instance = null;
 	}
 }
 

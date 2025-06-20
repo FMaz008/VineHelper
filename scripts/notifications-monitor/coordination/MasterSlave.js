@@ -18,6 +18,7 @@ class MasterSlave {
 	#monitorId = null;
 	#masterMonitorId = null;
 	#masterMonitorLastActivity = null;
+	#keepAliveInterval = null;
 	#monitorSet = new Set();
 
 	constructor(monitor) {
@@ -117,8 +118,13 @@ class MasterSlave {
 	}
 
 	#keepAlive() {
+		// Clear any existing interval
+		if (this.#keepAliveInterval) {
+			clearInterval(this.#keepAliveInterval);
+		}
+
 		//Send a message that we are still alive every second
-		setInterval(() => {
+		this.#keepAliveInterval = setInterval(() => {
 			this._monitor._channel.postMessage({ type: "ImAlive", destination: "*", sender: this.#monitorId });
 
 			//Update the master monitor's last activity time as we won't receive our own ImAlive messages.
@@ -181,6 +187,17 @@ class MasterSlave {
 
 	#isMasterMonitor() {
 		return this.#masterMonitorId === this.#monitorId;
+	}
+
+	destroy() {
+		// Clear the keep-alive interval to prevent memory leak
+		if (this.#keepAliveInterval) {
+			clearInterval(this.#keepAliveInterval);
+			this.#keepAliveInterval = null;
+		}
+
+		// Clear static instance reference
+		MasterSlave.#instance = null;
 	}
 }
 
