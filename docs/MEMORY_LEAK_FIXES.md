@@ -149,6 +149,53 @@ connect_error: (error) => {
 
 All existing tests pass after these changes (200 tests, 14 test suites), confirming that functionality is preserved while fixing the memory leaks.
 
+## Memory Debugging Tools
+
+To help identify and diagnose memory issues, VineHelper includes built-in memory debugging tools:
+
+### Enabling Memory Debugging
+
+1. **Via Settings (Recommended)**:
+
+    - Go to Settings > General > Debugging > Memory Analysis
+    - Enable "Enable Memory Debugging"
+    - Optionally enable "Auto Heap Snapshots" for automatic tracking
+    - Save and reload the notification monitor
+
+2. **Via Console** (for development):
+    ```javascript
+    localStorage.setItem("vh_debug_memory", "true");
+    location.reload();
+    ```
+
+### Using the Memory Debugger
+
+When enabled, the debugger is available as `window.md`:
+
+```javascript
+// Take snapshots at different points
+md.takeSnapshot("initial");
+// ... perform operations ...
+md.takeSnapshot("after-load");
+// ... more operations ...
+md.takeSnapshot("after-cleanup");
+
+// Generate a report showing memory changes
+md.generateReport();
+
+// Compare specific snapshots
+md.compareSnapshots("initial", "after-cleanup");
+```
+
+### What to Look For
+
+- **Heap size growth**: Monitor if memory increases continuously
+- **Event listener counts**: Check if listeners accumulate over time
+- **DOM node counts**: Verify nodes are properly cleaned up
+- **Snapshot comparisons**: Identify what's being retained between operations
+
+See `scripts/notifications-monitor/debug/README.md` for detailed documentation.
+
 ## Memory Profile Improvements
 
 The fixes address the following patterns observed in the Chrome memory profile:

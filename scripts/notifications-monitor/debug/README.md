@@ -16,18 +16,32 @@ Memory debugging is disabled by default and has zero impact on production perfor
 
 To enable:
 
+#### Option 1: Via Settings (Recommended)
+
+1. Go to VineHelper Settings > General tab
+2. Scroll to "Debugging" section > "Memory Analysis"
+3. Enable "Enable Memory Debugging"
+4. Optionally enable "Auto Heap Snapshots" for automatic snapshots
+5. Save settings and reload the notification monitor
+
+#### Option 2: Via localStorage (for development)
+
 ```javascript
-// Option 1: Set in localStorage (persists across reloads)
 localStorage.setItem("vh_debug_memory", "true");
 location.reload();
+```
 
-// Option 2: Set window flag before page load
+#### Option 3: Via window flag (before page load)
+
+```javascript
 window.DEBUG_MEMORY = true;
 ```
 
 ### Using the Debugger
 
-Due to browser extension context isolation, the debugger needs to be manually exposed in the console:
+When memory debugging is enabled via settings, the debugger is automatically available as `window.md` or `window.MEMORY_DEBUGGER`.
+
+If you need to manually expose it (e.g., for development):
 
 1. **Copy the entire contents of `expose-debugger.js`** into the browser console
 2. **Use the exposed `window.md` object**:

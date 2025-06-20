@@ -16,7 +16,13 @@ let MemoryDebugger = null;
 
 // Create a promise that resolves when the debugger is ready
 window.MEMORY_DEBUGGER_READY = new Promise((resolve) => {
-	if (window.DEBUG_MEMORY || localStorage.getItem("vh_debug_memory") === "true") {
+	// Check multiple sources for debug memory setting
+	const debugMemoryEnabled =
+		window.DEBUG_MEMORY ||
+		localStorage.getItem("vh_debug_memory") === "true" ||
+		localStorage.getItem("settings.general.debugMemory") === "true";
+
+	if (debugMemoryEnabled) {
 		import("/scripts/notifications-monitor/debug/MemoryDebugger.js")
 			.then((module) => {
 				MemoryDebugger = module.default || module.MemoryDebugger || module;
@@ -165,6 +171,14 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Memory debugger is initialized in the import callback above
+		// Check settings after they're loaded to enable memory debugging
+		this._settings.waitForLoad().then(() => {
+			if (this._settings.get("general.debugMemory") && !window.MEMORY_DEBUGGER) {
+				// Trigger memory debugger loading by setting localStorage
+				localStorage.setItem("vh_debug_memory", "true");
+				console.log("Memory debugging enabled via settings. Reload the page to activate.");
+			}
+		});
 	}
 
 	/**
@@ -252,8 +266,15 @@ class NotificationMonitor extends MonitorCore {
 			const newCount = this._countVisibleItems();
 			// Update the visibility state manager with new count (V3 only)
 			this._visibilityStateManager?.setCount(newCount);
+			// Update tab title
+			this._updateTabTitle(newCount);
 			// Emit event for filter change with visible count
 			this.#emitGridEvent("grid:items-filtered", { visibleCount: newCount });
+
+			// Force placeholder recalculation after filter change
+			if (this._noShiftGrid) {
+				this._noShiftGrid.insertPlaceholderTiles();
+			}
 		});
 	}
 
@@ -270,6 +291,7 @@ class NotificationMonitor extends MonitorCore {
 		const notificationTypeZeroETV = parseInt(node.dataset.typeZeroETV) === 1;
 		const notificationTypeHighlight = parseInt(node.dataset.typeHighlight) === 1;
 		const queueType = node.dataset.queue;
+		const beforeDisplay = node.style.display;
 
 		//Feed Paused
 		if (node.dataset.feedPaused == "true") {
@@ -320,10 +342,40 @@ class NotificationMonitor extends MonitorCore {
 		//Queue filter
 		let styleDisplay;
 		if (this._env.isSafari()) {
-			styleDisplay = window.getComputedStyle(node);
+			const computedStyle = window.getComputedStyle(node);
+			styleDisplay = computedStyle.display;
 		} else {
 			styleDisplay = node.style.display;
 		}
+
+		// Debug logging for visibility changes
+		const debugTabTitle = this._settings.get("general.debugTabTitle");
+		const debugPlaceholders = this._settings.get("general.debugPlaceholders");
+		if (debugTabTitle || debugPlaceholders) {
+			const afterDisplay = node.style.display;
+			if (beforeDisplay !== afterDisplay) {
+				console.log("[NotificationMonitor] Item visibility changed", {
+					asin: node.dataset.asin,
+					beforeDisplay,
+					afterDisplay,
+					typeZeroETV: notificationTypeZeroETV,
+					typeHighlight: notificationTypeHighlight,
+					currentFilter: this._filterType,
+					filterName:
+						this._filterType === TYPE_HIGHLIGHT_OR_ZEROETV
+							? "Zero ETV or KW match only"
+							: this._filterType === TYPE_HIGHLIGHT
+								? "Highlight only"
+								: this._filterType === TYPE_ZEROETV
+									? "Zero ETV only"
+									: this._filterType === TYPE_REGULAR
+										? "Regular only"
+										: "All",
+					styleDisplay,
+				});
+			}
+		}
+
 		if (styleDisplay == "flex" || styleDisplay == "block") {
 			if (this._filterQueue == "-1") {
 				return true;
@@ -535,7 +587,8 @@ class NotificationMonitor extends MonitorCore {
 					);
 
 					// Debug logging for truncation
-					if (typeof window !== "undefined" && window.DEBUG_TAB_TITLE) {
+					const debugTabTitle = this._settings.get("general.debugTabTitle");
+					if (debugTabTitle) {
 						console.log(`[Truncation] Starting truncation`, {
 							currentSize: this._itemsMgr.items.size,
 							maxLimit: max,
@@ -577,7 +630,7 @@ class NotificationMonitor extends MonitorCore {
 					});
 
 					// Debug logging for truncation completion
-					if (typeof window !== "undefined" && window.DEBUG_TAB_TITLE) {
+					if (debugTabTitle) {
 						console.log(`[Truncation] Completed truncation`, {
 							visibleItemsRemoved: visibleItemsRemovedCount,
 							newSize: this._itemsMgr.items.size,

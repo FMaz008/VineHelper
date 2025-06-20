@@ -122,6 +122,18 @@ Content Security Policy fix for Chrome compatibility:
 - Manifest file updates for all platforms
 - Test coverage for CSP validation
 
+### [MEMORY_OPTIMIZATION_RECOMMENDATIONS.md](./MEMORY_OPTIMIZATION_RECOMMENDATIONS.md)
+
+Memory optimization recommendations based on Chrome memory profile analysis:
+
+- Keyword matching memory allocation optimizations
+- Stream processing object reuse patterns
+- Virtual scrolling for large item lists
+- Socket.io message buffer management
+- Object pooling and WeakMap strategies
+- Memory monitoring and lifecycle management
+- Implementation priorities and success metrics
+
 ## Related Documentation
 
 - **Infrastructure Components**: See [`../scripts/infrastructure/README.md`](../scripts/infrastructure/README.md) for detailed documentation on the DI container and storage adapters

@@ -73,19 +73,181 @@ this._updateTabTitle(newCount);
 - Added proper count updates when truncation occurs
 - Ensured VisibilityStateManager is synchronized
 
+### 5. Safari Display Style Check Bug
+
+**Problem**: In `processNotificationFiltering`, Safari was getting the entire computed style object instead of just the display property.
+
+**Solution**: Fixed to properly extract the display property:
+
+```javascript
+if (this._env.isSafari()) {
+	const computedStyle = window.getComputedStyle(node);
+	styleDisplay = computedStyle.display;
+} else {
+	styleDisplay = node.style.display;
+}
+```
+
+### 6. Count Mismatch After Filter Changes
+
+**Problem**: Tab title showing incorrect count (e.g., 50 when 51 tiles visible) after filter changes.
+
+**Solution**: Enhanced `updateVisibleCountAfterFiltering` to:
+
+- Update tab title after recounting
+- Force placeholder recalculation
+- Use requestAnimationFrame for visual stability
+
+```javascript
+#updateVisibleCountAfterFiltering() {
+    requestAnimationFrame(() => {
+        if (this._env.isSafari()) {
+            this.#invalidateComputedStyleCache();
+        }
+
+        const newCount = this._countVisibleItems();
+        this._visibilityStateManager?.setCount(newCount);
+        this._updateTabTitle(newCount);
+        this.#emitGridEvent("grid:items-filtered", { visibleCount: newCount });
+
+        if (this._noShiftGrid) {
+            this._noShiftGrid.insertPlaceholderTiles();
+        }
+    });
+}
+```
+
+### 7. Debug Settings Not Persisting
+
+**Problem**: Debug checkboxes for "Debug Tab Title Updates" and "Debug Placeholder Calculations" were not persisting when leaving and returning to settings.
+
+**Root Cause**:
+
+1. Default values for these settings were not defined in SettingsMgrDI.js
+2. The settings were not being managed in the settings loader
+
+**Solution**:
+
+1. Added default values in `SettingsMgrDI.js`:
+
+```javascript
+// In #getDefaultSettings() method, within the general section:
+debugTabTitle: false,
+debugPlaceholders: false,
+```
+
+2. Added checkbox management in `settings_loadsave.js`:
+
+```javascript
+manageCheckboxSetting("general.debugTabTitle");
+manageCheckboxSetting("general.debugPlaceholders");
+```
+
+### 8. Placeholders Appearing at End Instead of Beginning
+
+**Problem**: Placeholder tiles were appearing at the very end of the grid instead of at the beginning.
+
+**Root Cause**: In `GridEventManager.js`, the `#handleSortNeeded` method was appending placeholder tiles after items in the document fragment.
+
+**Solution**: Modified the order in `GridEventManager.js` to add placeholders first:
+
+```javascript
+// Create a DocumentFragment for better performance
+const fragment = document.createDocumentFragment();
+
+// Add placeholder tiles at the beginning
+placeholderTiles.forEach((placeholder) => {
+	if (placeholder.parentNode) {
+		placeholder.remove();
+	}
+	fragment.appendChild(placeholder);
+});
+
+// Add items to fragment in sorted order after placeholders
+validItems.forEach((item) => {
+	if (item.element.parentNode) {
+		item.element.remove();
+	}
+	fragment.appendChild(item.element);
+});
+```
+
 ## Debug Mode
 
 Enable debug logging to troubleshoot count issues:
 
-```javascript
-window.DEBUG_TAB_TITLE = true;
-```
+### Using Settings (Recommended)
 
-This logs:
+1. Go to VineHelper Settings > General tab
+2. Scroll to the bottom "Debugging" section
+3. The debugging options are organized into subsections:
+
+#### Notification Monitor
+
+- **Debug Tab Title Updates** - Logs tab title count updates
+- **Debug Placeholder Calculations** - Logs placeholder tile calculations
+
+#### Memory Analysis
+
+- **Enable Memory Debugging** - Enables memory debugging tools in the notification monitor
+    - When enabled, you can use `window.md` or `window.MEMORY_DEBUGGER` to access the MemoryDebugger
+    - Common commands: `md.takeSnapshot("name")`, `md.compareSnapshots("before", "after")`
+- **Auto Heap Snapshots** - Automatically takes heap snapshots at key moments
+
+4. Save settings and reload the notification monitor
+
+### Viewing Debug Logs
+
+1. Open the notification monitor window
+2. Right-click in the window and select "Inspect"
+3. Go to the Console tab in DevTools
+4. Look for logs with these prefixes:
+    - `[MonitorCore]` - Count calculations and mismatches
+    - `[NoShiftGrid]` - Placeholder calculations
+    - `[TabTitle]` - Tab title updates
+    - `[Truncation]` - Item truncation events
+    - `[NotificationMonitor]` - Visibility changes
+
+### What Gets Logged
 
 - All tab title updates with count values
 - VisibilityStateManager count changes with stack traces
 - Truncation start/end with item counts
+- Placeholder calculations with grid dimensions
+- Item visibility changes during filtering
+- Count comparisons between different methods
+
+### Debug Output Examples
+
+```javascript
+// Placeholder calculation
+[NoShiftGrid] Starting placeholder calculation {
+    visibleItemsCount: 51,
+    visibilityStateCount: 50,
+    allTilesCount: 51,
+    hiddenTilesCount: 0,
+    domVisibleCount: 51,
+    endPlaceholdersCount: 0,
+    gridWidth: 1360
+}
+
+// Count mismatch detection
+[MonitorCore] Final count {
+    count: 51,
+    visibilityStateCount: 50,
+    mismatch: true
+}
+
+// Visibility change
+[NotificationMonitor] Item visibility changed {
+    asin: "B0XXXXX",
+    beforeDisplay: "none",
+    afterDisplay: "flex",
+    typeZeroETV: true,
+    currentFilter: 1,
+    filterName: "Zero ETV or KW match only"
+}
+```
 
 ## Test Plan
 

@@ -76,6 +76,11 @@ class NoShiftGrid {
 
 		// Use VisibilityStateManager count if available for consistency
 		let visibleItemsCount;
+		const allTiles = this._monitor._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
+		const hiddenTiles = this._monitor._gridContainer.querySelectorAll(
+			'.vvp-item-tile:not(.vh-placeholder-tile)[style*="display: none"]'
+		);
+
 		if (this._visibilityStateManager) {
 			visibleItemsCount = this._visibilityStateManager.getCount();
 		} else {
@@ -84,6 +89,20 @@ class NoShiftGrid {
 				'.vvp-item-tile:not(.vh-placeholder-tile):not([style*="display: none"])'
 			);
 			visibleItemsCount = visibleTiles.length;
+		}
+
+		// Debug logging
+		const debugPlaceholders = this._monitor._settings.get("general.debugPlaceholders");
+		if (debugPlaceholders) {
+			console.log("[NoShiftGrid] Starting placeholder calculation", {
+				visibleItemsCount,
+				visibilityStateCount: this._visibilityStateManager?.getCount(),
+				allTilesCount: allTiles.length,
+				hiddenTilesCount: hiddenTiles.length,
+				domVisibleCount: allTiles.length - hiddenTiles.length,
+				endPlaceholdersCount: this._endPlaceholdersCount,
+				gridWidth: this._gridWidth,
+			});
 		}
 
 		//Re-calculate the total number of items in the grid
@@ -97,6 +116,16 @@ class NoShiftGrid {
 
 		//Caculate the number of placeholder tiles we need to insert
 		const numPlaceholderTiles = (tilesPerRow - (theoricalItemsCount % tilesPerRow)) % tilesPerRow;
+
+		// Debug logging
+		if (debugPlaceholders) {
+			console.log("[NoShiftGrid] Placeholder calculation result", {
+				theoricalItemsCount,
+				tilesPerRow,
+				numPlaceholderTiles,
+				calculation: `(${tilesPerRow} - (${theoricalItemsCount} % ${tilesPerRow})) % ${tilesPerRow} = (${tilesPerRow} - ${theoricalItemsCount % tilesPerRow}) % ${tilesPerRow} = ${numPlaceholderTiles}`,
+			});
+		}
 
 		// Only modify DOM if placeholder count changed
 		const currentPlaceholders = this._monitor._gridContainer.querySelectorAll(".vh-placeholder-tile");

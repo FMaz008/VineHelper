@@ -1,0 +1,273 @@
+# Memory Optimization Recommendations
+
+Based on Chrome memory allocation profile analysis, here are the key areas for optimization:
+
+## 1. Keyword Matching Optimizations
+
+### Current Issues:
+
+- KeywordMatch.js shows high memory allocation (lines 124, 150, 168)
+- Likely creating many temporary objects during regex matching
+
+### Recommendations:
+
+```javascript
+// 1. Reuse regex test results
+const regexCache = new Map();
+function cachedRegexTest(regex, string) {
+	const key = `${regex.source}:${string}`;
+	if (regexCache.has(key)) {
+		return regexCache.get(key);
+	}
+	const result = regex.test(string);
+	// Limit cache size to prevent unbounded growth
+	if (regexCache.size > 1000) {
+		const firstKey = regexCache.keys().next().value;
+		regexCache.delete(firstKey);
+	}
+	regexCache.set(key, result);
+	return result;
+}
+
+// 2. Object pooling for keyword results
+const keywordResultPool = [];
+function getKeywordResult() {
+	return keywordResultPool.pop() || {};
+}
+function releaseKeywordResult(result) {
+	// Clear the object
+	for (const key in result) {
+		delete result[key];
+	}
+	keywordResultPool.push(result);
+}
+```
+
+## 2. Stream Processing Optimizations
+
+### Current Issues:
+
+- NewItemStreamProcessing.js allocates memory for each item transformation
+- Creates new objects instead of mutating existing ones
+
+### Recommendations:
+
+```javascript
+// 1. Mutate objects in-place instead of creating new ones
+const transformIsHighlight = dataStream.transformer(function (data) {
+	// Instead of returning new object, mutate existing
+	if (data.item?.data?.title !== undefined) {
+		const highlightKWMatch = keywordMatch(
+			Settings.get("general.highlightKeywords"),
+			data.item.data.title,
+			data.item.data.etv_min,
+			data.item.data.etv_max
+		);
+		// Mutate in place
+		data.item.data.KWsMatch = highlightKWMatch !== false;
+		data.item.data.KW = highlightKWMatch;
+	}
+	return data; // Return same object
+});
+
+// 2. Clear old references
+function processItemBatch(items) {
+	const results = [];
+	for (let i = 0; i < items.length; i++) {
+		const result = processItem(items[i]);
+		results.push(result);
+		// Clear reference to allow GC
+		items[i] = null;
+	}
+	return results;
+}
+```
+
+## 3. NotificationMonitor Optimizations
+
+### Current Issues:
+
+- Creating many DOM elements and event listeners
+- Keeping references to all items in memory
+
+### Recommendations:
+
+```javascript
+// 1. Implement virtual scrolling for large item lists
+class VirtualScroller {
+	constructor(container, itemHeight) {
+		this.container = container;
+		this.itemHeight = itemHeight;
+		this.visibleItems = new Map();
+		this.itemPool = [];
+	}
+
+	getItemElement() {
+		return this.itemPool.pop() || this.createItemElement();
+	}
+
+	releaseItemElement(element) {
+		// Clear event listeners
+		element.replaceWith(element.cloneNode(true));
+		this.itemPool.push(element);
+	}
+}
+
+// 2. Batch DOM operations
+const pendingDOMUpdates = [];
+let rafId = null;
+
+function scheduleDOMUpdate(update) {
+	pendingDOMUpdates.push(update);
+	if (!rafId) {
+		rafId = requestAnimationFrame(() => {
+			const fragment = document.createDocumentFragment();
+			pendingDOMUpdates.forEach((update) => update(fragment));
+			container.appendChild(fragment);
+			pendingDOMUpdates.length = 0;
+			rafId = null;
+		});
+	}
+}
+```
+
+## 4. Socket.io Memory Management
+
+### Current Issues:
+
+- WebSocket messages may be retained in memory
+- Event emitters can leak if not properly cleaned
+
+### Recommendations:
+
+```javascript
+// 1. Limit message buffer size
+class BoundedMessageBuffer {
+	constructor(maxSize = 1000) {
+		this.messages = [];
+		this.maxSize = maxSize;
+	}
+
+	add(message) {
+		this.messages.push(message);
+		if (this.messages.length > this.maxSize) {
+			// Remove oldest messages
+			this.messages.splice(0, this.messages.length - this.maxSize);
+		}
+	}
+
+	clear() {
+		this.messages.length = 0;
+	}
+}
+
+// 2. Properly clean up event listeners
+class SocketManager {
+	constructor() {
+		this.listeners = new Map();
+	}
+
+	on(event, handler) {
+		if (!this.listeners.has(event)) {
+			this.listeners.set(event, new Set());
+		}
+		this.listeners.get(event).add(handler);
+
+		// Return cleanup function
+		return () => {
+			const handlers = this.listeners.get(event);
+			if (handlers) {
+				handlers.delete(handler);
+				if (handlers.size === 0) {
+					this.listeners.delete(event);
+				}
+			}
+		};
+	}
+
+	destroy() {
+		this.listeners.clear();
+	}
+}
+```
+
+## 5. General Memory Management Best Practices
+
+### 1. Implement Memory Monitoring
+
+```javascript
+class MemoryMonitor {
+	static logMemoryUsage(label) {
+		if (performance.memory) {
+			console.log(`[Memory] ${label}:`, {
+				usedJSHeapSize: (performance.memory.usedJSHeapSize / 1048576).toFixed(2) + " MB",
+				totalJSHeapSize: (performance.memory.totalJSHeapSize / 1048576).toFixed(2) + " MB",
+				jsHeapSizeLimit: (performance.memory.jsHeapSizeLimit / 1048576).toFixed(2) + " MB",
+			});
+		}
+	}
+
+	static startMonitoring(interval = 30000) {
+		return setInterval(() => {
+			this.logMemoryUsage("Periodic Check");
+		}, interval);
+	}
+}
+```
+
+### 2. Implement Cleanup Lifecycle
+
+```javascript
+class ComponentLifecycle {
+	constructor() {
+		this.cleanupTasks = [];
+	}
+
+	addCleanup(task) {
+		this.cleanupTasks.push(task);
+	}
+
+	cleanup() {
+		this.cleanupTasks.forEach((task) => {
+			try {
+				task();
+			} catch (e) {
+				console.error("Cleanup task failed:", e);
+			}
+		});
+		this.cleanupTasks.length = 0;
+	}
+}
+```
+
+### 3. Use WeakMaps for Object Associations
+
+```javascript
+// Instead of attaching properties to DOM elements
+const elementData = new WeakMap();
+
+function setElementData(element, data) {
+	elementData.set(element, data);
+}
+
+function getElementData(element) {
+	return elementData.get(element);
+}
+// Data is automatically garbage collected when element is removed
+```
+
+## Implementation Priority
+
+1. **High Priority**: Keyword matching optimizations (biggest memory impact)
+2. **Medium Priority**: Virtual scrolling for large item lists
+3. **Medium Priority**: Socket.io message buffer limits
+4. **Low Priority**: General object pooling and reuse
+
+## Monitoring Success
+
+After implementing these optimizations:
+
+1. Take new memory profiles
+2. Compare allocation counts at the same code locations
+3. Monitor heap size over time
+4. Check for memory growth patterns during extended use

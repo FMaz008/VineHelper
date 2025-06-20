@@ -344,9 +344,25 @@ class MonitorCore {
 	_countVisibleItems() {
 		// Count visible items directly from DOM to ensure accuracy
 		// This avoids issues with ItemsMgr Map being out of sync
+		const allTiles = this._gridContainer.querySelectorAll(".vvp-item-tile");
+		const placeholderTiles = this._gridContainer.querySelectorAll(".vh-placeholder-tile");
+		const hiddenTiles = this._gridContainer.querySelectorAll('.vvp-item-tile[style*="display: none"]');
 		const visibleTiles = this._gridContainer.querySelectorAll(
 			'.vvp-item-tile:not(.vh-placeholder-tile):not([style*="display: none"])'
 		);
+
+		// Debug logging
+		const debugTabTitle = this._settings.get("general.debugTabTitle");
+		const debugPlaceholders = this._settings.get("general.debugPlaceholders");
+		if (debugTabTitle || debugPlaceholders) {
+			console.log("[MonitorCore] Counting visible items", {
+				allTiles: allTiles.length,
+				placeholderTiles: placeholderTiles.length,
+				hiddenTiles: hiddenTiles.length,
+				visibleTilesQuery: visibleTiles.length,
+				expectedVisible: allTiles.length - placeholderTiles.length - hiddenTiles.length,
+			});
+		}
 
 		let count = 0;
 
@@ -361,6 +377,15 @@ class MonitorCore {
 		} else {
 			// For other browsers, the selector already filters out display:none
 			count = visibleTiles.length;
+		}
+
+		// Debug logging
+		if (debugTabTitle || debugPlaceholders) {
+			console.log("[MonitorCore] Final count", {
+				count,
+				visibilityStateCount: this._visibilityStateManager?.getCount(),
+				mismatch: this._visibilityStateManager && this._visibilityStateManager.getCount() !== count,
+			});
 		}
 
 		// Update the single source of truth if available
@@ -395,7 +420,8 @@ class MonitorCore {
 			document.title = "VHNM (" + itemsCount + ")";
 
 			// Debug logging for truncation issues
-			if (typeof window !== "undefined" && window.DEBUG_TAB_TITLE) {
+			const debugTabTitle = this._settings.get("general.debugTabTitle");
+			if (debugTabTitle) {
 				console.log(`[TabTitle] Updated to: ${itemsCount}`, {
 					providedCount: count,
 					timestamp: new Date().toISOString(),

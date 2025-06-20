@@ -192,15 +192,7 @@ class GridEventManager {
 			// Create a DocumentFragment for better performance
 			const fragment = document.createDocumentFragment();
 
-			// Add items to fragment in sorted order
-			validItems.forEach((item) => {
-				if (item.element.parentNode) {
-					item.element.remove();
-				}
-				fragment.appendChild(item.element);
-			});
-
-			// Re-add placeholder tiles at the end
+			// Add placeholder tiles at the beginning
 			placeholderTiles.forEach((placeholder) => {
 				if (placeholder.parentNode) {
 					placeholder.remove();
@@ -208,7 +200,15 @@ class GridEventManager {
 				fragment.appendChild(placeholder);
 			});
 
-			// Append all items and placeholders at once
+			// Add items to fragment in sorted order after placeholders
+			validItems.forEach((item) => {
+				if (item.element.parentNode) {
+					item.element.remove();
+				}
+				fragment.appendChild(item.element);
+			});
+
+			// Append all placeholders and items at once
 			container.appendChild(fragment);
 		});
 

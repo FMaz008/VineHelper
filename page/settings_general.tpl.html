@@ -471,3 +471,62 @@
 		</div>
 	</div>
 </fieldset>
+
+<fieldset>
+	<legend>Debugging</legend>
+	<div class="vh-container">
+		Enable debug logging to help diagnose issues. Debug logs will appear in the browser console.
+	</div>
+
+	<fieldset>
+		<legend>Notification Monitor</legend>
+		<div class="setting-container">
+			<label for="general.debugTabTitle">
+				<input type="checkbox" name="general.debugTabTitle" value="1" />
+				Debug Tab Title Updates
+			</label>
+			<div class="setting-summary">
+				<div class="vh-toolbar-icon vh-icon-question"></div>
+				Logs detailed information about tab title count updates to help diagnose count mismatch issues.
+			</div>
+		</div>
+
+		<div class="setting-container">
+			<label for="general.debugPlaceholders">
+				<input type="checkbox" name="general.debugPlaceholders" value="1" />
+				Debug Placeholder Calculations
+			</label>
+			<div class="setting-summary">
+				<div class="vh-toolbar-icon vh-icon-question"></div>
+				Logs detailed information about placeholder tile calculations and grid layout adjustments.
+			</div>
+		</div>
+	</fieldset>
+
+	<fieldset>
+		<legend>Memory Analysis</legend>
+		<div class="setting-container">
+			<label for="general.debugMemory">
+				<input type="checkbox" name="general.debugMemory" value="1" />
+				Enable Memory Debugging
+			</label>
+			<div class="setting-summary">
+				<div class="vh-toolbar-icon vh-icon-question"></div>
+				Enables memory debugging tools in the notification monitor. When enabled, you can use <code>window.md</code> to access the MemoryDebugger instance.
+				<br />
+				<strong>Usage:</strong> <code>md.takeSnapshot("before")</code>, <code>md.compareSnapshots("before", "after")</code>
+			</div>
+		</div>
+
+		<div class="setting-container">
+			<label for="general.debugMemoryAutoSnapshot">
+				<input type="checkbox" name="general.debugMemoryAutoSnapshot" value="1" />
+				Auto Heap Snapshots
+			</label>
+			<div class="setting-summary">
+				<div class="vh-toolbar-icon vh-icon-question"></div>
+				Automatically takes heap snapshots at key moments (startup, after fetch, after truncation) to help identify memory leaks.
+			</div>
+		</div>
+	</fieldset>
+</fieldset>
