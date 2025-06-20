@@ -259,13 +259,32 @@ class GridEventManager {
 	 * Handle grid resized event (window resize)
 	 */
 	#handleGridResized() {
+		const debugPlaceholders = this.#monitor._settings.get("general.debugPlaceholders");
+		if (debugPlaceholders) {
+			console.log("[GridEventManager] Grid resized event received", {
+				isEnabled: this.#isEnabled,
+				hasNoShiftGrid: !!this.#noShiftGrid,
+			});
+		}
+
 		if (!this.#isEnabled || !this.#noShiftGrid) {
 			return;
 		}
 
 		// Update placeholders after grid resize
 		// The resize event is already debounced in NoShiftGrid
-		if (this.#shouldUpdatePlaceholders("resize")) {
+		const shouldUpdate = this.#shouldUpdatePlaceholders("resize");
+		if (debugPlaceholders) {
+			console.log("[GridEventManager] Should update placeholders after resize?", {
+				shouldUpdate,
+				sortType: this.#monitor._sortType,
+			});
+		}
+
+		if (shouldUpdate) {
+			if (debugPlaceholders) {
+				console.log("[GridEventManager] Updating placeholders after resize");
+			}
 			this.#updatePlaceholders();
 		}
 	}
@@ -294,7 +313,7 @@ class GridEventManager {
 		// and the operation affects grid layout
 		return (
 			this.#monitor._sortType === "date_desc" &&
-			["add", "remove", "clear", "filter", "sort", "unpause", "fetch"].includes(operation)
+			["add", "remove", "clear", "filter", "sort", "unpause", "fetch", "resize", "init"].includes(operation)
 		);
 	}
 

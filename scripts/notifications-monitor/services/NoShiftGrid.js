@@ -31,6 +31,23 @@ class NoShiftGrid {
 	updateGridContainer(gridContainer) {
 		this._monitor._gridContainer = gridContainer;
 		this.#calculateGridWidth();
+
+		// Set up ResizeObserver for the new container
+		if (window.ResizeObserver && gridContainer) {
+			// Disconnect existing observer if any
+			if (this._resizeObserver) {
+				this._resizeObserver.disconnect();
+			}
+
+			// Create new observer for the grid container
+			this._resizeObserver = new ResizeObserver((entries) => {
+				// Trigger resize handler when container size changes
+				this._resizeHandler();
+			});
+
+			// Observe the new grid container
+			this._resizeObserver.observe(gridContainer);
+		}
 	}
 
 	#setupEventListener() {
@@ -38,15 +55,46 @@ class NoShiftGrid {
 		this._resizeHandler = () => {
 			clearTimeout(this._resizeTimer);
 			this._resizeTimer = setTimeout(() => {
+				const debugPlaceholders = this._monitor._settings.get("general.debugPlaceholders");
+				if (debugPlaceholders) {
+					console.log("[NoShiftGrid] Resize/zoom detected, recalculating grid width");
+				}
+
 				this.#calculateGridWidth();
 				// Emit event instead of direct call to ensure proper batching
 				if (this._monitor && this._monitor._hookMgr) {
 					this._monitor._hookMgr.hookExecute("grid:resized");
 				}
-			}, 150); // Wait for resize animation to complete
+			}, 50); // Reduced delay for more responsive updates
 		};
 
 		window.addEventListener("resize", this._resizeHandler);
+
+		// Store initial DPR and check for changes
+		this._lastDevicePixelRatio = window.devicePixelRatio || 1;
+
+		// Check for DPR changes periodically as a fallback
+		// This catches zoom changes that don't trigger resize events
+		this._zoomCheckInterval = setInterval(() => {
+			const currentDPR = window.devicePixelRatio || 1;
+			if (Math.abs(currentDPR - this._lastDevicePixelRatio) > 0.001) {
+				this._lastDevicePixelRatio = currentDPR;
+
+				const debugPlaceholders = this._monitor._settings.get("general.debugPlaceholders");
+				if (debugPlaceholders) {
+					console.log("[NoShiftGrid] Zoom change detected via DPR check", {
+						oldDPR: this._lastDevicePixelRatio,
+						newDPR: currentDPR,
+					});
+				}
+
+				// Trigger immediate update without debounce for zoom changes
+				this.#calculateGridWidth();
+				if (this._monitor && this._monitor._hookMgr) {
+					this._monitor._hookMgr.hookExecute("grid:resized");
+				}
+			}
+		}, 200); // Check every 200ms for more responsive zoom detection
 	}
 
 	/**
@@ -55,7 +103,17 @@ class NoShiftGrid {
 	 */
 	#calculateGridWidth() {
 		if (this._monitor._gridContainer) {
+			const oldWidth = this._gridWidth;
 			this._gridWidth = this._monitor._gridContainer.offsetWidth;
+
+			const debugPlaceholders = this._monitor._settings.get("general.debugPlaceholders");
+			if (debugPlaceholders && oldWidth !== this._gridWidth) {
+				console.log("[NoShiftGrid] Grid width changed", {
+					oldWidth,
+					newWidth: this._gridWidth,
+					containerElement: this._monitor._gridContainer,
+				});
+			}
 		}
 	}
 
@@ -268,6 +326,18 @@ class NoShiftGrid {
 		if (this._resizeTimer) {
 			clearTimeout(this._resizeTimer);
 			this._resizeTimer = null;
+		}
+
+		// Disconnect ResizeObserver
+		if (this._resizeObserver) {
+			this._resizeObserver.disconnect();
+			this._resizeObserver = null;
+		}
+
+		// Clear zoom check interval
+		if (this._zoomCheckInterval) {
+			clearInterval(this._zoomCheckInterval);
+			this._zoomCheckInterval = null;
 		}
 
 		// Clear references

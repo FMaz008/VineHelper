@@ -316,3 +316,50 @@ if (wasVisible !== isNowVisible) {
 ```
 
 This ensures that when an item becomes a Zero ETV item and its visibility changes due to active filters, the count is properly updated.
+
+### 10. Enhanced Zoom Detection for Placeholder Recalculation
+
+**Problem**: Browser zoom level changes don't always trigger window resize events, causing placeholders to not recalculate when the number of items per row changes.
+
+**Solution**: Added multiple detection methods in NoShiftGrid using modern APIs:
+
+1. **ResizeObserver**: Monitor the grid container for size changes
+2. **Device Pixel Ratio Monitoring**: Periodically check for DPR changes as fallback
+3. **Window Resize Handler**: Continue to handle window resize events
+
+```javascript
+// Use ResizeObserver to detect container size changes
+if (window.ResizeObserver && this._monitor._gridContainer) {
+	this._resizeObserver = new ResizeObserver((entries) => {
+		this._resizeHandler();
+	});
+	this._resizeObserver.observe(this._monitor._gridContainer);
+}
+
+// Periodically check for zoom changes as fallback
+this._zoomCheckInterval = setInterval(() => {
+	const currentDPR = window.devicePixelRatio || 1;
+	if (Math.abs(currentDPR - this._lastDevicePixelRatio) > 0.001) {
+		this._lastDevicePixelRatio = currentDPR;
+		// Trigger immediate update for zoom changes
+		this.#calculateGridWidth();
+		this._monitor._hookMgr.hookExecute("grid:resized");
+	}
+}, 200); // Check every 200ms for responsive zoom detection
+```
+
+This ensures placeholders are recalculated when:
+
+- Window is resized
+- Browser zoom level changes
+- Container size changes for any reason
+- Font size changes
+- Device pixel ratio changes
+
+The ResizeObserver API is more reliable than media queries and doesn't use deprecated methods.
+
+**Timing Optimizations**:
+
+- Reduced resize debounce from 150ms to 50ms for more responsive updates
+- Reduced zoom check interval from 1000ms to 200ms for faster zoom detection
+- Zoom changes trigger immediate grid recalculation without debounce delay
