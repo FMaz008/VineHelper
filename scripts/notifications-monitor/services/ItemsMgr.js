@@ -21,6 +21,19 @@ class ItemsMgr {
 		// Only proceed if there are items to sort
 		if (this.items.size === 0) return;
 
+		const sortType = this._settings.get("notification.monitor.sortType");
+
+		// Only sort the Map if we're using price-based sorting
+		// Date-based sorting is handled by DOM insertion order
+		if (sortType !== TYPE_PRICE_ASC && sortType !== TYPE_PRICE_DESC) {
+			// Return array without modifying the Map order
+			return Array.from(this.items.entries()).map(([asin, item]) => ({
+				asin,
+				data: item.data,
+				element: item.element,
+			}));
+		}
+
 		// Convert Map to array for sorting
 		const itemsArray = Array.from(this.items.entries()).map(([asin, item]) => {
 			return {
@@ -32,20 +45,14 @@ class ItemsMgr {
 
 		// Sort based on the current sort type
 		itemsArray.sort((a, b) => {
-			if (this._settings.get("notification.monitor.sortType") === TYPE_DATE_ASC) {
-				// Sort by date, oldest first
-				return a.data.date - b.data.date;
-			} else if (this._settings.get("notification.monitor.sortType") === TYPE_DATE_DESC) {
-				// Sort by date, newest first
-				return b.data.date - a.data.date;
-			} else if (this._settings.get("notification.monitor.sortType") === TYPE_PRICE_ASC) {
+			if (sortType === TYPE_PRICE_ASC) {
 				// Sort by price, lowest first
 				// Treat null/undefined as 99999999 so they are at the end
 				const aPrice = parseFloat(a.data.etv_min || 99999999); // || will match null/undefined/""/false
 				const bPrice = parseFloat(b.data.etv_min || 99999999);
 				return aPrice - bPrice;
 			} else {
-				// Default: sort by price (TYPE_PRICE), highest first
+				// Default: sort by price (TYPE_PRICE_DESC), highest first
 				// Treat null/undefined as -1 so actual 0 values rank higher
 				const aPrice = parseFloat(a.data.etv_min || -1); // || will match null/undefined/""/false
 				const bPrice = parseFloat(b.data.etv_min || -1);
