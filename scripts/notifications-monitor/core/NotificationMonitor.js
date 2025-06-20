@@ -913,8 +913,8 @@ class NotificationMonitor extends MonitorCore {
 		const isVisible = this.#processNotificationFiltering(tileDOM);
 
 		// Emit grid events during normal operation or when fetching recent items
-		// This ensures visibility counts are updated even when paused during fetch
-		if (!this._feedPaused) {
+		// Always emit during fetch to ensure counts stay accurate
+		if (!this._feedPaused || this._fetchingRecentItems) {
 			// Emit event for grid modification with count
 			this.#emitGridEvent("grid:items-added", { count: isVisible ? 1 : 0 });
 		}
@@ -2134,10 +2134,14 @@ class NotificationMonitor extends MonitorCore {
 				}
 			});
 
-			// Update visibility count after unpause
-			// The original code called _updateTabTitle() which would recalculate counts
-			const newCount = this._countVisibleItems();
-			this._visibilityStateManager?.setCount(newCount);
+			// Update visibility count after unpause only if we don't have a visibility state manager
+			// If we have one, trust the incremental updates that happened during fetch
+			if (!this._visibilityStateManager) {
+				// Fallback for monitors without VisibilityStateManager
+				const newCount = this._countVisibleItems();
+				// Update title directly since we don't have state manager
+				this._updateTabTitle();
+			}
 
 			// Only emit unpause event for manual unpause, not hover unpause
 			if (!isHoverPause) {

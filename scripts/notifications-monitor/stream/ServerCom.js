@@ -253,8 +253,10 @@ class ServerCom {
 		}
 		this.#dataBuffer.push(data);
 		if (data.type == "fetchRecentItemsEnd") {
-			this._monitor._channel.postMessage({ type: "fetch100", data: JSON.stringify(this.#dataBuffer) });
-			this.processBroadcastMessage({ type: "fetch100", data: JSON.stringify(this.#dataBuffer) });
+			// Stringify once and reuse to avoid duplicate memory allocation
+			const stringifiedBuffer = JSON.stringify(this.#dataBuffer);
+			this._monitor._channel.postMessage({ type: "fetch100", data: stringifiedBuffer });
+			this.processBroadcastMessage({ type: "fetch100", data: stringifiedBuffer });
 			this.#dataBuffer = [];
 			this.fetch100 = false;
 		}
