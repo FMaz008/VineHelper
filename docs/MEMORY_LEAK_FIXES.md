@@ -138,6 +138,30 @@ The fixes address the following patterns observed in the Chrome memory profile:
 6. **Optimize Array Operations**: Review and combine filter/map/forEach chains into single loops where possible
 7. **Implement Object Pooling**: For frequently created objects in socket message processing
 
+## Additional Fix: Bulk Remove DOM Cleanup
+
+### Issue
+
+The `bulkRemoveItems` method in NotificationMonitor was not cleaning up DOM references when removing items in bulk (during auto-truncate), which could lead to memory leaks.
+
+### Fix Applied
+
+Modified `bulkRemoveItems` to null out DOM element and tile references for items being removed, ensuring proper garbage collection during bulk operations.
+
+## Additional Fix: Date-based Sorting
+
+### Issue
+
+When using "Fetch: last 12 hrs", items were not properly sorted by date, resulting in mixed chronological order. The `sortItems()` method was not actually sorting items for date-based sort types, relying instead on DOM insertion order which was broken during batch fetches.
+
+### Fix Applied
+
+Modified `ItemsMgr.sortItems()` to properly sort items by timestamp for date-based sorting:
+
+- Added sorting logic for `TYPE_DATE_ASC` (oldest first) and `TYPE_DATE_DESC` (newest first)
+- Items are now sorted by their timestamp property
+- This ensures proper chronological order after fetching historical items
+
 ## Impact
 
 These fixes should significantly reduce memory consumption over time, especially for users who keep the notification monitor running for extended periods. The fixes prevent:
@@ -147,3 +171,4 @@ These fixes should significantly reduce memory consumption over time, especially
 - Event listeners from persisting after the WebSocket is destroyed
 - Anonymous function closures from retaining unnecessary memory
 - Error objects with full stack traces from being retained
+- Incorrect item ordering when fetching historical data

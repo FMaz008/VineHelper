@@ -469,10 +469,17 @@ class NotificationMonitor extends MonitorCore {
 					if (item.data.img_url && this._settings.get("notification.monitor.hideDuplicateThumbnail")) {
 						newImageUrls.add(item.data.img_url);
 					}
-				} else if (!shouldKeep && item.element) {
+				} else if (!shouldKeep) {
 					// Count visible items being removed
-					if (this.#isElementVisible(item.element)) {
+					if (item.element && this.#isElementVisible(item.element)) {
 						visibleRemovedCount++;
+					}
+					// Clean up DOM references for items being removed
+					if (item.element) {
+						item.element = null;
+					}
+					if (item.tile) {
+						item.tile = null;
 					}
 				}
 			});
