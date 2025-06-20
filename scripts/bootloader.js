@@ -1259,9 +1259,13 @@ window.addEventListener("message", async function (event) {
 	}
 
 	//Amazon checkout process (only use if the notification monitor is loaded)
-	console.log(event.data, env.isAmazonCheckoutEnabled(), notificationMonitor);
-
-	if (event.data.type == "offerListingId" && env.isAmazonCheckoutEnabled() && notificationMonitor !== null) {
+	//This is an alternate backup method to flagging the form as target=_blank
+	if (
+		event.data.type == "offerListingId" &&
+		env.isAmazonCheckoutEnabled() &&
+		notificationMonitor !== null &&
+		!Settings.get("general.forceTango")
+	) {
 		const offerListingId = event.data.offerListingId;
 
 		//Open a new tab to the form generating url
