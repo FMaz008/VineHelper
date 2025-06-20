@@ -1215,16 +1215,69 @@ class NotificationMonitor extends MonitorCore {
 
 		//zero ETV found, highlight the item accordingly
 		if (parseFloat(etvObj.dataset.etvMin) == 0) {
+			// Check visibility BEFORE setting the flag
+			const wasVisible = this.#isElementVisible(notif);
+
 			// Set the flag before calling the handler
 			notif.dataset.typeZeroETV = 1;
 			// Always set typeZeroETV = 1 when ETV is 0, regardless of previous state
 			this.#zeroETVItemFound(notif, this._settings.get("notification.monitor.zeroETV.sound") != "0");
+
+			// Check if visibility changed after processing
+			const isNowVisible = this.#isElementVisible(notif);
+
+			// Debug logging for Zero ETV visibility changes
+			const debugTabTitle = this._settings.get("general.debugTabTitle");
+			if (debugTabTitle) {
+				console.log("[NotificationMonitor] Zero ETV item visibility check", {
+					asin: notif.dataset.asin,
+					wasVisible,
+					isNowVisible,
+					visibilityChanged: wasVisible !== isNowVisible,
+					currentFilter: this._filterType,
+					filterName:
+						this._filterType === TYPE_HIGHLIGHT_OR_ZEROETV
+							? "Zero ETV or KW match only"
+							: this._filterType === TYPE_ZEROETV
+								? "Zero ETV only"
+								: "Other",
+					etvMin: etvObj.dataset.etvMin,
+					etvMax: etvObj.dataset.etvMax,
+				});
+			}
+
+			if (wasVisible !== isNowVisible) {
+				this.#emitGridEvent(isNowVisible ? "grid:items-added" : "grid:items-removed", { count: 1 });
+			}
 		} else {
 			// Clear the zero ETV flag when item is not zero ETV
 			if (notif.dataset.typeZeroETV == 1) {
+				// Check visibility BEFORE clearing the flag
+				const wasVisible = this.#isElementVisible(notif);
+
 				notif.dataset.typeZeroETV = 0;
 				// Re-apply filtering to update visibility
 				this.#processNotificationFiltering(notif);
+
+				// Check if visibility changed after processing
+				const isNowVisible = this.#isElementVisible(notif);
+
+				// Debug logging
+				const debugTabTitle = this._settings.get("general.debugTabTitle");
+				if (debugTabTitle) {
+					console.log("[NotificationMonitor] Clearing Zero ETV flag", {
+						asin: notif.dataset.asin,
+						wasVisible,
+						isNowVisible,
+						visibilityChanged: wasVisible !== isNowVisible,
+						etvMin: etvObj.dataset.etvMin,
+						etvMax: etvObj.dataset.etvMax,
+					});
+				}
+
+				if (wasVisible !== isNowVisible) {
+					this.#emitGridEvent(isNowVisible ? "grid:items-added" : "grid:items-removed", { count: 1 });
+				}
 			}
 		}
 

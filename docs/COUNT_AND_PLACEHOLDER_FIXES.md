@@ -291,3 +291,28 @@ Enable debug logging to troubleshoot count issues:
 - Chose full recount over detecting visibility changes in `processNotificationFiltering`
 - Recounting only happens at specific points (unpause, fetch complete)
 - Avoids continuous visibility checks which are resource-intensive on Safari
+
+### 9. Zero ETV Items Not Emitting Visibility Change Events
+
+**Problem**: When items received Zero ETV values, their visibility could change (e.g., becoming visible with "Zero ETV or KW match only" filter) but no count update event was emitted.
+
+**Root Cause**: The `#setETV` method would set the `typeZeroETV` flag and call `#zeroETVItemFound`, but didn't check if the item's visibility changed as a result.
+
+**Solution**: Track visibility before and after setting Zero ETV flags:
+
+```javascript
+// Check visibility BEFORE setting the flag
+const wasVisible = this.#isElementVisible(notif);
+
+// Set the flag and process the item
+notif.dataset.typeZeroETV = 1;
+this.#zeroETVItemFound(notif, playSoundEffect);
+
+// Check if visibility changed after processing
+const isNowVisible = this.#isElementVisible(notif);
+if (wasVisible !== isNowVisible) {
+	this.#emitGridEvent(isNowVisible ? "grid:items-added" : "grid:items-removed", { count: 1 });
+}
+```
+
+This ensures that when an item becomes a Zero ETV item and its visibility changes due to active filters, the count is properly updated.
