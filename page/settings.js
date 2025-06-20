@@ -1,3 +1,14 @@
+// Load Apple SDK for Safari (moved from inline script to avoid CSP issues)
+if (navigator.userAgent.includes("Safari") && !navigator.userAgent.includes("Chrome")) {
+	const script = document.createElement("script");
+	script.type = "text/javascript";
+	script.src = "https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js";
+	script.onerror = function () {
+		console.warn("Apple Sign-In SDK failed to load. Receipt validation is still available.");
+	};
+	document.head.appendChild(script);
+}
+
 import { SettingsMgr } from "/scripts/core/services/SettingsMgrCompat.js";
 const Settings = new SettingsMgr();
 
@@ -132,6 +143,7 @@ async function validateReceipt() {
 	if (countryCode != null) {
 		initTabs();
 		initiateSettings(); //page/settings_loadsave.js, initialize the loading and saving code for the page
+		initMemoryDebugging(); // Initialize memory debugging controls
 	}
 
 	if (env.isSafari()) {
@@ -141,6 +153,242 @@ async function validateReceipt() {
 		document.getElementById("validateReceipt").addEventListener("click", validateReceipt);
 	}
 })();
+
+// Memory Debugging Functions
+function initMemoryDebugging() {
+	// Check if memory debugging is enabled
+	const debugMemoryCheckbox = document.querySelector('input[name="general.debugMemory"]');
+	const memoryDebugControls = document.getElementById("memoryDebugControls");
+
+	if (!debugMemoryCheckbox || !memoryDebugControls) return;
+
+	// Show/hide controls based on checkbox state
+	function updateMemoryDebugVisibility() {
+		memoryDebugControls.style.display = debugMemoryCheckbox.checked ? "block" : "none";
+	}
+
+	// Initial visibility
+	updateMemoryDebugVisibility();
+
+	// Listen for changes
+	debugMemoryCheckbox.addEventListener("change", updateMemoryDebugVisibility);
+
+	// Memory debug log
+	const logElement = document.getElementById("memoryDebugLog");
+	let logContent = [];
+
+	function addToLog(message, type = "info") {
+		const timestamp = new Date().toLocaleTimeString("en-US", {
+			hour: "2-digit",
+			minute: "2-digit",
+			second: "2-digit",
+			hour12: false,
+		});
+
+		// Use icons/symbols for different types
+		const typeSymbol = type === "error" ? "❌" : type === "success" ? "✅" : "ℹ️";
+		const color = type === "error" ? "#d32f2f" : type === "success" ? "#2e7d32" : "#555";
+
+		// Format message more compactly - all on one line
+		const logEntry =
+			`<div style="margin: 3px 0; font-size: 11px; line-height: 1.3;">` +
+			`<span style="color: #999; font-size: 10px; display: inline-block; width: 55px;">${timestamp}</span> ` +
+			`<span style="display: inline-block; width: 20px; text-align: center;">${typeSymbol}</span> ` +
+			`<span style="color: ${color};">${message}</span>` +
+			`</div>`;
+
+		logContent.push(logEntry);
+
+		// Keep only last 50 entries for dropdown view
+		if (logContent.length > 50) {
+			logContent.shift();
+		}
+
+		logElement.innerHTML = logContent.join("");
+		logElement.scrollTop = logElement.scrollHeight;
+	}
+
+	// Clear log button
+	document.getElementById("clearLogBtn")?.addEventListener("click", () => {
+		logContent = [];
+		logElement.innerHTML = '<div style="color: #888; font-style: italic;">Memory debugging log cleared.</div>';
+		addToLog("Log cleared", "info");
+	});
+
+	// Copy log button
+	document.getElementById("copyLogBtn")?.addEventListener("click", async () => {
+		try {
+			// Extract text content from log entries
+			const logText = logContent
+				.map((entry) => {
+					// Parse the HTML to extract text
+					const tempDiv = document.createElement("div");
+					tempDiv.innerHTML = entry;
+					return tempDiv.textContent || tempDiv.innerText || "";
+				})
+				.join("\n");
+
+			// Copy to clipboard
+			await navigator.clipboard.writeText(logText);
+
+			// Show success feedback
+			const copyBtn = document.getElementById("copyLogBtn");
+			const originalText = copyBtn.textContent;
+			copyBtn.textContent = "✓";
+			copyBtn.style.background = "#d4edda";
+
+			setTimeout(() => {
+				copyBtn.textContent = originalText;
+				copyBtn.style.background = "#f0f0f0";
+			}, 1500);
+
+			addToLog("Log copied to clipboard", "success");
+		} catch (error) {
+			console.error("Failed to copy log:", error);
+			addToLog("Failed to copy log: " + error.message, "error");
+		}
+	});
+
+	// Memory debugging API communication
+	async function sendMemoryCommand(command, params = {}) {
+		try {
+			// Send message to all tabs to execute memory debugging command
+			const tabs = await chrome.tabs.query({});
+			const vineTab = tabs.find((tab) => tab.url && tab.url.includes("amazon.") && tab.url.includes("/vine/"));
+
+			if (!vineTab) {
+				addToLog("No Vine tab found. Please open a Vine page first.", "error");
+				return null;
+			}
+
+			return new Promise((resolve) => {
+				chrome.tabs.sendMessage(
+					vineTab.id,
+					{
+						type: "MEMORY_DEBUG_COMMAND",
+						command: command,
+						params: params,
+					},
+					(response) => {
+						if (chrome.runtime.lastError) {
+							addToLog(`Error: ${chrome.runtime.lastError.message}`, "error");
+							resolve(null);
+						} else {
+							resolve(response);
+						}
+					}
+				);
+			});
+		} catch (error) {
+			addToLog(`Error: ${error.message}`, "error");
+			return null;
+		}
+	}
+
+	// Take snapshot button
+	document.getElementById("takeSnapshotBtn")?.addEventListener("click", async () => {
+		const snapshotNameInput = document.getElementById("snapshotName");
+		const snapshotName = snapshotNameInput.value.trim() || `snap-${Date.now()}`;
+
+		// Disable button during operation
+		const btn = document.getElementById("takeSnapshotBtn");
+		btn.disabled = true;
+		btn.textContent = "Taking...";
+
+		addToLog(`Taking snapshot: ${snapshotName}`);
+
+		const result = await sendMemoryCommand("takeSnapshot", { name: snapshotName });
+		if (result && result.success) {
+			addToLog(`Snapshot saved: ${snapshotName}`, "success");
+			snapshotNameInput.value = ""; // Clear input after success
+		} else {
+			addToLog(`Snapshot failed: ${result?.error || "Unknown error"}`, "error");
+		}
+
+		// Re-enable button
+		btn.disabled = false;
+		btn.textContent = "Take Snapshot";
+	});
+
+	// Generate report button
+	document.getElementById("generateReportBtn")?.addEventListener("click", async () => {
+		addToLog("Generating memory report...");
+
+		const result = await sendMemoryCommand("generateReport");
+		if (result && result.success) {
+			addToLog("Memory report generated:", "success");
+			addToLog(JSON.stringify(result.data, null, 2));
+		} else {
+			addToLog(`Failed to generate report: ${result?.error || "Unknown error"}`, "error");
+		}
+	});
+
+	// Detect leaks button
+	document.getElementById("detectLeaksBtn")?.addEventListener("click", async () => {
+		addToLog("Detecting memory leaks...");
+
+		const result = await sendMemoryCommand("detectLeaks");
+		if (result && result.success) {
+			const leaks = result.data;
+
+			// Compact summary
+			const hasIssues = leaks.notificationMonitors > 1 || leaks.detachedNodes > 100;
+			addToLog("Leak detection complete", hasIssues ? "error" : "success");
+
+			// Only show problematic values
+			if (leaks.notificationMonitors > 1) {
+				addToLog(`⚠️ Monitors: ${leaks.notificationMonitors} (should be 1)`, "error");
+			}
+			if (leaks.detachedNodes > 100) {
+				addToLog(`⚠️ Detached nodes: ${leaks.detachedNodes}`, "error");
+			}
+			if (leaks.keywordMatchInstances > 50) {
+				addToLog(`⚠️ Keywords: ${leaks.keywordMatchInstances}`, "error");
+			}
+
+			// Show summary if no issues
+			if (!hasIssues) {
+				addToLog(`✓ No memory leaks detected`, "success");
+			}
+		} else {
+			addToLog(`Leak detection failed`, "error");
+		}
+	});
+
+	// Check detached nodes button
+	document.getElementById("checkDetachedBtn")?.addEventListener("click", async () => {
+		addToLog("Checking for detached DOM nodes...");
+
+		const result = await sendMemoryCommand("checkDetachedNodes");
+		if (result && result.success) {
+			const detached = result.data;
+			addToLog(`Found ${detached.length} detached nodes`, detached.length > 0 ? "error" : "success");
+			if (detached.length > 0 && detached.length <= 10) {
+				detached.forEach((node, i) => {
+					addToLog(`  ${i + 1}. ${node}`);
+				});
+			}
+		} else {
+			addToLog(`Failed to check detached nodes: ${result?.error || "Unknown error"}`, "error");
+		}
+	});
+
+	// Cleanup button
+	document.getElementById("cleanupBtn")?.addEventListener("click", async () => {
+		addToLog("Running memory cleanup...");
+
+		const result = await sendMemoryCommand("cleanup");
+		if (result && result.success) {
+			const cleaned = result.data;
+			addToLog(`Cleanup completed! Cleaned ${cleaned.length} items`, "success");
+			cleaned.forEach((item) => {
+				addToLog(`  - ${item}`);
+			});
+		} else {
+			addToLog(`Failed to run cleanup: ${result?.error || "Unknown error"}`, "error");
+		}
+	});
+}
 
 function getAppVersion() {
 	const manifest = chrome.runtime.getManifest();

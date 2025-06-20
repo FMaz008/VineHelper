@@ -528,5 +528,89 @@
 				Automatically takes heap snapshots at key moments (startup, after fetch, after truncation) to help identify memory leaks.
 			</div>
 		</div>
+
+		<!-- Memory Debugging Controls (only visible when debugging is enabled) -->
+		<div id="memoryDebugControls" class="memory-debug-controls" style="display: none;">
+			<hr style="margin: 15px 0;">
+			
+			<div class="setting-container">
+				<h4 style="margin: 10px 0; font-size: 14px;">Memory Debugging Tools</h4>
+			</div>
+
+			<div class="setting-container" style="flex-direction: column; align-items: stretch;">
+				<label style="font-weight: bold; margin-bottom: 8px; font-size: 13px;">Take Snapshot:</label>
+				<div style="display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap;">
+					<input type="text" id="snapshotName" placeholder="Snapshot name" style="
+						flex: 1;
+						min-width: 120px;
+						padding: 6px 8px;
+						font-size: 12px;
+						border: 1px solid #ccc;
+						border-radius: 3px;
+					">
+					<button id="takeSnapshotBtn" class="vh-button-icon" style="
+						padding: 6px 12px;
+						font-size: 12px;
+						white-space: nowrap;
+					">Take Snapshot</button>
+				</div>
+			</div>
+
+			<div class="setting-container" style="background: #f0f8ff; padding: 10px; border-radius: 4px; margin-bottom: 12px;">
+				<div style="display: flex; align-items: center; gap: 8px;">
+					<span style="font-size: 16px;">ℹ️</span>
+					<div style="font-size: 12px; line-height: 1.4;">
+						<strong>How it works:</strong> These tools analyze memory in your Vine tab (where items are displayed), not this settings page.
+						Make sure you have a Vine page open before using these tools. All results show the actual state of your notification monitor.
+					</div>
+				</div>
+			</div>
+
+			<div class="setting-container" style="flex-direction: column; align-items: stretch;">
+				<label style="font-weight: bold; margin-bottom: 8px; font-size: 13px;">Memory Analysis:</label>
+				<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%;">
+					<button id="generateReportBtn" class="vh-button-icon memory-debug-btn">Generate Report</button>
+					<button id="detectLeaksBtn" class="vh-button-icon memory-debug-btn">Detect Leaks</button>
+					<button id="checkDetachedBtn" class="vh-button-icon memory-debug-btn">Check Detached</button>
+					<button id="cleanupBtn" class="vh-button-icon memory-debug-btn">Run Cleanup</button>
+				</div>
+			</div>
+
+			<div class="setting-container" style="flex-direction: column; align-items: stretch;">
+				<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+					<label style="font-weight: bold; font-size: 13px;">Memory Log:</label>
+					<div style="display: flex; gap: 4px;">
+						<button id="copyLogBtn" class="vh-button-icon" style="
+							padding: 4px 8px;
+							font-size: 11px;
+							background: #f0f0f0;
+							border: 1px solid #ccc;
+						" title="Copy log to clipboard">📋</button>
+						<button id="clearLogBtn" class="vh-button-icon" style="
+							padding: 4px 8px;
+							font-size: 11px;
+							background: #f0f0f0;
+							border: 1px solid #ccc;
+						">Clear</button>
+					</div>
+				</div>
+				<div id="memoryDebugLog" style="
+					background: #f8f8f8;
+					border: 1px solid #ddd;
+					border-radius: 4px;
+					padding: 8px;
+					height: 150px;
+					overflow-y: auto;
+					font-family: 'Consolas', 'Monaco', monospace;
+					font-size: 11px;
+					line-height: 1.4;
+					white-space: normal;
+					word-break: break-word;
+					box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+				">
+					<div style="color: #888; font-style: italic; font-size: 11px;">Memory debugging log will appear here...</div>
+				</div>
+			</div>
+		</div>
 	</fieldset>
 </fieldset>

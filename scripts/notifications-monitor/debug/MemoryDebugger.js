@@ -8,6 +8,8 @@
  * - Memory growth patterns
  */
 
+import { clearKeywordCache } from "../../core/utils/KeywordMatch.js";
+
 class MemoryDebugger {
 	constructor() {
 		// Track tiles with WeakMap to avoid creating references
@@ -27,6 +29,73 @@ class MemoryDebugger {
 
 		// Start periodic checks
 		this.startMonitoring();
+	}
+
+	/**
+	 * Detect common memory leaks
+	 * @returns {Object} Leak detection results
+	 */
+	detectLeaks() {
+		const leaks = {
+			timestamp: new Date().toISOString(),
+			notificationMonitors: document.querySelectorAll("[data-notification-monitor]").length,
+			detachedNodes: this.checkDetachedNodes().length,
+			eventListeners: this.listeners.size,
+			activeWebSockets: this.countActiveWebSockets(),
+			keywordMatchInstances: this.countKeywordMatchInstances(),
+			serverComInstances: this.countServerComInstances(),
+		};
+
+		// Check for critical leaks
+		const warnings = [];
+		if (leaks.notificationMonitors > 1) {
+			warnings.push(`⚠️ Multiple NotificationMonitor instances detected: ${leaks.notificationMonitors}`);
+		}
+		if (leaks.detachedNodes > 100) {
+			warnings.push(`⚠️ High number of detached nodes: ${leaks.detachedNodes}`);
+		}
+		if (leaks.eventListeners > 1000) {
+			warnings.push(`⚠️ Excessive event listeners: ${leaks.eventListeners}`);
+		}
+
+		if (warnings.length > 0) {
+			console.warn("🚨 Memory Leak Detection Warnings:", warnings);
+		}
+
+		console.log("🔍 Memory Leak Detection Results:", leaks);
+		return { leaks, warnings };
+	}
+
+	/**
+	 * Count active WebSocket connections
+	 * @returns {number}
+	 */
+	countActiveWebSockets() {
+		try {
+			return Array.from(window.performance.getEntriesByType("resource")).filter(
+				(r) => r.name.includes("wss://") && r.duration > 0
+			).length;
+		} catch (e) {
+			return 0;
+		}
+	}
+
+	/**
+	 * Count KeywordMatch instances (heuristic)
+	 * @returns {number}
+	 */
+	countKeywordMatchInstances() {
+		// This is a heuristic - actual implementation would need access to the instances
+		return document.querySelectorAll("[data-keyword-match]").length;
+	}
+
+	/**
+	 * Count ServerCom instances (heuristic)
+	 * @returns {number}
+	 */
+	countServerComInstances() {
+		// This is a heuristic - actual implementation would need access to the instances
+		return document.querySelectorAll("[data-server-com]").length;
 	}
 
 	/**
@@ -117,7 +186,8 @@ class MemoryDebugger {
 
 				const element = listener.element.deref();
 
-				if (element && !document.contains(element)) {
+				// Check if element exists and is a valid Node before calling contains
+				if (element && element instanceof Node && !document.contains(element)) {
 					detached.push({
 						key,
 						event: listener.event,
@@ -295,6 +365,32 @@ class MemoryDebugger {
 			}
 		}, 120000);
 		this.monitoringIntervals.push(snapshotInterval);
+
+		// Run leak detection every 5 minutes
+		const leakDetectionInterval = setInterval(
+			() => {
+				const { warnings } = this.detectLeaks();
+				if (warnings.length > 0) {
+					console.error("🚨 Memory leaks detected!", warnings);
+				}
+			},
+			5 * 60 * 1000
+		);
+		this.monitoringIntervals.push(leakDetectionInterval);
+
+		// Clear keyword cache every 10 minutes to prevent memory buildup
+		const keywordCacheClearInterval = setInterval(
+			() => {
+				try {
+					clearKeywordCache();
+					console.log("[MemoryDebugger] Cleared keyword cache as part of periodic cleanup");
+				} catch (error) {
+					console.error("[MemoryDebugger] Error clearing keyword cache:", error);
+				}
+			},
+			10 * 60 * 1000
+		);
+		this.monitoringIntervals.push(keywordCacheClearInterval);
 	}
 
 	/**
@@ -315,7 +411,7 @@ class MemoryDebugger {
 		for (const [key, listeners] of this.listeners.entries()) {
 			const activeListeners = listeners.filter((listener) => {
 				const element = listener.element.deref();
-				return element && document.contains(element);
+				return element && element instanceof Node && document.contains(element);
 			});
 
 			if (activeListeners.length === 0) {

@@ -193,10 +193,20 @@ describe("Keyword Pre-compilation Tests", () => {
 		// Clear the spy
 		regExpSpy.mockClear();
 
-		// Call with keywords2 (different array reference) should create regex objects again
+		// Call with keywords2 (same content, different reference) should use cached regexes
 		keywordMatch(keywords2, "Looking for a laptop");
 
-		// Should have created regex objects again since it's a different array
+		// Should NOT create new regex objects since content is the same (optimization)
+		expect(regExpSpy.mock.calls.length).toBe(0);
+
+		// Clear the spy again
+		regExpSpy.mockClear();
+
+		// Call with different keywords should create new regex objects
+		const keywords3 = ["desktop", { contains: "monitor", without: "", etv_min: "", etv_max: "" }];
+		keywordMatch(keywords3, "Looking for a desktop");
+
+		// Should have created new regex objects for different content
 		expect(regExpSpy.mock.calls.length).toBeGreaterThan(0);
 
 		regExpSpy.mockRestore();

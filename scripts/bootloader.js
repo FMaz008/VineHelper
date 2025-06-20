@@ -215,6 +215,22 @@ async function init() {
 		}
 
 		//Initate the notifications monitor
+		// CRITICAL: Clean up any existing instance to prevent memory leaks
+		if (notificationMonitor) {
+			console.log("🧹 Cleaning up existing NotificationMonitor instance before creating new one");
+			try {
+				notificationMonitor.destroy();
+			} catch (error) {
+				console.error("Error destroying previous NotificationMonitor:", error);
+			}
+			notificationMonitor = null;
+
+			// Force garbage collection hint
+			if (window.gc) {
+				window.gc();
+			}
+		}
+
 		notificationMonitor = new NotificationMonitorV3();
 		await notificationMonitor.initialize();
 
@@ -1590,6 +1606,12 @@ async function processMessage(data, sender = null, sendResponse = null) {
 		hookMgr.hookExecute(data.hookname, data);
 	}
 
+	// Handle memory debugging commands from settings page
+	if (data.type == "MEMORY_DEBUG_COMMAND") {
+		handleMemoryDebugCommand(data, sendResponse);
+		return true; // Keep message channel open for async response
+	}
+
 	if (data.type == "newItem") {
 		if (sendResponse) {
 			sendResponse({ success: true });
@@ -1879,6 +1901,57 @@ function removeElements(selector) {
 	elementsToRemove.forEach(function (element) {
 		element.remove();
 	});
+}
+
+// Memory debugging command handler
+async function handleMemoryDebugCommand(data, sendResponse) {
+	try {
+		// Check if memory debugger is available
+		const debuggerReady = await window.MEMORY_DEBUGGER_READY;
+		if (!debuggerReady) {
+			sendResponse({
+				success: false,
+				error: "Memory debugger not initialized. Please enable memory debugging and reload the page.",
+			});
+			return;
+		}
+
+		const { command, params } = data;
+		let result;
+
+		switch (command) {
+			case "takeSnapshot":
+				result = debuggerReady.takeSnapshot(params.name);
+				sendResponse({ success: true, data: result });
+				break;
+
+			case "generateReport":
+				result = debuggerReady.generateReport();
+				sendResponse({ success: true, data: result });
+				break;
+
+			case "detectLeaks":
+				result = debuggerReady.detectLeaks();
+				sendResponse({ success: true, data: result });
+				break;
+
+			case "checkDetachedNodes":
+				result = debuggerReady.checkDetachedNodes();
+				sendResponse({ success: true, data: result });
+				break;
+
+			case "cleanup":
+				result = debuggerReady.cleanup();
+				sendResponse({ success: true, data: result });
+				break;
+
+			default:
+				sendResponse({ success: false, error: `Unknown command: ${command}` });
+		}
+	} catch (error) {
+		console.error("Memory debug command error:", error);
+		sendResponse({ success: false, error: error.message });
+	}
 }
 
 function getRandomNumber(min, max) {

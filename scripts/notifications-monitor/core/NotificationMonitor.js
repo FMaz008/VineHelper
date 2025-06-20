@@ -33,50 +33,69 @@ window.MEMORY_DEBUGGER_READY = new Promise((resolve) => {
 					try {
 						const debuggerInstance = new MemoryDebugger();
 
-						// Try multiple ways to expose it globally
+						// Store the debugger instance
 						window.MEMORY_DEBUGGER = debuggerInstance;
-						globalThis.MEMORY_DEBUGGER = debuggerInstance;
-
-						// If we're in a content script, try to expose to the page
-						if (typeof unsafeWindow !== "undefined") {
-							unsafeWindow.MEMORY_DEBUGGER = debuggerInstance;
-						}
 
 						console.log("🔍 Memory Debugger initialized. Starting monitoring...");
 
-						// Also expose common methods directly for convenience
-						const takeSnapshotFunc = function (name) {
-							return debuggerInstance.takeSnapshot(name);
+						// Create global API that can be accessed from console
+						// Using direct window assignment instead of script injection to avoid CSP issues
+						window.VH_MEMORY = {
+							takeSnapshot: (name) => {
+								if (debuggerInstance) {
+									return debuggerInstance.takeSnapshot(name);
+								}
+								console.error("Memory debugger not available");
+								return null;
+							},
+							generateReport: () => {
+								if (debuggerInstance) {
+									return debuggerInstance.generateReport();
+								}
+								console.error("Memory debugger not available");
+								return null;
+							},
+							detectLeaks: () => {
+								if (debuggerInstance) {
+									return debuggerInstance.detectLeaks();
+								}
+								console.error("Memory debugger not available");
+								return null;
+							},
+							checkDetachedNodes: () => {
+								if (debuggerInstance) {
+									return debuggerInstance.checkDetachedNodes();
+								}
+								console.error("Memory debugger not available");
+								return null;
+							},
+							cleanup: () => {
+								if (debuggerInstance) {
+									return debuggerInstance.cleanup();
+								}
+								console.error("Memory debugger not available");
+								return null;
+							},
+							stopMonitoring: () => {
+								if (debuggerInstance) {
+									return debuggerInstance.stopMonitoring();
+								}
+								console.error("Memory debugger not available");
+								return null;
+							},
 						};
-						const generateReportFunc = function () {
-							return debuggerInstance.generateReport();
-						};
 
-						window.takeSnapshot = takeSnapshotFunc;
-						window.generateMemoryReport = generateReportFunc;
-						globalThis.takeSnapshot = takeSnapshotFunc;
-						globalThis.generateMemoryReport = generateReportFunc;
+						// Make it available globally
+						globalThis.VH_MEMORY = window.VH_MEMORY;
 
-						// Double-check they're set
-						if (typeof window.takeSnapshot !== "function") {
-							console.error("Failed to set window.takeSnapshot");
-						}
-						if (typeof window.generateMemoryReport !== "function") {
-							console.error("Failed to set window.generateMemoryReport");
-						}
-
-						console.log("📊 Quick access methods available:");
-						console.log("  - takeSnapshot(name)");
-						console.log("  - generateMemoryReport()");
-
-						// Debug: Check if it's really set
-						console.log("Debug: window.MEMORY_DEBUGGER is:", window.MEMORY_DEBUGGER);
-						console.log("Debug: typeof window.MEMORY_DEBUGGER:", typeof window.MEMORY_DEBUGGER);
-
-						// Provide instructions for accessing via promise
-						console.log("📌 If direct access doesn't work, use:");
-						console.log("   await window.MEMORY_DEBUGGER_READY");
-						console.log("   // Then use the returned debugger instance");
+						console.log("📊 Memory Debugger API available at window.VH_MEMORY");
+						console.log("Available methods:");
+						console.log("  - VH_MEMORY.takeSnapshot(name)");
+						console.log("  - VH_MEMORY.generateReport()");
+						console.log("  - VH_MEMORY.detectLeaks()");
+						console.log("  - VH_MEMORY.checkDetachedNodes()");
+						console.log("  - VH_MEMORY.cleanup()");
+						console.log("  - VH_MEMORY.stopMonitoring()");
 
 						resolve(debuggerInstance);
 					} catch (error) {
@@ -538,6 +557,11 @@ class NotificationMonitor extends MonitorCore {
 					newItems.set(keepItem.asin, keepItem.item);
 				}
 			});
+
+			// Notify MemoryDebugger that we're removing the old container's listener
+			if (window.MEMORY_DEBUGGER && this.#eventHandlers.grid) {
+				window.MEMORY_DEBUGGER.untrackListener(this._gridContainer, "click", this.#eventHandlers.grid);
+			}
 
 			// Replace the old container with the new one
 			this._gridContainer.parentNode.replaceChild(newContainer, this._gridContainer);

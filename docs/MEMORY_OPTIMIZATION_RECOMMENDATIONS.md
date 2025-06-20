@@ -1,6 +1,43 @@
 # Memory Optimization Recommendations
 
-Based on Chrome memory allocation profile analysis, here are the key areas for optimization:
+Based on Chrome memory allocation profile analysis and memory leak detection, here are the key areas for optimization:
+
+## Critical Memory Leaks Identified (June 2025)
+
+### 1. NotificationMonitor Instance Leak (735-1092 instances) ✅ FIXED
+
+**Problem**: Multiple NotificationMonitor instances were being retained in memory
+**Expected**: Only 1 instance should exist at a time
+**Fix Applied**: Added cleanup in bootloader.js before creating new instances
+
+### 2. KeywordMatch Object Retention (168-186 instances) ✅ FIXED
+
+**Problem**: KeywordMatch objects consuming 3.0 MB each were not being garbage collected
+**Root Cause**: WeakMap cache was accumulating because Settings.get() returns new array references
+**Fix Applied**:
+
+- Changed from WeakMap to Map with JSON stringified keys
+- Added MAX_CACHE_SIZE limit of 10 entries
+- Implemented automatic cache cleanup
+- Added periodic cache clearing every 10 minutes via MemoryDebugger
+
+### 3. ServerCom Instance Growth (84-248 instances) 🔧 PENDING
+
+**Problem**: ServerCom instances growing 3x over time
+**Root Cause**: WebSocket connections not being properly closed
+**Required Fix**: Implement proper cleanup in destroy method
+
+### 4. NewItemStreamProcessing Accumulation (20-52 instances) 🔧 PENDING
+
+**Problem**: Stream processors not being cleaned up
+**Root Cause**: Missing cleanup in destroy methods
+**Required Fix**: Add comprehensive cleanup methods
+
+### 5. Streamy Instance Retention (41-52 instances) 🔧 PENDING
+
+**Problem**: Stream objects accumulating
+**Root Cause**: Event listeners not being removed
+**Required Fix**: Track and remove all event listeners
 
 ## 1. Keyword Matching Optimizations
 
@@ -377,21 +414,110 @@ class VisibilityTracker {
 3. **Safari browser**: Use WeakMap cache (already implemented)
 4. **Future optimization**: Consider Intersection Observer for viewport-based visibility
 
+## Memory Debugging Tools
+
+### Using the Memory Debugger
+
+The VineHelper includes a built-in memory debugger that can be activated by enabling "Debug Memory" in settings. Once enabled and after page reload, use these commands in the browser console:
+
+```javascript
+// Take a memory snapshot
+VH_MEMORY.takeSnapshot("before-changes");
+
+// Generate a memory report
+VH_MEMORY.generateReport();
+
+// Detect memory leaks
+VH_MEMORY.detectLeaks();
+
+// Check for detached DOM nodes
+VH_MEMORY.checkDetachedNodes();
+
+// Clean up tracked resources
+VH_MEMORY.cleanup();
+
+// Stop monitoring (to free resources)
+VH_MEMORY.stopMonitoring();
+```
+
+### Automated Memory Monitoring
+
+The MemoryDebugger automatically:
+
+- Checks for detached nodes every 30 seconds
+- Takes memory snapshots every 2 minutes
+- Runs leak detection every 5 minutes
+- Clears keyword cache every 10 minutes
+
 ## Implementation Priority
 
-1. **High Priority**: Keyword matching optimizations (biggest memory impact)
-2. **High Priority**: DOM visibility checking optimizations (performance impact with large lists)
-3. **Medium Priority**: Virtual scrolling for large item lists
-4. **Medium Priority**: Socket.io message buffer limits
-5. **Low Priority**: General object pooling and reuse
+1. **Completed**: NotificationMonitor singleton pattern ✅
+2. **Completed**: KeywordMatch memory optimization ✅
+3. **High Priority**: ServerCom WebSocket cleanup 🔧
+4. **High Priority**: NewItemStreamProcessing cleanup 🔧
+5. **High Priority**: Streamy event listener cleanup 🔧
+6. **Medium Priority**: DOM visibility checking optimizations
+7. **Medium Priority**: Virtual scrolling for large item lists
+8. **Low Priority**: General object pooling and reuse
+
+## Prevention Strategies
+
+1. **Implement Destroy Pattern**: Every class must have a destroy() method
+2. **Use WeakMaps**: For DOM element associations
+3. **Event Listener Registry**: Track and clean all listeners
+4. **Resource Pooling**: Reuse objects instead of creating new ones
+5. **Periodic Cleanup**: Run cleanup tasks every 5-10 minutes
+6. **Singleton Pattern**: Ensure single instances of major components
 
 ## Monitoring Success
 
 After implementing these optimizations:
 
-1. Take new memory profiles
+1. Take new memory profiles using Chrome DevTools
 2. Compare allocation counts at the same code locations
-3. Monitor heap size over time
+3. Monitor heap size over time using VH_MEMORY tools
 4. Check for memory growth patterns during extended use
 5. Measure performance with Chrome DevTools Performance profiler
 6. Test with varying item counts (10, 50, 100, 500+ items)
+7. Monitor specific leak indicators:
+    - NotificationMonitor instances should stay at 1
+    - KeywordMatch cache size should stay under 10
+    - WebSocket connections should be properly closed
+    - Event listener count should remain stable
+
+## Recent Fixes (June 2025)
+
+### Memory Debugging UI Implementation ✅
+
+- Added interactive memory debugging interface in settings page
+- Take snapshots, generate reports, detect leaks, check detached nodes
+- Color-coded log window with copy functionality
+- Works via Chrome messaging API (no CSP violations)
+
+### Detached DOM Node Event Listener Fix ✅
+
+- Fixed MemoryDebugger false positives for grid container replacements
+- Added proper untracking before DOM replacement:
+
+```javascript
+if (window.MEMORY_DEBUGGER && this.#eventHandlers.grid) {
+	window.MEMORY_DEBUGGER.untrackListener(this._gridContainer, "click", this.#eventHandlers.grid);
+}
+```
+
+### Memory Debugger Console Access ✅
+
+- Created `VH_MEMORY` API directly on window object
+- All methods accessible from browser console without CSP issues
+
+## Next Steps
+
+1. ✅ ~~Implement singleton pattern for NotificationMonitor~~
+2. ✅ ~~Fix KeywordMatch memory leak with cache limits~~
+3. ✅ ~~Add memory debugging UI to settings~~
+4. ✅ ~~Fix detached DOM node tracking~~
+5. 🔧 Add comprehensive destroy() methods to ServerCom
+6. 🔧 Fix NewItemStreamProcessing cleanup
+7. 🔧 Fix Streamy event listener removal
+8. 🔧 Add memory leak detection to CI/CD pipeline
+9. 🔧 Set up automated memory profiling

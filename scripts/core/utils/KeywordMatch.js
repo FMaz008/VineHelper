@@ -1,8 +1,39 @@
 import { hasEtvCondition, areEtvConditionsSatisfied } from "./KeywordUtils.js";
 
 // Pre-compiled regex cache for keywords
-// Using WeakMap to allow garbage collection when keywords array is replaced
-const compiledKeywordCache = new WeakMap();
+// Using a Map with string keys (JSON stringified) to avoid memory leaks
+// WeakMap was causing issues because Settings.get() returns new array references
+const compiledKeywordCache = new Map();
+const MAX_CACHE_SIZE = 10; // Limit cache size to prevent unbounded growth
+
+// Generate a cache key from keywords array
+function getCacheKey(keywords) {
+	// Use JSON.stringify for consistent key generation
+	// This ensures same keywords always produce same key
+	try {
+		return JSON.stringify(keywords);
+	} catch (e) {
+		// Fallback for circular references
+		return keywords.map((k, i) => `${i}:${typeof k === "string" ? k : k.contains}`).join("|");
+	}
+}
+
+// Clean up old cache entries when size limit is reached
+function cleanupCache() {
+	if (compiledKeywordCache.size <= MAX_CACHE_SIZE) {
+		return;
+	}
+
+	// Remove oldest entries (first half of the cache)
+	const entriesToRemove = Math.floor(compiledKeywordCache.size / 2);
+	const keys = Array.from(compiledKeywordCache.keys());
+
+	for (let i = 0; i < entriesToRemove; i++) {
+		compiledKeywordCache.delete(keys[i]);
+	}
+
+	console.log(`[KeywordMatch] Cache cleanup: removed ${entriesToRemove} old entries`);
+}
 
 /**
  * Creates a regex pattern for keyword matching
@@ -65,9 +96,11 @@ function compileKeyword(word) {
  * Should be called when keywords are loaded from settings
  */
 function precompileKeywords(keywords) {
+	const cacheKey = getCacheKey(keywords);
+
 	// Check if already compiled
-	if (compiledKeywordCache.has(keywords)) {
-		const existingCache = compiledKeywordCache.get(keywords);
+	if (compiledKeywordCache.has(cacheKey)) {
+		const existingCache = compiledKeywordCache.get(cacheKey);
 		return {
 			total: keywords.length,
 			compiled: existingCache.size,
@@ -75,6 +108,9 @@ function precompileKeywords(keywords) {
 			cached: true,
 		};
 	}
+
+	// Clean up cache if it's getting too large
+	cleanupCache();
 
 	// Create a new cache for this keywords array
 	const cache = new Map();
@@ -90,7 +126,7 @@ function precompileKeywords(keywords) {
 	});
 
 	// Store the cache for this keywords array
-	compiledKeywordCache.set(keywords, cache);
+	compiledKeywordCache.set(cacheKey, cache);
 
 	// Return stats for logging by caller
 	return {
@@ -105,7 +141,8 @@ function precompileKeywords(keywords) {
  * Get compiled regex for a keyword at a specific index
  */
 function getCompiledRegex(keywords, index) {
-	const cache = compiledKeywordCache.get(keywords);
+	const cacheKey = getCacheKey(keywords);
+	const cache = compiledKeywordCache.get(cacheKey);
 	if (!cache) {
 		return null;
 	}
@@ -148,9 +185,16 @@ function testKeywordMatch(word, compiled, title, etv_min, etv_max) {
 }
 
 function keywordMatchReturnFullObject(keywords, title, etv_min = null, etv_max = null) {
+	// Handle empty keywords array
+	if (!keywords || keywords.length === 0) {
+		return undefined;
+	}
+
+	const cacheKey = getCacheKey(keywords);
+
 	// Automatically pre-compile keywords if not already done
 	// This ensures optimal performance without requiring explicit pre-compilation
-	if (!compiledKeywordCache.has(keywords) && keywords.length > 0) {
+	if (!compiledKeywordCache.has(cacheKey)) {
 		const stats = precompileKeywords(keywords);
 		// Log automatic pre-compilation if not in test environment
 		if (typeof process === "undefined" || process.env.NODE_ENV !== "test") {
@@ -202,13 +246,15 @@ function hasAnyEtvConditions(keywords) {
 		return false;
 	}
 
+	const cacheKey = getCacheKey(keywords);
+
 	// Get cache for this keywords array
-	let cache = compiledKeywordCache.get(keywords);
+	let cache = compiledKeywordCache.get(cacheKey);
 
 	// If not cached, compile first
 	if (!cache) {
 		precompileKeywords(keywords);
-		cache = compiledKeywordCache.get(keywords);
+		cache = compiledKeywordCache.get(cacheKey);
 	}
 
 	// Check if any compiled keyword has ETV condition flag
@@ -221,4 +267,13 @@ function hasAnyEtvConditions(keywords) {
 	return false;
 }
 
-export { keywordMatch, keywordMatchReturnFullObject, precompileKeywords, hasAnyEtvConditions };
+/**
+ * Clear the keyword cache - useful for memory management
+ */
+function clearKeywordCache() {
+	const size = compiledKeywordCache.size;
+	compiledKeywordCache.clear();
+	console.log(`[KeywordMatch] Cleared ${size} cached keyword compilations`);
+}
+
+export { keywordMatch, keywordMatchReturnFullObject, precompileKeywords, hasAnyEtvConditions, clearKeywordCache };
