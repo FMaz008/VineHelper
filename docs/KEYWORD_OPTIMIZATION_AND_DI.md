@@ -55,28 +55,44 @@ This PR implements two major improvements to VineHelper's keyword system:
 └───────────────────────────────────────────────────────┘
 ```
 
-### DI Architecture (Optional Enhancement)
+### DI Architecture (NOT IMPLEMENTED - Optional Future Enhancement)
+
+**Note**: This DI approach was considered but NOT implemented due to Service Worker reliability issues in Safari. The current implementation uses the WeakMap + Array Caching approach shown above, which works reliably across all browsers.
+
+#### Safari-Safe Alternative: Background Page Compilation Service
+
+A more reliable cross-browser approach would use a persistent background page (manifest v2) or offscreen document (manifest v3) for centralized compilation:
 
 ```
 ┌─────────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   Service Worker    │     │  Content Script  │     │    Main Page    │
+│  Background Page    │     │  Content Script  │     │    Main Page    │
+│  or Offscreen Doc   │     │  (Any Tab)       │     │   (Any Tab)     │
 │                     │     │                  │     │                 │
-│ KeywordCompilation  │◄────┤ KeywordMatchDI   │◄────┤ KeywordMatchDI  │
-│     Service         │     │                  │     │                 │
+│ KeywordCompilation  │     │ KeywordMatchDI   │     │ KeywordMatchDI  │
+│     Service         │◄────┤                  │◄────┤                 │
 │                     │     └──────────────────┘     └─────────────────┘
 │  (Compiles Once)    │              ▲                        ▲
-│                     │              │                        │
+│  (Always Available) │              │                        │
 └──────────┬──────────┘              │                        │
            │                         │                        │
            ▼                         │                        │
     ┌──────────────┐                 │                        │
-    │   Storage    │                 │                        │
-    │              │                 │                        │
-    │  Serialized  │─────────────────┴────────────────────────┘
-    │  Compiled    │         (Shared via Storage/Messages)
+    │chrome.storage│                 │                        │
+    │    .local    │                 │                        │
+    │              │─────────────────┴────────────────────────┘
+    │  Serialized  │         (Shared via chrome.storage API)
+    │  Compiled    │         (Reliable across all browsers)
     │  Keywords    │
     └──────────────┘
+
+Benefits:
+- Background pages/offscreen documents are more reliable than Service Workers
+- chrome.storage.local works consistently across all browsers
+- Compilation happens once and is shared across all contexts
+- No issues with Safari's Service Worker implementation
 ```
+
+**Current Implementation**: Each context compiles keywords independently using WeakMap caching, which is simple and reliable but may duplicate work across contexts.
 
 ## Bug Fixes
 
