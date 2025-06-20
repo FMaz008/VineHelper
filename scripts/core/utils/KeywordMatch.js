@@ -1,71 +1,185 @@
+import { hasEtvCondition, areEtvConditionsSatisfied } from "./KeywordUtils.js";
+
+// Pre-compiled regex cache for keywords
+// Using WeakMap to allow garbage collection when keywords array is replaced
+const compiledKeywordCache = new WeakMap();
+
+/**
+ * Creates a regex pattern for keyword matching
+ * @param {string} keyword - The keyword to create a pattern for
+ * @returns {string} The regex pattern
+ */
+function createRegexPattern(keyword) {
+	// ASCII characters use word boundaries, non-ASCII uses Unicode property escapes
+	return /^[\x20-\x7E]+$/.test(keyword) ? `\\b${keyword}\\b` : `(?<![\\p{L}\\p{N}])${keyword}(?![\\p{L}\\p{N}])`;
+}
+
+/**
+ * Compiles a keyword into regex object(s)
+ * @param {string|object} word - The keyword (string or object format)
+ * @returns {object|null} Compiled regex object or null if compilation failed
+ */
+function compileKeyword(word) {
+	try {
+		if (typeof word === "string") {
+			// Old data format where each keyword was a string
+			const pattern = createRegexPattern(word);
+			return {
+				regex: new RegExp(pattern, "iu"),
+				withoutRegex: null,
+			};
+		} else if (typeof word === "object" && word.contains) {
+			// New data format where keywords are objects
+			const containsPattern = createRegexPattern(word.contains);
+			const containsRegex = new RegExp(containsPattern, "iu");
+
+			let withoutRegex = null;
+			if (word.without) {
+				const withoutPattern = createRegexPattern(word.without);
+				withoutRegex = new RegExp(withoutPattern, "iu");
+			}
+
+			const compiled = {
+				regex: containsRegex,
+				withoutRegex: withoutRegex,
+			};
+
+			// Add ETV condition flag
+			if (hasEtvCondition(word)) {
+				compiled.hasEtvCondition = true;
+			}
+
+			return compiled;
+		}
+	} catch (error) {
+		if (error instanceof SyntaxError) {
+			const keywordStr = typeof word === "string" ? word : word.contains;
+			console.warn(`[KeywordMatch] Failed to compile regex for keyword: "${keywordStr}" - ${error.message}`);
+		}
+	}
+	return null;
+}
+
+/**
+ * Pre-compiles regex patterns for all keywords
+ * Should be called when keywords are loaded from settings
+ */
+function precompileKeywords(keywords) {
+	// Check if already compiled
+	if (compiledKeywordCache.has(keywords)) {
+		const existingCache = compiledKeywordCache.get(keywords);
+		return {
+			total: keywords.length,
+			compiled: existingCache.size,
+			failed: keywords.length - existingCache.size,
+			cached: true,
+		};
+	}
+
+	// Create a new cache for this keywords array
+	const cache = new Map();
+	let failedCount = 0;
+
+	keywords.forEach((word, index) => {
+		const compiled = compileKeyword(word);
+		if (compiled) {
+			cache.set(index, compiled);
+		} else {
+			failedCount++;
+		}
+	});
+
+	// Store the cache for this keywords array
+	compiledKeywordCache.set(keywords, cache);
+
+	// Return stats for logging by caller
+	return {
+		total: keywords.length,
+		compiled: cache.size,
+		failed: failedCount,
+		cached: false,
+	};
+}
+
+/**
+ * Get compiled regex for a keyword at a specific index
+ */
+function getCompiledRegex(keywords, index) {
+	const cache = compiledKeywordCache.get(keywords);
+	if (!cache) {
+		return null;
+	}
+	return cache.get(index);
+}
+
+/**
+ * Tests if a keyword matches the title with ETV filtering
+ * @param {object} word - The keyword object
+ * @param {object} compiled - The compiled regex object
+ * @param {string} title - The title to test
+ * @param {*} etv_min - Minimum ETV value
+ * @param {*} etv_max - Maximum ETV value
+ * @returns {boolean} True if matches
+ */
+function testKeywordMatch(word, compiled, title, etv_min, etv_max) {
+	// Test the main regex
+	if (!compiled.regex.test(title)) {
+		return false;
+	}
+
+	// For string keywords, we're done
+	if (typeof word === "string") {
+		return true;
+	}
+
+	// For object keywords, check "without" condition
+	if (word.without && word.without !== "" && compiled.withoutRegex && compiled.withoutRegex.test(title)) {
+		return false;
+	}
+
+	// Check ETV filtering
+	if (word.etv_min === "" && word.etv_max === "") {
+		// No ETV filtering defined, we have a match
+		return true;
+	}
+
+	// Use shared utility for ETV condition checking
+	return areEtvConditionsSatisfied(word, etv_min, etv_max);
+}
+
 function keywordMatchReturnFullObject(keywords, title, etv_min = null, etv_max = null) {
-	let found = keywords.find((word) => {
-		let regex;
-		let regex2;
-		if (typeof word == "string") {
-			//Old data format where each keyword was a string
-			try {
-				const pattern = /^[\x20-\x7E]+$/.test(word)
-					? `\\b${word}\\b`
-					: `(?<![\\p{L}\\p{N}])${word}(?![\\p{L}\\p{N}])`;
-				regex = new RegExp(pattern, "iu");
-			} catch (error) {
-				if (error instanceof SyntaxError) {
-					return false;
-				}
+	// Automatically pre-compile keywords if not already done
+	// This ensures optimal performance without requiring explicit pre-compilation
+	if (!compiledKeywordCache.has(keywords) && keywords.length > 0) {
+		const stats = precompileKeywords(keywords);
+		// Log automatic pre-compilation if not in test environment
+		if (typeof process === "undefined" || process.env.NODE_ENV !== "test") {
+			const cacheStatus = stats.cached ? " (from cache)" : " on first use";
+			if (stats.failed > 0) {
+				console.log(
+					`[KeywordMatch] Auto pre-compiled ${stats.compiled}/${stats.total} keyword patterns${cacheStatus} (${stats.failed} failed)`
+				);
+			} else {
+				console.log(`[KeywordMatch] Auto pre-compiled ${stats.compiled} keyword patterns${cacheStatus}`);
 			}
+		}
+	}
 
-			if (regex.test(title)) {
-				return true;
-			}
-		} else if (typeof word == "object") {
-			//New data format where keywords are objects
-			try {
-				//Check if the keyword contains non-ASCII characters
-				//If it does, use a regex pattern supporting japanese characters
-				const pattern = /^[\x20-\x7E]+$/.test(word.contains)
-					? `\\b${word.contains}\\b`
-					: `(?<![\\p{L}\\p{N}])${word.contains}(?![\\p{L}\\p{N}])`;
-				regex = new RegExp(pattern, "iu");
-				const pattern2 = /^[\x20-\x7E]+$/.test(word.without)
-					? `\\b${word.without}\\b`
-					: `(?<![\\p{L}\\p{N}])${word.without}(?![\\p{L}\\p{N}])`;
-				regex2 = new RegExp(pattern2, "iu");
-			} catch (error) {
-				if (error instanceof SyntaxError) {
-					return false;
-				}
-			}
+	let found = keywords.find((word, index) => {
+		let compiled = getCompiledRegex(keywords, index);
 
-			if (regex.test(title)) {
-				if (word.without == "" || !regex2.test(title)) {
-					if (word.etv_min == "" && word.etv_max == "") {
-						//There is no ETV filtering defined, we have a match.
-						return true;
-					} else {
-						//There is an ETV filtering defined, we need to satisfy it.
-						//etv_min and etv_max are the values returned by the server.
-						//word.etv_min and word.etv_max are from the user.
-						//For the user's ETV min, match if any variations match (compare against highest ETV, etv_max.)
-						//For the user's ETV max, match if any variations match (compare against lowest ETV, etv_min.)
-						if (
-							word.etv_min == "" ||
-							(etv_max !== null && etv_max !== "" && etv_max >= parseFloat(word.etv_min))
-						) {
-							if (
-								word.etv_max == "" ||
-								(etv_min !== null && etv_min !== "" && etv_min <= parseFloat(word.etv_max))
-							) {
-								return true;
-							}
-						}
-					}
-				}
+		// This should rarely happen now since we pre-compile above
+		// But keep as a safety fallback
+		if (!compiled) {
+			compiled = compileKeyword(word);
+			if (!compiled) {
+				return false;
 			}
 		}
 
-		return false; // Continue searching
+		return testKeywordMatch(word, compiled, title, etv_min, etv_max);
 	});
+
 	return found;
 }
 
@@ -78,4 +192,33 @@ function keywordMatch(keywords, title, etv_min = null, etv_max = null) {
 	return found === undefined ? false : found;
 }
 
-export { keywordMatch, keywordMatchReturnFullObject };
+/**
+ * Check if any keywords have ETV conditions
+ * @param {Array} keywords - Array of keyword objects
+ * @returns {boolean} - True if any keyword has ETV conditions
+ */
+function hasAnyEtvConditions(keywords) {
+	if (!keywords || keywords.length === 0) {
+		return false;
+	}
+
+	// Get cache for this keywords array
+	let cache = compiledKeywordCache.get(keywords);
+
+	// If not cached, compile first
+	if (!cache) {
+		precompileKeywords(keywords);
+		cache = compiledKeywordCache.get(keywords);
+	}
+
+	// Check if any compiled keyword has ETV condition flag
+	for (const [index, compiled] of cache) {
+		if (compiled && compiled.hasEtvCondition) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+export { keywordMatch, keywordMatchReturnFullObject, precompileKeywords, hasAnyEtvConditions };

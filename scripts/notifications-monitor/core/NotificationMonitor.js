@@ -5,7 +5,8 @@
 import { Tile } from "/scripts/ui/components/Tile.js";
 
 import { YMDHiStoISODate } from "/scripts/core/utils/DateHelper.js";
-import { keywordMatch } from "/scripts/core/utils/KeywordMatch.js";
+import { keywordMatch, hasAnyEtvConditions } from "/scripts/core/utils/KeywordMatch.js";
+import { ETV_REPOSITION_THRESHOLD } from "/scripts/core/utils/KeywordUtils.js";
 import { escapeHTML, unescapeHTML, removeSpecialHTML } from "/scripts/core/utils/StringHelper.js";
 import { MonitorCore } from "/scripts/notifications-monitor/core/MonitorCore.js";
 import { Item } from "/scripts/core/models/Item.js";
@@ -1032,52 +1033,95 @@ class NotificationMonitor extends MonitorCore {
 			}
 		}
 
-		//If a new ETV came in, we want to check if the item now match a keywords with an ETV condition.
-		//If the item is already highlighted, we don't need to check if we need to highlight it or hide it.
-		let skipHighlightCheck = notif.dataset.typeHighlight == 1;
-		if (!skipHighlightCheck) {
-			//No need to re-highlight if the item is already highlighted.
-			//We don't want to highlight an item that is getting its ETV set initially (processAsZeroETVFound==false) before another pass of highlighting will be done shortly after.
+		// Re-evaluate keywords if any have ETV conditions
+		const highlightKeywords = this._settings.get("general.highlightKeywords");
+		if (highlightKeywords && hasAnyEtvConditions(highlightKeywords)) {
 			const title = notif.querySelector(".a-truncate-full").innerText;
 			if (title) {
-				//Check if we need to highlight the item now what we have an ETV
-				const val = await keywordMatch(
-					this._settings.get("general.highlightKeywords"),
+				// Check keyword match with new ETV values
+				const matchedKeyword = await keywordMatch(
+					highlightKeywords,
 					title,
 					etvObj.dataset.etvMin,
 					etvObj.dataset.etvMax
 				);
 
-				if (val !== false) {
-					//We got a keyword match, highlight the item
-					const technicalBtn = this._gridContainer.querySelector("#vh-reason-link-" + asin + ">div");
+				const wasHighlighted = notif.dataset.typeHighlight == 1;
+				const technicalBtn = this._gridContainer.querySelector("#vh-reason-link-" + asin + ">div");
+
+				if (matchedKeyword !== false) {
+					// Item matches a keyword
 					if (technicalBtn) {
-						technicalBtn.dataset.highlightkw = val;
+						technicalBtn.dataset.highlightkw = matchedKeyword;
 					}
-					this.#highlightedItemFound(
-						notif,
-						this._settings.get("notification.monitor.highlight.sound") != "0"
-					);
-				} else if (this._settings.get("notification.hideList")) {
-					//Check if we need to hide the item
-					const val2 = await keywordMatch(
-						this._settings.get("general.hideKeywords"),
+
+					// Set the highlight flag
+					notif.dataset.typeHighlight = 1;
+
+					if (!wasHighlighted) {
+						// New highlight - play sound and move to top
+						const tileVisible = this.#processNotificationFiltering(notif);
+
+						// Play sound if visible or fetching
+						if (
+							(tileVisible || this._fetchingRecentItems) &&
+							this._settings.get("notification.monitor.highlight.sound") != "0"
+						) {
+							this._soundPlayerMgr.play(TYPE_HIGHLIGHT);
+						}
+
+						// Move to top if not fetching and sort allows it
+						if (!this._fetchingRecentItems && this._sortType !== TYPE_DATE_ASC) {
+							this._moveNotifToTop(notif);
+						}
+					} else {
+						// Already highlighted - just update visibility
+						this.#processNotificationFiltering(notif);
+					}
+				} else if (wasHighlighted) {
+					// Was highlighted but no longer matches - clear highlight
+					notif.dataset.typeHighlight = 0;
+					if (technicalBtn) {
+						delete technicalBtn.dataset.highlightkw;
+					}
+					this.#processNotificationFiltering(notif);
+				}
+			}
+		}
+
+		// Check hide keywords separately (not dependent on highlight keywords)
+		if (this._settings.get("notification.hideList")) {
+			const hideKeywords = this._settings.get("general.hideKeywords");
+			if (hideKeywords) {
+				const title = notif.querySelector(".a-truncate-full").innerText;
+				if (title) {
+					const matchedHideKeyword = await keywordMatch(
+						hideKeywords,
 						title,
 						etvObj.dataset.etvMin,
 						etvObj.dataset.etvMax
 					);
-					if (val2 !== false) {
-						//Remove (permanently "hide") the tile
-						this._log.add(`NOTIF: Item ${asin} matched hide keyword ${val2}. Hidding it.`);
+					if (matchedHideKeyword !== false) {
+						// Remove (permanently "hide") the tile
+						this._log.add(`NOTIF: Item ${asin} matched hide keyword ${matchedHideKeyword}. Hiding it.`);
 						this.#removeTile(notif, asin);
+						return true; // Exit early since item is removed
 					}
 				}
 			}
 		}
 
 		//zero ETV found, highlight the item accordingly
-		if (oldMaxValue == "" && parseFloat(etvObj.dataset.etvMin) == 0) {
+		if (parseFloat(etvObj.dataset.etvMin) == 0) {
+			// Always set typeZeroETV = 1 when ETV is 0, regardless of previous state
 			this.#zeroETVItemFound(notif, this._settings.get("notification.monitor.zeroETV.sound") != "0");
+		} else {
+			// Clear the zero ETV flag when item is not zero ETV
+			if (notif.dataset.typeZeroETV == 1) {
+				notif.dataset.typeZeroETV = 0;
+				// Re-apply filtering to update visibility
+				this.#processNotificationFiltering(notif);
+			}
 		}
 
 		//Set the highlight color as needed
@@ -1179,42 +1223,117 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Only reposition if the ETV changed significantly enough to potentially affect order
-		if (oldETV === null || Math.abs(newETV - oldETV) > 0.01) {
-			// Remove the element from DOM
-			notif.remove();
-
-			// Find the correct position to insert
+		if (oldETV === null || Math.abs(newETV - oldETV) > ETV_REPOSITION_THRESHOLD) {
+			// First, check if repositioning is actually needed by finding the current position
 			const newPrice = parseFloat(newETV);
-			let insertPosition = null;
+			let currentIndex = -1;
+			let targetIndex = -1;
+			let index = 0;
 
-			// Find the first item with a lower price
-			for (const [existingAsin, item] of this._itemsMgr.items.entries()) {
-				// Skip the current item or items without elements
-				if (existingAsin === asin || !item.element || !item.element.parentNode) {
-					continue;
-				}
+			// Get all items in order
+			const orderedItems = Array.from(this._gridContainer.children);
 
-				const existingPrice = parseFloat(item.data.etv_min) || 0;
-				if (this._sortType === TYPE_PRICE_DESC && newPrice > existingPrice) {
-					insertPosition = item.element;
-					break;
-				} else if (this._sortType === TYPE_PRICE_ASC && newPrice < existingPrice) {
-					insertPosition = item.element;
-					break;
+			// Find current position and calculate target position
+			for (const element of orderedItems) {
+				const itemAsin = element.dataset.asin;
+				if (itemAsin === asin) {
+					currentIndex = index;
+				} else if (itemAsin) {
+					const item = this._itemsMgr.items.get(itemAsin);
+					if (item && item.data) {
+						const existingPrice = parseFloat(item.data.etv_min) || 0;
+
+						// Determine if this item should come after our repositioned item
+						if (targetIndex === -1) {
+							if (this._sortType === TYPE_PRICE_DESC && newPrice > existingPrice) {
+								targetIndex = index;
+							} else if (this._sortType === TYPE_PRICE_ASC && newPrice < existingPrice) {
+								targetIndex = index;
+							}
+						}
+					}
 				}
+				index++;
 			}
 
-			if (insertPosition) {
-				// Insert before the found position
-				this._gridContainer.insertBefore(notif, insertPosition);
-			} else {
-				// If no position found or item has highest price, append to the end
-				this._gridContainer.appendChild(notif);
+			// If no target position found, item should go to the end
+			if (targetIndex === -1) {
+				targetIndex = orderedItems.length - 1;
 			}
-			return true;
+
+			// Adjust target index if current item is before it
+			if (currentIndex !== -1 && currentIndex < targetIndex) {
+				targetIndex--;
+			}
+
+			// Only reposition if the item needs to move
+			if (currentIndex !== targetIndex && currentIndex !== -1) {
+				// Remove the element from DOM
+				notif.remove();
+
+				// Insert at the correct position
+				if (targetIndex >= orderedItems.length - 1) {
+					// Append to the end
+					this._gridContainer.appendChild(notif);
+				} else {
+					// Insert before the target element
+					const targetElement = orderedItems[targetIndex];
+					if (targetElement && targetElement !== notif) {
+						this._gridContainer.insertBefore(notif, targetElement);
+					} else {
+						this._gridContainer.appendChild(notif);
+					}
+				}
+				return true;
+			}
 		}
 
 		return false;
+	}
+
+	/**
+	 * Common handler for item found events
+	 * @param {object} notif - The DOM element of the tile
+	 * @param {string} itemType - The type of item (TYPE_ZEROETV, TYPE_HIGHLIGHT, TYPE_REGULAR)
+	 * @param {boolean} playSoundEffect - If true, play the sound effect
+	 * @returns {boolean} - True if the item was found, false otherwise
+	 * @private
+	 */
+	#handleItemFound(notif, itemType, playSoundEffect = true) {
+		if (!notif) {
+			return false;
+		}
+
+		// Set dataset properties based on item type
+		if (itemType === TYPE_ZEROETV) {
+			notif.dataset.typeZeroETV = 1;
+		} else if (itemType === TYPE_HIGHLIGHT) {
+			notif.dataset.typeHighlight = 1;
+		}
+
+		const tileVisible = this.#processNotificationFiltering(notif);
+
+		// Play sound effect if conditions are met
+		if ((tileVisible || this._fetchingRecentItems) && playSoundEffect) {
+			this._soundPlayerMgr.play(itemType);
+		}
+
+		// Handle moving to top or sorting
+		if (!this._fetchingRecentItems) {
+			if (itemType === TYPE_ZEROETV) {
+				// Only move to top if we're NOT using price sort
+				if (this._sortType === TYPE_DATE_DESC && this._settings.get("notification.monitor.bump0ETV")) {
+					this._moveNotifToTop(notif);
+				} else {
+					// If sorting by price is active, emit event to resort after identifying as zero ETV
+					this.#emitGridEvent("grid:sort-needed");
+				}
+			} else if (itemType === TYPE_HIGHLIGHT && this._sortType !== TYPE_DATE_ASC) {
+				this._moveNotifToTop(notif);
+			}
+		}
+
+		return true;
 	}
 
 	/**
@@ -1224,60 +1343,15 @@ class NotificationMonitor extends MonitorCore {
 	 * @returns {boolean} - True if the zero ETV item was found, false otherwise
 	 */
 	#zeroETVItemFound(notif, playSoundEffect = true) {
-		if (!notif) {
-			return false;
-		}
-
-		notif.dataset.typeZeroETV = 1;
-		const tileVisible = this.#processNotificationFiltering(notif);
-
-		//Play the zero ETV sound effect
-		if ((tileVisible || this._fetchingRecentItems) && playSoundEffect) {
-			this._soundPlayerMgr.play(TYPE_ZEROETV);
-		}
-
-		//Move the notification to the top only if we're not using price-based sorting
-		if (!this._fetchingRecentItems) {
-			// Only move to top if we're NOT using price sort
-			if (this._sortType === TYPE_DATE_DESC && this._settings.get("notification.monitor.bump0ETV")) {
-				this._moveNotifToTop(notif);
-			} else {
-				// If sorting by price is active, emit event to resort after identifying as zero ETV
-				this.#emitGridEvent("grid:sort-needed");
-			}
-		}
+		return this.#handleItemFound(notif, TYPE_ZEROETV, playSoundEffect);
 	}
 
 	#highlightedItemFound(notif, playSoundEffect = true) {
-		if (!notif) {
-			return false;
-		}
-
-		notif.dataset.typeHighlight = 1;
-		const tileVisible = this.#processNotificationFiltering(notif);
-
-		//Play the highlight sound effect
-		if ((tileVisible || this._fetchingRecentItems) && playSoundEffect) {
-			this._soundPlayerMgr.play(TYPE_HIGHLIGHT);
-		}
-
-		//Move the notification to the top
-		if (!this._fetchingRecentItems && this._sortType !== TYPE_DATE_ASC) {
-			this._moveNotifToTop(notif);
-		}
+		return this.#handleItemFound(notif, TYPE_HIGHLIGHT, playSoundEffect);
 	}
 
 	#regularItemFound(notif, playSoundEffect = true) {
-		if (!notif) {
-			return false;
-		}
-
-		const tileVisible = this.#processNotificationFiltering(notif);
-
-		//Play the regular notification sound effect.
-		if ((tileVisible || this._fetchingRecentItems) && playSoundEffect) {
-			this._soundPlayerMgr.play(TYPE_REGULAR);
-		}
+		return this.#handleItemFound(notif, TYPE_REGULAR, playSoundEffect);
 	}
 
 	/**
