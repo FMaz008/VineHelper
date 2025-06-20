@@ -1,11 +1,19 @@
 const TYPE_DATE_DESC = "date_desc";
 
+/**
+ * NoShiftGrid - Manages placeholder tiles to prevent grid shifting
+ *
+ * This service ensures that items remain in their columns when new items are added
+ * by inserting placeholder tiles at the beginning of the grid.
+ */
 class NoShiftGrid {
 	_monitor = null;
 	_visibilityStateManager = null;
 	_gridWidth = 0;
 	_endPlaceholdersCount = 0;
 	_endPlaceholdersCountBuffer = 0;
+	#isUpdatingPlaceholders = false;
+	#pendingUpdate = false;
 
 	constructor(monitorInstance, visibilityStateManager) {
 		this._monitor = monitorInstance;
@@ -16,6 +24,10 @@ class NoShiftGrid {
 		this.#calculateGridWidth();
 	}
 
+	/**
+	 * Update the grid container reference
+	 * @param {HTMLElement} gridContainer - The new grid container element
+	 */
 	updateGridContainer(gridContainer) {
 		this._monitor._gridContainer = gridContainer;
 		this.#calculateGridWidth();
@@ -37,10 +49,20 @@ class NoShiftGrid {
 		window.addEventListener("resize", this._resizeHandler);
 	}
 
+	/**
+	 * Calculate and cache the grid width
+	 * @private
+	 */
 	#calculateGridWidth() {
-		this._gridWidth = this._monitor._gridContainer.offsetWidth;
+		if (this._monitor._gridContainer) {
+			this._gridWidth = this._monitor._gridContainer.offsetWidth;
+		}
 	}
 
+	/**
+	 * Reset the end placeholders count
+	 * This should be called after fetch completes to prevent accumulation
+	 */
 	resetEndPlaceholdersCount() {
 		this._endPlaceholdersCount = 0;
 		this._endPlaceholdersCountBuffer = 0;
@@ -61,98 +83,119 @@ class NoShiftGrid {
 	 * Insert placeholder tiles to the grid to keep the grid elements fixed to their column with in sort TYPE_DATE_DESC
 	 */
 	insertPlaceholderTiles() {
+		// Prevent concurrent updates
+		if (this.#isUpdatingPlaceholders) {
+			this.#pendingUpdate = true;
+			return;
+		}
+
 		//If the sort is not by date DESC or the feed is paused, we don't need to do anything
 		if (this._monitor._sortType != TYPE_DATE_DESC || this._monitor._fetchingRecentItems) {
 			return;
 		}
 
-		// Ensure we have the current grid width
-		this.#calculateGridWidth();
+		// Mark as updating
+		this.#isUpdatingPlaceholders = true;
 
-		// Don't proceed if grid has no width
-		if (this._gridWidth <= 0) {
-			return;
-		}
+		try {
+			// Ensure we have the current grid width
+			this.#calculateGridWidth();
 
-		// Use VisibilityStateManager count if available for consistency
-		let visibleItemsCount;
-		const allTiles = this._monitor._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
-		const hiddenTiles = this._monitor._gridContainer.querySelectorAll(
-			'.vvp-item-tile:not(.vh-placeholder-tile)[style*="display: none"]'
-		);
+			// Don't proceed if grid has no width
+			if (this._gridWidth <= 0) {
+				return;
+			}
 
-		if (this._visibilityStateManager) {
-			visibleItemsCount = this._visibilityStateManager.getCount();
-		} else {
-			// Fallback to DOM count
-			const visibleTiles = this._monitor._gridContainer.querySelectorAll(
-				'.vvp-item-tile:not(.vh-placeholder-tile):not([style*="display: none"])'
+			// Use VisibilityStateManager count if available for consistency
+			let visibleItemsCount;
+			const allTiles = this._monitor._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
+			const hiddenTiles = this._monitor._gridContainer.querySelectorAll(
+				'.vvp-item-tile:not(.vh-placeholder-tile)[style*="display: none"]'
 			);
-			visibleItemsCount = visibleTiles.length;
-		}
 
-		// Debug logging
-		const debugPlaceholders = this._monitor._settings.get("general.debugPlaceholders");
-		if (debugPlaceholders) {
-			console.log("[NoShiftGrid] Starting placeholder calculation", {
-				visibleItemsCount,
-				visibilityStateCount: this._visibilityStateManager?.getCount(),
-				allTilesCount: allTiles.length,
-				hiddenTilesCount: hiddenTiles.length,
-				domVisibleCount: allTiles.length - hiddenTiles.length,
-				endPlaceholdersCount: this._endPlaceholdersCount,
-				gridWidth: this._gridWidth,
-			});
-		}
+			if (this._visibilityStateManager) {
+				visibleItemsCount = this._visibilityStateManager.getCount();
+			} else {
+				// Fallback to DOM count
+				const visibleTiles = this._monitor._gridContainer.querySelectorAll(
+					'.vvp-item-tile:not(.vh-placeholder-tile):not([style*="display: none"])'
+				);
+				visibleItemsCount = visibleTiles.length;
+			}
 
-		//Re-calculate the total number of items in the grid
-		const theoricalItemsCount = visibleItemsCount + this._endPlaceholdersCount;
+			// Debug logging
+			const debugPlaceholders = this._monitor._settings.get("general.debugPlaceholders");
+			if (debugPlaceholders) {
+				console.log("[NoShiftGrid] Starting placeholder calculation", {
+					visibleItemsCount,
+					visibilityStateCount: this._visibilityStateManager?.getCount(),
+					allTilesCount: allTiles.length,
+					hiddenTilesCount: hiddenTiles.length,
+					domVisibleCount: allTiles.length - hiddenTiles.length,
+					endPlaceholdersCount: this._endPlaceholdersCount,
+					gridWidth: this._gridWidth,
+				});
+			}
 
-		//ToDo: Find a better way to precisely calculate the actual tile width (with 2 decimal places)
-		const tileWidth = this._monitor._settings.get("notification.monitor.tileSize.width") + 1;
+			//Re-calculate the total number of items in the grid
+			const theoricalItemsCount = visibleItemsCount + this._endPlaceholdersCount;
 
-		//Calculate the number of tiles per row
-		const tilesPerRow = Math.floor(this._gridWidth / tileWidth);
+			//ToDo: Find a better way to precisely calculate the actual tile width (with 2 decimal places)
+			const tileWidth = this._monitor._settings.get("notification.monitor.tileSize.width") + 1;
 
-		//Caculate the number of placeholder tiles we need to insert
-		const numPlaceholderTiles = (tilesPerRow - (theoricalItemsCount % tilesPerRow)) % tilesPerRow;
+			//Calculate the number of tiles per row
+			const tilesPerRow = Math.floor(this._gridWidth / tileWidth);
 
-		// Debug logging
-		if (debugPlaceholders) {
-			console.log("[NoShiftGrid] Placeholder calculation result", {
-				theoricalItemsCount,
-				tilesPerRow,
-				numPlaceholderTiles,
-				calculation: `(${tilesPerRow} - (${theoricalItemsCount} % ${tilesPerRow})) % ${tilesPerRow} = (${tilesPerRow} - ${theoricalItemsCount % tilesPerRow}) % ${tilesPerRow} = ${numPlaceholderTiles}`,
-			});
-		}
+			//Caculate the number of placeholder tiles we need to insert
+			const numPlaceholderTiles = (tilesPerRow - (theoricalItemsCount % tilesPerRow)) % tilesPerRow;
 
-		// Only modify DOM if placeholder count changed
-		const currentPlaceholders = this._monitor._gridContainer.querySelectorAll(".vh-placeholder-tile");
-		if (currentPlaceholders.length === numPlaceholderTiles) {
-			return; // No change needed
-		}
+			// Debug logging
+			if (debugPlaceholders) {
+				console.log("[NoShiftGrid] Placeholder calculation result", {
+					theoricalItemsCount,
+					tilesPerRow,
+					numPlaceholderTiles,
+					calculation: `(${tilesPerRow} - (${theoricalItemsCount} % ${tilesPerRow})) % ${tilesPerRow} = (${tilesPerRow} - ${theoricalItemsCount % tilesPerRow}) % ${tilesPerRow} = ${numPlaceholderTiles}`,
+				});
+			}
 
-		// Use DocumentFragment to batch DOM operations and prevent flickering
-		const fragment = document.createDocumentFragment();
+			// Only modify DOM if placeholder count changed
+			const currentPlaceholders = this._monitor._gridContainer.querySelectorAll(".vh-placeholder-tile");
+			if (currentPlaceholders.length === numPlaceholderTiles) {
+				return; // No change needed
+			}
 
-		// Remove existing placeholders - use for...of to avoid function allocation
-		for (const p of currentPlaceholders) {
-			p.remove();
-		}
+			// Use DocumentFragment to batch DOM operations and prevent flickering
+			const fragment = document.createDocumentFragment();
 
-		// Create new placeholders
-		for (let i = 0; i < numPlaceholderTiles; i++) {
-			const placeholderTile = document.createElement("div");
-			placeholderTile.classList.add("vh-placeholder-tile");
-			placeholderTile.classList.add("vvp-item-tile");
-			placeholderTile.classList.add("vh-logo-vh");
-			fragment.appendChild(placeholderTile);
-		}
+			// Remove existing placeholders - use for...of to avoid function allocation
+			for (const p of currentPlaceholders) {
+				p.remove();
+			}
 
-		// Insert all placeholders at once at the beginning
-		if (fragment.childNodes.length > 0) {
-			this._monitor._gridContainer.insertBefore(fragment, this._monitor._gridContainer.firstChild);
+			// Create new placeholders
+			for (let i = 0; i < numPlaceholderTiles; i++) {
+				const placeholderTile = document.createElement("div");
+				placeholderTile.classList.add("vh-placeholder-tile");
+				placeholderTile.classList.add("vvp-item-tile");
+				placeholderTile.classList.add("vh-logo-vh");
+				fragment.appendChild(placeholderTile);
+			}
+
+			// Insert all placeholders at once at the beginning
+			if (fragment.childNodes.length > 0) {
+				this._monitor._gridContainer.insertBefore(fragment, this._monitor._gridContainer.firstChild);
+			}
+		} finally {
+			// Mark as done updating
+			this.#isUpdatingPlaceholders = false;
+
+			// If there was a pending update, process it now
+			if (this.#pendingUpdate) {
+				this.#pendingUpdate = false;
+				// Use setTimeout to avoid stack overflow
+				setTimeout(() => this.insertPlaceholderTiles(), 0);
+			}
 		}
 	}
 
