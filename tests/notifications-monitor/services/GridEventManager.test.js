@@ -15,6 +15,11 @@ describe("GridEventManager", () => {
 	};
 
 	beforeEach(() => {
+		// Mock requestAnimationFrame for Node.js environment
+		global.requestAnimationFrame = jest.fn((callback) => {
+			setTimeout(callback, 0);
+		});
+
 		// Use fake timers for testing batching
 		jest.useFakeTimers();
 		// Create a new DI container for each test
@@ -70,12 +75,10 @@ describe("GridEventManager", () => {
 		// Clear all timers after each test
 		jest.clearAllTimers();
 		jest.useRealTimers();
-	});
-
-	afterEach(() => {
-		// Clear all timers after each test
-		jest.clearAllTimers();
-		jest.useRealTimers();
+		// Clean up
+		gridEventManager?.destroy();
+		// Clean up requestAnimationFrame mock
+		delete global.requestAnimationFrame;
 	});
 
 	describe("Event Registration", () => {
@@ -197,11 +200,12 @@ describe("GridEventManager", () => {
 			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
 		});
 
-		it("should reset end placeholders count for filter operation", () => {
+		it("should NOT reset end placeholders count for filter operation", () => {
 			const filterHandler = mockHookMgr.hookBind.mock.calls.find((call) => call[0] === "grid:items-filtered")[1];
 			filterHandler();
 
-			expect(mockNoShiftGrid.resetEndPlaceholdersCount).toHaveBeenCalled();
+			// Should NOT reset placeholders during filter to preserve state
+			expect(mockNoShiftGrid.resetEndPlaceholdersCount).not.toHaveBeenCalled();
 
 			// Flush the batch timer
 			flushBatch();
@@ -214,7 +218,8 @@ describe("GridEventManager", () => {
 			filterHandler({ visibleCount: 10 });
 
 			expect(mockVisibilityStateManager.setCount).toHaveBeenCalledWith(10);
-			expect(mockNoShiftGrid.resetEndPlaceholdersCount).toHaveBeenCalled();
+			// Should NOT reset placeholders during filter to preserve state
+			expect(mockNoShiftGrid.resetEndPlaceholdersCount).not.toHaveBeenCalled();
 
 			// Flush the batch timer
 			flushBatch();

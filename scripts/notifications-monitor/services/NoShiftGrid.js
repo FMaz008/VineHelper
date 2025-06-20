@@ -43,6 +43,7 @@ class NoShiftGrid {
 
 	resetEndPlaceholdersCount() {
 		this._endPlaceholdersCount = 0;
+		this._endPlaceholdersCountBuffer = 0;
 	}
 
 	/**
@@ -73,11 +74,17 @@ class NoShiftGrid {
 			return;
 		}
 
-		//Delete all placeholder tiles
-		this.deletePlaceholderTiles();
-
-		//Get the current visible items count
-		const visibleItemsCount = this._visibilityStateManager ? this._visibilityStateManager.getCount() : 0;
+		// Use VisibilityStateManager count if available for consistency
+		let visibleItemsCount;
+		if (this._visibilityStateManager) {
+			visibleItemsCount = this._visibilityStateManager.getCount();
+		} else {
+			// Fallback to DOM count
+			const visibleTiles = this._monitor._gridContainer.querySelectorAll(
+				'.vvp-item-tile:not(.vh-placeholder-tile):not([style*="display: none"])'
+			);
+			visibleItemsCount = visibleTiles.length;
+		}
 
 		//Re-calculate the total number of items in the grid
 		const theoricalItemsCount = visibleItemsCount + this._endPlaceholdersCount;
@@ -91,18 +98,32 @@ class NoShiftGrid {
 		//Caculate the number of placeholder tiles we need to insert
 		const numPlaceholderTiles = (tilesPerRow - (theoricalItemsCount % tilesPerRow)) % tilesPerRow;
 
-		//Insert the placeholder tiles
+		// Only modify DOM if placeholder count changed
+		const currentPlaceholders = this._monitor._gridContainer.querySelectorAll(".vh-placeholder-tile");
+		if (currentPlaceholders.length === numPlaceholderTiles) {
+			return; // No change needed
+		}
+
+		// Use DocumentFragment to batch DOM operations and prevent flickering
+		const fragment = document.createDocumentFragment();
+
+		// Remove existing placeholders - use for...of to avoid function allocation
+		for (const p of currentPlaceholders) {
+			p.remove();
+		}
+
+		// Create new placeholders
 		for (let i = 0; i < numPlaceholderTiles; i++) {
 			const placeholderTile = document.createElement("div");
 			placeholderTile.classList.add("vh-placeholder-tile");
 			placeholderTile.classList.add("vvp-item-tile");
 			placeholderTile.classList.add("vh-logo-vh");
+			fragment.appendChild(placeholderTile);
+		}
 
-			//Add the tile to the beginning of the grid
-			this._monitor._gridContainer.insertBefore(
-				placeholderTile.cloneNode(true),
-				this._monitor._gridContainer.firstChild
-			);
+		// Insert all placeholders at once at the beginning
+		if (fragment.childNodes.length > 0) {
+			this._monitor._gridContainer.insertBefore(fragment, this._monitor._gridContainer.firstChild);
 		}
 	}
 
@@ -111,16 +132,27 @@ class NoShiftGrid {
 			return;
 		}
 
-		//Calculate the number of tiles per row
-		const tilesPerRow = Math.floor(
-			this._gridWidth / this._monitor._settings.get("notification.monitor.tileSize.width")
-		);
+		// Ensure grid width is current
+		this.#calculateGridWidth();
 
-		this._endPlaceholdersCountBuffer = (this._endPlaceholdersCountBuffer + tilesToInsert) % tilesPerRow;
-
-		if (!this._monitor._feedPaused) {
-			this._endPlaceholdersCount = this._endPlaceholdersCountBuffer;
+		// Don't proceed if grid has no width
+		if (this._gridWidth <= 0) {
+			return;
 		}
+
+		//Calculate the number of tiles per row (consistent with insertPlaceholderTiles)
+		const tileWidth = this._monitor._settings.get("notification.monitor.tileSize.width") + 1;
+		const tilesPerRow = Math.floor(this._gridWidth / tileWidth);
+
+		// Guard against division by zero
+		if (tilesPerRow <= 0) {
+			return;
+		}
+
+		// Always update the actual count, not just the buffer
+		// This ensures consistency regardless of pause state
+		this._endPlaceholdersCount = (this._endPlaceholdersCount + tilesToInsert) % tilesPerRow;
+		this._endPlaceholdersCountBuffer = this._endPlaceholdersCount;
 
 		//console.log("Adding ", this._endPlaceholdersCount, " imaginary placeholders tiles at the end of the grid");
 	}

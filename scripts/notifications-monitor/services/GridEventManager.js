@@ -73,7 +73,10 @@ class GridEventManager {
 
 		// Only update placeholders for operations that affect grid layout
 		if (this.#shouldUpdatePlaceholders(operation)) {
-			this.#updatePlaceholders(data.fetchingRecentItems);
+			// Use requestAnimationFrame for visual stability
+			requestAnimationFrame(() => {
+				this.#updatePlaceholders(data.fetchingRecentItems);
+			});
 		}
 	}
 
@@ -136,8 +139,9 @@ class GridEventManager {
 			this.#visibilityStateManager.setCount(data.visibleCount);
 		}
 
-		// Reset end placeholders count and update placeholders
-		this.#noShiftGrid.resetEndPlaceholdersCount();
+		// Don't reset end placeholders count during filtering
+		// This preserves the placeholder state when items are being loaded concurrently
+		// The insertPlaceholderTiles method will recalculate based on current visible count
 		if (this.#shouldUpdatePlaceholders("filter")) {
 			this.#updatePlaceholders();
 		}
@@ -366,6 +370,7 @@ class GridEventManager {
 				this.#noShiftGrid.insertPlaceholderTiles();
 			});
 		} else {
+			// For non-fetching updates, update placeholders immediately
 			this.#noShiftGrid.insertPlaceholderTiles();
 		}
 	}

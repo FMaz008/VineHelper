@@ -97,7 +97,17 @@ class Grid {
 
 	getTileCount(trueCount = false) {
 		if (trueCount) {
-			return this.gridDOM?.children.length;
+			// Count only actual tiles, excluding placeholders
+			if (!this.gridDOM) return 0;
+
+			let count = 0;
+			for (const child of this.gridDOM.children) {
+				// Skip placeholder tiles
+				if (!child.classList.contains("vh-placeholder-tile")) {
+					count++;
+				}
+			}
+			return count;
 		} else {
 			return this.pArrTile.length;
 		}

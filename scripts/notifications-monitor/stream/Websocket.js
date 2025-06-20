@@ -50,6 +50,14 @@ class Websocket {
 			return;
 		}
 
+		// Clean up any existing socket instance before creating a new one
+		if (this.#socket) {
+			this.#cleanupSocketListeners();
+			this.#socket.removeAllListeners();
+			this.#socket.disconnect();
+			this.#socket = null;
+		}
+
 		this.#socket_connecting = true;
 		this.#socket = io.connect(VINE_HELPER_API_V5_WS_URL, {
 			query: {

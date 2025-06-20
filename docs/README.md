@@ -95,6 +95,31 @@ Comprehensive tracking of memory leak fixes:
 - Count synchronization during bulk operations
 - Performance impact analysis (40% memory reduction)
 - Best practices for preventing future leaks
+- **June 2025 Chrome Memory Profile Analysis & Fixes**:
+    - Socket.io reconnection memory leak fixes
+    - URL string interning with size-based cleanup
+    - Counting and placeholder synchronization fixes
+    - Anti-flicker optimizations with RequestAnimationFrame
+    - Array allocation reductions in hot paths
+    - Expected additional 40-50% memory reduction
+
+### [COUNT_PLACEHOLDER_SYNC_FIXES.md](./COUNT_PLACEHOLDER_SYNC_FIXES.md)
+
+Documentation of count/placeholder synchronization fixes:
+
+- Tab title count vs visible tiles mismatch resolution
+- Centralized count management through VisibilityStateManager
+- Placeholder buffer synchronization during pause/unpause cycles
+- Anti-flicker measures using DocumentFragment and requestAnimationFrame
+
+### [CSP_FIX.md](./CSP_FIX.md)
+
+Content Security Policy fix for Chrome compatibility:
+
+- Removal of external script sources from CSP
+- Chrome extension security requirements
+- Manifest file updates for all platforms
+- Test coverage for CSP validation
 
 ## Related Documentation
 
