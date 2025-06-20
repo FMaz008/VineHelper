@@ -11,7 +11,7 @@
 		"notifications"
 	],
 	"content_security_policy": {
-		"extension_pages": "default-src 'self'; script-src 'self';  style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.vinehelper.ovh wss://api.vinehelper.ovh https://*.media-amazon.com https://api.llamastories.com https://*.amazon.com https://*.amazon.co.uk https://*.amazon.de https://*.amazon.fr https://*.amazon.es https://*.amazon.it https://*.amazon.co.jp https://*.amazon.com.au https://*.amazon.com.br https://*.amazon.com.mx https://*.amazon.sg https://*.amazon.ca; img-src 'self' https://*.media-amazon.com https://*.paypal.com https://*.paypalobjects.com;"
+		"extension_pages": "default-src 'self'; script-src 'self' https://appleid.cdn-apple.com;  style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.vinehelper.ovh wss://api.vinehelper.ovh https://*.media-amazon.com https://api.llamastories.com https://*.amazon.com https://*.amazon.co.uk https://*.amazon.de https://*.amazon.fr https://*.amazon.es https://*.amazon.it https://*.amazon.co.jp https://*.amazon.com.au https://*.amazon.com.br https://*.amazon.com.mx https://*.amazon.sg https://*.amazon.ca; img-src 'self' https://*.media-amazon.com https://*.paypal.com https://*.paypalobjects.com;"
 	},
 	"icons": {
 		"32": "resource/image/icon-32.png",

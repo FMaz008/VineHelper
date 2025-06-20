@@ -9,6 +9,9 @@ import { initiateSettings } from "/page/settings_loadsave.js";
 import { Template } from "/scripts/core/utils/Template.js";
 var Tpl = new Template();
 
+import { Environment } from "/scripts/core/services/Environment.js";
+const env = new Environment();
+
 // Clear template cache and variables when opening settings
 Tpl.flushLocalStorage();
 
@@ -24,6 +27,36 @@ if (navigator.userAgent.includes("Safari")) {
 	document.head.innerHTML += `<link rel="stylesheet" type="text/css" href="../resource/css/icon_ios.css" />`;
 }
 
+//Init the AppleAuth
+function initAppleAuth(event) {
+	event.preventDefault();
+
+	AppleID.auth.init({
+		clientId: "com.FrancoisMazerolle.VineHelper",
+		scope: "email name",
+		redirectURI: "https://api.vinehelper.ovh/apple-login",
+		state: `origin:web,uuid:${Settings.get("general.uuid", false)}`,
+	});
+
+	AppleID.auth.signIn();
+}
+
+async function validateReceipt() {
+	const receiptData = document.getElementById("receiptData").value;
+	const uuid = await Settings.get("general.uuid", false);
+
+	const response = await fetch("/api/apple/validate-receipt", {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ uuid, receiptData }),
+	});
+
+	const result = await response.json();
+	if (result.success) {
+		alert(`✅ Subscription linked: ${result.subscription.tier_name}`);
+	}
+}
+
 //Render the main layout
 (async () => {
 	const promMainTpl = await Tpl.loadFile("/page/settings_main.tpl.html");
@@ -35,6 +68,7 @@ if (navigator.userAgent.includes("Safari")) {
 	const promTab6 = await Tpl.loadFile("/page/settings_keybindings.tpl.html");
 	const promTab7 = await Tpl.loadFile("/page/settings_styles.tpl.html");
 	const promTab8 = await Tpl.loadFile("/page/settings_premium.tpl.html");
+	Tpl.setIf("isSafari", env.isSafari());
 	const promTab9 = await Tpl.loadFile("/page/settings_about.tpl.html");
 
 	// Clear any existing template variables before setting new ones
@@ -76,6 +110,13 @@ if (navigator.userAgent.includes("Safari")) {
 	if (countryCode != null) {
 		initTabs();
 		initiateSettings(); //page/settings_loadsave.js, initialize the loading and saving code for the page
+	}
+
+	if (env.isSafari()) {
+		//Bind the initAppleAuth function to the AppleLogin button
+		document.getElementById("AppleLogin").addEventListener("click", initAppleAuth);
+		//Bind the validateReceipt function to the validateReceipt button
+		document.getElementById("validateReceipt").addEventListener("click", validateReceipt);
 	}
 })();
 
