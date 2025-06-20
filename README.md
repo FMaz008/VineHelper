@@ -12,10 +12,13 @@ Browser Extension to improve the experience of Amazon Vine members.
 
 ### Requirements
 
-You must have [node.js](https://nodejs.org/en/download) installed. This project uses the [yarn classic](https://classic.yarnpkg.com/) package manager.
+You must have [node.js](https://nodejs.org/en/download) installed.
+
+This project uses the yarn 3.6.4 package manager. Install yarn:
 
 ```
-npm install -g yarn
+corepack enable
+yarn install
 ```
 
 ### Getting Started
