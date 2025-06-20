@@ -103,14 +103,15 @@ Comprehensive tracking of memory leak fixes:
     - Array allocation reductions in hot paths
     - Expected additional 40-50% memory reduction
 
-### [COUNT_PLACEHOLDER_SYNC_FIXES.md](./COUNT_PLACEHOLDER_SYNC_FIXES.md)
+### [COUNT_AND_PLACEHOLDER_FIXES.md](./COUNT_AND_PLACEHOLDER_FIXES.md)
 
-Documentation of count/placeholder synchronization fixes:
+Comprehensive documentation of count and placeholder synchronization fixes:
 
-- Tab title count vs visible tiles mismatch resolution
-- Centralized count management through VisibilityStateManager
-- Placeholder buffer synchronization during pause/unpause cycles
-- Anti-flicker measures using DocumentFragment and requestAnimationFrame
+- New item placement relative to placeholders
+- Zero ETV items counting with filters
+- Tab title count synchronization after unpause/truncation
+- Debug mode for troubleshooting count issues
+- Test plan and implementation details
 
 ### [CSP_FIX.md](./CSP_FIX.md)
 
