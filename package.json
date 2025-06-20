@@ -2,6 +2,9 @@
 	"name": "vinehelper",
 	"version": "3.6.0",
 	"description": "Improve the Amazon Vine experience.",
+	"workspaces": [
+		"/*"
+	],
 	"scripts": {
 		"test": "jest",
 		"test:coverage": "jest --coverage",
@@ -32,19 +35,25 @@
 		"vine-styling": "github:FMaz008/vine-styling.git#main"
 	},
 	"devDependencies": {
+		"@babel/core": "^7.27.4",
 		"@babel/preset-env": "^7.26.0",
 		"@commitlint/cli": "^19.2.1",
 		"@commitlint/config-conventional": "^19.1.0",
+		"@eslint/eslintrc": "^3.3.1",
+		"@eslint/js": "^9.29.0",
 		"@release-it/bumper": "^6.0.1",
+		"@types/node": "^24.0.3",
 		"archiver": "^7.0.1",
 		"babel-jest": "^29.7.0",
-		"eslint": "^8.57.0",
+		"eslint": "latest",
 		"eslint-config-prettier": "^9.1.0",
+		"globals": "^16.2.0",
 		"husky": "^9.0.11",
 		"jest": "^29.7.0",
 		"lint-staged": "^15.2.2",
 		"prettier": "^3.2.5",
-		"release-it": "^17.1.1"
+		"release-it": "^17.1.1",
+		"typescript": "^5.8.3"
 	},
 	"lint-staged": {
 		"*.js": [
