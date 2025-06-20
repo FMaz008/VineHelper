@@ -256,12 +256,134 @@ function getElementData(element) {
 // Data is automatically garbage collected when element is removed
 ```
 
+## 6. DOM Visibility Checking Performance Optimizations
+
+### Current Issues:
+
+- `window.getComputedStyle()` forces style recalculation/reflow for each element
+- Multiple loops through elements calling `getComputedStyle` can cause performance degradation
+- Particularly impactful with large numbers of items (50+)
+
+### Recommendations:
+
+```javascript
+// 1. Batch style calculations to minimize reflows
+function countVisibleItemsBatched(container) {
+	// Force a single reflow by reading offsetHeight first
+	void container.offsetHeight;
+
+	const itemTiles = container.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
+
+	// For Safari and large item counts, use optimized approach
+	const useOptimizedApproach = isSafari() || itemTiles.length > 50;
+
+	if (useOptimizedApproach) {
+		// Batch read all computed styles at once to minimize reflows
+		const tilesToCheck = Array.from(itemTiles);
+		const computedStyles = tilesToCheck.map((tile) => ({
+			tile,
+			display: window.getComputedStyle(tile).display,
+		}));
+
+		// Process results without triggering additional reflows
+		let count = 0;
+		for (const { display } of computedStyles) {
+			if (display !== "none") {
+				count++;
+			}
+		}
+		return count;
+	} else {
+		// Direct approach for smaller counts
+		let count = 0;
+		for (const tile of itemTiles) {
+			if (window.getComputedStyle(tile).display !== "none") {
+				count++;
+			}
+		}
+		return count;
+	}
+}
+
+// 2. Cache computed styles for Safari (already implemented in NotificationMonitor)
+class ComputedStyleCache {
+	constructor() {
+		this.cache = new WeakMap();
+	}
+
+	getStyle(element) {
+		let cachedStyle = this.cache.get(element);
+		if (!cachedStyle) {
+			cachedStyle = window.getComputedStyle(element);
+			this.cache.set(element, cachedStyle);
+		}
+		return cachedStyle;
+	}
+
+	invalidate() {
+		this.cache = new WeakMap();
+	}
+}
+
+// 3. Use Intersection Observer for visibility tracking (future optimization)
+class VisibilityTracker {
+	constructor() {
+		this.visibleElements = new Set();
+		this.observer = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					if (entry.isIntersecting) {
+						this.visibleElements.add(entry.target);
+					} else {
+						this.visibleElements.delete(entry.target);
+					}
+				}
+			},
+			{ root: null, threshold: 0.1 }
+		);
+	}
+
+	observe(element) {
+		this.observer.observe(element);
+	}
+
+	unobserve(element) {
+		this.observer.unobserve(element);
+		this.visibleElements.delete(element);
+	}
+
+	getVisibleCount() {
+		return this.visibleElements.size;
+	}
+
+	destroy() {
+		this.observer.disconnect();
+		this.visibleElements.clear();
+	}
+}
+```
+
+### Performance Trade-offs:
+
+- **`getComputedStyle()`**: More accurate but slower, triggers reflows
+- **Inline style checking**: Faster but less accurate, misses CSS rules
+- **Batching**: Reduces reflows but uses more memory temporarily
+- **Caching**: Faster for repeated checks but requires invalidation management
+
+### When to Use Each Approach:
+
+1. **Small item counts (<50)**: Direct `getComputedStyle` approach
+2. **Large item counts (50+)**: Batched approach with array mapping
+3. **Safari browser**: Use WeakMap cache (already implemented)
+4. **Future optimization**: Consider Intersection Observer for viewport-based visibility
+
 ## Implementation Priority
 
 1. **High Priority**: Keyword matching optimizations (biggest memory impact)
-2. **Medium Priority**: Virtual scrolling for large item lists
-3. **Medium Priority**: Socket.io message buffer limits
-4. **Low Priority**: General object pooling and reuse
+2. **High Priority**: DOM visibility checking optimizations (performance impact with large lists)
+3. **Medium Priority**: Virtual scrolling for large item lists
+4. **Medium Priority**: Socket.io message buffer limits
+5. **Low Priority**: General object pooling and reuse
 
 ## Monitoring Success
 
@@ -271,3 +393,5 @@ After implementing these optimizations:
 2. Compare allocation counts at the same code locations
 3. Monitor heap size over time
 4. Check for memory growth patterns during extended use
+5. Measure performance with Chrome DevTools Performance profiler
+6. Test with varying item counts (10, 50, 100, 500+ items)

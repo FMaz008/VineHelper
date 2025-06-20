@@ -346,10 +346,51 @@ class MonitorCore {
 		// This avoids issues with ItemsMgr Map being out of sync
 		const allTiles = this._gridContainer.querySelectorAll(".vvp-item-tile");
 		const placeholderTiles = this._gridContainer.querySelectorAll(".vh-placeholder-tile");
-		const hiddenTiles = this._gridContainer.querySelectorAll('.vvp-item-tile[style*="display: none"]');
-		const visibleTiles = this._gridContainer.querySelectorAll(
-			'.vvp-item-tile:not(.vh-placeholder-tile):not([style*="display: none"])'
-		);
+
+		// Get all non-placeholder tiles
+		const itemTiles = this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
+
+		// Count visible items by checking computed style
+		// This is more reliable than checking inline styles
+		let count = 0;
+		let hiddenCount = 0;
+
+		// Performance optimization: batch style calculations
+		// Force a single reflow by reading offsetHeight first
+		void this._gridContainer.offsetHeight;
+
+		// For Safari and large item counts, use optimized approach
+		const useOptimizedApproach = this._env.isSafari() || itemTiles.length > 50;
+
+		if (useOptimizedApproach) {
+			// Collect all tiles that need style checks
+			const tilesToCheck = Array.from(itemTiles);
+
+			// Batch read all computed styles at once to minimize reflows
+			const computedStyles = tilesToCheck.map((tile) => ({
+				tile,
+				display: window.getComputedStyle(tile).display,
+			}));
+
+			// Now process the results without triggering additional reflows
+			for (const { display } of computedStyles) {
+				if (display !== "none") {
+					count++;
+				} else {
+					hiddenCount++;
+				}
+			}
+		} else {
+			// For smaller counts, use direct approach
+			for (const tile of itemTiles) {
+				const computedStyle = window.getComputedStyle(tile);
+				if (computedStyle.display !== "none") {
+					count++;
+				} else {
+					hiddenCount++;
+				}
+			}
+		}
 
 		// Debug logging
 		const debugTabTitle = this._settings.get("general.debugTabTitle");
@@ -358,25 +399,11 @@ class MonitorCore {
 			console.log("[MonitorCore] Counting visible items", {
 				allTiles: allTiles.length,
 				placeholderTiles: placeholderTiles.length,
-				hiddenTiles: hiddenTiles.length,
-				visibleTilesQuery: visibleTiles.length,
-				expectedVisible: allTiles.length - placeholderTiles.length - hiddenTiles.length,
+				itemTiles: itemTiles.length,
+				hiddenCount: hiddenCount,
+				visibleCount: count,
+				expectedVisible: itemTiles.length - hiddenCount,
 			});
-		}
-
-		let count = 0;
-
-		// For Safari, we need to check computed style
-		if (this._env.isSafari()) {
-			for (const tile of visibleTiles) {
-				const computedStyle = window.getComputedStyle(tile);
-				if (computedStyle.display !== "none") {
-					count++;
-				}
-			}
-		} else {
-			// For other browsers, the selector already filters out display:none
-			count = visibleTiles.length;
 		}
 
 		// Debug logging

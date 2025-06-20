@@ -108,19 +108,47 @@ class NoShiftGrid {
 
 			// Use VisibilityStateManager count if available for consistency
 			let visibleItemsCount;
-			const allTiles = this._monitor._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
-			const hiddenTiles = this._monitor._gridContainer.querySelectorAll(
-				'.vvp-item-tile:not(.vh-placeholder-tile)[style*="display: none"]'
-			);
 
 			if (this._visibilityStateManager) {
 				visibleItemsCount = this._visibilityStateManager.getCount();
 			} else {
-				// Fallback to DOM count
-				const visibleTiles = this._monitor._gridContainer.querySelectorAll(
-					'.vvp-item-tile:not(.vh-placeholder-tile):not([style*="display: none"])'
+				// Fallback to DOM count using computed styles
+				const allTiles = this._monitor._gridContainer.querySelectorAll(
+					".vvp-item-tile:not(.vh-placeholder-tile)"
 				);
-				visibleItemsCount = visibleTiles.length;
+
+				// Performance optimization: batch style calculations
+				// Force a single reflow by reading offsetHeight first
+				void this._monitor._gridContainer.offsetHeight;
+
+				// Count hidden tiles by checking computed style
+				let hiddenCount = 0;
+
+				// For Safari and large item counts, use optimized approach
+				const useOptimizedApproach = this._monitor._env.isSafari() || allTiles.length > 50;
+
+				if (useOptimizedApproach) {
+					// Batch read all computed styles at once to minimize reflows
+					const tilesToCheck = Array.from(allTiles);
+					const computedStyles = tilesToCheck.map((tile) => window.getComputedStyle(tile).display);
+
+					// Now process the results without triggering additional reflows
+					for (const display of computedStyles) {
+						if (display === "none") {
+							hiddenCount++;
+						}
+					}
+				} else {
+					// For smaller counts, use direct approach
+					for (const tile of allTiles) {
+						const computedStyle = window.getComputedStyle(tile);
+						if (computedStyle.display === "none") {
+							hiddenCount++;
+						}
+					}
+				}
+
+				visibleItemsCount = allTiles.length - hiddenCount;
 			}
 
 			// Debug logging
@@ -129,9 +157,6 @@ class NoShiftGrid {
 				console.log("[NoShiftGrid] Starting placeholder calculation", {
 					visibleItemsCount,
 					visibilityStateCount: this._visibilityStateManager?.getCount(),
-					allTilesCount: allTiles.length,
-					hiddenTilesCount: hiddenTiles.length,
-					domVisibleCount: allTiles.length - hiddenTiles.length,
 					endPlaceholdersCount: this._endPlaceholdersCount,
 					gridWidth: this._gridWidth,
 				});
