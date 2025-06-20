@@ -1242,9 +1242,25 @@ window.addEventListener("message", async function (event) {
 	if (event.data.type == "promotionId") {
 		promotionId = event.data.promotionId;
 		checkoutAsin = event.data.asin;
+
+		// Try to find and update the form for 3 seconds
+		let attempts = 0;
+		const maxAttempts = 60; // 3 seconds at 50ms intervals
+		const interval = setInterval(() => {
+			const checkoutBuyNowForm = document.querySelector("#vvp-checkout-buy-now");
+			if (checkoutBuyNowForm) {
+				checkoutBuyNowForm.target = "_blank";
+				clearInterval(interval);
+			} else if (++attempts >= maxAttempts) {
+				clearInterval(interval);
+				console.log("Could not find checkout form after 3 seconds");
+			}
+		}, 50);
 	}
 
 	//Amazon checkout process (only use if the notification monitor is loaded)
+	console.log(event.data, env.isAmazonCheckoutEnabled(), notificationMonitor);
+
 	if (event.data.type == "offerListingId" && env.isAmazonCheckoutEnabled() && notificationMonitor !== null) {
 		const offerListingId = event.data.offerListingId;
 
@@ -1527,15 +1543,14 @@ async function generateCheckoutForm(asin, promotionId, offerListingId) {
 	const form = document.createElement("form");
 	form.method = "POST";
 	form.action = `https://www.amazon.${i13n.getDomainTLD()}/checkout/entry/buynow?pipelineType=Chewbacca`;
-	form.target = "_blank";
 	form.style.display = "none";
 	form.innerHTML = `
-		<input type="hidden" name="offerListingID" value="${offerListingId}" />
-		<input type="hidden" name="promotionId" value="${promotionId}" />
-		<input type="hidden" name="asin" value="${asin}" />
-		<input type="hidden" name="skipCart" value="1" />
-		<input type="hidden" name="quantity" value="1" />
-		<input type="hidden" name="vineProgramType" value="VINE" />
+		<input type="text" name="offerListingID" value="${offerListingId}" />
+		<input type="text" name="vinePromotionId" value="${promotionId}" />
+		<input type="text" name="asin" value="${asin}" />
+		<input type="text" name="skipCart" value="1" />
+		<input type="text" name="quantity" value="1" />
+		<input type="text" name="vineProgramType" value="VINE" />
 	`;
 	document.body.appendChild(form);
 	form.submit();
