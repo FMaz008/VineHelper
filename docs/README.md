@@ -85,6 +85,17 @@ Summary of DI keyword compilation implementation:
 - RuntimeAdapter and infrastructure updates
 - Documentation and test coverage
 
+### [MEMORY_LEAK_FIXES.md](./MEMORY_LEAK_FIXES.md)
+
+Comprehensive tracking of memory leak fixes:
+
+- Critical interval-based memory leaks (MasterSlave, ServerCom)
+- WebSocket event handler cleanup patterns
+- DOM reference management strategies
+- Count synchronization during bulk operations
+- Performance impact analysis (40% memory reduction)
+- Best practices for preventing future leaks
+
 ## Related Documentation
 
 - **Infrastructure Components**: See [`../scripts/infrastructure/README.md`](../scripts/infrastructure/README.md) for detailed documentation on the DI container and storage adapters

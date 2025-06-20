@@ -118,21 +118,31 @@ This document consolidates planned improvements, optimizations, and technical de
 
 ## Technical Debt
 
-### 1. Timer Management
+### 1. ~~Timer Management~~ ✅ FIXED
 
-**Issue:** Potential memory leaks in services using setInterval without cleanup
-**Affected files:**
+**Issue:** ~~Potential memory leaks in services using setInterval without cleanup~~
+**Status:** Fixed in memory leak PR
+**Resolution:**
 
-- MasterSlave.js - "ImAlive" interval
-- Websocket.js - reconnect timer
-- ServerCom.js - service worker status timer
+- MasterSlave.js - Added proper interval storage and cleanup in destroy()
+- Websocket.js - Already had proper cleanup (confirmed)
+- ServerCom.js - Added destroy() method to clear all timers
 
 ### 2. DOM Reference Management
 
 **Issue:** Arrays of DOM references created frequently
 **Solution:** Use WeakMap/WeakSet where appropriate
 
-### 3. Bootloader Refactoring
+### 3. Count Synchronization Best Practices
+
+**Learning from Memory Leak PR:**
+
+- When implementing pause/unpause mechanisms, trust incremental count updates
+- Avoid full recounts after operations that already track changes incrementally
+- Ensure events are emitted even during "paused" states if they affect counts
+- Consider race conditions between different data sources (WebSocket vs bulk fetch)
+
+### 4. Bootloader Refactoring
 
 **Status:** High risk, high reward
 **Goal:** Reduce coupling and improve testability
@@ -166,6 +176,7 @@ This document consolidates planned improvements, optimizations, and technical de
     - Heap growth over time
     - Detached DOM nodes
     - Event listener count
+    - Interval/timer cleanup verification
 
 3. **User Experience:**
     - Filter application speed
