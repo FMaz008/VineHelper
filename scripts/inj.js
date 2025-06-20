@@ -44,7 +44,10 @@ window.fetch = async (...args) => {
 				},
 				"/" //message should be sent to the same origin as the current document.
 			);
-		} else if (extHelper_responseData.result?.offerListingId !== undefined) {
+		} else if (
+			extHelper_responseData.result?.offerListingId !== undefined &&
+			extHelper_responseData.result?.offerListingId !== null
+		) {
 			//Amazon checkout process
 			window.postMessage(
 				{
