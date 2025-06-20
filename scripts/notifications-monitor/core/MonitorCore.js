@@ -342,23 +342,25 @@ class MonitorCore {
 	}
 
 	_countVisibleItems() {
-		let count = 0;
-		// Iterate directly over Map values to avoid Array conversion
-		for (const item of this._itemsMgr.items.values()) {
-			// Early continue if no element
-			if (!item.element) continue;
+		// Count visible items directly from DOM to ensure accuracy
+		// This avoids issues with ItemsMgr Map being out of sync
+		const visibleTiles = this._gridContainer.querySelectorAll(
+			'.vvp-item-tile:not(.vh-placeholder-tile):not([style*="display: none"])'
+		);
 
-			let displayStyle;
-			if (this._env.isSafari()) {
-				// For Safari, use computed style (which is slower and cause reflow) as it can't read style.display reliably.
-				const computedStyle = window.getComputedStyle(item.element);
-				displayStyle = computedStyle.display;
-			} else {
-				displayStyle = item.element.style.display;
+		let count = 0;
+
+		// For Safari, we need to check computed style
+		if (this._env.isSafari()) {
+			for (const tile of visibleTiles) {
+				const computedStyle = window.getComputedStyle(tile);
+				if (computedStyle.display !== "none") {
+					count++;
+				}
 			}
-			if (displayStyle !== "none") {
-				count++;
-			}
+		} else {
+			// For other browsers, the selector already filters out display:none
+			count = visibleTiles.length;
 		}
 
 		// Update the single source of truth if available

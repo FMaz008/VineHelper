@@ -10,8 +10,47 @@ class ItemsMgr {
 	imageUrls = new Set(); // Set of image URLs used for duplicate thumbnail detection (kept separate for O(1) lookup performance)
 	items = new Map(); // Combined map to store both item data and DOM elements
 
+	// URL string interning pool to prevent duplicate strings in memory
+	static #urlInternPool = new Map();
+
 	constructor(settings) {
 		this._settings = settings;
+	}
+
+	/**
+	 * Intern a URL string to prevent duplicates in memory
+	 * @param {string} url - The URL to intern
+	 * @returns {string} The interned URL string
+	 */
+	static #internUrl(url) {
+		if (!url) return url;
+
+		const existing = ItemsMgr.#urlInternPool.get(url);
+		if (existing) {
+			return existing;
+		}
+
+		ItemsMgr.#urlInternPool.set(url, url);
+		return url;
+	}
+
+	/**
+	 * Clean up old URLs from the intern pool (call periodically)
+	 * @param {number} maxPoolSize - Maximum number of URLs to keep in pool
+	 */
+	static cleanupUrlPool(maxPoolSize = 1000) {
+		// If pool is too large, clear oldest entries
+		if (ItemsMgr.#urlInternPool.size > maxPoolSize) {
+			// Convert to array, sort by insertion order (Map maintains order)
+			const entries = Array.from(ItemsMgr.#urlInternPool.entries());
+			const toKeep = entries.slice(-maxPoolSize); // Keep the most recent
+
+			// Clear and rebuild with recent entries only
+			ItemsMgr.#urlInternPool.clear();
+			for (const [url, value] of toKeep) {
+				ItemsMgr.#urlInternPool.set(url, value);
+			}
+		}
 	}
 
 	/**
@@ -23,15 +62,16 @@ class ItemsMgr {
 
 		const sortType = this._settings.get("notification.monitor.sortType");
 
-		// Convert Map to array for sorting
-		const itemsArray = Array.from(this.items.entries()).map(([asin, item]) => {
-			return {
+		// Convert Map to array for sorting - reuse array to reduce allocations
+		const itemsArray = [];
+		for (const [asin, item] of this.items.entries()) {
+			itemsArray.push({
 				asin,
 				data: item.data,
 				element: item.element,
 				tile: item.tile,
-			};
-		});
+			});
+		}
 
 		// Sort based on the current sort type
 		itemsArray.sort((a, b) => {
@@ -62,17 +102,19 @@ class ItemsMgr {
 
 		// For price-based sorting, update the Map order
 		if (sortType === TYPE_PRICE_ASC || sortType === TYPE_PRICE_DESC) {
-			// Transform the sorted array back to [key, value] pairs for the Map constructor
-			this.items = new Map(
-				itemsArray.map((item) => [
+			// Rebuild the map in sorted order - avoid map() allocation
+			const sortedEntries = [];
+			for (const item of itemsArray) {
+				sortedEntries.push([
 					item.asin,
 					{
 						data: item.data,
 						element: item.element,
 						tile: item.tile,
 					},
-				])
-			);
+				]);
+			}
+			this.items = new Map(sortedEntries);
 		}
 
 		return itemsArray;
@@ -135,11 +177,19 @@ class ItemsMgr {
 		// Create a new item object or update existing one
 		let addedStatus = false;
 
+		// Intern URL strings to prevent duplicates in memory
+		const internedData = {
+			...itemData,
+			img_url: ItemsMgr.#internUrl(itemData.img_url),
+			search_url: ItemsMgr.#internUrl(itemData.search_url),
+			// Intern any other URL fields that might exist
+		};
+
 		if (!this.items.has(asin)) {
 			// New item
 			this.items.set(asin, {
 				data: {
-					...itemData, //The spread operator will convert null values to empty strings.
+					...internedData, //The spread operator will convert null values to empty strings.
 					dateAdded: new Date(),
 				},
 				element: null, // Element will be set later
@@ -152,7 +202,7 @@ class ItemsMgr {
 			this.items.set(asin, {
 				data: {
 					...existing.data, //The spread operator will convert null values to empty strings.
-					...itemData, //The spread operator will convert null values to empty strings.
+					...internedData, //The spread operator will convert null values to empty strings.
 				},
 				element: existing.element,
 			});
@@ -168,8 +218,8 @@ class ItemsMgr {
 		}
 
 		// Store image URL if needed for duplicate detection
-		if (itemData.img_url && this._settings.get("notification.monitor.hideDuplicateThumbnail")) {
-			this.imageUrls.add(itemData.img_url);
+		if (internedData.img_url && this._settings.get("notification.monitor.hideDuplicateThumbnail")) {
+			this.imageUrls.add(internedData.img_url);
 		}
 
 		// Sort the items after adding or updating a new item

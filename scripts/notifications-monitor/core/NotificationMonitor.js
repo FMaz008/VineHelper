@@ -241,17 +241,20 @@ class NotificationMonitor extends MonitorCore {
 	 * Update visible count after filtering and emit appropriate events
 	 */
 	#updateVisibleCountAfterFiltering() {
-		// Invalidate Safari computed style cache after bulk filtering
-		if (this._env.isSafari()) {
-			this.#invalidateComputedStyleCache();
-		}
+		// Use requestAnimationFrame for better visual stability
+		requestAnimationFrame(() => {
+			// Invalidate Safari computed style cache after bulk filtering
+			if (this._env.isSafari()) {
+				this.#invalidateComputedStyleCache();
+			}
 
-		// Recalculate visible count after filtering
-		const newCount = this._countVisibleItems();
-		// Update the visibility state manager with new count (V3 only)
-		this._visibilityStateManager?.setCount(newCount);
-		// Emit event for filter change with visible count
-		this.#emitGridEvent("grid:items-filtered", { visibleCount: newCount });
+			// Recalculate visible count after filtering
+			const newCount = this._countVisibleItems();
+			// Update the visibility state manager with new count (V3 only)
+			this._visibilityStateManager?.setCount(newCount);
+			// Emit event for filter change with visible count
+			this.#emitGridEvent("grid:items-filtered", { visibleCount: newCount });
+		});
 	}
 
 	/**
@@ -919,7 +922,7 @@ class NotificationMonitor extends MonitorCore {
 		// Emit grid events during normal operation or when fetching recent items
 		// Always emit during fetch to ensure counts stay accurate
 		if (!this._feedPaused || this._fetchingRecentItems) {
-			// Emit event for grid modification with count
+			// Emit event immediately to avoid visual delays
 			this.#emitGridEvent("grid:items-added", { count: isVisible ? 1 : 0 });
 		}
 
@@ -1611,9 +1614,11 @@ class NotificationMonitor extends MonitorCore {
 	 * @private
 	 */
 	#applyFilteringToAllItems() {
-		this._gridContainer.querySelectorAll(".vvp-item-tile").forEach((node) => {
+		// Use for...of instead of forEach to avoid function allocation
+		const tiles = this._gridContainer.querySelectorAll(".vvp-item-tile");
+		for (const node of tiles) {
 			this.#processNotificationFiltering(node);
-		});
+		}
 	}
 
 	#mouseoverHandler(e) {
@@ -2131,12 +2136,14 @@ class NotificationMonitor extends MonitorCore {
 			document.getElementById("pauseFeed-fixed").value = "Pause & Buffer Feed";
 			// Check if any items were actually marked as paused (legacy code path)
 			// In current implementation, items don't get marked with feedPaused="true"
-			this._gridContainer.querySelectorAll(".vvp-item-tile").forEach((node, key, parent) => {
+			// Use for...of to avoid function allocation
+			const tiles = this._gridContainer.querySelectorAll(".vvp-item-tile");
+			for (const node of tiles) {
 				if (node.dataset.feedPaused == "true") {
 					node.dataset.feedPaused = "false";
 					this.#processNotificationFiltering(node);
 				}
-			});
+			}
 
 			// Update visibility count after unpause
 			// If we have a VisibilityStateManager, use its count; otherwise recount

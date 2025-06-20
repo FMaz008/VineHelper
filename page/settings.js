@@ -31,14 +31,36 @@ if (navigator.userAgent.includes("Safari")) {
 function initAppleAuth(event) {
 	event.preventDefault();
 
-	AppleID.auth.init({
-		clientId: "com.FrancoisMazerolle.VineHelper",
-		scope: "email name",
-		redirectURI: "https://api.vinehelper.ovh/apple-login",
-		state: `origin:web,uuid:${Settings.get("general.uuid", false)}`,
-	});
+	// Check if AppleID is available (only in Safari with proper CSP)
+	if (typeof AppleID !== "undefined" && AppleID.auth) {
+		try {
+			AppleID.auth.init({
+				clientId: "com.FrancoisMazerolle.VineHelper",
+				scope: "email name",
+				redirectURI: "https://api.vinehelper.ovh/apple-login",
+				state: `origin:web,uuid:${Settings.get("general.uuid", false)}`,
+			});
 
-	AppleID.auth.signIn();
+			AppleID.auth.signIn();
+		} catch (error) {
+			console.error("Apple Sign-In error:", error);
+			showAppleAuthFallback();
+		}
+	} else {
+		showAppleAuthFallback();
+	}
+}
+
+function showAppleAuthFallback() {
+	// More user-friendly message for non-Safari browsers
+	const isSafari = navigator.userAgent.includes("Safari") && !navigator.userAgent.includes("Chrome");
+	const message = isSafari
+		? "Apple Sign-In is temporarily unavailable. Please use the receipt validation method below."
+		: "Apple Sign-In is only available in Safari. Please use the receipt validation method below.";
+
+	alert(message);
+	// Focus on the receipt textarea
+	document.getElementById("receiptData")?.focus();
 }
 
 async function validateReceipt() {
