@@ -31,47 +31,54 @@ window.fetch = async (...args) => {
 		}
 
 		let data = {};
-		if (extHelper_responseData.result?.offerListingId !== undefined) {
+		if (extHelper_responseData.error !== null) {
+			window.postMessage(
+				{
+					type: "order",
+					data: {
+						status: "failed",
+						error: extHelper_responseData.error, //CROSS_BORDER_SHIPMENT, SCHEDULED_DELIVERY_REQUIRED, ITEM_NOT_IN_ENROLLMENT, ITEM_ALREADY_ORDERED
+						parent_asin: lastParent,
+						asin: asin,
+					},
+				},
+				"/" //message should be sent to the same origin as the current document.
+			);
+		} else if (extHelper_responseData.result?.offerListingId !== undefined) {
 			//Amazon checkout process
-			data = {
-				type: "offerListingId",
-				offerListingId: extHelper_responseData.result.offerListingId,
-			};
+			window.postMessage(
+				{
+					type: "offerListingId",
+					offerListingId: extHelper_responseData.result.offerListingId,
+				},
+				"/" //message should be sent to the same origin as the current document.
+			);
 		} else {
-			//Vine checkout process
-			if (extHelper_responseData.error !== null) {
+			//Old vine checkout process
+			if (extHelper_responseData.result?.orderId) {
 				data = {
-					status: "failed",
-					error: extHelper_responseData.error, //CROSS_BORDER_SHIPMENT, SCHEDULED_DELIVERY_REQUIRED, ITEM_NOT_IN_ENROLLMENT, ITEM_ALREADY_ORDERED
+					status: "success",
+					error: null,
+					//orderId: extHelper_responseData.result.orderId,
 					parent_asin: lastParent,
 					asin: asin,
 				};
 			} else {
-				if (extHelper_responseData.result?.orderId) {
-					data = {
-						status: "success",
-						error: null,
-						//orderId: extHelper_responseData.result.orderId,
-						parent_asin: lastParent,
-						asin: asin,
-					};
-				} else {
-					data = {
-						status: "failed",
-						error: "No orderId received back",
-						parent_asin: lastParent,
-						asin: asin,
-					};
-				}
+				data = {
+					status: "failed",
+					error: "No orderId received back",
+					parent_asin: lastParent,
+					asin: asin,
+				};
 			}
+			window.postMessage(
+				{
+					type: "order",
+					data,
+				},
+				"/" //message should be sent to the same origin as the current document.
+			);
 		}
-		window.postMessage(
-			{
-				type: "order",
-				data,
-			},
-			"/" //message should be sent to the same origin as the current document.
-		);
 
 		//Wait 500ms following an order to allow for the order report query to go through before the redirect happens.
 		await new Promise((r) => setTimeout(r, 500));
