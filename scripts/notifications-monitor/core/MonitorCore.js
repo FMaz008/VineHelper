@@ -395,7 +395,7 @@ class MonitorCore {
 			document.title = "VHNM (" + itemsCount + ")";
 
 			// Debug logging for truncation issues
-			if (window.DEBUG_TAB_TITLE) {
+			if (typeof window !== "undefined" && window.DEBUG_TAB_TITLE) {
 				console.log(`[TabTitle] Updated to: ${itemsCount}`, {
 					providedCount: count,
 					timestamp: new Date().toISOString(),

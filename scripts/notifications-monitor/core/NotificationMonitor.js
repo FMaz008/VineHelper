@@ -535,7 +535,7 @@ class NotificationMonitor extends MonitorCore {
 					);
 
 					// Debug logging for truncation
-					if (window.DEBUG_TAB_TITLE) {
+					if (typeof window !== "undefined" && window.DEBUG_TAB_TITLE) {
 						console.log(`[Truncation] Starting truncation`, {
 							currentSize: this._itemsMgr.items.size,
 							maxLimit: max,
@@ -577,7 +577,7 @@ class NotificationMonitor extends MonitorCore {
 					});
 
 					// Debug logging for truncation completion
-					if (window.DEBUG_TAB_TITLE) {
+					if (typeof window !== "undefined" && window.DEBUG_TAB_TITLE) {
 						console.log(`[Truncation] Completed truncation`, {
 							visibleItemsRemoved: visibleItemsRemovedCount,
 							newSize: this._itemsMgr.items.size,
