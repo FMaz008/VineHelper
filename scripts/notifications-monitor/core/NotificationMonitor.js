@@ -417,10 +417,13 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Always emit event to update placeholders after fetching recent items
-		// Get the count from VisibilityStateManager if available, otherwise count manually
-		const visibleCount = this._visibilityStateManager
-			? this._visibilityStateManager.getCount()
-			: this._countVisibleItems();
+		// Always recount to ensure accuracy after fetch, as items may have been
+		// added with isVisible=false during the fetch process
+		const visibleCount = this._countVisibleItems();
+		if (this._visibilityStateManager) {
+			// Update the VisibilityStateManager with the accurate count
+			this._visibilityStateManager.setCount(visibleCount);
+		}
 		this.#emitGridEvent("grid:fetch-complete", { visibleCount });
 
 		// Emit event to trigger sorting instead of calling directly
@@ -531,6 +534,15 @@ class NotificationMonitor extends MonitorCore {
 						`NOTIF: Auto truncating item(s) from the page using the ${this._sortType} sort method.`
 					);
 
+					// Debug logging for truncation
+					if (window.DEBUG_TAB_TITLE) {
+						console.log(`[Truncation] Starting truncation`, {
+							currentSize: this._itemsMgr.items.size,
+							maxLimit: max,
+							toRemove: this._itemsMgr.items.size - max,
+						});
+					}
+
 					// Convert map to array for sorting
 					const itemsArray = Array.from(this._itemsMgr.items.entries()).map(([asin, item]) => ({
 						asin,
@@ -563,6 +575,15 @@ class NotificationMonitor extends MonitorCore {
 						fetchingRecentItems,
 						visibleItemsRemovedCount,
 					});
+
+					// Debug logging for truncation completion
+					if (window.DEBUG_TAB_TITLE) {
+						console.log(`[Truncation] Completed truncation`, {
+							visibleItemsRemoved: visibleItemsRemovedCount,
+							newSize: this._itemsMgr.items.size,
+							fetchingRecentItems,
+						});
+					}
 				}
 			}
 		};
@@ -807,8 +828,17 @@ class NotificationMonitor extends MonitorCore {
 				this._gridContainer.appendChild(fragment);
 			} else {
 				//Sort DESC
-				// For date descending (default), insert at the beginning
-				this._gridContainer.insertBefore(fragment, this._gridContainer.firstChild);
+				// For date descending (default), insert at the beginning but after placeholders
+				let insertPosition = this._gridContainer.firstChild;
+				while (insertPosition && insertPosition.classList.contains("vh-placeholder-tile")) {
+					insertPosition = insertPosition.nextSibling;
+				}
+				if (insertPosition) {
+					this._gridContainer.insertBefore(fragment, insertPosition);
+				} else {
+					// All children are placeholders or container is empty
+					this._gridContainer.appendChild(fragment);
+				}
 			}
 		});
 
@@ -868,6 +898,8 @@ class NotificationMonitor extends MonitorCore {
 
 		//Process the item according to the notification type (highlight > 0etv > regular)
 		//This is what determine & trigger what sound effect to play
+		// Handle item-specific logic (sound, moving to top, etc.)
+		// Note: type flags are already set above before filtering
 		if (KWsMatch) {
 			this.#highlightedItemFound(tileDOM, true); //Play the highlight sound
 		} else if (parseFloat(etv_min) === 0) {
@@ -914,6 +946,13 @@ class NotificationMonitor extends MonitorCore {
 		if (this._mostRecentItemDate == null || date > this._mostRecentItemDate) {
 			this._mostRecentItemDateDOM.innerText = this._formatDate(date);
 			this._mostRecentItemDate = date;
+		}
+
+		// Set type flags BEFORE filtering so visibility is calculated correctly
+		if (KWsMatch) {
+			tileDOM.dataset.typeHighlight = 1;
+		} else if (parseFloat(etv_min) === 0) {
+			tileDOM.dataset.typeZeroETV = 1;
 		}
 
 		//Apply the filters
@@ -1123,6 +1162,8 @@ class NotificationMonitor extends MonitorCore {
 
 		//zero ETV found, highlight the item accordingly
 		if (parseFloat(etvObj.dataset.etvMin) == 0) {
+			// Set the flag before calling the handler
+			notif.dataset.typeZeroETV = 1;
 			// Always set typeZeroETV = 1 when ETV is 0, regardless of previous state
 			this.#zeroETVItemFound(notif, this._settings.get("notification.monitor.zeroETV.sound") != "0");
 		} else {
@@ -1314,13 +1355,10 @@ class NotificationMonitor extends MonitorCore {
 			return false;
 		}
 
-		// Set dataset properties based on item type
-		if (itemType === TYPE_ZEROETV) {
-			notif.dataset.typeZeroETV = 1;
-		} else if (itemType === TYPE_HIGHLIGHT) {
-			notif.dataset.typeHighlight = 1;
-		}
+		// Note: Type flags (typeZeroETV, typeHighlight) should already be set
+		// before this method is called to ensure proper counting
 
+		// Re-process filtering to get current visibility state
 		const tileVisible = this.#processNotificationFiltering(notif);
 
 		// Play sound effect if conditions are met
@@ -2146,16 +2184,14 @@ class NotificationMonitor extends MonitorCore {
 			}
 
 			// Update visibility count after unpause
-			// If we have a VisibilityStateManager, use its count; otherwise recount
+			// We need to recount because items added during pause might not have been counted
+			// if they were filtered out (isVisible = false) during the fetch
+			const newCount = this._countVisibleItems();
 			if (this._visibilityStateManager) {
-				// Trust the incremental updates that happened during fetch
-				const currentCount = this._visibilityStateManager.getCount();
-				this._updateTabTitle(currentCount);
-			} else {
-				// Fallback for monitors without VisibilityStateManager
-				const newCount = this._countVisibleItems();
-				this._updateTabTitle(newCount);
+				// Update the VisibilityStateManager with the correct count
+				this._visibilityStateManager.setCount(newCount);
 			}
+			this._updateTabTitle(newCount);
 
 			// Only emit unpause event for manual unpause, not hover unpause
 			if (!isHoverPause) {

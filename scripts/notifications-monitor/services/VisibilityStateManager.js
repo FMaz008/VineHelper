@@ -77,6 +77,14 @@ class VisibilityStateManager {
 	 * @private
 	 */
 	#emitCountChanged() {
+		// Debug logging for count changes
+		if (window.DEBUG_TAB_TITLE) {
+			console.log(`[VisibilityStateManager] Count changed to: ${this.#count}`, {
+				timestamp: new Date().toISOString(),
+				stack: new Error().stack.split("\n").slice(2, 5).join("\n"),
+			});
+		}
+
 		this.#hookMgr.hookExecute("visibility:count-changed", {
 			count: this.#count,
 			timestamp: Date.now(),

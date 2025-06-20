@@ -393,6 +393,14 @@ class MonitorCore {
 
 			// Update the tab title
 			document.title = "VHNM (" + itemsCount + ")";
+
+			// Debug logging for truncation issues
+			if (window.DEBUG_TAB_TITLE) {
+				console.log(`[TabTitle] Updated to: ${itemsCount}`, {
+					providedCount: count,
+					timestamp: new Date().toISOString(),
+				});
+			}
 		}, 100); // 100ms delay for UI updates
 	}
 
