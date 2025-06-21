@@ -15,6 +15,8 @@ var cryptoKeys = new CryptoKeys();
 import { HiddenListMgr } from "/scripts/core/services/HiddenListMgr.js";
 var HiddenList = new HiddenListMgr();
 
+import { Item } from "/scripts/core/models/Item.js";
+
 import { ModalMgr } from "/scripts/ui/controllers/ModalMgr.js";
 var modalMgr = new ModalMgr();
 
@@ -157,7 +159,8 @@ class Tile {
 		//Add event listener to the links
 		const links = document.querySelectorAll(`#modal-item-variants-${asin} .vh-link-variant`);
 		for (let link of links) {
-			link.addEventListener("click", () => {
+			link.addEventListener("click", (event) => {
+				event.preventDefault();
 				//Close the modal
 				m.close();
 
@@ -167,9 +170,19 @@ class Tile {
 				const seeDetails = this.#tileDOM.querySelector(".vvp-details-btn input");
 
 				//Generate a See Details button
+				//Extract enrollment guid from recommendationId
 				const recommendationId = seeDetails.dataset.recommendationId;
-				const recommendationType = seeDetails.dataset.recommendationType;
-				drawButton(variantAsin, false, recommendationType, recommendationId);
+				const enrollmentGuid = recommendationId.split("#vine.enrollment.")[1];
+
+				const item = new Item({
+					asin: seeDetails.dataset.asin,
+					queue: seeDetails.dataset.queue,
+					is_parent_asin: false,
+					enrollment_guid: enrollmentGuid,
+					is_pre_release: seeDetails.dataset.isPreRelease,
+				});
+
+				drawButton(item, variantAsin);
 				clickDynamicSeeDetailsButton(variantAsin);
 			});
 		}

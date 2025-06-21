@@ -20,20 +20,20 @@ async function openDynamicModal(options, autoClick = true) {
 	return btn;
 }
 
-function drawButton(item) {
-	const { asin, queue, is_parent_asin, is_pre_release, enrollment_guid, variant_asin } = item.data;
+function drawButton(item, variant_asin = null) {
+	const { asin, is_parent_asin, is_pre_release } = item.data;
 
 	//Generate the dynamic modal button
 	const container1 = document.createElement("span");
-	env.data.gridDOM.regular.appendChild(container1);
-	container1.id = "dynamicModalBtnSpan-" + asin;
+	document.querySelector("#vvp-items-grid").parentNode.appendChild(container1);
+	container1.id = "dynamicModalBtnSpan-" + (variant_asin ? variant_asin : asin);
 	container1.classList.add("vvp-details-btn");
 	const container2 = document.createElement("span");
 	container1.appendChild(container2);
 	const btn = document.createElement("input");
 	container2.appendChild(btn);
 	btn.type = "submit";
-	btn.id = "dynamicModalBtn-" + asin;
+	btn.id = "dynamicModalBtn-" + (variant_asin ? variant_asin : asin);
 	btn.dataset.asin = variant_asin ? variant_asin : asin;
 	btn.dataset.isParentAsin = variant_asin ? false : is_parent_asin;
 	btn.dataset.recommendationType = item.getRecommendationType();
@@ -45,28 +45,38 @@ function drawButton(item) {
 
 async function clickDynamicSeeDetailsButton(asin) {
 	//If the click happens too fast, it won't work.
-	while (document.readyState !== "complete" || !document.querySelector("#dynamicModalBtn-" + asin)) {
+	let attempts = 1;
+	while (
+		(document.readyState !== "complete" || !document.querySelector("#dynamicModalBtn-" + asin)) &&
+		attempts <= 20
+	) {
+		console.log("Waiting for DOM to load and button to be available");
 		await new Promise((r) => setTimeout(r, 100));
+		attempts++;
+	}
+	if (attempts > 20) {
+		console.error("Failed to find button after 20 attempts");
+		return;
 	}
 
 	//If DOM is loaded and ready
 	const btn = document.querySelector("#dynamicModalBtn-" + asin);
-	let attempt = 1;
-	while ((!document.querySelector(".a-popover-modal") && attempt <= 5) || attempt === 1) {
-		console.log(`Attempt #${attempt} to open the modal window`);
+	attempts = 1;
+	while ((!document.querySelector(".a-popover-modal") && attempts <= 5) || attempts === 1) {
+		console.log(`Attempt #${attempts} to open the modal window`);
 		btn.click();
-		await new Promise((r) => setTimeout(r, 200 * attempt));
-		attempt++;
+		await new Promise((r) => setTimeout(r, 200 * attempts));
+		attempts++;
 	}
 
-	if (attempt == 6) {
+	if (attempts == 6) {
 		console.error("Failed to open modal or succeeded on last attempt");
 	}
 
 	setTimeout(function () {
 		const container1 = document.querySelector("#dynamicModalBtnSpan-" + asin);
 		if (container1) {
-			container1.remove(); // Removes container1 from the DOM
+			//container1.remove(); // Removes container1 from the DOM
 		}
 	}, 500);
 }
