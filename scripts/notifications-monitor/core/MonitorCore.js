@@ -99,9 +99,6 @@ class MonitorCore {
 		this._isMasterMonitor = true;
 		this._ws = new Websocket(this);
 		this._autoLoad = new AutoLoad(this, this._ws);
-
-		//Update the master/slave test
-		this.#setMonitorModeLabel();
 	}
 	setSlaveMonitor() {
 		this._isMasterMonitor = false;
@@ -110,22 +107,6 @@ class MonitorCore {
 		}
 		this._ws = null;
 		this._autoLoad = null;
-
-		//Update the master/slave test
-		this.#setMonitorModeLabel();
-	}
-
-	async #setMonitorModeLabel() {
-		let masterSlaveText = null;
-		let t = 0;
-		do {
-			masterSlaveText = document.getElementById("vh-monitor-masterslave");
-			if (masterSlaveText) {
-				masterSlaveText.innerText = `[Monitor Mode: ${this._isMasterMonitor ? "Master" : "Slave"}]`;
-			}
-			t++;
-			await new Promise((resolve) => setTimeout(resolve, 100));
-		} while (!masterSlaveText && t < 5);
 	}
 
 	fetchAutoLoadUrl(url, queue, page) {

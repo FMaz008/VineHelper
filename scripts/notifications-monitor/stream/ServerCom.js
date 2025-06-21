@@ -89,7 +89,7 @@ class ServerCom {
 		if (data.type == "masterMonitorPong") {
 			window.clearTimeout(this.#statusTimer);
 			this.#statusTimer = null;
-			this.#setMasterMonitorStatus(true, "Running...");
+			this.#setMasterMonitorStatus(true, "Running as slave ...");
 		}
 		if (data.type == "newETV") {
 			this._monitor.setETVFromASIN(data.item.asin, data.item.etv);
@@ -211,7 +211,7 @@ class ServerCom {
 		} else if (this._monitor._settings.get("notification.active")) {
 			//Send a message to the service worker to check if it is still running
 			this.#statusTimer = window.setTimeout(() => {
-				this.#setMasterMonitorStatus(false, "Not responding, reload the page.");
+				this.#setMasterMonitorStatus(false, "Master monitor not responding, reload the page.");
 			}, 500);
 			try {
 				this._monitor._channel.postMessage({ type: "masterMonitorPing" });
@@ -219,6 +219,8 @@ class ServerCom {
 					clearTimeout(this.#statusTimer);
 					this.#statusTimer = null;
 					this.#setMasterMonitorStatus(true, "Running as master ...");
+				} else {
+					//Will be set when we receive a pong from the master monitor.
 				}
 			} catch (e) {
 				//Page out of context, let the display show an error.
