@@ -84,7 +84,8 @@ class HeapSnapshotHelper {
 
 		let node;
 		while ((node = walker.nextNode())) {
-			if (!document.contains(node)) {
+			// TreeWalker should only return valid nodes, but add safety check
+			if (node && node instanceof Node && !document.contains(node)) {
 				allNodes.push(node);
 			}
 		}

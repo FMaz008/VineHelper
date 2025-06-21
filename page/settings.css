@@ -354,3 +354,60 @@ input.dualslider[type="range"] {
 	z-index: 1;
 	margin-top: 4px;
 }
+
+/* #################################### */
+/* MEMORY DEBUGGING CONTROLS */
+/* #################################### */
+
+.memory-debug-controls {
+	max-width: 100%;
+	box-sizing: border-box;
+}
+
+.memory-debug-controls .setting-container {
+	margin-bottom: 12px;
+}
+
+.memory-debug-btn {
+	padding: 6px 10px;
+	font-size: 12px;
+	background: #fff;
+	border: 1px solid #ccc;
+	border-radius: 3px;
+	cursor: pointer;
+	transition: all 0.2s;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.memory-debug-btn:hover {
+	background: #f0f0f0;
+	border-color: #999;
+}
+
+.memory-debug-btn:active {
+	background: #e0e0e0;
+}
+
+.memory-debug-btn:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+/* Responsive adjustments for narrow views */
+@media (max-width: 400px) {
+	.memory-debug-controls .setting-container {
+		padding: 8px;
+	}
+	
+	.memory-debug-btn {
+		font-size: 11px;
+		padding: 5px 8px;
+	}
+	
+	#memoryDebugLog {
+		height: 120px !important;
+		font-size: 10px !important;
+	}
+}

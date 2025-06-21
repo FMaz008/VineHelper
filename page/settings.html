@@ -8,19 +8,6 @@
 		<link rel="stylesheet" type="text/css" href="../resource/css/main.css" />
 		<link rel="stylesheet" type="text/css" href="../resource/css/icon.css" />
 		<link rel="stylesheet" type="text/css" href="../resource/css/toolbar.css" />
-		<!-- Conditionally load Apple's Sign-In SDK for Safari only -->
-		<script>
-			// Only load Apple SDK for Safari where CSP allows it
-			if (navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome')) {
-				const script = document.createElement('script');
-				script.type = 'text/javascript';
-				script.src = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js';
-				script.onerror = function() {
-					console.warn('Apple Sign-In SDK failed to load. Receipt validation is still available.');
-				};
-				document.head.appendChild(script);
-			}
-		</script>
 		<script src="../page/settings.js" type="module"></script>
 	</head>
 	<body></body>

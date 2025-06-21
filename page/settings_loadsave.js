@@ -273,6 +273,10 @@ async function initiateSettings() {
 	manageCheckboxSetting("general.unknownETVHighlight.active");
 	manageColorPicker("general.unknownETVHighlight.color");
 	manageColorPicker("general.toolbarBackgroundColor");
+	manageCheckboxSetting("general.debugTabTitle");
+	manageCheckboxSetting("general.debugPlaceholders");
+	manageCheckboxSetting("general.debugMemory");
+	manageCheckboxSetting("general.debugMemoryAutoSnapshot");
 
 	//##TAB - NOTIFICATIONS
 

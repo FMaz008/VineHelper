@@ -11,85 +11,14 @@ import { escapeHTML, unescapeHTML, removeSpecialHTML } from "/scripts/core/utils
 import { MonitorCore } from "/scripts/notifications-monitor/core/MonitorCore.js";
 import { Item } from "/scripts/core/models/Item.js";
 
-// Memory debugging - only load if debug mode is enabled
+// Memory debugging - will be initialized if debug mode is enabled
 let MemoryDebugger = null;
+let memoryDebuggerInitialized = false;
 
-// Create a promise that resolves when the debugger is ready
+// Create a promise that will be resolved when we check for debug mode
 window.MEMORY_DEBUGGER_READY = new Promise((resolve) => {
-	if (window.DEBUG_MEMORY || localStorage.getItem("vh_debug_memory") === "true") {
-		import("/scripts/notifications-monitor/debug/MemoryDebugger.js")
-			.then((module) => {
-				MemoryDebugger = module.default || module.MemoryDebugger || module;
-				console.log("🔍 Memory Debugger loaded. Use window.MEMORY_DEBUGGER to access.");
-
-				// Create the global instance immediately after loading
-				if (!window.MEMORY_DEBUGGER && MemoryDebugger) {
-					try {
-						const debuggerInstance = new MemoryDebugger();
-
-						// Try multiple ways to expose it globally
-						window.MEMORY_DEBUGGER = debuggerInstance;
-						globalThis.MEMORY_DEBUGGER = debuggerInstance;
-
-						// If we're in a content script, try to expose to the page
-						if (typeof unsafeWindow !== "undefined") {
-							unsafeWindow.MEMORY_DEBUGGER = debuggerInstance;
-						}
-
-						console.log("🔍 Memory Debugger initialized. Starting monitoring...");
-
-						// Also expose common methods directly for convenience
-						const takeSnapshotFunc = function (name) {
-							return debuggerInstance.takeSnapshot(name);
-						};
-						const generateReportFunc = function () {
-							return debuggerInstance.generateReport();
-						};
-
-						window.takeSnapshot = takeSnapshotFunc;
-						window.generateMemoryReport = generateReportFunc;
-						globalThis.takeSnapshot = takeSnapshotFunc;
-						globalThis.generateMemoryReport = generateReportFunc;
-
-						// Double-check they're set
-						if (typeof window.takeSnapshot !== "function") {
-							console.error("Failed to set window.takeSnapshot");
-						}
-						if (typeof window.generateMemoryReport !== "function") {
-							console.error("Failed to set window.generateMemoryReport");
-						}
-
-						console.log("📊 Quick access methods available:");
-						console.log("  - takeSnapshot(name)");
-						console.log("  - generateMemoryReport()");
-
-						// Debug: Check if it's really set
-						console.log("Debug: window.MEMORY_DEBUGGER is:", window.MEMORY_DEBUGGER);
-						console.log("Debug: typeof window.MEMORY_DEBUGGER:", typeof window.MEMORY_DEBUGGER);
-
-						// Provide instructions for accessing via promise
-						console.log("📌 If direct access doesn't work, use:");
-						console.log("   await window.MEMORY_DEBUGGER_READY");
-						console.log("   // Then use the returned debugger instance");
-
-						resolve(debuggerInstance);
-					} catch (error) {
-						console.error("Failed to create MemoryDebugger instance:", error);
-						resolve(null);
-					}
-				} else {
-					console.log("Debug: MEMORY_DEBUGGER already exists or MemoryDebugger not loaded");
-					resolve(window.MEMORY_DEBUGGER || null);
-				}
-			})
-			.catch((error) => {
-				console.error("Failed to load Memory Debugger:", error);
-				resolve(null);
-			});
-	} else {
-		console.log("Memory debugging not enabled");
-		resolve(null);
-	}
+	// This will be resolved when NotificationMonitor is initialized
+	window._resolveMemoryDebuggerReady = resolve;
 });
 
 // Also create a simple getter function that works after page load
@@ -164,7 +93,114 @@ class NotificationMonitor extends MonitorCore {
 			throw new TypeError('Abstract class "NotificationMonitor" cannot be instantiated directly.');
 		}
 
-		// Memory debugger is initialized in the import callback above
+		// Initialize memory debugger if enabled in settings
+		this._initializeMemoryDebugger();
+	}
+
+	/**
+	 * Initialize the memory debugger if enabled in settings
+	 * @private
+	 */
+	async _initializeMemoryDebugger() {
+		// Wait for settings to load
+		await this._settings.waitForLoad();
+
+		// Check if memory debugging is enabled
+		const debugMemoryEnabled = this._settings.get("general.debugMemory") === true;
+
+		if (debugMemoryEnabled && !memoryDebuggerInitialized) {
+			memoryDebuggerInitialized = true;
+
+			try {
+				// Dynamically import the memory debugger
+				const module = await import("/scripts/notifications-monitor/debug/MemoryDebugger.js");
+				MemoryDebugger = module.default || module.MemoryDebugger || module;
+				console.log("🔍 Memory Debugger loaded. Use window.MEMORY_DEBUGGER to access.");
+
+				// Create the global instance
+				if (!window.MEMORY_DEBUGGER && MemoryDebugger) {
+					const debuggerInstance = new MemoryDebugger();
+
+					// Store the debugger instance
+					window.MEMORY_DEBUGGER = debuggerInstance;
+
+					console.log("🔍 Memory Debugger initialized. Starting monitoring...");
+
+					// Create global API that can be accessed from console
+					window.VH_MEMORY = {
+						takeSnapshot: (name) => {
+							if (debuggerInstance) {
+								return debuggerInstance.takeSnapshot(name);
+							}
+							console.error("Memory debugger not available");
+							return null;
+						},
+						generateReport: () => {
+							if (debuggerInstance) {
+								return debuggerInstance.generateReport();
+							}
+							console.error("Memory debugger not available");
+							return null;
+						},
+						detectLeaks: () => {
+							if (debuggerInstance) {
+								return debuggerInstance.detectLeaks();
+							}
+							console.error("Memory debugger not available");
+							return null;
+						},
+						checkDetachedNodes: () => {
+							if (debuggerInstance) {
+								return debuggerInstance.checkDetachedNodes();
+							}
+							console.error("Memory debugger not available");
+							return null;
+						},
+						cleanup: () => {
+							if (debuggerInstance) {
+								return debuggerInstance.cleanup();
+							}
+							console.error("Memory debugger not available");
+							return null;
+						},
+						stopMonitoring: () => {
+							if (debuggerInstance) {
+								return debuggerInstance.stopMonitoring();
+							}
+							console.error("Memory debugger not available");
+							return null;
+						},
+					};
+
+					// Make it available globally
+					globalThis.VH_MEMORY = window.VH_MEMORY;
+
+					console.log("📊 Memory Debugger API available at window.VH_MEMORY");
+					console.log("Available methods:");
+					console.log("  - VH_MEMORY.takeSnapshot(name)");
+					console.log("  - VH_MEMORY.generateReport()");
+					console.log("  - VH_MEMORY.detectLeaks()");
+					console.log("  - VH_MEMORY.checkDetachedNodes()");
+					console.log("  - VH_MEMORY.cleanup()");
+					console.log("  - VH_MEMORY.stopMonitoring()");
+
+					// Resolve the promise
+					if (window._resolveMemoryDebuggerReady) {
+						window._resolveMemoryDebuggerReady(debuggerInstance);
+					}
+				}
+			} catch (error) {
+				console.error("Failed to initialize MemoryDebugger:", error);
+				if (window._resolveMemoryDebuggerReady) {
+					window._resolveMemoryDebuggerReady(null);
+				}
+			}
+		} else {
+			// Resolve the promise with null if not enabled
+			if (window._resolveMemoryDebuggerReady) {
+				window._resolveMemoryDebuggerReady(null);
+			}
+		}
 	}
 
 	/**
@@ -252,8 +288,15 @@ class NotificationMonitor extends MonitorCore {
 			const newCount = this._countVisibleItems();
 			// Update the visibility state manager with new count (V3 only)
 			this._visibilityStateManager?.setCount(newCount);
+			// Update tab title
+			this._updateTabTitle(newCount);
 			// Emit event for filter change with visible count
 			this.#emitGridEvent("grid:items-filtered", { visibleCount: newCount });
+
+			// Force placeholder recalculation after filter change
+			if (this._noShiftGrid) {
+				this._noShiftGrid.insertPlaceholderTiles();
+			}
 		});
 	}
 
@@ -270,6 +313,7 @@ class NotificationMonitor extends MonitorCore {
 		const notificationTypeZeroETV = parseInt(node.dataset.typeZeroETV) === 1;
 		const notificationTypeHighlight = parseInt(node.dataset.typeHighlight) === 1;
 		const queueType = node.dataset.queue;
+		const beforeDisplay = node.style.display;
 
 		//Feed Paused
 		if (node.dataset.feedPaused == "true") {
@@ -320,10 +364,40 @@ class NotificationMonitor extends MonitorCore {
 		//Queue filter
 		let styleDisplay;
 		if (this._env.isSafari()) {
-			styleDisplay = window.getComputedStyle(node);
+			const computedStyle = window.getComputedStyle(node);
+			styleDisplay = computedStyle.display;
 		} else {
 			styleDisplay = node.style.display;
 		}
+
+		// Debug logging for visibility changes
+		const debugTabTitle = this._settings.get("general.debugTabTitle");
+		const debugPlaceholders = this._settings.get("general.debugPlaceholders");
+		if (debugTabTitle || debugPlaceholders) {
+			const afterDisplay = node.style.display;
+			if (beforeDisplay !== afterDisplay) {
+				console.log("[NotificationMonitor] Item visibility changed", {
+					asin: node.dataset.asin,
+					beforeDisplay,
+					afterDisplay,
+					typeZeroETV: notificationTypeZeroETV,
+					typeHighlight: notificationTypeHighlight,
+					currentFilter: this._filterType,
+					filterName:
+						this._filterType === TYPE_HIGHLIGHT_OR_ZEROETV
+							? "Zero ETV or KW match only"
+							: this._filterType === TYPE_HIGHLIGHT
+								? "Highlight only"
+								: this._filterType === TYPE_ZEROETV
+									? "Zero ETV only"
+									: this._filterType === TYPE_REGULAR
+										? "Regular only"
+										: "All",
+					styleDisplay,
+				});
+			}
+		}
+
 		if (styleDisplay == "flex" || styleDisplay == "block") {
 			if (this._filterQueue == "-1") {
 				return true;
@@ -487,6 +561,11 @@ class NotificationMonitor extends MonitorCore {
 				}
 			});
 
+			// Notify MemoryDebugger that we're removing the old container's listener
+			if (window.MEMORY_DEBUGGER && this.#eventHandlers.grid) {
+				window.MEMORY_DEBUGGER.untrackListener(this._gridContainer, "click", this.#eventHandlers.grid);
+			}
+
 			// Replace the old container with the new one
 			this._gridContainer.parentNode.replaceChild(newContainer, this._gridContainer);
 			this._gridContainer = newContainer;
@@ -535,7 +614,8 @@ class NotificationMonitor extends MonitorCore {
 					);
 
 					// Debug logging for truncation
-					if (typeof window !== "undefined" && window.DEBUG_TAB_TITLE) {
+					const debugTabTitle = this._settings.get("general.debugTabTitle");
+					if (debugTabTitle) {
 						console.log(`[Truncation] Starting truncation`, {
 							currentSize: this._itemsMgr.items.size,
 							maxLimit: max,
@@ -577,7 +657,7 @@ class NotificationMonitor extends MonitorCore {
 					});
 
 					// Debug logging for truncation completion
-					if (typeof window !== "undefined" && window.DEBUG_TAB_TITLE) {
+					if (debugTabTitle) {
 						console.log(`[Truncation] Completed truncation`, {
 							visibleItemsRemoved: visibleItemsRemovedCount,
 							newSize: this._itemsMgr.items.size,
@@ -1162,16 +1242,69 @@ class NotificationMonitor extends MonitorCore {
 
 		//zero ETV found, highlight the item accordingly
 		if (parseFloat(etvObj.dataset.etvMin) == 0) {
+			// Check visibility BEFORE setting the flag
+			const wasVisible = this.#isElementVisible(notif);
+
 			// Set the flag before calling the handler
 			notif.dataset.typeZeroETV = 1;
 			// Always set typeZeroETV = 1 when ETV is 0, regardless of previous state
 			this.#zeroETVItemFound(notif, this._settings.get("notification.monitor.zeroETV.sound") != "0");
+
+			// Check if visibility changed after processing
+			const isNowVisible = this.#isElementVisible(notif);
+
+			// Debug logging for Zero ETV visibility changes
+			const debugTabTitle = this._settings.get("general.debugTabTitle");
+			if (debugTabTitle) {
+				console.log("[NotificationMonitor] Zero ETV item visibility check", {
+					asin: notif.dataset.asin,
+					wasVisible,
+					isNowVisible,
+					visibilityChanged: wasVisible !== isNowVisible,
+					currentFilter: this._filterType,
+					filterName:
+						this._filterType === TYPE_HIGHLIGHT_OR_ZEROETV
+							? "Zero ETV or KW match only"
+							: this._filterType === TYPE_ZEROETV
+								? "Zero ETV only"
+								: "Other",
+					etvMin: etvObj.dataset.etvMin,
+					etvMax: etvObj.dataset.etvMax,
+				});
+			}
+
+			if (wasVisible !== isNowVisible) {
+				this.#emitGridEvent(isNowVisible ? "grid:items-added" : "grid:items-removed", { count: 1 });
+			}
 		} else {
 			// Clear the zero ETV flag when item is not zero ETV
 			if (notif.dataset.typeZeroETV == 1) {
+				// Check visibility BEFORE clearing the flag
+				const wasVisible = this.#isElementVisible(notif);
+
 				notif.dataset.typeZeroETV = 0;
 				// Re-apply filtering to update visibility
 				this.#processNotificationFiltering(notif);
+
+				// Check if visibility changed after processing
+				const isNowVisible = this.#isElementVisible(notif);
+
+				// Debug logging
+				const debugTabTitle = this._settings.get("general.debugTabTitle");
+				if (debugTabTitle) {
+					console.log("[NotificationMonitor] Clearing Zero ETV flag", {
+						asin: notif.dataset.asin,
+						wasVisible,
+						isNowVisible,
+						visibilityChanged: wasVisible !== isNowVisible,
+						etvMin: etvObj.dataset.etvMin,
+						etvMax: etvObj.dataset.etvMax,
+					});
+				}
+
+				if (wasVisible !== isNowVisible) {
+					this.#emitGridEvent(isNowVisible ? "grid:items-added" : "grid:items-removed", { count: 1 });
+				}
 			}
 		}
 

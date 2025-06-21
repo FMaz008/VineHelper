@@ -1,8 +1,45 @@
 import { hasEtvCondition, areEtvConditionsSatisfied } from "./KeywordUtils.js";
 
 // Pre-compiled regex cache for keywords
-// Using WeakMap to allow garbage collection when keywords array is replaced
-const compiledKeywordCache = new WeakMap();
+// Using a Map with string keys (JSON stringified) to avoid memory leaks
+// WeakMap was causing issues because Settings.get() returns new array references
+const compiledKeywordCache = new Map();
+const MAX_CACHE_SIZE = 10; // Limit cache size to prevent unbounded growth
+
+// Cache for settings arrays to avoid repeated JSON.stringify
+let settingsArrayCache = new WeakMap();
+let cacheKeyCounter = 0;
+
+// Generate a cache key from keywords array
+function getCacheKey(keywords) {
+	// Check if we already have a cache key for this array reference
+	if (settingsArrayCache.has(keywords)) {
+		return settingsArrayCache.get(keywords);
+	}
+
+	// Generate a simple unique key instead of expensive JSON.stringify
+	const key = `keywords_${++cacheKeyCounter}`;
+	settingsArrayCache.set(keywords, key);
+
+	return key;
+}
+
+// Clean up old cache entries when size limit is reached
+function cleanupCache() {
+	if (compiledKeywordCache.size <= MAX_CACHE_SIZE) {
+		return;
+	}
+
+	// Remove oldest entries (first half of the cache)
+	const entriesToRemove = Math.floor(compiledKeywordCache.size / 2);
+	const keys = Array.from(compiledKeywordCache.keys());
+
+	for (let i = 0; i < entriesToRemove; i++) {
+		compiledKeywordCache.delete(keys[i]);
+	}
+
+	console.log(`[KeywordMatch] Cache cleanup: removed ${entriesToRemove} old entries`);
+}
 
 /**
  * Creates a regex pattern for keyword matching
@@ -65,9 +102,11 @@ function compileKeyword(word) {
  * Should be called when keywords are loaded from settings
  */
 function precompileKeywords(keywords) {
+	const cacheKey = getCacheKey(keywords);
+
 	// Check if already compiled
-	if (compiledKeywordCache.has(keywords)) {
-		const existingCache = compiledKeywordCache.get(keywords);
+	if (compiledKeywordCache.has(cacheKey)) {
+		const existingCache = compiledKeywordCache.get(cacheKey);
 		return {
 			total: keywords.length,
 			compiled: existingCache.size,
@@ -75,6 +114,9 @@ function precompileKeywords(keywords) {
 			cached: true,
 		};
 	}
+
+	// Clean up cache if it's getting too large
+	cleanupCache();
 
 	// Create a new cache for this keywords array
 	const cache = new Map();
@@ -90,7 +132,7 @@ function precompileKeywords(keywords) {
 	});
 
 	// Store the cache for this keywords array
-	compiledKeywordCache.set(keywords, cache);
+	compiledKeywordCache.set(cacheKey, cache);
 
 	// Return stats for logging by caller
 	return {
@@ -105,9 +147,16 @@ function precompileKeywords(keywords) {
  * Get compiled regex for a keyword at a specific index
  */
 function getCompiledRegex(keywords, index) {
-	const cache = compiledKeywordCache.get(keywords);
+	const cacheKey = getCacheKey(keywords);
+	const cache = compiledKeywordCache.get(cacheKey);
 	if (!cache) {
+		if (typeof window !== "undefined" && window.DEBUG_KEYWORD_CACHE) {
+			console.log(`[KeywordMatch] Cache miss for key: ${cacheKey}`);
+		}
 		return null;
+	}
+	if (typeof window !== "undefined" && window.DEBUG_KEYWORD_CACHE) {
+		console.log(`[KeywordMatch] Cache hit for key: ${cacheKey}`);
 	}
 	return cache.get(index);
 }
@@ -148,9 +197,16 @@ function testKeywordMatch(word, compiled, title, etv_min, etv_max) {
 }
 
 function keywordMatchReturnFullObject(keywords, title, etv_min = null, etv_max = null) {
+	// Handle empty keywords array
+	if (!keywords || keywords.length === 0) {
+		return undefined;
+	}
+
+	const cacheKey = getCacheKey(keywords);
+
 	// Automatically pre-compile keywords if not already done
 	// This ensures optimal performance without requiring explicit pre-compilation
-	if (!compiledKeywordCache.has(keywords) && keywords.length > 0) {
+	if (!compiledKeywordCache.has(cacheKey)) {
 		const stats = precompileKeywords(keywords);
 		// Log automatic pre-compilation if not in test environment
 		if (typeof process === "undefined" || process.env.NODE_ENV !== "test") {
@@ -165,22 +221,26 @@ function keywordMatchReturnFullObject(keywords, title, etv_min = null, etv_max =
 		}
 	}
 
-	let found = keywords.find((word, index) => {
-		let compiled = getCompiledRegex(keywords, index);
+	// Memory optimization: Use for loop instead of find() to avoid closure allocation
+	const cache = compiledKeywordCache.get(cacheKey);
+	if (!cache) {
+		return undefined;
+	}
 
-		// This should rarely happen now since we pre-compile above
-		// But keep as a safety fallback
+	for (let index = 0; index < keywords.length; index++) {
+		const word = keywords[index];
+		const compiled = cache.get(index);
+
 		if (!compiled) {
-			compiled = compileKeyword(word);
-			if (!compiled) {
-				return false;
-			}
+			continue;
 		}
 
-		return testKeywordMatch(word, compiled, title, etv_min, etv_max);
-	});
+		if (testKeywordMatch(word, compiled, title, etv_min, etv_max)) {
+			return word;
+		}
+	}
 
-	return found;
+	return undefined;
 }
 
 function keywordMatch(keywords, title, etv_min = null, etv_max = null) {
@@ -202,18 +262,20 @@ function hasAnyEtvConditions(keywords) {
 		return false;
 	}
 
+	const cacheKey = getCacheKey(keywords);
+
 	// Get cache for this keywords array
-	let cache = compiledKeywordCache.get(keywords);
+	let cache = compiledKeywordCache.get(cacheKey);
 
 	// If not cached, compile first
 	if (!cache) {
 		precompileKeywords(keywords);
-		cache = compiledKeywordCache.get(keywords);
+		cache = compiledKeywordCache.get(cacheKey);
 	}
 
 	// Check if any compiled keyword has ETV condition flag
-	for (const [index, compiled] of cache) {
-		if (compiled && compiled.hasEtvCondition) {
+	for (const [, compiled] of cache) {
+		if (compiled?.hasEtvCondition) {
 			return true;
 		}
 	}
@@ -221,4 +283,15 @@ function hasAnyEtvConditions(keywords) {
 	return false;
 }
 
-export { keywordMatch, keywordMatchReturnFullObject, precompileKeywords, hasAnyEtvConditions };
+/**
+ * Clear the keyword cache - useful for memory management
+ */
+function clearKeywordCache() {
+	const size = compiledKeywordCache.size;
+	compiledKeywordCache.clear();
+	settingsArrayCache = new WeakMap(); // Clear the settings array cache as well
+	cacheKeyCounter = 0; // Reset counter
+	console.log(`[KeywordMatch] Cleared ${size} cached keyword compilations`);
+}
+
+export { keywordMatch, keywordMatchReturnFullObject, precompileKeywords, hasAnyEtvConditions, clearKeywordCache };

@@ -1,13 +1,12 @@
 # Future Improvements and Optimizations
 
-This document consolidates planned improvements, optimizations, and technical debt items across the VineHelper codebase.
+This document tracks planned improvements that are not yet implemented or are in active development.
 
 ## Performance Optimizations
 
-### 1. Visibility Caching System (High Priority)
+### Visibility Caching System (High Priority)
 
-**From:** Visibility code optimizations
-**Status:** Next priority after Safari optimization
+**Status:** Next priority after current work
 
 **Current Issue:**
 
@@ -51,117 +50,59 @@ This document consolidates planned improvements, optimizations, and technical de
 - Particularly beneficial for operations that check multiple elements
 - Generation-based invalidation is more efficient than clearing WeakMap
 
-### 2. Event Batching Improvements
+## Completed Improvements
 
-**Status:** Medium priority
+The following improvements have been completed and documented in other files:
 
-- Batch visibility change events within a microtask
-- Use a single "visibility:changed" event with details
-- Implement event debouncing for rapid changes
+### Performance
 
-### 3. Memory Optimization
+- ✅ **Keyword Matching Performance** (Commit: 9b126fb) - See [MEMORY_MANAGEMENT.md](./MEMORY_MANAGEMENT.md)
+    - 15x improvement (19.4s → 1.3s)
+    - WeakMap-based caching with module-level array storage
+- ✅ **Stream Processing Memory Usage** (Commit: a4066e0) - See [MEMORY_MANAGEMENT.md](./MEMORY_MANAGEMENT.md)
+    - 95% memory reduction (1.6 MB → 69.2 KB)
+    - Named functions and cached settings
 
-**Status:** Low priority
+### Architecture
 
-- Ensure proper cleanup when elements are removed
-- Consider using WeakRef for long-lived references
-- Monitor for memory leaks in visibility tracking
+- ✅ **Dependency Injection** - See [DI_IMPLEMENTATION_ROADMAP.md](./DI_IMPLEMENTATION_ROADMAP.md)
+- ✅ **Event-Driven Architecture** - See [ARCHITECTURE.md](./ARCHITECTURE.md)
+- ✅ **Memory Leak Fixes** - See [MEMORY_MANAGEMENT.md](./MEMORY_MANAGEMENT.md)
 
-## Architectural Improvements
+### Code Quality
 
-### 1. Dependency Injection (In Progress)
+- ✅ **DRY Improvements** - See [ARCHITECTURE.md](./ARCHITECTURE.md)
+    - ETV validation logic (hasRequiredEtvData helper)
+    - Title validation logic (hasTitle helper)
+    - Visibility checking patterns
 
-**Status:** Active development
+## Active Development
+
+### Dependency Injection Migration
+
+**Status:** In Progress  
 **Details:** See [DI_IMPLEMENTATION_ROADMAP.md](./DI_IMPLEMENTATION_ROADMAP.md)
 
-### 2. Notification Monitor Refactoring
+Current focus:
 
-**Status:** Planning phase
+- Logger service migration
+- Browser API adapters
+- Testing infrastructure
 
-- Extract notification processing logic into services
-- Separate coordination from business logic
-- Create testable components
+## Implementation Priority
 
-### 3. HookMgr Enhancement
+1. **Immediate (Next PR):**
 
-**Status:** Blocked - requires architectural change
+    - Visibility caching system
+    - Complete DI migration for Logger
 
-**Issue:** No unbind method for event listeners
-**Impact:** Memory leak risk in GridEventManager and other services
-**Solution:** Implement unbind functionality in HookMgr
+2. **Short-term (Next 2-3 PRs):**
 
-## Code Quality Improvements
+    - Browser API adapters
+    - Integration tests for grid operations
 
-### 1. Reduce Code Duplication
-
-**Areas identified:**
-
-- Visibility check patterns (partially addressed)
-- Filter application logic
-- Event emission patterns
-
-### 2. Service Extraction
-
-**Candidates:**
-
-- Keyword matching logic
-- Filter management
-- Sort operations
-
-### 3. Testing Coverage
-
-**Priority areas:**
-
-- Visibility state management
-- Event-driven operations
-- Memory leak prevention
-
-## Technical Debt
-
-### 1. ~~Timer Management~~ ✅ FIXED
-
-**Issue:** ~~Potential memory leaks in services using setInterval without cleanup~~
-**Status:** Fixed in memory leak PR
-**Resolution:**
-
-- MasterSlave.js - Added proper interval storage and cleanup in destroy()
-- Websocket.js - Already had proper cleanup (confirmed)
-- ServerCom.js - Added destroy() method to clear all timers
-
-### 2. DOM Reference Management
-
-**Issue:** Arrays of DOM references created frequently
-**Solution:** Use WeakMap/WeakSet where appropriate
-
-### 3. Count Synchronization Best Practices
-
-**Learning from Memory Leak PR:**
-
-- When implementing pause/unpause mechanisms, trust incremental count updates
-- Avoid full recounts after operations that already track changes incrementally
-- Ensure events are emitted even during "paused" states if they affect counts
-- Consider race conditions between different data sources (WebSocket vs bulk fetch)
-
-### 4. Bootloader Refactoring
-
-**Status:** High risk, high reward
-**Goal:** Reduce coupling and improve testability
-
-## Feature Enhancements
-
-### 1. Order Status Tracking in Notification Monitor
-
-**Status:** Not planned
-**Note:** Currently only available in bootloader-enhanced pages (RFY, AFA, AI)
-**Reason:** Architectural separation between systems
-
-### 2. Advanced Filtering Options
-
-**Status:** Under consideration
-
-- Multi-criteria filtering
-- Custom filter expressions
-- Filter presets
+3. **Long-term:**
+    - See [ARCHITECTURE.md](./ARCHITECTURE.md) for full architectural roadmap
 
 ## Performance Metrics to Track
 
@@ -173,36 +114,15 @@ This document consolidates planned improvements, optimizations, and technical de
 
 2. **Memory Usage:**
 
-    - Heap growth over time
-    - Detached DOM nodes
-    - Event listener count
-    - Interval/timer cleanup verification
+    - See [MEMORY_MANAGEMENT.md](./MEMORY_MANAGEMENT.md) for comprehensive metrics
 
 3. **User Experience:**
     - Filter application speed
     - Sort operation performance
     - UI responsiveness
 
-## Implementation Priority
-
-1. **Immediate (Next PR):**
-
-    - Visibility caching system
-    - Complete DI migration for Logger
-
-2. **Short-term (Next 2-3 PRs):**
-
-    - Event batching improvements
-    - Timer management fixes
-    - Browser API adapters
-
-3. **Long-term:**
-    - Bootloader refactoring
-    - Full notification monitor service extraction
-    - Comprehensive testing suite
-
 ## Notes
 
-- This document should be updated as improvements are completed
-- New technical debt should be added as discovered
+- This document focuses on work not yet started or in early stages
+- Completed work is documented in respective files
 - Priority may shift based on user feedback and performance metrics

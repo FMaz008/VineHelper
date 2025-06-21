@@ -488,3 +488,88 @@ The MemoryDebugger tracks:
 - Manual: Add/remove items and check for detached nodes
 - Automated: Verify listener cleanup in destroy()
 - Monitor: Use MemoryDebugger in development
+
+## Future Architectural Improvements
+
+### High Priority
+
+1. **HookMgr Enhancement**
+
+    - **Issue:** No unbind method for event listeners
+    - **Impact:** Memory leak risk in GridEventManager and other services
+    - **Solution:** Implement unbind functionality in HookMgr
+
+2. **Notification Monitor Service Extraction**
+
+    - Extract notification processing logic into services
+    - Separate coordination from business logic
+    - Create testable components
+
+3. **Visibility Caching System**
+    - Implement centralized visibility state management
+    - Cache visibility calculations with generation-based invalidation
+    - Reduce redundant DOM operations
+    - See FUTURE_IMPROVEMENTS.md for detailed implementation
+
+### Medium Priority
+
+1. **Event System Improvements**
+
+    - Implement event batching for performance
+    - Create typed event system
+    - Add event debugging capabilities
+
+2. **Service Layer Extraction**
+
+    - Filter management service
+    - Sort operations service
+    - Settings caching layer (partially implemented)
+
+3. **DOM Reference Management**
+    - Use WeakMap/WeakSet for DOM references
+    - Implement proper cleanup lifecycle
+    - Prevent memory leaks from detached nodes
+
+### Low Priority
+
+1. **Advanced Filtering System**
+
+    - Multi-criteria filtering
+    - Custom filter expressions
+    - Filter presets and saving
+
+2. **Performance Monitoring**
+    - Built-in performance metrics
+    - User experience tracking
+    - Automated performance regression detection
+
+### Technical Debt Items
+
+1. **Timer Management**
+
+    - ✅ Fixed: MasterSlave and ServerCom timer cleanup
+    - Remaining: Audit all setTimeout/setInterval usage
+
+2. **Count Synchronization Best Practices**
+
+    - Trust incremental count updates
+    - Avoid full recounts after operations
+    - Handle race conditions between data sources
+
+3. **Memory Management**
+
+    - See [MEMORY_MANAGEMENT.md](./MEMORY_MANAGEMENT.md) for comprehensive details
+    - Implement destroy() pattern consistently
+    - Use WeakMaps for object associations
+
+4. **Code Duplication**
+
+    - ✅ Fixed: ETV validation logic (hasRequiredEtvData helper)
+    - ✅ Fixed: Title validation logic (hasTitle helper)
+    - Remaining: Event emission patterns
+
+5. **Bootloader Refactoring**
+    - **Status:** High risk, high reward
+    - **Goal:** Reduce coupling and improve testability
+    - Break down monolithic initialization
+    - Extract service creation into factories
