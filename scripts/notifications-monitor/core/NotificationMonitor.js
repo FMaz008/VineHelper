@@ -11,110 +11,14 @@ import { escapeHTML, unescapeHTML, removeSpecialHTML } from "/scripts/core/utils
 import { MonitorCore } from "/scripts/notifications-monitor/core/MonitorCore.js";
 import { Item } from "/scripts/core/models/Item.js";
 
-// Memory debugging - only load if debug mode is enabled
+// Memory debugging - will be initialized if debug mode is enabled
 let MemoryDebugger = null;
+let memoryDebuggerInitialized = false;
 
-// Create a promise that resolves when the debugger is ready
+// Create a promise that will be resolved when we check for debug mode
 window.MEMORY_DEBUGGER_READY = new Promise((resolve) => {
-	// Check multiple sources for debug memory setting
-	const debugMemoryEnabled =
-		window.DEBUG_MEMORY ||
-		localStorage.getItem("vh_debug_memory") === "true" ||
-		localStorage.getItem("settings.general.debugMemory") === "true";
-
-	if (debugMemoryEnabled) {
-		import("/scripts/notifications-monitor/debug/MemoryDebugger.js")
-			.then((module) => {
-				MemoryDebugger = module.default || module.MemoryDebugger || module;
-				console.log("🔍 Memory Debugger loaded. Use window.MEMORY_DEBUGGER to access.");
-
-				// Create the global instance immediately after loading
-				if (!window.MEMORY_DEBUGGER && MemoryDebugger) {
-					try {
-						const debuggerInstance = new MemoryDebugger();
-
-						// Store the debugger instance
-						window.MEMORY_DEBUGGER = debuggerInstance;
-
-						console.log("🔍 Memory Debugger initialized. Starting monitoring...");
-
-						// Create global API that can be accessed from console
-						// Using direct window assignment instead of script injection to avoid CSP issues
-						window.VH_MEMORY = {
-							takeSnapshot: (name) => {
-								if (debuggerInstance) {
-									return debuggerInstance.takeSnapshot(name);
-								}
-								console.error("Memory debugger not available");
-								return null;
-							},
-							generateReport: () => {
-								if (debuggerInstance) {
-									return debuggerInstance.generateReport();
-								}
-								console.error("Memory debugger not available");
-								return null;
-							},
-							detectLeaks: () => {
-								if (debuggerInstance) {
-									return debuggerInstance.detectLeaks();
-								}
-								console.error("Memory debugger not available");
-								return null;
-							},
-							checkDetachedNodes: () => {
-								if (debuggerInstance) {
-									return debuggerInstance.checkDetachedNodes();
-								}
-								console.error("Memory debugger not available");
-								return null;
-							},
-							cleanup: () => {
-								if (debuggerInstance) {
-									return debuggerInstance.cleanup();
-								}
-								console.error("Memory debugger not available");
-								return null;
-							},
-							stopMonitoring: () => {
-								if (debuggerInstance) {
-									return debuggerInstance.stopMonitoring();
-								}
-								console.error("Memory debugger not available");
-								return null;
-							},
-						};
-
-						// Make it available globally
-						globalThis.VH_MEMORY = window.VH_MEMORY;
-
-						console.log("📊 Memory Debugger API available at window.VH_MEMORY");
-						console.log("Available methods:");
-						console.log("  - VH_MEMORY.takeSnapshot(name)");
-						console.log("  - VH_MEMORY.generateReport()");
-						console.log("  - VH_MEMORY.detectLeaks()");
-						console.log("  - VH_MEMORY.checkDetachedNodes()");
-						console.log("  - VH_MEMORY.cleanup()");
-						console.log("  - VH_MEMORY.stopMonitoring()");
-
-						resolve(debuggerInstance);
-					} catch (error) {
-						console.error("Failed to create MemoryDebugger instance:", error);
-						resolve(null);
-					}
-				} else {
-					console.log("Debug: MEMORY_DEBUGGER already exists or MemoryDebugger not loaded");
-					resolve(window.MEMORY_DEBUGGER || null);
-				}
-			})
-			.catch((error) => {
-				console.error("Failed to load Memory Debugger:", error);
-				resolve(null);
-			});
-	} else {
-		console.log("Memory debugging not enabled");
-		resolve(null);
-	}
+	// This will be resolved when NotificationMonitor is initialized
+	window._resolveMemoryDebuggerReady = resolve;
 });
 
 // Also create a simple getter function that works after page load
@@ -189,15 +93,114 @@ class NotificationMonitor extends MonitorCore {
 			throw new TypeError('Abstract class "NotificationMonitor" cannot be instantiated directly.');
 		}
 
-		// Memory debugger is initialized in the import callback above
-		// Check settings after they're loaded to enable memory debugging
-		this._settings.waitForLoad().then(() => {
-			if (this._settings.get("general.debugMemory") && !window.MEMORY_DEBUGGER) {
-				// Trigger memory debugger loading by setting localStorage
-				localStorage.setItem("vh_debug_memory", "true");
-				console.log("Memory debugging enabled via settings. Reload the page to activate.");
+		// Initialize memory debugger if enabled in settings
+		this._initializeMemoryDebugger();
+	}
+
+	/**
+	 * Initialize the memory debugger if enabled in settings
+	 * @private
+	 */
+	async _initializeMemoryDebugger() {
+		// Wait for settings to load
+		await this._settings.waitForLoad();
+
+		// Check if memory debugging is enabled
+		const debugMemoryEnabled = this._settings.get("general.debugMemory") === true;
+
+		if (debugMemoryEnabled && !memoryDebuggerInitialized) {
+			memoryDebuggerInitialized = true;
+
+			try {
+				// Dynamically import the memory debugger
+				const module = await import("/scripts/notifications-monitor/debug/MemoryDebugger.js");
+				MemoryDebugger = module.default || module.MemoryDebugger || module;
+				console.log("🔍 Memory Debugger loaded. Use window.MEMORY_DEBUGGER to access.");
+
+				// Create the global instance
+				if (!window.MEMORY_DEBUGGER && MemoryDebugger) {
+					const debuggerInstance = new MemoryDebugger();
+
+					// Store the debugger instance
+					window.MEMORY_DEBUGGER = debuggerInstance;
+
+					console.log("🔍 Memory Debugger initialized. Starting monitoring...");
+
+					// Create global API that can be accessed from console
+					window.VH_MEMORY = {
+						takeSnapshot: (name) => {
+							if (debuggerInstance) {
+								return debuggerInstance.takeSnapshot(name);
+							}
+							console.error("Memory debugger not available");
+							return null;
+						},
+						generateReport: () => {
+							if (debuggerInstance) {
+								return debuggerInstance.generateReport();
+							}
+							console.error("Memory debugger not available");
+							return null;
+						},
+						detectLeaks: () => {
+							if (debuggerInstance) {
+								return debuggerInstance.detectLeaks();
+							}
+							console.error("Memory debugger not available");
+							return null;
+						},
+						checkDetachedNodes: () => {
+							if (debuggerInstance) {
+								return debuggerInstance.checkDetachedNodes();
+							}
+							console.error("Memory debugger not available");
+							return null;
+						},
+						cleanup: () => {
+							if (debuggerInstance) {
+								return debuggerInstance.cleanup();
+							}
+							console.error("Memory debugger not available");
+							return null;
+						},
+						stopMonitoring: () => {
+							if (debuggerInstance) {
+								return debuggerInstance.stopMonitoring();
+							}
+							console.error("Memory debugger not available");
+							return null;
+						},
+					};
+
+					// Make it available globally
+					globalThis.VH_MEMORY = window.VH_MEMORY;
+
+					console.log("📊 Memory Debugger API available at window.VH_MEMORY");
+					console.log("Available methods:");
+					console.log("  - VH_MEMORY.takeSnapshot(name)");
+					console.log("  - VH_MEMORY.generateReport()");
+					console.log("  - VH_MEMORY.detectLeaks()");
+					console.log("  - VH_MEMORY.checkDetachedNodes()");
+					console.log("  - VH_MEMORY.cleanup()");
+					console.log("  - VH_MEMORY.stopMonitoring()");
+
+					// Resolve the promise
+					if (window._resolveMemoryDebuggerReady) {
+						window._resolveMemoryDebuggerReady(debuggerInstance);
+					}
+				}
+			} catch (error) {
+				console.error("Failed to initialize MemoryDebugger:", error);
+				if (window._resolveMemoryDebuggerReady) {
+					window._resolveMemoryDebuggerReady(null);
+				}
 			}
-		});
+		} else {
+			// Resolve the promise with null if not enabled
+			if (window._resolveMemoryDebuggerReady) {
+				window._resolveMemoryDebuggerReady(null);
+			}
+		}
 	}
 
 	/**
@@ -812,8 +815,14 @@ class NotificationMonitor extends MonitorCore {
 					this._enableItem(element); //Return the DOM element of the tile.
 				}
 
-				// Handle visibility change and emit events if needed
-				this.#handleVisibilityChange(element, wasVisible);
+				// Skip visibility change handling for existing items during bulk loading
+				// This is a performance optimization - the item's visibility hasn't actually changed,
+				// we're just updating its recommendation ID
+				// Only check visibility if the item was previously unavailable
+				if (item.data.unavailable) {
+					// Handle visibility change and emit events if needed
+					this.#handleVisibilityChange(element, wasVisible);
+				}
 
 				return element;
 			}
