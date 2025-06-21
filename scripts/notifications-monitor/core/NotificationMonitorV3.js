@@ -250,7 +250,7 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		//Update the user tier info
 		this._updateUserTierInfo();
 
-		//Initial check of the status of services (service worker and WebSocket)
+		//Initial check of the status of services (master monitor and WebSocket)
 		this._serverComMgr.updateServicesStatus();
 
 		// Initialize the error alert manager

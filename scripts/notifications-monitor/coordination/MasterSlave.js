@@ -60,6 +60,11 @@ class MasterSlave {
 					this.#masterMonitorLastActivity = Date.now();
 					if (this.#isMasterMonitor()) {
 						this._monitor.setMasterMonitor();
+						//Send a pong for the slave monitors to be marked as such
+						this._monitor._channel.postMessage({ type: "masterMonitorPong" });
+
+						//Update the status of the master monitor
+						this._monitor._serverComMgr.updateServicesStatus();
 					} else {
 						this._monitor.setSlaveMonitor();
 					}

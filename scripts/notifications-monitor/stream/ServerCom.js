@@ -25,9 +25,9 @@ class ServerCom {
 		}
 		ServerCom.#instance = this;
 
-		//Create a timer to check if the service worker is still running
+		//Create a timer to check if the master monitor is still running
 		this.#serviceWorkerStatusTimer = window.setInterval(() => {
-			this.#updateServiceWorkerStatus();
+			this.#updateMasterMonitorStatus();
 		}, 10000);
 
 		this.#createEventListeners();
@@ -68,12 +68,12 @@ class ServerCom {
 	}
 
 	/**
-	 * Check the status of the service worker and the WebSocket connection.
-	 * Called once upon loading the monitor V2 or V3.
+	 * Check the status of the master monitor and the WebSocket connection.
+	 * Called once upon loading the monitor V2 or V3, and when the master monitor is promoted.
 	 */
 	updateServicesStatus() {
-		//Check the status of the service worker.
-		this.#updateServiceWorkerStatus();
+		//Check the status of the master monitor.
+		this.#updateMasterMonitorStatus();
 
 		//Obtain the status of the WebSocket connection.
 		this._monitor._channel.postMessage({
@@ -193,7 +193,7 @@ class ServerCom {
 		}
 	}
 
-	#updateServiceWorkerStatus() {
+	#updateMasterMonitorStatus() {
 		if (!this._monitor._settings.get("notification.active")) {
 			this.#setMasterMonitorStatus(
 				false,

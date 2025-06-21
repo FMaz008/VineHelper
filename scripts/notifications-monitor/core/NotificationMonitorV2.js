@@ -57,7 +57,7 @@ class NotificationMonitorV2 extends NotificationMonitor {
 			this._visibilityStateManager.setCount(initialCount);
 		}
 
-		//Initial check of the status of services (service worker and WebSocket)
+		//Initial check of the status of services (master monitor and WebSocket)
 		this._serverComMgr.updateServicesStatus();
 	}
 
