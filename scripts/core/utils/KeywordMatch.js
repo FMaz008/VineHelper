@@ -7,7 +7,7 @@ const compiledKeywordCache = new Map();
 const MAX_CACHE_SIZE = 10; // Limit cache size to prevent unbounded growth
 
 // Cache for settings arrays to avoid repeated JSON.stringify
-const settingsArrayCache = new WeakMap();
+let settingsArrayCache = new WeakMap();
 let cacheKeyCounter = 0;
 
 // Generate a cache key from keywords array
@@ -221,22 +221,26 @@ function keywordMatchReturnFullObject(keywords, title, etv_min = null, etv_max =
 		}
 	}
 
-	let found = keywords.find((word, index) => {
-		let compiled = getCompiledRegex(keywords, index);
+	// Memory optimization: Use for loop instead of find() to avoid closure allocation
+	const cache = compiledKeywordCache.get(cacheKey);
+	if (!cache) {
+		return undefined;
+	}
 
-		// This should rarely happen now since we pre-compile above
-		// But keep as a safety fallback
+	for (let index = 0; index < keywords.length; index++) {
+		const word = keywords[index];
+		const compiled = cache.get(index);
+
 		if (!compiled) {
-			compiled = compileKeyword(word);
-			if (!compiled) {
-				return false;
-			}
+			continue;
 		}
 
-		return testKeywordMatch(word, compiled, title, etv_min, etv_max);
-	});
+		if (testKeywordMatch(word, compiled, title, etv_min, etv_max)) {
+			return word;
+		}
+	}
 
-	return found;
+	return undefined;
 }
 
 function keywordMatch(keywords, title, etv_min = null, etv_max = null) {
@@ -270,8 +274,8 @@ function hasAnyEtvConditions(keywords) {
 	}
 
 	// Check if any compiled keyword has ETV condition flag
-	for (const [index, compiled] of cache) {
-		if (compiled && compiled.hasEtvCondition) {
+	for (const [, compiled] of cache) {
+		if (compiled?.hasEtvCondition) {
 			return true;
 		}
 	}
@@ -285,6 +289,8 @@ function hasAnyEtvConditions(keywords) {
 function clearKeywordCache() {
 	const size = compiledKeywordCache.size;
 	compiledKeywordCache.clear();
+	settingsArrayCache = new WeakMap(); // Clear the settings array cache as well
+	cacheKeyCounter = 0; // Reset counter
 	console.log(`[KeywordMatch] Cleared ${size} cached keyword compilations`);
 }
 
