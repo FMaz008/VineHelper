@@ -7,10 +7,38 @@ import { precompileAllKeywords } from "/scripts/core/utils/KeywordPrecompiler.js
 import { Item } from "/scripts/core/models/Item.js";
 var Settings = new SettingsMgr();
 
+// Cache keywords to avoid repeated Settings.get() calls
+let cachedHideKeywords = null;
+let cachedHighlightKeywords = null;
+let cachedBlurKeywords = null;
+
 // Pre-compile keywords when settings are loaded
 Settings.waitForLoad().then(() => {
+	// Cache the keywords arrays
+	cachedHideKeywords = Settings.get("general.hideKeywords");
+	cachedHighlightKeywords = Settings.get("general.highlightKeywords");
+	cachedBlurKeywords = Settings.get("general.blurKeywords");
+
+	// Pre-compile with cached arrays
 	precompileAllKeywords(Settings, "NewItemStreamProcessing");
 });
+
+// Listen for settings changes to update cache
+if (typeof chrome !== "undefined" && chrome.storage) {
+	chrome.storage.onChanged.addListener((changes, namespace) => {
+		if (namespace === "local") {
+			if (changes["general.hideKeywords"]) {
+				cachedHideKeywords = changes["general.hideKeywords"].newValue;
+			}
+			if (changes["general.highlightKeywords"]) {
+				cachedHighlightKeywords = changes["general.highlightKeywords"].newValue;
+			}
+			if (changes["general.blurKeywords"]) {
+				cachedBlurKeywords = changes["general.blurKeywords"].newValue;
+			}
+		}
+	});
+}
 var outputFunctions = {
 	broadcast: () => {},
 	push: () => {},
@@ -25,9 +53,9 @@ const filterHideitem = dataStream.filter(function (data) {
 	) {
 		return true; //Skip this filter
 	}
-	if (Settings.get("notification.hideList")) {
+	if (Settings.get("notification.hideList") && cachedHideKeywords) {
 		const hideKWMatch = keywordMatch(
-			Settings.get("general.hideKeywords"),
+			cachedHideKeywords,
 			data.item.data.title,
 			data.item.data.etv_min,
 			data.item.data.etv_max
@@ -47,12 +75,9 @@ const transformIsHighlight = dataStream.transformer(function (data) {
 	) {
 		return data; //Skip this transformer
 	}
-	const highlightKWMatch = keywordMatch(
-		Settings.get("general.highlightKeywords"),
-		data.item.data.title,
-		data.item.data.etv_min,
-		data.item.data.etv_max
-	);
+	const highlightKWMatch = cachedHighlightKeywords
+		? keywordMatch(cachedHighlightKeywords, data.item.data.title, data.item.data.etv_min, data.item.data.etv_max)
+		: false;
 	data.item.data.KWsMatch = highlightKWMatch !== false;
 	data.item.data.KW = highlightKWMatch;
 
@@ -62,7 +87,7 @@ const transformIsBlur = dataStream.transformer(function (data) {
 	if (data.item?.data?.title == undefined) {
 		return data; //Skip this transformer
 	}
-	const blurKWMatch = keywordMatch(Settings.get("general.blurKeywords"), data.item.data.title);
+	const blurKWMatch = cachedBlurKeywords ? keywordMatch(cachedBlurKeywords, data.item.data.title) : false;
 	data.item.data.BlurKWsMatch = blurKWMatch !== false;
 	data.item.data.BlurKW = blurKWMatch;
 

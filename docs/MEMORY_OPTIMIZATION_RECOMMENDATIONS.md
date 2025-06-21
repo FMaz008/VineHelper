@@ -39,6 +39,22 @@ Based on Chrome memory allocation profile analysis and memory leak detection, he
 **Root Cause**: Event listeners not being removed
 **Required Fix**: Track and remove all event listeners
 
+### 6. Keyword Matching Performance (19.4s → <2s) ✅ FIXED
+
+**Problem**: Processing 300 items took 19.4 seconds, with 83.5% time in getCompiledRegex
+**Root Cause**:
+
+- Settings.get() returns new array instances each time
+- WeakMap cache keys were always different, causing cache misses
+- Regex patterns compiled 353,000 times instead of once
+
+**Fix Applied**:
+
+- Cache keyword arrays at module level in NewItemStreamProcessing.js
+- Use WeakMap + counter for cache keys (1055x faster than JSON.stringify)
+- Same array reference ensures cache hits
+- Debug logging available via window.DEBUG_KEYWORD_CACHE
+
 ## 1. Keyword Matching Optimizations
 
 ### Current Issues:

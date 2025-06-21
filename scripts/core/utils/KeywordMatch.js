@@ -6,16 +6,22 @@ import { hasEtvCondition, areEtvConditionsSatisfied } from "./KeywordUtils.js";
 const compiledKeywordCache = new Map();
 const MAX_CACHE_SIZE = 10; // Limit cache size to prevent unbounded growth
 
+// Cache for settings arrays to avoid repeated JSON.stringify
+const settingsArrayCache = new WeakMap();
+let cacheKeyCounter = 0;
+
 // Generate a cache key from keywords array
 function getCacheKey(keywords) {
-	// Use JSON.stringify for consistent key generation
-	// This ensures same keywords always produce same key
-	try {
-		return JSON.stringify(keywords);
-	} catch (e) {
-		// Fallback for circular references
-		return keywords.map((k, i) => `${i}:${typeof k === "string" ? k : k.contains}`).join("|");
+	// Check if we already have a cache key for this array reference
+	if (settingsArrayCache.has(keywords)) {
+		return settingsArrayCache.get(keywords);
 	}
+
+	// Generate a simple unique key instead of expensive JSON.stringify
+	const key = `keywords_${++cacheKeyCounter}`;
+	settingsArrayCache.set(keywords, key);
+
+	return key;
 }
 
 // Clean up old cache entries when size limit is reached
@@ -144,7 +150,13 @@ function getCompiledRegex(keywords, index) {
 	const cacheKey = getCacheKey(keywords);
 	const cache = compiledKeywordCache.get(cacheKey);
 	if (!cache) {
+		if (typeof window !== "undefined" && window.DEBUG_KEYWORD_CACHE) {
+			console.log(`[KeywordMatch] Cache miss for key: ${cacheKey}`);
+		}
 		return null;
+	}
+	if (typeof window !== "undefined" && window.DEBUG_KEYWORD_CACHE) {
+		console.log(`[KeywordMatch] Cache hit for key: ${cacheKey}`);
 	}
 	return cache.get(index);
 }
