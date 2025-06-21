@@ -134,7 +134,12 @@ class Websocket {
 	}
 
 	#relayMessage(message) {
-		console.log("Relaying message", message);
+		// Only log message type for performance - avoid logging large arrays
+		if (message.type === "last100") {
+			console.log(`Relaying message type: ${message.type}, products: ${message.products?.length || 0}`);
+		} else {
+			console.log("Relaying message", message);
+		}
 		this._monitor._channel.postMessage(message);
 		this._monitor._serverComMgr.processBroadcastMessage(message);
 	}

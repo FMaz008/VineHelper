@@ -815,14 +815,8 @@ class NotificationMonitor extends MonitorCore {
 					this._enableItem(element); //Return the DOM element of the tile.
 				}
 
-				// Skip visibility change handling for existing items during bulk loading
-				// This is a performance optimization - the item's visibility hasn't actually changed,
-				// we're just updating its recommendation ID
-				// Only check visibility if the item was previously unavailable
-				if (item.data.unavailable) {
-					// Handle visibility change and emit events if needed
-					this.#handleVisibilityChange(element, wasVisible);
-				}
+				// Handle visibility change and emit events if needed
+				this.#handleVisibilityChange(element, wasVisible);
 
 				return element;
 			}
