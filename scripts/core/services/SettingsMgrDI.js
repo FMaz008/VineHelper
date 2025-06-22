@@ -92,7 +92,7 @@ export class SettingsMgrDI {
 
 	async set(settingPath, value, reloadSettings = true) {
 		// Don't go through the hassle of updating the value if it did not change
-		if (this.get(settingPath, false) == value) {
+		if (this.get(settingPath, false) === value) {
 			return false;
 		}
 
