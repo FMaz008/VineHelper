@@ -1,5 +1,5 @@
 /*global chrome*/
-import { Tile } from "/scripts/ui/components/Tile.js";
+import { Tile } from "../../ui/components/Tile.js";
 
 const TYPE_DATE_ASC = "date_asc";
 const TYPE_DATE_DESC = "date_desc";
@@ -8,7 +8,9 @@ const TYPE_PRICE_ASC = "price_asc";
 
 class ItemsMgr {
 	imageUrls = new Set(); // Set of image URLs used for duplicate thumbnail detection (kept separate for O(1) lookup performance)
-	items = new Map(); // Combined map to store both item data and DOM elements
+	items = new Map(); // Map to store item data
+	domElements = new WeakMap(); // WeakMap for DOM elements to allow garbage collection
+	tiles = new WeakMap(); // WeakMap for Tile instances
 
 	// URL string interning pool to prevent duplicate strings in memory
 	static #urlInternPool = new Map();
@@ -230,7 +232,7 @@ class ItemsMgr {
 	}
 
 	/**
-	 * Store the DOM element reference on the items map
+	 * Store the DOM element reference in WeakMap
 	 * @param {string} asin - The ASIN of the item
 	 * @param {object} element - The DOM element to store
 	 * @returns {boolean} - Returns true if the item was marked as unavailable
@@ -238,12 +240,16 @@ class ItemsMgr {
 	storeItemDOMElement(asin, element) {
 		if (this.items.has(asin)) {
 			const item = this.items.get(asin);
-			item.element = element;
-			item.tile = new Tile(element, null);
-			this.items.set(asin, item);
+			
+			// Store DOM element in WeakMap using item object as key
+			this.domElements.set(item, element);
+			
+			// Store Tile instance in WeakMap
+			const tile = new Tile(element, null);
+			this.tiles.set(item, tile);
 
 			// Check if this item was marked as unavailable before its DOM was ready
-			return item.data.unavailable === true;
+			return item.data.unavailable == 1;
 		} else {
 			throw new Error(`Item ${asin} not found in items map`);
 		}
@@ -256,7 +262,7 @@ class ItemsMgr {
 	markItemUnavailable(asin) {
 		if (this.items.has(asin)) {
 			const item = this.items.get(asin);
-			item.data.unavailable = true;
+			item.data.unavailable = 1; // Use 1 for consistency with server data
 			this.items.set(asin, item);
 		}
 	}
@@ -267,7 +273,14 @@ class ItemsMgr {
 	 * @returns {object} - The DOM element of the item
 	 */
 	getItemDOMElement(asin) {
-		return this.items.get(asin)?.element;
+		// First try to get from stored element reference
+		const item = this.items.get(asin);
+		if (item?.element) {
+			return item.element;
+		}
+		
+		// Fallback to querying the DOM directly
+		return document.getElementById(`vh-notification-${asin}`);
 	}
 
 	/**
@@ -275,12 +288,19 @@ class ItemsMgr {
 	 * @returns {object} - The tile
 	 */
 	getItemTile(asin) {
-		let item = this.items.get(asin);
+		const item = this.items.get(asin);
 		if (item) {
-			if (!item.tile) {
-				item.tile = new Tile(item.element, null);
+			// Check if tile exists in WeakMap
+			let tile = this.tiles.get(item);
+			if (!tile) {
+				// Create tile if we have a DOM element
+				const element = this.domElements.get(item);
+				if (element) {
+					tile = new Tile(element, null);
+					this.tiles.set(item, tile);
+				}
 			}
-			return item.tile;
+			return tile;
 		}
 		return null;
 	}
@@ -288,16 +308,8 @@ class ItemsMgr {
 	removeAsin(asin) {
 		const item = this.items.get(asin);
 		if (item) {
-			// Clean up DOM references to prevent memory leaks
-			if (item.element) {
-				item.element = null;
-			}
-
-			// Clean up Tile instance if it exists
-			// Note: Tile class doesn't have a destroy method, but we should still clear the reference
-			if (item.tile) {
-				item.tile = null;
-			}
+			// WeakMaps will automatically clean up when item is removed
+			// No need to manually clear DOM element or tile references
 		}
 		this.items.delete(asin);
 	}

@@ -23,7 +23,7 @@ var modalMgr = new ModalMgr();
 import { Template } from "/scripts/core/utils/Template.js";
 var Tpl = new Template();
 
-import { keywordMatch } from "/scripts/core/utils/KeywordMatch.js";
+import { sharedKeywordMatcher } from "/scripts/core/utils/SharedKeywordMatcher.js";
 import { YMDHiStoISODate } from "/scripts/core/utils/DateHelper.js";
 import { getTileByAsin, updateTileCounts } from "/scripts/ui/components/Grid.js";
 import { unescapeHTML, escapeHTML } from "/scripts/core/utils/StringHelper.js";
@@ -440,8 +440,10 @@ class Tile {
 	async initiateTile() {
 		//Match with blur keywords.
 		this.#tileDOM.dataset.blurredKeyword = "";
-		if (Settings.isPremiumUser() && Settings.get("general.blurKeywords")?.length > 0) {
-			let match = keywordMatch(Settings.get("general.blurKeywords"), this.getTitle(), null, null);
+		const blurKeywords = Settings.get("general.blurKeywords");
+		if (Settings.isPremiumUser() && blurKeywords?.length > 0) {
+			// SharedKeywordMatcher handles compilation internally
+			let match = sharedKeywordMatcher.match(blurKeywords, this.getTitle(), null, null, 'blur', Settings);
 			if (match) {
 				logger.add("TILE: The item match the keyword '" + match + "', blur it");
 				const img = this.#tileDOM.querySelector("img");
@@ -453,7 +455,8 @@ class Tile {
 					}
 				}
 				this.#tileDOM.querySelector(".vvp-item-product-title-container")?.classList.add("dynamic-blur");
-				this.#tileDOM.dataset.blurredKeyword = escapeHTML(match);
+				const blurMatchString = typeof match === 'object' ? (match.contains || match.word || '') : match;
+				this.#tileDOM.dataset.blurredKeyword = escapeHTML(blurMatchString);
 			}
 		}
 

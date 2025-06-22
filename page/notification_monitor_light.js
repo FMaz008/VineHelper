@@ -1,4 +1,4 @@
-import { NotificationMonitorV2 } from "../scripts/notification-monitor/NotificationMonitorV2.js";
+import { NotificationMonitorV2 } from "../scripts/notifications-monitor/core/NotificationMonitorV2.js";
 const NotifMon = new NotificationMonitorV2();
 NotifMon.initialize();
 

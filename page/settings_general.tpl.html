@@ -504,6 +504,88 @@
 	</fieldset>
 
 	<fieldset>
+		<legend>WebSocket & Stream Debugging</legend>
+		<div class="setting-container">
+			<label for="general.debugWebsocket">
+				<input type="checkbox" name="general.debugWebsocket" value="1" />
+				Debug WebSocket Messages
+			</label>
+			<div class="setting-summary">
+				<div class="vh-toolbar-icon vh-icon-question"></div>
+				Logs WebSocket relay messages including newPreprocessedItem, unavailableItem, and newETV events.
+			</div>
+		</div>
+
+		<div class="setting-container">
+			<label for="general.debugServercom">
+				<input type="checkbox" name="general.debugServercom" value="1" />
+				Debug ServerCom Messages
+			</label>
+			<div class="setting-summary">
+				<div class="vh-toolbar-icon vh-icon-question"></div>
+				Logs ServerCom processing messages including newPreprocessedItem and newItem events with item details.
+			</div>
+		</div>
+		<div class="setting-container">
+			<label for="general.debugServiceWorker">
+				<input type="checkbox" name="general.debugServiceWorker" value="1" />
+				Debug Service Worker Messages
+			</label>
+			<div class="setting-summary">
+				<div class="vh-toolbar-icon vh-icon-question"></div>
+				Logs service worker messages including tab communication, notification creation, and URL handling.
+			</div>
+		</div>
+	</fieldset>
+
+	<fieldset>
+		<legend>Performance & Operations</legend>
+		<div class="setting-container">
+			<label for="general.debugBulkOperations">
+				<input type="checkbox" name="general.debugBulkOperations" value="1" />
+				Debug Bulk Operations
+			</label>
+			<div class="setting-summary">
+				<div class="vh-toolbar-icon vh-icon-question"></div>
+				Logs detailed information about bulk item removal operations, including item counts, processing steps, and performance metrics.
+			</div>
+		</div>
+
+		<div class="setting-container">
+			<label for="general.debugKeywords">
+				<input type="checkbox" name="general.debugKeywords" value="1" />
+				Debug Keyword Operations
+			</label>
+			<div class="setting-summary">
+				<div class="vh-toolbar-icon vh-icon-question"></div>
+				Logs information about keyword compilation, caching, and pattern matching operations.
+			</div>
+		</div>
+		
+		<div class="setting-container">
+			<label for="general.debugSettings">
+				<input type="checkbox" name="general.debugSettings" value="1" />
+				Debug Settings Operations
+			</label>
+			<div class="setting-summary">
+				<div class="vh-toolbar-icon vh-icon-question"></div>
+				Logs information about settings loading, saving, and migration operations.
+			</div>
+		</div>
+		
+		<div class="setting-container">
+			<label for="general.debugStorage">
+				<input type="checkbox" name="general.debugStorage" value="1" />
+				Debug Storage Operations
+			</label>
+			<div class="setting-summary">
+				<div class="vh-toolbar-icon vh-icon-question"></div>
+				Logs detailed information about Chrome storage read/write operations.
+			</div>
+		</div>
+	</fieldset>
+
+	<fieldset>
 		<legend>Memory Analysis</legend>
 		<div class="setting-container">
 			<label for="general.debugMemory">
@@ -528,8 +610,9 @@
 				Automatically takes heap snapshots at key moments (startup, after fetch, after truncation) to help identify memory leaks.
 			</div>
 		</div>
+	</fieldset>
 
-		<!-- Memory Debugging Controls (only visible when debugging is enabled) -->
+	<!-- Memory Debugging Controls (only visible when debugging is enabled) -->
 		<div id="memoryDebugControls" class="memory-debug-controls" style="display: none;">
 			<hr style="margin: 15px 0;">
 			

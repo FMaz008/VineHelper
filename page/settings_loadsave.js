@@ -19,6 +19,8 @@ var deviceMgr = new DeviceMgr(Settings);
 import { CryptoKeys } from "/scripts/core/utils/CryptoKeys.js";
 var cryptoKeys = new CryptoKeys();
 
+import { precompileKeywords, compileKeyword } from "/scripts/core/utils/KeywordMatch.js";
+
 async function drawDiscord() {
 	//Show or hide the discord options
 	document.querySelector("#discordOptions").style.display = Settings.get("discord.active") ? "block" : "none";
@@ -244,7 +246,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("general.displayFirstSeen");
 	manageCheckboxSetting("general.bookmark");
 	manageCheckboxSetting("hiddenTab.active");
-	manageCheckboxSetting("hiddenTab.scrollToRFY");
+	manageCheckboxSetting("hiddenTab.scrollToRFY", false);
 	manageCheckboxSetting("pinnedTab.active");
 	manageCheckboxSetting("unavailableTab.active");
 	manageCheckboxSetting("general.modalNavigation");
@@ -277,6 +279,11 @@ async function initiateSettings() {
 	manageCheckboxSetting("general.debugPlaceholders");
 	manageCheckboxSetting("general.debugMemory");
 	manageCheckboxSetting("general.debugMemoryAutoSnapshot");
+	manageCheckboxSetting("general.debugKeywords", false);
+	manageCheckboxSetting("general.debugBulkOperations", false);
+	manageCheckboxSetting("general.debugWebsocket", false);
+	manageCheckboxSetting("general.debugServercom", false);
+	manageCheckboxSetting("general.debugServiceWorker", false);
 
 	//##TAB - NOTIFICATIONS
 
@@ -587,7 +594,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("thorvarium.removeHeader");
 	manageCheckboxSetting("thorvarium.removeFooter");
 	manageCheckboxSetting("thorvarium.removeAssociateHeader");
-	manageCheckboxSetting("thorvarium.darktheme");
+	manageCheckboxSetting("thorvarium.darktheme", false);
 	manageCheckboxSetting("thorvarium.ETVModalOnTop");
 	manageCheckboxSetting("thorvarium.categoriesWithEmojis");
 	manageCheckboxSetting("thorvarium.paginationOnTop");
@@ -1047,6 +1054,47 @@ function manageKeywords(key) {
 		btnSave.disabled = true;
 		const arrContent = keywordsToJSON(key);
 		await Settings.set(key, arrContent);
+		
+		// NEW: Compile and store patterns
+		try {
+			// Compile keywords to get the compiled regex patterns
+			const compilationResult = precompileKeywords(arrContent);
+			
+			// Extract the compiled patterns from the cache
+			const patterns = [];
+			arrContent.forEach((keyword, index) => {
+				const compiled = compileKeyword(keyword);
+				if (compiled) {
+					const pattern = {
+						pattern: compiled.regex.source,
+						flags: compiled.regex.flags,
+						hasEtvCondition: compiled.hasEtvCondition || false
+					};
+					
+					if (compiled.withoutRegex) {
+						pattern.withoutPattern = compiled.withoutRegex.source;
+						pattern.withoutFlags = compiled.withoutRegex.flags;
+					}
+					
+					patterns.push(pattern);
+				} else {
+					// Store null for failed compilations
+					patterns.push(null);
+				}
+			});
+			
+			// Store the compiled patterns
+			await Settings.set(key + '_compiled', patterns);
+			console.log(`[Settings] Compiled and stored ${patterns.filter(p => p !== null).length} patterns for ${key}`);
+			
+			// Notify service worker to clear caches
+			if (chrome.runtime && chrome.runtime.sendMessage) {
+				chrome.runtime.sendMessage({ action: "keywordsUpdated", keyType: key });
+			}
+		} catch (error) {
+			console.error(`[Settings] Failed to compile keywords for ${key}:`, error);
+		}
+		
 		await new Promise((r) => setTimeout(r, 500)); //Wait to give user-feedback.
 		btnSave.disabled = false;
 	});
@@ -1350,11 +1398,19 @@ function manageSelectBox(key) {
 }
 
 function manageCheckboxSetting(key, def = null) {
-	const val = def === null ? Settings.get(key) : def;
-	if (val === null) {
-		console.log("Setting " + key + " does not exist");
+	let val = Settings.get(key);
+	
+	// If the setting doesn't exist and we have a default, use it and save it
+	if (val === undefined && def !== null) {
+		val = def;
+		Settings.set(key, val); // Save the default value
+	}
+	
+	if (val === undefined || val === null) {
+		console.log("Setting " + key + " does not exist and no default provided");
 		return;
 	}
+	
 	const keyE = CSS.escape(key);
 	const checkObj = document.querySelector(`input[name='${keyE}']`);
 	if (checkObj == null) {

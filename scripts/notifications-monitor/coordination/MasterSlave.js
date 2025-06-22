@@ -149,7 +149,7 @@ class MasterSlave {
 		//By default, set us as the master monitor.
 		this.#masterMonitorId = this.#monitorId;
 		this.#masterMonitorLastActivity = Date.now();
-		this._monitor.setMasterMonitor(false);
+		this._monitor.setMasterMonitor();
 
 		//Query other tabs to see if there is already a master
 		this._monitor._channel.postMessage({ type: "areYouTheMaster", destination: "*", sender: this.#monitorId });

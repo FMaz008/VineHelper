@@ -79,7 +79,7 @@
 	"background": {
 		"type": "module",
 		"scripts": [
-			"scripts/vh_service_worker.js"
+			"scripts/vh_service_worker_di.js"
 		]
 	},
 	"content_scripts": [

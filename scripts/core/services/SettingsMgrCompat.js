@@ -50,6 +50,14 @@ class SettingsMgr {
 	async set(settingPath, value, reloadSettings = true) {
 		return this.#diInstance.set(settingPath, value, reloadSettings);
 	}
+
+	getCompiledKeywords(key) {
+		return this.#diInstance.getCompiledKeywords(key);
+	}
+
+	clearKeywordCache() {
+		return this.#diInstance.clearKeywordCache();
+	}
 }
 
 export { SettingsMgr };

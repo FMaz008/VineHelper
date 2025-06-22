@@ -232,6 +232,43 @@ class SocketManager {
 }
 ```
 
+### 5. Keyword Caching Strategy Evolution
+
+**Important Lessons Learned**:
+
+1. **WeakMap Failure (Initial Attempt)**:
+   - WeakMap was used for caching compiled regex patterns
+   - Failed because Settings.get() returns new array references each time
+   - Result: 0% cache hit rate, patterns compiled on every match
+
+2. **JSON.stringify Approach (Too Slow)**:
+   - Used JSON.stringify(keywords) as cache key
+   - Performance: 1055x slower than current solution
+   - Abandoned due to performance impact
+
+3. **Current Solution (Optimal)**:
+   ```javascript
+   // WeakMap + counter approach
+   const settingsArrayCache = new WeakMap();
+   let cacheKeyCounter = 0;
+   
+   function getCacheKey(keywords) {
+       if (settingsArrayCache.has(keywords)) {
+           return settingsArrayCache.get(keywords);
+       }
+       const key = `keywords_${++cacheKeyCounter}`;
+       settingsArrayCache.set(keywords, key);
+       return key;
+   }
+   ```
+
+4. **Array Reference Stability**:
+   - SettingsMgrDI implements array caching to maintain stable references
+   - Components within a tab share the same array references
+   - Enables effective WeakMap caching
+
+**Key Takeaway**: Always verify that cache keys remain stable across calls. WeakMap only works when the same object reference is used as the key.
+
 ### 5. DOM Visibility Checking Optimization
 
 ```javascript

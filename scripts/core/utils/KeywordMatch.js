@@ -196,20 +196,53 @@ function testKeywordMatch(word, compiled, title, etv_min, etv_max) {
 	return areEtvConditionsSatisfied(word, etv_min, etv_max);
 }
 
-function keywordMatchReturnFullObject(keywords, title, etv_min = null, etv_max = null) {
+function keywordMatchReturnFullObject(keywords, title, etv_min = null, etv_max = null, settingsMgr = null) {
 	// Handle empty keywords array
 	if (!keywords || keywords.length === 0) {
 		return undefined;
 	}
 
+	// Check if we have a settings manager with compiled keywords
+	if (settingsMgr && typeof settingsMgr.getCompiledKeywords === 'function') {
+		try {
+			// Try to get pre-compiled keywords from settings
+			const keywordType = getKeywordType(keywords);
+			if (keywordType) {
+				// getCompiledKeywords already handles the path correctly
+				const compiled = settingsMgr.getCompiledKeywords(keywordType);
+				if (compiled && compiled.length > 0) {
+					// Successfully using pre-compiled keywords - no logging needed
+					for (let index = 0; index < keywords.length && index < compiled.length; index++) {
+						const word = keywords[index];
+						const compiledRegex = compiled[index];
+
+						if (!compiledRegex) {
+							continue;
+						}
+
+						if (testKeywordMatch(word, compiledRegex, title, etv_min, etv_max)) {
+							return word;
+						}
+					}
+					return undefined;
+				}
+			}
+		} catch (error) {
+			// Fall back to local compilation
+			console.warn('[KeywordMatch] Failed to use pre-compiled keywords:', error);
+		}
+	}
+
+	// Fallback to original implementation
 	const cacheKey = getCacheKey(keywords);
 
 	// Automatically pre-compile keywords if not already done
 	// This ensures optimal performance without requiring explicit pre-compilation
 	if (!compiledKeywordCache.has(cacheKey)) {
 		const stats = precompileKeywords(keywords);
-		// Log automatic pre-compilation if not in test environment
-		if (typeof process === "undefined" || process.env.NODE_ENV !== "test") {
+		// Log automatic pre-compilation if debug is enabled and not in test environment
+		if (settingsMgr && settingsMgr.get("general.debugKeywords") &&
+		    (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
 			const cacheStatus = stats.cached ? " (from cache)" : " on first use";
 			if (stats.failed > 0) {
 				console.log(
@@ -243,8 +276,20 @@ function keywordMatchReturnFullObject(keywords, title, etv_min = null, etv_max =
 	return undefined;
 }
 
-function keywordMatch(keywords, title, etv_min = null, etv_max = null) {
-	let found = keywordMatchReturnFullObject(keywords, title, etv_min, etv_max);
+/**
+ * Helper function to determine keyword type from the keywords array
+ * This is a heuristic based on the fact that settings returns the same array reference
+ */
+function getKeywordType(keywords) {
+	// This will be set by the settings manager when it returns keyword arrays
+	if (keywords.__keywordType) {
+		return keywords.__keywordType;
+	}
+	return null;
+}
+
+function keywordMatch(keywords, title, etv_min = null, etv_max = null, settingsMgr = null) {
+	let found = keywordMatchReturnFullObject(keywords, title, etv_min, etv_max, settingsMgr);
 
 	if (typeof found === "object") {
 		found = found.contains;
@@ -294,4 +339,4 @@ function clearKeywordCache() {
 	console.log(`[KeywordMatch] Cleared ${size} cached keyword compilations`);
 }
 
-export { keywordMatch, keywordMatchReturnFullObject, precompileKeywords, hasAnyEtvConditions, clearKeywordCache };
+export { keywordMatch, keywordMatchReturnFullObject, precompileKeywords, hasAnyEtvConditions, clearKeywordCache, compileKeyword, createRegexPattern, getCompiledRegex };

@@ -23,7 +23,7 @@ import { getTileByAsin, addPinnedTile, removePinnedTile, updateTileCounts } from
 import { Template } from "/scripts/core/utils/Template.js";
 var Tpl = new Template();
 
-import { keywordMatch } from "/scripts/core/utils/KeywordMatch.js";
+import { sharedKeywordMatcher } from "/scripts/core/utils/SharedKeywordMatcher.js";
 import { escapeHTML } from "/scripts/core/utils/StringHelper.js";
 import { BrendaAnnounceQueue } from "/scripts/core/services/BrendaAnnounce.js";
 var brendaAnnounceQueue = new BrendaAnnounceQueue();
@@ -350,8 +350,10 @@ class Toolbar {
 		let match;
 		const oldHighlight = this.#tile.getDOM().dataset.highlightedKeyword;
 		this.#tile.getDOM().dataset.highlightedKeyword = "";
-		if (Settings.get("general.highlightKeywords")?.length > 0) {
-			match = keywordMatch(Settings.get("general.highlightKeywords"), this.#tile.getTitle(), etv1, etv2);
+		const highlightKeywords = Settings.get("general.highlightKeywords");
+		if (highlightKeywords?.length > 0) {
+			// SharedKeywordMatcher handles compilation internally
+			match = sharedKeywordMatcher.match(highlightKeywords, this.#tile.getTitle(), etv1, etv2, 'highlight', Settings);
 			if (!match) {
 				logger.add("Toolbar: processHighlight: no match");
 				//No match now, remove the highlight
@@ -361,7 +363,8 @@ class Toolbar {
 			} else {
 				logger.add("Toolbar: processHighlight: match");
 				//Match found, keep the highlight
-				this.#tile.getDOM().dataset.highlightedKeyword = escapeHTML(match);
+				const matchString = typeof match === 'object' ? (match.contains || match.word || '') : match;
+				this.#tile.getDOM().dataset.highlightedKeyword = escapeHTML(matchString);
 				this.#tile.getDOM().dataset.keywordHighlight = true;
 
 				if (Settings.get("general.highlightKWFirst") && !oldHighlight) {
@@ -381,8 +384,10 @@ class Toolbar {
 		this.#tile.getDOM().dataset.hideKeyword = "";
 		if (checkHideList) {
 			//Check if the item should be hidden
-			if (Settings.get("hiddenTab.active") && Settings.get("general.hideKeywords")?.length > 0) {
-				match = keywordMatch(Settings.get("general.hideKeywords"), this.#tile.getTitle(), etv1, etv2);
+			const hideKeywords = Settings.get("general.hideKeywords");
+			if (Settings.get("hiddenTab.active") && hideKeywords?.length > 0) {
+				// SharedKeywordMatcher handles compilation internally
+				match = sharedKeywordMatcher.match(hideKeywords, this.#tile.getTitle(), etv1, etv2, 'hide', Settings);
 				if (match) {
 					logger.add("Toolbar: processHide: hide match");
 					this.#tile.hideTile(false, false, true); //Do not save, skip the hidden manager: just move the tile.
@@ -390,7 +395,8 @@ class Toolbar {
 					document.getElementById("vh-hide-link-" + this.#tile.getAsin()).style.display = "none";
 
 					//Add a data-hide-keyword attribute to the tile
-					this.#tile.getDOM().dataset.hideKeyword = escapeHTML(match);
+					const hideMatchString = typeof match === 'object' ? (match.contains || match.word || '') : match;
+					this.#tile.getDOM().dataset.hideKeyword = escapeHTML(hideMatchString);
 				}
 			}
 		}

@@ -129,15 +129,18 @@ describe("GridEventManager", () => {
 			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
 		});
 
-		it("should increment visibility count when items are added", () => {
+		it("should update placeholders when items are added without incrementing count", () => {
+			// Visibility count is now managed by VisibilityStateManager.setVisibility, not by grid events
 			const addHandler = mockHookMgr.hookBind.mock.calls.find((call) => call[0] === "grid:items-added")[1];
-			addHandler({ count: 5 });
+			addHandler({});
 
-			expect(mockVisibilityStateManager.increment).toHaveBeenCalledWith(5);
+			// Should NOT increment count (this is now handled by VisibilityStateManager.setVisibility)
+			expect(mockVisibilityStateManager.increment).not.toHaveBeenCalled();
 
 			// Flush the batch timer
 			flushBatch();
 
+			// Should still update placeholders
 			expect(mockNoShiftGrid.insertPlaceholderTiles).toHaveBeenCalled();
 		});
 

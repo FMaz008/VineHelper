@@ -1680,6 +1680,7 @@ async function processMessage(data, sender = null, sendResponse = null) {
 			Tpl.setVar("is_parent_asin", is_parent_asin);
 			Tpl.setVar("is_pre_release", is_pre_release);
 			Tpl.setVar("enrollment_guid", enrollment_guid);
+			Tpl.setVar("domain", i13n.getDomainTLD());
 
 			//Generate the notification
 			let note2 = new ScreenNotification();

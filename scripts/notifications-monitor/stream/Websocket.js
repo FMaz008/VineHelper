@@ -84,6 +84,15 @@ class Websocket {
 			},
 
 			newItem: (data) => {
+				// Debug logging for incoming item data
+				if (this._monitor._settings.get("general.debugWebsocket")) {
+					console.log("[WebSocket] Received newItem", {
+						asin: data.item?.asin,
+						hasImgUrl: !!data.item?.img_url,
+						imgUrl: data.item?.img_url,
+						itemKeys: data.item ? Object.keys(data.item) : []
+					});
+				}
 				this.#relayMessage({ type: "newPreprocessedItem", item: data.item });
 			},
 
@@ -134,11 +143,14 @@ class Websocket {
 	}
 
 	#relayMessage(message) {
-		// Only log message type for performance - avoid logging large arrays
-		if (message.type === "last100") {
-			console.log(`Relaying message type: ${message.type}, products: ${message.products?.length || 0}`);
-		} else {
-			console.log("Relaying message", message);
+		// Only log if debug is enabled
+		if (this._monitor._settings.get("general.debugWebsocket")) {
+			// Only log message type for performance - avoid logging large arrays
+			if (message.type === "last100") {
+				console.log(`Relaying message type: ${message.type}, products: ${message.products?.length || 0}`);
+			} else {
+				console.log("Relaying message", message);
+			}
 		}
 		this._monitor._channel.postMessage(message);
 		this._monitor._serverComMgr.processBroadcastMessage(message);

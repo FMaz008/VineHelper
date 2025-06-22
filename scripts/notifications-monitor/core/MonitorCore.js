@@ -96,11 +96,14 @@ class MonitorCore {
 	}
 
 	setMasterMonitor() {
+		console.log("[MonitorCore] Setting as MASTER monitor");
 		this._isMasterMonitor = true;
 		this._ws = new Websocket(this);
 		this._autoLoad = new AutoLoad(this, this._ws);
+		console.log("[MonitorCore] WebSocket and AutoLoad initialized");
 	}
 	setSlaveMonitor() {
+		console.log("[MonitorCore] Setting as SLAVE monitor");
 		this._isMasterMonitor = false;
 		if (this._ws !== null) {
 			this._ws.destroyInstance();
@@ -225,6 +228,18 @@ class MonitorCore {
 		notif.style.filter = "brightness(0.7)";
 	}
 
+	/**
+	 * Check if an item has unknown ETV
+	 * @param {Element} etvObj - The ETV element
+	 * @returns {boolean} - True if ETV is unknown
+	 */
+	isUnknownETV(etvObj) {
+		// Check for both empty string and items that haven't had ETV set yet
+		// When items have unknown ETV, the dataset attributes remain empty strings
+		// but the item data might have null values
+		return etvObj && (etvObj.dataset.etvMax == "" || etvObj.dataset.etvMax == null);
+	}
+
 	_processNotificationHighlight(notif) {
 		if (!notif) {
 			return false;
@@ -240,7 +255,7 @@ class MonitorCore {
 		const isZeroETV =
 			notif.dataset.typeZeroETV == 1 && this._settings.get("notification.monitor.zeroETV.colorActive");
 		const isUnknownETV =
-			etvObj.dataset.etvMax == "" && this._settings.get("notification.monitor.unknownETV.colorActive");
+			this.isUnknownETV(etvObj) && this._settings.get("notification.monitor.unknownETV.colorActive");
 
 		const highlightColor = this._settings.get("notification.monitor.highlight.color");
 		const zeroETVColor = this._settings.get("notification.monitor.zeroETV.color");
