@@ -8,6 +8,12 @@
 import { SettingsMgr } from "/scripts/core/services/SettingsMgrCompat.js";
 var Settings = new SettingsMgr();
 
+import { CryptoKeys } from "/scripts/core/utils/CryptoKeys.js";
+var cryptoKeys = new CryptoKeys();
+
+import { Environment } from "/scripts/core/services/Environment.js";
+var env = new Environment();
+
 //###########################
 //If the productId was not registered: Register the current checkout and link it to an ASIN.
 //If the productId was registered, the ASIN will be available for the process.
@@ -16,7 +22,9 @@ async function init() {
 	await Settings.waitForLoad();
 	let currentASIN = await Settings.get("checkout.currentASIN");
 	let arrCurrentCheckouts = await Settings.get("checkout.arrCurrentCheckouts");
-
+	//await Settings.set("checkout.arrCurrentCheckouts", [
+	//	{ asin: "B0F6NDJXWZ", expires: 1750619417031, productId: "703-6232317-0987410" },
+	//]);
 	if (!arrCurrentCheckouts) {
 		arrCurrentCheckouts = [];
 	}
@@ -31,8 +39,8 @@ async function init() {
 			productId: getProductId(),
 			expires: Date.now() + 1000 * 60 * 60 * 1, // 1 hour
 		});
-		Settings.set("checkout.arrCurrentCheckouts", arrCurrentCheckouts);
-		Settings.set("checkout.currentASIN", null);
+		await Settings.set("checkout.arrCurrentCheckouts", arrCurrentCheckouts);
+		await Settings.set("checkout.currentASIN", null);
 	}
 
 	//Garbage collect expired checkouts
@@ -42,6 +50,11 @@ async function init() {
 	//###########################
 	//Order confirmation page
 	checkForError();
+
+	//###########################
+	//Thank you page
+
+	checkForSuccess();
 }
 
 async function checkForError() {
@@ -52,7 +65,7 @@ async function checkForError() {
 		if (checkForVineOrderCannotBeProcessedError()) {
 			console.log("vine error stock not available");
 			console.log("Assume ITEM_NOT_IN_ENROLLMENT error");
-			//Todo: tell VH server the order failed
+			contactVHServer(false);
 		}
 	}
 }
@@ -86,6 +99,45 @@ function getProductId() {
 		.find((segment) => segment.startsWith("p-"))
 		?.substring(2);
 	return pNumber; // Returns "733-6232317-0987411"
+}
+
+function getCountry() {
+	//Get the URL's domain TLD
+	const url = new URL(window.location.href);
+	const domain = url.hostname;
+	return domain.split(".").pop();
+}
+
+async function contactVHServer(status) {
+	const asin = await getCurrentASIN();
+	if (!asin) {
+		console.log("No ASIN found, not contacting VH server");
+		return;
+	}
+
+	const content = {
+		api_version: 5,
+		app_version: env.data.appVersion,
+		action: "record_order",
+		country: getCountry(),
+		uuid: await Settings.get("general.uuid", false),
+		fid: await Settings.get("general.fingerprint.id", false),
+		asin: asin,
+		parent_asin: null, //Todo: add parent_asin or deal with it server side.
+		order_status: status ? "success" : "failed",
+		order_error: status ? null : "ITEM_NOT_IN_ENROLLMENT",
+	};
+
+	const s = await cryptoKeys.signData(content);
+	content.s = s;
+	content.pk = await cryptoKeys.getExportedPublicKey();
+
+	//Form the full URL
+	await fetch(env.getAPIUrl(), {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(content),
+	});
 }
 
 //###########################
@@ -135,13 +187,6 @@ function getItemASIN() {
 	return itemASIN.textContent;
 }
 
-function getCountry() {
-	//Get the URL's domain TLD
-	const url = new URL(window.location.href);
-	const domain = url.hostname;
-	return domain.split(".").pop();
-}
-
 //###########################
 //Order placed page (this page seems to get redirected and never trigger this part of the script)
 
@@ -179,18 +224,20 @@ function isErrorPage() {
 //###########################
 //Thank you page
 
-if (isPageThankYou()) {
-	console.log("Thank you page, order sucessful: " + isOrderIdIssued());
+async function checkForSuccess() {
+	if (isPageThankYou() && isOrderIdIssued()) {
+		console.log("Thank you page, order sucessful: " + isOrderIdIssued());
 
-	const currentASIN = getCurrentASIN();
-	if (currentASIN) {
-		console.log("Current ASIN: " + getCurrentASIN());
-		console.log("Current country: " + getCountry());
-		//Todo: tell VH server the order was successful
-	} else {
-		console.log(
-			"No ASIN found in the current checkouts, could not establish this to be a vine order. Not updating VH server."
-		);
+		const currentASIN = await getCurrentASIN();
+		if (currentASIN) {
+			console.log("Current ASIN: " + currentASIN);
+			console.log("Current country: " + getCountry());
+			contactVHServer(true);
+		} else {
+			console.log(
+				"No ASIN found in the current checkouts, could not establish this to be a vine order. Not updating VH server."
+			);
+		}
 	}
 }
 
