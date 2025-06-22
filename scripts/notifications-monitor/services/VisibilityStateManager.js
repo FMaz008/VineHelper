@@ -37,6 +37,19 @@ class VisibilityStateManager {
 
 		const wasVisible = this.isVisible(element);
 
+		// Debug logging for setVisibility calls
+		if (typeof window !== "undefined" && window.DEBUG_TAB_TITLE) {
+			console.log("[VisibilityStateManager] setVisibility called", {
+				elementId: element.id,
+				asin: element.dataset?.asin,
+				wasVisible,
+				newVisible: visible,
+				currentCount: this.#count,
+				hasCache: this.#visibilityCache.has(element),
+				timestamp: new Date().toISOString(),
+			});
+		}
+
 		// Update the element's display style
 		element.style.display = visible ? displayStyle : "none";
 
@@ -92,6 +105,19 @@ class VisibilityStateManager {
 		// Use computed style for accurate visibility check
 		const computedStyle = this.#getComputedStyle(element);
 		const isVisible = computedStyle.display !== "none";
+
+		// Debug logging for uncached elements (likely new items)
+		if (typeof window !== "undefined" && window.DEBUG_TAB_TITLE) {
+			console.log("[VisibilityStateManager] isVisible called for uncached element", {
+				elementId: element.id,
+				asin: element.dataset?.asin,
+				isVisible,
+				inlineDisplay: element.style.display,
+				computedDisplay: computedStyle.display,
+				currentCount: this.#count,
+				timestamp: new Date().toISOString(),
+			});
+		}
 
 		// Also check inline style as a safeguard
 		// This catches cases where the style was just set but computed style hasn't updated

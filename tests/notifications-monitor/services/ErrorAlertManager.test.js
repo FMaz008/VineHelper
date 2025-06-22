@@ -21,6 +21,12 @@ describe("ErrorAlertManager", () => {
 			TEXT_NODE: 3,
 		};
 
+		// Mock window object
+		global.window = {
+			scrollY: 0,
+			scrollTo: jest.fn(),
+		};
+
 		// Track created elements for better testing
 		createdElements = {
 			styles: [],
@@ -77,6 +83,7 @@ describe("ErrorAlertManager", () => {
 	afterEach(() => {
 		jest.clearAllMocks();
 		delete global.Node;
+		delete global.window;
 	});
 
 	describe("initialize", () => {

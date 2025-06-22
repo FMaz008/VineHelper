@@ -92,11 +92,11 @@ export class SettingsMgrDI {
 		// Cache keyword arrays to ensure same reference is returned
 		if (keywordPaths.includes(settingPath) && Array.isArray(answer)) {
 			// Tag the array with its type for identification
-			Object.defineProperty(answer, '__keywordType', {
+			Object.defineProperty(answer, "__keywordType", {
 				value: settingPath,
 				writable: false,
 				enumerable: false,
-				configurable: true
+				configurable: true,
 			});
 			this.#arrayCache.set(settingPath, answer);
 		}
@@ -113,37 +113,47 @@ export class SettingsMgrDI {
 		// Check if this is a keyword array that needs compilation
 		const keywordPaths = ["general.highlightKeywords", "general.hideKeywords", "general.blurKeywords"];
 		const isKeywordPath = keywordPaths.includes(settingPath);
-		
+
 		// Don't go through the hassle of updating the value if it did not change
 		// UNLESS it's a keyword path that might need compilation
 		if (!isKeywordPath && this.get(settingPath, false) == value) {
 			return false;
 		}
-		
+
 		// For keyword paths, check if compiled patterns exist
 		if (isKeywordPath) {
 			const existingValue = this.get(settingPath, false);
-			const valuesEqual = existingValue === value || (Array.isArray(existingValue) && Array.isArray(value) && JSON.stringify(existingValue) === JSON.stringify(value));
-			
+			const valuesEqual =
+				existingValue === value ||
+				(Array.isArray(existingValue) &&
+					Array.isArray(value) &&
+					JSON.stringify(existingValue) === JSON.stringify(value));
+
 			if (this.#debugKeywords && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
 				console.log(`[SettingsMgrDI] Keyword path ${settingPath} value comparison:`, {
 					existingIsArray: Array.isArray(existingValue),
 					newIsArray: Array.isArray(value),
 					valuesEqual,
 					existingLength: existingValue?.length,
-					newLength: value?.length
+					newLength: value?.length,
 				});
 			}
-			
+
 			if (valuesEqual) {
 				// Check if compiled patterns already exist
-				const pathParts = settingPath.split('.');
+				const pathParts = settingPath.split(".");
 				const lastPart = pathParts[pathParts.length - 1];
-				const compiledKey = lastPart + '_compiled';
+				const compiledKey = lastPart + "_compiled";
 				const parentPath = pathParts.slice(0, -1);
-				const parent = parentPath.length > 0 ? this.#getFromObject(this.#settings, parentPath.join('.')) : this.#settings;
-				
-				if (parent && parent[compiledKey] && Array.isArray(parent[compiledKey]) && parent[compiledKey].length > 0) {
+				const parent =
+					parentPath.length > 0 ? this.#getFromObject(this.#settings, parentPath.join(".")) : this.#settings;
+
+				if (
+					parent &&
+					parent[compiledKey] &&
+					Array.isArray(parent[compiledKey]) &&
+					parent[compiledKey].length > 0
+				) {
 					if (this.#debugKeywords && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
 						console.log(`[SettingsMgrDI] Compiled patterns already exist for ${settingPath}, skipping`);
 					}
@@ -178,11 +188,13 @@ export class SettingsMgrDI {
 			this.#arrayCache.delete(settingPath);
 			// Also clear regex cache
 			this.#regexCache.delete(settingPath);
-			
+
 			if (this.#debugKeywords && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
-				console.log(`[SettingsMgrDI] Keyword path detected: ${settingPath}, value is array: ${Array.isArray(value)}, length: ${value?.length}`);
+				console.log(
+					`[SettingsMgrDI] Keyword path detected: ${settingPath}, value is array: ${Array.isArray(value)}, length: ${value?.length}`
+				);
 			}
-			
+
 			// Automatically compile and save keywords
 			if (Array.isArray(value) && value.length > 0) {
 				if (this.#debugKeywords && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
@@ -190,55 +202,32 @@ export class SettingsMgrDI {
 				}
 				try {
 					// Import all needed functions at the beginning so they're available throughout
-					const { precompileKeywords, getCompiledRegex } = await import('../utils/KeywordMatch.js');
+					const { precompileKeywords, getCompiledRegex } = await import("../utils/KeywordMatch.js");
 					const compilationResult = precompileKeywords(value);
-					
+
 					if (this.#debugKeywords && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
 						console.log(`[SettingsMgrDI] Compilation result:`, {
 							path: settingPath,
 							compiledCount: compilationResult.compiled,
 							failed: compilationResult.failed,
-							total: compilationResult.total
+							total: compilationResult.total,
 						});
 					}
-					
+
 					// Convert compiled regexes to storable format
 					// We need to use getCompiledRegex to retrieve from the global cache
-					if (this.#debugKeywords && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
-						console.log(`[SettingsMgrDI] Starting pattern retrieval for ${value.length} keywords`);
-					}
-					
 					let compiledPatterns = [];
 					try {
-						// Debug: Check if the cache exists before trying to retrieve
-						const testCompiled = getCompiledRegex(value, 0);
-						if (this.#debugKeywords && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
-							console.log(`[SettingsMgrDI] Test retrieval result:`, {
-								testCompiled: testCompiled ? 'found' : 'null',
-								valueType: Array.isArray(value) ? 'array' : typeof value,
-								valueLength: value.length
-							});
-						}
-						
 						for (let index = 0; index < value.length; index++) {
 							try {
 								const compiled = getCompiledRegex(value, index);
-								if (index === 0 || index === value.length - 1) {
-									if (this.#debugKeywords && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
-										console.log(`[SettingsMgrDI] Compiled result at index ${index}:`, {
-											keyword: typeof value[index] === 'string' ? value[index] : value[index].word,
-											compiled: compiled ? 'found' : 'null',
-											hasRegex: compiled && compiled.regex ? 'yes' : 'no'
-										});
-									}
-								}
 								if (compiled && compiled.regex) {
 									compiledPatterns.push({
 										pattern: compiled.regex.source,
 										flags: compiled.regex.flags,
 										withoutPattern: compiled.withoutRegex ? compiled.withoutRegex.source : null,
 										withoutFlags: compiled.withoutRegex ? compiled.withoutRegex.flags : null,
-										hasEtvCondition: compiled.hasEtvCondition || false
+										hasEtvCondition: compiled.hasEtvCondition || false,
 									});
 								} else {
 									compiledPatterns.push(null);
@@ -248,17 +237,20 @@ export class SettingsMgrDI {
 								compiledPatterns.push(null);
 							}
 						}
-						
-						if (this.#debugKeywords && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
-							console.log(`[SettingsMgrDI] Pattern retrieval complete:`, {
-								totalPatterns: compiledPatterns.length,
-								nonNullPatterns: compiledPatterns.filter(p => p !== null).length,
-								firstPattern: compiledPatterns[0],
-								lastPattern: compiledPatterns[compiledPatterns.length - 1]
-							});
+
+						if (
+							this.#debugKeywords &&
+							(typeof process === "undefined" || process.env.NODE_ENV !== "test")
+						) {
+							console.log(
+								`[SettingsMgrDI] Compiled ${compiledPatterns.filter((p) => p !== null).length}/${value.length} patterns for ${settingPath}`
+							);
 						}
 					} catch (outerError) {
-						if (this.#debugKeywords && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
+						if (
+							this.#debugKeywords &&
+							(typeof process === "undefined" || process.env.NODE_ENV !== "test")
+						) {
 							console.error(`[SettingsMgrDI] CRITICAL ERROR in pattern retrieval:`, outerError);
 							console.error(`[SettingsMgrDI] Error stack:`, outerError.stack);
 						}
@@ -269,9 +261,9 @@ export class SettingsMgrDI {
 					// Save compiled patterns at the same level as the keywords
 					// For example, if keywords are at general.blurKeywords,
 					// compiled patterns should be at general.blurKeywords_compiled
-					const compiledKey = lastKey + '_compiled';
+					const compiledKey = lastKey + "_compiled";
 					current[compiledKey] = compiledPatterns;
-					
+
 					// Debug: Log what we're about to store
 					if (this.#debugKeywords && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
 						console.log(`[SettingsMgrDI] Storing compiled patterns:`, {
@@ -281,25 +273,29 @@ export class SettingsMgrDI {
 							firstPattern: compiledPatterns[0],
 							currentKeys: Object.keys(current),
 							currentIsGeneralObject: current === this.#settings.general,
-							pathArray: pathArray
+							pathArray: pathArray,
 						});
 					}
-					
+
 					// Verify the patterns were actually stored
 					if (this.#debugKeywords && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
 						console.log(`[SettingsMgrDI] After storing - verification:`, {
 							compiledInCurrent: compiledKey in current,
-							compiledInGeneral: this.#settings.general && (compiledKey in this.#settings.general),
-							generalKeys: this.#settings.general ? Object.keys(this.#settings.general).filter(k => k.includes('_compiled')) : []
+							compiledInGeneral: this.#settings.general && compiledKey in this.#settings.general,
+							generalKeys: this.#settings.general
+								? Object.keys(this.#settings.general).filter((k) => k.includes("_compiled"))
+								: [],
 						});
 					}
-					
-					this.#logger.add(`SettingsMgr: Auto-compiled ${compilationResult.compiled} patterns for ${settingPath}`);
-					
+
+					this.#logger.add(
+						`SettingsMgr: Auto-compiled ${compilationResult.compiled} patterns for ${settingPath}`
+					);
+
 					// Verify the patterns were actually stored
-					const verifyPath = pathArray.join('.') + '.' + compiledKey;
+					const verifyPath = pathArray.join(".") + "." + compiledKey;
 					const stored = this.#getFromObject(this.#settings, verifyPath);
-					
+
 					// Debug logging
 					if (this.#debugKeywords && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
 						// Log the current state before storing
@@ -307,77 +303,85 @@ export class SettingsMgrDI {
 							path: settingPath,
 							compiledKey: compiledKey,
 							currentObject: Object.keys(current),
-							hasCompiledKeyBefore: compiledKey in current
+							hasCompiledKeyBefore: compiledKey in current,
 						});
-						
+
 						console.log(`[SettingsMgrDI] Compiled and stored patterns:`, {
 							path: settingPath,
 							compiledKey: compiledKey,
-							storageLocation: `${pathArray.join('.')}.${compiledKey}`,
+							storageLocation: `${pathArray.join(".")}.${compiledKey}`,
 							compiledCount: compilationResult.compiled,
 							totalPatterns: compiledPatterns.length,
-							validPatterns: compiledPatterns.filter(p => p !== null).length,
+							validPatterns: compiledPatterns.filter((p) => p !== null).length,
 							samplePattern: compiledPatterns[0],
 							verificationPath: verifyPath,
 							storedSuccessfully: !!stored && Array.isArray(stored),
-							storedLength: stored?.length || 0
+							storedLength: stored?.length || 0,
 						});
-						
+
 						// Log the state after storing
 						console.log(`[SettingsMgrDI] AFTER storing compiled patterns:`, {
 							currentKeys: Object.keys(current),
 							hasCompiledKeyAfter: compiledKey in current,
-							compiledValueType: Array.isArray(current[compiledKey]) ? 'array' : typeof current[compiledKey],
-							compiledLength: current[compiledKey]?.length || 0
+							compiledValueType: Array.isArray(current[compiledKey])
+								? "array"
+								: typeof current[compiledKey],
+							compiledLength: current[compiledKey]?.length || 0,
 						});
 					}
 				} catch (error) {
-					this.#logger.add(`SettingsMgr: Failed to auto-compile keywords for ${settingPath}: ${error.message}`);
+					this.#logger.add(
+						`SettingsMgr: Failed to auto-compile keywords for ${settingPath}: ${error.message}`
+					);
 				}
 			}
 		}
 
 		await this.#save();
-		
+
 		// Update debug flags if any debug setting changed
-		if (settingPath.startsWith('general.debug')) {
+		if (settingPath.startsWith("general.debug")) {
 			this.#updateDebugFlags();
 		}
-		
+
 		// Debug logging to verify what's in memory after save
-		if (this.#debugKeywords && keywordPathsList.includes(settingPath) && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
+		if (
+			this.#debugKeywords &&
+			keywordPathsList.includes(settingPath) &&
+			(typeof process === "undefined" || process.env.NODE_ENV !== "test")
+		) {
 			const generalSettings = this.#settings.general || {};
-			const compiledKeys = Object.keys(generalSettings).filter(k => k.includes('_compiled'));
+			const compiledKeys = Object.keys(generalSettings).filter((k) => k.includes("_compiled"));
 			console.log(`[SettingsMgrDI] AFTER save - memory state:`, {
 				path: settingPath,
 				compiledKeysInMemory: compiledKeys,
-				specificCompiledKey: lastKey + '_compiled',
-				hasSpecificCompiled: !!(generalSettings[lastKey + '_compiled']),
-				specificCompiledLength: generalSettings[lastKey + '_compiled']?.length || 0
+				specificCompiledKey: lastKey + "_compiled",
+				hasSpecificCompiled: !!generalSettings[lastKey + "_compiled"],
+				specificCompiledLength: generalSettings[lastKey + "_compiled"]?.length || 0,
 			});
 		}
-		
+
 		// Reload settings if requested (but after saving!)
 		if (reloadSettings) {
 			await this.#loadSettingsFromStorage(true);
 		}
-		
+
 		return true;
 	}
 
 	/**
-		* Clear the keyword regex cache when settings change
-		*/
+	 * Clear the keyword regex cache when settings change
+	 */
 	clearKeywordCache() {
 		this.#regexCache.clear();
 		this.#logger.add("SettingsMgr: Cleared keyword regex cache");
 	}
 
 	/**
-		* Get compiled keywords with memory caching
-		* @param {string} key - The keyword setting key (e.g., 'general.highlightKeywords')
-		* @returns {Array} Array of compiled regex objects
-		*/
+	 * Get compiled keywords with memory caching
+	 * @param {string} key - The keyword setting key (e.g., 'general.highlightKeywords')
+	 * @returns {Array} Array of compiled regex objects
+	 */
 	getCompiledKeywords(key) {
 		// Check memory cache first
 		if (this.#regexCache.has(key)) {
@@ -387,24 +391,27 @@ export class SettingsMgrDI {
 		// Get pre-compiled patterns from settings
 		// The compiled patterns are stored alongside the keywords
 		// For example: general.blurKeywords_compiled is at the same level as general.blurKeywords
-		const pathParts = key.split('.');
+		const pathParts = key.split(".");
 		const lastPart = pathParts[pathParts.length - 1];
-		const compiledPath = pathParts.slice(0, -1).concat(lastPart + '_compiled').join('.');
+		const compiledPath = pathParts
+			.slice(0, -1)
+			.concat(lastPart + "_compiled")
+			.join(".");
 		const patterns = this.get(compiledPath);
-		
+
 		// Additional debug to check what's in settings
 		if (this.#debugKeywords && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
 			// Check if the compiled patterns exist in the settings object
 			const settingsSnapshot = JSON.parse(JSON.stringify(this.#settings));
 			const generalSettings = settingsSnapshot.general || {};
 			console.log(`[SettingsMgrDI] Checking storage for ${key}:`, {
-				compiledKey: lastPart + '_compiled',
-				hasCompiledInGeneral: !!(generalSettings[lastPart + '_compiled']),
-				compiledLength: generalSettings[lastPart + '_compiled']?.length || 0,
-				allGeneralKeys: Object.keys(generalSettings).filter(k => k.includes('_compiled'))
+				compiledKey: lastPart + "_compiled",
+				hasCompiledInGeneral: !!generalSettings[lastPart + "_compiled"],
+				compiledLength: generalSettings[lastPart + "_compiled"]?.length || 0,
+				allGeneralKeys: Object.keys(generalSettings).filter((k) => k.includes("_compiled")),
 			});
 		}
-		
+
 		// Debug logging
 		if (this.#debugKeywords && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
 			console.log(`[SettingsMgrDI] getCompiledKeywords for ${key}:`, {
@@ -413,10 +420,10 @@ export class SettingsMgrDI {
 				patternsFound: !!patterns,
 				patternsLength: patterns?.length || 0,
 				isArray: Array.isArray(patterns),
-				samplePattern: patterns?.[0]
+				samplePattern: patterns?.[0],
 			});
 		}
-		
+
 		if (!patterns || !Array.isArray(patterns)) {
 			// Fallback: compile on demand if no compiled version
 			this.#logger.add(`SettingsMgr: No pre-compiled patterns found for ${key}, compiling on demand`);
@@ -435,13 +442,15 @@ export class SettingsMgrDI {
 			if (p && p.pattern) {
 				try {
 					const regex = {
-						regex: new RegExp(p.pattern, p.flags || 'iu'),
-						withoutRegex: p.withoutPattern ? new RegExp(p.withoutPattern, p.withoutFlags || 'iu') : null,
-						hasEtvCondition: p.hasEtvCondition || false
+						regex: new RegExp(p.pattern, p.flags || "iu"),
+						withoutRegex: p.withoutPattern ? new RegExp(p.withoutPattern, p.withoutFlags || "iu") : null,
+						hasEtvCondition: p.hasEtvCondition || false,
 					};
 					regexes.push(regex);
 				} catch (error) {
-					this.#logger.add(`SettingsMgr: Failed to create RegExp for pattern at index ${index}: ${error.message}`);
+					this.#logger.add(
+						`SettingsMgr: Failed to create RegExp for pattern at index ${index}: ${error.message}`
+					);
 					regexes.push(null);
 				}
 			} else {
@@ -455,17 +464,17 @@ export class SettingsMgrDI {
 	}
 
 	/**
-		* Compile keywords on demand (fallback)
-		* @private
-		*/
+	 * Compile keywords on demand (fallback)
+	 * @private
+	 */
 	async #compileOnDemand(key, keywords) {
 		try {
 			// Dynamically import to avoid circular dependencies
-			const { precompileKeywords, compileKeyword } = await import('../utils/KeywordMatch.js');
-			
+			const { precompileKeywords, compileKeyword } = await import("../utils/KeywordMatch.js");
+
 			// Compile keywords
 			const compilationResult = precompileKeywords(keywords);
-			
+
 			// Build regex array
 			const regexes = [];
 			keywords.forEach((keyword, index) => {
@@ -491,20 +500,23 @@ export class SettingsMgrDI {
 			// Debug logging for save operation
 			if (this.#debugStorage && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
 				const generalSettings = this.#settings.general || {};
-				const compiledKeys = Object.keys(generalSettings).filter(k => k.includes('_compiled'));
+				const compiledKeys = Object.keys(generalSettings).filter((k) => k.includes("_compiled"));
 				console.log(`[SettingsMgrDI] SAVING settings to Chrome storage:`, {
 					hasGeneralObject: !!this.#settings.general,
 					compiledKeysInGeneral: compiledKeys,
-					compiledKeysSample: compiledKeys.length > 0 ? {
-						[compiledKeys[0]]: Array.isArray(generalSettings[compiledKeys[0]]) ?
-							`Array(${generalSettings[compiledKeys[0]].length})` :
-							typeof generalSettings[compiledKeys[0]]
-					} : 'none'
+					compiledKeysSample:
+						compiledKeys.length > 0
+							? {
+									[compiledKeys[0]]: Array.isArray(generalSettings[compiledKeys[0]])
+										? `Array(${generalSettings[compiledKeys[0]].length})`
+										: typeof generalSettings[compiledKeys[0]],
+								}
+							: "none",
 				});
 			}
-			
+
 			await this.#storageAdapter.set("settings", this.#settings);
-			
+
 			if (this.#debugStorage && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
 				console.log(`[SettingsMgrDI] Settings SAVED successfully`);
 			}
@@ -529,16 +541,18 @@ export class SettingsMgrDI {
 		const debugStorage = settings?.general?.debugStorage;
 		if (debugStorage && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
 			const generalSettings = settings?.general || {};
-			const compiledKeys = Object.keys(generalSettings).filter(k => k.includes('_compiled'));
+			const compiledKeys = Object.keys(generalSettings).filter((k) => k.includes("_compiled"));
 			console.log(`[SettingsMgrDI] LOADED settings from Chrome storage:`, {
 				hasSettings: !!settings,
 				hasGeneralObject: !!settings?.general,
 				compiledKeysInGeneral: compiledKeys,
-				compiledKeysSample: compiledKeys.map(key => ({
+				compiledKeysSample: compiledKeys.map((key) => ({
 					key,
-					type: Array.isArray(generalSettings[key]) ? `Array(${generalSettings[key].length})` : typeof generalSettings[key],
-					firstItem: generalSettings[key]?.[0]
-				}))
+					type: Array.isArray(generalSettings[key])
+						? `Array(${generalSettings[key].length})`
+						: typeof generalSettings[key],
+					firstItem: generalSettings[key]?.[0],
+				})),
 			});
 		}
 
@@ -546,7 +560,7 @@ export class SettingsMgrDI {
 		// Skip comparison on initial load (when this.#settings is empty)
 		const isInitialLoad = !this.#settings || Object.keys(this.#settings).length === 0;
 		const settingsChanged = !isInitialLoad && JSON.stringify(settings) !== JSON.stringify(this.#settings);
-		
+
 		if (settingsChanged) {
 			if (this.#debugSettings && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
 				console.log(`[SettingsMgrDI] Settings changed, clearing array cache`);
@@ -566,49 +580,54 @@ export class SettingsMgrDI {
 
 		if (!skipMigration) {
 			await this.#migrate();
-			
+
 			// Only check for keyword compilation on initial load (not on reload after compilation)
 			// Check if we need to compile keywords that don't have compiled versions
 			// This MUST happen AFTER this.#settings is assigned, otherwise compiled patterns will be lost
 			const keywordPaths = ["general.highlightKeywords", "general.hideKeywords", "general.blurKeywords"];
 			const compilationNeeded = [];
-			
+
 			for (const path of keywordPaths) {
 				const keywords = this.get(path);
 				// Extract the last part of the path to check for compiled version
-				const pathParts = path.split('.');
+				const pathParts = path.split(".");
 				const lastPart = pathParts[pathParts.length - 1];
-				const compiledKey = lastPart + '_compiled';
-				
+				const compiledKey = lastPart + "_compiled";
+
 				// Check if compiled patterns exist at the same level as keywords
 				// For example, general.highlightKeywords_compiled should be in general object
 				const parentPath = pathParts.slice(0, -1);
-				const parent = parentPath.length > 0 ? this.#getFromObject(this.#settings, parentPath.join('.')) : this.#settings;
-				const hasCompiled = parent && parent[compiledKey] && Array.isArray(parent[compiledKey]) && parent[compiledKey].length > 0;
-				
+				const parent =
+					parentPath.length > 0 ? this.#getFromObject(this.#settings, parentPath.join(".")) : this.#settings;
+				const hasCompiled =
+					parent &&
+					parent[compiledKey] &&
+					Array.isArray(parent[compiledKey]) &&
+					parent[compiledKey].length > 0;
+
 				if (keywords && keywords.length > 0 && !hasCompiled) {
 					// Keywords exist but no compiled version - mark for compilation
 					compilationNeeded.push(path);
-					
+
 					// Debug logging
 					if (this.#debugKeywords && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
 						console.log(`[SettingsMgrDI] Missing compiled patterns for ${path}, will compile`);
 					}
 				}
 			}
-			
+
 			// Compile all needed keywords in batch
 			if (compilationNeeded.length > 0) {
 				if (this.#debugKeywords && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
 					console.log(`[SettingsMgrDI] Compiling keywords for paths:`, compilationNeeded);
 				}
-				
+
 				// Compile each path without reloading
 				for (const path of compilationNeeded) {
 					const keywords = this.get(path);
 					await this.set(path, keywords, false); // false = don't reload settings
 				}
-				
+
 				// After all compilations are done, reload settings once to get compiled patterns into memory
 				if (this.#debugKeywords && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
 					console.log(`[SettingsMgrDI] All keyword compilations complete, reloading settings`);

@@ -240,10 +240,10 @@ class ItemsMgr {
 	storeItemDOMElement(asin, element) {
 		if (this.items.has(asin)) {
 			const item = this.items.get(asin);
-			
+
 			// Store DOM element in WeakMap using item object as key
 			this.domElements.set(item, element);
-			
+
 			// Store Tile instance in WeakMap
 			const tile = new Tile(element, null);
 			this.tiles.set(item, tile);
@@ -278,7 +278,7 @@ class ItemsMgr {
 		if (item?.element) {
 			return item.element;
 		}
-		
+
 		// Fallback to querying the DOM directly
 		return document.getElementById(`vh-notification-${asin}`);
 	}
@@ -306,11 +306,8 @@ class ItemsMgr {
 	}
 
 	removeAsin(asin) {
-		const item = this.items.get(asin);
-		if (item) {
-			// WeakMaps will automatically clean up when item is removed
-			// No need to manually clear DOM element or tile references
-		}
+		// WeakMaps will automatically clean up when item is removed
+		// No need to manually clear DOM element or tile references
 		this.items.delete(asin);
 	}
 }

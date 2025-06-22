@@ -2,10 +2,7 @@
 
 import { Internationalization } from "/scripts/core/services/Internationalization.js";
 import { Item } from "/scripts/core/models/Item.js";
-import {
-	initializeServices,
-	getSettingsManager,
-} from "/scripts/infrastructure/SettingsFactoryEnhanced.js";
+import { initializeServices, getSettingsManager } from "/scripts/infrastructure/SettingsFactoryEnhanced.js";
 
 // Initialize services
 let Settings = null;
@@ -40,6 +37,13 @@ let selectedWord = ""; // For context menu functionality
 })();
 
 // Removed old keyword caching functions - now handled by SettingsMgrDI
+
+// NOTE: Keywords in the service worker are NOT mission-critical
+// The service worker only uses keywords for:
+// 1. Adding new keywords via context menu (right-click)
+// 2. Clearing keyword cache when keywords are updated
+// All actual keyword matching happens in content scripts and the notification monitor
+// If the service worker goes offline, keyword functionality continues to work
 
 //#####################################################
 //## LISTENERS
@@ -236,16 +240,16 @@ chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
 		if (Settings.get("general.debugServiceWorker")) {
 			console.log("[ServiceWorker] Notification clicked", {
 				notificationId,
-				data: notificationsData[notificationId]
+				data: notificationsData[notificationId],
 			});
 		}
-		
+
 		const { asin, queue, is_parent_asin, enrollment_guid, search, is_pre_release } =
 			notificationsData[notificationId] || {};
-			
+
 		let url;
 		const domain = Settings.get("general.country") || "com";
-		
+
 		// Check if we should open modal (requires all necessary data)
 		if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
 			try {
@@ -276,7 +280,7 @@ chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
 			// Last resort: just open vine items page
 			url = `https://www.amazon.${domain}/vine/vine-items`;
 			console.warn("[ServiceWorker] No search string available for notification", {
-				notificationData: notificationsData[notificationId]
+				notificationData: notificationsData[notificationId],
 			});
 		}
 
@@ -296,7 +300,7 @@ async function pushNotification(title, item) {
 	// Handle both object with methods and plain object formats
 	// If item is an Item instance, get the data from getAllInfo()
 	const itemData = item.getAllInfo ? item.getAllInfo() : item;
-	
+
 	// Store notification data
 	notificationsData[notificationId] = {
 		asin: itemData.asin,
@@ -309,7 +313,7 @@ async function pushNotification(title, item) {
 
 	// Get the product image URL if available
 	const imageUrl = itemData.img_url;
-	
+
 	// Debug logging for notification images
 	if (Settings.get("general.debugServiceWorker")) {
 		console.log("[ServiceWorker] Notification image data", {
@@ -318,31 +322,31 @@ async function pushNotification(title, item) {
 			imageUrl: imageUrl,
 			hasImgUrl: !!itemData.img_url,
 			itemDataKeys: Object.keys(itemData),
-			fullItemData: itemData
+			fullItemData: itemData,
 		});
-		
+
 		if (!imageUrl) {
 			console.warn("[ServiceWorker] No image URL for notification");
 		}
 	}
-	
+
 	const notificationOptions = {
 		type: "basic",
-		iconUrl: imageUrl || iconUrl,  // Use product image as icon if available, fallback to extension icon
+		iconUrl: imageUrl || iconUrl, // Use product image as icon if available, fallback to extension icon
 		title: title,
-		message: itemData.title || '',
+		message: itemData.title || "",
 		priority: 2,
 		silent: false,
 	};
-	
+
 	if (Settings.get("general.debugServiceWorker")) {
 		console.log("[ServiceWorker] Creating notification", {
 			asin: itemData.asin,
 			type: notificationOptions.type,
 			iconUrl: notificationOptions.iconUrl,
-			hasProductImage: !!imageUrl
+			hasProductImage: !!imageUrl,
 		});
 	}
-	
+
 	chrome.notifications.create(notificationId, notificationOptions);
 }

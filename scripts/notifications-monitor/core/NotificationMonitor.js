@@ -875,24 +875,43 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		const tiles = this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
-		const actualVisibleCount = Array.from(tiles).filter((tile) => !tile.classList.contains("hidden")).length;
+		// Check actual visibility using computed style, not just the hidden class
+		const actualVisibleCount = Array.from(tiles).filter((tile) => {
+			const style = window.getComputedStyle(tile);
+			return style.display !== "none" && !tile.classList.contains("hidden");
+		}).length;
 		const reportedCount = this._visibilityStateManager.getCount();
 
 		if (actualVisibleCount !== reportedCount) {
 			console.error("[NotificationMonitor] Count mismatch detected!", {
-				 
 				actualVisibleCount,
 				reportedCount,
 				difference: actualVisibleCount - reportedCount,
 				timestamp: new Date().toISOString(),
 			});
 
+			// Debug: Log sample of tiles to understand visibility
+			const debugTabTitle = this._settings.get("general.debugTabTitle");
+			if (debugTabTitle) {
+				const sampleTiles = Array.from(tiles).slice(0, 5);
+				console.log("[NotificationMonitor] Sample tile visibility:", {
+					samples: sampleTiles.map((tile) => ({
+						asin: tile.dataset.asin,
+						hasHiddenClass: tile.classList.contains("hidden"),
+						inlineDisplay: tile.style.display,
+						computedDisplay: window.getComputedStyle(tile).display,
+						isVisible:
+							window.getComputedStyle(tile).display !== "none" && !tile.classList.contains("hidden"),
+					})),
+					totalTiles: tiles.length,
+				});
+			}
+
 			// Auto-fix the count
 			this._visibilityStateManager.recalculateCount(tiles);
 			console.log("[NotificationMonitor] Count recalculated to fix mismatch"); // eslint-disable-line no-console
 		} else {
 			console.log("[NotificationMonitor] Count verification passed:", {
-				 
 				count: actualVisibleCount,
 				timestamp: new Date().toISOString(),
 			});
@@ -1165,6 +1184,20 @@ class NotificationMonitor extends MonitorCore {
 		// Track tile creation for memory debugging
 		if (window.MEMORY_DEBUGGER) {
 			window.MEMORY_DEBUGGER.trackTile(tileDOM, asin);
+		}
+
+		// Debug logging for count tracking
+		const debugTabTitle = this._settings.get("general.debugTabTitle");
+		if (debugTabTitle) {
+			const isVisible = tileDOM.style.display !== "none" && !tileDOM.classList.contains("hidden");
+			console.log("[NotificationMonitor] New item added to DOM", {
+				asin,
+				isVisible,
+				display: tileDOM.style.display,
+				hasHiddenClass: tileDOM.classList.contains("hidden"),
+				currentVisibilityStateCount: this._visibilityStateManager?.getCount(),
+				timestamp: new Date().toISOString(),
+			});
 		}
 
 		// If the item was marked as unavailable before its DOM was ready, apply the unavailable visual state now
@@ -2161,6 +2194,7 @@ class NotificationMonitor extends MonitorCore {
 		// Type filter
 		const notificationTypeZeroETV = parseInt(node.dataset.typeZeroETV) === 1;
 		const notificationTypeHighlight = parseInt(node.dataset.typeHighlight) === 1;
+		const notificationTypeUnknownETV = parseInt(node.dataset.typeUnknownETV) === 1;
 
 		let passesTypeFilter = false;
 		if (this._filterType == -1) {
@@ -2173,6 +2207,8 @@ class NotificationMonitor extends MonitorCore {
 			passesTypeFilter = notificationTypeZeroETV;
 		} else if (this._filterType == TYPE_REGULAR) {
 			passesTypeFilter = !notificationTypeZeroETV && !notificationTypeHighlight;
+		} else if (this._filterType == TYPE_UNKNOWN_ETV) {
+			passesTypeFilter = notificationTypeUnknownETV;
 		}
 
 		if (!passesTypeFilter) {
@@ -2812,6 +2848,18 @@ class NotificationMonitor extends MonitorCore {
 		if (this._serverComMgr && typeof this._serverComMgr.destroy === "function") {
 			this._serverComMgr.destroy();
 			this._serverComMgr = null;
+		}
+
+		// Destroy AutoLoad to clear timers and event listeners
+		if (this._autoLoad && typeof this._autoLoad.destroy === "function") {
+			this._autoLoad.destroy();
+			this._autoLoad = null;
+		}
+
+		// Destroy Websocket to clear timers and connections
+		if (this._ws && typeof this._ws.destroyInstance === "function") {
+			this._ws.destroyInstance();
+			this._ws = null;
 		}
 
 		// Clear count verification interval

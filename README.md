@@ -45,3 +45,21 @@ yarn
 4. select the folder with the unzipped files in it
 
 **Note:** If testing locally with the default manifest.json file, your browser will likely give you errors, as the test manifest.json file is a mix of the settings for Chrome and Firefox. The extension should work fine despite these errors. Released versions use the proper manifest file for each browser.
+
+## Features
+
+VineHelper enhances the Amazon Vine experience with various features including keyword filtering, item management, and real-time notifications.
+
+## Known Limitations
+
+### Multi-Tab Item Count Synchronization
+
+When using VineHelper across multiple browser tabs:
+
+- Each tab maintains its own item count
+- Counts are not synchronized between tabs in real-time
+- This is by design to avoid complex state synchronization
+- The actual item processing is properly coordinated (no duplicates)
+- Refreshing a tab will update its count to the current state
+
+**Workaround:** If you need accurate counts, use a single tab or refresh the tab to get the latest count.

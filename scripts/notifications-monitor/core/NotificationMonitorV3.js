@@ -79,7 +79,7 @@ class NotificationMonitorV3 extends NotificationMonitor {
 	async initialize() {
 		// Wait for settings to load before proceeding
 		await this._settings.waitForLoad();
-		
+
 		const debugInit = this._settings.get("general.debugTabTitle");
 		if (debugInit) {
 			console.log("[NotificationMonitorV3] Starting initialization...");
@@ -185,21 +185,21 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		const initialCount = this._countVisibleItems();
 		if (this._visibilityStateManager && initialCount >= 0) {
 			this._visibilityStateManager.setCount(initialCount);
-			
+
 			// Debug initial count
 			if (this._settings.get("general.debugTabTitle")) {
 				console.log("[NotificationMonitorV3] Initial count set", {
 					initialCount,
 					totalTiles: this._gridContainer.querySelectorAll(".vvp-item-tile").length,
 					placeholders: this._gridContainer.querySelectorAll(".vh-placeholder-tile").length,
-					itemTiles: this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)").length
+					itemTiles: this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)").length,
 				});
 			}
 		}
 
 		// Initialize event-driven tab title updates
 		this._initializeTabTitleListener();
-		
+
 		// Set up periodic count verification to catch off-by-one errors
 		this._setupCountVerification();
 
@@ -219,10 +219,22 @@ class NotificationMonitorV3 extends NotificationMonitor {
 			parentContainer.insertBefore(header, mainContainer);
 		} catch (error) {
 			console.error("Failed to load notification monitor header:", error);
-			// Create a minimal header to prevent further errors
-			const fallbackHeader = document.createElement('div');
-			fallbackHeader.innerHTML = '<div id="date_loaded"></div><div id="date_most_recent_item"></div>';
-			parentContainer.insertBefore(fallbackHeader, mainContainer);
+			// Show error message to user
+			const errorDiv = document.createElement("div");
+			errorDiv.className = "vh-error-message";
+			errorDiv.style.cssText =
+				"background: #ff4444; color: white; padding: 10px; margin: 10px 0; border-radius: 5px;";
+			errorDiv.innerHTML = `
+				<strong>Error: Failed to load notification monitor header</strong><br>
+				Please try the following:<br>
+				1. Open VineHelper Settings (this reloads all templates)<br>
+				2. Reload this page<br>
+				If the problem persists, please report this issue.
+			`;
+			parentContainer.insertBefore(errorDiv, mainContainer);
+
+			// Throw error to prevent further initialization with broken state
+			throw new Error("Critical template loading failure - cannot continue initialization");
 		}
 
 		// Update UI filters after header is inserted

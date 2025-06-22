@@ -10,6 +10,7 @@ class AutoLoad {
 
 	#displayTimer = null;
 	#reloadTimer = null;
+	#channelMessageHandler = null;
 
 	constructor(monitor, ws) {
 		if (AutoLoad.#instance) {
@@ -35,10 +36,13 @@ class AutoLoad {
 	}
 
 	#createListener() {
-		//The SW is reporting that a tab was detected to be a dog page, delay the auto-load timer for 24 hours.
-		this._monitor._channel.addEventListener("message", (event) => {
+		// Store reference to handler for cleanup
+		this.#channelMessageHandler = (event) => {
 			this.processMessage(event.data);
-		});
+		};
+
+		//The SW is reporting that a tab was detected to be a dog page, delay the auto-load timer for 24 hours.
+		this._monitor._channel.addEventListener("message", this.#channelMessageHandler);
 	}
 
 	processMessage(message) {
@@ -272,6 +276,31 @@ class AutoLoad {
 				);
 			});
 		}
+	}
+
+	/**
+	 * Clean up resources to prevent memory leaks
+	 */
+	destroy() {
+		// Clear timers
+		if (this.#displayTimer) {
+			clearTimeout(this.#displayTimer);
+			this.#displayTimer = null;
+		}
+
+		if (this.#reloadTimer) {
+			clearTimeout(this.#reloadTimer);
+			this.#reloadTimer = null;
+		}
+
+		// Remove event listener
+		if (this.#channelMessageHandler && this._monitor._channel) {
+			this._monitor._channel.removeEventListener("message", this.#channelMessageHandler);
+			this.#channelMessageHandler = null;
+		}
+
+		// Clear static instance reference
+		AutoLoad.#instance = null;
 	}
 }
 

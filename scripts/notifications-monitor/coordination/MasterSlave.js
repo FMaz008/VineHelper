@@ -20,106 +20,181 @@ class MasterSlave {
 	#masterMonitorLastActivity = null;
 	#keepAliveInterval = null;
 	#monitorSet = new Set();
+	#messageHandler = null;
+	#beforeUnloadHandler = null;
 
 	constructor(monitor) {
 		if (MasterSlave.#instance) {
 			return MasterSlave.#instance;
 		}
-		MasterSlave.#instance = this;
-		this.#monitorId = crypto.randomUUID();
-		this._monitor = monitor;
-		this.#createEventListeners();
-		this.#checkIfMasterTab();
-		this.#keepAlive();
-	}
 
-	#createEventListeners() {
-		//Listen for messages from other tabs
-		this._monitor._channel.addEventListener("message", (event) => {
-			if (
-				event.data.type !== "ImAlive" &&
-				event.data.type !== "masterMonitorPing" &&
-				event.data.type !== "masterMonitorPong"
-			) {
-				console.log("MasterSlave: Received message:", event.data);
-			}
+		// Add BroadcastChannel availability check
+		if (typeof BroadcastChannel === "undefined") {
+			console.error("[MasterSlave] BroadcastChannel API not available. Multi-tab coordination disabled.");
+			this._monitor = monitor;
+			this.#monitorId = crypto.randomUUID();
+			// Set as master by default when BroadcastChannel unavailable
+			this._monitor.setMasterMonitor();
+			MasterSlave.#instance = this;
+			return;
+		}
 
-			// Handle broadcast messages (no destination required)
-			if (event.data.type === "masterMonitorPing") {
-				if (this._monitor._isMasterMonitor) {
-					this._monitor._channel.postMessage({ type: "masterMonitorPong" });
+		// Add try-catch for channel creation
+		try {
+			// Verify channel exists on monitor
+			if (!monitor || !monitor._channel) {
+				console.warn("[MasterSlave] Monitor channel not initialized. Setting as master in single-tab mode.");
+				this._monitor = monitor;
+				this.#monitorId = crypto.randomUUID();
+				// Set as master by default when channel unavailable
+				if (monitor && monitor.setMasterMonitor) {
+					monitor.setMasterMonitor();
 				}
+				MasterSlave.#instance = this;
 				return;
 			}
 
-			// Handle directed messages (require destination)
-			if (event.data.destination === this.#monitorId || event.data.destination === "*") {
-				//A tab has claimed to be the master
-				if (event.data.type === "ImTheMaster") {
-					this.#masterMonitorId = event.data.sender;
-					this.#masterMonitorLastActivity = Date.now();
-					if (this.#isMasterMonitor()) {
-						this._monitor.setMasterMonitor();
-						//Send a pong for the slave monitors to be marked as such
-						this._monitor._channel.postMessage({ type: "masterMonitorPong" });
+			MasterSlave.#instance = this;
+			this.#monitorId = crypto.randomUUID();
+			this._monitor = monitor;
+			this.#createEventListeners();
+			this.#checkIfMasterTab();
+			this.#keepAlive();
+		} catch (error) {
+			console.error("[MasterSlave] Initialization failed:", error);
+			// Fallback to single-tab mode
+			this._monitor = monitor;
+			this.#monitorId = crypto.randomUUID();
+			if (monitor && monitor.setMasterMonitor) {
+				monitor.setMasterMonitor();
+			}
+			MasterSlave.#instance = this;
+		}
+	}
 
-						//Update the status of the master monitor
-						this._monitor._serverComMgr.updateServicesStatus();
-					} else {
-						this._monitor.setSlaveMonitor();
-					}
+	#createEventListeners() {
+		try {
+			// Store reference to handler for cleanup
+			this.#messageHandler = (event) => {
+				if (
+					event.data.type !== "ImAlive" &&
+					event.data.type !== "masterMonitorPing" &&
+					event.data.type !== "masterMonitorPong"
+				) {
+					console.log("MasterSlave: Received message:", event.data);
 				}
 
-				//A tab is alive
-				if (event.data.type === "ImAlive") {
-					if (!this.#monitorSet.has(event.data.sender)) {
-						this.#monitorSet.add(event.data.sender);
+				// Handle broadcast messages (no destination required)
+				if (event.data.type === "masterMonitorPing") {
+					if (this._monitor._isMasterMonitor) {
+						try {
+							this._monitor._channel.postMessage({ type: "masterMonitorPong" });
+						} catch (error) {
+							console.warn("[MasterSlave] Failed to send pong:", error);
+						}
 					}
+					return;
+				}
 
-					if (this.#masterMonitorId === event.data.sender) {
+				// Handle directed messages (require destination)
+				if (event.data.destination === this.#monitorId || event.data.destination === "*") {
+					//A tab has claimed to be the master
+					if (event.data.type === "ImTheMaster") {
+						this.#masterMonitorId = event.data.sender;
 						this.#masterMonitorLastActivity = Date.now();
-					}
-				}
+						if (this.#isMasterMonitor()) {
+							this._monitor.setMasterMonitor();
+							//Send a pong for the slave monitors to be marked as such
+							try {
+								this._monitor._channel.postMessage({ type: "masterMonitorPong" });
+							} catch (error) {
+								console.warn("[MasterSlave] Failed to send master pong:", error);
+							}
 
-				//A tab is quitting
-				if (event.data.type === "IQuit") {
-					this.#monitorSet.delete(event.data.sender);
-				}
-
-				//A tab is asking if we are the master. This occurs whena new monitor is loaded.
-				if (event.data.type === "areYouTheMaster") {
-					//Add the sender to the monitorSet
-					this.#monitorSet.add(event.data.sender);
-
-					if (this.#isMasterMonitor()) {
-						this._monitor._channel.postMessage({
-							type: "ImTheMaster",
-							sender: this.#monitorId,
-							destination: event.data.sender,
-						});
+							//Update the status of the master monitor
+							if (this._monitor._serverComMgr && this._monitor._serverComMgr.updateServicesStatus) {
+								this._monitor._serverComMgr.updateServicesStatus();
+							}
+						} else {
+							this._monitor.setSlaveMonitor();
+						}
 					}
 
-					//Inform the sender that we exist.
+					//A tab is alive
+					if (event.data.type === "ImAlive") {
+						if (!this.#monitorSet.has(event.data.sender)) {
+							this.#monitorSet.add(event.data.sender);
+						}
+
+						if (this.#masterMonitorId === event.data.sender) {
+							this.#masterMonitorLastActivity = Date.now();
+						}
+					}
+
+					//A tab is quitting
+					if (event.data.type === "IQuit") {
+						this.#monitorSet.delete(event.data.sender);
+					}
+
+					//A tab is asking if we are the master. This occurs whena new monitor is loaded.
+					if (event.data.type === "areYouTheMaster") {
+						//Add the sender to the monitorSet
+						this.#monitorSet.add(event.data.sender);
+
+						if (this.#isMasterMonitor()) {
+							try {
+								this._monitor._channel.postMessage({
+									type: "ImTheMaster",
+									sender: this.#monitorId,
+									destination: event.data.sender,
+								});
+							} catch (error) {
+								console.warn("[MasterSlave] Failed to send ImTheMaster:", error);
+							}
+						}
+
+						//Inform the sender that we exist.
+						try {
+							this._monitor._channel.postMessage({
+								type: "ImAlive",
+								sender: this.#monitorId,
+								destination: event.data.sender,
+							});
+						} catch (error) {
+							console.warn("[MasterSlave] Failed to send ImAlive:", error);
+						}
+					}
+				}
+			};
+
+			//Listen for messages from other tabs
+			this._monitor._channel.addEventListener("message", this.#messageHandler);
+
+			// Store reference to beforeunload handler
+			this.#beforeUnloadHandler = () => {
+				try {
 					this._monitor._channel.postMessage({
-						type: "ImAlive",
+						type: "IQuit",
 						sender: this.#monitorId,
-						destination: event.data.sender,
+						destination: "*",
 					});
+				} catch (error) {
+					console.warn("[MasterSlave] Failed to send quit message:", error);
 				}
-			}
-		});
 
-		this._monitor._hookMgr.hookBind("beforeunload", () => {
-			this._monitor._channel.postMessage({
-				type: "IQuit",
-				sender: this.#monitorId,
-				destination: "*",
-			});
+				if (this.#isMasterMonitor()) {
+					this.#promoteNewMasterTab();
+				}
+			};
 
-			if (this.#isMasterMonitor()) {
-				this.#promoteNewMasterTab();
+			this._monitor._hookMgr.hookBind("beforeunload", this.#beforeUnloadHandler);
+		} catch (error) {
+			console.error("[MasterSlave] Failed to setup event listeners:", error);
+			// Ensure we still function as master in error cases
+			if (this._monitor && this._monitor.setMasterMonitor) {
+				this._monitor.setMasterMonitor();
 			}
-		});
+		}
 	}
 
 	#keepAlive() {
@@ -130,7 +205,13 @@ class MasterSlave {
 
 		//Send a message that we are still alive every second
 		this.#keepAliveInterval = setInterval(() => {
-			this._monitor._channel.postMessage({ type: "ImAlive", destination: "*", sender: this.#monitorId });
+			try {
+				if (this._monitor && this._monitor._channel) {
+					this._monitor._channel.postMessage({ type: "ImAlive", destination: "*", sender: this.#monitorId });
+				}
+			} catch (error) {
+				console.warn("[MasterSlave] Failed to send keep-alive:", error);
+			}
 
 			//Update the master monitor's last activity time as we won't receive our own ImAlive messages.
 			if (this.#isMasterMonitor()) {
@@ -152,7 +233,18 @@ class MasterSlave {
 		this._monitor.setMasterMonitor();
 
 		//Query other tabs to see if there is already a master
-		this._monitor._channel.postMessage({ type: "areYouTheMaster", destination: "*", sender: this.#monitorId });
+		try {
+			if (this._monitor && this._monitor._channel) {
+				this._monitor._channel.postMessage({
+					type: "areYouTheMaster",
+					destination: "*",
+					sender: this.#monitorId,
+				});
+			}
+		} catch (error) {
+			console.warn("[MasterSlave] Failed to query for master:", error);
+			// Continue as master if we can't communicate
+		}
 	}
 
 	#promoteNewMasterTab() {
@@ -164,11 +256,17 @@ class MasterSlave {
 				this.#masterMonitorId = monitorId;
 
 				//Designate a new master monitor
-				this._monitor._channel.postMessage({
-					type: "ImTheMaster",
-					sender: monitorId,
-					destination: "*",
-				});
+				try {
+					if (this._monitor && this._monitor._channel) {
+						this._monitor._channel.postMessage({
+							type: "ImTheMaster",
+							sender: monitorId,
+							destination: "*",
+						});
+					}
+				} catch (error) {
+					console.warn("[MasterSlave] Failed to promote new master:", error);
+				}
 
 				this._monitor.setSlaveMonitor();
 			}
@@ -181,11 +279,17 @@ class MasterSlave {
 		this.#masterMonitorId = this.#monitorId;
 		this.#masterMonitorLastActivity = Date.now();
 
-		this._monitor._channel.postMessage({
-			type: "ImTheMaster",
-			sender: this.#monitorId,
-			destination: "*",
-		});
+		try {
+			if (this._monitor && this._monitor._channel) {
+				this._monitor._channel.postMessage({
+					type: "ImTheMaster",
+					sender: this.#monitorId,
+					destination: "*",
+				});
+			}
+		} catch (error) {
+			console.warn("[MasterSlave] Failed to announce self-promotion:", error);
+		}
 
 		this._monitor.setMasterMonitor();
 	}
@@ -201,7 +305,30 @@ class MasterSlave {
 			this.#keepAliveInterval = null;
 		}
 
+		// Remove event listeners
+		if (this.#messageHandler && this._monitor && this._monitor._channel) {
+			this._monitor._channel.removeEventListener("message", this.#messageHandler);
+			this.#messageHandler = null;
+		}
+
+		// Unbind beforeunload if possible
+		if (this.#beforeUnloadHandler && this._monitor && this._monitor._hookMgr && this._monitor._hookMgr.unbind) {
+			this._monitor._hookMgr.unbind("beforeunload", this.#beforeUnloadHandler);
+			this.#beforeUnloadHandler = null;
+		}
+
+		// Clear monitor set
+		this.#monitorSet.clear();
+
 		// Clear static instance reference
+		MasterSlave.#instance = null;
+	}
+
+	// Static method to reset singleton for testing
+	static resetInstance() {
+		if (MasterSlave.#instance) {
+			MasterSlave.#instance.destroy();
+		}
 		MasterSlave.#instance = null;
 	}
 }

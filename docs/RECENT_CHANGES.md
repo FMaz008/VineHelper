@@ -1,5 +1,158 @@
 # Recent Changes and Fixes
 
+## Session: June 22, 2025
+
+### Unknown ETV Filter Fix ✅
+
+**Problem**: The "Unknown ETV only" filter wasn't showing existing items with unknown ETV values, only newly added ones.
+
+**Root Cause**: The `#calculateNodeVisibility` method in NotificationMonitor.js was missing the check for `TYPE_UNKNOWN_ETV`. This method is called when filters are applied to existing items during filter changes.
+
+**Solution**:
+
+- Added `notificationTypeUnknownETV` check to the `#calculateNodeVisibility` method
+- Added the missing case for `TYPE_UNKNOWN_ETV` in the filter type check
+
+**Key Code**:
+
+```javascript
+// In NotificationMonitor.js #calculateNodeVisibility method
+const notificationTypeUnknownETV = parseInt(node.dataset.typeUnknownETV) === 1;
+
+// Added missing case
+} else if (this._filterType == TYPE_UNKNOWN_ETV) {
+    passesTypeFilter = notificationTypeUnknownETV;
+}
+```
+
+### Keyword Matching System Review ✅
+
+**Findings**:
+
+- The KeywordMatch.js singleton pattern with fixed storage is well-implemented
+- SharedKeywordMatcher.js is now just a thin wrapper for backward compatibility
+- The "without" condition logic is working correctly
+- The cache key generation issue mentioned in the summary was already fixed
+
+**Recommendations**:
+
+- Consider removing redundant fallback paths in keyword compilation
+- Components could migrate directly to KeywordMatcher singleton instead of using SharedKeywordMatcher
+- The current implementation is functional and performant
+
+### Keyword Matching and Count Verification Fixes
+
+#### 1. Count Mismatch in Verification ✅
+
+**Problem**: Count verification was showing mismatches (e.g., actualVisibleCount: 2613, reportedCount: 84) because hidden items were being counted as visible.
+
+**Root Cause**: The `_verifyCount` method was only checking for the `hidden` class but not verifying the actual CSS `display` property.
+
+**Solution**:
+
+- Updated visibility check to use `window.getComputedStyle(tile).display !== "none"`
+- This properly excludes items hidden by filters or other CSS rules
+
+**Key Code**:
+
+```javascript
+// In NotificationMonitor.js _verifyCount method
+const isVisible = window.getComputedStyle(tile).display !== "none";
+```
+
+#### 2. Keyword "undefined" Display ✅
+
+**Problem**: When no keyword match was found, the UI was displaying "undefined" for both highlight and blur keywords.
+
+**Root Cause**: In `UnifiedTransformHandler.js`, undefined values were being assigned directly to `KW` and `BlurKW` properties.
+
+**Solution**:
+
+- Added proper handling to set empty strings when no match is found
+- Applied fix to both highlight and blur keyword handling
+
+**Key Code**:
+
+```javascript
+// Highlight keyword fix
+data.item.data.KW =
+	highlightMatch !== undefined ? (typeof highlightMatch === "object" ? highlightMatch.contains : highlightMatch) : "";
+
+// Blur keyword fix
+data.item.data.BlurKW = blurMatch !== undefined ? (typeof blurMatch === "object" ? blurMatch.contains : blurMatch) : "";
+```
+
+#### 3. Enhanced Debug Logging ✅
+
+**Added comprehensive debug logging for keyword matching**:
+
+- Track which keyword index matches in `KeywordMatch.js`
+- Log "but without" exclusions with detailed condition checking
+- Log ETV exclusions
+- Track visibility state changes in `VisibilityStateManager.js`
+- Log new items being added in `NotificationMonitor.js`
+- Enhanced "but without" condition logging to diagnose exclusion issues
+
+**Files Modified**:
+
+- [`KeywordMatch.js`](../scripts/core/utils/KeywordMatch.js:1)
+- [`UnifiedTransformHandler.js`](../scripts/notifications-monitor/stream/UnifiedTransformHandler.js:1)
+- [`VisibilityStateManager.js`](../scripts/notifications-monitor/services/VisibilityStateManager.js:1)
+- [`NotificationMonitor.js`](../scripts/notifications-monitor/core/NotificationMonitor.js:1)
+
+#### 4. Debug Settings Tab ✅
+
+**Problem**: Debug settings were cluttering the General tab.
+
+**Solution**:
+
+- Created new Debug tab in settings (`settings_debug.tpl.html`)
+- Moved all debugging options from General tab to dedicated Debug tab
+- Updated settings navigation to include Debug tab before About tab
+
+**Files Modified**:
+
+- [`settings_debug.tpl.html`](../page/settings_debug.tpl.html:1) (created)
+- [`settings_general.tpl.html`](../page/settings_general.tpl.html:1)
+- [`settings_main.tpl.html`](../page/settings_main.tpl.html:1)
+- [`settings.js`](../page/settings.js:1)
+
+#### 5. Error Alert Scroll Prevention ✅
+
+**Problem**: When order errors appear (e.g., "There was a problem creating your request"), the page would automatically scroll to the top.
+
+**Solution**:
+
+- Modified `ErrorAlertManager` to capture and restore scroll position
+- Added scroll position tracking in mutation observer
+- Prevents unwanted page jumps when error alerts are displayed
+
+**Key Code**:
+
+```javascript
+// Store current scroll position to prevent jump
+const currentScrollY = window.scrollY;
+
+// ... add close button ...
+
+// Restore scroll position if it changed
+if (window.scrollY !== currentScrollY) {
+	window.scrollTo({
+		top: currentScrollY,
+		behavior: "instant",
+	});
+}
+```
+
+**Files Modified**:
+
+- [`ErrorAlertManager.js`](../scripts/notifications-monitor/services/ErrorAlertManager.js:1)
+
+### Documentation
+
+- Created [`KEYWORD_MATCHING_FIXES.md`](../docs/KEYWORD_MATCHING_FIXES.md:1) to document all keyword matching fixes
+- Updated documentation to reflect new Debug tab and scroll prevention fix
+
 ## Session: June 21, 2025
 
 ### Issues Fixed

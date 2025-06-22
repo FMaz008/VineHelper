@@ -443,7 +443,7 @@ class Tile {
 		const blurKeywords = Settings.get("general.blurKeywords");
 		if (Settings.isPremiumUser() && blurKeywords?.length > 0) {
 			// SharedKeywordMatcher handles compilation internally
-			let match = sharedKeywordMatcher.match(blurKeywords, this.getTitle(), null, null, 'blur', Settings);
+			let match = sharedKeywordMatcher.match(blurKeywords, this.getTitle(), null, null, "blur", Settings);
 			if (match) {
 				logger.add("TILE: The item match the keyword '" + match + "', blur it");
 				const img = this.#tileDOM.querySelector("img");
@@ -455,7 +455,7 @@ class Tile {
 					}
 				}
 				this.#tileDOM.querySelector(".vvp-item-product-title-container")?.classList.add("dynamic-blur");
-				const blurMatchString = typeof match === 'object' ? (match.contains || match.word || '') : match;
+				const blurMatchString = typeof match === "object" ? match.contains || match.word || "" : match;
 				this.#tileDOM.dataset.blurredKeyword = escapeHTML(blurMatchString);
 			}
 		}
@@ -471,11 +471,10 @@ class Tile {
 	}
 
 	colorizeHighlight() {
-		const zeroETV = this.#tileDOM.dataset.zeroETV === "true" && Settings.get("general.zeroETVHighlight.active");
-		const highlight =
-			this.#tileDOM.dataset.keywordHighlight === "true" && Settings.get("general.highlightColor.active");
+		const zeroETV = this.#tileDOM.dataset.typeZeroETV === "1" && Settings.get("general.zeroETVHighlight.active");
+		const highlight = this.#tileDOM.dataset.typeHighlight === "1" && Settings.get("general.highlightColor.active");
 		const unknownETV =
-			this.#tileDOM.dataset.unknownETV === "true" && Settings.get("general.unknownETVHighlight.active");
+			this.#tileDOM.dataset.typeUnknownETV === "1" && Settings.get("general.unknownETVHighlight.active");
 
 		this.#tileDOM.style.backgroundColor = "unset";
 		this.#tileDOM.style.background = "unset";

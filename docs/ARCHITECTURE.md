@@ -92,6 +92,32 @@ These systems share some services (Settings, Environment) but have separate rend
 
 The Notification Monitor is a real-time item tracking system that displays Amazon Vine items as they become available. It uses a master/slave architecture to coordinate between multiple browser tabs and efficiently manage resources.
 
+### Multi-Tab Coordination
+
+#### Master-Slave Architecture
+
+The notification monitor uses a master-slave pattern for multi-tab coordination:
+
+- One tab acts as the "master" and performs all server communication
+- Other tabs act as "slaves" and display data received from the master
+- Coordination happens via BroadcastChannel API
+
+#### Design Trade-offs
+
+1. **Item Count Synchronization**: Each tab maintains its own count to avoid complex state sync. This means counts may differ between tabs, but actual item processing is properly coordinated.
+2. **Single Point of Failure**: If the master tab crashes, a slave automatically promotes itself to master within 2 seconds.
+3. **Browser Compatibility**: Falls back to single-tab mode if BroadcastChannel is unavailable.
+
+### Known Limitations
+
+#### Multi-Tab Item Count Synchronization
+
+When using VineHelper across multiple browser tabs, item counts are not synchronized between tabs. This is a deliberate design decision to avoid the complexity of real-time state synchronization across tabs. While the actual item processing is properly coordinated (preventing duplicates), each tab maintains its own view of the item count.
+
+**Impact**: Users may see different counts in different tabs, but this does not affect the core functionality of item processing.
+
+**Future Improvement**: A future enhancement could implement count synchronization using the existing BroadcastChannel infrastructure, but this would require careful handling of race conditions and state conflicts.
+
 ### Architecture Components
 
 #### 1. Master/Slave Coordination
