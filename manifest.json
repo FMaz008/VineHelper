@@ -163,6 +163,24 @@
 				"*://*.amazon.sg/reviews/edit-review/edit*"
 			],
 			"run_at": "document_end"
+		},
+		{
+			"js": ["scripts/checkoutMonitoringLoader.js"],
+			"matches": [
+				"*://*.amazon.ca/checkout/p/*",
+				"*://*.amazon.com/checkout/p/*",
+				"*://*.amazon.de/checkout/p/*",
+				"*://*.amazon.fr/checkout/p/*",
+				"*://*.amazon.co.uk/checkout/p/*",
+				"*://*.amazon.co.jp/checkout/p/*",
+				"*://*.amazon.com.au/checkout/p/*",
+				"*://*.amazon.com.br/checkout/p/*",
+				"*://*.amazon.com.mx/checkout/p/*",
+				"*://*.amazon.sg/checkout/p/*",
+				"*://*.amazon.it/checkout/p/*",
+				"*://*.amazon.es/checkout/p/*"
+			],
+			"run_at": "document_end"
 		}
 	]
 }
