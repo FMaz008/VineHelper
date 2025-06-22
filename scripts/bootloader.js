@@ -1244,6 +1244,7 @@ async function serverProductsResponse(data) {
 //Most requests comes from the inj.js file, which is in a different scope/context.
 var arrVariations = null;
 var modalASIN = null;
+var modalParentASIN = null;
 window.addEventListener("message", async function (event) {
 	//Do not run the extension if ultraviner is running
 	if (ultraviner) {
@@ -1260,6 +1261,7 @@ window.addEventListener("message", async function (event) {
 		promotionId = event.data.promotionId;
 		checkoutAsin = event.data.asin;
 		modalASIN = event.data.asin;
+		modalParentASIN = event.data.parent_asin;
 		// Try to find and update the form for 3 seconds
 		let attempts = 0;
 		const maxAttempts = 60; // 3 seconds at 50ms intervals
@@ -1273,7 +1275,8 @@ window.addEventListener("message", async function (event) {
 
 				const requestProductBtnListener = async (e) => {
 					await Settings.set("checkout.currentASIN", modalASIN);
-					checkoutBuyNowForm.removeEventListener("submit", requestProductBtnListener);
+					await Settings.set("checkout.currentParentASIN", modalParentASIN);
+					checkoutBuyNowForm.removeEventListener("click", requestProductBtnListener);
 				};
 				requestProductBtn.addEventListener("click", requestProductBtnListener);
 

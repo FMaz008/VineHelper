@@ -4,7 +4,7 @@
  * - When we getto be able to confirm when it has been ordered.
  * - Update VH server when a product is ordered successfully or get a failure error.
  */
-
+console.log("Checkout monitoring loaded.");
 import { SettingsMgr } from "/scripts/core/services/SettingsMgrCompat.js";
 var Settings = new SettingsMgr();
 
@@ -19,28 +19,34 @@ var env = new Environment();
 //If the productId was registered, the ASIN will be available for the process.
 
 async function init() {
+	//Auto decline prime membership is prompted.
+	const skipPrimeLink = document.querySelector("#prime-decline-button");
+	if (skipPrimeLink) {
+		skipPrimeLink.click();
+		return;
+	}
+
 	await Settings.waitForLoad();
-	let currentASIN = await Settings.get("checkout.currentASIN");
-	let arrCurrentCheckouts = await Settings.get("checkout.arrCurrentCheckouts");
-	//await Settings.set("checkout.arrCurrentCheckouts", [
-	//	{ asin: "B0F6NDJXWZ", expires: 1750619417031, productId: "703-6232317-0987410" },
-	//]);
+	let currentASIN = await Settings.get("checkout.currentASIN", false);
+	let currentParentASIN = await Settings.get("checkout.currentParentASIN", false);
+	let arrCurrentCheckouts = await Settings.get("checkout.arrCurrentCheckouts", false);
+
 	if (!arrCurrentCheckouts) {
 		arrCurrentCheckouts = [];
 	}
 
 	//If the current checkout does not exist, create it.
-	console.log("currentASIN: " + currentASIN);
-	console.log(await getCurrentCheckout(currentASIN));
 	if (!(await getCurrentCheckout(currentASIN)) && currentASIN) {
 		//Add the current checkout to the array
 		arrCurrentCheckouts.push({
 			asin: currentASIN,
+			parent_asin: currentParentASIN,
 			productId: getProductId(),
 			expires: Date.now() + 1000 * 60 * 60 * 1, // 1 hour
 		});
 		await Settings.set("checkout.arrCurrentCheckouts", arrCurrentCheckouts);
 		await Settings.set("checkout.currentASIN", null);
+		await Settings.set("checkout.currentParentASIN", null);
 	}
 
 	//Garbage collect expired checkouts
@@ -53,21 +59,7 @@ async function init() {
 
 	//###########################
 	//Thank you page
-
 	checkForSuccess();
-}
-
-async function checkForError() {
-	const currentASIN = await getCurrentASIN();
-	if (currentASIN) {
-		console.log("Item ASIN: " + currentASIN);
-		console.log("Country: " + getCountry());
-		if (checkForVineOrderCannotBeProcessedError()) {
-			console.log("vine error stock not available");
-			console.log("Assume ITEM_NOT_IN_ENROLLMENT error");
-			contactVHServer(false);
-		}
-	}
 }
 init();
 
@@ -76,17 +68,12 @@ async function getCurrentCheckout(currentASIN) {
 	return arrCurrentCheckouts.find((checkout) => checkout.asin === currentASIN);
 }
 
-async function getCurrentASIN() {
+/**
+ * @returns {Object} {asin: string, parent_asin: string, productId: string, expires: number}
+ */
+async function getCurrentInfo() {
 	const arrCurrentCheckouts = await Settings.get("checkout.arrCurrentCheckouts");
-	return arrCurrentCheckouts.find((checkout) => getProductId() === checkout.productId)?.asin;
-}
-
-console.log("Checkout monitoring loaded.");
-
-//Auto decline prime membership is prompted.
-const skipPrimeLink = document.querySelector("#prime-decline-button");
-if (skipPrimeLink) {
-	skipPrimeLink.click();
+	return arrCurrentCheckouts.find((checkout) => getProductId() === checkout.productId);
 }
 
 function getProductId() {
@@ -106,38 +93,6 @@ function getCountry() {
 	const url = new URL(window.location.href);
 	const domain = url.hostname;
 	return domain.split(".").pop();
-}
-
-async function contactVHServer(status) {
-	const asin = await getCurrentASIN();
-	if (!asin) {
-		console.log("No ASIN found, not contacting VH server");
-		return;
-	}
-
-	const content = {
-		api_version: 5,
-		app_version: env.data.appVersion,
-		action: "record_order",
-		country: getCountry(),
-		uuid: await Settings.get("general.uuid", false),
-		fid: await Settings.get("general.fingerprint.id", false),
-		asin: asin,
-		parent_asin: null, //Todo: add parent_asin or deal with it server side.
-		order_status: status ? "success" : "failed",
-		order_error: status ? null : "ITEM_NOT_IN_ENROLLMENT",
-	};
-
-	const s = await cryptoKeys.signData(content);
-	content.s = s;
-	content.pk = await cryptoKeys.getExportedPublicKey();
-
-	//Form the full URL
-	await fetch(env.getAPIUrl(), {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify(content),
-	});
 }
 
 //###########################
@@ -178,47 +133,21 @@ function getQuantity() {
 	return parseInt(quantity.textContent);
 }
 
-/* unreliable, only on initial page, looks like a debug value */
-function getItemASIN() {
-	const itemASIN = document.querySelector("span[data-testid='Item_asin_0_0_0']");
-	if (!itemASIN) {
-		return false;
-	}
-	return itemASIN.textContent;
-}
-
 //###########################
-//Order placed page (this page seems to get redirected and never trigger this part of the script)
+//Error(s) on the page
 
-if (isPageOrderPlace()) {
-	console.log("Order placed page found");
-	console.log(document.body.innerHTML);
-}
-
-function isPageOrderPlace() {
-	//https://www.amazon.ca/checkout/p/p-733-7492584-9889813/spc/place-order?pipelineType=Chewbacca&referrer=spc&ref_=chk_spc_chw_placeOrder
-	//If the URL match that of an order placed
-	const url = new URL(window.location.href);
-	const pathname = url.pathname;
-	return pathname.includes("/place-order");
-}
-
-//###########################
-//Order placed but error bring back the confirmation page with continue buttons and a vine error
-// redundant.
-
-if (isErrorPage()) {
-	//redundant
-	console.log("Error page found"); //redundant
-	if (checkForVineOrderCannotBeProcessedError()) {
-		console.log("Vine error found"); //redundant
+async function checkForError() {
+	const currentInfo = await getCurrentInfo();
+	if (currentInfo) {
+		console.log("Item ASIN: " + currentInfo.asin);
+		console.log("Parent ASIN: " + currentInfo.parent_asin);
+		console.log("Country: " + getCountry());
+		if (checkForVineOrderCannotBeProcessedError()) {
+			console.log("vine error stock not available");
+			console.log("Assume ITEM_NOT_IN_ENROLLMENT error");
+			contactVHServer(false);
+		}
 	}
-}
-
-function isErrorPage() {
-	//https://www.amazon.ca/checkout/p/p-733-6161774-7652204/itemselect?pipelineType=Chewbacca&referrer=itemselect
-	const url = window.location.href;
-	return url.includes("/itemselect?pipelineType=Chewbacca&referrer=itemselect");
 }
 
 //###########################
@@ -228,9 +157,10 @@ async function checkForSuccess() {
 	if (isPageThankYou() && isOrderIdIssued()) {
 		console.log("Thank you page, order sucessful: " + isOrderIdIssued());
 
-		const currentASIN = await getCurrentASIN();
-		if (currentASIN) {
-			console.log("Current ASIN: " + currentASIN);
+		const currentInfo = await getCurrentInfo();
+		if (currentInfo) {
+			console.log("Current ASIN: " + currentInfo.asin);
+			console.log("Current parent ASIN: " + currentInfo.parent_asin);
 			console.log("Current country: " + getCountry());
 			contactVHServer(true);
 		} else {
@@ -253,4 +183,39 @@ function isPageThankYou() {
 function isOrderIdIssued() {
 	const orderId = new URL(window.location.href).searchParams.get("purchaseId");
 	return !!orderId;
+}
+
+//###########################
+//VH server
+
+async function contactVHServer(status) {
+	const currentInfo = await getCurrentInfo();
+	if (!currentInfo) {
+		console.log("No ASIN found, not contacting VH server");
+		return;
+	}
+
+	const content = {
+		api_version: 5,
+		app_version: env.data.appVersion,
+		action: "record_order",
+		country: getCountry(),
+		uuid: await Settings.get("general.uuid", false),
+		fid: await Settings.get("general.fingerprint.id", false),
+		asin: currentInfo.asin,
+		parent_asin: currentInfo.parent_asin,
+		order_status: status ? "success" : "failed",
+		order_error: status ? null : "ITEM_NOT_IN_ENROLLMENT",
+	};
+
+	const s = await cryptoKeys.signData(content);
+	content.s = s;
+	content.pk = await cryptoKeys.getExportedPublicKey();
+
+	//Form the full URL
+	await fetch(env.getAPIUrl(), {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(content),
+	});
 }

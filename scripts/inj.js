@@ -10,9 +10,15 @@ const countryCode = scriptTag.getAttribute("data-country-code");
 window.fetch = async (...args) => {
 	let response = await origFetch(...args);
 	let lastParent = extHelper_LastParentVariant;
+
 	let regex = null;
 
 	const url = args[0] || "";
+
+	if (lastParent != null) {
+		regex = /^.+?#(.+?)#.+$/;
+		lastParent = extHelper_LastParentVariant.recommendationId.match(regex)[1];
+	}
 
 	//Voice Orders API
 	if (url.startsWith("api/voiceOrders")) {
@@ -23,11 +29,6 @@ window.fetch = async (...args) => {
 			extHelper_responseData = await response.clone().json();
 		} catch (e) {
 			console.error(e);
-		}
-
-		if (lastParent != null) {
-			regex = /^.+?#(.+?)#.+$/;
-			lastParent = extHelper_LastParentVariant.recommendationId.match(regex)[1];
 		}
 
 		let data = {};
@@ -184,6 +185,7 @@ window.fetch = async (...args) => {
 					type: "promotionId",
 					promotionId: result.promotionId,
 					asin: result.asin,
+					parent_asin: lastParent,
 				},
 				"/" //message should be sent to the same origin as the current document.
 			);
