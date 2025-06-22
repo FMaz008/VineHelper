@@ -1243,6 +1243,7 @@ async function serverProductsResponse(data) {
 //Messages sent via window.postMessage({}, "*");
 //Most requests comes from the inj.js file, which is in a different scope/context.
 var arrVariations = null;
+var modalASIN = null;
 window.addEventListener("message", async function (event) {
 	//Do not run the extension if ultraviner is running
 	if (ultraviner) {
@@ -1258,14 +1259,24 @@ window.addEventListener("message", async function (event) {
 	if (event.data.type == "promotionId") {
 		promotionId = event.data.promotionId;
 		checkoutAsin = event.data.asin;
-
+		modalASIN = event.data.asin;
 		// Try to find and update the form for 3 seconds
 		let attempts = 0;
 		const maxAttempts = 60; // 3 seconds at 50ms intervals
 		const interval = setInterval(() => {
 			const checkoutBuyNowForm = document.querySelector("#vvp-checkout-buy-now");
-			if (checkoutBuyNowForm) {
+			const requestProductBtn = document.querySelector(
+				"#vvp-product-details-modal--request-btn input[type='submit']"
+			);
+			if (checkoutBuyNowForm && requestProductBtn) {
 				checkoutBuyNowForm.target = "_blank";
+
+				const requestProductBtnListener = async (e) => {
+					await Settings.set("checkout.currentASIN", modalASIN);
+					checkoutBuyNowForm.removeEventListener("submit", requestProductBtnListener);
+				};
+				requestProductBtn.addEventListener("click", requestProductBtnListener);
+
 				clearInterval(interval);
 			} else if (++attempts >= maxAttempts) {
 				clearInterval(interval);
@@ -1276,15 +1287,15 @@ window.addEventListener("message", async function (event) {
 
 	//Amazon checkout process (only use if the notification monitor is loaded)
 	//This is an alternate backup method to flagging the form as target=_blank
+	/*
 	if (
 		event.data.type == "offerListingId" &&
 		env.isAmazonCheckoutEnabled() &&
 		notificationMonitor !== null &&
 		!Settings.get("general.forceTango")
 	) {
-		const offerListingId = event.data.offerListingId;
-
 		//Open a new tab to the form generating url
+		const offerListingId = event.data.offerListingId;
 		const params = {
 			asin: checkoutAsin,
 			promotionId: promotionId,
@@ -1297,6 +1308,7 @@ window.addEventListener("message", async function (event) {
 			"_blank"
 		);
 	}
+	*/
 
 	//Sometime, mostly for debugging purpose, the Service worker can try to display notifications.
 	if (event.data.type == "rawNotification") {
