@@ -5,7 +5,9 @@ This directory contains architectural and technical documentation for the VineHe
 ## Core Documentation
 
 ### [ARCHITECTURE.md](./ARCHITECTURE.md)
+
 Comprehensive overview of the VineHelper architecture, including:
+
 - Current architecture analysis
 - System boundaries and operational modes
 - Notification Monitor architecture details
@@ -16,15 +18,28 @@ Comprehensive overview of the VineHelper architecture, including:
 - Future improvements roadmap
 
 ### [RECENT_CHANGES.md](./RECENT_CHANGES.md)
+
 Summary of recent fixes and changes:
+
 - Off-by-one count issue fix
 - Chrome OS notification fixes (images and click handling)
 - Debug settings persistence
 - Console logging controls
 - Testing recommendations
 
+### [DEBUG_SETTINGS_USAGE.md](./DEBUG_SETTINGS_USAGE.md)
+
+Comprehensive guide to all debug settings:
+
+- Complete list of debug settings and their purposes
+- Usage examples and code snippets
+- Settings configuration and initialization
+- Periodic count verification feature
+
 ### [MEMORY_MANAGEMENT.md](./MEMORY_MANAGEMENT.md)
+
 Comprehensive memory management documentation:
+
 - Fixed memory issues and their solutions
 - Current best practices and patterns
 - Memory debugging tools and usage
@@ -32,14 +47,18 @@ Comprehensive memory management documentation:
 - Prevention strategies
 
 ### [DEPENDENCY_INJECTION_MIGRATION.md](./DEPENDENCY_INJECTION_MIGRATION.md)
+
 Step-by-step guide for migrating from singleton pattern to dependency injection:
+
 - Migration strategies (quick, full, custom)
 - Code examples and patterns
 - Testing approaches
 - Troubleshooting guide
 
 ### [FUTURE_IMPROVEMENTS.md](./FUTURE_IMPROVEMENTS.md)
+
 Tracking of planned improvements and optimizations:
+
 - Performance optimizations
 - Architectural improvements
 - Code quality improvements
@@ -58,6 +77,7 @@ Older documentation files have been moved to the `archived/` directory. These co
 ## Documentation Standards
 
 When adding new documentation:
+
 1. Use clear, descriptive filenames
 2. Include a table of contents for longer documents
 3. Provide code examples where applicable
@@ -67,6 +87,7 @@ When adding new documentation:
 ## Contributing
 
 When making architectural changes or adding new patterns:
+
 1. Update the relevant documentation
 2. Add examples to migration guides
 3. Update the implementation status in ARCHITECTURE.md

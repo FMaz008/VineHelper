@@ -9,6 +9,7 @@ VineHelper is a browser extension that enhances the Amazon Vine experience. The 
 ### Core Components
 
 1. **Bootloader System** (`scripts/bootloader.js`)
+
     - Initializes all singleton instances
     - Sets up the environment and dependencies
     - Creates grid instances and manages tabs
@@ -20,6 +21,7 @@ VineHelper is a browser extension that enhances the Amazon Vine experience. The 
         - Direct DOM manipulation of existing Amazon elements
 
 2. **Notifications Monitor** (`scripts/notification_monitor/`)
+
     - Complex subsystem with multiple components
     - Master/Slave architecture for multi-tab coordination
     - Stream-based processing for new items
@@ -31,8 +33,9 @@ VineHelper is a browser extension that enhances the Amazon Vine experience. The 
         - Complete UI replacement, not enhancement
 
 3. **Settings Management** (`scripts/SettingsMgr.js`)
-    - Singleton pattern with Chrome storage integration
-    - Dependency injection migration in progress
+
+    - Dependency injection pattern with StorageAdapter
+    - Migration from singleton pattern in progress
     - Array caching for stable references
     - Keyword pre-compilation support
 
@@ -49,6 +52,7 @@ VineHelper is a browser extension that enhances the Amazon Vine experience. The 
 **Important Distinction**: VineHelper operates in two distinct modes:
 
 1. **Page Enhancement Mode** (Bootloader):
+
     - Runs on Amazon Vine pages (RFY, AFA, AI)
     - Enhances existing Amazon UI elements
     - Adds toolbars with order tracking, pinning, hiding
@@ -65,11 +69,13 @@ These systems share some services (Settings, Environment) but have separate rend
 ### Architectural Patterns
 
 1. **Singleton Pattern (Overused)**
+
     - Almost every major component is a singleton
     - Makes testing difficult
     - Creates tight coupling
 
 2. **Event-Driven Architecture**
+
     - Hook system for extensibility
     - Browser message passing
     - DOM event handling
@@ -83,11 +89,13 @@ These systems share some services (Settings, Environment) but have separate rend
 ## Notification Monitor Architecture
 
 ### Overview
+
 The Notification Monitor is a real-time item tracking system that displays Amazon Vine items as they become available. It uses a master/slave architecture to coordinate between multiple browser tabs and efficiently manage resources.
 
 ### Architecture Components
 
 #### 1. Master/Slave Coordination
+
 - **MasterSlave.js**: Manages which monitor instance acts as master
 - Only the master fetches items from the server
 - Slave monitors receive items via BroadcastChannel
@@ -96,18 +104,21 @@ The Notification Monitor is a real-time item tracking system that displays Amazo
 #### 2. Core Components
 
 **MonitorCore.js**
+
 - Base class for all monitor types
 - Initializes core services (settings, hooks, etc.)
 - Manages master/slave state transitions
 - Creates WebSocket and AutoLoad instances for master
 
 **NotificationMonitor.js**
+
 - Main monitor implementation
 - Handles item display and filtering
 - Manages UI interactions
 - Processes incoming items
 
 **NotificationMonitorV3.js**
+
 - Enhanced version with dependency injection
 - Uses DIContainer for service management
 - Implements advanced features like NoShiftGrid
@@ -130,12 +141,14 @@ Master Monitor (V3)
 
 **VisibilityStateManager**
 Centralized service managing both:
+
 - **Element Visibility**: Tracks which items are visible/hidden
 - **Count Management**: Maintains accurate count of visible items
 - **Performance**: WeakMap caching, batch operations
 - **Events**: Emits visibility changes for UI updates
 
 Key features:
+
 - `setVisibility()`: Update element visibility with automatic count tracking
 - `isVisible()`: Check visibility with caching
 - `batchSetVisibility()`: Batch operations for performance
@@ -146,7 +159,7 @@ Key features:
 1. **Batch Operations**: Reduces DOM reflows from O(n) to O(1)
 2. **WeakMap Caching**: Prevents memory leaks, caches computed styles
 3. **Event Debouncing**: Batches rapid UI updates
-4. **Lazy Loading**: Only processes visible items
+4. **Efficient Processing**: Optimized stream processing for large batches
 5. **Stream Processing**: Handles large item batches efficiently
 
 ## Memory Management
@@ -154,55 +167,65 @@ Key features:
 ### Fixed Issues
 
 #### Critical Issues (Unbounded Growth)
+
 1. **Uncleared Interval in MasterSlave** ✅ FIXED
-   - 1-second interval never cleared
-   - Added proper cleanup in destroy()
+
+    - 1-second interval never cleared
+    - Added proper cleanup in destroy()
 
 2. **Uncleared Interval in ServerCom** ✅ FIXED
-   - 10-second service worker check never cleared
-   - Added destroy() method
+
+    - 10-second service worker check never cleared
+    - Added destroy() method
 
 3. **NotificationMonitor Instance Leak** ✅ FIXED
-   - Multiple instances retained in memory
-   - Added cleanup in bootloader.js
+
+    - Multiple instances retained in memory
+    - Added cleanup in bootloader.js
 
 4. **KeywordMatch Object Retention** ✅ FIXED
-   - Changed from WeakMap to Map with JSON stringified keys
-   - Added MAX_CACHE_SIZE limit of 10 entries
-   - Periodic cache clearing every 10 minutes
+    - Uses WeakMap + counter approach for cache keys
+    - Caches up to 10 different keyword arrays (not individual keywords)
+    - Each array pre-compiles all its keywords together
+    - Automatic cleanup of oldest arrays when limit exceeded
 
 #### Performance Issues
+
 1. **Keyword Matching Performance** ✅ FIXED
-   - 15x improvement (19.4s → 1.3s)
-   - WeakMap + counter approach for cache keys
-   - Module-level caching
+
+    - 15x improvement (19.4s → 1.3s)
+    - WeakMap + counter approach for cache keys
+    - Module-level caching
 
 2. **Stream Processing Memory Usage** ✅ FIXED
-   - 95% memory reduction (1.6 MB → 69.2 KB)
-   - Named functions and cached settings
+    - 95% memory reduction (1.6 MB → 69.2 KB)
+    - Named functions and cached settings
 
 ### Best Practices
 
 1. **Memory Monitoring**
-   - Enable via Settings > General > Debugging > Memory Analysis
-   - Available as `VH_MEMORY` in console
-   - Automatic snapshots and leak detection
+
+    - Enable via Settings > General > Debugging > Memory Analysis
+    - Available as `VH_MEMORY` in console
+    - Automatic snapshots and leak detection
 
 2. **Cleanup Lifecycle Pattern**
-   - Every class must implement destroy() method
-   - Track and clean all event listeners
-   - Clear timers and intervals
+
+    - Every class must implement destroy() method
+    - Track and clean all event listeners
+    - Clear timers and intervals
 
 3. **WeakMap for DOM Associations**
-   ```javascript
-   const elementData = new WeakMap();
-   // Data automatically garbage collected when element is removed
-   ```
+
+    ```javascript
+    const elementData = new WeakMap();
+    // Data automatically garbage collected when element is removed
+    ```
 
 4. **Event Listener Management**
-   - Store handler references before adding
-   - Always remove listeners in destroy()
-   - Use event delegation for dynamic content
+    - Store handler references before adding
+    - Always remove listeners in destroy()
+    - Use event delegation for dynamic content
 
 ### Prevention Guidelines
 
@@ -218,6 +241,7 @@ Key features:
 ### Overview
 
 The dependency injection refactoring introduces:
+
 - A lightweight DI container (`DIContainer.js`)
 - Storage adapters for testability (`StorageAdapter.js`)
 - A refactored SettingsMgr that accepts dependencies (`SettingsMgrDI.js`)
@@ -226,6 +250,7 @@ The dependency injection refactoring introduces:
 ### Migration Status
 
 ✅ **Completed**
+
 - DIContainer with singleton/transient support
 - StorageAdapter abstraction (Chrome and Memory implementations)
 - SettingsMgr refactored to use dependency injection
@@ -233,11 +258,13 @@ The dependency injection refactoring introduces:
 - Comprehensive unit tests for DI components
 
 🔧 **In Progress**
+
 - Logger service migration
 - Browser API adapters
 - Testing infrastructure
 
 📋 **Planned**
+
 - HiddenListMgr and PinnedListMgr migration
 - Extract business logic into services
 - Refactor notifications monitor
@@ -248,11 +275,13 @@ The dependency injection refactoring introduces:
 ### Critical Implementation Guidelines
 
 1. **Visibility State Changes**: Any operation that might change item visibility MUST:
+
     - Track the visibility state before and after the operation
     - Emit appropriate grid events when visibility changes
     - Update the VisibilityStateManager count accordingly
 
     **Operations requiring visibility tracking:**
+
     - `addTileInGrid()` - when updating existing items
     - `setTierFromASIN()` - when tier changes affect visibility
     - `#bulkRemoveItems()` - count visible items being removed
@@ -262,11 +291,13 @@ The dependency injection refactoring introduces:
     - Any filtering operations (search, type, queue filters)
 
 2. **Event Batching**: Use batching for performance-sensitive operations:
+
     - Placeholder updates: 50ms batch delay
     - Tab title updates: 100ms batch delay
     - Prevents UI thrashing during rapid updates
 
 3. **Testing Strategy**:
+
     - Write tests that verify behavior, not implementation
     - Include edge cases and browser-specific scenarios
     - Ensure tests remain maintainable as implementation evolves
@@ -286,33 +317,39 @@ The dependency injection refactoring introduces:
 ## Future Improvements
 
 ### High Priority
+
 1. **HookMgr Enhancement**
-   - Implement unbind functionality for event listeners
-   - Prevent memory leaks in GridEventManager
+
+    - Implement unbind functionality for event listeners
+    - Prevent memory leaks in GridEventManager
 
 2. **Virtual Scrolling**
-   - Only render visible items
-   - Constant memory usage regardless of item count
-   - Better initial load times
+    - Only render visible items
+    - Constant memory usage regardless of item count
+    - Better initial load times
 
 ### Medium Priority
+
 1. **Event System Improvements**
-   - Implement event batching for performance
-   - Create typed event system
-   - Add event debugging capabilities
+
+    - Implement event batching for performance
+    - Create typed event system
+    - Add event debugging capabilities
 
 2. **Service Layer Extraction**
-   - Filter management service
-   - Sort operations service
-   - Settings caching layer
+    - Filter management service
+    - Sort operations service
+    - Settings caching layer
 
 ### Low Priority
+
 1. **Advanced Filtering System**
-   - Multi-criteria filtering
-   - Custom filter expressions
-   - Filter presets and saving
+
+    - Multi-criteria filtering
+    - Custom filter expressions
+    - Filter presets and saving
 
 2. **Performance Monitoring**
-   - Built-in performance metrics
-   - User experience tracking
-   - Automated performance regression detection
+    - Built-in performance metrics
+    - User experience tracking
+    - Automated performance regression detection

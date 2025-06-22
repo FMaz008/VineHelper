@@ -29,7 +29,6 @@ window.getMemoryDebugger = function () {
 		return window.MEMORY_DEBUGGER;
 	}
 	console.log(
-		 
 		'Memory debugger not available. Enable with: localStorage.setItem("vh_debug_memory", "true") and reload'
 	);
 	return null;
@@ -412,7 +411,6 @@ class NotificationMonitor extends MonitorCore {
 			const afterDisplay = node.style.display;
 			if (beforeDisplay !== afterDisplay) {
 				console.log("[NotificationMonitor] Item visibility changed", {
-					 
 					asin: node.dataset.asin,
 					beforeDisplay,
 					afterDisplay,
@@ -543,7 +541,6 @@ class NotificationMonitor extends MonitorCore {
 				const itemTiles = this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
 				const placeholderTiles = this._gridContainer.querySelectorAll(".vh-placeholder-tile");
 				console.log("[fetchRecentItemsEnd] Fetch complete (after DOM settle)", {
-					 
 					visibleCount,
 					totalItems: this._itemsMgr.items.size,
 					gridChildren: this._gridContainer.children.length,
@@ -573,7 +570,6 @@ class NotificationMonitor extends MonitorCore {
 		const debugBulkOperations = this._settings.get("general.debugBulkOperations");
 		if (debugBulkOperations) {
 			console.log("[bulkRemoveItems] Starting with:", {
-				 
 				arrASINsSize: arrASINs.size,
 				isKeepSet,
 				totalItems: this._itemsMgr.items.size,
@@ -636,7 +632,6 @@ class NotificationMonitor extends MonitorCore {
 
 			if (debugBulkOperations) {
 				console.log("[bulkRemoveItems] After processing:", {
-					 
 					itemsToKeepCount: itemsToKeep.length,
 					itemsToRemoveCount,
 					visibleRemovedCount,
@@ -653,7 +648,6 @@ class NotificationMonitor extends MonitorCore {
 
 			if (debugBulkOperations) {
 				console.log("[bulkRemoveItems] Before sort:", {
-					 
 					itemsToKeepCount: itemsToKeep.length,
 					itemsMgrSize: this._itemsMgr.items.size,
 					itemsToKeepSample: itemsToKeep.slice(0, 5).map(({ asin, item }) => ({
@@ -669,7 +663,6 @@ class NotificationMonitor extends MonitorCore {
 
 			if (debugBulkOperations) {
 				console.log("[bulkRemoveItems] After sort:", {
-					 
 					sortedItemsCount: sortedItems.length,
 					itemsMgrSize: this._itemsMgr.items.size,
 					sortedItemsSample: sortedItems.slice(0, 5).map((item) => ({
@@ -696,7 +689,6 @@ class NotificationMonitor extends MonitorCore {
 
 			if (debugBulkOperations) {
 				console.log("[bulkRemoveItems] Final state:", {
-					 
 					newItemsSize: newItems.size,
 					newContainerChildren: newContainer.children.length,
 					expectedItems: itemsToKeep.length,
@@ -765,7 +757,6 @@ class NotificationMonitor extends MonitorCore {
 					const debugTabTitle = this._settings.get("general.debugTabTitle");
 					if (debugTabTitle) {
 						console.log(`[Truncation] Starting truncation`, {
-							 
 							currentSize: this._itemsMgr.items.size,
 							maxLimit: max,
 							toRemove: this._itemsMgr.items.size - max,
@@ -808,7 +799,6 @@ class NotificationMonitor extends MonitorCore {
 					// Debug logging for truncation completion
 					if (debugTabTitle) {
 						console.log(`[Truncation] Completed truncation`, {
-							 
 							visibleItemsRemoved: visibleItemsRemovedCount,
 							newSize: this._itemsMgr.items.size,
 							fetchingRecentItems,
@@ -851,9 +841,62 @@ class NotificationMonitor extends MonitorCore {
 	 * @private
 	 */
 	_setupCountVerification() {
-		// Disabled for now - causing errors on first load
-		// TODO: Implement proper initialization check before running verification
-		return;
+		// Only set up if debug is enabled
+		if (!this._settings.get("general.debugTabTitle")) {
+			return;
+		}
+
+		// Clear any existing interval
+		if (this._countVerificationInterval) {
+			clearInterval(this._countVerificationInterval);
+		}
+
+		// Wait for initial load to complete
+		setTimeout(() => {
+			// Verify count immediately
+			this._verifyCount();
+
+			// Then set up periodic verification every 30 seconds
+			this._countVerificationInterval = setInterval(() => {
+				this._verifyCount();
+			}, 30000);
+
+			console.log("[NotificationMonitor] Count verification enabled - will check every 30 seconds"); // eslint-disable-line no-console
+		}, 5000); // Wait 5 seconds for initial load
+	}
+
+	/**
+	 * Verify that the tab title count matches the actual visible items
+	 * @private
+	 */
+	_verifyCount() {
+		if (!this._gridContainer || !this._visibilityStateManager) {
+			return;
+		}
+
+		const tiles = this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
+		const actualVisibleCount = Array.from(tiles).filter((tile) => !tile.classList.contains("hidden")).length;
+		const reportedCount = this._visibilityStateManager.getCount();
+
+		if (actualVisibleCount !== reportedCount) {
+			console.error("[NotificationMonitor] Count mismatch detected!", {
+				 
+				actualVisibleCount,
+				reportedCount,
+				difference: actualVisibleCount - reportedCount,
+				timestamp: new Date().toISOString(),
+			});
+
+			// Auto-fix the count
+			this._visibilityStateManager.recalculateCount(tiles);
+			console.log("[NotificationMonitor] Count recalculated to fix mismatch"); // eslint-disable-line no-console
+		} else {
+			console.log("[NotificationMonitor] Count verification passed:", {
+				 
+				count: actualVisibleCount,
+				timestamp: new Date().toISOString(),
+			});
+		}
 	}
 
 	/**
@@ -880,7 +923,6 @@ class NotificationMonitor extends MonitorCore {
 		});
 
 		console.log("[clearUnavailableItems] Debug info:", {
-			 
 			totalItems: this._itemsMgr.items.size,
 			unavailableCount: unavailableAsins.size,
 			unavailableAsins: Array.from(unavailableAsins).slice(0, 5), // Show first 5 for debugging
@@ -1245,7 +1287,6 @@ class NotificationMonitor extends MonitorCore {
 			// Debug: Log when new items are added
 			if (this._settings.get("general.debugPlaceholders") || this._settings.get("general.debugTabTitle")) {
 				console.log("[NotificationMonitor] New item added", {
-					 
 					asin,
 					isVisible,
 					currentCount: this._visibilityStateManager?.getCount(),
@@ -1521,7 +1562,6 @@ class NotificationMonitor extends MonitorCore {
 			const debugTabTitle = this._settings.get("general.debugTabTitle");
 			if (debugTabTitle) {
 				console.log("[NotificationMonitor] Zero ETV item visibility check", {
-					 
 					asin: notif.dataset.asin,
 					wasVisible,
 					isNowVisible,
@@ -1562,7 +1602,6 @@ class NotificationMonitor extends MonitorCore {
 				const debugTabTitle = this._settings.get("general.debugTabTitle");
 				if (debugTabTitle) {
 					console.log("[NotificationMonitor] Clearing Zero ETV flag", {
-						 
 						asin: notif.dataset.asin,
 						wasVisible,
 						isNowVisible,
@@ -1907,7 +1946,6 @@ class NotificationMonitor extends MonitorCore {
 				});
 			} catch (error) {
 				console.error("[NotificationMonitor] Cannot create item for pinning -", error.message, {
-					 
 					source: "pin button click",
 					asin: asin,
 					queue: target.dataset.queue,
@@ -2264,7 +2302,6 @@ class NotificationMonitor extends MonitorCore {
 					);
 				} catch (error) {
 					console.error("[NotificationMonitor] Cannot create item for modal -", error.message, {
-						 
 						source: "see details button click",
 						asin: seeDetailsBtn.dataset.asin,
 						queue: seeDetailsBtn.dataset.queue,
@@ -2306,7 +2343,6 @@ class NotificationMonitor extends MonitorCore {
 					window.MEMORY_DEBUGGER.untrackListener(this._gridContainer, "click", this.#eventHandlers.grid);
 				}
 			} catch (e) {
-				 
 				// Container might be gone, just clear the reference
 			}
 			this.#eventHandlers.grid = null;
@@ -2776,6 +2812,13 @@ class NotificationMonitor extends MonitorCore {
 		if (this._serverComMgr && typeof this._serverComMgr.destroy === "function") {
 			this._serverComMgr.destroy();
 			this._serverComMgr = null;
+		}
+
+		// Clear count verification interval
+		if (this._countVerificationInterval) {
+			clearInterval(this._countVerificationInterval);
+			this._countVerificationInterval = null;
+			console.log("🧹 Cleared count verification interval"); // eslint-disable-line no-console
 		}
 
 		// Clear references
