@@ -32,14 +32,14 @@ class VisibilityStateManager {
 	 * @param {string} displayStyle - The display style to use when visible (default: 'block')
 	 * @returns {boolean} Whether the visibility actually changed
 	 */
-	setVisibility(element, visible, displayStyle = 'block') {
+	setVisibility(element, visible, displayStyle = "block") {
 		if (!element) return false;
 
 		const wasVisible = this.isVisible(element);
-		
+
 		// Update the element's display style
-		element.style.display = visible ? displayStyle : 'none';
-		
+		element.style.display = visible ? displayStyle : "none";
+
 		// Clear caches for this element
 		this.#computedStyleCache.delete(element);
 		this.#visibilityCache.set(element, visible);
@@ -51,15 +51,15 @@ class VisibilityStateManager {
 			} else {
 				this.decrement(1);
 			}
-			
+
 			// Emit visibility change event for this specific element
-			this.#hookMgr.hookExecute('visibility:element-changed', {
+			this.#hookMgr.hookExecute("visibility:element-changed", {
 				element,
 				wasVisible,
 				isVisible: visible,
-				timestamp: Date.now()
+				timestamp: Date.now(),
 			});
-			
+
 			return true;
 		}
 
@@ -79,8 +79,8 @@ class VisibilityStateManager {
 			const cached = this.#visibilityCache.get(element);
 			// Validate cache by checking computed style
 			const computedStyle = this.#getComputedStyle(element);
-			const actuallyVisible = computedStyle.display !== 'none';
-			
+			const actuallyVisible = computedStyle.display !== "none";
+
 			if (cached === actuallyVisible) {
 				return cached;
 			}
@@ -91,18 +91,18 @@ class VisibilityStateManager {
 
 		// Use computed style for accurate visibility check
 		const computedStyle = this.#getComputedStyle(element);
-		const isVisible = computedStyle.display !== 'none';
-		
+		const isVisible = computedStyle.display !== "none";
+
 		// Also check inline style as a safeguard
 		// This catches cases where the style was just set but computed style hasn't updated
-		if (element.style.display === 'none') {
+		if (element.style.display === "none") {
 			this.#visibilityCache.set(element, false);
 			return false;
 		}
-		
+
 		// Cache the result
 		this.#visibilityCache.set(element, isVisible);
-		
+
 		return isVisible;
 	}
 
@@ -125,7 +125,6 @@ class VisibilityStateManager {
 	clearCache() {
 		this.#computedStyleCache = new WeakMap();
 		this.#visibilityCache = new WeakMap();
-		this.#cacheGeneration++;
 	}
 
 	/**
@@ -138,12 +137,12 @@ class VisibilityStateManager {
 		let visibleDelta = 0;
 
 		// Process all updates
-		for (const { element, visible, displayStyle = 'block' } of updates) {
+		for (const { element, visible, displayStyle = "block" } of updates) {
 			if (!element) continue;
 
 			const wasVisible = this.isVisible(element);
-			element.style.display = visible ? displayStyle : 'none';
-			
+			element.style.display = visible ? displayStyle : "none";
+
 			// Track changes
 			if (wasVisible !== visible) {
 				changedCount++;
@@ -173,7 +172,7 @@ class VisibilityStateManager {
 	 */
 	recalculateCount(elements) {
 		let count = 0;
-		
+
 		// Clear caches before recalculation
 		this.clearCache();
 
@@ -184,22 +183,22 @@ class VisibilityStateManager {
 			if (isVisible) {
 				count++;
 			}
-			
+
 			// Collect debug info
 			debugElements.push({
-				asin: element.getAttribute('data-asin'),
+				asin: element.getAttribute("data-asin"),
 				display: window.getComputedStyle(element).display,
-				isVisible
+				isVisible,
 			});
 		}
 
 		// Always log when count changes or seems wrong
 		if (this.#count !== count || count > 6) {
-			console.log('[VisibilityStateManager] Recalculate count:', {
+			console.log("[VisibilityStateManager] Recalculate count:", {
 				oldCount: this.#count,
 				newCount: count,
 				totalElements: elements.length,
-				elements: debugElements
+				elements: debugElements,
 			});
 		}
 
@@ -219,7 +218,7 @@ class VisibilityStateManager {
 	 */
 	handlePossibleVisibilityChange(element, wasVisible) {
 		const isVisible = this.isVisible(element);
-		
+
 		if (wasVisible !== isVisible) {
 			// Update count
 			if (isVisible) {
@@ -227,18 +226,18 @@ class VisibilityStateManager {
 			} else {
 				this.decrement(1);
 			}
-			
+
 			// Emit element-specific change event
-			this.#hookMgr.hookExecute('visibility:element-changed', {
+			this.#hookMgr.hookExecute("visibility:element-changed", {
 				element,
 				wasVisible,
 				isVisible,
-				timestamp: Date.now()
+				timestamp: Date.now(),
 			});
-			
+
 			return true;
 		}
-		
+
 		return false;
 	}
 
@@ -248,7 +247,7 @@ class VisibilityStateManager {
 	 * @returns {string} The display style to use
 	 */
 	getTileDisplayStyle(isInlineMode) {
-		return isInlineMode ? 'inline-block' : 'block';
+		return isInlineMode ? "inline-block" : "block";
 	}
 
 	/**
@@ -260,17 +259,17 @@ class VisibilityStateManager {
 
 		const oldCount = this.#count;
 		this.#count += amount;
-		
+
 		// Debug logging (only if debug flag is set)
 		if (typeof window !== "undefined" && window.DEBUG_VISIBILITY_STATE) {
 			console.log("[VisibilityStateManager] Count incremented", {
 				oldCount,
 				newCount: this.#count,
 				amount,
-				stack: new Error().stack.split('\n').slice(2, 5).join('\n')
+				stack: new Error().stack.split("\n").slice(2, 5).join("\n"),
 			});
 		}
-		
+
 		this.#emitCountChanged();
 	}
 
@@ -283,17 +282,17 @@ class VisibilityStateManager {
 
 		const oldCount = this.#count;
 		this.#count = Math.max(0, this.#count - amount);
-		
+
 		// Debug logging (only if debug flag is set)
 		if (typeof window !== "undefined" && window.DEBUG_VISIBILITY_STATE) {
 			console.log("[VisibilityStateManager] Count decremented", {
 				oldCount,
 				newCount: this.#count,
 				amount,
-				stack: new Error().stack.split('\n').slice(2, 5).join('\n')
+				stack: new Error().stack.split("\n").slice(2, 5).join("\n"),
 			});
 		}
-		
+
 		this.#emitCountChanged();
 	}
 

@@ -2,6 +2,8 @@
 
 //Todo: insertTileAccordingToETV and ETVChangeRepositioning are very similar. Could we merge some logic?
 
+// Tile import kept for future use
+// eslint-disable-next-line no-unused-vars
 import { Tile } from "/scripts/ui/components/Tile.js";
 
 import { YMDHiStoISODate } from "/scripts/core/utils/DateHelper.js";
@@ -27,6 +29,7 @@ window.getMemoryDebugger = function () {
 		return window.MEMORY_DEBUGGER;
 	}
 	console.log(
+		 
 		'Memory debugger not available. Enable with: localStorage.setItem("vh_debug_memory", "true") and reload'
 	);
 	return null;
@@ -83,9 +86,6 @@ class NotificationMonitor extends MonitorCore {
 		buttons: new Map(),
 	};
 
-	// Cache for computed styles (Safari performance optimization)
-	#computedStyleCache = new WeakMap();
-
 	constructor(monitorV3 = false) {
 		super(monitorV3);
 
@@ -116,7 +116,7 @@ class NotificationMonitor extends MonitorCore {
 				// Dynamically import the memory debugger
 				const module = await import("/scripts/notifications-monitor/debug/MemoryDebugger.js");
 				MemoryDebugger = module.default || module.MemoryDebugger || module;
-				console.log("🔍 Memory Debugger loaded. Use window.MEMORY_DEBUGGER to access.");
+				console.log("🔍 Memory Debugger loaded. Use window.MEMORY_DEBUGGER to access."); // eslint-disable-line no-console
 
 				// Create the global instance
 				if (!window.MEMORY_DEBUGGER && MemoryDebugger) {
@@ -125,7 +125,7 @@ class NotificationMonitor extends MonitorCore {
 					// Store the debugger instance
 					window.MEMORY_DEBUGGER = debuggerInstance;
 
-					console.log("🔍 Memory Debugger initialized. Starting monitoring...");
+					console.log("🔍 Memory Debugger initialized. Starting monitoring..."); // eslint-disable-line no-console
 
 					// Create global API that can be accessed from console
 					window.VH_MEMORY = {
@@ -168,7 +168,7 @@ class NotificationMonitor extends MonitorCore {
 							if (debuggerInstance) {
 								return debuggerInstance.stopMonitoring();
 							}
-							console.error("Memory debugger not available");
+							console.error("Memory debugger not available"); // eslint-disable-line no-console
 							return null;
 						},
 					};
@@ -176,14 +176,14 @@ class NotificationMonitor extends MonitorCore {
 					// Make it available globally
 					globalThis.VH_MEMORY = window.VH_MEMORY;
 
-					console.log("📊 Memory Debugger API available at window.VH_MEMORY");
-					console.log("Available methods:");
-					console.log("  - VH_MEMORY.takeSnapshot(name)");
-					console.log("  - VH_MEMORY.generateReport()");
-					console.log("  - VH_MEMORY.detectLeaks()");
-					console.log("  - VH_MEMORY.checkDetachedNodes()");
-					console.log("  - VH_MEMORY.cleanup()");
-					console.log("  - VH_MEMORY.stopMonitoring()");
+					console.log("📊 Memory Debugger API available at window.VH_MEMORY"); // eslint-disable-line no-console
+					console.log("Available methods:"); // eslint-disable-line no-console
+					console.log("  - VH_MEMORY.takeSnapshot(name)"); // eslint-disable-line no-console
+					console.log("  - VH_MEMORY.generateReport()"); // eslint-disable-line no-console
+					console.log("  - VH_MEMORY.detectLeaks()"); // eslint-disable-line no-console
+					console.log("  - VH_MEMORY.checkDetachedNodes()"); // eslint-disable-line no-console
+					console.log("  - VH_MEMORY.cleanup()"); // eslint-disable-line no-console
+					console.log("  - VH_MEMORY.stopMonitoring()"); // eslint-disable-line no-console
 
 					// Resolve the promise
 					if (window._resolveMemoryDebuggerReady) {
@@ -191,7 +191,7 @@ class NotificationMonitor extends MonitorCore {
 					}
 				}
 			} catch (error) {
-				console.error("Failed to initialize MemoryDebugger:", error);
+				console.error("Failed to initialize MemoryDebugger:", error); // eslint-disable-line no-console
 				if (window._resolveMemoryDebuggerReady) {
 					window._resolveMemoryDebuggerReady(null);
 				}
@@ -240,7 +240,7 @@ class NotificationMonitor extends MonitorCore {
 			this._visibilityStateManager.setVisibility(element, visible, displayStyle || this.#getTileDisplayStyle());
 		} else {
 			// V2 fallback - set style directly
-			element.style.display = visible ? (displayStyle || this.#getTileDisplayStyle()) : "none";
+			element.style.display = visible ? displayStyle || this.#getTileDisplayStyle() : "none";
 		}
 	}
 
@@ -254,7 +254,7 @@ class NotificationMonitor extends MonitorCore {
 		if (this._visibilityStateManager && this._visibilityStateManager.isVisible) {
 			return this._visibilityStateManager.isVisible(element);
 		}
-		
+
 		// Fallback for V2 or if VisibilityStateManager is not available
 		if (!element) return false;
 		const style = window.getComputedStyle(element);
@@ -269,10 +269,8 @@ class NotificationMonitor extends MonitorCore {
 		// Delegate to VisibilityStateManager for V3
 		if (this._visibilityStateManager && this._visibilityStateManager.clearCache) {
 			this._visibilityStateManager.clearCache();
-		} else {
-			// Fallback for V2
-			this.#computedStyleCache = new WeakMap();
 		}
+		// No cache to clear for V2 since we removed #computedStyleCache
 	}
 
 	/**
@@ -324,7 +322,7 @@ class NotificationMonitor extends MonitorCore {
 					// Update the visibility state manager with new count (V3 only)
 					this._visibilityStateManager?.setCount(newCount);
 				}
-				
+
 				// Update tab title
 				this._updateTabTitle(newCount);
 				// Emit event for filter change with visible count
@@ -346,8 +344,7 @@ class NotificationMonitor extends MonitorCore {
 
 		const notificationTypeZeroETV = parseInt(node.dataset.typeZeroETV) === 1;
 		const notificationTypeHighlight = parseInt(node.dataset.typeHighlight) === 1;
-		const etvObj = node.querySelector("div.etv");
-		const notificationTypeUnknownETV = this.isUnknownETV(etvObj);
+		const notificationTypeUnknownETV = parseInt(node.dataset.typeUnknownETV) === 1;
 		const queueType = node.dataset.queue;
 		const beforeDisplay = node.style.display;
 
@@ -415,6 +412,7 @@ class NotificationMonitor extends MonitorCore {
 			const afterDisplay = node.style.display;
 			if (beforeDisplay !== afterDisplay) {
 				console.log("[NotificationMonitor] Item visibility changed", {
+					 
 					asin: node.dataset.asin,
 					beforeDisplay,
 					afterDisplay,
@@ -539,24 +537,25 @@ class NotificationMonitor extends MonitorCore {
 				// Update the VisibilityStateManager with the accurate count
 				this._visibilityStateManager.setCount(visibleCount);
 			}
-			
+
 			const debugPlaceholders = this._settings?.get("general.debugPlaceholders");
 			if (debugPlaceholders) {
 				const itemTiles = this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
 				const placeholderTiles = this._gridContainer.querySelectorAll(".vh-placeholder-tile");
 				console.log("[fetchRecentItemsEnd] Fetch complete (after DOM settle)", {
+					 
 					visibleCount,
 					totalItems: this._itemsMgr.items.size,
 					gridChildren: this._gridContainer.children.length,
 					itemTiles: itemTiles.length,
 					placeholders: placeholderTiles.length,
-					visibilityStateCount: this._visibilityStateManager?.getCount()
+					visibilityStateCount: this._visibilityStateManager?.getCount(),
 				});
 			}
-			
+
 			// Emit fetch-complete event first to allow placeholder updates
 			this.#emitGridEvent("grid:fetch-complete", { visibleCount });
-			
+
 			// Note: Sorting is now handled by GridEventManager after placeholders are updated
 		}, 100); // Small delay to ensure DOM has settled
 	}
@@ -574,10 +573,11 @@ class NotificationMonitor extends MonitorCore {
 		const debugBulkOperations = this._settings.get("general.debugBulkOperations");
 		if (debugBulkOperations) {
 			console.log("[bulkRemoveItems] Starting with:", {
+				 
 				arrASINsSize: arrASINs.size,
 				isKeepSet,
 				totalItems: this._itemsMgr.items.size,
-				firstFewAsins: Array.from(arrASINs).slice(0, 5)
+				firstFewAsins: Array.from(arrASINs).slice(0, 5),
 			});
 		}
 
@@ -592,12 +592,14 @@ class NotificationMonitor extends MonitorCore {
 
 			// Get all current DOM elements for quick lookup
 			const domElements = new Map();
-			Array.from(this._gridContainer.querySelectorAll('.vvp-item-tile:not(.vh-placeholder-tile)')).forEach(element => {
-				const asin = element.id?.replace('vh-notification-', '');
-				if (asin) {
-					domElements.set(asin, element);
+			Array.from(this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)")).forEach(
+				(element) => {
+					const asin = element.id?.replace("vh-notification-", "");
+					if (asin) {
+						domElements.set(asin, element);
+					}
 				}
-			});
+			);
 
 			// First, collect items to keep and items to remove
 			const itemsToKeep = [];
@@ -634,11 +636,12 @@ class NotificationMonitor extends MonitorCore {
 
 			if (debugBulkOperations) {
 				console.log("[bulkRemoveItems] After processing:", {
+					 
 					itemsToKeepCount: itemsToKeep.length,
 					itemsToRemoveCount,
 					visibleRemovedCount,
-					logic: `isKeepSet=${isKeepSet}, so shouldKeep = ${isKeepSet ? 'arrASINs.has(asin)' : '!arrASINs.has(asin)'}`,
-					expectedItemsAfter: this._itemsMgr.items.size - itemsToRemoveCount
+					logic: `isKeepSet=${isKeepSet}, so shouldKeep = ${isKeepSet ? "arrASINs.has(asin)" : "!arrASINs.has(asin)"}`,
+					expectedItemsAfter: this._itemsMgr.items.size - itemsToRemoveCount,
 				});
 			}
 
@@ -650,13 +653,14 @@ class NotificationMonitor extends MonitorCore {
 
 			if (debugBulkOperations) {
 				console.log("[bulkRemoveItems] Before sort:", {
+					 
 					itemsToKeepCount: itemsToKeep.length,
 					itemsMgrSize: this._itemsMgr.items.size,
 					itemsToKeepSample: itemsToKeep.slice(0, 5).map(({ asin, item }) => ({
 						asin,
 						unavailable: item.data.unavailable,
-						hasElement: !!item.element
-					}))
+						hasElement: !!item.element,
+					})),
 				});
 			}
 
@@ -665,24 +669,25 @@ class NotificationMonitor extends MonitorCore {
 
 			if (debugBulkOperations) {
 				console.log("[bulkRemoveItems] After sort:", {
+					 
 					sortedItemsCount: sortedItems.length,
 					itemsMgrSize: this._itemsMgr.items.size,
 					sortedItemsSample: sortedItems.slice(0, 5).map((item) => ({
 						asin: item.asin,
 						unavailable: item.data.unavailable,
-						hasElement: !!item.element
-					}))
+						hasElement: !!item.element,
+					})),
 				});
 			}
 
 			// Add items to new container in sorted order
 			sortedItems.forEach((sortedItem) => {
 				// Find the corresponding kept item with DOM element
-				const keptItem = itemsToKeep.find(k => k.asin === sortedItem.asin);
-				
+				const keptItem = itemsToKeep.find((k) => k.asin === sortedItem.asin);
+
 				// Add to new items map
 				newItems.set(sortedItem.asin, sortedItem);
-				
+
 				// Append DOM element if it exists
 				if (keptItem && keptItem.element) {
 					newContainer.appendChild(keptItem.element);
@@ -691,9 +696,10 @@ class NotificationMonitor extends MonitorCore {
 
 			if (debugBulkOperations) {
 				console.log("[bulkRemoveItems] Final state:", {
+					 
 					newItemsSize: newItems.size,
 					newContainerChildren: newContainer.children.length,
-					expectedItems: itemsToKeep.length
+					expectedItems: itemsToKeep.length,
 				});
 			}
 
@@ -759,6 +765,7 @@ class NotificationMonitor extends MonitorCore {
 					const debugTabTitle = this._settings.get("general.debugTabTitle");
 					if (debugTabTitle) {
 						console.log(`[Truncation] Starting truncation`, {
+							 
 							currentSize: this._itemsMgr.items.size,
 							maxLimit: max,
 							toRemove: this._itemsMgr.items.size - max,
@@ -801,6 +808,7 @@ class NotificationMonitor extends MonitorCore {
 					// Debug logging for truncation completion
 					if (debugTabTitle) {
 						console.log(`[Truncation] Completed truncation`, {
+							 
 							visibleItemsRemoved: visibleItemsRemovedCount,
 							newSize: this._itemsMgr.items.size,
 							fetchingRecentItems,
@@ -862,9 +870,9 @@ class NotificationMonitor extends MonitorCore {
 				asin,
 				unavailable: item.data.unavailable,
 				unavailableType: typeof item.data.unavailable,
-				isUnavailable: item.data.unavailable == 1
+				isUnavailable: item.data.unavailable == 1,
 			});
-			
+
 			// Check for unavailable == 1 (consistent with server data format)
 			if (item.data.unavailable == 1) {
 				unavailableAsins.add(asin);
@@ -872,25 +880,28 @@ class NotificationMonitor extends MonitorCore {
 		});
 
 		console.log("[clearUnavailableItems] Debug info:", {
+			 
 			totalItems: this._itemsMgr.items.size,
 			unavailableCount: unavailableAsins.size,
 			unavailableAsins: Array.from(unavailableAsins).slice(0, 5), // Show first 5 for debugging
 			allItemsDebug: allItemsDebug.slice(0, 20), // Show first 20 items
-			sampleItems: Array.from(this._itemsMgr.items.entries()).slice(0, 10).map(([asin, item]) => ({
-				asin,
-				unavailable: item.data.unavailable,
-				unavailableType: typeof item.data.unavailable,
-				isInSet: unavailableAsins.has(asin)
-			}))
+			sampleItems: Array.from(this._itemsMgr.items.entries())
+				.slice(0, 10)
+				.map(([asin, item]) => ({
+					asin,
+					unavailable: item.data.unavailable,
+					unavailableType: typeof item.data.unavailable,
+					isInSet: unavailableAsins.has(asin),
+				})),
 		});
 
 		// Use the bulk remove method - it will handle counting and event emission
 		this.#bulkRemoveItems(unavailableAsins, false);
-		
+
 		// After clearing unavailable items, recalculate the count to ensure accuracy
 		// This fixes any off-by-one errors that may have accumulated
 		if (this._visibilityStateManager) {
-			console.log("[clearUnavailableItems] Recalculating count after clearing unavailable items");
+			console.log("[clearUnavailableItems] Recalculating count after clearing unavailable items"); // eslint-disable-line no-console
 			const tiles = this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
 			this._visibilityStateManager.recalculateCount(tiles);
 		}
@@ -1216,6 +1227,9 @@ class NotificationMonitor extends MonitorCore {
 			tileDOM.dataset.typeHighlight = 1;
 		} else if (parseFloat(etv_min) === 0) {
 			tileDOM.dataset.typeZeroETV = 1;
+		} else if (etv_min == "" || etv_min == null || etv_max == "" || etv_max == null) {
+			// Mark items with unknown ETV
+			tileDOM.dataset.typeUnknownETV = 1;
 		}
 
 		//Apply the filters
@@ -1227,17 +1241,18 @@ class NotificationMonitor extends MonitorCore {
 			// Emit event immediately to avoid visual delays
 			// Don't include count - visibility is tracked by VisibilityStateManager when setElementVisibility is called
 			this.#emitGridEvent("grid:items-added", {});
-			
+
 			// Debug: Log when new items are added
 			if (this._settings.get("general.debugPlaceholders") || this._settings.get("general.debugTabTitle")) {
 				console.log("[NotificationMonitor] New item added", {
+					 
 					asin,
 					isVisible,
 					currentCount: this._visibilityStateManager?.getCount(),
 					feedPaused: this._feedPaused,
 					fetchingRecentItems: this._fetchingRecentItems,
 					tileVisible: this.#isElementVisible(tileDOM),
-					computedDisplay: window.getComputedStyle(tileDOM).display
+					computedDisplay: window.getComputedStyle(tileDOM).display,
 				});
 			}
 		}
@@ -1323,7 +1338,9 @@ class NotificationMonitor extends MonitorCore {
 		const brendaAnnounce = notif.querySelector("#vh-announce-link-" + asin);
 
 		//Update the ETV value in the hidden fields
-		let oldMaxValue = etvObj.dataset.etvMax; //Used to determine if a new 0ETV was found
+		// oldMaxValue kept for potential future use in determining if a new 0ETV was found
+		// eslint-disable-next-line no-unused-vars
+		let oldMaxValue = etvObj.dataset.etvMax;
 		if (etvObj.dataset.etvMin == "" || etv < etvObj.dataset.etvMin) {
 			etvObj.dataset.etvMin = etv;
 		}
@@ -1420,7 +1437,7 @@ class NotificationMonitor extends MonitorCore {
 					if (technicalBtn) {
 						delete technicalBtn.dataset.highlightkw;
 					}
-					
+
 					// Handle visibility change
 					this.#handleVisibilityChange(notif, wasVisible);
 				}
@@ -1465,9 +1482,27 @@ class NotificationMonitor extends MonitorCore {
 	 */
 	#checkZeroETVStatus(notif) {
 		if (!notif) return;
-		
+
 		const etvObj = notif.querySelector("div.etv");
 		if (!etvObj) return;
+
+		// Clear unknown ETV flag since we now have an ETV value
+		if (notif.dataset.typeUnknownETV == 1) {
+			// Check visibility BEFORE clearing the flag
+			const wasVisible = this.#isElementVisible(notif);
+
+			notif.dataset.typeUnknownETV = 0;
+
+			// Check if visibility changed after clearing unknown ETV flag
+			const isNowVisible = this.#isElementVisible(notif);
+			if (wasVisible !== isNowVisible) {
+				// For V3, VisibilityStateManager handles count changes
+				// For V2, emit grid event
+				if (!this._visibilityStateManager) {
+					this.#emitGridEvent(isNowVisible ? "grid:items-added" : "grid:items-removed", { count: 1 });
+				}
+			}
+		}
 
 		//zero ETV found, highlight the item accordingly
 		if (parseFloat(etvObj.dataset.etvMin) == 0) {
@@ -1486,6 +1521,7 @@ class NotificationMonitor extends MonitorCore {
 			const debugTabTitle = this._settings.get("general.debugTabTitle");
 			if (debugTabTitle) {
 				console.log("[NotificationMonitor] Zero ETV item visibility check", {
+					 
 					asin: notif.dataset.asin,
 					wasVisible,
 					isNowVisible,
@@ -1526,6 +1562,7 @@ class NotificationMonitor extends MonitorCore {
 				const debugTabTitle = this._settings.get("general.debugTabTitle");
 				if (debugTabTitle) {
 					console.log("[NotificationMonitor] Clearing Zero ETV flag", {
+						 
 						asin: notif.dataset.asin,
 						wasVisible,
 						isNowVisible,
@@ -1870,6 +1907,7 @@ class NotificationMonitor extends MonitorCore {
 				});
 			} catch (error) {
 				console.error("[NotificationMonitor] Cannot create item for pinning -", error.message, {
+					 
 					source: "pin button click",
 					asin: asin,
 					queue: target.dataset.queue,
@@ -2022,17 +2060,17 @@ class NotificationMonitor extends MonitorCore {
 		if (this._visibilityStateManager && this._visibilityStateManager.batchSetVisibility) {
 			const tiles = this._gridContainer.querySelectorAll(".vvp-item-tile");
 			const updates = [];
-			
+
 			// Calculate visibility for all tiles
 			for (const node of tiles) {
 				const shouldBeVisible = this.#calculateNodeVisibility(node);
 				updates.push({
 					element: node,
 					visible: shouldBeVisible,
-					displayStyle: this.#getTileDisplayStyle()
+					displayStyle: this.#getTileDisplayStyle(),
 				});
 			}
-			
+
 			// Apply all visibility changes in one batch
 			this._visibilityStateManager.batchSetVisibility(updates);
 		} else {
@@ -2085,7 +2123,7 @@ class NotificationMonitor extends MonitorCore {
 		// Type filter
 		const notificationTypeZeroETV = parseInt(node.dataset.typeZeroETV) === 1;
 		const notificationTypeHighlight = parseInt(node.dataset.typeHighlight) === 1;
-		
+
 		let passesTypeFilter = false;
 		if (this._filterType == -1) {
 			passesTypeFilter = true;
@@ -2115,7 +2153,7 @@ class NotificationMonitor extends MonitorCore {
 	#mouseoverHandler(e) {
 		//Handle the See Details button
 		if (
-			this.#eventClosestElementLocator(e, ".vh-btn-container", (event, icon) => {
+			this.#eventClosestElementLocator(e, ".vh-btn-container", () => {
 				e.preventDefault();
 				if (!this._feedPaused) {
 					this.#pausedByMouseoverSeeDetails = true;
@@ -2226,6 +2264,7 @@ class NotificationMonitor extends MonitorCore {
 					);
 				} catch (error) {
 					console.error("[NotificationMonitor] Cannot create item for modal -", error.message, {
+						 
 						source: "see details button click",
 						asin: seeDetailsBtn.dataset.asin,
 						queue: seeDetailsBtn.dataset.queue,
@@ -2267,6 +2306,7 @@ class NotificationMonitor extends MonitorCore {
 					window.MEMORY_DEBUGGER.untrackListener(this._gridContainer, "click", this.#eventHandlers.grid);
 				}
 			} catch (e) {
+				 
 				// Container might be gone, just clear the reference
 			}
 			this.#eventHandlers.grid = null;
@@ -2382,7 +2422,7 @@ class NotificationMonitor extends MonitorCore {
 
 		//Bind clear-monitor button
 		const btnClearMonitor = document.getElementById("clear-monitor");
-		const clearMonitorHandler = async (event) => {
+		const clearMonitorHandler = async () => {
 			//Delete all items from the grid
 			if (confirm("Clear all visible items?")) {
 				this._preserveScrollPosition(() => {
@@ -2399,7 +2439,7 @@ class NotificationMonitor extends MonitorCore {
 
 		//Bind clear-unavailable button
 		const btnClearUnavailable = document.getElementById("clear-unavailable");
-		const clearUnavailableHandler = async (event) => {
+		const clearUnavailableHandler = async () => {
 			if (confirm("Clear unavailable items?")) {
 				this.#clearUnavailableItems();
 			}
@@ -2413,7 +2453,7 @@ class NotificationMonitor extends MonitorCore {
 
 		//Bind fetch-last-100 button
 		const btnLast100 = document.getElementById("fetch-last-100");
-		const fetchLast100Handler = async (event) => {
+		const fetchLast100Handler = async () => {
 			btnLast100.disabled = true;
 
 			// Start 30 second countdown
@@ -2459,7 +2499,7 @@ class NotificationMonitor extends MonitorCore {
 		//Bind fetch-last-12hrs button
 		const btnLast12hrs = document.getElementById("fetch-last-12hrs");
 		if (btnLast12hrs) {
-			const fetchLast12hrsHandler = async (event) => {
+			const fetchLast12hrsHandler = async () => {
 				btnLast12hrs.disabled = true;
 
 				// Start 60 second countdown
@@ -2515,7 +2555,7 @@ class NotificationMonitor extends MonitorCore {
 
 		// Bind sort and filter controls
 		const sortQueue = document.querySelector("select[name='sort-queue']");
-		const sortQueueHandler = async (event) => {
+		const sortQueueHandler = async () => {
 			this._sortType = sortQueue.value;
 			await this._settings.set("notification.monitor.sortType", this._sortType);
 			// Emit event to trigger sorting instead of calling directly
@@ -2533,7 +2573,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		const filterType = document.querySelector("select[name='filter-type']");
-		const filterTypeHandler = (event) => {
+		const filterTypeHandler = () => {
 			this._filterType = filterType.value;
 			this._settings.set("notification.monitor.filterType", this._filterType);
 			//Display a specific type of notifications only
@@ -2549,7 +2589,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		const filterQueue = document.querySelector("select[name='filter-queue']");
-		const filterQueueHandler = (event) => {
+		const filterQueueHandler = () => {
 			this._filterQueue = filterQueue.value;
 			this._settings.set("notification.monitor.filterQueue", this._filterQueue);
 			//Display a specific queue only
@@ -2566,7 +2606,7 @@ class NotificationMonitor extends MonitorCore {
 
 		const autoTruncateCheckbox = document.getElementById("auto-truncate");
 		autoTruncateCheckbox.checked = this._autoTruncateEnabled;
-		const autoTruncateHandler = (event) => {
+		const autoTruncateHandler = () => {
 			this._autoTruncateEnabled = autoTruncateCheckbox.checked;
 			this._settings.set("notification.monitor.autoTruncate", this._autoTruncateEnabled);
 			// Force immediate truncate when auto truncate is enabled
@@ -2582,7 +2622,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		const autoTruncateLimitSelect = document.getElementById("auto-truncate-limit");
-		const autoTruncateLimitHandler = (event) => {
+		const autoTruncateLimitHandler = () => {
 			this._settings.set("notification.monitor.autoTruncateLimit", parseInt(autoTruncateLimitSelect.value));
 			// Force immediate truncate when limit changes
 			this.#autoTruncate(true);
@@ -2658,7 +2698,7 @@ class NotificationMonitor extends MonitorCore {
 	 * to prevent memory leaks
 	 */
 	destroy() {
-		console.log("🧹 Destroying NotificationMonitor and cleaning up event listeners...");
+		console.log("🧹 Destroying NotificationMonitor and cleaning up event listeners..."); // eslint-disable-line no-console
 
 		// Remove grid container listener
 		if (this.#eventHandlers.grid && this._gridContainer) {
@@ -2742,7 +2782,7 @@ class NotificationMonitor extends MonitorCore {
 		this._gridContainer = null;
 		this._visibilityStateManager = null;
 
-		console.log("✅ NotificationMonitor cleanup complete");
+		console.log("✅ NotificationMonitor cleanup complete"); // eslint-disable-line no-console
 	}
 }
 
