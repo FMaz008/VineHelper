@@ -73,6 +73,9 @@ class NotificationMonitor extends MonitorCore {
 	#pinDebounceTimer = null;
 	#pinDebounceClickable = true;
 
+	// Track items currently being processed for ETV to prevent duplicate processing
+	#etvProcessingItems = new Set();
+
 	// Store event handler references for cleanup
 	#eventHandlers = {
 		grid: null,
@@ -1373,6 +1376,45 @@ class NotificationMonitor extends MonitorCore {
 			return;
 		}
 
+		// Clean up from ETV processing tracking
+		this.#etvProcessingItems.delete(asin);
+
+		// Enhanced logging for memory debugging
+		if (window.MEMORY_DEBUGGER && this._settings.get("general.debugMemory")) {
+			console.log(`🗑️ Removing tile for ASIN: ${asin}`);
+
+			// Check for event listeners on tile elements before removal
+			const elementsWithListeners = [];
+
+			// Check the tile itself
+			if (tile.onclick || tile.addEventListener) {
+				elementsWithListeners.push({ element: "tile", tag: tile.tagName, classes: tile.className });
+			}
+
+			// Check all buttons in the tile
+			const buttons = tile.querySelectorAll('button, a, input[type="button"], input[type="submit"]');
+			buttons.forEach((btn) => {
+				if (btn.onclick || btn.addEventListener) {
+					elementsWithListeners.push({
+						element: "button/link",
+						tag: btn.tagName,
+						classes: btn.className,
+						text: btn.textContent?.substring(0, 30),
+					});
+				}
+			});
+
+			if (elementsWithListeners.length > 0) {
+				console.warn(
+					`⚠️ Tile ${asin} has ${elementsWithListeners.length} elements that might have listeners:`,
+					elementsWithListeners
+				);
+			}
+
+			// Mark the tile as removed in the debugger
+			window.MEMORY_DEBUGGER.markRemoved(tile);
+		}
+
 		// Check if tile was visible before removal
 		const wasVisible = this.#isElementVisible(tile);
 
@@ -1384,6 +1426,15 @@ class NotificationMonitor extends MonitorCore {
 		const a = tile.querySelector(".a-link-normal");
 		if (a) {
 			this._tooltipMgr.removeTooltip(a);
+		}
+
+		// Call the tile's destroy method to clean up event listeners
+		// Get the Tile instance from ItemsMgr
+		const tileInstance = this._itemsMgr.tiles.get(item);
+		if (tileInstance && typeof tileInstance.destroy === "function") {
+			tileInstance.destroy();
+		} else if (window.MEMORY_DEBUGGER && this._settings.get("general.debugMemory")) {
+			console.warn(`⚠️ Tile ${asin} does not have a destroy method or could not find Tile instance!`);
 		}
 
 		// Remove from data structures
@@ -1588,42 +1639,65 @@ class NotificationMonitor extends MonitorCore {
 
 		//zero ETV found, highlight the item accordingly
 		if (parseFloat(etvObj.dataset.etvMin) == 0) {
-			// Check visibility BEFORE setting the flag
-			const wasVisible = this.#isElementVisible(notif);
+			// Only process if we haven't already marked this as zero ETV
+			const wasAlreadyZeroETV = notif.dataset.typeZeroETV === "1";
 
-			// Set the flag before calling the handler
-			notif.dataset.typeZeroETV = 1;
-			// Always set typeZeroETV = 1 when ETV is 0, regardless of previous state
-			this.#zeroETVItemFound(notif, this._settings.get("notification.monitor.zeroETV.sound") != "0");
+			// Get ASIN from the notification element
+			const asin = notif.dataset.asin;
 
-			// Check if visibility changed after processing
-			const isNowVisible = this.#isElementVisible(notif);
+			// Check if we're already processing this item to prevent duplicate processing
+			const isAlreadyProcessing = this.#etvProcessingItems.has(asin);
 
-			// Debug logging for Zero ETV visibility changes
-			const debugTabTitle = this._settings.get("general.debugTabTitle");
-			if (debugTabTitle) {
-				console.log("[NotificationMonitor] Zero ETV item visibility check", {
-					asin: notif.dataset.asin,
-					wasVisible,
-					isNowVisible,
-					visibilityChanged: wasVisible !== isNowVisible,
-					currentFilter: this._filterType,
-					filterName:
-						this._filterType === TYPE_HIGHLIGHT_OR_ZEROETV
-							? "Zero ETV or KW match only"
-							: this._filterType === TYPE_ZEROETV
-								? "Zero ETV only"
-								: "Other",
-					etvMin: etvObj.dataset.etvMin,
-					etvMax: etvObj.dataset.etvMax,
-				});
-			}
+			if (!wasAlreadyZeroETV && !isAlreadyProcessing) {
+				// Mark as processing
+				this.#etvProcessingItems.add(asin);
 
-			if (wasVisible !== isNowVisible) {
-				// For V3, VisibilityStateManager handles count changes
-				// For V2, emit grid event
-				if (!this._visibilityStateManager) {
-					this.#emitGridEvent(isNowVisible ? "grid:items-added" : "grid:items-removed", { count: 1 });
+				try {
+					// Check visibility BEFORE setting the flag
+					const wasVisible = this.#isElementVisible(notif);
+
+					// Set the flag before calling the handler
+					notif.dataset.typeZeroETV = 1;
+
+					// Process filtering to update visibility based on the new flag
+					this.#processNotificationFiltering(notif);
+
+					// Check if visibility changed after processing
+					const isNowVisible = this.#isElementVisible(notif);
+
+					// Debug logging for Zero ETV visibility changes
+					const debugTabTitle = this._settings.get("general.debugTabTitle");
+					if (debugTabTitle) {
+						console.log("[NotificationMonitor] Zero ETV item visibility check", {
+							asin: notif.dataset.asin,
+							wasVisible,
+							isNowVisible,
+							visibilityChanged: wasVisible !== isNowVisible,
+							currentFilter: this._filterType,
+							filterName:
+								this._filterType === TYPE_HIGHLIGHT_OR_ZEROETV
+									? "Zero ETV or KW match only"
+									: this._filterType === TYPE_ZEROETV
+										? "Zero ETV only"
+										: "Other",
+							etvMin: etvObj.dataset.etvMin,
+							etvMax: etvObj.dataset.etvMax,
+							stackTrace: new Error().stack.split("\n").slice(2, 5).join(" -> "),
+						});
+					}
+
+					// Only call the item found handler for sound and sorting, not for visibility
+					// Pass skipFiltering=true to avoid duplicate processing
+					this.#zeroETVItemFound(
+						notif,
+						this._settings.get("notification.monitor.zeroETV.sound") != "0",
+						true
+					);
+
+					// Visibility changes are already handled by VisibilityStateManager via processNotificationFiltering
+				} finally {
+					// Always remove from processing set
+					this.#etvProcessingItems.delete(asin);
 				}
 			}
 		} else {
@@ -1830,10 +1904,11 @@ class NotificationMonitor extends MonitorCore {
 	 * @param {object} notif - The DOM element of the tile
 	 * @param {string} itemType - The type of item (TYPE_ZEROETV, TYPE_HIGHLIGHT, TYPE_REGULAR)
 	 * @param {boolean} playSoundEffect - If true, play the sound effect
+	 * @param {boolean} skipFiltering - If true, skip re-processing filtering (used when called from ETV processing)
 	 * @returns {boolean} - True if the item was found, false otherwise
 	 * @private
 	 */
-	#handleItemFound(notif, itemType, playSoundEffect = true) {
+	#handleItemFound(notif, itemType, playSoundEffect = true, skipFiltering = false) {
 		if (!notif) {
 			return false;
 		}
@@ -1841,8 +1916,14 @@ class NotificationMonitor extends MonitorCore {
 		// Note: Type flags (typeZeroETV, typeHighlight) should already be set
 		// before this method is called to ensure proper counting
 
-		// Re-process filtering to get current visibility state
-		const tileVisible = this.#processNotificationFiltering(notif);
+		let tileVisible;
+		if (skipFiltering) {
+			// Just check current visibility without re-processing
+			tileVisible = this.#isElementVisible(notif);
+		} else {
+			// Re-process filtering to get current visibility state
+			tileVisible = this.#processNotificationFiltering(notif);
+		}
 
 		// Play sound effect if conditions are met
 		if ((tileVisible || this._fetchingRecentItems) && playSoundEffect) {
@@ -1874,16 +1955,16 @@ class NotificationMonitor extends MonitorCore {
 	 * @param {boolean} playSoundEffect - If true, play the zero ETV sound effect
 	 * @returns {boolean} - True if the zero ETV item was found, false otherwise
 	 */
-	#zeroETVItemFound(notif, playSoundEffect = true) {
-		return this.#handleItemFound(notif, TYPE_ZEROETV, playSoundEffect);
+	#zeroETVItemFound(notif, playSoundEffect = true, skipFiltering = false) {
+		return this.#handleItemFound(notif, TYPE_ZEROETV, playSoundEffect, skipFiltering);
 	}
 
-	#highlightedItemFound(notif, playSoundEffect = true) {
-		return this.#handleItemFound(notif, TYPE_HIGHLIGHT, playSoundEffect);
+	#highlightedItemFound(notif, playSoundEffect = true, skipFiltering = false) {
+		return this.#handleItemFound(notif, TYPE_HIGHLIGHT, playSoundEffect, skipFiltering);
 	}
 
-	#regularItemFound(notif, playSoundEffect = true) {
-		return this.#handleItemFound(notif, TYPE_REGULAR, playSoundEffect);
+	#regularItemFound(notif, playSoundEffect = true, skipFiltering = false) {
+		return this.#handleItemFound(notif, TYPE_REGULAR, playSoundEffect, skipFiltering);
 	}
 
 	//############################################################

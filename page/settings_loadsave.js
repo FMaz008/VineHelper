@@ -840,13 +840,12 @@ function testKeyword(key, title) {
 	for (let i = 0; i < lines.length; i++) {
 		const containsObj = lines[i].querySelector(`td input[name="contains"]`);
 		const contains = containsObj.value.trim();
+
+		// For testing, we pass a simple array without __keywordType
+		// The last parameter 'true' enables test mode to suppress warnings
 		if (
-			keywordMatch(
-				Object.assign([{ contains: contains, without: "", etv_min: "", etv_max: "" }], {
-					__keywordType: "test",
-				}),
-				title
-			) != false
+			keywordMatch([{ contains: contains, without: "", etv_min: "", etv_max: "" }], title, null, null, true) !=
+			false
 		) {
 			containsObj.style.background = "lightgreen";
 		} else {
@@ -855,13 +854,11 @@ function testKeyword(key, title) {
 
 		const withoutObj = lines[i].querySelector(`td input[name="without"]`);
 		const without = withoutObj.value.trim();
+
+		// Test the 'without' field as if it were a 'contains' field
 		if (
-			keywordMatch(
-				Object.assign([{ contains: without, without: "", etv_min: "", etv_max: "" }], {
-					__keywordType: "test",
-				}),
-				title
-			) != false
+			keywordMatch([{ contains: without, without: "", etv_min: "", etv_max: "" }], title, null, null, true) !=
+			false
 		) {
 			withoutObj.style.background = "lightgreen";
 		} else {

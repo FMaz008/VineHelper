@@ -257,8 +257,16 @@ class KeywordMatcher {
 
 	/**
 	 * Main matching function - returns full keyword object if match found
+	 * @param {boolean} isTestMode - If true, suppresses warnings for unknown keyword types (used for testing unsaved keywords)
 	 */
-	keywordMatchReturnFullObject(keywords, title, etv_min = null, etv_max = null, settingsMgr = null) {
+	keywordMatchReturnFullObject(
+		keywords,
+		title,
+		etv_min = null,
+		etv_max = null,
+		settingsMgr = null,
+		isTestMode = false
+	) {
 		// Handle empty keywords array
 		if (!keywords || keywords.length === 0) {
 			return undefined;
@@ -404,8 +412,8 @@ class KeywordMatcher {
 
 			// We couldn't determine the type, so we can't use our fixed storage
 			// This shouldn't happen in normal operation, but we'll handle it gracefully
-			// Only warn if not in test environment
-			if (typeof process === "undefined" || process.env.NODE_ENV !== "test") {
+			// Only warn if not in test environment and not in test mode
+			if (!isTestMode && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
 				console.warn("[KeywordMatcher] Could not determine keyword type, compiling at runtime");
 			}
 
@@ -474,10 +482,11 @@ class KeywordMatcher {
 	 * @param {string} title - Title to match against
 	 * @param {*} etv_min - Minimum ETV value
 	 * @param {*} etv_max - Maximum ETV value
+	 * @param {boolean} isTestMode - If true, suppresses warnings for unknown keyword types
 	 * @returns {string|boolean} The matched keyword string or false if no match
 	 */
-	keywordMatch(keywords, title, etv_min = null, etv_max = null) {
-		const match = this.keywordMatchReturnFullObject(keywords, title, etv_min, etv_max);
+	keywordMatch(keywords, title, etv_min = null, etv_max = null, isTestMode = false) {
+		const match = this.keywordMatchReturnFullObject(keywords, title, etv_min, etv_max, null, isTestMode);
 		if (!match) return false;
 
 		// Return the keyword string for backward compatibility
@@ -610,8 +619,8 @@ function keywordMatchReturnFullObject(keywords, title, etv_min = null, etv_max =
 	return keywordMatcher.keywordMatchReturnFullObject(keywords, title, etv_min, etv_max, settingsMgr);
 }
 
-function keywordMatch(keywords, title, etv_min = null, etv_max = null) {
-	return keywordMatcher.keywordMatch(keywords, title, etv_min, etv_max);
+function keywordMatch(keywords, title, etv_min = null, etv_max = null, isTestMode = false) {
+	return keywordMatcher.keywordMatch(keywords, title, etv_min, etv_max, isTestMode);
 }
 
 function hasAnyEtvConditions(keywords) {
