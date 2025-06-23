@@ -96,13 +96,15 @@ async function validateReceipt() {
 	const promTab1 = await Tpl.loadFile("/page/settings_general.tpl.html");
 	const promTab2 = await Tpl.loadFile("/page/settings_notifications.tpl.html");
 	const promTab3 = await Tpl.loadFile("/page/settings_system.tpl.html");
-	const promTab4 = await Tpl.loadFile("/page/settings_brenda.tpl.html");
-	const promTab5 = await Tpl.loadFile("/page/settings_keywords.tpl.html");
-	const promTab6 = await Tpl.loadFile("/page/settings_keybindings.tpl.html");
-	const promTab7 = await Tpl.loadFile("/page/settings_styles.tpl.html");
-	const promTab8 = await Tpl.loadFile("/page/settings_premium.tpl.html");
+	const promTab4 = await Tpl.loadFile("/page/settings_styles.tpl.html");
+	const promTab5 = await Tpl.loadFile("/page/settings_brenda.tpl.html");
+	const promTab6 = await Tpl.loadFile("/page/settings_keywords.tpl.html");
+	const promTab7 = await Tpl.loadFile("/page/settings_keybindings.tpl.html");
+	// Set Safari detection before loading premium template so it can be used within the template
 	Tpl.setIf("isSafari", env.isSafari());
-	const promTab9 = await Tpl.loadFile("/page/settings_about.tpl.html");
+	const promTab8 = await Tpl.loadFile("/page/settings_premium.tpl.html");
+	const promTab9 = await Tpl.loadFile("/page/settings_debug.tpl.html");
+	const promTab10 = await Tpl.loadFile("/page/settings_about.tpl.html");
 
 	// Clear any existing template variables before setting new ones
 	Tpl.clearVariables();
@@ -117,6 +119,7 @@ async function validateReceipt() {
 	Tpl.setVar("TAB7", Tpl.render(promTab7));
 	Tpl.setVar("TAB8", Tpl.render(promTab8));
 	Tpl.setVar("TAB9", Tpl.render(promTab9));
+	Tpl.setVar("TAB10", Tpl.render(promTab10));
 
 	let domainTLD = "";
 	const countryCode = Settings.get("general.country");

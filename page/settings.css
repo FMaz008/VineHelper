@@ -56,6 +56,18 @@ body {
 /* TABS */
 /* #################################### */
 
+/* Reduce tab padding to fit on two lines */
+#tabs-index.vh-tabs li {
+	padding: 2px 6px;
+	font-size: 11px;
+}
+
+#tabs-index.vh-tabs ul {
+	display: flex;
+	flex-wrap: wrap;
+	max-width: 600px;
+}
+
 #tabs-content .tab {
 	padding: 0;
 	display: flex;

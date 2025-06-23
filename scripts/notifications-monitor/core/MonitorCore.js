@@ -1,3 +1,5 @@
+// chrome global is used in subclasses
+// eslint-disable-next-line no-unused-vars
 /*global chrome*/
 
 //This file serve the main purpose of reducing the size of the NotificationMonitor.js file.
@@ -96,11 +98,14 @@ class MonitorCore {
 	}
 
 	setMasterMonitor() {
+		console.log("[MonitorCore] Setting as MASTER monitor"); // eslint-disable-line no-console
 		this._isMasterMonitor = true;
 		this._ws = new Websocket(this);
 		this._autoLoad = new AutoLoad(this, this._ws);
+		console.log("[MonitorCore] WebSocket and AutoLoad initialized"); // eslint-disable-line no-console
 	}
 	setSlaveMonitor() {
+		console.log("[MonitorCore] Setting as SLAVE monitor"); // eslint-disable-line no-console
 		this._isMasterMonitor = false;
 		if (this._ws !== null) {
 			this._ws.destroyInstance();
@@ -192,6 +197,7 @@ class MonitorCore {
 				elem.style.display = "none";
 			});
 		} catch (err) {
+			 
 			//Do nothing
 		}
 	}
@@ -225,6 +231,18 @@ class MonitorCore {
 		notif.style.filter = "brightness(0.7)";
 	}
 
+	/**
+	 * Check if an item has unknown ETV
+	 * @param {Element} etvObj - The ETV element
+	 * @returns {boolean} - True if ETV is unknown
+	 */
+	isUnknownETV(etvObj) {
+		// Check for both empty string and items that haven't had ETV set yet
+		// When items have unknown ETV, the dataset attributes remain empty strings
+		// but the item data might have null values
+		return etvObj && (etvObj.dataset.etvMax == "" || etvObj.dataset.etvMax == null);
+	}
+
 	_processNotificationHighlight(notif) {
 		if (!notif) {
 			return false;
@@ -240,7 +258,7 @@ class MonitorCore {
 		const isZeroETV =
 			notif.dataset.typeZeroETV == 1 && this._settings.get("notification.monitor.zeroETV.colorActive");
 		const isUnknownETV =
-			etvObj.dataset.etvMax == "" && this._settings.get("notification.monitor.unknownETV.colorActive");
+			notif.dataset.typeUnknownETV == 1 && this._settings.get("notification.monitor.unknownETV.colorActive");
 
 		const highlightColor = this._settings.get("notification.monitor.highlight.color");
 		const zeroETVColor = this._settings.get("notification.monitor.zeroETV.color");
@@ -317,7 +335,8 @@ class MonitorCore {
 				hourCycle: "h23",
 			}).format(date);
 		} catch (err) {
-			console.log("Date format invalid: " + date);
+			 
+			console.log("Date format invalid: " + date); // eslint-disable-line no-console
 			return "N/A";
 		}
 	}
@@ -378,6 +397,7 @@ class MonitorCore {
 		const debugPlaceholders = this._settings.get("general.debugPlaceholders");
 		if (debugTabTitle || debugPlaceholders) {
 			console.log("[MonitorCore] Counting visible items", {
+				 
 				allTiles: allTiles.length,
 				placeholderTiles: placeholderTiles.length,
 				itemTiles: itemTiles.length,
@@ -390,6 +410,7 @@ class MonitorCore {
 		// Debug logging
 		if (debugTabTitle || debugPlaceholders) {
 			console.log("[MonitorCore] Final count", {
+				 
 				count,
 				visibilityStateCount: this._visibilityStateManager?.getCount(),
 				mismatch: this._visibilityStateManager && this._visibilityStateManager.getCount() !== count,
@@ -431,6 +452,7 @@ class MonitorCore {
 			const debugTabTitle = this._settings.get("general.debugTabTitle");
 			if (debugTabTitle) {
 				console.log(`[TabTitle] Updated to: ${itemsCount}`, {
+					 
 					providedCount: count,
 					timestamp: new Date().toISOString(),
 				});

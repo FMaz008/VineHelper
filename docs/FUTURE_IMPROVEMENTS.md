@@ -4,51 +4,24 @@ This document tracks planned improvements that are not yet implemented or are in
 
 ## Performance Optimizations
 
-### Visibility Caching System (High Priority)
+### Virtual Scrolling Implementation
 
-**Status:** Next priority after current work
+**Status:** Future enhancement
 
 **Current Issue:**
+- All items are rendered in the DOM, even those outside viewport
+- Memory usage scales linearly with item count
+- Performance degrades with large numbers of items
 
-- Visibility is recalculated frequently, even when elements haven't changed
-- Multiple operations might check the same element's visibility repeatedly
-- No centralized visibility state management
-
-**Proposed Implementation:**
-
-```javascript
-// Visibility cache that tracks element visibility state
-#visibilityCache = new WeakMap();
-#cacheGeneration = 0; // Increment to invalidate all cached values
-
-#getCachedVisibility(element) {
-    const cached = this.#visibilityCache.get(element);
-    if (cached && cached.generation === this.#cacheGeneration) {
-        return cached.isVisible;
-    }
-
-    const isVisible = this.#isElementVisible(element);
-    this.#visibilityCache.set(element, {
-        isVisible,
-        generation: this.#cacheGeneration
-    });
-    return isVisible;
-}
-
-#invalidateVisibilityCache() {
-    this.#cacheGeneration++;
-    // Also invalidate computed style cache for Safari
-    if (this._env.isSafari()) {
-        this.#invalidateComputedStyleCache();
-    }
-}
-```
+**Proposed Solution:**
+- Implement virtual scrolling to only render visible items
+- Use Intersection Observer API for viewport detection
+- Maintain scroll position during dynamic updates
 
 **Benefits:**
-
-- Avoids redundant visibility calculations
-- Particularly beneficial for operations that check multiple elements
-- Generation-based invalidation is more efficient than clearing WeakMap
+- Constant memory usage regardless of item count
+- Improved scrolling performance
+- Better initial load times
 
 ## Completed Improvements
 
@@ -62,6 +35,16 @@ The following improvements have been completed and documented in other files:
 - ✅ **Stream Processing Memory Usage** (Commit: a4066e0) - See [MEMORY_MANAGEMENT.md](./MEMORY_MANAGEMENT.md)
     - 95% memory reduction (1.6 MB → 69.2 KB)
     - Named functions and cached settings
+- ✅ **Visibility Caching and Management** - See [VISIBILITY_AND_COUNT_MANAGEMENT.md](./VISIBILITY_AND_COUNT_MANAGEMENT.md)
+    - Centralized visibility state management
+    - WeakMap-based caching with automatic invalidation
+    - Batch operations reduce reflows from O(n) to O(1)
+    - ~39% performance improvement for filter operations
+- ✅ **Memory Optimizations** (Current PR) - See [MEMORY_PROFILE_ANALYSIS.md](./MEMORY_PROFILE_ANALYSIS.md)
+    - SharedKeywordMatcher with LRU cache (~50% memory reduction)
+    - UnifiedTransformHandler consolidating stream operations (~15% reduction)
+    - WeakMap usage for DOM element storage (improved GC)
+    - String interning for URLs in ItemsMgr
 
 ### Architecture
 
@@ -93,8 +76,8 @@ Current focus:
 
 1. **Immediate (Next PR):**
 
-    - Visibility caching system
     - Complete DI migration for Logger
+    - Browser API adapters
 
 2. **Short-term (Next 2-3 PRs):**
 

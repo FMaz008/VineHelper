@@ -29,6 +29,44 @@ async function loadStyleSheets() {
 	await Settings.waitForLoad();
 	logger.add("PREBOOT: config loaded!");
 
+	// Apply blind loading CSS immediately to prevent flicker
+	if (Settings.get("general.blindLoading")) {
+		logger.add("PREBOOT: Applying blind loading CSS to hide grid early");
+		loadStyleSheetContent(
+			`
+			/* Hide the grid container immediately to prevent flicker during page loads and pagination */
+			/* Using visibility instead of display to avoid layout issues */
+			/* Using a specific attribute selector that we can remove later */
+			body:not([data-vh-ready]) #vvp-items-grid-container {
+				visibility: hidden !important;
+				opacity: 0 !important;
+			}
+			
+			/* Also hide the items grid itself as a fallback */
+			body:not([data-vh-ready]) #vvp-items-grid {
+				visibility: hidden !important;
+				opacity: 0 !important;
+			}
+			
+			/* Hide the entire items container to be extra sure */
+			body:not([data-vh-ready]) .vvp-items-container {
+				visibility: hidden !important;
+				opacity: 0 !important;
+			}
+			
+			/* Smooth transition when showing */
+			body[data-vh-ready] #vvp-items-grid-container,
+			body[data-vh-ready] #vvp-items-grid,
+			body[data-vh-ready] .vvp-items-container {
+				visibility: visible !important;
+				opacity: 1 !important;
+				transition: opacity 0.2s ease-in-out;
+			}
+		`,
+			"blind-loading-early"
+		);
+	}
+
 	//Load Thorvarium stylesheets
 	if (Settings.get("thorvarium.mobileios")) loadStyleSheet("node_modules/vine-styling/mobile/ios-with-bugfix.css");
 

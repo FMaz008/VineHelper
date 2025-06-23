@@ -14,6 +14,7 @@ class NoShiftGrid {
 	_endPlaceholdersCountBuffer = 0;
 	#isUpdatingPlaceholders = false;
 	#pendingUpdate = false;
+	#pendingForceForFilter = false;
 
 	constructor(monitorInstance, visibilityStateManager) {
 		this._monitor = monitorInstance;
@@ -55,15 +56,24 @@ class NoShiftGrid {
 		this._resizeHandler = () => {
 			clearTimeout(this._resizeTimer);
 			this._resizeTimer = setTimeout(() => {
-				const debugPlaceholders = this._monitor._settings.get("general.debugPlaceholders");
-				if (debugPlaceholders) {
-					console.log("[NoShiftGrid] Resize/zoom detected, recalculating grid width");
-				}
-
+				// Check if grid width actually changed
+				const oldWidth = this._gridWidth;
 				this.#calculateGridWidth();
-				// Emit event instead of direct call to ensure proper batching
-				if (this._monitor && this._monitor._hookMgr) {
-					this._monitor._hookMgr.hookExecute("grid:resized");
+
+				// Only proceed if width actually changed
+				if (oldWidth !== this._gridWidth) {
+					const debugPlaceholders = this._monitor._settings.get("general.debugPlaceholders");
+					if (debugPlaceholders) {
+						console.log("[NoShiftGrid] Resize/zoom detected, recalculating grid width", {
+							oldWidth,
+							newWidth: this._gridWidth,
+						});
+					}
+
+					// Emit event instead of direct call to ensure proper batching
+					if (this._monitor && this._monitor._hookMgr) {
+						this._monitor._hookMgr.hookExecute("grid:resized");
+					}
 				}
 			}, 50); // Reduced delay for more responsive updates
 		};
@@ -139,21 +149,32 @@ class NoShiftGrid {
 
 	/**
 	 * Insert placeholder tiles to the grid to keep the grid elements fixed to their column with in sort TYPE_DATE_DESC
+	 * @param {boolean} forceForFilter - Force placeholder insertion for filter operations
 	 */
-	insertPlaceholderTiles() {
+	insertPlaceholderTiles(forceForFilter = false) {
 		// Prevent concurrent updates
 		if (this.#isUpdatingPlaceholders) {
 			this.#pendingUpdate = true;
 			return;
 		}
 
-		//If the sort is not by date DESC or the feed is paused, we don't need to do anything
-		if (this._monitor._sortType != TYPE_DATE_DESC || this._monitor._fetchingRecentItems) {
+		// Skip if feed is paused
+		if (this._monitor._fetchingRecentItems) {
+			const debugPlaceholders = this._monitor._settings?.get("general.debugPlaceholders");
+			if (debugPlaceholders) {
+				console.log("[NoShiftGrid] Skipping placeholder insertion - fetching recent items");
+			}
+			return;
+		}
+
+		// Allow placeholders for filters regardless of sort type, otherwise only for date DESC
+		if (!forceForFilter && this._monitor._sortType != TYPE_DATE_DESC) {
 			return;
 		}
 
 		// Mark as updating
 		this.#isUpdatingPlaceholders = true;
+		this.#pendingForceForFilter = forceForFilter; // Store the parameter for pending updates
 
 		try {
 			// Ensure we have the current grid width
@@ -166,9 +187,11 @@ class NoShiftGrid {
 
 			// Use VisibilityStateManager count if available for consistency
 			let visibleItemsCount;
+			let debugInfo = {};
 
 			if (this._visibilityStateManager) {
 				visibleItemsCount = this._visibilityStateManager.getCount();
+				debugInfo.source = "VisibilityStateManager";
 			} else {
 				// Fallback to DOM count using computed styles
 				const allTiles = this._monitor._gridContainer.querySelectorAll(
@@ -207,45 +230,73 @@ class NoShiftGrid {
 				}
 
 				visibleItemsCount = allTiles.length - hiddenCount;
+				debugInfo.source = "DOM count";
+				debugInfo.totalTiles = allTiles.length;
+				debugInfo.hiddenCount = hiddenCount;
 			}
 
 			// Debug logging
 			const debugPlaceholders = this._monitor._settings.get("general.debugPlaceholders");
-			if (debugPlaceholders) {
+			// Only log starting calculation if debugging and something might change
+			if (debugPlaceholders && forceForFilter) {
 				console.log("[NoShiftGrid] Starting placeholder calculation", {
 					visibleItemsCount,
 					visibilityStateCount: this._visibilityStateManager?.getCount(),
 					endPlaceholdersCount: this._endPlaceholdersCount,
 					gridWidth: this._gridWidth,
+					forceForFilter,
+					sortType: this._monitor._sortType,
+					...debugInfo,
 				});
 			}
 
 			//Re-calculate the total number of items in the grid
 			const theoricalItemsCount = visibleItemsCount + this._endPlaceholdersCount;
 
-			//ToDo: Find a better way to precisely calculate the actual tile width (with 2 decimal places)
-			const tileWidth = this._monitor._settings.get("notification.monitor.tileSize.width") + 1;
+			// Calculate the actual tile width
+			const tileWidth = this._calculateTileWidth();
 
 			//Calculate the number of tiles per row
 			const tilesPerRow = Math.floor(this._gridWidth / tileWidth);
 
-			//Caculate the number of placeholder tiles we need to insert
-			const numPlaceholderTiles = (tilesPerRow - (theoricalItemsCount % tilesPerRow)) % tilesPerRow;
+			//Calculate the number of placeholder tiles we need to insert
+			// When items would start a new row (remainder = 0), we need a full row of placeholders
+			// Otherwise, we need enough to complete the current row
+			const remainder = theoricalItemsCount % tilesPerRow;
+			const numPlaceholderTiles = remainder === 0 ? 0 : tilesPerRow - remainder;
 
-			// Debug logging
-			if (debugPlaceholders) {
-				console.log("[NoShiftGrid] Placeholder calculation result", {
-					theoricalItemsCount,
-					tilesPerRow,
-					numPlaceholderTiles,
-					calculation: `(${tilesPerRow} - (${theoricalItemsCount} % ${tilesPerRow})) % ${tilesPerRow} = (${tilesPerRow} - ${theoricalItemsCount % tilesPerRow}) % ${tilesPerRow} = ${numPlaceholderTiles}`,
-				});
-			}
+			// For filters, we always want to maintain alignment, so ensure we have placeholders
+			// to keep items in their columns
+			const finalPlaceholderCount =
+				forceForFilter && numPlaceholderTiles === 0 && visibleItemsCount > 0
+					? tilesPerRow
+					: numPlaceholderTiles;
 
 			// Only modify DOM if placeholder count changed
 			const currentPlaceholders = this._monitor._gridContainer.querySelectorAll(".vh-placeholder-tile");
-			if (currentPlaceholders.length === numPlaceholderTiles) {
-				return; // No change needed
+
+			// Debug logging - only log when debug is enabled AND (count changes OR force filter)
+			if (debugPlaceholders && (finalPlaceholderCount !== currentPlaceholders.length || forceForFilter)) {
+				console.log("[NoShiftGrid] Placeholder calculation result", {
+					theoricalItemsCount,
+					tilesPerRow,
+					remainder,
+					numPlaceholderTiles,
+					finalPlaceholderCount,
+					calculation: `remainder=${remainder}, placeholders=${numPlaceholderTiles}, final=${finalPlaceholderCount}`,
+					tileWidth,
+					gridWidth: this._gridWidth,
+					currentPlaceholderCount: currentPlaceholders.length,
+				});
+			}
+			// For filter operations, we need to reposition placeholders even if count is unchanged
+			// because items may have been filtered out from different positions
+			if (currentPlaceholders.length === finalPlaceholderCount && !forceForFilter) {
+				// Only log if explicitly debugging placeholders (not for every operation)
+				if (debugPlaceholders) {
+					console.log("[NoShiftGrid] Placeholder count unchanged, skipping DOM update");
+				}
+				return;
 			}
 
 			// Use DocumentFragment to batch DOM operations and prevent flickering
@@ -257,7 +308,7 @@ class NoShiftGrid {
 			}
 
 			// Create new placeholders
-			for (let i = 0; i < numPlaceholderTiles; i++) {
+			for (let i = 0; i < finalPlaceholderCount; i++) {
 				const placeholderTile = document.createElement("div");
 				placeholderTile.classList.add("vh-placeholder-tile");
 				placeholderTile.classList.add("vvp-item-tile");
@@ -267,6 +318,14 @@ class NoShiftGrid {
 
 			// Insert all placeholders at once at the beginning
 			if (fragment.childNodes.length > 0) {
+				const debugPlaceholders = this._monitor._settings?.get("general.debugPlaceholders");
+				if (debugPlaceholders) {
+					console.log("[NoShiftGrid] Inserting placeholders at beginning of grid", {
+						placeholderCount: fragment.childNodes.length,
+						firstChild: this._monitor._gridContainer.firstChild,
+						totalChildren: this._monitor._gridContainer.children.length,
+					});
+				}
 				this._monitor._gridContainer.insertBefore(fragment, this._monitor._gridContainer.firstChild);
 			}
 		} finally {
@@ -276,8 +335,10 @@ class NoShiftGrid {
 			// If there was a pending update, process it now
 			if (this.#pendingUpdate) {
 				this.#pendingUpdate = false;
+				const pendingForceForFilter = this.#pendingForceForFilter || false;
+				this.#pendingForceForFilter = false;
 				// Use setTimeout to avoid stack overflow
-				setTimeout(() => this.insertPlaceholderTiles(), 0);
+				setTimeout(() => this.insertPlaceholderTiles(pendingForceForFilter), 0);
 			}
 		}
 	}
@@ -296,7 +357,7 @@ class NoShiftGrid {
 		}
 
 		//Calculate the number of tiles per row (consistent with insertPlaceholderTiles)
-		const tileWidth = this._monitor._settings.get("notification.monitor.tileSize.width") + 1;
+		const tileWidth = this._calculateTileWidth();
 		const tilesPerRow = Math.floor(this._gridWidth / tileWidth);
 
 		// Guard against division by zero
@@ -310,6 +371,16 @@ class NoShiftGrid {
 		this._endPlaceholdersCountBuffer = this._endPlaceholdersCount;
 
 		//console.log("Adding ", this._endPlaceholdersCount, " imaginary placeholders tiles at the end of the grid");
+	}
+
+	/**
+	 * Calculate the width of a single tile including margins
+	 * @private
+	 * @returns {number} The width of a tile in pixels
+	 */
+	_calculateTileWidth() {
+		//ToDo: Find a better way to precisely calculate the actual tile width (with 2 decimal places)
+		return this._monitor._settings.get("notification.monitor.tileSize.width") + 1;
 	}
 
 	/**

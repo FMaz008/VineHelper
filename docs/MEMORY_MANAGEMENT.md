@@ -40,10 +40,11 @@ This document consolidates all memory-related documentation for the VineHelper n
 - **Problem**: KeywordMatch objects consuming 3.0 MB each were not being garbage collected
 - **Root Cause**: WeakMap cache was accumulating because Settings.get() returns new array references
 - **Fix**:
-    - Changed from WeakMap to Map with JSON stringified keys
-    - Added MAX_CACHE_SIZE limit of 10 entries
-    - Implemented automatic cache cleanup
-    - Added periodic cache clearing every 10 minutes via MemoryDebugger
+    - Implemented WeakMap + counter approach for cache keys
+    - MAX_CACHE_SIZE of 10 keyword arrays (not individual keywords)
+    - Each array's keywords are pre-compiled and cached together
+    - Automatic cleanup of oldest arrays when limit exceeded
+    - SharedKeywordMatcher for cross-component optimization
 - **Commit**: cd45f00
 
 ### Performance Issues
@@ -232,6 +233,53 @@ class SocketManager {
 }
 ```
 
+### 5. Keyword Caching Strategy Evolution
+
+**Important Lessons Learned**:
+
+1. **WeakMap Failure (Initial Attempt)**:
+
+    - WeakMap was used for caching compiled regex patterns
+    - Failed because Settings.get() returns new array references each time
+    - Result: 0% cache hit rate, patterns compiled on every match
+
+2. **JSON.stringify Approach (Too Slow)**:
+
+    - Used JSON.stringify(keywords) as cache key
+    - Performance: 1055x slower than current solution
+    - Abandoned due to performance impact
+
+3. **Current Solution (Optimal)**:
+
+    ```javascript
+    // WeakMap + counter approach for cache keys
+    const settingsArrayCache = new WeakMap();
+    let cacheKeyCounter = 0;
+
+    function getCacheKey(keywords) {
+    	if (settingsArrayCache.has(keywords)) {
+    		return settingsArrayCache.get(keywords);
+    	}
+    	const key = `keywords_${++cacheKeyCounter}`;
+    	settingsArrayCache.set(keywords, key);
+    	return key;
+    }
+    ```
+
+4. **Array Reference Stability**:
+
+    - SettingsMgrDI implements array caching to maintain stable references
+    - Components within a tab share the same array references
+    - Enables effective WeakMap caching
+
+5. **Cache Management**:
+    - KeywordMatch.js: Caches up to 10 different keyword arrays (e.g., highlight, hide, blur)
+    - Each array can contain hundreds of pre-compiled keywords
+    - SharedKeywordMatcher.js: Small last-match cache (100 entries max) for repeated checks
+    - No periodic clearing needed - cache size naturally limited
+
+**Key Takeaway**: Always verify that cache keys remain stable across calls. WeakMap only works when the same object reference is used as the key.
+
 ### 5. DOM Visibility Checking Optimization
 
 ```javascript
@@ -350,6 +398,7 @@ function countVisibleItemsBatched(container) {
     ```
 
 2. **Message Buffer Size Limiting**
+
     ```javascript
     class BoundedMessageBuffer {
     	constructor(maxSize = 1000) {
@@ -415,7 +464,6 @@ The MemoryDebugger automatically:
 - Checks for detached nodes every 30 seconds
 - Takes memory snapshots every 2 minutes
 - Runs leak detection every 5 minutes
-- Clears keyword cache every 10 minutes
 
 ### Memory Debugging UI
 

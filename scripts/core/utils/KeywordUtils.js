@@ -18,8 +18,15 @@ export function hasEtvCondition(keyword) {
  * @returns {boolean} True if the condition is satisfied
  */
 export function isEtvMinSatisfied(keywordEtvMin, itemEtvMax) {
+	// If no minimum requirement, always satisfied
 	if (!keywordEtvMin || keywordEtvMin === "") return true;
-	if (itemEtvMax === null || itemEtvMax === "") return false;
+
+	// Original logic: item must have a non-null, non-empty ETV value that satisfies the minimum
+	// This matches: (etv_max !== null && etv_max !== "" && etv_max >= parseFloat(word.etv_min))
+	if (itemEtvMax === null || itemEtvMax === undefined || itemEtvMax === "") {
+		return false;
+	}
+
 	return itemEtvMax >= parseFloat(keywordEtvMin);
 }
 
@@ -30,8 +37,15 @@ export function isEtvMinSatisfied(keywordEtvMin, itemEtvMax) {
  * @returns {boolean} True if the condition is satisfied
  */
 export function isEtvMaxSatisfied(keywordEtvMax, itemEtvMin) {
+	// If no maximum requirement, always satisfied
 	if (!keywordEtvMax || keywordEtvMax === "") return true;
-	if (itemEtvMin === null || itemEtvMin === "") return false;
+
+	// Original logic: item must have a non-null, non-empty ETV value that satisfies the maximum
+	// This matches: (etv_min !== null && etv_min !== "" && etv_min <= parseFloat(word.etv_max))
+	if (itemEtvMin === null || itemEtvMin === undefined || itemEtvMin === "") {
+		return false;
+	}
+
 	return itemEtvMin <= parseFloat(keywordEtvMax);
 }
 

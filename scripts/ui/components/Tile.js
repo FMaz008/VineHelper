@@ -23,7 +23,7 @@ var modalMgr = new ModalMgr();
 import { Template } from "/scripts/core/utils/Template.js";
 var Tpl = new Template();
 
-import { keywordMatch } from "/scripts/core/utils/KeywordMatch.js";
+import { sharedKeywordMatcher } from "/scripts/core/utils/SharedKeywordMatcher.js";
 import { YMDHiStoISODate } from "/scripts/core/utils/DateHelper.js";
 import { getTileByAsin, updateTileCounts } from "/scripts/ui/components/Grid.js";
 import { unescapeHTML, escapeHTML } from "/scripts/core/utils/StringHelper.js";
@@ -309,6 +309,15 @@ class Tile {
 	getTitle() {
 		if (this.#title == null) {
 			this.#title = getTitleFromDom(this.#tileDOM);
+			// Debug logging
+			const settings = new SettingsMgr();
+			if (settings.get("general.debugKeywords")) {
+				console.log("[Tile] Title retrieved from DOM:", {
+					asin: this.getAsin(),
+					title: this.#title.substring(0, 100) + (this.#title.length > 100 ? "..." : ""),
+					domElement: this.#tileDOM,
+				});
+			}
 		}
 		return this.#title;
 	}
@@ -440,8 +449,10 @@ class Tile {
 	async initiateTile() {
 		//Match with blur keywords.
 		this.#tileDOM.dataset.blurredKeyword = "";
-		if (Settings.isPremiumUser() && Settings.get("general.blurKeywords")?.length > 0) {
-			let match = keywordMatch(Settings.get("general.blurKeywords"), this.getTitle(), null, null);
+		const blurKeywords = Settings.get("general.blurKeywords");
+		if (Settings.isPremiumUser() && blurKeywords?.length > 0) {
+			// SharedKeywordMatcher handles compilation internally
+			let match = sharedKeywordMatcher.match(blurKeywords, this.getTitle(), null, null, "blur", Settings);
 			if (match) {
 				logger.add("TILE: The item match the keyword '" + match + "', blur it");
 				const img = this.#tileDOM.querySelector("img");
@@ -453,7 +464,8 @@ class Tile {
 					}
 				}
 				this.#tileDOM.querySelector(".vvp-item-product-title-container")?.classList.add("dynamic-blur");
-				this.#tileDOM.dataset.blurredKeyword = escapeHTML(match);
+				const blurMatchString = typeof match === "object" ? match.contains || match.word || "" : match;
+				this.#tileDOM.dataset.blurredKeyword = escapeHTML(blurMatchString);
 			}
 		}
 
@@ -468,11 +480,26 @@ class Tile {
 	}
 
 	colorizeHighlight() {
-		const zeroETV = this.#tileDOM.dataset.zeroETV === "true" && Settings.get("general.zeroETVHighlight.active");
-		const highlight =
-			this.#tileDOM.dataset.keywordHighlight === "true" && Settings.get("general.highlightColor.active");
+		const zeroETV = this.#tileDOM.dataset.typeZeroETV === "1" && Settings.get("general.zeroETVHighlight.active");
+		const highlight = this.#tileDOM.dataset.typeHighlight === "1" && Settings.get("general.highlightColor.active");
 		const unknownETV =
-			this.#tileDOM.dataset.unknownETV === "true" && Settings.get("general.unknownETVHighlight.active");
+			this.#tileDOM.dataset.typeUnknownETV === "1" && Settings.get("general.unknownETVHighlight.active");
+
+		// Debug logging
+		if (Settings.get("general.debugKeywords")) {
+			console.log("[Tile] colorizeHighlight called:", {
+				asin: this.#asin,
+				typeHighlight: this.#tileDOM.dataset.typeHighlight,
+				typeZeroETV: this.#tileDOM.dataset.typeZeroETV,
+				typeUnknownETV: this.#tileDOM.dataset.typeUnknownETV,
+				highlightColorActive: Settings.get("general.highlightColor.active"),
+				zeroETVHighlightActive: Settings.get("general.zeroETVHighlight.active"),
+				unknownETVHighlightActive: Settings.get("general.unknownETVHighlight.active"),
+				willHighlight: highlight,
+				willHighlightZeroETV: zeroETV,
+				willHighlightUnknownETV: unknownETV,
+			});
+		}
 
 		this.#tileDOM.style.backgroundColor = "unset";
 		this.#tileDOM.style.background = "unset";
@@ -590,7 +617,22 @@ function getTileFromDom(tileDom) {
 
 function getTitleFromDom(tileDom) {
 	let textElement = tileDom.querySelector(".a-truncate-full");
-	return textElement ? textElement.textContent : "";
+	const title = textElement ? textElement.textContent : "";
+
+	// Debug logging
+	const settings = new SettingsMgr();
+	if (settings.get("general.debugKeywords")) {
+		const asinElement = tileDom.querySelector("[data-asin]");
+		const asin = asinElement ? asinElement.dataset.asin : "unknown";
+		console.log("[getTitleFromDom] Extracting title:", {
+			asin: asin,
+			title: title.substring(0, 100) + (title.length > 100 ? "..." : ""),
+			textElement: textElement,
+			tileDom: tileDom,
+		});
+	}
+
+	return title;
 }
 
 function getThumbnailURLFromDom(tileDom) {

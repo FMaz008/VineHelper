@@ -2,15 +2,10 @@
 
 import { Internationalization } from "/scripts/core/services/Internationalization.js";
 import { Item } from "/scripts/core/models/Item.js";
-import {
-	initializeServices,
-	getSettingsManager,
-	getKeywordCompilationService,
-} from "/scripts/infrastructure/SettingsFactoryEnhanced.js";
+import { initializeServices, getSettingsManager } from "/scripts/infrastructure/SettingsFactoryEnhanced.js";
 
 // Initialize services
 let Settings = null;
-let keywordService = null;
 let i13n = new Internationalization();
 let notificationsData = {};
 let masterCheckInterval = 0.2; //Firefox shutdown the background script after 30seconds.
@@ -21,45 +16,34 @@ let selectedWord = ""; // For context menu functionality
 	try {
 		await initializeServices();
 		Settings = getSettingsManager();
-		keywordService = getKeywordCompilationService();
 
 		console.log("[ServiceWorker] DI services initialized successfully");
 
 		// Listen for keyword updates to clear cache
 		chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 			if (message.action === "keywordsUpdated") {
-				keywordService.clearCache().then(() => {
+				// Clear keyword cache in settings manager
+				if (Settings.clearKeywordCache) {
+					Settings.clearKeywordCache();
 					console.log("[ServiceWorker] Keyword cache cleared after update");
-					// Re-compile keywords
-					recompileKeywords();
-				});
+				}
 			}
 		});
 	} catch (error) {
 		console.error("[ServiceWorker] Failed to initialize DI services:", error);
-		// Fallback to compatibility mode
-		const { SettingsMgr } = await import("/scripts/core/services/SettingsMgrCompat.js");
-		Settings = new SettingsMgr();
+		// Service workers cannot recover from this error - DI is required
+		throw error;
 	}
 })();
 
-// Helper function to recompile keywords after updates
-async function recompileKeywords() {
-	if (!keywordService) return;
+// Removed old keyword caching functions - now handled by SettingsMgrDI
 
-	const keywordTypes = [
-		{ key: "general.highlightKeywords", type: "highlight" },
-		{ key: "general.hideKeywords", type: "hide" },
-		{ key: "general.blurKeywords", type: "blur" },
-	];
-
-	for (const { key, type } of keywordTypes) {
-		const keywords = (await Settings.get(key)) || [];
-		if (keywords.length > 0) {
-			await keywordService.compileAndShare(type, keywords);
-		}
-	}
-}
+// NOTE: Keywords in the service worker are NOT mission-critical
+// The service worker only uses keywords for:
+// 1. Adding new keywords via context menu (right-click)
+// 2. Clearing keyword cache when keywords are updated
+// All actual keyword matching happens in content scripts and the notification monitor
+// If the service worker goes offline, keyword functionality continues to work
 
 //#####################################################
 //## LISTENERS
@@ -103,11 +87,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 			});
 
 			await Settings.set("general.hideKeywords", newArrHide);
-
-			// Recompile keywords after update
-			if (keywordService) {
-				await keywordService.compileAndShare("hide", newArrHide);
-			}
+			// Keywords are now automatically compiled by SettingsMgrDI
 
 			sendResponse({ success: true });
 		} else if (message.list === "Highlight") {
@@ -122,11 +102,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 			});
 
 			await Settings.set("general.highlightKeywords", newArrHighlight);
-
-			// Recompile keywords after update
-			if (keywordService) {
-				await keywordService.compileAndShare("highlight", newArrHighlight);
-			}
+			// Keywords are now automatically compiled by SettingsMgrDI
 
 			sendResponse({ success: true });
 		}
@@ -212,7 +188,9 @@ async function sendMessageToAllTabs(data) {
 				const match = regex.exec(tab.url);
 				//Edge Canari Mobile does not support tab.url
 				if (tab.url == undefined || match) {
-					console.log("Sending to tab id " + tab.id, data);
+					if (Settings.get("general.debugServiceWorker")) {
+						console.log("Sending to tab id " + tab.id, data);
+					}
 					sendMessageToTab(tab.id, data);
 				}
 			}
@@ -259,11 +237,23 @@ function sendMessageToTab(tabId, data) {
 
 chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
 	chrome.notifications.onClicked.addListener((notificationId) => {
+		if (Settings.get("general.debugServiceWorker")) {
+			console.log("[ServiceWorker] Notification clicked", {
+				notificationId,
+				data: notificationsData[notificationId],
+			});
+		}
+
 		const { asin, queue, is_parent_asin, enrollment_guid, search, is_pre_release } =
-			notificationsData[notificationId];
+			notificationsData[notificationId] || {};
+
 		let url;
+		const domain = Settings.get("general.country") || "com";
+
+		// Check if we should open modal (requires all necessary data)
 		if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
 			try {
+				// Create the openModal URL like the old code did
 				const item = new Item({
 					asin: asin,
 					queue: queue,
@@ -271,20 +261,32 @@ chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
 					is_pre_release: is_pre_release,
 					enrollment_guid: enrollment_guid,
 				});
-				item.setSearch(search);
-				url = item.getModalUrl();
+				const options = item.getCoreInfoWithVariant();
+				url = `https://www.amazon.${domain}/vine/vine-items?queue=encore#openModal;${encodeURIComponent(JSON.stringify(options))}`;
+				if (Settings.get("general.debugServiceWorker")) {
+					console.log("[ServiceWorker] Opening modal URL:", url);
+				}
 			} catch (error) {
-				console.error("[ServiceWorker] Cannot create item for notification click -", error.message, {
-					notificationData: notificationsData[notificationId],
-					source: "notification click handler",
-				});
-				// Fallback to search URL
-				url = search;
+				console.error("[ServiceWorker] Cannot create modal URL, falling back to search", error);
+				// Fall back to search URL
+				if (search) {
+					url = `https://www.amazon.${domain}/vine/vine-items?search=${encodeURIComponent(search)}`;
+				}
 			}
+		} else if (search) {
+			// Use search string (item title) not ASIN
+			url = `https://www.amazon.${domain}/vine/vine-items?search=${encodeURIComponent(search)}`;
 		} else {
-			url = search;
+			// Last resort: just open vine items page
+			url = `https://www.amazon.${domain}/vine/vine-items`;
+			console.warn("[ServiceWorker] No search string available for notification", {
+				notificationData: notificationsData[notificationId],
+			});
 		}
 
+		if (Settings.get("general.debugServiceWorker")) {
+			console.log("[ServiceWorker] Opening URL from notification click:", url);
+		}
 		chrome.tabs.create({ url: url });
 		chrome.notifications.clear(notificationId);
 		delete notificationsData[notificationId];
@@ -293,23 +295,58 @@ chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
 
 async function pushNotification(title, item) {
 	const notificationId = `notification_${Date.now()}`;
-	const iconUrl = await i13n.getURL("resource/image/icon-128.png");
+	const iconUrl = chrome.runtime.getURL("resource/image/icon-128.png");
+
+	// Handle both object with methods and plain object formats
+	// If item is an Item instance, get the data from getAllInfo()
+	const itemData = item.getAllInfo ? item.getAllInfo() : item;
 
 	// Store notification data
 	notificationsData[notificationId] = {
-		asin: item.getAsin(),
-		queue: item.getQueue(),
-		is_parent_asin: item.getIsParentAsin(),
-		enrollment_guid: item.getEnrollmentGuid(),
-		search: item.getSearch(),
-		is_pre_release: item.getIsPreRelease(),
+		asin: itemData.asin,
+		queue: itemData.queue,
+		is_parent_asin: itemData.is_parent_asin,
+		enrollment_guid: itemData.enrollment_guid,
+		search: itemData.search,
+		is_pre_release: itemData.is_pre_release,
 	};
 
-	chrome.notifications.create(notificationId, {
+	// Get the product image URL if available
+	const imageUrl = itemData.img_url;
+
+	// Debug logging for notification images
+	if (Settings.get("general.debugServiceWorker")) {
+		console.log("[ServiceWorker] Notification image data", {
+			asin: itemData.asin,
+			title: itemData.title,
+			imageUrl: imageUrl,
+			hasImgUrl: !!itemData.img_url,
+			itemDataKeys: Object.keys(itemData),
+			fullItemData: itemData,
+		});
+
+		if (!imageUrl) {
+			console.warn("[ServiceWorker] No image URL for notification");
+		}
+	}
+
+	const notificationOptions = {
 		type: "basic",
-		iconUrl: iconUrl,
+		iconUrl: imageUrl || iconUrl, // Use product image as icon if available, fallback to extension icon
 		title: title,
-		message: item.getTitle(),
+		message: itemData.title || "",
 		priority: 2,
-	});
+		silent: false,
+	};
+
+	if (Settings.get("general.debugServiceWorker")) {
+		console.log("[ServiceWorker] Creating notification", {
+			asin: itemData.asin,
+			type: notificationOptions.type,
+			iconUrl: notificationOptions.iconUrl,
+			hasProductImage: !!imageUrl,
+		});
+	}
+
+	chrome.notifications.create(notificationId, notificationOptions);
 }

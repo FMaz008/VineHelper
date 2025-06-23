@@ -458,7 +458,9 @@ async function hideAllItems() {
 	// Scoll to the RFY/AFA/AI header
 	if (Settings.get("hiddenTab.scrollToRFY")) {
 		var scrollTarget = document.getElementById("vvp-items-button-container");
-		scrollTarget.scrollIntoView({ behavior: "smooth" });
+		if (scrollTarget) {
+			scrollTarget.scrollIntoView({ behavior: "instant", block: "start" });
+		}
 	}
 }
 
@@ -492,7 +494,9 @@ async function showAllItems() {
 	// Scoll to the RFY/AFA/AI header
 	if (Settings.get("hiddenTab.scrollToRFY")) {
 		var scrollTarget = document.getElementById("vvp-items-button-container");
-		scrollTarget.scrollIntoView({ behavior: "smooth" });
+		if (scrollTarget) {
+			scrollTarget.scrollIntoView({ behavior: "instant", block: "start" });
+		}
 	}
 }
 

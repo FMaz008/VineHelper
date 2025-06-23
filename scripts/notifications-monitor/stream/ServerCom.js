@@ -115,7 +115,9 @@ class ServerCom {
 		// Send the item to the stream processing, to come out to the #dataBuffering function,
 		// which will pass them to the processBroadcastMessage as newItem, as the type is set by this function.
 		if (data.type == "newPreprocessedItem") {
-			console.log("newPreprocessedItem", data);
+			if (this._monitor._settings.get("general.debugServercom")) {
+				console.log("[ServerCom] newPreprocessedItem", data);
+			}
 			const item = this.#createValidatedItem(data.item, "newPreprocessedItem from WebSocket");
 			if (item) {
 				myStream.input({
@@ -130,7 +132,9 @@ class ServerCom {
 
 		// Received from #dataBuffering function, the data is the result of the output of the stream processing.
 		if (data.type == "newItem") {
-			console.log("newItem", data);
+			if (this._monitor._settings.get("general.debugServercom")) {
+				console.log("[ServerCom] newItem", data);
+			}
 			//The broadcastChannel will pass the item as an object, not an instance of Item.
 			if (!(data.item instanceof Item)) {
 				data.item = this.#createValidatedItem(
@@ -176,6 +180,13 @@ class ServerCom {
 	#setWebSocketStatus(status, message = null) {
 		const icon = document.querySelector("#statusWS div.vh-switch-32");
 		const description = document.querySelector("#descriptionWS");
+		
+		// Add null checks to prevent errors when elements don't exist
+		if (!icon || !description) {
+			console.warn("[ServerCom] WebSocket status elements not found in DOM");
+			return;
+		}
+		
 		if (status) {
 			icon.classList.remove("vh-icon-switch-off");
 			icon.classList.add("vh-icon-switch-on");

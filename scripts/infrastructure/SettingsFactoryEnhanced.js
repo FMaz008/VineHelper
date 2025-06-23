@@ -9,8 +9,7 @@ import { SettingsMgrDI } from "/scripts/core/services/SettingsMgrDI.js";
 import { ChromeStorageAdapter, MemoryStorageAdapter } from "/scripts/infrastructure/StorageAdapter.js";
 import { RuntimeAdapter, MockRuntimeAdapter } from "/scripts/infrastructure/RuntimeAdapter.js";
 import { container } from "/scripts/infrastructure/DIContainer.js";
-import { registerKeywordCompilationService } from "/scripts/core/services/KeywordCompilationService.js";
-import { setCompilationService } from "/scripts/core/utils/KeywordMatchDI.js";
+import { Logger } from "/scripts/core/utils/Logger.js";
 
 // Detect if we're in a test environment
 const isTestEnvironment = typeof process !== "undefined" && process.env.NODE_ENV === "test";
@@ -46,9 +45,7 @@ container.register(
 // Register the logger
 container.register(
 	"logger",
-	async () => {
-		// Dynamic import to avoid circular dependencies
-		const { Logger } = await import("/scripts/core/utils/Logger.js");
+	() => {
 		return new Logger();
 	},
 	{
@@ -68,22 +65,7 @@ container.register(
 	}
 );
 
-// Register the keyword compilation service
-registerKeywordCompilationService(container);
-
-// Initialize the keyword compilation service with KeywordMatchDI
-container.register(
-	"keywordMatchInitializer",
-	(keywordCompilationService) => {
-		// Set the compilation service in KeywordMatchDI
-		setCompilationService(keywordCompilationService);
-		return true; // Return something to satisfy the DI container
-	},
-	{
-		singleton: true,
-		dependencies: ["keywordCompilationService"],
-	}
-);
+// Keyword compilation service removed - now handled by SettingsMgrDI
 
 /**
  * Initialize all services
@@ -91,35 +73,9 @@ container.register(
  */
 export async function initializeServices() {
 	try {
-		// Resolve the initializer to set up the compilation service
-		await container.resolve("keywordMatchInitializer");
-
-		// Initialize the keyword compilation service
-		const compilationService = await container.resolve("keywordCompilationService");
-
-		// Pre-compile keywords from settings
+		// Initialize the settings manager
 		const settings = await container.resolve("settingsManager");
 		await settings.waitForLoad();
-
-		// Pre-compile all keyword types
-		const keywordTypes = [
-			{ key: "general.highlightKeywords", type: "highlight" },
-			{ key: "general.hideKeywords", type: "hide" },
-			{ key: "general.blurKeywords", type: "blur" },
-		];
-
-		for (const { key, type } of keywordTypes) {
-			const keywords = settings.get(key) || [];
-			if (keywords.length > 0) {
-				const stats = await compilationService.compileAndShare(type, keywords);
-				if (!isTestEnvironment) {
-					const cacheStatus = stats.cached ? " (from cache)" : "";
-					console.log(
-						`[SettingsFactory] Pre-compiled ${stats.compiled}/${stats.total} ${type} keywords${cacheStatus}`
-					);
-				}
-			}
-		}
 
 		console.log("[SettingsFactory] All services initialized successfully");
 	} catch (error) {
@@ -141,13 +97,6 @@ export function getContainer() {
  */
 export function getSettingsManager() {
 	return container.resolve("settingsManager");
-}
-
-/**
- * Get the keyword compilation service
- */
-export function getKeywordCompilationService() {
-	return container.resolve("keywordCompilationService");
 }
 
 /**
@@ -183,8 +132,6 @@ export function createTestContainer() {
 		singleton: true,
 		dependencies: ["storage", "logger"],
 	});
-
-	registerKeywordCompilationService(testContainer);
 
 	return testContainer;
 }

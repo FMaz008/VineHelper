@@ -72,7 +72,7 @@
 	],
 	"background": {
 		"type": "module",
-		"service_worker": "scripts/vh_service_worker.js"
+		"service_worker": "scripts/vh_service_worker_di.js"
 	},
 	"content_scripts": [
 		{

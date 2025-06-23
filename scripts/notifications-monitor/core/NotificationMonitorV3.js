@@ -45,11 +45,15 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		});
 
 		// Register VisibilityStateManager as a singleton
-		// Manages visible items count with incremental updates
-		this.#container.register("visibilityStateManager", (hookMgr) => new VisibilityStateManager(hookMgr), {
-			singleton: true,
-			dependencies: ["hookMgr"],
-		});
+		// Manages both visible items count and element visibility state with centralized control
+		this.#container.register(
+			"visibilityStateManager",
+			(hookMgr, settings) => new VisibilityStateManager(hookMgr, settings),
+			{
+				singleton: true,
+				dependencies: ["hookMgr", "settings"],
+			}
+		);
 
 		// Register GridEventManager with its dependencies
 		// This demonstrates proper DI with dependency injection
@@ -68,6 +72,7 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		this.#container.register("hookMgr", () => this._hookMgr);
 		this.#container.register("noShiftGrid", () => this._noShiftGrid);
 		this.#container.register("monitor", () => this);
+		this.#container.register("settings", () => this._settings);
 
 		// Future services can be registered here as we migrate them
 		// Example for when TileSizer is migrated:
@@ -80,9 +85,12 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		// Wait for settings to load before proceeding
 		await this._settings.waitForLoad();
 
-		// Pre-compile all keyword regex patterns after settings are loaded
-		const { precompileAllKeywords } = await import("/scripts/core/utils/KeywordPrecompiler.js");
-		precompileAllKeywords(this._settings, "NotificationMonitorV3");
+		const debugInit = this._settings.get("general.debugTabTitle");
+		if (debugInit) {
+			console.log("[NotificationMonitorV3] Starting initialization...");
+			console.log("[NotificationMonitorV3] Settings loaded");
+		}
+		// Keywords are now pre-compiled when saved in settings
 
 		if (this._settings.get("notification.monitor.listView")) {
 			this._itemTemplateFile = "tile_listview.html";
@@ -180,12 +188,25 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		// Initialize the VisibilityStateManager with the current count
 		// This ensures placeholders show correctly on initial load
 		const initialCount = this._countVisibleItems();
-		if (this._visibilityStateManager && initialCount > 0) {
+		if (this._visibilityStateManager && initialCount >= 0) {
 			this._visibilityStateManager.setCount(initialCount);
+
+			// Debug initial count
+			if (this._settings.get("general.debugTabTitle")) {
+				console.log("[NotificationMonitorV3] Initial count set", {
+					initialCount,
+					totalTiles: this._gridContainer.querySelectorAll(".vvp-item-tile").length,
+					placeholders: this._gridContainer.querySelectorAll(".vh-placeholder-tile").length,
+					itemTiles: this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)").length,
+				});
+			}
 		}
 
 		// Initialize event-driven tab title updates
 		this._initializeTabTitleListener();
+
+		// Set up periodic count verification to catch off-by-one errors
+		this._setupCountVerification();
 
 		//Insert the header
 		const parentContainer = document.querySelector("div.vvp-tab-content");
@@ -193,13 +214,33 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		const topContainer = document.querySelector("div#vvp-items-grid-container");
 		const itemContainer = document.querySelector("div#vvp-items-grid");
 
-		let prom2 = await this._tpl.loadFile("scripts/ui/templates/notification_monitor_header.html");
-		this._tpl.setVar("fetchLimit", this._fetchLimit);
-		this._tpl.setIf("TIER3", this._settings.isPremiumUser(3));
-		this._tpl.setIf("TIER2", this._settings.isPremiumUser(2));
-		this._tpl.setIf("TIER1", this._settings.isPremiumUser(1));
-		const header = this._tpl.render(prom2, true);
-		parentContainer.insertBefore(header, mainContainer);
+		try {
+			let prom2 = await this._tpl.loadFile("scripts/ui/templates/notification_monitor_header.html");
+			this._tpl.setVar("fetchLimit", this._fetchLimit);
+			this._tpl.setIf("TIER3", this._settings.isPremiumUser(3));
+			this._tpl.setIf("TIER2", this._settings.isPremiumUser(2));
+			this._tpl.setIf("TIER1", this._settings.isPremiumUser(1));
+			const header = this._tpl.render(prom2, true);
+			parentContainer.insertBefore(header, mainContainer);
+		} catch (error) {
+			console.error("Failed to load notification monitor header:", error);
+			// Show error message to user
+			const errorDiv = document.createElement("div");
+			errorDiv.className = "vh-error-message";
+			errorDiv.style.cssText =
+				"background: #ff4444; color: white; padding: 10px; margin: 10px 0; border-radius: 5px;";
+			errorDiv.innerHTML = `
+				<strong>Error: Failed to load notification monitor header</strong><br>
+				Please try the following:<br>
+				1. Open VineHelper Settings (this reloads all templates)<br>
+				2. Reload this page<br>
+				If the problem persists, please report this issue.
+			`;
+			parentContainer.insertBefore(errorDiv, mainContainer);
+
+			// Throw error to prevent further initialization with broken state
+			throw new Error("Critical template loading failure - cannot continue initialization");
+		}
 
 		// Update UI filters after header is inserted
 		this._loadUIUserSettings();
@@ -232,8 +273,14 @@ class NotificationMonitorV3 extends NotificationMonitor {
 			this.#initTileSizeWidget();
 		}
 
-		document.getElementById("date_loaded").innerText = this._formatDate();
+		const dateLoadedElement = document.getElementById("date_loaded");
+		if (dateLoadedElement) {
+			dateLoadedElement.innerText = this._formatDate();
+		}
 		this._mostRecentItemDateDOM = document.getElementById("date_most_recent_item");
+		if (!this._mostRecentItemDateDOM) {
+			console.error("date_most_recent_item element not found in DOM");
+		}
 
 		if (!this._env.isFirefox() && this._settings.get("notification.monitor.openLinksInNewTab") != "1") {
 			if (this._settings.get("notification.monitor.preventUnload")) {
@@ -252,9 +299,16 @@ class NotificationMonitorV3 extends NotificationMonitor {
 
 		//Initial check of the status of services (master monitor and WebSocket)
 		this._serverComMgr.updateServicesStatus();
+		if (debugInit) {
+			console.log("[NotificationMonitorV3] Services status updated");
+		}
 
 		// Initialize the error alert manager
 		this._errorAlertManager.initialize();
+		if (debugInit) {
+			console.log("[NotificationMonitorV3] Error alert manager initialized");
+			console.log("[NotificationMonitorV3] Is Master Monitor:", this._isMasterMonitor);
+		}
 
 		if (
 			this._settings.get("notification.monitor.placeholders") &&
