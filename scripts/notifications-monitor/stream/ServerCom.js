@@ -34,7 +34,12 @@ class ServerCom {
 
 		// Bind the dataBuffering function to preserve this context
 		broadcastFunction((data) => this.#dataBuffering(data));
-		notificationPushFunction(this.#pushNotification);
+
+		//Only the master monitor should push notifications
+		//Otherwise we get duplicates push notifications.
+		if (this._monitor._isMasterMonitor) {
+			notificationPushFunction(this.#pushNotification);
+		}
 	}
 
 	/**
@@ -180,13 +185,13 @@ class ServerCom {
 	#setWebSocketStatus(status, message = null) {
 		const icon = document.querySelector("#statusWS div.vh-switch-32");
 		const description = document.querySelector("#descriptionWS");
-		
+
 		// Add null checks to prevent errors when elements don't exist
 		if (!icon || !description) {
 			console.warn("[ServerCom] WebSocket status elements not found in DOM");
 			return;
 		}
-		
+
 		if (status) {
 			icon.classList.remove("vh-icon-switch-off");
 			icon.classList.add("vh-icon-switch-on");
