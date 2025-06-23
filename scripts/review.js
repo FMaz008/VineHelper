@@ -115,7 +115,7 @@ async function boot_review() {
 	}
 
 	//Resize the review box
-	const reviewTextarea = document.getElementById("reviewText");
+	const reviewTextarea = getReviewContentObject();
 	if (reviewTextarea) {
 		// Use ResizeObserver to detect textarea size changes
 		const resizeObserver = new ResizeObserver((entries) => {
@@ -248,6 +248,11 @@ async function boot_review() {
 
 	function getReviewContentObject() {
 		let reviewContent;
+		reviewContent = document.querySelector("#reviewText textarea");
+		if (reviewContent) {
+			return reviewContent;
+		}
+
 		reviewContent = document.getElementById("reviewText");
 		if (reviewContent == undefined) {
 			return document.getElementById("scarface-review-text-card-title");
