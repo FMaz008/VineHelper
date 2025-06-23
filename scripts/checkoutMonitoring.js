@@ -109,6 +109,10 @@ function getTotal() {
 	return total;
 }
 
+/**
+ * This error is not specific to vine, but is displayed when there is no stock available for the quantity requested.
+ * @returns boolean
+ */
 function checkForOutOfStockError() {
 	const outOfStockError = document.querySelector(`div[data-messageid="OfferListingUnavailableCvMessage"]`);
 	if (outOfStockError) {
@@ -117,6 +121,10 @@ function checkForOutOfStockError() {
 	}
 }
 
+/**
+ * This error is specific to vine, but can happen when we take too long (>10 minutes?) to complete the checkout.
+ * @returns boolean
+ */
 function checkForVineOrderCannotBeProcessedError() {
 	const orderCannotBeProcessedError = document.querySelector(`div[data-messageid="VineCVMessage"]`);
 	if (orderCannotBeProcessedError) {
@@ -142,7 +150,8 @@ async function checkForError() {
 		console.log("Item ASIN: " + currentInfo.asin);
 		console.log("Parent ASIN: " + currentInfo.parent_asin);
 		console.log("Country: " + getCountry());
-		if (checkForVineOrderCannotBeProcessedError()) {
+		//We want the error confirming this is a vine listing AND the error confirming there is no stock available.
+		if (checkForVineOrderCannotBeProcessedError() && checkForOutOfStockError()) {
 			console.log("vine error stock not available");
 			console.log("Assume ITEM_NOT_IN_ENROLLMENT error");
 			contactVHServer(false);
