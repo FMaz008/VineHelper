@@ -1,5 +1,17 @@
 # Count/Placeholder Synchronization Investigation
 
+## Summary
+
+This document details the investigation and resolution of four critical synchronization issues in the VineHelper notification monitor:
+
+1. **KW Match Filter Count Desynchronization**: When applying the KW Match filter, the visible item count in the tab title would become out of sync with the actual number of visible items.
+
+2. **Placeholder Positioning During Fetch**: During the "fetching recent items" phase, placeholder tiles would briefly appear at the top of the grid before jumping to their correct position at the bottom.
+
+3. **Zero ETV Duplicate Processing**: When items receive Zero ETV values, the visibility count would be updated multiple times, causing count mismatches.
+
+4. **Undefined ASIN in Duplicate Processing Check**: The Zero ETV duplicate processing prevention was ineffective due to using an undefined `asin` variable.
+
 ## Problem Description
 
 - Tab shows 11 items but only 10 are visible
@@ -25,6 +37,23 @@ During the "fetching recent items" phase, placeholders would briefly appear at t
 
 - Visual "bounce" effect as placeholders moved from top to bottom
 - Poor user experience during initial page load
+
+### 3. **Zero ETV Duplicate Processing**
+
+When items receive Zero ETV values, the visibility count would be updated multiple times, causing count mismatches. This was caused by:
+
+- The `#setETV` method being called multiple times for the same item (once for min value, once for max value)
+- Each call triggering the full Zero ETV visibility check logic
+- No mechanism to prevent duplicate processing of the same item
+- Resulting in multiple visibility state changes and count updates for a single item
+
+### 4. **Undefined ASIN in Duplicate Processing Check**
+
+The Zero ETV duplicate processing prevention mechanism was failing due to a scoping issue. This was caused by:
+
+- The `#checkZeroETVStatus` method attempting to use an undefined `asin` variable
+- The duplicate check `this.#etvProcessingItems.has(asin)` always returning false because `asin` was undefined
+- This allowed the same item to be processed multiple times, defeating the purpose of the tracking Set
 
 ## Solutions Implemented
 
@@ -74,6 +103,37 @@ During the "fetching recent items" phase, placeholders would briefly appear at t
     - Trigger sort after placeholder update to ensure correct positioning
     - Prevent placeholder "bounce" during initial load
 
+### Fix 3: Zero ETV Duplicate Processing Prevention
+
+#### Changes in `NotificationMonitor.js`:
+
+1. **Processing Tracker**: Added `#etvProcessingItems` Set to track items currently being processed:
+
+    - Prevents duplicate Zero ETV visibility checks for the same item
+    - Ensures each item's visibility is only updated once per ETV update cycle
+    - Automatically cleaned up when items are removed
+
+2. **Modified `#setETV` Method**:
+
+    - Check if item is already being processed before running Zero ETV logic
+    - Add item to processing set at start of Zero ETV check
+    - Remove from set after processing completes
+    - Prevents race conditions when min/max ETV values are set in quick succession
+
+3. **Enhanced Debug Logging**:
+    - Added stack trace logging to identify duplicate processing call paths
+    - Track when items are added/removed from processing set
+    - Log visibility state changes with detailed context
+
+### Fix 4: Undefined ASIN Variable Fix
+
+#### Changes in `NotificationMonitor.js`:
+
+1. **Fixed Variable Scoping in `#checkZeroETVStatus`**:
+    - Added `const asin = notif.dataset.asin;` to properly retrieve the ASIN
+    - This ensures the duplicate processing check actually works
+    - The tracking Set can now properly identify and prevent duplicate processing
+
 ## Technical Details
 
 ### Event Flow for Filter Changes:
@@ -100,6 +160,22 @@ During the "fetching recent items" phase, placeholders would briefly appear at t
     - Updates placeholders first
     - Triggers sort to position placeholders correctly
 
+### Event Flow for Zero ETV Processing:
+
+1. Item receives ETV update via `#setETV(item, value, isMax)`
+2. Method checks if item is already in `#etvProcessingItems` Set
+3. If not already processing:
+    - Add item to processing set
+    - Check if value is zero and item matches Zero ETV criteria
+    - If visibility needs to change:
+        - Update item visibility
+        - Trigger visibility state change in `VisibilityStateManager`
+        - Count is updated only once
+    - Remove item from processing set
+4. If already processing (duplicate call):
+    - Skip all Zero ETV logic
+    - Prevent duplicate visibility updates
+
 ## Debug Settings
 
 To troubleshoot count/placeholder issues, enable these debug settings:
@@ -117,10 +193,19 @@ To troubleshoot count/placeholder issues, enable these debug settings:
     - Switch filters and verify count updates immediately
 
 2. **For Placeholder Positioning**:
+
     - Reload the page
     - Watch for placeholders during "fetching recent items"
     - Verify placeholders appear at bottom, not top
     - Confirm no visual "bounce" effect
+
+3. **For Zero ETV Duplicate Processing**:
+    - Enable debug tab title and debug placeholders settings
+    - Monitor items receiving Zero ETV values
+    - Check console for "Zero ETV item visibility check" logs
+    - Verify each item only appears once in these logs
+    - Confirm count changes by exactly 1 for each Zero ETV item
+    - Watch for "Item already being processed" debug messages
 
 ## Memory Considerations
 
@@ -129,6 +214,8 @@ The fixes include proper cleanup:
 - Computed style cache is cleared when no longer needed
 - Event listeners are properly managed
 - No memory leaks from cached DOM references
+- `#etvProcessingItems` Set is cleaned up when items are removed
+- Processing tracker prevents memory buildup from duplicate operations
 
 ## Future Improvements
 

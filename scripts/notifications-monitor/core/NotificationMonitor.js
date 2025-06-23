@@ -1642,6 +1642,9 @@ class NotificationMonitor extends MonitorCore {
 			// Only process if we haven't already marked this as zero ETV
 			const wasAlreadyZeroETV = notif.dataset.typeZeroETV === "1";
 
+			// Get ASIN from the notification element
+			const asin = notif.dataset.asin;
+
 			// Check if we're already processing this item to prevent duplicate processing
 			const isAlreadyProcessing = this.#etvProcessingItems.has(asin);
 
