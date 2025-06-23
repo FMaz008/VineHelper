@@ -44,10 +44,23 @@ class Tile {
 	#title = null;
 	#thumbnailUrl = null;
 	#variants = [];
+	#eventListeners = []; // Track event listeners for cleanup
+
 	constructor(obj, gridInstance) {
 		this.#tileDOM = obj;
 		this.#grid = gridInstance;
 		this.#toolbar = null;
+
+		// Extract ASIN early for logging
+		const asinElement = this.#tileDOM.querySelector("div[data-asin]");
+		if (asinElement) {
+			this.#asin = asinElement.dataset.asin;
+		}
+
+		// Log tile creation for memory debugging
+		if (window.MEMORY_DEBUGGER && Settings.get("general.debugMemory")) {
+			console.log(`🏗️ Creating tile for ASIN: ${this.#asin}`);
+		}
 		this.#asin = this.#findasin();
 		this.#orderSuccess = 0;
 		this.#orderFailed = 0;
@@ -121,7 +134,16 @@ class Tile {
 		}
 
 		//Add event listener to the buy now button
-		btnShowVariants.addEventListener("click", this.btnShowVariantsClick.bind(this));
+		const clickHandler = this.btnShowVariantsClick.bind(this);
+		btnShowVariants.addEventListener("click", clickHandler);
+
+		// Track this listener for cleanup
+		this.#eventListeners.push({ element: btnShowVariants, event: "click", handler: clickHandler });
+
+		// Log for memory debugging
+		if (window.MEMORY_DEBUGGER && Settings.get("general.debugMemory")) {
+			console.log(`🎯 Added variant button click listener for ASIN: ${this.#asin}`);
+		}
 	}
 
 	async btnShowVariantsClick(event) {
@@ -159,7 +181,7 @@ class Tile {
 		//Add event listener to the links
 		const links = document.querySelectorAll(`#modal-item-variants-${asin} .vh-link-variant`);
 		for (let link of links) {
-			link.addEventListener("click", (event) => {
+			const clickHandler = (event) => {
 				event.preventDefault();
 				//Close the modal
 				m.close();
@@ -184,7 +206,11 @@ class Tile {
 
 				drawButton(item, variantAsin);
 				clickDynamicSeeDetailsButton(variantAsin);
-			});
+			};
+			link.addEventListener("click", clickHandler);
+
+			// Track this listener for cleanup
+			this.#eventListeners.push({ element: link, event: "click", handler: clickHandler });
 		}
 
 		// ### Get the unavailable status for the variant items
@@ -575,6 +601,31 @@ class Tile {
 
 		//Refresh grid counts
 		updateTileCounts();
+	}
+
+	/**
+	 * Clean up all event listeners before removing the tile
+	 */
+	destroy() {
+		// Log cleanup for memory debugging
+		if (window.MEMORY_DEBUGGER && Settings.get("general.debugMemory")) {
+			console.log(
+				`🧹 Cleaning up tile for ASIN: ${this.#asin}, removing ${this.#eventListeners.length} event listeners`
+			);
+		}
+
+		// Remove all tracked event listeners
+		for (const listener of this.#eventListeners) {
+			listener.element.removeEventListener(listener.event, listener.handler);
+		}
+
+		// Clear the array
+		this.#eventListeners = [];
+
+		// Mark the tile as cleaned up in MemoryDebugger
+		if (window.MEMORY_DEBUGGER) {
+			window.MEMORY_DEBUGGER.markElementRemoved(this.#tileDOM);
+		}
 	}
 }
 

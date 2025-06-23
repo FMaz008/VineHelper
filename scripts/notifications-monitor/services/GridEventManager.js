@@ -50,6 +50,9 @@ class GridEventManager {
 		this.#hookMgr.hookBind("grid:fetch-complete", (data) => this.#handleFetchComplete(data));
 		this.#hookMgr.hookBind("grid:resized", () => this.#handleGridResized());
 		this.#hookMgr.hookBind("grid:initialized", () => this.#handleGridInitialized());
+
+		// Listen for visibility count changes (e.g., from recalculation)
+		this.#hookMgr.hookBind("visibility:count-changed", (data) => this.#handleVisibilityCountChanged(data));
 	}
 
 	/**
@@ -442,6 +445,29 @@ class GridEventManager {
 		// Clear the batch
 		this.#batchedUpdates.clear();
 		this.#batchTimer = null;
+	}
+
+	/**
+	 * Handle visibility count changed events
+	 * This occurs when the visibility state manager recalculates the count
+	 * @param {Object} data - Event data containing the new count
+	 */
+	#handleVisibilityCountChanged(data) {
+		if (!this.#isEnabled || !this.#noShiftGrid) {
+			return;
+		}
+
+		const debugPlaceholders = this.#monitor?._settings?.get("general.debugPlaceholders");
+		if (debugPlaceholders) {
+			console.log("[GridEventManager] Visibility count changed", {
+				newCount: data.count,
+				source: data.source || "unknown",
+			});
+		}
+
+		// Update placeholders immediately when count changes from recalculation
+		// This ensures placeholders are updated even when no items are being added/removed
+		this.#updatePlaceholders(false, true);
 	}
 
 	/**
