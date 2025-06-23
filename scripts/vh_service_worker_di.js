@@ -294,12 +294,13 @@ chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
 });
 
 async function pushNotification(title, item) {
-	const notificationId = `notification_${Date.now()}`;
-	const iconUrl = chrome.runtime.getURL("resource/image/icon-128.png");
-
 	// Handle both object with methods and plain object formats
 	// If item is an Item instance, get the data from getAllInfo()
 	const itemData = item.getAllInfo ? item.getAllInfo() : item;
+
+	// Use ASIN-based notification ID to prevent duplicates
+	const notificationId = `notification_${itemData.asin}`;
+	const iconUrl = chrome.runtime.getURL("resource/image/icon-128.png");
 
 	// Store notification data
 	notificationsData[notificationId] = {
