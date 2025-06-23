@@ -4,6 +4,16 @@ var logger = new Logger();
 import { SettingsMgr } from "/scripts/core/services/SettingsMgrCompat.js";
 var Settings = new SettingsMgr();
 
+// Lazy-load TitleDebugLogger only when debug is enabled
+let titleDebugger = null;
+const getTitleDebugger = async () => {
+	if (!titleDebugger) {
+		const { TitleDebugLogger } = await import("/scripts/ui/components/TitleDebugLogger.js");
+		titleDebugger = TitleDebugLogger.getInstance();
+	}
+	return titleDebugger;
+};
+
 import { Environment } from "/scripts/core/services/Environment.js";
 var env = new Environment();
 
@@ -344,6 +354,10 @@ class Tile {
 					domElement: this.#tileDOM,
 				});
 			}
+			// Title debug logging - only if debug is enabled
+			if (Settings.get("general.debugTitleDisplay")) {
+				getTitleDebugger().then((logger) => logger.logDOMExtraction(this.#asin, "getTitle", this.#title));
+			}
 		}
 		return this.#title;
 	}
@@ -495,11 +509,175 @@ class Tile {
 			}
 		}
 
-		//Unescape titles
-		const fullText = this.getDOM().querySelector(".a-truncate-full").innerText;
-		this.getDOM().querySelector(".a-truncate-full").innerText = unescapeHTML(unescapeHTML(fullText));
-		if (fullText) {
-			this.getDOM().querySelector(".a-truncate-cut").innerText = unescapeHTML(unescapeHTML(fullText));
+		//Unescape titles and ensure they remain visible
+		const truncateFull = this.getDOM().querySelector(".a-truncate-full");
+		const truncateCut = this.getDOM().querySelector(".a-truncate-cut");
+
+		// Log initial tile creation - only if debug is enabled
+		if (Settings.get("general.debugTitleDisplay")) {
+			getTitleDebugger().then((logger) =>
+				logger.logTileCreation(
+					this.#asin,
+					truncateFull || truncateCut,
+					truncateFull?.innerText || truncateCut?.innerText
+				)
+			);
+		}
+
+		// Get the title text - try multiple sources
+		let titleText = truncateFull?.innerText || truncateCut?.innerText;
+
+		// If both are empty, try to get from the link's data-tooltip
+		if (!titleText) {
+			const linkElement = this.getDOM().querySelector(".a-link-normal");
+			titleText = linkElement?.getAttribute("data-tooltip") || "";
+			if (Settings.get("general.debugTitleDisplay")) {
+				getTitleDebugger().then((logger) =>
+					logger.logDOMExtraction(this.#asin, "data-tooltip fallback", titleText)
+				);
+			}
+		}
+
+		// If still empty, get from the tile's stored title
+		if (!titleText) {
+			titleText = this.getTitle();
+			if (Settings.get("general.debugTitleDisplay")) {
+				getTitleDebugger().then((logger) =>
+					logger.logDOMExtraction(this.#asin, "getTitle fallback", titleText)
+				);
+			}
+		}
+
+		// Apply unescaped text to both spans
+		if (titleText) {
+			const unescapedText = unescapeHTML(unescapeHTML(titleText));
+
+			// Set text content for both spans
+			if (truncateFull) {
+				truncateFull.innerText = unescapedText;
+				// Ensure it stays visible by removing a-offscreen if Amazon adds it
+				truncateFull.classList.remove("a-offscreen");
+				if (Settings.get("general.debugTitleDisplay")) {
+					getTitleDebugger().then((logger) =>
+						logger.log(this.#asin, "TITLE_SET", {
+							element: "truncateFull",
+							text: unescapedText.substring(0, 100),
+							length: unescapedText.length,
+						})
+					);
+				}
+			}
+			if (truncateCut) {
+				truncateCut.innerText = unescapedText;
+				// Ensure it's visible
+				truncateCut.style.visibility = "visible";
+				truncateCut.style.display = "";
+				if (Settings.get("general.debugTitleDisplay")) {
+					getTitleDebugger().then((logger) =>
+						logger.log(this.#asin, "TITLE_SET", {
+							element: "truncateCut",
+							text: unescapedText.substring(0, 100),
+							length: unescapedText.length,
+						})
+					);
+				}
+			}
+
+			// Only apply MutationObserver fix on Amazon pages where the issue occurs
+			// Skip on Notification Monitor where titles display correctly
+			const isNotificationMonitor = window.location.href.includes("#monitor");
+			const isAmazonVinePage = window.location.href.includes("/vine/vine-items") && !isNotificationMonitor;
+
+			if (isAmazonVinePage) {
+				// Use a single shared observer for better performance
+				if (!Tile.sharedTitleObserver) {
+					// Track mutations being processed to prevent loops
+					const processingMutations = new WeakSet();
+
+					Tile.sharedTitleObserver = new MutationObserver((mutations) => {
+						mutations.forEach((mutation) => {
+							if (mutation.type === "characterData" || mutation.type === "childList") {
+								const target = mutation.target;
+								// Check if this is a title element that was cleared
+								if (
+									target.classList?.contains("a-truncate-full") ||
+									target.classList?.contains("a-truncate-cut")
+								) {
+									const tileElement = target.closest(".vvp-item-tile");
+									if (tileElement) {
+										const asin = tileElement.dataset.asin;
+
+										// Skip if we're already processing this element to prevent loops
+										if (processingMutations.has(target)) {
+											return;
+										}
+
+										// Log the mutation - only if debug is enabled
+										if (Settings.get("general.debugTitleDisplay")) {
+											getTitleDebugger().then((logger) =>
+												logger.logMutation(asin, mutation, target)
+											);
+										}
+
+										// Check if text was cleared
+										const storedTitle = tileElement.dataset.vhOriginalTitle;
+										if (storedTitle && !target.innerText) {
+											// Log the clearing event - only if debug is enabled
+											if (Settings.get("general.debugTitleDisplay")) {
+												getTitleDebugger().then((logger) =>
+													logger.logTextCleared(asin, target, storedTitle)
+												);
+											}
+
+											// Mark this element as being processed to prevent re-entry
+											processingMutations.add(target);
+
+											// Restore the title
+											target.innerText = storedTitle;
+											if (Settings.get("general.debugTitleDisplay")) {
+												getTitleDebugger().then((logger) =>
+													logger.logTextRestored(
+														asin,
+														target,
+														storedTitle,
+														"MutationObserver"
+													)
+												);
+											}
+
+											// Remove from processing set after a microtask to allow the DOM to update
+											Promise.resolve().then(() => {
+												processingMutations.delete(target);
+											});
+										}
+									}
+								}
+							}
+						});
+					});
+
+					// Observe the entire grid container for better performance
+					const gridContainer = document.querySelector("#vvp-items-grid");
+					if (gridContainer) {
+						Tile.sharedTitleObserver.observe(gridContainer, {
+							characterData: true,
+							childList: true,
+							subtree: true,
+							characterDataOldValue: true,
+						});
+						if (Settings.get("general.debugTitleDisplay")) {
+							getTitleDebugger().then((logger) =>
+								logger.log("GLOBAL", "OBSERVER_STARTED", {
+									container: "#vvp-items-grid",
+								})
+							);
+						}
+					}
+				}
+
+				// Store the original title in the tile's dataset for restoration
+				this.#tileDOM.dataset.vhOriginalTitle = unescapedText;
+			}
 		}
 		//Assign the ASIN to the tile content
 		this.getDOM().closest(".vvp-item-tile").dataset.asin = this.#asin;
@@ -614,9 +792,15 @@ class Tile {
 			);
 		}
 
-		// Remove all tracked event listeners
+		// Remove all tracked event listeners and observers
 		for (const listener of this.#eventListeners) {
-			listener.element.removeEventListener(listener.event, listener.handler);
+			if (listener.type === "observer") {
+				// Disconnect MutationObserver
+				listener.instance.disconnect();
+			} else {
+				// Remove regular event listener
+				listener.element.removeEventListener(listener.event, listener.handler);
+			}
 		}
 
 		// Clear the array
@@ -672,15 +856,21 @@ function getTitleFromDom(tileDom) {
 
 	// Debug logging
 	const settings = new SettingsMgr();
+	const asinElement = tileDom.querySelector("[data-asin]");
+	const asin = asinElement ? asinElement.dataset.asin : "unknown";
+
 	if (settings.get("general.debugKeywords")) {
-		const asinElement = tileDom.querySelector("[data-asin]");
-		const asin = asinElement ? asinElement.dataset.asin : "unknown";
 		console.log("[getTitleFromDom] Extracting title:", {
 			asin: asin,
 			title: title.substring(0, 100) + (title.length > 100 ? "..." : ""),
 			textElement: textElement,
 			tileDom: tileDom,
 		});
+	}
+
+	// Title debug logging - only if debug is enabled
+	if (asin !== "unknown" && settings.get("general.debugTitleDisplay")) {
+		getTitleDebugger().then((logger) => logger.logDOMExtraction(asin, "getTitleFromDom", title));
 	}
 
 	return title;
@@ -722,6 +912,34 @@ function animateOpacity(element, targetOpacity, duration) {
 
 		requestAnimationFrame(animate);
 	});
+}
+
+// Add static cleanup method for the shared observer
+Tile.cleanupSharedObserver = function () {
+	if (Tile.sharedTitleObserver) {
+		Tile.sharedTitleObserver.disconnect();
+		Tile.sharedTitleObserver = null;
+
+		// Log cleanup if debug is enabled
+		const settings = new SettingsMgr();
+		if (settings.get("general.debugTitleDisplay")) {
+			console.log("🧹 [TitleFix] Shared MutationObserver disconnected");
+		}
+	}
+};
+
+// Set up cleanup on page unload
+if (typeof window !== "undefined") {
+	window.addEventListener("beforeunload", () => {
+		Tile.cleanupSharedObserver();
+	});
+
+	// Also clean up if the extension is disabled/reloaded
+	if (chrome?.runtime?.onSuspend) {
+		chrome.runtime.onSuspend.addListener(() => {
+			Tile.cleanupSharedObserver();
+		});
+	}
 }
 
 export { Tile, getTileFromDom, getAsinFromDom };

@@ -891,6 +891,7 @@ export class SettingsMgrDI {
 				},
 				debugTabTitle: false,
 				debugPlaceholders: false,
+				debugTitleDisplay: false,
 				debugMemory: false,
 				debugBulkOperations: false,
 				debugMemoryAutoSnapshot: false,
@@ -898,6 +899,9 @@ export class SettingsMgrDI {
 				debugWebsocket: false,
 				debugServercom: false,
 				debugServiceWorker: false,
+				debugSettings: false,
+				debugStorage: false,
+				debugCoordination: false,
 			},
 			metrics: {
 				minutesUsed: 0,

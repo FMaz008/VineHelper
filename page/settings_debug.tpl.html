@@ -78,6 +78,17 @@
 	<fieldset>
 		<legend>Performance & Operations</legend>
 		<div class="setting-container">
+			<label for="general.debugTitleDisplay">
+				<input type="checkbox" name="general.debugTitleDisplay" value="1" />
+				Debug Title Display Issues
+			</label>
+			<div class="setting-summary">
+				<div class="vh-toolbar-icon vh-icon-question"></div>
+				Logs detailed information about title display operations to help diagnose issues with titles being cleared or not showing correctly. Tracks DOM mutations, text extraction, and restoration events.
+			</div>
+		</div>
+
+		<div class="setting-container">
 			<label for="general.debugBulkOperations">
 				<input type="checkbox" name="general.debugBulkOperations" value="1" />
 				Debug Bulk Operations
