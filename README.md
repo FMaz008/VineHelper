@@ -58,8 +58,9 @@ When using VineHelper across multiple browser tabs:
 
 - Each tab maintains its own item count
 - Counts are not synchronized between tabs in real-time
-- This is by design to avoid complex state synchronization
+- This is intentional: multiple tabs are typically used to apply different filters and monitor different categories
+- Synchronizing counts would be counterproductive as each tab may be filtering for different items
 - The actual item processing is properly coordinated (no duplicates)
-- Refreshing a tab will update its count to the current state
+- Refreshing a tab will update its count based on its current filter settings
 
-**Workaround:** If you need accurate counts, use a single tab or refresh the tab to get the latest count.
+**Note:** This design allows you to monitor different product categories or keywords in separate tabs without interference.
