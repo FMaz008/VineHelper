@@ -1026,6 +1026,20 @@ function keywordsToJSON(key) {
 		const etv_min = lines[i].querySelector(`td input[name="etv_min"]`).value.trim();
 		const etv_max = lines[i].querySelector(`td input[name="etv_max"]`).value.trim();
 
+		//Validate that contains and without have valid regex syntax
+		try {
+			new RegExp(contains);
+		} catch (e) {
+			alert("Invalid regex syntax: " + contains);
+			lines[i].querySelector(`td input[name="contains"]`).focus();
+		}
+		try {
+			new RegExp(without);
+		} catch (e) {
+			alert("Invalid regex syntax: " + without);
+			lines[i].querySelector(`td input[name="without"]`).focus();
+		}
+
 		//Skip empty lines
 		if (contains == "" && without == "" && etv_min == "" && etv_max == "") {
 			continue;
