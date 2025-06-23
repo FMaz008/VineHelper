@@ -846,6 +846,7 @@ export class SettingsMgrDI {
 				hideCategoriesRFYAFA: false,
 				hideKeywords: [],
 				hideNoNews: true,
+				scrollToRFY: false,
 				hideOptOutButton: false,
 				hideRecommendations: false,
 				hideSideCart: false,
