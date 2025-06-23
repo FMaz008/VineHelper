@@ -320,9 +320,9 @@ Added comprehensive debug logging to track:
 ### Performance Optimizations ✅
 
 - **15x improvement** in keyword matching (19.4s → 1.3s)
-- WeakMap + counter approach for cache keys
-- Module-level caching
-- Fixed storage for 3 keyword types (no eviction needed)
+- Pre-compiled regex patterns stored with keywords
+- Fixed storage for 3 keyword types (highlight, hide, order)
+- Automatic recompilation when patterns become stale
 
 ## Memory Management
 
@@ -427,6 +427,6 @@ All debug logging is controlled by settings in the Debug tab:
 
 - **Keyword Processing**: 300 items in <2 seconds (was 19.4 seconds)
 - **Memory Usage**: 40-50% reduction overall
-- **Cache Hit Rate**: >99% for keywords
+- **Pre-compiled Patterns**: Eliminates regex compilation overhead
 - **Master Failover**: 2 seconds (was 12 seconds)
 - **Stream Processing**: 95% memory reduction
