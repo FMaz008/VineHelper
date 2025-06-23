@@ -320,13 +320,59 @@ class NoShiftGrid {
 			if (fragment.childNodes.length > 0) {
 				const debugPlaceholders = this._monitor._settings?.get("general.debugPlaceholders");
 				if (debugPlaceholders) {
-					console.log("[NoShiftGrid] Inserting placeholders at beginning of grid", {
+					// Log detailed grid state before insertion
+					const gridChildren = Array.from(this._monitor._gridContainer.children);
+					const placeholderPositions = [];
+					const itemPositions = [];
+
+					gridChildren.forEach((child, index) => {
+						if (child.classList.contains("vh-placeholder-tile")) {
+							placeholderPositions.push(index);
+						} else {
+							itemPositions.push({
+								index,
+								asin: child.dataset?.asin || "unknown",
+								display: child.style.display,
+							});
+						}
+					});
+
+					console.log("[NoShiftGrid] BEFORE placeholder insertion", {
 						placeholderCount: fragment.childNodes.length,
-						firstChild: this._monitor._gridContainer.firstChild,
+						existingPlaceholderPositions: placeholderPositions,
+						itemPositions: itemPositions.slice(0, 10), // First 10 items
 						totalChildren: this._monitor._gridContainer.children.length,
+						firstChildType: this._monitor._gridContainer.firstChild?.classList?.contains(
+							"vh-placeholder-tile"
+						)
+							? "placeholder"
+							: "item",
+						gridWidth: this._gridWidth,
+						tilesPerRow: Math.floor(this._gridWidth / this._calculateTileWidth()),
 					});
 				}
+
+				// CRITICAL: Always insert placeholders at the very beginning
+				// This ensures they don't end up in the middle of rows
 				this._monitor._gridContainer.insertBefore(fragment, this._monitor._gridContainer.firstChild);
+
+				if (debugPlaceholders) {
+					// Log state after insertion
+					const gridChildren = Array.from(this._monitor._gridContainer.children);
+					const placeholderPositions = [];
+
+					gridChildren.forEach((child, index) => {
+						if (child.classList.contains("vh-placeholder-tile")) {
+							placeholderPositions.push(index);
+						}
+					});
+
+					console.log("[NoShiftGrid] AFTER placeholder insertion", {
+						newPlaceholderPositions: placeholderPositions,
+						totalChildren: this._monitor._gridContainer.children.length,
+						placeholdersAtStart: placeholderPositions.every((pos, idx) => pos === idx),
+					});
+				}
 			}
 		} finally {
 			// Mark as done updating

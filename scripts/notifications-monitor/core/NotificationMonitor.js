@@ -1373,6 +1373,42 @@ class NotificationMonitor extends MonitorCore {
 			return;
 		}
 
+		// Enhanced logging for memory debugging
+		if (window.MEMORY_DEBUGGER && this._settings.get("general.debugMemory")) {
+			console.log(`🗑️ Removing tile for ASIN: ${asin}`);
+
+			// Check for event listeners on tile elements before removal
+			const elementsWithListeners = [];
+
+			// Check the tile itself
+			if (tile.onclick || tile.addEventListener) {
+				elementsWithListeners.push({ element: "tile", tag: tile.tagName, classes: tile.className });
+			}
+
+			// Check all buttons in the tile
+			const buttons = tile.querySelectorAll('button, a, input[type="button"], input[type="submit"]');
+			buttons.forEach((btn) => {
+				if (btn.onclick || btn.addEventListener) {
+					elementsWithListeners.push({
+						element: "button/link",
+						tag: btn.tagName,
+						classes: btn.className,
+						text: btn.textContent?.substring(0, 30),
+					});
+				}
+			});
+
+			if (elementsWithListeners.length > 0) {
+				console.warn(
+					`⚠️ Tile ${asin} has ${elementsWithListeners.length} elements that might have listeners:`,
+					elementsWithListeners
+				);
+			}
+
+			// Mark the tile as removed in the debugger
+			window.MEMORY_DEBUGGER.markRemoved(tile);
+		}
+
 		// Check if tile was visible before removal
 		const wasVisible = this.#isElementVisible(tile);
 
@@ -1384,6 +1420,15 @@ class NotificationMonitor extends MonitorCore {
 		const a = tile.querySelector(".a-link-normal");
 		if (a) {
 			this._tooltipMgr.removeTooltip(a);
+		}
+
+		// Call the tile's destroy method to clean up event listeners
+		// Get the Tile instance from ItemsMgr
+		const tileInstance = this._itemsMgr.tiles.get(item);
+		if (tileInstance && typeof tileInstance.destroy === "function") {
+			tileInstance.destroy();
+		} else if (window.MEMORY_DEBUGGER && this._settings.get("general.debugMemory")) {
+			console.warn(`⚠️ Tile ${asin} does not have a destroy method or could not find Tile instance!`);
 		}
 
 		// Remove from data structures
