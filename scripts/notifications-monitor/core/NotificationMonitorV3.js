@@ -46,10 +46,14 @@ class NotificationMonitorV3 extends NotificationMonitor {
 
 		// Register VisibilityStateManager as a singleton
 		// Manages both visible items count and element visibility state with centralized control
-		this.#container.register("visibilityStateManager", (hookMgr) => new VisibilityStateManager(hookMgr), {
-			singleton: true,
-			dependencies: ["hookMgr"],
-		});
+		this.#container.register(
+			"visibilityStateManager",
+			(hookMgr, settings) => new VisibilityStateManager(hookMgr, settings),
+			{
+				singleton: true,
+				dependencies: ["hookMgr", "settings"],
+			}
+		);
 
 		// Register GridEventManager with its dependencies
 		// This demonstrates proper DI with dependency injection
@@ -68,6 +72,7 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		this.#container.register("hookMgr", () => this._hookMgr);
 		this.#container.register("noShiftGrid", () => this._noShiftGrid);
 		this.#container.register("monitor", () => this);
+		this.#container.register("settings", () => this._settings);
 
 		// Future services can be registered here as we migrate them
 		// Example for when TileSizer is migrated:

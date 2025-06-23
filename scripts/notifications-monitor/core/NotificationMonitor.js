@@ -299,36 +299,34 @@ class NotificationMonitor extends MonitorCore {
 	 * Update visible count after filtering and emit appropriate events
 	 */
 	#updateVisibleCountAfterFiltering() {
-		// Use double requestAnimationFrame to ensure DOM has fully updated
-		requestAnimationFrame(() => {
-			requestAnimationFrame(() => {
-				// Invalidate computed style cache after bulk filtering
-				// This prevents stale cached values after style changes
-				this.#invalidateComputedStyleCache();
+		// For filter operations, update immediately to prevent placeholder bounce
+		// The DOM is already updated by applyFilteringToAllItems
 
-				// Force a reflow to ensure styles are applied
-				void this._gridContainer.offsetHeight;
+		// Invalidate computed style cache after bulk filtering
+		// This prevents stale cached values after style changes
+		this.#invalidateComputedStyleCache();
 
-				// Recalculate visible count after filtering
-				let newCount;
-				if (this._visibilityStateManager && this._visibilityStateManager.recalculateCount) {
-					// V3 with VisibilityStateManager - use its recalculation method
-					const tiles = this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
-					newCount = this._visibilityStateManager.recalculateCount(tiles);
-				} else {
-					// V2 fallback - count directly
-					newCount = this._countVisibleItems();
-					// Update the visibility state manager with new count (V3 only)
-					this._visibilityStateManager?.setCount(newCount);
-				}
+		// Force a reflow to ensure styles are applied
+		void this._gridContainer.offsetHeight;
 
-				// Update tab title
-				this._updateTabTitle(newCount);
-				// Emit event for filter change with visible count
-				// The GridEventManager will handle placeholder updates via this event
-				this.#emitGridEvent("grid:items-filtered", { visibleCount: newCount });
-			});
-		});
+		// Recalculate visible count after filtering
+		let newCount;
+		if (this._visibilityStateManager && this._visibilityStateManager.recalculateCount) {
+			// V3 with VisibilityStateManager - use its recalculation method
+			const tiles = this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
+			newCount = this._visibilityStateManager.recalculateCount(tiles);
+		} else {
+			// V2 fallback - count directly
+			newCount = this._countVisibleItems();
+			// Update the visibility state manager with new count (V3 only)
+			this._visibilityStateManager?.setCount(newCount);
+		}
+
+		// Update tab title
+		this._updateTabTitle(newCount);
+		// Emit event for filter change with visible count
+		// The GridEventManager will handle placeholder updates via this event
+		this.#emitGridEvent("grid:items-filtered", { visibleCount: newCount });
 	}
 
 	/**
@@ -941,20 +939,24 @@ class NotificationMonitor extends MonitorCore {
 			}
 		});
 
-		console.log("[clearUnavailableItems] Debug info:", {
-			totalItems: this._itemsMgr.items.size,
-			unavailableCount: unavailableAsins.size,
-			unavailableAsins: Array.from(unavailableAsins).slice(0, 5), // Show first 5 for debugging
-			allItemsDebug: allItemsDebug.slice(0, 20), // Show first 20 items
-			sampleItems: Array.from(this._itemsMgr.items.entries())
-				.slice(0, 10)
-				.map(([asin, item]) => ({
-					asin,
-					unavailable: item.data.unavailable,
-					unavailableType: typeof item.data.unavailable,
-					isInSet: unavailableAsins.has(asin),
-				})),
-		});
+		// Debug logging for clearing unavailable items
+		const debugBulkOperations = this._settings.get("general.debugBulkOperations");
+		if (debugBulkOperations) {
+			console.log("[clearUnavailableItems] Debug info:", {
+				totalItems: this._itemsMgr.items.size,
+				unavailableCount: unavailableAsins.size,
+				unavailableAsins: Array.from(unavailableAsins).slice(0, 5), // Show first 5 for debugging
+				allItemsDebug: allItemsDebug.slice(0, 20), // Show first 20 items
+				sampleItems: Array.from(this._itemsMgr.items.entries())
+					.slice(0, 10)
+					.map(([asin, item]) => ({
+						asin,
+						unavailable: item.data.unavailable,
+						unavailableType: typeof item.data.unavailable,
+						isInSet: unavailableAsins.has(asin),
+					})),
+			});
+		}
 
 		// Use the bulk remove method - it will handle counting and event emission
 		this.#bulkRemoveItems(unavailableAsins, false);
@@ -962,7 +964,9 @@ class NotificationMonitor extends MonitorCore {
 		// After clearing unavailable items, recalculate the count to ensure accuracy
 		// This fixes any off-by-one errors that may have accumulated
 		if (this._visibilityStateManager) {
-			console.log("[clearUnavailableItems] Recalculating count after clearing unavailable items"); // eslint-disable-line no-console
+			if (debugBulkOperations) {
+				console.log("[clearUnavailableItems] Recalculating count after clearing unavailable items");
+			}
 			const tiles = this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
 			this._visibilityStateManager.recalculateCount(tiles);
 		}
@@ -1284,9 +1288,6 @@ class NotificationMonitor extends MonitorCore {
 			this._disableItem(tileDOM);
 		}
 
-		//Set the highlight color as needed
-		this._processNotificationHighlight(tileDOM);
-
 		//Check gold tier status for this item
 		this.#disableGoldItemsForSilverUsers(tileDOM);
 
@@ -1298,14 +1299,21 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Set type flags BEFORE filtering so visibility is calculated correctly
+		// Note: These are not mutually exclusive - an item can have multiple types
 		if (KWsMatch) {
 			tileDOM.dataset.typeHighlight = 1;
-		} else if (parseFloat(etv_min) === 0) {
+		}
+
+		// Check ETV status independently of keyword matching
+		if (parseFloat(etv_min) === 0 || parseFloat(etv_max) === 0) {
 			tileDOM.dataset.typeZeroETV = 1;
 		} else if (etv_min == "" || etv_min == null || etv_max == "" || etv_max == null) {
 			// Mark items with unknown ETV
 			tileDOM.dataset.typeUnknownETV = 1;
 		}
+
+		//Set the highlight color as needed - MUST be called AFTER setting type attributes
+		this._processNotificationHighlight(tileDOM);
 
 		//Apply the filters
 		const isVisible = this.#processNotificationFiltering(tileDOM);

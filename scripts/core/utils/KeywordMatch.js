@@ -191,10 +191,24 @@ class KeywordMatcher {
 	 */
 	testKeywordMatch(word, compiled, title, etv_min, etv_max) {
 		// Debug logging for keyword operations
-		const debugKeywords = typeof window !== "undefined" && window.DEBUG_KEYWORDS;
+		const effectiveSettingsMgr =
+			this.settingsMgr || (typeof SettingsMgr !== "undefined" ? new SettingsMgr() : null);
+		const debugKeywords = effectiveSettingsMgr && effectiveSettingsMgr.get("general.debugKeywords");
 
 		// Test the main regex
-		if (!compiled.regex.test(title)) {
+		const matches = compiled.regex.test(title);
+
+		if (debugKeywords && matches) {
+			console.log("[KeywordMatcher] testKeywordMatch - pattern matched:", {
+				keyword: typeof word === "string" ? word : word.contains,
+				pattern: compiled.regex.source,
+				flags: compiled.regex.flags,
+				title: title.substring(0, 100) + (title.length > 100 ? "..." : ""),
+				matches: matches,
+			});
+		}
+
+		if (!matches) {
 			return false;
 		}
 
@@ -285,29 +299,77 @@ class KeywordMatcher {
 				if (compiled && compiled.length > 0) {
 					// Debug logging for pre-compiled keywords
 					const debugKeywords = effectiveSettingsMgr && effectiveSettingsMgr.get("general.debugKeywords");
-					if (debugKeywords && keywords.length !== compiled.length) {
-						console.log("[KeywordMatcher] Pre-compiled length mismatch", {
+					if (debugKeywords) {
+						console.log("[KeywordMatcher] Using pre-compiled patterns", {
 							keywordType,
-							expected: keywords.length,
-							actual: compiled.length,
+							title: title.substring(0, 100) + (title.length > 100 ? "..." : ""),
+							keywordsLength: keywords.length,
+							compiledLength: compiled.length,
+							firstKeyword: keywords[0]?.contains || keywords[0],
+							lastKeyword: keywords[keywords.length - 1]?.contains || keywords[keywords.length - 1],
 						});
+
+						if (keywords.length !== compiled.length) {
+							console.log("[KeywordMatcher] Pre-compiled length mismatch", {
+								keywordType,
+								expected: keywords.length,
+								actual: compiled.length,
+							});
+						}
 					}
 
 					// Successfully using pre-compiled keywords
-					for (let index = 0; index < keywords.length && index < compiled.length; index++) {
-						const word = keywords[index];
+					for (let index = 0; index < compiled.length; index++) {
 						const compiledRegex = compiled[index];
 
 						if (!compiledRegex) {
 							continue;
 						}
 
+						// Check if the compiled pattern has an originalIndex property
+						// This would be set during compilation to maintain the mapping
+						const keywordIndex =
+							compiledRegex.originalIndex !== undefined ? compiledRegex.originalIndex : index;
+
+						// Ensure we have a valid keyword at this index
+						if (keywordIndex >= keywords.length) {
+							console.warn(
+								`[KeywordMatcher] Compiled pattern index ${keywordIndex} out of bounds for keywords array of length ${keywords.length}`
+							);
+							continue;
+						}
+
+						const word = keywords[keywordIndex];
+
 						if (this.testKeywordMatch(word, compiledRegex, title, etv_min, etv_max)) {
 							if (debugKeywords) {
-								console.log("[KeywordMatcher] Match found:", {
+								// Log the actual regex pattern and test result
+								const regexPattern = compiledRegex.regex ? compiledRegex.regex.source : "N/A";
+								const regexFlags = compiledRegex.regex ? compiledRegex.regex.flags : "N/A";
+								const testResult = compiledRegex.regex ? compiledRegex.regex.test(title) : false;
+
+								console.log("[KeywordMatcher] Match found - detailed info:", {
 									type: keywordType,
 									keyword: typeof word === "string" ? word : word.contains,
+									compiledIndex: index,
+									keywordIndex: keywordIndex,
+									title: title.substring(0, 100) + (title.length > 100 ? "..." : ""),
+									actualWord: typeof word === "string" ? word : JSON.stringify(word),
+									regexPattern: regexPattern,
+									regexFlags: regexFlags,
+									testResult: testResult,
+									compiledRegexStructure: Object.keys(compiledRegex),
 								});
+
+								// Test the pattern manually to debug
+								if (compiledRegex.regex) {
+									const manualTest = new RegExp(regexPattern, regexFlags);
+									console.log("[KeywordMatcher] Manual regex test:", {
+										pattern: regexPattern,
+										title: title.substring(0, 50),
+										matches: manualTest.test(title),
+									});
+								}
 							}
 							return word;
 						}

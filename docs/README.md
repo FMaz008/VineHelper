@@ -17,24 +17,17 @@ Comprehensive overview of the VineHelper architecture, including:
 - Technical debt priorities
 - Future improvements roadmap
 
-### [RECENT_CHANGES.md](./RECENT_CHANGES.md)
+### [CHANGES_AND_FIXES.md](./CHANGES_AND_FIXES.md)
 
-Summary of recent fixes and changes:
+Consolidated summary of all changes, fixes, and improvements:
 
-- Off-by-one count issue fix
-- Chrome OS notification fixes (images and click handling)
-- Debug settings persistence
-- Console logging controls
-- Testing recommendations
-
-### [DEBUG_SETTINGS_USAGE.md](./DEBUG_SETTINGS_USAGE.md)
-
-Comprehensive guide to all debug settings:
-
-- Complete list of debug settings and their purposes
-- Usage examples and code snippets
-- Settings configuration and initialization
-- Periodic count verification feature
+- Recent bug fixes and enhancements
+- Feature branch fixes (Fix #1-7)
+- Keyword system improvements
+- Memory management optimizations
+- Architecture improvements
+- Test coverage status
+- Performance metrics
 
 ### [MEMORY_MANAGEMENT.md](./MEMORY_MANAGEMENT.md)
 
@@ -55,6 +48,15 @@ Step-by-step guide for migrating from singleton pattern to dependency injection:
 - Testing approaches
 - Troubleshooting guide
 
+### [DEBUG_SETTINGS_USAGE.md](./DEBUG_SETTINGS_USAGE.md)
+
+Comprehensive guide to all debug settings:
+
+- Complete list of debug settings and their purposes
+- Usage examples and code snippets
+- Settings configuration and initialization
+- Periodic count verification feature
+
 ### [FUTURE_IMPROVEMENTS.md](./FUTURE_IMPROVEMENTS.md)
 
 Tracking of planned improvements and optimizations:
@@ -71,7 +73,6 @@ Older documentation files have been moved to the `archived/` directory. These co
 ## Related Documentation
 
 - **Infrastructure Components**: See [`../scripts/infrastructure/README.md`](../scripts/infrastructure/README.md) for DI container and storage adapters
-- **Memory Debugging**: See [`../scripts/notifications-monitor/debug/README.md`](../scripts/notifications-monitor/debug/README.md) for memory debugger usage
 - **Project README**: See the root [`../README.md`](../README.md) for general project information
 
 ## Documentation Standards

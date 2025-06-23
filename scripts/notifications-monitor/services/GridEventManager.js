@@ -174,16 +174,16 @@ class GridEventManager {
 
 		const container = this.#monitor._gridContainer;
 		if (!container) return;
-		
+
 		const debugPlaceholders = this.#monitor._settings?.get("general.debugPlaceholders");
-		
+
 		// Get current placeholder tiles before sorting
 		const placeholderTiles = Array.from(container.querySelectorAll(".vh-placeholder-tile"));
-		
+
 		if (debugPlaceholders) {
 			console.log("[GridEventManager] Starting sort", {
 				placeholderCount: placeholderTiles.length,
-				containerChildren: container.children.length
+				containerChildren: container.children.length,
 			});
 		}
 
@@ -196,11 +196,11 @@ class GridEventManager {
 
 			// Get all current item tiles from the DOM
 			const itemTiles = Array.from(container.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)"));
-			
+
 			// Create a map of ASIN to DOM element for quick lookup
 			const asinToElement = new Map();
-			itemTiles.forEach(tile => {
-				const asin = tile.id?.replace('vh-notification-', '');
+			itemTiles.forEach((tile) => {
+				const asin = tile.id?.replace("vh-notification-", "");
 				if (asin) {
 					asinToElement.set(asin, tile);
 				}
@@ -232,19 +232,19 @@ class GridEventManager {
 					containerChildrenBefore: container.children.length,
 					placeholdersInFragment: placeholderTiles.length,
 					itemsInFragment: sortedItems.length,
-					itemTilesFound: itemTiles.length
+					itemTilesFound: itemTiles.length,
 				});
 			}
 
 			// Append the sorted content to the container
 			// Don't clear the container - just move elements to their new positions
 			container.appendChild(fragment);
-			
+
 			if (debugPlaceholders) {
 				console.log("[GridEventManager] After sort", {
 					containerChildrenAfter: container.children.length,
 					firstChild: container.firstChild?.className,
-					lastChild: container.lastChild?.className
+					lastChild: container.lastChild?.className,
 				});
 			}
 		});
@@ -281,7 +281,7 @@ class GridEventManager {
 		if (debugPlaceholders) {
 			console.log("[GridEventManager] Handling fetch complete", {
 				visibleCount: data.visibleCount,
-				endPlaceholdersCountBefore: this.#noShiftGrid._endPlaceholdersCount
+				endPlaceholdersCountBefore: this.#noShiftGrid._endPlaceholdersCount,
 			});
 		}
 
@@ -300,7 +300,7 @@ class GridEventManager {
 				console.log("[GridEventManager] Updating placeholders after fetch");
 			}
 			this.#updatePlaceholders();
-			
+
 			// Trigger a sort to ensure placeholders are positioned correctly
 			// This is needed because items were added in bulk during fetch
 			// Use setTimeout to ensure DOM has updated before sorting
@@ -373,7 +373,7 @@ class GridEventManager {
 		if (operation === "filter") {
 			return true;
 		}
-		
+
 		// For other operations, only update if we're in date descending sort
 		return (
 			this.#monitor._sortType === "date_desc" &&
@@ -450,7 +450,10 @@ class GridEventManager {
 	 * @param {boolean} forceForFilter - Force placeholder insertion for filter operations
 	 */
 	#updatePlaceholders(fetchingRecentItems, forceForFilter = false) {
-		if (fetchingRecentItems) {
+		// For filter operations, always update immediately to prevent visual bounce
+		if (forceForFilter) {
+			this.#noShiftGrid.insertPlaceholderTiles(forceForFilter);
+		} else if (fetchingRecentItems) {
 			this.#batchUpdate("placeholder", () => {
 				this.#noShiftGrid.insertPlaceholderTiles(forceForFilter);
 			});

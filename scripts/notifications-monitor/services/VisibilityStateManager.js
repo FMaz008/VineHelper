@@ -15,14 +15,17 @@
 class VisibilityStateManager {
 	#count = 0;
 	#hookMgr;
+	#settings;
 	#visibilityCache = new WeakMap();
 	#computedStyleCache = new WeakMap();
 
 	/**
 	 * @param {HookMgr} hookMgr - The hook manager for event handling
+	 * @param {SettingsMgr} settings - The settings manager for debug flags
 	 */
-	constructor(hookMgr) {
+	constructor(hookMgr, settings) {
 		this.#hookMgr = hookMgr;
+		this.#settings = settings;
 	}
 
 	/**
@@ -218,8 +221,9 @@ class VisibilityStateManager {
 			});
 		}
 
-		// Always log when count changes or seems wrong
-		if (this.#count !== count || count > 6) {
+		// Log when count changes if debug is enabled
+		const debugTabTitle = this.#settings?.get("general.debugTabTitle");
+		if (debugTabTitle && this.#count !== count) {
 			console.log("[VisibilityStateManager] Recalculate count:", {
 				oldCount: this.#count,
 				newCount: count,

@@ -309,6 +309,15 @@ class Tile {
 	getTitle() {
 		if (this.#title == null) {
 			this.#title = getTitleFromDom(this.#tileDOM);
+			// Debug logging
+			const settings = new SettingsMgr();
+			if (settings.get("general.debugKeywords")) {
+				console.log("[Tile] Title retrieved from DOM:", {
+					asin: this.getAsin(),
+					title: this.#title.substring(0, 100) + (this.#title.length > 100 ? "..." : ""),
+					domElement: this.#tileDOM,
+				});
+			}
 		}
 		return this.#title;
 	}
@@ -476,6 +485,22 @@ class Tile {
 		const unknownETV =
 			this.#tileDOM.dataset.typeUnknownETV === "1" && Settings.get("general.unknownETVHighlight.active");
 
+		// Debug logging
+		if (Settings.get("general.debugKeywords")) {
+			console.log("[Tile] colorizeHighlight called:", {
+				asin: this.#asin,
+				typeHighlight: this.#tileDOM.dataset.typeHighlight,
+				typeZeroETV: this.#tileDOM.dataset.typeZeroETV,
+				typeUnknownETV: this.#tileDOM.dataset.typeUnknownETV,
+				highlightColorActive: Settings.get("general.highlightColor.active"),
+				zeroETVHighlightActive: Settings.get("general.zeroETVHighlight.active"),
+				unknownETVHighlightActive: Settings.get("general.unknownETVHighlight.active"),
+				willHighlight: highlight,
+				willHighlightZeroETV: zeroETV,
+				willHighlightUnknownETV: unknownETV,
+			});
+		}
+
 		this.#tileDOM.style.backgroundColor = "unset";
 		this.#tileDOM.style.background = "unset";
 
@@ -592,7 +617,22 @@ function getTileFromDom(tileDom) {
 
 function getTitleFromDom(tileDom) {
 	let textElement = tileDom.querySelector(".a-truncate-full");
-	return textElement ? textElement.textContent : "";
+	const title = textElement ? textElement.textContent : "";
+
+	// Debug logging
+	const settings = new SettingsMgr();
+	if (settings.get("general.debugKeywords")) {
+		const asinElement = tileDom.querySelector("[data-asin]");
+		const asin = asinElement ? asinElement.dataset.asin : "unknown";
+		console.log("[getTitleFromDom] Extracting title:", {
+			asin: asin,
+			title: title.substring(0, 100) + (title.length > 100 ? "..." : ""),
+			textElement: textElement,
+			tileDom: tileDom,
+		});
+	}
+
+	return title;
 }
 
 function getThumbnailURLFromDom(tileDom) {

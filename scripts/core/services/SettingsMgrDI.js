@@ -220,15 +220,35 @@ export class SettingsMgrDI {
 					try {
 						for (let index = 0; index < value.length; index++) {
 							try {
+								const keyword = value[index];
+								const keywordStr = typeof keyword === "string" ? keyword : keyword?.contains || "";
+
+								if (this.#debugKeywords && index === 119) {
+									console.log(`[SettingsMgrDI] Compiling keyword at index 119:`, {
+										keyword: keywordStr,
+										fullKeyword: keyword,
+									});
+								}
+
 								const compiled = getCompiledRegex(value, index);
 								if (compiled && compiled.regex) {
-									compiledPatterns.push({
+									const patternObj = {
 										pattern: compiled.regex.source,
 										flags: compiled.regex.flags,
 										withoutPattern: compiled.withoutRegex ? compiled.withoutRegex.source : null,
 										withoutFlags: compiled.withoutRegex ? compiled.withoutRegex.flags : null,
 										hasEtvCondition: compiled.hasEtvCondition || false,
-									});
+										originalIndex: index,
+									};
+
+									if (this.#debugKeywords && index === 119) {
+										console.log(`[SettingsMgrDI] Compiled pattern at index 119:`, {
+											pattern: patternObj.pattern,
+											originalKeyword: keywordStr,
+										});
+									}
+
+									compiledPatterns.push(patternObj);
 								} else {
 									compiledPatterns.push(null);
 								}
@@ -424,16 +444,38 @@ export class SettingsMgrDI {
 			});
 		}
 
+		// Get the raw keywords to validate
+		const raw = this.get(key);
+
 		if (!patterns || !Array.isArray(patterns)) {
 			// Fallback: compile on demand if no compiled version
 			this.#logger.add(`SettingsMgr: No pre-compiled patterns found for ${key}, compiling on demand`);
-			const raw = this.get(key);
 			if (!raw || !Array.isArray(raw)) {
 				return [];
 			}
 
 			// Import dynamically to avoid circular dependencies
 			return this.#compileOnDemand(key, raw);
+		}
+
+		// Validate that compiled patterns match current keywords
+		if (raw && Array.isArray(raw)) {
+			// Check if the number of patterns matches the number of keywords
+			if (patterns.length !== raw.length) {
+				this.#logger.add(
+					`SettingsMgr: Compiled patterns length (${patterns.length}) doesn't match keywords length (${raw.length}) for ${key}, recompiling`
+				);
+				return this.#compileOnDemand(key, raw);
+			}
+
+			// Check if any pattern is missing originalIndex (indicates old format)
+			const hasOldFormat = patterns.some((p) => p && p.pattern && p.originalIndex === undefined);
+			if (hasOldFormat) {
+				this.#logger.add(
+					`SettingsMgr: Compiled patterns are in old format (missing originalIndex) for ${key}, recompiling`
+				);
+				return this.#compileOnDemand(key, raw);
+			}
 		}
 
 		// Convert patterns to RegExp objects
@@ -445,6 +487,7 @@ export class SettingsMgrDI {
 						regex: new RegExp(p.pattern, p.flags || "iu"),
 						withoutRegex: p.withoutPattern ? new RegExp(p.withoutPattern, p.withoutFlags || "iu") : null,
 						hasEtvCondition: p.hasEtvCondition || false,
+						originalIndex: p.originalIndex !== undefined ? p.originalIndex : index,
 					};
 					regexes.push(regex);
 				} catch (error) {
@@ -475,16 +518,47 @@ export class SettingsMgrDI {
 			// Compile keywords
 			const compilationResult = precompileKeywords(keywords);
 
-			// Build regex array
+			// Build regex array and storable patterns
 			const regexes = [];
+			const storablePatterns = [];
+
 			keywords.forEach((keyword, index) => {
 				const compiled = compileKeyword(keyword);
 				if (compiled) {
 					regexes.push(compiled);
+					// Convert to storable format
+					storablePatterns.push({
+						pattern: compiled.regex.source,
+						flags: compiled.regex.flags,
+						withoutPattern: compiled.withoutRegex ? compiled.withoutRegex.source : null,
+						withoutFlags: compiled.withoutRegex ? compiled.withoutRegex.flags : null,
+						hasEtvCondition: compiled.hasEtvCondition || false,
+						originalIndex: index,
+					});
 				} else {
 					regexes.push(null);
+					storablePatterns.push(null);
 				}
 			});
+
+			// Save compiled patterns back to storage
+			const compiledPath = key.replace(/\./g, ".") + "_compiled";
+			const pathParts = compiledPath.split(".");
+
+			// Navigate to the parent object and set the compiled patterns
+			let current = this.#settings;
+			for (let i = 0; i < pathParts.length - 1; i++) {
+				if (!current[pathParts[i]]) {
+					current[pathParts[i]] = {};
+				}
+				current = current[pathParts[i]];
+			}
+			current[pathParts[pathParts.length - 1]] = storablePatterns;
+
+			// Save to storage
+			await this.#save();
+
+			this.#logger.add(`SettingsMgr: Recompiled and saved ${storablePatterns.length} patterns for ${key}`);
 
 			// Cache in memory
 			this.#regexCache.set(key, regexes);

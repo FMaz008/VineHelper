@@ -840,7 +840,14 @@ function testKeyword(key, title) {
 	for (let i = 0; i < lines.length; i++) {
 		const containsObj = lines[i].querySelector(`td input[name="contains"]`);
 		const contains = containsObj.value.trim();
-		if (keywordMatch([{ contains: contains, without: "", etv_min: "", etv_max: "" }], title) != false) {
+		if (
+			keywordMatch(
+				Object.assign([{ contains: contains, without: "", etv_min: "", etv_max: "" }], {
+					__keywordType: "test",
+				}),
+				title
+			) != false
+		) {
 			containsObj.style.background = "lightgreen";
 		} else {
 			containsObj.style.background = "white";
@@ -848,7 +855,14 @@ function testKeyword(key, title) {
 
 		const withoutObj = lines[i].querySelector(`td input[name="without"]`);
 		const without = withoutObj.value.trim();
-		if (keywordMatch([{ contains: without, without: "", etv_min: "", etv_max: "" }], title) != false) {
+		if (
+			keywordMatch(
+				Object.assign([{ contains: without, without: "", etv_min: "", etv_max: "" }], {
+					__keywordType: "test",
+				}),
+				title
+			) != false
+		) {
 			withoutObj.style.background = "lightgreen";
 		} else {
 			withoutObj.style.background = "white";

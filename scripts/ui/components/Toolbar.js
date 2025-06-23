@@ -352,20 +352,43 @@ class Toolbar {
 		this.#tile.getDOM().dataset.highlightedKeyword = "";
 		const highlightKeywords = Settings.get("general.highlightKeywords");
 		if (highlightKeywords?.length > 0) {
+			// Debug logging
+			const title = this.#tile.getTitle();
+			const asin = this.#tile.getAsin();
+			if (Settings.get("general.debugKeywords")) {
+				console.log("[Toolbar] Processing highlight for item:", {
+					asin: asin,
+					title: title.substring(0, 100) + (title.length > 100 ? "..." : ""),
+					keywordsCount: highlightKeywords.length,
+				});
+			}
+
 			// SharedKeywordMatcher handles compilation internally
-			match = sharedKeywordMatcher.match(highlightKeywords, this.#tile.getTitle(), etv1, etv2, 'highlight', Settings);
+			match = sharedKeywordMatcher.match(highlightKeywords, title, etv1, etv2, "highlight", Settings);
 			if (!match) {
 				logger.add("Toolbar: processHighlight: no match");
 				//No match now, remove the highlight
 				this.#tile.getDOM().dataset.keywordHighlight = false;
+				this.#tile.getDOM().dataset.typeHighlight = "0";
 
 				checkHideList = true;
 			} else {
 				logger.add("Toolbar: processHighlight: match");
 				//Match found, keep the highlight
-				const matchString = typeof match === 'object' ? (match.contains || match.word || '') : match;
+				const matchString = typeof match === "object" ? match.contains || match.word || "" : match;
+
+				if (Settings.get("general.debugKeywords")) {
+					console.log("[Toolbar] Highlight match found:", {
+						asin: this.#tile.getAsin(),
+						title: this.#tile.getTitle().substring(0, 100),
+						matchedKeyword: matchString,
+						matchObject: match,
+					});
+				}
+
 				this.#tile.getDOM().dataset.highlightedKeyword = escapeHTML(matchString);
 				this.#tile.getDOM().dataset.keywordHighlight = true;
+				this.#tile.getDOM().dataset.typeHighlight = "1";
 
 				if (Settings.get("general.highlightKWFirst") && !oldHighlight) {
 					logger.add("Toolbar: processHighlight: highlightKWFirst");
@@ -378,6 +401,7 @@ class Toolbar {
 			}
 		} else {
 			this.#tile.getDOM().dataset.keywordHighlight = false;
+			this.#tile.getDOM().dataset.typeHighlight = "0";
 			checkHideList = true;
 		}
 
@@ -387,7 +411,7 @@ class Toolbar {
 			const hideKeywords = Settings.get("general.hideKeywords");
 			if (Settings.get("hiddenTab.active") && hideKeywords?.length > 0) {
 				// SharedKeywordMatcher handles compilation internally
-				match = sharedKeywordMatcher.match(hideKeywords, this.#tile.getTitle(), etv1, etv2, 'hide', Settings);
+				match = sharedKeywordMatcher.match(hideKeywords, this.#tile.getTitle(), etv1, etv2, "hide", Settings);
 				if (match) {
 					logger.add("Toolbar: processHide: hide match");
 					this.#tile.hideTile(false, false, true); //Do not save, skip the hidden manager: just move the tile.
@@ -395,7 +419,7 @@ class Toolbar {
 					document.getElementById("vh-hide-link-" + this.#tile.getAsin()).style.display = "none";
 
 					//Add a data-hide-keyword attribute to the tile
-					const hideMatchString = typeof match === 'object' ? (match.contains || match.word || '') : match;
+					const hideMatchString = typeof match === "object" ? match.contains || match.word || "" : match;
 					this.#tile.getDOM().dataset.hideKeyword = escapeHTML(hideMatchString);
 				}
 			}
@@ -405,13 +429,19 @@ class Toolbar {
 			logger.add("Toolbar: processHighlight: unknownETV");
 			this.#tile.getDOM().dataset.unknownETV = true;
 			this.#tile.getDOM().dataset.zeroETV = false;
+			this.#tile.getDOM().dataset.typeUnknownETV = "1";
+			this.#tile.getDOM().dataset.typeZeroETV = "0";
 		} else if (parseFloat(etv1) == 0 || parseFloat(etv2) == 0) {
 			logger.add("Toolbar: processHighlight: zeroETV");
 			this.#tile.getDOM().dataset.zeroETV = true;
 			this.#tile.getDOM().dataset.unknownETV = false;
+			this.#tile.getDOM().dataset.typeZeroETV = "1";
+			this.#tile.getDOM().dataset.typeUnknownETV = "0";
 		} else {
 			this.#tile.getDOM().dataset.zeroETV = false;
 			this.#tile.getDOM().dataset.unknownETV = false;
+			this.#tile.getDOM().dataset.typeZeroETV = "0";
+			this.#tile.getDOM().dataset.typeUnknownETV = "0";
 		}
 
 		logger.add("Toolbar: processHighlight: colorize");

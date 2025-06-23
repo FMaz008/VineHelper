@@ -132,6 +132,47 @@ if (!ultraviner) {
 }
 
 //#########################
+//### Helper functions
+
+// Helper function to show the grid and clean up BlindLoading
+function showGridContainer() {
+	const gridContainer = document.querySelector("#vvp-items-grid-container");
+	if (!gridContainer) return;
+
+	// Signal that VineHelper is ready to show content
+	window.vhReadyToShow = true;
+
+	// Add attribute to body to allow CSS to show the containers
+	document.body.setAttribute("data-vh-ready", "true");
+
+	// Clean up the MutationObserver if BlindLoading was enabled
+	if (window.vhBlindLoadingObserver) {
+		window.vhBlindLoadingObserver.disconnect();
+		window.vhBlindLoadingObserver = null;
+	}
+
+	// Show the grid (remove any inline styles that might have been set)
+	gridContainer.style.visibility = "";
+	gridContainer.style.opacity = "";
+	gridContainer.style.display = "";
+
+	// Also ensure the parent containers are visible
+	const itemsGrid = document.querySelector("#vvp-items-grid");
+	if (itemsGrid) {
+		itemsGrid.style.visibility = "";
+		itemsGrid.style.opacity = "";
+		itemsGrid.style.display = "";
+	}
+
+	const itemsContainer = document.querySelector(".vvp-items-container");
+	if (itemsContainer) {
+		itemsContainer.style.visibility = "";
+		itemsContainer.style.opacity = "";
+		itemsContainer.style.display = "";
+	}
+}
+
+//#########################
 //### Main flow
 
 //Initiate the extension
@@ -180,6 +221,117 @@ async function init() {
 	logger.add("BOOT: Waiting on preboot to complete...");
 	await Settings.waitForLoad();
 	logger.add("BOOT: Config available. Begining init() function");
+
+	// Set up BlindLoading observer if enabled
+	if (Settings.get("general.blindLoading")) {
+		// Flag to track when VineHelper is ready to show content
+		window.vhReadyToShow = false;
+
+		// Create observer to watch for the container and prevent early visibility
+		const observer = new MutationObserver(function (mutations) {
+			if (window.vhReadyToShow) return; // Stop if we're ready to show
+
+			// Ensure body doesn't have the ready attribute yet
+			if (document.body.hasAttribute("data-vh-ready")) {
+				document.body.removeAttribute("data-vh-ready");
+			}
+
+			// Check all mutations for our containers
+			for (const mutation of mutations) {
+				if (mutation.type === "attributes" && mutation.attributeName === "style") {
+					const target = mutation.target;
+
+					// Check if this is one of our containers
+					if (
+						target.id === "vvp-items-grid-container" ||
+						target.id === "vvp-items-grid" ||
+						target.classList.contains("vvp-items-container")
+					) {
+						// Force hide if it's trying to show
+						if (
+							target.style.visibility !== "hidden" ||
+							target.style.display === "block" ||
+							target.style.opacity !== "0"
+						) {
+							target.style.visibility = "hidden";
+							target.style.opacity = "0";
+							target.style.display = "";
+						}
+					}
+				}
+			}
+
+			// Also do a periodic check on all containers
+			const container = document.querySelector("#vvp-items-grid-container");
+			if (container && (container.style.visibility !== "hidden" || container.style.opacity !== "0")) {
+				container.style.visibility = "hidden";
+				container.style.opacity = "0";
+				container.style.display = "";
+			}
+
+			const itemsGrid = document.querySelector("#vvp-items-grid");
+			if (itemsGrid && (itemsGrid.style.visibility !== "hidden" || itemsGrid.style.opacity !== "0")) {
+				itemsGrid.style.visibility = "hidden";
+				itemsGrid.style.opacity = "0";
+				itemsGrid.style.display = "";
+			}
+
+			const itemsContainer = document.querySelector(".vvp-items-container");
+			if (
+				itemsContainer &&
+				(itemsContainer.style.visibility !== "hidden" || itemsContainer.style.opacity !== "0")
+			) {
+				itemsContainer.style.visibility = "hidden";
+				itemsContainer.style.opacity = "0";
+				itemsContainer.style.display = "";
+			}
+		});
+
+		// Start observing as soon as possible
+		observer.observe(document.documentElement, {
+			childList: true,
+			subtree: true,
+			attributes: true,
+			attributeFilter: ["style"],
+		});
+
+		// Store observer reference for cleanup
+		window.vhBlindLoadingObserver = observer;
+
+		// Immediately hide any containers that might already be visible
+		const hideContainers = () => {
+			const container = document.querySelector("#vvp-items-grid-container");
+			if (container) {
+				container.style.visibility = "hidden";
+				container.style.opacity = "0";
+				container.style.display = "";
+			}
+
+			const itemsGrid = document.querySelector("#vvp-items-grid");
+			if (itemsGrid) {
+				itemsGrid.style.visibility = "hidden";
+				itemsGrid.style.opacity = "0";
+				itemsGrid.style.display = "";
+			}
+
+			const itemsContainer = document.querySelector(".vvp-items-container");
+			if (itemsContainer) {
+				itemsContainer.style.visibility = "hidden";
+				itemsContainer.style.opacity = "0";
+				itemsContainer.style.display = "";
+			}
+		};
+
+		// Hide immediately
+		hideContainers();
+
+		// Also hide after a short delay to catch any late-loading elements
+		setTimeout(hideContainers, 10);
+		setTimeout(hideContainers, 50);
+		setTimeout(hideContainers, 100);
+
+		logger.add("BOOT: BlindLoading observer initialized");
+	}
 
 	if (Settings.get("thorvarium.darktheme")) {
 		document.getElementsByTagName("body")[0].classList.add("darktheme");
@@ -234,6 +386,9 @@ async function init() {
 		notificationMonitor = new NotificationMonitorV3();
 		await notificationMonitor.initialize();
 
+		// Show the grid for notification monitor
+		showGridContainer();
+
 		hookMgr.hookExecute("productsUpdated", null);
 		return; //Do not initialize the page as normal
 	}
@@ -260,9 +415,11 @@ async function init() {
 	}
 
 	if (Settings.get("general.blindLoading")) {
-		const gridContainer = document.querySelector("#vvp-items-grid-container");
+		// Hide the grid during initial processing to prevent flicker
+		// This prevents users from seeing tiles being rearranged, sorted, and filtered
 		if (gridContainer) {
 			gridContainer.style.display = "none";
+			logger.add("BOOT: Blind loading enabled - hiding grid during initial processing");
 		}
 	}
 
@@ -886,10 +1043,13 @@ async function initTilesAndDrawToolbars() {
 	}
 	logger.add("done creating toolbars.");
 
-	// Scoll to the RFY/AFA/AI header
+	// Scroll to the RFY/AFA/AI header
 	if (Settings.get("general.scrollToRFY")) {
 		var scrollTarget = document.getElementById("vvp-items-button-container");
-		scrollTarget.scrollIntoView({ behavior: "smooth" });
+		if (scrollTarget) {
+			// Use instant scroll instead of smooth to avoid visible scrolling
+			scrollTarget.scrollIntoView({ behavior: "instant", block: "start" });
+		}
 	}
 
 	toolbarsDrawn = true;
@@ -1021,7 +1181,13 @@ async function fetchProductsDatav5() {
 	if (arrProductsData.length == 0) {
 		const gridContainer = document.querySelector("#vvp-items-grid-container");
 		if (gridContainer) {
-			gridContainer.style.display = "block";
+			if (!Settings.get("general.blindLoading")) {
+				// Only show immediately if blind loading is disabled
+				gridContainer.style.display = "block";
+			} else {
+				// Even with blind loading, we need to show the grid if there are no products
+				showGridContainer();
+			}
 		}
 		return false; //No product on this page
 	}
@@ -1066,7 +1232,8 @@ async function fetchProductsDatav5() {
 			} else {
 				logger.add("FETCH: Server request failed");
 			}
-			document.querySelector("#vvp-items-grid-container").style.display = "block";
+			// Show grid on error
+			showGridContainer();
 		})
 		.finally(() => {
 			clearTimeout(timeoutId);
@@ -1084,7 +1251,8 @@ async function serverProductsResponse(data) {
 	logger.add("FETCH: Response received from VineHelper's server...");
 	if (data["invalid_uuid"] == true) {
 		console.error("Invalid UUID");
-		document.querySelector("#vvp-items-grid-container").style.display = "block";
+		// Show grid on error
+		showGridContainer();
 		Settings.set("general.uuid", null); //Cancel the UUID, so the next load can regenerate a new one.
 		//Do no complete this execution
 		return false;
@@ -1233,7 +1401,8 @@ async function serverProductsResponse(data) {
 	productUpdated = true;
 	hookMgr.hookExecute("productsUpdated", null);
 
-	document.querySelector("#vvp-items-grid-container").style.display = "block";
+	// Show the grid after all processing is complete
+	showGridContainer();
 }
 
 //#########################

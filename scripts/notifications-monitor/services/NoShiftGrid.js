@@ -59,14 +59,14 @@ class NoShiftGrid {
 				// Check if grid width actually changed
 				const oldWidth = this._gridWidth;
 				this.#calculateGridWidth();
-				
+
 				// Only proceed if width actually changed
 				if (oldWidth !== this._gridWidth) {
 					const debugPlaceholders = this._monitor._settings.get("general.debugPlaceholders");
 					if (debugPlaceholders) {
 						console.log("[NoShiftGrid] Resize/zoom detected, recalculating grid width", {
 							oldWidth,
-							newWidth: this._gridWidth
+							newWidth: this._gridWidth,
 						});
 					}
 
@@ -246,7 +246,7 @@ class NoShiftGrid {
 					gridWidth: this._gridWidth,
 					forceForFilter,
 					sortType: this._monitor._sortType,
-					...debugInfo
+					...debugInfo,
 				});
 			}
 
@@ -263,17 +263,18 @@ class NoShiftGrid {
 			// When items would start a new row (remainder = 0), we need a full row of placeholders
 			// Otherwise, we need enough to complete the current row
 			const remainder = theoricalItemsCount % tilesPerRow;
-			const numPlaceholderTiles = remainder === 0 ? 0 : (tilesPerRow - remainder);
-			
+			const numPlaceholderTiles = remainder === 0 ? 0 : tilesPerRow - remainder;
+
 			// For filters, we always want to maintain alignment, so ensure we have placeholders
 			// to keep items in their columns
-			const finalPlaceholderCount = forceForFilter && numPlaceholderTiles === 0 && visibleItemsCount > 0
-				? tilesPerRow
-				: numPlaceholderTiles;
+			const finalPlaceholderCount =
+				forceForFilter && numPlaceholderTiles === 0 && visibleItemsCount > 0
+					? tilesPerRow
+					: numPlaceholderTiles;
 
 			// Only modify DOM if placeholder count changed
 			const currentPlaceholders = this._monitor._gridContainer.querySelectorAll(".vh-placeholder-tile");
-			
+
 			// Debug logging - only log when debug is enabled AND (count changes OR force filter)
 			if (debugPlaceholders && (finalPlaceholderCount !== currentPlaceholders.length || forceForFilter)) {
 				console.log("[NoShiftGrid] Placeholder calculation result", {
@@ -285,12 +286,14 @@ class NoShiftGrid {
 					calculation: `remainder=${remainder}, placeholders=${numPlaceholderTiles}, final=${finalPlaceholderCount}`,
 					tileWidth,
 					gridWidth: this._gridWidth,
-					currentPlaceholderCount: currentPlaceholders.length
+					currentPlaceholderCount: currentPlaceholders.length,
 				});
 			}
-			if (currentPlaceholders.length === finalPlaceholderCount) {
+			// For filter operations, we need to reposition placeholders even if count is unchanged
+			// because items may have been filtered out from different positions
+			if (currentPlaceholders.length === finalPlaceholderCount && !forceForFilter) {
 				// Only log if explicitly debugging placeholders (not for every operation)
-				if (debugPlaceholders && !forceForFilter) {
+				if (debugPlaceholders) {
 					console.log("[NoShiftGrid] Placeholder count unchanged, skipping DOM update");
 				}
 				return;
@@ -320,7 +323,7 @@ class NoShiftGrid {
 					console.log("[NoShiftGrid] Inserting placeholders at beginning of grid", {
 						placeholderCount: fragment.childNodes.length,
 						firstChild: this._monitor._gridContainer.firstChild,
-						totalChildren: this._monitor._gridContainer.children.length
+						totalChildren: this._monitor._gridContainer.children.length,
 					});
 				}
 				this._monitor._gridContainer.insertBefore(fragment, this._monitor._gridContainer.firstChild);

@@ -417,4 +417,110 @@ describe("Comprehensive Keyword System Tests", () => {
 			expect(keywordMatch(keywords, "Smart Ring tracker")).toBeTruthy();
 		});
 	});
+
+	describe("Pre-compiled Keywords with Index Mapping", () => {
+		test("should handle pre-compiled keywords with originalIndex correctly", () => {
+			// This test verifies the fix for the off-by-one error where
+			// pre-compiled patterns in a different order than the original keywords
+			// would return the wrong keyword
+
+			const keywords = [
+				"\\bS80UD\\b|ViewFinity S8",
+				"\\bSAE\\b|\\bAnderson\\b|battery connectors?",
+				"ETL[- ]Cert|ETL[- ]Listed|UL[- ]Cert|UL[- ]Listed",
+			];
+
+			// Mock settings manager that returns pre-compiled patterns in different order
+			const mockSettingsMgr = {
+				get: () => null,
+				getCompiledKeywords: (type) => {
+					if (type === "test.keywords") {
+						// Return patterns in different order with originalIndex
+						return [
+							{
+								regex: /\bSAE\b|\bAnderson\b|battery connectors?/iu,
+								withoutRegex: null,
+								hasEtvCondition: false,
+								originalIndex: 1, // Maps to keywords[1]
+							},
+							{
+								regex: /\bS80UD\b|ViewFinity S8/iu,
+								withoutRegex: null,
+								hasEtvCondition: false,
+								originalIndex: 0, // Maps to keywords[0]
+							},
+							{
+								regex: /ETL[- ]Cert|ETL[- ]Listed|UL[- ]Cert|UL[- ]Listed/iu,
+								withoutRegex: null,
+								hasEtvCondition: false,
+								originalIndex: 2, // Maps to keywords[2]
+							},
+						];
+					}
+					return null;
+				},
+			};
+
+			// Set type to help matcher identify it
+			keywords.__type = "test.keywords";
+
+			// Test that correct keywords are returned despite different order
+			const result1 = keywordMatcher.keywordMatchReturnFullObject(
+				keywords,
+				"SAE battery connectors for solar",
+				null,
+				null,
+				mockSettingsMgr
+			);
+			expect(result1).toBe("\\bSAE\\b|\\bAnderson\\b|battery connectors?");
+
+			const result2 = keywordMatcher.keywordMatchReturnFullObject(
+				keywords,
+				"Samsung ViewFinity S8 Monitor",
+				null,
+				null,
+				mockSettingsMgr
+			);
+			expect(result2).toBe("\\bS80UD\\b|ViewFinity S8");
+
+			const result3 = keywordMatcher.keywordMatchReturnFullObject(
+				keywords,
+				"Product with ETL-Certified label",
+				null,
+				null,
+				mockSettingsMgr
+			);
+			expect(result3).toBe("ETL[- ]Cert|ETL[- ]Listed|UL[- ]Cert|UL[- ]Listed");
+		});
+
+		test("should maintain backward compatibility when originalIndex is not present", () => {
+			const keywords = ["laptop", "phone", "tablet"];
+
+			// Mock settings manager without originalIndex
+			const mockSettingsMgr = {
+				get: () => null,
+				getCompiledKeywords: (type) => {
+					if (type === "test.simple") {
+						return [
+							{ regex: /\blaptop\b/iu, withoutRegex: null, hasEtvCondition: false },
+							{ regex: /\bphone\b/iu, withoutRegex: null, hasEtvCondition: false },
+							{ regex: /\btablet\b/iu, withoutRegex: null, hasEtvCondition: false },
+						];
+					}
+					return null;
+				},
+			};
+
+			keywords.__type = "test.simple";
+
+			const result = keywordMatcher.keywordMatchReturnFullObject(
+				keywords,
+				"I need a new phone",
+				null,
+				null,
+				mockSettingsMgr
+			);
+			expect(result).toBe("phone");
+		});
+	});
 });
