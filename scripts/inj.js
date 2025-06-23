@@ -10,14 +10,14 @@ const countryCode = scriptTag.getAttribute("data-country-code");
 window.fetch = async (...args) => {
 	let response = await origFetch(...args);
 	let lastParent = extHelper_LastParentVariant;
-
+	let lastParentAsin = null;
 	let regex = null;
 
 	const url = args[0] || "";
 
 	if (lastParent != null) {
 		regex = /^.+?#(.+?)#.+$/;
-		lastParent = extHelper_LastParentVariant.recommendationId.match(regex)[1];
+		lastParentAsin = extHelper_LastParentVariant.recommendationId.match(regex)[1];
 	}
 
 	//Voice Orders API
@@ -39,7 +39,7 @@ window.fetch = async (...args) => {
 					data: {
 						status: "failed",
 						error: extHelper_responseData.error, //CROSS_BORDER_SHIPMENT, SCHEDULED_DELIVERY_REQUIRED, ITEM_NOT_IN_ENROLLMENT, ITEM_ALREADY_ORDERED
-						parent_asin: lastParent,
+						parent_asin: lastParentAsin,
 						asin: asin,
 					},
 				},
@@ -64,14 +64,14 @@ window.fetch = async (...args) => {
 					status: "success",
 					error: null,
 					//orderId: extHelper_responseData.result.orderId,
-					parent_asin: lastParent,
+					parent_asin: lastParentAsin,
 					asin: asin,
 				};
 			} else {
 				data = {
 					status: "failed",
 					error: "No orderId received back",
-					parent_asin: lastParent,
+					parent_asin: lastParentAsin,
 					asin: asin,
 				};
 			}
@@ -152,15 +152,14 @@ window.fetch = async (...args) => {
 		} else if (result.taxValue !== undefined) {
 			// The item has an ETV value, let's find out if it's a child or a parent
 			const isChild = !!lastParent?.variations?.some((v) => v.asin == result.asin);
+
 			let data = {
 				parent_asin: null,
 				asin: result.asin,
 				etv: result.taxValue,
 			};
 			if (isChild) {
-				regex = /^.+?#(.+?)#.+$/;
-				let arrMatchesP = lastParent.recommendationId.match(regex);
-				data.parent_asin = arrMatchesP[1];
+				data.parent_asin = lastParentAsin;
 			} else {
 				extHelper_LastParentVariant = null;
 			}
