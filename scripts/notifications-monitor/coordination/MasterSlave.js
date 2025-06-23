@@ -76,7 +76,10 @@ class MasterSlave {
 		try {
 			// Store reference to handler for cleanup
 			this.#messageHandler = (event) => {
+				// Only log coordination messages if debug flag is enabled
+				const debugCoordination = this._settings?.get("general.debugCoordination");
 				if (
+					debugCoordination &&
 					event.data.type !== "ImAlive" &&
 					event.data.type !== "masterMonitorPing" &&
 					event.data.type !== "masterMonitorPong"
