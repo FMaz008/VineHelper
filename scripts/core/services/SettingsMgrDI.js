@@ -223,13 +223,6 @@ export class SettingsMgrDI {
 								const keyword = value[index];
 								const keywordStr = typeof keyword === "string" ? keyword : keyword?.contains || "";
 
-								if (this.#debugKeywords && index === 119) {
-									console.log(`[SettingsMgrDI] Compiling keyword at index 119:`, {
-										keyword: keywordStr,
-										fullKeyword: keyword,
-									});
-								}
-
 								const compiled = getCompiledRegex(value, index);
 								if (compiled && compiled.regex) {
 									const patternObj = {
@@ -240,13 +233,6 @@ export class SettingsMgrDI {
 										hasEtvCondition: compiled.hasEtvCondition || false,
 										originalIndex: index,
 									};
-
-									if (this.#debugKeywords && index === 119) {
-										console.log(`[SettingsMgrDI] Compiled pattern at index 119:`, {
-											pattern: patternObj.pattern,
-											originalKeyword: keywordStr,
-										});
-									}
 
 									compiledPatterns.push(patternObj);
 								} else {
