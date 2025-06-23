@@ -74,7 +74,8 @@
 	],
 	"background": {
 		"service_worker": "scripts/vh_service_worker_di.js",
-		"type": "module"
+		"type": "module",
+		"scripts": ["scripts/vh_service_worker_di.js"]
 	},
 	"content_scripts": [
 		{
