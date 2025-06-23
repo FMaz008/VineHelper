@@ -1435,7 +1435,8 @@ function manageCheckboxSetting(key, def = null) {
 		console.log("Checkbox input name='" + key + "' does not exist");
 		return;
 	}
-	checkObj.checked = val;
+
+	checkObj.checked = val === true;
 
 	//Trigger the change event so the fieldset will update accordingly.
 	const event = new Event("change");
