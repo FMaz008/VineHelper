@@ -188,11 +188,32 @@ class MemoryDebugger {
 
 				// Check if element exists and is a valid Node before calling contains
 				if (element && element instanceof Node && !document.contains(element)) {
+					// Enhanced information for debugging
+					const elementInfo = {
+						tagName: element.tagName,
+						className: element.className,
+						id: element.id,
+						innerHTML: element.innerHTML ? element.innerHTML.substring(0, 100) + "..." : "",
+						parentInfo: element.parentElement
+							? {
+									tagName: element.parentElement.tagName,
+									className: element.parentElement.className,
+								}
+							: null,
+						dataset: element.dataset ? { ...element.dataset } : {},
+						isTile: element.classList?.contains("vh-notification-tile"),
+						isButton: element.tagName === "BUTTON" || element.tagName === "A",
+						asin: element.dataset?.asin || element.closest("[data-asin]")?.dataset?.asin || "unknown",
+					};
+
 					detached.push({
 						key,
 						event: listener.event,
 						timestamp: listener.timestamp,
 						isRemoved: this.removedElements.has(element),
+						elementInfo,
+						age: Date.now() - listener.timestamp,
+						stack: listener.stack,
 					});
 				}
 			}
@@ -350,7 +371,35 @@ class MemoryDebugger {
 		const detachedCheckInterval = setInterval(() => {
 			const detached = this.checkDetachedNodes();
 			if (detached.length > 0) {
-				console.error(`⚠️ Found ${detached.length} detached nodes with listeners!`, detached);
+				console.group(`⚠️ Found ${detached.length} detached nodes with listeners!`);
+
+				// Group by element type and event
+				const grouped = {};
+				detached.forEach((item) => {
+					const key = `${item.elementInfo.tagName}.${item.elementInfo.className || "no-class"} - ${item.event}`;
+					if (!grouped[key]) {
+						grouped[key] = [];
+					}
+					grouped[key].push(item);
+				});
+
+				// Log grouped information
+				for (const [groupKey, items] of Object.entries(grouped)) {
+					console.group(`${groupKey} (${items.length} instances)`);
+					items.forEach((item) => {
+						console.log({
+							asin: item.elementInfo.asin,
+							age: `${Math.round(item.age / 1000)}s`,
+							elementInfo: item.elementInfo,
+							wasMarkedRemoved: item.isRemoved,
+						});
+					});
+					console.groupEnd();
+				}
+
+				// Log full details for debugging
+				console.log("Full details:", detached);
+				console.groupEnd();
 			}
 		}, 30000);
 		this.monitoringIntervals.push(detachedCheckInterval);

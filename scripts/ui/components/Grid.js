@@ -52,6 +52,13 @@ class Grid {
 	async addTile(t) {
 		return new Promise((resolve) => {
 			try {
+				const debugTabTitle = Settings.get("general.debugTabTitle");
+				const asin = t.getAsin ? t.getAsin() : "unknown";
+
+				if (debugTabTitle) {
+					console.log(`➕ Grid.addTile: Adding tile ${asin} to ${this.getId()}`);
+				}
+
 				arrTile.push(t);
 				this.pArrTile.push(t);
 
@@ -66,10 +73,19 @@ class Grid {
 					if (gridElement) {
 						gridElement.appendChild(domElement);
 						domElement.style.display = "";
+
+						if (debugTabTitle) {
+							console.log(
+								`➕ Grid.addTile: Successfully added tile ${asin}. Array length now: ${this.pArrTile.length}`
+							);
+						}
 					}
 				}
 			} catch (e) {
 				logger.add("Error in addTile: " + e.message);
+				if (Settings.get("general.debugTabTitle")) {
+					console.error(`❌ Grid.addTile: Error adding tile:`, e);
+				}
 			}
 			resolve();
 		});
@@ -77,12 +93,27 @@ class Grid {
 
 	async removeTile(t) {
 		return new Promise((resolve) => {
+			const debugTabTitle = Settings.get("general.debugTabTitle");
+			const asin = t.getAsin();
+
+			if (debugTabTitle) {
+				console.log(`🗑️ Grid.removeTile: Removing tile ${asin} from array`);
+			}
+
 			// Iterate over the array in reverse order to safely remove items
+			let removed = false;
 			for (let i = this.pArrTile.length - 1; i >= 0; i--) {
 				const value = this.pArrTile[i];
-				if (value !== undefined && value.getAsin() === t.getAsin()) {
+				if (value !== undefined && value.getAsin() === asin) {
 					this.pArrTile.splice(i, 1);
+					removed = true;
 				}
+			}
+
+			if (debugTabTitle) {
+				console.log(
+					`🗑️ Grid.removeTile: ${removed ? "Successfully removed" : "Failed to remove"} tile ${asin}. Array length now: ${this.pArrTile.length}`
+				);
 			}
 
 			resolve();
@@ -96,19 +127,32 @@ class Grid {
 	}
 
 	getTileCount(trueCount = false) {
+		const debugTabTitle = Settings.get("general.debugTabTitle");
+
 		if (trueCount) {
 			// Count only actual tiles, excluding placeholders
 			if (!this.gridDOM) return 0;
 
 			let count = 0;
+			let placeholderCount = 0;
 			for (const child of this.gridDOM.children) {
 				// Skip placeholder tiles
 				if (!child.classList.contains("vh-placeholder-tile")) {
 					count++;
+				} else {
+					placeholderCount++;
 				}
 			}
+
+			if (debugTabTitle && placeholderCount > 0) {
+				console.log(`🔢 Grid ${this.gridDOM.id}: ${count} real tiles, ${placeholderCount} placeholders`);
+			}
+
 			return count;
 		} else {
+			if (debugTabTitle) {
+				console.log(`🔢 Grid tile array length: ${this.pArrTile.length}`);
+			}
 			return this.pArrTile.length;
 		}
 	}
@@ -128,30 +172,67 @@ class Grid {
 }
 
 function updateTileCounts() {
+	// Debug logging for count synchronization
+	const debugTabTitle = Settings.get("general.debugTabTitle");
+
+	if (debugTabTitle) {
+		console.log("📊 Updating tile counts...");
+	}
+
 	//Calculate how many tiles within each grids
 	if (Settings.get("unavailableTab.active") || Settings.get("hiddenTab.active")) {
 		const tab1 = document.getElementById("vh-available-count");
 		if (tab1) {
-			tab1.innerText = env.data.grid.gridRegular.getTileCount(true);
+			const count = env.data.grid.gridRegular.getTileCount(true);
+			tab1.innerText = count;
+			if (debugTabTitle) {
+				console.log(`  ✅ Available tab count: ${count}`);
+			}
 		}
 	}
 	if (Settings.get("unavailableTab.active")) {
 		const tab2 = document.getElementById("vh-unavailable-count");
 		if (tab2) {
-			tab2.innerText = env.data.grid.gridUnavailable.getTileCount(true);
+			const count = env.data.grid.gridUnavailable.getTileCount(true);
+			tab2.innerText = count;
+			if (debugTabTitle) {
+				console.log(`  ❌ Unavailable tab count: ${count}`);
+			}
 		}
 	}
 	if (Settings.get("hiddenTab.active")) {
 		const tab3 = document.getElementById("vh-hidden-count");
 		if (tab3) {
-			tab3.innerText = env.data.grid.gridHidden.getTileCount(true);
+			const count = env.data.grid.gridHidden.getTileCount(true);
+			tab3.innerText = count;
+			if (debugTabTitle) {
+				console.log(`  👻 Hidden tab count: ${count}`);
+			}
 		}
 	}
 	if (Settings.get("pinnedTab.active")) {
 		const tab4 = document.getElementById("vh-pinned-count");
 		if (tab4) {
-			tab4.innerText = env.data.grid.gridPinned.getTileCount(true);
+			const count = env.data.grid.gridPinned.getTileCount(true);
+			tab4.innerText = count;
+			if (debugTabTitle) {
+				console.log(`  📌 Pinned tab count: ${count}`);
+			}
 		}
+	}
+
+	if (debugTabTitle) {
+		// Also log the actual DOM element counts for comparison
+		const regularTiles = document.querySelectorAll("#vh-grid-regular .vvp-item-tile").length;
+		const unavailableTiles = document.querySelectorAll("#vh-grid-unavailable .vvp-item-tile").length;
+		const hiddenTiles = document.querySelectorAll("#vh-grid-hidden .vvp-item-tile").length;
+		const pinnedTiles = document.querySelectorAll("#vh-grid-pinned .vvp-item-tile").length;
+
+		console.log("📊 Actual DOM tile counts:");
+		console.log(`  ✅ Regular grid DOM tiles: ${regularTiles}`);
+		console.log(`  ❌ Unavailable grid DOM tiles: ${unavailableTiles}`);
+		console.log(`  👻 Hidden grid DOM tiles: ${hiddenTiles}`);
+		console.log(`  📌 Pinned grid DOM tiles: ${pinnedTiles}`);
 	}
 }
 
