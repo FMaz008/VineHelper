@@ -61,16 +61,16 @@ The architecture was heavily influenced by Chrome extension limitations that mad
 ```mermaid
 graph TB
     subgraph "Previous Architecture - Multiple Handlers & Instances"
-        Stream[Item Stream<br/>300+ items] --> FilterHandler[filterHideItemHandler<br/>844 KB]
-        FilterHandler --> HighlightHandler[transformHighlightHandler<br/>111 KB]
-        HighlightHandler --> BlurHandler[transformBlurHandler<br/>86.6 KB]
+        Stream["Item Stream<br>300+ items"] --> FilterHandler["filterHideItemHandler<br>844 KB"]
+        FilterHandler --> HighlightHandler["transformHighlightHandler<br>111 KB"]
+        HighlightHandler --> BlurHandler["transformBlurHandler<br>86.6 KB"]
         BlurHandler --> NotificationHandler[notificationHandler]
         NotificationHandler --> Output[Processed Items]
 
         subgraph "Keyword Matching Instances"
-            KW1[KeywordMatch Instance 1<br/>2.8 MB<br/>Hide Keywords]
-            KW2[KeywordMatch Instance 2<br/>2.8 MB<br/>Highlight Keywords]
-            KW3[KeywordMatch Instance 3<br/>2.8 MB<br/>Blur Keywords]
+            KW1["KeywordMatch Instance 1<br>2.8 MB<br>Hide Keywords"]
+            KW2["KeywordMatch Instance 2<br>2.8 MB<br>Highlight Keywords"]
+            KW3["KeywordMatch Instance 3<br>2.8 MB<br>Blur Keywords"]
         end
 
         FilterHandler -.-> KW1
@@ -78,9 +78,9 @@ graph TB
         BlurHandler -.-> KW3
 
         subgraph "Regex Compilation"
-            KW1 --> RC1[Regex Compile<br/>Every Call]
-            KW2 --> RC2[Regex Compile<br/>Every Call]
-            KW3 --> RC3[Regex Compile<br/>Every Call]
+            KW1 --> RC1["Regex Compile<br>Every Call"]
+            KW2 --> RC2["Regex Compile<br>Every Call"]
+            KW3 --> RC3["Regex Compile<br>Every Call"]
         end
     end
 
@@ -95,16 +95,16 @@ graph TB
 ```mermaid
 graph TB
     subgraph "Current Architecture - Unified Handler"
-        Stream[Item Stream<br/>300+ items] --> UnifiedHandler[UnifiedTransformHandler<br/>~200 KB total]
+        Stream["Item Stream<br>300+ items"] --> UnifiedHandler["UnifiedTransformHandler<br>~200 KB total"]
         UnifiedHandler --> Output[Processed Items]
 
         subgraph "Inside UnifiedHandler"
-            Filter[filter()<br/>Hide logic]
-            Transform[transform()<br/>Highlight, Blur, Notification]
+            Filter["filter()<br>Hide logic"]
+            Transform["transform()<br>Highlight, Blur, Notification"]
             Filter --> Transform
         end
 
-        SharedMatcher[SharedKeywordMatcher<br/>Singleton with Cache]
+        SharedMatcher["SharedKeywordMatcher<br>Singleton with Cache"]
 
         UnifiedHandler --> SharedMatcher
 
@@ -129,20 +129,20 @@ graph LR
         H2 -->|15ms| H3[Blur Check]
         H3 -->|5ms| Result1[Result]
 
-        H1 --> Regex1[New Regex<br/>Compilation]
-        H2 --> Regex2[New Regex<br/>Compilation]
-        H3 --> Regex3[New Regex<br/>Compilation]
+        H1 --> Regex1["New Regex<br>Compilation"]
+        H2 --> Regex2["New Regex<br>Compilation"]
+        H3 --> Regex3["New Regex<br>Compilation"]
 
-        Note1[Total: ~50ms per item<br/>300 items = 15 seconds]
+        Note1["Total: ~50ms per item<br>300 items = 15 seconds"]
     end
 
     subgraph "Current: Unified Processing"
-        Item2[Item] -->|1ms| Unified[Unified Check<br/>All Operations]
+        Item2[Item] -->|1ms| Unified["Unified Check<br>All Operations"]
         Unified -->|<1ms| Result2[Result]
 
-        Unified --> Cache[Cached<br/>Regex]
+        Unified --> Cache["Cached<br>Regex"]
 
-        Note2[Total: ~1ms per item<br/>300 items = 0.3 seconds]
+        Note2["Total: ~1ms per item<br>300 items = 0.3 seconds"]
     end
 
     style Regex1 fill:#ffcccc
