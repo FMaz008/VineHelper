@@ -756,25 +756,18 @@ class NotificationMonitor extends MonitorCore {
 
 		// Play bulk sound if any items were found
 		if (this._bulkSoundPending && this._bulkSoundTypes.size > 0) {
-			// Determine the highest priority sound to play
-			let soundTypeToPlay = TYPE_REGULAR;
-			if (this._bulkSoundTypes.has(TYPE_ZEROETV)) {
-				soundTypeToPlay = TYPE_ZEROETV;
-			} else if (this._bulkSoundTypes.has(TYPE_HIGHLIGHT)) {
-				soundTypeToPlay = TYPE_HIGHLIGHT;
+			if (this._settings.get("general.debugNotifications")) {
+				console.log("[NotificationMonitor] Playing bulk notification sound:", {
+					itemTypesFound: Array.from(this._bulkSoundTypes),
+					itemCount: this._bulkSoundTypes.size,
+					isMasterMonitor: this._isMasterMonitor,
+					timestamp: Date.now(),
+				});
 			}
 
-			console.log("[NotificationMonitor] Playing bulk notification sound:", {
-				soundType: soundTypeToPlay,
-				typeNames: { 0: "REGULAR", 1: "ZEROETV", 2: "HIGHLIGHT" },
-				itemTypesFound: Array.from(this._bulkSoundTypes),
-				itemCount: this._bulkSoundTypes.size,
-				isMasterMonitor: this._isMasterMonitor,
-				timestamp: Date.now(),
-			});
-
-			// Play the sound
-			this._soundPlayerMgr.play(soundTypeToPlay);
+			// Play the sound using SoundCoordinator to prevent duplicates across monitors
+			// SoundCoordinator will determine the highest priority sound to play
+			this._soundCoordinator.tryPlayBulkSound(this._bulkSoundTypes, "bulk-fetch");
 
 			// Reset bulk tracking
 			this._bulkSoundPending = false;
@@ -1988,7 +1981,11 @@ class NotificationMonitor extends MonitorCore {
 									soundSetting: this._settings.get("notification.monitor.highlight.sound"),
 									isMasterMonitor: this._isMasterMonitor,
 								});
-								this._soundPlayerMgr.play(TYPE_HIGHLIGHT);
+								// Use SoundCoordinator to prevent duplicate sounds across monitors
+								const asin = notif.dataset.asin;
+								if (asin) {
+									this._soundCoordinator.tryPlaySound(asin, TYPE_HIGHLIGHT, tileVisible);
+								}
 							}
 						}
 
@@ -2420,7 +2417,11 @@ class NotificationMonitor extends MonitorCore {
 					isMasterMonitor: this._isMasterMonitor,
 					feedPaused: this._feedPaused,
 				});
-				this._soundPlayerMgr.play(itemType);
+				// Use SoundCoordinator to prevent duplicate sounds across monitors
+				const asin = notif.dataset.asin;
+				if (asin) {
+					this._soundCoordinator.tryPlaySound(asin, itemType, tileVisible);
+				}
 			}
 		}
 
@@ -3561,6 +3562,12 @@ class NotificationMonitor extends MonitorCore {
 		if (this._ws && typeof this._ws.destroyInstance === "function") {
 			this._ws.destroyInstance();
 			this._ws = null;
+		}
+
+		// Destroy SoundCoordinator to clear intervals and channels
+		if (this._soundCoordinator && typeof this._soundCoordinator.destroy === "function") {
+			this._soundCoordinator.destroy();
+			this._soundCoordinator = null;
 		}
 
 		// Clear count verification interval

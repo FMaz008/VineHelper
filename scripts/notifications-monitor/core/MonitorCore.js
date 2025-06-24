@@ -27,6 +27,7 @@ import { ItemsMgr } from "/scripts/notifications-monitor/services/ItemsMgr.js";
 import { Websocket } from "/scripts/notifications-monitor/stream/Websocket.js";
 import { AutoLoad } from "/scripts/notifications-monitor/stream/AutoLoad.js";
 import { MasterSlave } from "/scripts/notifications-monitor/coordination/MasterSlave.js";
+import { SoundCoordinator } from "/scripts/notifications-monitor/coordination/SoundCoordinator.js";
 
 class MonitorCore {
 	//Variables linked to monitor V2 vs V3
@@ -75,6 +76,7 @@ class MonitorCore {
 		this._brendaMgr = new BrendaAnnounceQueue();
 		this._dialogMgr = new ModalMgr();
 		this._soundPlayerMgr = new NotificationsSoundPlayer();
+		this._soundCoordinator = new SoundCoordinator(this._soundPlayerMgr, this._settings);
 		this._hookMgr = new HookMgr();
 		this._masterSlave = new MasterSlave(this);
 
@@ -197,7 +199,6 @@ class MonitorCore {
 				elem.style.display = "none";
 			});
 		} catch (err) {
-			 
 			//Do nothing
 		}
 	}
@@ -335,7 +336,6 @@ class MonitorCore {
 				hourCycle: "h23",
 			}).format(date);
 		} catch (err) {
-			 
 			console.log("Date format invalid: " + date); // eslint-disable-line no-console
 			return "N/A";
 		}
@@ -397,7 +397,6 @@ class MonitorCore {
 		const debugPlaceholders = this._settings.get("general.debugPlaceholders");
 		if (debugTabTitle || debugPlaceholders) {
 			console.log("[MonitorCore] Counting visible items", {
-				 
 				allTiles: allTiles.length,
 				placeholderTiles: placeholderTiles.length,
 				itemTiles: itemTiles.length,
@@ -410,7 +409,6 @@ class MonitorCore {
 		// Debug logging
 		if (debugTabTitle || debugPlaceholders) {
 			console.log("[MonitorCore] Final count", {
-				 
 				count,
 				visibilityStateCount: this._visibilityStateManager?.getCount(),
 				mismatch: this._visibilityStateManager && this._visibilityStateManager.getCount() !== count,
