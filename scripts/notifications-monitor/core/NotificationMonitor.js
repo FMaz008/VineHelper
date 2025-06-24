@@ -337,7 +337,7 @@ class NotificationMonitor extends MonitorCore {
 	 * @param {object} node - The DOM element of the tile
 	 * @returns {boolean} - Doesn't mean anything.
 	 */
-	#processNotificationFiltering(node) {
+	#processNotificationFiltering(node, unpausing = false) {
 		if (!node) {
 			return false;
 		}
@@ -397,7 +397,9 @@ class NotificationMonitor extends MonitorCore {
 			shouldBeVisible = notificationTypeUnknownETV;
 		}
 
-		this.#setElementVisibility(node, shouldBeVisible, displayStyle);
+		if (!unpausing) {
+			this.#setElementVisibility(node, shouldBeVisible, displayStyle);
+		}
 
 		//Queue filter
 		let styleDisplay;
@@ -433,16 +435,14 @@ class NotificationMonitor extends MonitorCore {
 			}
 		}
 
-		if (styleDisplay == "flex" || styleDisplay == "block") {
-			if (this._filterQueue == "-1") {
-				return true;
-			} else {
-				const queueMatches = queueType == this._filterQueue;
-				this.#setElementVisibility(node, queueMatches, this.#getTileDisplayStyle());
-				return queueMatches;
-			}
+		if (this._filterQueue == "-1") {
+			return true;
 		} else {
-			return false;
+			const queueMatches = queueType == this._filterQueue;
+			if (!unpausing) {
+				this.#setElementVisibility(node, queueMatches, this.#getTileDisplayStyle());
+			}
+			return queueMatches;
 		}
 	}
 
@@ -2830,11 +2830,18 @@ class NotificationMonitor extends MonitorCore {
 			// In current implementation, items don't get marked with feedPaused="true"
 			// Use for...of to avoid function allocation
 			const tiles = this._gridContainer.querySelectorAll(".vvp-item-tile");
+			let arrChanges = [];
+			let visible = false;
 			for (const node of tiles) {
 				if (node.dataset.feedPaused == "true") {
 					node.dataset.feedPaused = "false";
-					this.#processNotificationFiltering(node);
+					visible = this.#processNotificationFiltering(node, true); //Unpausing,
+					arrChanges.push({ element: node, visible: visible, displayStyle: this.#getTileDisplayStyle() });
 				}
+			}
+			if (arrChanges.length > 0) {
+				console.log(arrChanges);
+				this._visibilityStateManager.batchSetVisibility(arrChanges);
 			}
 
 			// Update visibility count after unpause
