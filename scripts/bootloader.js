@@ -602,21 +602,21 @@ function displayAccountDataEvaluationMetrics() {
 	const evalStartStamp = document.querySelector("#vvp-eval-start-stamp");
 	const evalEndStamp = document.querySelector("#vvp-eval-end-stamp");
 	const evalTooltipTrigger = document.querySelector("#vvp-evaluation-period-tooltip-trigger");
-	
+
+	let periodStart, periodEnd;
 	if (evalStartStamp && evalEndStamp && evalTooltipTrigger) {
-		const periodStart = new Date(parseInt(evalStartStamp.innerText));
-		const periodEnd = new Date(parseInt(evalEndStamp.innerText));
-		evalTooltipTrigger.innerText =
-			`Evaluation period: ${periodStart.toLocaleDateString()} - ${periodEnd.toLocaleString()}`;
+		periodStart = new Date(parseInt(evalStartStamp.innerText));
+		periodEnd = new Date(parseInt(evalEndStamp.innerText));
+		evalTooltipTrigger.innerText = `Evaluation period: ${periodStart.toLocaleDateString()} - ${periodEnd.toLocaleString()}`;
 	}
 
 	const percReviewedElement = document.querySelector("#vvp-perc-reviewed-metric-display strong");
 	const numReviewedElement = document.querySelector("#vvp-num-reviewed-metric-display strong");
-	
+
 	if (!percReviewedElement || !numReviewedElement) {
 		return;
 	}
-	
+
 	const percent = Math.round(parseFloat(percReviewedElement.innerText));
 	if (percent > 0) {
 		const count = parseInt(numReviewedElement.innerText.replace(/,/g, ""));
@@ -631,39 +631,39 @@ function displayAccountDataEvaluationMetrics() {
 		const percDisplayP = document.querySelector("#vvp-perc-reviewed-metric-display p");
 		if (percDisplayP) {
 			if (targetMax > 0) {
-				percDisplayP.innerHTML =
-					`You have reviewed <strong>${percent}%</strong> of ${orderEstimate} items; review ${targetRequired} more to reach 90%`;
+				percDisplayP.innerHTML = `You have reviewed <strong>${percent}%</strong> of ${orderEstimate} items; review ${targetRequired} more to reach 90%`;
 			} else {
-				percDisplayP.innerHTML =
-					`You have reviewed <strong>${percent}%</strong> of ${orderEstimate} Vine items this period`;
+				percDisplayP.innerHTML = `You have reviewed <strong>${percent}%</strong> of ${orderEstimate} Vine items this period`;
 			}
 		}
 
-		const periodFraction = (new Date().setUTCHours(0, 0, 0, 0) - periodStart) / (periodEnd - periodStart);
-		if (periodFraction > 0) {
-			const awaitingEstimate = orderMax - count;
-			const projectedCount = count / periodFraction;
-			const projectedOrders = orderMin / periodFraction;
-			const projectedPercent = (projectedOrders - awaitingEstimate) / projectedOrders;
-			const countBar = document.querySelector("#vvp-num-reviewed-metric-display .animated-progress span");
-			const percentBar = document.querySelector("#vvp-perc-reviewed-metric-display .animated-progress span");
-			if (countBar) {
-				if (projectedCount < 70) {
-					countBar.style.backgroundColor = "red";
-				} else if (projectedCount < 77) {
-					countBar.style.backgroundColor = "orange";
-				} else if (projectedCount < 80) {
-					countBar.style.backgroundColor = "yellow";
+		if (periodStart && periodEnd) {
+			const periodFraction = (new Date().setUTCHours(0, 0, 0, 0) - periodStart) / (periodEnd - periodStart);
+			if (periodFraction > 0) {
+				const awaitingEstimate = orderMax - count;
+				const projectedCount = count / periodFraction;
+				const projectedOrders = orderMin / periodFraction;
+				const projectedPercent = (projectedOrders - awaitingEstimate) / projectedOrders;
+				const countBar = document.querySelector("#vvp-num-reviewed-metric-display .animated-progress span");
+				const percentBar = document.querySelector("#vvp-perc-reviewed-metric-display .animated-progress span");
+				if (countBar) {
+					if (projectedCount < 70) {
+						countBar.style.backgroundColor = "red";
+					} else if (projectedCount < 77) {
+						countBar.style.backgroundColor = "orange";
+					} else if (projectedCount < 80) {
+						countBar.style.backgroundColor = "yellow";
+					}
 				}
-			}
 
-			if (percentBar) {
-				if (projectedPercent < 0.8) {
-					percentBar.style.backgroundColor = "red";
-				} else if (projectedPercent < 0.88) {
-					percentBar.style.backgroundColor = "orange";
-				} else if (projectedPercent < 0.92) {
-					percentBar.style.backgroundColor = "yellow";
+				if (percentBar) {
+					if (projectedPercent < 0.8) {
+						percentBar.style.backgroundColor = "red";
+					} else if (projectedPercent < 0.88) {
+						percentBar.style.backgroundColor = "orange";
+					} else if (projectedPercent < 0.92) {
+						percentBar.style.backgroundColor = "yellow";
+					}
 				}
 			}
 		}
@@ -1031,11 +1031,11 @@ async function initTilesAndDrawToolbars() {
 	for (let i = 0; i < arrObj.length; i++) {
 		try {
 			tile = await generateTile(arrObj[i]);
-			
+
 			// Always create toolbar, even for tiles without ASINs
 			// Some tiles may have ASINs in the DOM but fail extraction
 			let t = new Toolbar(tile);
-			
+
 			if (!tile.getAsin()) {
 				logger.add("WARNING: Creating toolbar for tile without extracted ASIN");
 			}
@@ -1058,8 +1058,7 @@ async function initTilesAndDrawToolbars() {
 
 				//Move the seeDetails button as a child span
 				span.appendChild(seeDetails);
-			} else {
-				}
+			}
 
 			//Generate the toolbar
 			await t.createProductToolbar();
@@ -1087,7 +1086,6 @@ async function initTilesAndDrawToolbars() {
 async function getAllProductsData() {
 	let arrUrl = []; //Will be use to store the URL identifier of the listed products.
 	const arrObj = document.querySelectorAll(".vvp-item-tile:not(.pinned)");
-
 
 	if (arrObj.length == 0) {
 		return { arr: [], s: await cryptoKeys.signData([]) };
@@ -1137,7 +1135,7 @@ async function generateTile(obj) {
 	// Check if tile was created without ASIN
 	if (!tile.getAsin()) {
 		logger.add("WARNING: Tile created without ASIN, but continuing with DOM setup");
-		}
+	}
 
 	//Add a container for the image and place the image in it.
 	let img = obj.querySelector(".vvp-item-tile-content img"); // Get the img element
@@ -1197,7 +1195,7 @@ async function generateTile(obj) {
 		let buttonInput = obj.querySelector(".a-button-input");
 		if (!buttonInput) {
 			logger.add("WARNING: No button input found for variant check");
-			} else {
+		} else {
 			let variant = buttonInput.getAttribute("data-is-parent-asin");
 
 			if (variant === "true") {
@@ -1209,17 +1207,17 @@ async function generateTile(obj) {
 					div.classList.add("vh-variant-indicator-container");
 					imgContainerDOM.appendChild(div);
 
-			// Create the <a> element with a link that does nothing
-			let alink = document.createElement("a");
-			alink.href = "#";
-			alink.setAttribute("onclick", "return false;");
-			alink.setAttribute("title", "The item has variant(s).");
-			alink.style.cursor = "default";
-			div.appendChild(alink);
+					// Create the <a> element with a link that does nothing
+					let alink = document.createElement("a");
+					alink.href = "#";
+					alink.setAttribute("onclick", "return false;");
+					alink.setAttribute("title", "The item has variant(s).");
+					alink.style.cursor = "default";
+					div.appendChild(alink);
 
-			// Create another div element for the icon and add classes
-			let iconDiv = document.createElement("div");
-				iconDiv.classList.add("vh-indicator-icon", "vh-icon-choice");
+					// Create another div element for the icon and add classes
+					let iconDiv = document.createElement("div");
+					iconDiv.classList.add("vh-indicator-icon", "vh-icon-choice");
 					alink.appendChild(iconDiv);
 				}
 			}
@@ -1342,7 +1340,7 @@ async function serverProductsResponse(data) {
 
 	// Move missingASINs declaration before any usage
 	let missingASINs = [];
-	
+
 	logger.add("FETCH: Waiting toolbars to be drawn...");
 	while (toolbarsDrawn == false) {
 		await new Promise((r) => setTimeout(r, 10));
@@ -1351,17 +1349,12 @@ async function serverProductsResponse(data) {
 	try {
 		// Get all ASINs from the page
 		const grid = env.data.grid.gridRegular;
-		if (!grid) {
-			} else {
+		if (grid) {
 			// Use pArrTile property instead of getTiles method
 			const allTiles = grid.pArrTile || [];
-			const allPageASINs = allTiles.map(t => t.getAsin()).filter(a => a);
+			const allPageASINs = allTiles.map((t) => t.getAsin()).filter((a) => a);
 			const serverASINs = Object.keys(data["products"]);
-			missingASINs = allPageASINs.filter(asin => !serverASINs.includes(asin));
-			
-			if (missingASINs.length > 0) {
-				} else {
-				}
+			missingASINs = allPageASINs.filter((asin) => !serverASINs.includes(asin));
 		}
 	} catch (error) {
 		logger.add("ERROR: Failed to get tiles from grid: " + error.message);
@@ -1376,104 +1369,103 @@ async function serverProductsResponse(data) {
 			logger.add("DRAW: Processing ASIN #" + key);
 			let tile = getTileByAsin(key);
 
-		if (tile == null) {
-			logger.add("No tile matching " + key);
-			continue; //Continue the loop with the next item - FIXED: was 'return'
-		}
-		
-		// Debug: Check tile state
-		//Load the ETV value
-		if (values.etv_min != null) {
-			logger.add("DRAW: Setting ETV");
-			const toolbar = tile.getToolbar();
-			if (toolbar) {
-				toolbar.setETV(values.etv_min, values.etv_max);
-			} else {
+			if (tile == null) {
+				logger.add("No tile matching " + key);
+				continue; //Continue the loop with the next item - FIXED: was 'return'
+			}
+
+			// Debug: Check tile state
+			//Load the ETV value
+			if (values.etv_min != null) {
+				logger.add("DRAW: Setting ETV");
+				const toolbar = tile.getToolbar();
+				if (toolbar) {
+					toolbar.setETV(values.etv_min, values.etv_max);
 				}
-		} else {
-			logger.add("DRAW: No ETV value found");
-			const toolbar = tile.getToolbar();
-			if (toolbar) {
-				toolbar.unknownETV();
-			}
-		}
-
-		if (values.date_added != null) {
-			logger.add("DRAW: Setting Date");
-			tile.setDateAdded(timenow, values.date_added);
-		}
-
-		if (values.discovered) {
-			logger.add("DRAW: Marking as discovered");
-			tile.markAsDiscovered();
-		}
-
-		//If there is a remote value for the hidden item, ensure it is sync'ed up with the local list
-		if (Settings.isPremiumUser(1) && Settings.get("hiddenTab.remote") && values.hidden != null) {
-			if (values.hidden == true && !(await tile.isHidden())) {
-				logger.add("DRAW: Remote is ordering to hide item");
-				await tile.hideTile(false); //Will update the placement and list
-			} else if (values.hidden == false && (await tile.isHidden())) {
-				logger.add("DRAW: Remote is ordering to show item");
-				await tile.showTile(false); //Will update the placement and list
-			}
-		}
-
-		if (Settings.get("unavailableTab.active")) {
-			logger.add("DRAW: Setting orders");
-			tile.setOrders(values.order_success, values.order_failed);
-			tile.setUnavailable(values.order_unavailable);
-
-			//Assign the tiles to the proper grid
-			if (Settings.get("hiddenTab.active") && (await tile.isHidden())) {
-				//The hidden tiles were already moved, keep the there.
-			} else if (tile.getUnavailable()) {
-				logger.add("DRAW: moving the tile to Unavailable (failed order(s))");
-				await tile.moveToGrid(env.data.grid.gridUnavailable, false); //This is the main sort, do not animate it
+			} else {
+				logger.add("DRAW: No ETV value found");
+				const toolbar = tile.getToolbar();
+				if (toolbar) {
+					toolbar.unknownETV();
+				}
 			}
 
-			logger.add("DRAW: Updating the toolbar");
-			const toolbar = tile.getToolbar();
-			if (toolbar) {
-				try {
-					toolbar.updateVisibilityIcon();
-				} catch (visError) {
+			if (values.date_added != null) {
+				logger.add("DRAW: Setting Date");
+				tile.setDateAdded(timenow, values.date_added);
+			}
+
+			if (values.discovered) {
+				logger.add("DRAW: Marking as discovered");
+				tile.markAsDiscovered();
+			}
+
+			//If there is a remote value for the hidden item, ensure it is sync'ed up with the local list
+			if (Settings.isPremiumUser(1) && Settings.get("hiddenTab.remote") && values.hidden != null) {
+				if (values.hidden == true && !(await tile.isHidden())) {
+					logger.add("DRAW: Remote is ordering to hide item");
+					await tile.hideTile(false); //Will update the placement and list
+				} else if (values.hidden == false && (await tile.isHidden())) {
+					logger.add("DRAW: Remote is ordering to show item");
+					await tile.showTile(false); //Will update the placement and list
+				}
+			}
+
+			if (Settings.get("unavailableTab.active")) {
+				logger.add("DRAW: Setting orders");
+				tile.setOrders(values.order_success, values.order_failed);
+				tile.setUnavailable(values.order_unavailable);
+
+				//Assign the tiles to the proper grid
+				if (Settings.get("hiddenTab.active") && (await tile.isHidden())) {
+					//The hidden tiles were already moved, keep the there.
+				} else if (tile.getUnavailable()) {
+					logger.add("DRAW: moving the tile to Unavailable (failed order(s))");
+					await tile.moveToGrid(env.data.grid.gridUnavailable, false); //This is the main sort, do not animate it
+				}
+
+				logger.add("DRAW: Updating the toolbar");
+				const toolbar = tile.getToolbar();
+				if (toolbar) {
+					try {
+						toolbar.updateVisibilityIcon();
+					} catch (visError) {
+						// Ignore visibility icon update errors
 					}
-			} else {
 				}
-			logger.add("DRAW: Done updating the toolbar");
-		}
-
-		//Process variants
-		if (Settings.isPremiumUser(2) && Settings.get("general.displayVariantButton")) {
-			if (values.variants && values.variants.length > 0) {
-				logger.add("DRAW: Processing variants");
-
-				//Add variants to the tile
-				for (const [k, val] of Object.entries(values.variants)) {
-					await tile.addVariant(val.asin, val.title, val.etv);
-				}
-				tile.updateVariantCount();
+				logger.add("DRAW: Done updating the toolbar");
 			}
-		}
+
+			//Process variants
+			if (Settings.isPremiumUser(2) && Settings.get("general.displayVariantButton")) {
+				if (values.variants && values.variants.length > 0) {
+					logger.add("DRAW: Processing variants");
+
+					//Add variants to the tile
+					for (const [k, val] of Object.entries(values.variants)) {
+						await tile.addVariant(val.asin, val.title, val.etv);
+					}
+					tile.updateVariantCount();
+				}
+			}
 		} catch (error) {
-			}
+			// Ignore errors in variant processing
+		}
 	}
 	// Process tiles that the server didn't return data for as unknown ETV
 	try {
-		if (typeof missingASINs !== 'undefined' && missingASINs.length > 0) {
+		if (typeof missingASINs !== "undefined" && missingASINs.length > 0) {
 			for (const asin of missingASINs) {
 				const tile = getTileByAsin(asin);
 				if (tile && tile.getToolbar()) {
 					tile.getToolbar().unknownETV();
 					tile.colorizeHighlight();
-				} else {
-					}
+				}
 			}
-		} else {
-			}
-	} catch (error) {
 		}
+	} catch (error) {
+		// Ignore errors when processing missing ASINs
+	}
 
 	//Loading remote stored pinned items
 	if (Settings.isPremiumUser(1) && Settings.get("pinnedTab.active") && Settings.get("pinnedTab.remote")) {
