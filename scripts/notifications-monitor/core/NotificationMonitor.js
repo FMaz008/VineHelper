@@ -2840,7 +2840,6 @@ class NotificationMonitor extends MonitorCore {
 				}
 			}
 			if (arrChanges.length > 0) {
-				console.log(arrChanges);
 				this._visibilityStateManager.batchSetVisibility(arrChanges);
 			}
 
