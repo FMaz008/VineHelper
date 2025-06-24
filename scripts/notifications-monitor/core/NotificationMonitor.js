@@ -335,7 +335,7 @@ class NotificationMonitor extends MonitorCore {
 	/**
 	 * Determine if the item should be displayed based on the filters settings. Will hide the item if it doesn't match the filters.
 	 * @param {object} node - The DOM element of the tile
-	 * @returns {boolean} - Doesn't mean anything.
+	 * @returns {boolean} - If the node should be visible.
 	 */
 	#processNotificationFiltering(node, unpausing = false) {
 		if (!node) {
