@@ -1259,6 +1259,7 @@ window.addEventListener("message", async function (event) {
 		}, 50);
 	}
 
+	/*
 	//Amazon checkout process (only use if the notification monitor is loaded)
 	//This is an alternate backup method to flagging the form as target=_blank
 	if (
@@ -1282,6 +1283,7 @@ window.addEventListener("message", async function (event) {
 			"_blank"
 		);
 	}
+	*/
 
 	//Sometime, mostly for debugging purpose, the Service worker can try to display notifications.
 	if (event.data.type == "rawNotification") {
