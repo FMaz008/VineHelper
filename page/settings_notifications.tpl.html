@@ -43,6 +43,22 @@
 			Enforce a cooldown period between notification sound playing.
 		</div>
 	</div>
+	<div class="setting-container">
+		<label for="notification.soundDeduplicationWindow" style="margin-left: 20px; margin-top: 5px"
+			>Deduplicate item sounds within:&nbsp;
+			<select name="notification.soundDeduplicationWindow">
+				<option value="500">500 ms</option>
+				<option value="1000">1 second</option>
+				<option value="1500">1.5 seconds</option>
+				<option value="2000">2 seconds</option>
+				<option value="3000">3 seconds</option>
+			</select>
+		</label>
+		<div class="setting-summary">
+			<div class="vh-toolbar-icon vh-icon-question"></div>
+			Prevents duplicate sounds for the same item across multiple monitors within this time window.
+		</div>
+	</div>
 	<fieldset>
 		<legend>
 			<label for="notification.screen.active">
