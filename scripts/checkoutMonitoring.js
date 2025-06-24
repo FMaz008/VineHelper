@@ -19,14 +19,17 @@ var env = new Environment();
 //If the productId was registered, the ASIN will be available for the process.
 
 async function init() {
+	await Settings.waitForLoad();
+
 	//Auto decline prime membership is prompted.
-	const skipPrimeLink = document.querySelector("#prime-decline-button");
-	if (skipPrimeLink) {
-		skipPrimeLink.click();
-		return;
+	if (Settings.isPremiumUser(2) && Settings.get("general.skipPrimeAd")) {
+		const skipPrimeLink = document.querySelector("#prime-decline-button");
+		if (skipPrimeLink) {
+			skipPrimeLink.click();
+			return;
+		}
 	}
 
-	await Settings.waitForLoad();
 	let currentASIN = await Settings.get("checkout.currentASIN", false);
 	let currentParentASIN = await Settings.get("checkout.currentParentASIN", false);
 	let arrCurrentCheckouts = await Settings.get("checkout.arrCurrentCheckouts", false);
