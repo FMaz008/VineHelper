@@ -277,6 +277,7 @@ async function initiateSettings() {
 	manageColorPicker("general.toolbarBackgroundColor");
 	manageCheckboxSetting("general.debugTabTitle");
 	manageCheckboxSetting("general.debugPlaceholders");
+	manageCheckboxSetting("general.debugTitleDisplay");
 	manageCheckboxSetting("general.debugMemory");
 	manageCheckboxSetting("general.debugMemoryAutoSnapshot");
 	manageCheckboxSetting("general.debugKeywords", false);

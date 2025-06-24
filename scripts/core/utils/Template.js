@@ -1,6 +1,9 @@
 import { Logger } from "/scripts/core/utils/Logger.js";
 var logger = new Logger();
 
+import { TitleDebugLogger } from "/scripts/ui/components/TitleDebugLogger.js";
+const titleDebugger = TitleDebugLogger.getInstance();
+
 class Template {
 	static #instance = null;
 	#tplMgr;
@@ -52,8 +55,36 @@ class Template {
 			return "";
 		}
 		var output = html;
+
+		// Debug logging for description variable
+		const descriptionVar = this.arrVar.find((v) => v.name === "description");
+		const asinVar = this.arrVar.find((v) => v.name === "asin");
+
+		if (descriptionVar && titleDebugger.isEnabled()) {
+			console.log("[Template.js] Processing description variable:", {
+				currentURL: this.currentURL,
+				description:
+					descriptionVar.value?.substring(0, 100) + (descriptionVar.value?.length > 100 ? "..." : ""),
+				descriptionLength: descriptionVar.value?.length,
+				asin: asinVar?.value,
+			});
+		}
+
+		// Check if we're processing a template with description placeholder
+		const hasDescriptionPlaceholder = output.includes("{{$description}}");
+
 		for (let i = 0; i < this.arrVar.length; i++) {
 			output = output.replaceAll("{{$" + this.arrVar[i]["name"] + "}}", this.arrVar[i]["value"]);
+		}
+
+		// Log template processing for title debugging
+		if (asinVar && titleDebugger.isEnabled()) {
+			titleDebugger.logTemplateProcessing(
+				asinVar.value,
+				this.currentURL,
+				hasDescriptionPlaceholder,
+				descriptionVar?.value
+			);
 		}
 
 		// Process if conditions with a stack-based approach for proper nesting

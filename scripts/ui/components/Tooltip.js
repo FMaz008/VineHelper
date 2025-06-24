@@ -1,3 +1,6 @@
+import { TitleDebugLogger } from "/scripts/ui/components/TitleDebugLogger.js";
+const titleDebugger = TitleDebugLogger.getInstance();
+
 class Tooltip {
 	tooltip = null;
 	// WeakMap to store tooltip text for each element
@@ -15,6 +18,27 @@ class Tooltip {
 	}
 
 	addTooltip(bindTo, title) {
+		// Debug logging - only if title debug is enabled
+		if (titleDebugger.isEnabled()) {
+			console.log("[Tooltip.js] Adding tooltip:", {
+				element: bindTo.tagName,
+				elementClass: bindTo.className,
+				titleLength: title?.length,
+				titlePreview: title?.substring(0, 100) + (title?.length > 100 ? "..." : ""),
+				hasChildSpans: bindTo.querySelectorAll(".a-truncate-full, .a-truncate-cut").length,
+				spanContent: {
+					truncateFull: bindTo.querySelector(".a-truncate-full")?.innerText,
+					truncateCut: bindTo.querySelector(".a-truncate-cut")?.innerText,
+				},
+			});
+
+			// Title debug logging - try to find ASIN from parent tile
+			const tileElement = bindTo.closest(".vvp-item-tile");
+			if (tileElement && tileElement.dataset.asin) {
+				titleDebugger.logTooltipAdded(tileElement.dataset.asin, bindTo, title);
+			}
+		}
+
 		bindTo.setAttribute("data-tooltip", title);
 		// Store the tooltip text in WeakMap
 		this.#tooltipTexts.set(bindTo, title);
