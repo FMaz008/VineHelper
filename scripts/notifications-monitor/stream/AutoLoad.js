@@ -249,7 +249,7 @@ class AutoLoad {
 
 		//Forward the items to the server
 		if (items.length > 0) {
-			const arrQueue = { AI: "encore", RFY: "potluck", AFA: "last_chance" };
+			const arrQueue = { AI: "encore", RFY: "potluck", AFA: "last_chance", ALL: "all_items" };
 
 			const content = {
 				api_version: 5,

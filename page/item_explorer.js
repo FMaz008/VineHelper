@@ -508,6 +508,7 @@ function queueToAbbr(queue) {
 		potluck: "RFY",
 		encore: "AI",
 		last_chance: "AFA",
+		all_items: "ALL",
 	};
 
 	return arr[queue];

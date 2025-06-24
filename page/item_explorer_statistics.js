@@ -125,7 +125,13 @@ Chart.register({
 
 			const canvas5 = document.createElement("canvas");
 			document.getElementById("vh-drop-stats-stacked").appendChild(canvas5);
-			generateStackedGraph(canvas5, data.drop_stats_rfy, data.drop_stats_afa, data.drop_stats_ai);
+			generateStackedGraph(
+				canvas5,
+				data.drop_stats_rfy,
+				data.drop_stats_afa,
+				data.drop_stats_ai,
+				data.drop_stats_all
+			);
 
 			const canvas2 = document.createElement("canvas");
 			document.getElementById("vh-drop-stats-rfy").appendChild(canvas2);
@@ -138,6 +144,10 @@ Chart.register({
 			const canvas4 = document.createElement("canvas");
 			document.getElementById("vh-drop-stats-ai").appendChild(canvas4);
 			generateGraph(canvas4, data.drop_stats_ai);
+
+			const canvas6 = document.createElement("canvas");
+			document.getElementById("vh-drop-stats-all").appendChild(canvas6);
+			generateGraph(canvas6, data.drop_stats_all);
 		});
 })();
 
@@ -200,7 +210,7 @@ function generateGraph(canvas, data) {
 	});
 }
 
-function generateStackedGraph(canvas, dataRFY, dataAFA, dataAI) {
+function generateStackedGraph(canvas, dataRFY, dataAFA, dataAI, dataALL) {
 	if (!dataRFY || !dataAFA || !dataAI) {
 		console.error("No data for graph");
 		return;
@@ -235,6 +245,13 @@ function generateStackedGraph(canvas, dataRFY, dataAFA, dataAI) {
 					data: dataRFY.map((d) => d.item_count),
 					backgroundColor: "rgba(255, 99, 132, 0.8)",
 					borderColor: "rgb(255, 99, 132)",
+					borderWidth: 1,
+				},
+				{
+					label: "ALL Items",
+					data: dataALL.map((d) => d.item_count),
+					backgroundColor: "rgba(153, 102, 255, 0.8)",
+					borderColor: "rgb(153, 102, 255)",
 					borderWidth: 1,
 				},
 			],

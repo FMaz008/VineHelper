@@ -706,6 +706,7 @@ export class SettingsMgrDI {
 			this.#settings.keyBindings.previousPage = "p";
 			this.#settings.keyBindings.RFYPage = "r";
 			this.#settings.keyBindings.AFAPage = "a";
+			this.#settings.keyBindings.ALLPage = "l";
 			this.#settings.keyBindings.AIPage = "i";
 			this.#settings.keyBindings.hideAll = "h";
 			this.#settings.keyBindings.showAll = "s";
@@ -984,6 +985,7 @@ export class SettingsMgrDI {
 				active: true,
 				AFAPage: "a",
 				AIPage: "i",
+				ALLPage: "l",
 				debug: "d",
 				hideAll: "h",
 				nextPage: "n",
