@@ -6,6 +6,8 @@ import {
 	notificationPushFunction,
 } from "/scripts/notifications-monitor/stream/NewItemStreamProcessing.js";
 import { Item } from "/scripts/core/models/Item.js";
+import { SettingsMgr } from "/scripts/core/services/SettingsMgrCompat.js";
+var Settings = new SettingsMgr();
 class ServerCom {
 	static #instance = null;
 
@@ -16,6 +18,8 @@ class ServerCom {
 	#channelMessageHandler = null;
 	fetch100 = false;
 	#dataBuffer = [];
+	#processedItems = new Map(); // Track processed items to prevent duplicates
+	#instanceId = `servercom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`; // Unique instance ID
 
 	constructor(monitor) {
 		this._monitor = monitor;
@@ -37,6 +41,12 @@ class ServerCom {
 
 		//Only the master monitor should push notifications
 		//Otherwise we get duplicates push notifications.
+		if (Settings.get("general.debugNotifications")) {
+			console.log("[ServerCom] Initializing notification push function:", {
+				isMasterMonitor: this._monitor._isMasterMonitor,
+				monitorId: this._monitor._monitorId
+			});
+		}
 		if (this._monitor._isMasterMonitor) {
 			notificationPushFunction(this.#pushNotification);
 		}
@@ -91,6 +101,14 @@ class ServerCom {
 			return false;
 		}
 
+		// Skip messages from our own instance to prevent duplicate processing
+		if (data.sourceInstanceId === this.#instanceId) {
+			if (this._monitor._settings.get("general.debugServercom")) {
+				console.log("[ServerCom] Skipping own broadcast message", { type: data.type, sourceInstanceId: data.sourceInstanceId });
+			}
+			return false;
+		}
+
 		if (data.type == "masterMonitorPong") {
 			window.clearTimeout(this.#statusTimer);
 			this.#statusTimer = null;
@@ -137,6 +155,35 @@ class ServerCom {
 
 		// Received from #dataBuffering function, the data is the result of the output of the stream processing.
 		if (data.type == "newItem") {
+			// Check for duplicate processing
+			const itemKey = data.item?.data?.asin || data.item?.asin;
+			if (itemKey) {
+				const now = Date.now();
+				const lastProcessed = this.#processedItems.get(itemKey);
+				
+				// Skip if we've processed this item in the last 2 seconds
+				if (lastProcessed && (now - lastProcessed) < 2000) {
+					if (this._monitor._settings.get("general.debugServercom")) {
+						console.log("[ServerCom] Skipping duplicate item", {
+							asin: itemKey,
+							timeSinceLastProcess: now - lastProcessed,
+							sourceInstanceId: data.sourceInstanceId
+						});
+					}
+					return;
+				}
+				
+				// Track this item as processed
+				this.#processedItems.set(itemKey, now);
+				
+				// Clean up old entries (older than 10 seconds)
+				for (const [asin, timestamp] of this.#processedItems) {
+					if (now - timestamp > 10000) {
+						this.#processedItems.delete(asin);
+					}
+				}
+			}
+			
 			if (this._monitor._settings.get("general.debugServercom")) {
 				console.log("[ServerCom] newItem", data);
 			}
@@ -156,16 +203,27 @@ class ServerCom {
 		}
 		if (data.type == "fetch100") {
 			let itemIndex = 0;
-			for (const itemData of JSON.parse(data.data)) {
-				if (itemData.type == "newItem") {
-					const item = this.#createValidatedItem(itemData.item?.data, `fetch100 batch item ${itemIndex}`);
-					if (item) {
-						await this._monitor.addTileInGrid(item, "Fetch latest");
+			try {
+				for (const itemData of JSON.parse(data.data)) {
+					if (itemData.type == "newItem") {
+						try {
+							const item = this.#createValidatedItem(itemData.item?.data, `fetch100 batch item ${itemIndex}`);
+							if (item) {
+								await this._monitor.addTileInGrid(item, "Fetch latest");
+							}
+						} catch (itemError) {
+							console.error(`Error processing fetch100 item ${itemIndex}:`, itemError);
+							// Continue processing other items
+						}
+						itemIndex++;
+					} else if (itemData.type == "fetchRecentItemsEnd") {
+						this._monitor.fetchRecentItemsEnd();
 					}
-					itemIndex++;
-				} else if (itemData.type == "fetchRecentItemsEnd") {
-					this._monitor.fetchRecentItemsEnd();
 				}
+			} catch (error) {
+				console.error("Error processing fetch100 data:", error);
+				// Ensure we always call fetchRecentItemsEnd to clean up state
+				this._monitor.fetchRecentItemsEnd();
 			}
 		}
 		if (data.type == "newVariants") {
@@ -264,17 +322,22 @@ class ServerCom {
 	//#####################################################
 
 	#dataBuffering(data) {
+		// Add source instance ID to prevent self-processing
+		const dataWithSource = { ...data, sourceInstanceId: this.#instanceId };
+		
 		if (!this.fetch100) {
-			this._monitor._channel.postMessage(data);
-			this.processBroadcastMessage(data);
+			this._monitor._channel.postMessage(dataWithSource);
+			// Don't process our own broadcast messages
+			// this.processBroadcastMessage(data); // Removed to prevent duplicate processing
 			return;
 		}
 		this.#dataBuffer.push(data);
 		if (data.type == "fetchRecentItemsEnd") {
 			// Stringify once and reuse to avoid duplicate memory allocation
 			const stringifiedBuffer = JSON.stringify(this.#dataBuffer);
-			this._monitor._channel.postMessage({ type: "fetch100", data: stringifiedBuffer });
-			this.processBroadcastMessage({ type: "fetch100", data: stringifiedBuffer });
+			this._monitor._channel.postMessage({ type: "fetch100", data: stringifiedBuffer, sourceInstanceId: this.#instanceId });
+			// Don't process our own broadcast messages
+			// this.processBroadcastMessage({ type: "fetch100", data: stringifiedBuffer }); // Removed
 			this.#dataBuffer = [];
 			this.fetch100 = false;
 		}
@@ -312,13 +375,22 @@ class ServerCom {
 	//## PUSH NOTIFICATIONS
 	//#####################################################
 
-	#pushNotification(notificationTitle, item) {
+	#pushNotification = (notificationTitle, item) => {
 		if (!(item instanceof Item)) {
 			throw new Error("item is not an instance of Item");
 		}
+		const itemInfo = item.getAllInfo();
+		const isMasterMonitor = this._monitor && this._monitor._isMasterMonitor;
+		console.log("[ServerCom] Sending OS notification:", {
+			title: notificationTitle,
+			asin: itemInfo.asin,
+			isMasterMonitor: isMasterMonitor,
+			hasMonitor: !!this._monitor,
+			timestamp: Date.now()
+		});
 		chrome.runtime.sendMessage({
 			type: "pushNotification",
-			item: item.getAllInfo(),
+			item: itemInfo,
 			title: notificationTitle,
 		});
 	}

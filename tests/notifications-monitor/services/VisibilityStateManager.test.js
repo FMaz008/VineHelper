@@ -71,7 +71,8 @@ describe("VisibilityStateManager", () => {
 			visibilityStateManager.increment();
 
 			expect(visibilityStateManager.getCount()).toBe(6);
-			expect(mockHookMgr.hookExecute).toHaveBeenCalledTimes(3);
+			// Each increment/decrement emits 2 events (count-changed and count-changed-immediate)
+			expect(mockHookMgr.hookExecute).toHaveBeenCalledTimes(6);
 		});
 	});
 
@@ -127,7 +128,8 @@ describe("VisibilityStateManager", () => {
 			visibilityStateManager.decrement();
 
 			expect(visibilityStateManager.getCount()).toBe(4);
-			expect(mockHookMgr.hookExecute).toHaveBeenCalledTimes(3);
+			// Each increment/decrement emits 2 events (count-changed and count-changed-immediate)
+			expect(mockHookMgr.hookExecute).toHaveBeenCalledTimes(6);
 		});
 	});
 
@@ -259,7 +261,8 @@ describe("VisibilityStateManager", () => {
 			expect(visibilityStateManager.getCount()).toBe(0);
 
 			// Verify all operations emitted events
-			expect(mockHookMgr.hookExecute).toHaveBeenCalledTimes(5);
+			// Each operation emits 2 events (count-changed and count-changed-immediate)
+			expect(mockHookMgr.hookExecute).toHaveBeenCalledTimes(10);
 		});
 
 		it("should maintain consistency across rapid updates", () => {

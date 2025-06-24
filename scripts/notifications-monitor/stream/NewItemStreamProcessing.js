@@ -5,6 +5,10 @@ import { SettingsMgr } from "/scripts/core/services/SettingsMgrCompat.js";
 import { UnifiedTransformHandler } from "/scripts/notifications-monitor/stream/UnifiedTransformHandler.js";
 var Settings = new SettingsMgr();
 
+// Track recent OS notifications to prevent duplicates
+const recentOSNotifications = new Map();
+const OS_NOTIFICATION_DEDUP_WINDOW = 2000; // 2 seconds
+
 // Create unified transform handler
 let transformHandler = null;
 
@@ -54,9 +58,56 @@ function transformHandlerWrapper(data) {
 }
 
 function outputHandler(data) {
+	// ISSUE #3 DEBUG: Track item processing
+	const debugNotifications = Settings.get("general.debugNotifications");
+	const asin = data.notification?.item?.getAsin?.() || data.notification?.item?.asin || data.asin;
+	
+	if (debugNotifications && asin === "B0F32SHGNR") {
+		console.log("[NewItemStreamProcessing] B0F32SHGNR PROCESSING", {
+			asin,
+			hasNotification: !!data.notification,
+			dataKeys: Object.keys(data),
+			timestamp: Date.now(),
+			stackTrace: new Error().stack
+		});
+	}
+	
 	// Handle notification if present
 	if (data.notification) {
-		outputFunctions.push(data.notification.title, data.notification.item);
+		const asin = data.notification.item?.getAsin?.() || data.notification.item?.asin;
+		const now = Date.now();
+		
+		// Check for duplicate OS notifications
+		const lastNotificationTime = recentOSNotifications.get(asin);
+		const isDuplicate = lastNotificationTime && (now - lastNotificationTime) < OS_NOTIFICATION_DEDUP_WINDOW;
+		
+		if (debugNotifications) {
+			console.log("[NewItemStreamProcessing] OS notification check:", {
+				title: data.notification.title,
+				asin: asin,
+				hasOutputFunction: !!outputFunctions.push,
+				timestamp: now,
+				isDuplicate: isDuplicate,
+				timeSinceLastNotification: lastNotificationTime ? now - lastNotificationTime : null
+			});
+		}
+		
+		if (!isDuplicate) {
+			// Record this notification
+			recentOSNotifications.set(asin, now);
+			
+			// Clean up old entries (older than 10 seconds)
+			for (const [key, timestamp] of recentOSNotifications) {
+				if (now - timestamp > 10000) {
+					recentOSNotifications.delete(key);
+				}
+			}
+			
+			// Send the OS notification
+			outputFunctions.push(data.notification.title, data.notification.item);
+		} else if (debugNotifications) {
+			console.warn("[NewItemStreamProcessing] Skipping duplicate OS notification for ASIN:", asin);
+		}
 	}
 	
 	// Broadcast the notification

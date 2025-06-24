@@ -431,33 +431,51 @@ class MonitorCore {
 	 */
 	_initializeTabTitleListener() {
 		if (this._hookMgr) {
-			// Listen to visibility count changes
+			// Listen to visibility count changes with delay for batching
 			this._hookMgr.hookBind("visibility:count-changed", (data) => {
-				this._updateTabTitle(data.count);
+				this._updateTabTitle(data.count, false);
+			});
+
+			// Listen to immediate visibility count changes for instant UI feedback
+			this._hookMgr.hookBind("visibility:count-changed-immediate", (data) => {
+				this._updateTabTitle(data.count, true);
 			});
 		}
 	}
 
-	_updateTabTitle(count) {
-		// Batch tab title updates to avoid excessive DOM operations
-		clearTimeout(this._tabTitleTimer);
-		this._tabTitleTimer = setTimeout(() => {
-			// Use provided count or fall back to counting
-			const itemsCount = count !== undefined ? count : this._countVisibleItems();
+	_updateTabTitle(count, immediate = false) {
+		// Use provided count or fall back to counting
+		const itemsCount = count !== undefined ? count : this._countVisibleItems();
 
-			// Update the tab title
+		if (immediate) {
+			// Update immediately for UI consistency
 			document.title = "VHNM (" + itemsCount + ")";
 
-			// Debug logging for truncation issues
+			// Debug logging
 			const debugTabTitle = this._settings.get("general.debugTabTitle");
 			if (debugTabTitle) {
-				console.log(`[TabTitle] Updated to: ${itemsCount}`, {
-					 
+				console.log(`[TabTitle] Immediate update to: ${itemsCount}`, {
 					providedCount: count,
 					timestamp: new Date().toISOString(),
 				});
 			}
-		}, 100); // 100ms delay for UI updates
+		} else {
+			// Batch tab title updates to avoid excessive DOM operations
+			clearTimeout(this._tabTitleTimer);
+			this._tabTitleTimer = setTimeout(() => {
+				// Update the tab title
+				document.title = "VHNM (" + itemsCount + ")";
+
+				// Debug logging for truncation issues
+				const debugTabTitle = this._settings.get("general.debugTabTitle");
+				if (debugTabTitle) {
+					console.log(`[TabTitle] Batched update to: ${itemsCount}`, {
+						providedCount: count,
+						timestamp: new Date().toISOString(),
+					});
+				}
+			}, 100); // 100ms delay for batched updates
+		}
 	}
 
 	// Helper method to preserve scroll position during DOM operations

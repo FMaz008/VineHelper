@@ -11,6 +11,8 @@
  * - Batch operations for performance
  * - Event emission for visibility changes
  * - WeakMap-based caching to prevent memory leaks
+ * - Debug mode with stack trace logging
+ * - Double-counting prevention with WeakSet tracking
  */
 class VisibilityStateManager {
 	#count = 0;
@@ -18,6 +20,11 @@ class VisibilityStateManager {
 	#settings;
 	#visibilityCache = new WeakMap();
 	#computedStyleCache = new WeakMap();
+	#trackedItems = new WeakSet(); // Track which items we've already counted
+	#debugMode = false; // Debug mode flag for verbose logging
+	#operationHistory = []; // Track recent operations for debugging
+	#maxHistorySize = 100; // Limit history size to prevent memory issues
+	#suspendCountUpdates = false; // Flag to suspend count update emissions during bulk operations
 
 	/**
 	 * @param {HookMgr} hookMgr - The hook manager for event handling
@@ -26,6 +33,76 @@ class VisibilityStateManager {
 	constructor(hookMgr, settings) {
 		this.#hookMgr = hookMgr;
 		this.#settings = settings;
+		
+		// Initialize debug mode based on settings or global flags
+		this.#updateDebugMode();
+	}
+
+	/**
+	 * Update debug mode based on current settings
+	 * @private
+	 */
+	#updateDebugMode() {
+		this.#debugMode = typeof window !== "undefined" && (
+			window.DEBUG_VISIBILITY_STATE ||
+			window.DEBUG_TAB_TITLE ||
+			this.#settings?.get("general.debugTabTitle") ||
+			this.#settings?.get("general.debugVisibilityState")
+		);
+	}
+
+	/**
+	 * Enable or disable debug mode
+	 * @param {boolean} enabled - Whether to enable debug mode
+	 */
+	setDebugMode(enabled) {
+		this.#debugMode = enabled;
+		if (enabled) {
+			console.log("[VisibilityStateManager] Debug mode enabled");
+		}
+	}
+
+	/**
+	 * Get stack trace for debugging
+	 * @private
+	 * @returns {string} Formatted stack trace
+	 */
+	#getStackTrace() {
+		const stack = new Error().stack;
+		// Remove the first few lines that are internal to this method
+		const lines = stack.split('\n').slice(3, 8);
+		return lines.join('\n');
+	}
+
+	/**
+	 * Add operation to history for debugging
+	 * @private
+	 * @param {Object} operation - Operation details
+	 */
+	#addToHistory(operation) {
+		if (!this.#debugMode) return;
+		
+		this.#operationHistory.push({
+			...operation,
+			timestamp: new Date().toISOString(),
+			stackTrace: this.#getStackTrace()
+		});
+		
+		// Trim history if it gets too large
+		if (this.#operationHistory.length > this.#maxHistorySize) {
+			this.#operationHistory = this.#operationHistory.slice(-this.#maxHistorySize);
+		}
+	}
+
+	/**
+	 * Suspend count update emissions (useful during bulk operations like fetch)
+	 * @param {boolean} suspend - Whether to suspend count updates
+	 */
+	suspendCountUpdates(suspend) {
+		this.#suspendCountUpdates = suspend;
+		if (this.#debugMode) {
+			console.log(`[VisibilityStateManager] Count updates ${suspend ? 'suspended' : 'resumed'}`);
+		}
 	}
 
 	/**
@@ -36,22 +113,142 @@ class VisibilityStateManager {
 	 * @returns {boolean} Whether the visibility actually changed
 	 */
 	setVisibility(element, visible, displayStyle = "block") {
-		if (!element) return false;
+		if (!element) {
+			if (this.#debugMode) {
+				console.warn("[VisibilityStateManager] setVisibility called with null element");
+			}
+			return false;
+		}
 
+		// Update debug mode in case settings changed
+		this.#updateDebugMode();
+
+		// ISSUE #3 FIX: Prevent duplicate tracking by using a unique element identifier
+		// Generate a unique ID for the element if it doesn't have one
+		if (!element.id) {
+			element.id = `vh-item-${Math.random().toString(36).substr(2, 9)}`;
+		}
+		
+		const isFirstTimeTracking = !this.#trackedItems.has(element);
 		const wasVisible = this.isVisible(element);
-
-		// Debug logging for setVisibility calls
-		if (typeof window !== "undefined" && window.DEBUG_TAB_TITLE) {
-			console.log("[VisibilityStateManager] setVisibility called", {
-				elementId: element.id,
-				asin: element.dataset?.asin,
-				wasVisible,
-				newVisible: visible,
+		const asin = element.dataset?.asin || element.getAttribute("data-asin") || "unknown";
+		const elementId = element.id;
+		
+		// ISSUE #3 FIX: Additional safeguard - check for duplicate elements with same ASIN
+		if (isFirstTimeTracking && asin !== "unknown") {
+			// Check if we already have another element with this ASIN tracked
+			const existingTrackedWithSameAsin = Array.from(document.querySelectorAll(`[data-asin="${asin}"]`))
+				.filter(el => el !== element && this.#trackedItems.has(el));
+			
+			if (existingTrackedWithSameAsin.length > 0 && this.#debugMode) {
+				console.error("[VisibilityStateManager] DUPLICATE ELEMENT DETECTED", {
+					asin,
+					newElementId: elementId,
+					existingElements: existingTrackedWithSameAsin.map(el => ({
+						id: el.id,
+						tracked: this.#trackedItems.has(el),
+						visible: this.isVisible(el)
+					})),
+					stackTrace: this.#getStackTrace()
+				});
+			}
+		}
+		
+		// ISSUE #3 DEBUG: Track duplicate item detection
+		if (this.#debugMode && asin === "B0F32SHGNR") {
+			console.log("[VisibilityStateManager] B0F32SHGNR TRACKING CHECK", {
+				asin,
+				isFirstTimeTracking,
+				trackedItemsSize: this.#trackedItems.size,
+				elementId,
+				element,
+				hasElement: this.#trackedItems.has(element),
 				currentCount: this.#count,
-				hasCache: this.#visibilityCache.has(element),
-				timestamp: new Date().toISOString(),
+				stackTrace: this.#getStackTrace()
+			});
+			
+			// Check if there are multiple elements with same ASIN
+			const allElements = document.querySelectorAll(`[data-asin="${asin}"]`);
+			if (allElements.length > 1) {
+				console.warn("[VisibilityStateManager] MULTIPLE ELEMENTS WITH SAME ASIN", {
+					asin,
+					elementCount: allElements.length,
+					elements: Array.from(allElements).map(el => ({
+						id: el.id,
+						className: el.className,
+						isTracked: this.#trackedItems.has(el)
+					}))
+				});
+			}
+		}
+
+		// Track call frequency
+		if (!this._callFrequencyMap) {
+			this._callFrequencyMap = new Map();
+		}
+		const callKey = `${asin}-${visible}`;
+		const now = Date.now();
+		const lastCall = this._callFrequencyMap.get(callKey);
+		
+		if (lastCall && (now - lastCall.timestamp) < 1000) {
+			lastCall.count++;
+			if (this.#debugMode) {
+				console.warn(`[VisibilityStateManager] Rapid repeated call detected for ${asin}`, {
+					callCount: lastCall.count,
+					timeSinceLastCall: now - lastCall.timestamp,
+					visible,
+					wasVisible,
+					stackTrace: this.#getStackTrace()
+				});
+			}
+		} else {
+			this._callFrequencyMap.set(callKey, { timestamp: now, count: 1 });
+		}
+
+		// Early exit if visibility hasn't changed and element is already tracked
+		if (!isFirstTimeTracking && wasVisible === visible) {
+			if (this.#debugMode) {
+				console.log("[VisibilityStateManager] Early exit - no visibility change", {
+					asin,
+					visible,
+					elementId
+				});
+			}
+			// Still update the display style in case it changed
+			element.style.display = visible ? displayStyle : "none";
+			return false; // No change
+		}
+
+		// Defensive check: Ensure element has a valid parent
+		if (!element.parentNode && this.#debugMode) {
+			console.warn("[VisibilityStateManager] Element has no parent node", {
+				elementId,
+				asin,
+				visible
 			});
 		}
+
+		// Log operation details
+		const operation = {
+			operation: "setVisibility",
+			elementId,
+			asin,
+			wasVisible,
+			newVisible: visible,
+			isFirstTimeTracking,
+			currentCount: this.#count,
+			hasCache: this.#visibilityCache.has(element),
+			displayStyle
+		};
+
+		if (this.#debugMode) {
+			console.log("[VisibilityStateManager] setVisibility called", {
+				...operation,
+				stackTrace: this.#getStackTrace()
+			});
+		}
+
+		this.#addToHistory(operation);
 
 		// Update the element's display style
 		element.style.display = visible ? displayStyle : "none";
@@ -60,12 +257,70 @@ class VisibilityStateManager {
 		this.#computedStyleCache.delete(element);
 		this.#visibilityCache.set(element, visible);
 
+		// ISSUE #3 FIX: Always mark as tracked before processing visibility changes
+		// This prevents the same element from being counted multiple times
+		if (isFirstTimeTracking) {
+			this.#trackedItems.add(element);
+			if (this.#debugMode) {
+				console.log("[VisibilityStateManager] Item tracked for the first time", {
+					asin,
+					elementId,
+					visible,
+					wasVisible,
+					willChangeVisibility: wasVisible !== visible,
+					decision: visible && wasVisible !== visible ? "will-increment" : "no-count-change",
+					stackTrace: this.#getStackTrace()
+				});
+			}
+		}
+		
 		// Track the change if visibility actually changed
 		if (wasVisible !== visible) {
+
+			// Defensive check: Validate count before modification
+			const oldCount = this.#count;
+			
+			// ISSUE #3 FIX: Improved logic to prevent double counting
+			// Only increment count if:
+			// 1. Item is becoming visible AND
+			// 2. Either it's first time tracking OR it was previously invisible
 			if (visible) {
-				this.increment(1);
-			} else {
-				this.decrement(1);
+				if (isFirstTimeTracking) {
+					// First time seeing this element and it's visible
+					this.#incrementCount(1, asin, "first-time-visible");
+				} else if (!wasVisible) {
+					// Already tracked element becoming visible
+					this.#incrementCount(1, asin, "visibility-change-to-visible");
+				}
+			} else if (!visible && wasVisible && !isFirstTimeTracking) {
+				// Already tracked element becoming invisible
+				this.#decrementCount(1, asin, "visibility-change-to-invisible");
+			}
+			
+			// Debug check for the specific problematic ASIN
+			if (this.#debugMode && asin === "B0F32SHGNR") {
+				console.log("[VisibilityStateManager] B0F32SHGNR visibility change processed", {
+					asin,
+					elementId,
+					wasVisible,
+					isVisible: visible,
+					isFirstTimeTracking,
+					countChange: visible && (isFirstTimeTracking || !wasVisible) ? "+1" :
+					            (!visible && wasVisible && !isFirstTimeTracking) ? "-1" : "0",
+					currentCount: this.#count
+				});
+			}
+
+			// Defensive check: Ensure count didn't go negative
+			if (this.#count < 0) {
+				console.error("[VisibilityStateManager] Count went negative!", {
+					oldCount,
+					newCount: this.#count,
+					asin,
+					visible,
+					isFirstTimeTracking
+				});
+				this.#count = 0;
 			}
 
 			// Emit visibility change event for this specific element
@@ -78,6 +333,7 @@ class VisibilityStateManager {
 
 			return true;
 		}
+		// Note: We already marked as tracked above, so no need to do it again here
 
 		return false;
 	}
@@ -90,62 +346,113 @@ class VisibilityStateManager {
 	isVisible(element) {
 		if (!element) return false;
 
-		// Check cache first
-		if (this.#visibilityCache.has(element)) {
-			const cached = this.#visibilityCache.get(element);
-			// Validate cache by checking computed style
-			const computedStyle = this.#getComputedStyle(element);
-			const actuallyVisible = computedStyle.display !== "none";
+		try {
+			// Check cache first
+			if (this.#visibilityCache.has(element)) {
+				const cached = this.#visibilityCache.get(element);
+				// Validate cache by checking computed style
+				const computedStyle = this.#getComputedStyle(element);
+				const actuallyVisible = computedStyle && computedStyle.display !== "none";
 
-			if (cached === actuallyVisible) {
-				return cached;
+				if (cached === actuallyVisible) {
+					return cached;
+				}
+				// Cache was stale, update it
+				this.#visibilityCache.set(element, actuallyVisible);
+				
+				if (this.#debugMode) {
+					console.warn("[VisibilityStateManager] Cache was stale", {
+						elementId: element.id,
+						asin: element.dataset?.asin,
+						cached,
+						actual: actuallyVisible
+					});
+				}
+				
+				return actuallyVisible;
 			}
-			// Cache was stale, update it
-			this.#visibilityCache.set(element, actuallyVisible);
-			return actuallyVisible;
-		}
 
-		// Use computed style for accurate visibility check
-		const computedStyle = this.#getComputedStyle(element);
-		const isVisible = computedStyle.display !== "none";
+			// Log uncached visibility check if bulk operations debug is enabled
+			const debugBulkOperations = this.#settings?.get("general.debugBulkOperations");
+			if (debugBulkOperations) {
+				console.log("[VisibilityStateManager] isVisible called for uncached element:", {
+					elementId: element.id,
+					asin: element.dataset?.asin,
+					className: element.className,
+					stackTrace: new Error().stack.split('\n').slice(2, 5).join('\n')
+				});
+			}
 
-		// Debug logging for uncached elements (likely new items)
-		if (typeof window !== "undefined" && window.DEBUG_TAB_TITLE) {
-			console.log("[VisibilityStateManager] isVisible called for uncached element", {
-				elementId: element.id,
-				asin: element.dataset?.asin,
-				isVisible,
-				inlineDisplay: element.style.display,
-				computedDisplay: computedStyle.display,
-				currentCount: this.#count,
-				timestamp: new Date().toISOString(),
-			});
-		}
+			// Use computed style for accurate visibility check
+			const computedStyle = this.#getComputedStyle(element);
+			const isVisible = computedStyle && computedStyle.display !== "none";
 
-		// Also check inline style as a safeguard
-		// This catches cases where the style was just set but computed style hasn't updated
-		if (element.style.display === "none") {
-			this.#visibilityCache.set(element, false);
+			// Debug logging for uncached elements (likely new items)
+			if (this.#debugMode) {
+				console.log("[VisibilityStateManager] isVisible called for uncached element", {
+					elementId: element.id,
+					asin: element.dataset?.asin,
+					isVisible,
+					inlineDisplay: element.style.display,
+					computedDisplay: computedStyle?.display,
+					currentCount: this.#count,
+					isTracked: this.#trackedItems.has(element),
+					stackTrace: this.#getStackTrace()
+				});
+			}
+
+			// Also check inline style as a safeguard
+			// This catches cases where the style was just set but computed style hasn't updated
+			if (element.style.display === "none") {
+				this.#visibilityCache.set(element, false);
+				return false;
+			}
+
+			// Cache the result
+			this.#visibilityCache.set(element, isVisible);
+
+			return isVisible;
+		} catch (error) {
+			// Handle cases where element might be detached or invalid
+			if (this.#debugMode) {
+				console.error("[VisibilityStateManager] Error checking visibility", {
+					error,
+					element,
+					elementId: element?.id
+				});
+			}
 			return false;
 		}
-
-		// Cache the result
-		this.#visibilityCache.set(element, isVisible);
-
-		return isVisible;
 	}
 
 	/**
 	 * Get computed style with caching
 	 * @private
 	 * @param {HTMLElement} element - The element
-	 * @returns {CSSStyleDeclaration} The computed style
+	 * @returns {CSSStyleDeclaration|null} The computed style or null if error
 	 */
 	#getComputedStyle(element) {
-		if (!this.#computedStyleCache.has(element)) {
-			this.#computedStyleCache.set(element, window.getComputedStyle(element));
+		try {
+			if (!this.#computedStyleCache.has(element)) {
+				// Defensive check: ensure element is still in DOM
+				if (!element.isConnected && this.#debugMode) {
+					console.warn("[VisibilityStateManager] Element not connected to DOM", {
+						elementId: element.id,
+						asin: element.dataset?.asin
+					});
+				}
+				this.#computedStyleCache.set(element, window.getComputedStyle(element));
+			}
+			return this.#computedStyleCache.get(element);
+		} catch (error) {
+			if (this.#debugMode) {
+				console.error("[VisibilityStateManager] Error getting computed style", {
+					error,
+					elementId: element?.id
+				});
+			}
+			return null;
 		}
-		return this.#computedStyleCache.get(element);
 	}
 
 	/**
@@ -188,7 +495,16 @@ class VisibilityStateManager {
 		// Update count once for the entire batch
 		if (visibleDelta !== 0) {
 			this.#count = Math.max(0, this.#count + visibleDelta);
-			this.#emitCountChanged();
+			// Only emit if not suspended
+			if (!this.#suspendCountUpdates) {
+				// Only emit if not suspended
+				if (!this.#suspendCountUpdates) {
+					// Only emit if not suspended
+					if (!this.#suspendCountUpdates) {
+						this.#emitCountChanged();
+					}
+				}
+			}
 		}
 
 		return changedCount;
@@ -202,27 +518,58 @@ class VisibilityStateManager {
 	recalculateCount(elements) {
 		let count = 0;
 
+		// Debug logging
+		const debugTabTitle = this.#settings?.get("general.debugTabTitle");
+		const debugBulkOperations = this.#settings?.get("general.debugBulkOperations");
+		
+		if (debugBulkOperations) {
+			console.log("[VisibilityStateManager] recalculateCount called with", elements.length, "elements");
+			console.log("[VisibilityStateManager] Cache sizes before clear:", {
+				visibilityCache: "WeakMap (size unknown)",
+				computedStyleCache: "WeakMap (size unknown)"
+			});
+		}
+
 		// Clear caches before recalculation
 		this.clearCache();
 
 		// Debug: log all elements and their visibility
 		const debugElements = [];
+		let uncachedCount = 0;
 		for (const element of elements) {
+			// Check if this will be uncached
+			const wasCached = this.#visibilityCache.has(element);
+			if (!wasCached) {
+				uncachedCount++;
+			}
+			
 			const isVisible = this.isVisible(element);
 			if (isVisible) {
 				count++;
 			}
 
 			// Collect debug info
-			debugElements.push({
-				asin: element.getAttribute("data-asin"),
-				display: window.getComputedStyle(element).display,
-				isVisible,
+			if (debugBulkOperations && debugElements.length < 10) { // Only log first 10 for brevity
+				debugElements.push({
+					asin: element.getAttribute("data-asin"),
+					display: element.style.display || "not set",
+					computedDisplay: window.getComputedStyle(element).display,
+					isVisible,
+					wasCached
+				});
+			}
+		}
+		
+		if (debugBulkOperations) {
+			console.log("[VisibilityStateManager] Visibility check results:", {
+				totalElements: elements.length,
+				uncachedElements: uncachedCount,
+				visibleCount: count,
+				sampleElements: debugElements
 			});
 		}
 
 		// Log when count changes if debug is enabled
-		const debugTabTitle = this.#settings?.get("general.debugTabTitle");
 		if (debugTabTitle && this.#count !== count) {
 			console.log("[VisibilityStateManager] Recalculate count:", {
 				oldCount: this.#count,
@@ -281,26 +628,106 @@ class VisibilityStateManager {
 	}
 
 	/**
-	 * Increment the visible items count
-	 * @param {number} amount - Amount to increment (default: 1)
+	 * Increment the visible items count with enhanced logging
+	 * @private
+	 * @param {number} amount - Amount to increment
+	 * @param {string} asin - The ASIN of the item
+	 * @param {string} source - The source of the increment (e.g., "first-time-visible", "visibility-change")
 	 */
-	increment(amount = 1) {
+	#incrementCount(amount, asin, source) {
 		if (amount <= 0) return;
 
 		const oldCount = this.#count;
 		this.#count += amount;
 
-		// Debug logging (only if debug flag is set)
-		if (typeof window !== "undefined" && window.DEBUG_VISIBILITY_STATE) {
+		const operation = {
+			operation: "increment",
+			oldCount,
+			newCount: this.#count,
+			amount,
+			asin,
+			source
+		};
+
+		this.#addToHistory(operation);
+		
+		if (this.#debugMode) {
 			console.log("[VisibilityStateManager] Count incremented", {
-				oldCount,
-				newCount: this.#count,
-				amount,
-				stack: new Error().stack.split("\n").slice(2, 5).join("\n"),
+				...operation,
+				stackTrace: this.#getStackTrace()
 			});
 		}
 
-		this.#emitCountChanged();
+		// Defensive check for unexpected count values
+		if (this.#count < 0 || !Number.isFinite(this.#count)) {
+			console.error("[VisibilityStateManager] Invalid count after increment!", {
+				oldCount,
+				newCount: this.#count,
+				amount,
+				source
+			});
+			this.#count = Math.max(0, oldCount);
+		}
+
+		// Only emit if not suspended
+		if (!this.#suspendCountUpdates) {
+			// Only emit if not suspended
+			if (!this.#suspendCountUpdates) {
+				this.#emitCountChanged(source);
+			}
+		}
+	}
+
+	/**
+	 * Decrement the visible items count with enhanced logging
+	 * @private
+	 * @param {number} amount - Amount to decrement
+	 * @param {string} asin - The ASIN of the item
+	 * @param {string} source - The source of the decrement
+	 */
+	#decrementCount(amount, asin, source) {
+		if (amount <= 0) return;
+
+		const oldCount = this.#count;
+		this.#count = Math.max(0, this.#count - amount);
+
+		const operation = {
+			operation: "decrement",
+			oldCount,
+			newCount: this.#count,
+			amount,
+			asin,
+			source
+		};
+
+		this.#addToHistory(operation);
+		
+		if (this.#debugMode) {
+			console.log("[VisibilityStateManager] Count decremented", {
+				...operation,
+				stackTrace: this.#getStackTrace()
+			});
+		}
+
+		// Defensive check: warn if we tried to go negative
+		if (oldCount - amount < 0) {
+			console.warn("[VisibilityStateManager] Attempted to decrement below zero", {
+				oldCount,
+				amount,
+				source,
+				asin
+			});
+		}
+
+		this.#emitCountChanged(source);
+	}
+
+	/**
+	 * Increment the visible items count
+	 * @param {number} amount - Amount to increment (default: 1)
+	 */
+	increment(amount = 1) {
+		this.#incrementCount(amount, "unknown", "manual-increment");
 	}
 
 	/**
@@ -308,22 +735,7 @@ class VisibilityStateManager {
 	 * @param {number} amount - Amount to decrement (default: 1)
 	 */
 	decrement(amount = 1) {
-		if (amount <= 0) return;
-
-		const oldCount = this.#count;
-		this.#count = Math.max(0, this.#count - amount);
-
-		// Debug logging (only if debug flag is set)
-		if (typeof window !== "undefined" && window.DEBUG_VISIBILITY_STATE) {
-			console.log("[VisibilityStateManager] Count decremented", {
-				oldCount,
-				newCount: this.#count,
-				amount,
-				stack: new Error().stack.split("\n").slice(2, 5).join("\n"),
-			});
-		}
-
-		this.#emitCountChanged();
+		this.#decrementCount(amount, "unknown", "manual-decrement");
 	}
 
 	/**
@@ -356,25 +768,114 @@ class VisibilityStateManager {
 		if (this.#count !== 0) {
 			this.#count = 0;
 			this.clearCache();
-			this.#emitCountChanged();
+			this.#trackedItems = new WeakSet(); // Clear tracked items on reset
+			// Only emit if not suspended
+			if (!this.#suspendCountUpdates) {
+				this.#emitCountChanged("reset");
+			}
 		}
+	}
+
+	/**
+	 * Get debug information about the current state
+	 * @returns {Object} Debug information
+	 */
+	getDebugInfo() {
+		return {
+			count: this.#count,
+			cacheSize: "WeakMap/WeakSet (size not available)",
+			debugMode: this.#debugMode,
+			recentOperations: this.#debugMode ? this.#operationHistory.slice(-10) : [],
+			timestamp: new Date().toISOString(),
+		};
+	}
+
+	/**
+	 * Get full operation history (debug mode only)
+	 * @returns {Array} Operation history
+	 */
+	getOperationHistory() {
+		if (!this.#debugMode) {
+			console.warn("[VisibilityStateManager] Operation history only available in debug mode");
+			return [];
+		}
+		return [...this.#operationHistory];
+	}
+
+	/**
+	 * Clear operation history
+	 */
+	clearOperationHistory() {
+		this.#operationHistory = [];
+		if (this.#debugMode) {
+			console.log("[VisibilityStateManager] Operation history cleared");
+		}
+	}
+
+	/**
+	 * Validate current state and check for inconsistencies
+	 * @param {NodeList|Array<HTMLElement>} elements - Elements to validate against
+	 * @returns {Object} Validation results
+	 */
+	validateState(elements) {
+		const actualVisibleCount = Array.from(elements).filter(el => this.isVisible(el)).length;
+		const isValid = actualVisibleCount === this.#count;
+		
+		const result = {
+			isValid,
+			expectedCount: this.#count,
+			actualCount: actualVisibleCount,
+			difference: this.#count - actualVisibleCount
+		};
+
+		if (!isValid) {
+			console.error("[VisibilityStateManager] State validation failed!", result);
+			
+			if (this.#debugMode) {
+				// Log details about each element
+				const elementDetails = Array.from(elements).map(el => ({
+					asin: el.dataset?.asin || el.getAttribute("data-asin"),
+					isVisible: this.isVisible(el),
+					isTracked: this.#trackedItems.has(el),
+					display: el.style.display,
+					computedDisplay: window.getComputedStyle(el).display
+				}));
+				
+				console.log("[VisibilityStateManager] Element details:", elementDetails);
+			}
+		}
+
+		return result;
 	}
 
 	/**
 	 * Emit event when count changes
 	 * @private
+	 * @param {string} source - The source of the count change
 	 */
-	#emitCountChanged() {
-		// Debug logging for count changes
-		if (typeof window !== "undefined" && window.DEBUG_TAB_TITLE) {
+	#emitCountChanged(source = "unknown") {
+		// Update debug mode in case it changed
+		this.#updateDebugMode();
+		
+		if (this.#debugMode) {
 			console.log(`[VisibilityStateManager] Count changed to: ${this.#count}`, {
+				source,
 				timestamp: new Date().toISOString(),
-				stack: new Error().stack.split("\n").slice(2, 5).join("\n"),
+				recentHistory: this.#operationHistory.slice(-5)
 			});
 		}
 
+		// Emit the event for tab title updates
 		this.#hookMgr.hookExecute("visibility:count-changed", {
 			count: this.#count,
+			source,
+			timestamp: Date.now(),
+		});
+
+		// Also emit an immediate update event for UI elements that need instant feedback
+		this.#hookMgr.hookExecute("visibility:count-changed-immediate", {
+			count: this.#count,
+			source,
 			timestamp: Date.now(),
 		});
 	}
