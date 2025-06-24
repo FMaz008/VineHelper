@@ -877,6 +877,7 @@ export class SettingsMgrDI {
 				},
 				topPagination: true,
 				toolbarBackgroundColor: "#FFFFFF",
+				skipPrimeAd: false,
 				unknownETVHighlight: {
 					active: false,
 					color: "#FF3366",

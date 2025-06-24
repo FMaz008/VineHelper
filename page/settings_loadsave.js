@@ -265,6 +265,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("general.projectedAccountStatistics");
 	manageCheckboxSetting("general.discoveryFirst");
 	manageCheckboxSetting("general.blindLoading");
+	manageCheckboxSetting("general.skipPrimeAd");
 	manageColorPicker("general.bookmarkColor");
 	manageCheckboxSetting("general.highlightColor.active");
 	manageColorPicker("general.highlightColor.color");
@@ -275,6 +276,8 @@ async function initiateSettings() {
 	manageCheckboxSetting("general.unknownETVHighlight.active");
 	manageColorPicker("general.unknownETVHighlight.color");
 	manageColorPicker("general.toolbarBackgroundColor");
+
+	//## TAB - DEBUG
 	manageCheckboxSetting("general.debugTabTitle");
 	manageCheckboxSetting("general.debugPlaceholders");
 	manageCheckboxSetting("general.debugTitleDisplay");
