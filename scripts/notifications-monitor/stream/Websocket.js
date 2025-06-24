@@ -1,6 +1,5 @@
 /*global chrome*/
 
-const DEBUG_MODE = false;
 const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_WS_URL = "ws://127.0.0.1:3000";
 const WSReconnectInterval = 12 * 1000; //12 seconds
@@ -61,7 +60,9 @@ class Websocket {
 		this.#socket_connecting = true;
 		this.#socket = io.connect(VINE_HELPER_API_V5_WS_URL, {
 			query: {
-				countryCode: DEBUG_MODE ? "com" : this._monitor._i13nMgr.getCountryCode(),
+				countryCode: this._monitor._settings.get("general.debugWebsocket")
+					? "com"
+					: this._monitor._i13nMgr.getCountryCode(),
 				uuid: this._monitor._settings.get("general.uuid", false),
 				fid: this._monitor._settings.get("general.fingerprint.id", false),
 				app_version: chrome.runtime.getManifest().version,
@@ -90,7 +91,7 @@ class Websocket {
 						asin: data.item?.asin,
 						hasImgUrl: !!data.item?.img_url,
 						imgUrl: data.item?.img_url,
-						itemKeys: data.item ? Object.keys(data.item) : []
+						itemKeys: data.item ? Object.keys(data.item) : [],
 					});
 				}
 				this.#relayMessage({ type: "newPreprocessedItem", item: data.item });
@@ -184,7 +185,9 @@ class Websocket {
 					app_version: chrome.runtime.getManifest().version,
 					uuid: this._monitor._settings.get("general.uuid", false),
 					fid: this._monitor._settings.get("general.fingerprint.id", false),
-					countryCode: DEBUG_MODE ? "com" : this._monitor._i13nMgr.getCountryCode(),
+					countryCode: this._monitor._settings.get("general.debugWebsocket")
+						? "com"
+						: this._monitor._i13nMgr.getCountryCode(),
 					limit: message.limit || 100,
 					request_variants:
 						this._monitor._settings.isPremiumUser(2) &&

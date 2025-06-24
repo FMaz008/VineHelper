@@ -11,6 +11,20 @@ let notificationsData = {};
 let masterCheckInterval = 0.2; //Firefox shutdown the background script after 30seconds.
 let selectedWord = ""; // For context menu functionality
 
+// Track recent notifications for time-based deduplication
+const recentNotifications = new Map(); // Map of ASIN -> timestamp
+const NOTIFICATION_DEDUP_WINDOW = 5000; // 5 seconds
+
+// Cleanup old entries periodically
+setInterval(() => {
+	const now = Date.now();
+	for (const [asin, timestamp] of recentNotifications.entries()) {
+		if (now - timestamp > NOTIFICATION_DEDUP_WINDOW * 2) {
+			recentNotifications.delete(asin);
+		}
+	}
+}, 30000); // Clean up every 30 seconds
+
 // Initialize DI services on startup
 (async function initializeServiceWorker() {
 	try {
@@ -51,6 +65,19 @@ let selectedWord = ""; // For context menu functionality
 
 // Consolidated message handler for all runtime messages
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+	// Log all incoming messages if debugging is enabled
+	if ((message.type === "pushNotification") &&
+	    (Settings.get("general.debugNotifications") || Settings.get("general.debugServiceWorker"))) {
+		console.log("[ServiceWorker] Message received:", {
+			type: message.type,
+			hasItem: !!message.item,
+			asin: message.item?.asin,
+			title: message.title,
+			sender: sender.tab?.id || "background",
+			timestamp: Date.now()
+		});
+	}
+	
 	// Handle broadcast messages (including pushNotification)
 	if (message.type !== undefined) {
 		processBroadcastMessage(message);
@@ -147,6 +174,16 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 
 function processBroadcastMessage(data) {
 	if (data.type == "pushNotification") {
+		// Log incoming notification request
+		if (Settings.get("general.debugNotifications") || Settings.get("general.debugServiceWorker")) {
+			console.log("[ServiceWorker] Received pushNotification message:", {
+				title: data.title,
+				asin: data.item?.asin,
+				hasItem: !!data.item,
+				timestamp: Date.now()
+			});
+		}
+		
 		try {
 			// ServerCom sends { type: "pushNotification", item: {...}, title: ... }
 			// where item contains all the item data from item.getAllInfo()
@@ -164,11 +201,22 @@ function processBroadcastMessage(data) {
 			item.setTitle(data.item.title);
 			item.setImgUrl(data.item.img_url);
 			item.setSearch(data.item.search_string);
+			
+			if (Settings.get("general.debugNotifications") || Settings.get("general.debugServiceWorker")) {
+				console.log("[ServiceWorker] Calling pushNotification function:", {
+					title: data.title,
+					asin: item.getAsin(),
+					itemTitle: item.getTitle(),
+					hasImage: !!item.getImgUrl()
+				});
+			}
+			
 			pushNotification(data.title, item);
 		} catch (error) {
 			console.error("[ServiceWorker] Cannot create item for push notification -", error.message, {
 				data: data,
 				source: "pushNotification message",
+				stack: error.stack
 			});
 		}
 	}
@@ -301,6 +349,53 @@ async function pushNotification(title, item) {
 	// Use ASIN-based notification ID to prevent duplicates
 	const notificationId = `notification_${itemData.asin}`;
 	const iconUrl = chrome.runtime.getURL("resource/image/icon-128.png");
+	const now = Date.now();
+
+	// Check for recent notifications (time-based deduplication)
+	const lastNotificationTime = recentNotifications.get(itemData.asin);
+	if (lastNotificationTime && (now - lastNotificationTime) < NOTIFICATION_DEDUP_WINDOW) {
+		if (Settings.get("general.debugNotifications")) {
+			console.warn("[ServiceWorker] Duplicate notification prevented by time window for ASIN:", {
+				asin: itemData.asin,
+				timeSinceLastNotification: now - lastNotificationTime,
+				deduplicationWindow: NOTIFICATION_DEDUP_WINDOW
+			});
+		}
+		return;
+	}
+
+	if (Settings.get("general.debugNotifications")) {
+		console.log("[ServiceWorker] pushNotification called:", {
+			title: title,
+			asin: itemData.asin,
+			notificationId: notificationId,
+			existingNotificationData: notificationsData[notificationId],
+			isDuplicate: !!notificationsData[notificationId],
+			timestamp: now
+		});
+	}
+
+	// Check if we already have this notification
+	if (notificationsData[notificationId]) {
+		if (Settings.get("general.debugNotifications")) {
+			console.warn("[ServiceWorker] Duplicate notification prevented for ASIN:", itemData.asin);
+		}
+		// Update the stored data but don't create a new notification
+		notificationsData[notificationId] = {
+			asin: itemData.asin,
+			queue: itemData.queue,
+			is_parent_asin: itemData.is_parent_asin,
+			enrollment_guid: itemData.enrollment_guid,
+			search: itemData.search,
+			is_pre_release: itemData.is_pre_release,
+		};
+		// Still update the recent notifications timestamp
+		recentNotifications.set(itemData.asin, now);
+		return;
+	}
+
+	// Record this notification
+	recentNotifications.set(itemData.asin, now);
 
 	// Store notification data
 	notificationsData[notificationId] = {
@@ -349,5 +444,46 @@ async function pushNotification(title, item) {
 		});
 	}
 
-	chrome.notifications.create(notificationId, notificationOptions);
+	// Check if we have notification permissions first
+	chrome.permissions.contains({ permissions: ["notifications"] }, (hasPermission) => {
+		if (!hasPermission) {
+			console.error("[ServiceWorker] CRITICAL: No notification permission!", {
+				asin: itemData.asin,
+				title: title
+			});
+			return;
+		}
+		
+		if (Settings.get("general.debugNotifications") || Settings.get("general.debugServiceWorker")) {
+			console.log("[ServiceWorker] Creating notification with permissions confirmed", {
+				hasPermission: hasPermission,
+				notificationId: notificationId,
+				options: notificationOptions
+			});
+		}
+		
+		chrome.notifications.create(notificationId, notificationOptions, (createdId) => {
+			// CRITICAL: Check for errors
+			if (chrome.runtime.lastError) {
+				console.error("[ServiceWorker] FAILED to create notification:", {
+					error: chrome.runtime.lastError.message,
+					notificationId: notificationId,
+					asin: itemData.asin,
+					title: title,
+					options: notificationOptions
+				});
+				return;
+			}
+			
+			if (Settings.get("general.debugNotifications") || Settings.get("general.debugServiceWorker")) {
+				console.log("[ServiceWorker] Notification created successfully:", {
+					notificationId: createdId,
+					asin: itemData.asin,
+					title: title,
+					message: itemData.title,
+					timestamp: Date.now()
+				});
+			}
+		});
+	});
 }

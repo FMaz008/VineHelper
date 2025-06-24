@@ -5,6 +5,40 @@ var logger = new Logger();
 
 logger.add("BOOT: Bootloader starting.");
 
+// Add global error handler to catch variations errors
+window.addEventListener('error', (e) => {
+	if (e.message && e.message.includes('variations')) {
+		console.error(`[VH DEBUG] Global variations error caught:`, {
+			message: e.message,
+			filename: e.filename,
+			lineno: e.lineno,
+			colno: e.colno,
+			stack: e.error ? e.error.stack : 'No stack trace',
+			timestamp: new Date().toISOString()
+		});
+		
+		// Try to get context about what was happening
+		const activeModals = document.querySelectorAll('.a-popover-modal');
+		const dynamicButtons = document.querySelectorAll('[id^="dynamicModalBtn-"]');
+		const vvpDetailsBtns = document.querySelectorAll('.vvp-details-btn input');
+		
+		console.error(`[VH DEBUG] Page state during error:`, {
+			activeModals: activeModals.length,
+			dynamicButtons: dynamicButtons.length,
+			vvpDetailsBtns: vvpDetailsBtns.length,
+			currentUrl: window.location.href
+		});
+		
+		// Log any dynamic buttons that exist
+		dynamicButtons.forEach((btn, index) => {
+			console.error(`[VH DEBUG] Dynamic button #${index}:`, {
+				id: btn.id,
+				dataset: {...btn.dataset}
+			});
+		});
+	}
+});
+
 // TODO: This bootloader needs refactoring to use dependency injection
 // Currently using compatibility layer for SettingsMgr as first step
 // Future work:

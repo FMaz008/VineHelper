@@ -1,5 +1,7 @@
 import { Template } from "/scripts/core/utils/Template.js";
+import { SettingsMgr } from "/scripts/core/services/SettingsMgrCompat.js";
 var Tpl = new Template();
+var Settings = new SettingsMgr();
 
 /** Notification, use to configure a notification
  *  will be fed to ScreenNotifier
@@ -50,7 +52,8 @@ class ScreenNotifier {
 	static #instance = null;
 
 	#noteCounter;
-	#lastSoundPlayedAt;
+	#soundPlayer;
+	#debugNotifications;
 
 	constructor() {
 		if (ScreenNotifier.#instance) {
@@ -59,7 +62,9 @@ class ScreenNotifier {
 		ScreenNotifier.#instance = this;
 
 		this.#noteCounter = 0;
-		this.#lastSoundPlayedAt = Date.now();
+		// Use NotificationsSoundPlayer for centralized sound management
+		this.#soundPlayer = null;
+		this.#debugNotifications = false;
 		this.#init();
 	}
 
@@ -67,6 +72,14 @@ class ScreenNotifier {
 	 * This method can be called multiple times to ensure a container is created as early as possible.
 	 */
 	async #init() {
+		// Initialize sound player
+		import("/scripts/ui/components/NotificationsSoundPlayer.js").then(module => {
+			this.#soundPlayer = new module.NotificationsSoundPlayer();
+		});
+
+		// Check debug flag
+		this.#debugNotifications = Settings.get("general.debugNotifications");
+
 		//If the container does not exist, create it and append it to the body.
 		if (document.readyState === "loading") {
 			document.addEventListener("DOMContentLoaded", async () => {
@@ -86,6 +99,42 @@ class ScreenNotifier {
 	}
 	async pushNotification(note) {
 		note.id = this.#noteCounter++;
+		
+		// ISSUE #1 FIX: Track OS notification coordination
+		const isMasterMonitor = window._notificationMonitor?._isMasterMonitor;
+		
+		if (this.#debugNotifications) {
+			console.log("[ScreenNotifier] OS Notification Push", {
+				noteId: note.id,
+				title: note.title,
+				isMasterMonitor: isMasterMonitor,
+				monitorId: window._notificationMonitor?._monitorId,
+				timestamp: Date.now(),
+				stackTrace: new Error().stack
+			});
+		}
+		
+		// ISSUE #1 FIX: Only allow master monitor to show OS notifications
+		if (isMasterMonitor === false) {
+			if (this.#debugNotifications) {
+				console.warn("[ScreenNotifier] BLOCKED: Slave monitor attempted OS notification", {
+					title: note.title,
+					monitorId: window._notificationMonitor?._monitorId
+				});
+			}
+			return; // Don't show OS notifications in slave monitors
+		}
+		
+		// Also block if master/slave status is not yet determined
+		if (isMasterMonitor === undefined && window._notificationMonitor) {
+			if (this.#debugNotifications) {
+				console.log("[ScreenNotifier] DEFERRED: Master/slave status not yet determined", {
+					title: note.title,
+					monitorId: window._notificationMonitor?._monitorId
+				});
+			}
+			return;
+		}
 
 		//Render the notification and insert it into the container
 		let content = await note.render();
@@ -132,20 +181,26 @@ class ScreenNotifier {
 			}, note.lifespan * 1000);
 		}
 
-		//Play a sound
-		if (note.sound != null) {
-			if (Date.now() - this.#lastSoundPlayedAt > 30000) {
-				// Don't play the notification sound again within 30 sec.
-				this.#lastSoundPlayedAt = Date.now();
-				const audioElement = new Audio(chrome.runtime.getURL(note.sound));
-				const handleEnded = () => {
-					audioElement.removeEventListener("ended", handleEnded); // Remove the event listener
-					audioElement.remove(); // Remove the audio element from the DOM
-				};
-				audioElement.addEventListener("ended", handleEnded);
-				audioElement.volume = Number(note.volume);
-				audioElement.play();
+		//Play a sound using centralized sound player
+		if (note.sound != null && this.#soundPlayer) {
+			if (this.#debugNotifications) {
+				console.log("[ScreenNotifier] Delegating sound to NotificationsSoundPlayer:", {
+					noteId: note.id,
+					sound: note.sound,
+					volume: note.volume
+				});
 			}
+			
+			// Determine notification type based on sound file
+			let notificationType = 0; // Default to regular
+			if (note.sound.includes("cash-register") || note.sound.includes("vintage-horn")) {
+				notificationType = 1; // Zero ETV
+			} else if (note.sound.includes("tada") || note.sound.includes("upgrade")) {
+				notificationType = 2; // Highlight
+			}
+			
+			// Use NotificationsSoundPlayer which handles its own cooldown
+			this.#soundPlayer.play(notificationType);
 		}
 	}
 

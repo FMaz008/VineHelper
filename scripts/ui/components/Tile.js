@@ -226,6 +226,13 @@ class Tile {
 
 				//Find the main See Details button
 				const seeDetails = this.#tileDOM.querySelector(".vvp-details-btn input");
+				
+				console.log(`[VH DEBUG] Variant click handler triggered:`, {
+					variantAsin: variantAsin,
+					parentAsin: this.#asin,
+					seeDetailsFound: !!seeDetails,
+					seeDetailsDataset: seeDetails ? {...seeDetails.dataset} : null
+				});
 
 				//Generate a See Details button
 				//Extract enrollment guid from recommendationId
@@ -238,6 +245,12 @@ class Tile {
 					is_parent_asin: false,
 					enrollment_guid: enrollmentGuid,
 					is_pre_release: seeDetails.dataset.isPreRelease,
+				});
+				
+				console.log(`[VH DEBUG] Creating variant button for:`, {
+					variantAsin: variantAsin,
+					itemData: item.data,
+					enrollmentGuid: enrollmentGuid
 				});
 
 				drawButton(item, variantAsin);

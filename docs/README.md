@@ -57,6 +57,34 @@ Comprehensive guide to all debug settings:
 - Settings configuration and initialization
 - Periodic count verification feature
 
+### [DEBUG_SETTINGS_MAPPING.md](./DEBUG_SETTINGS_MAPPING.md)
+
+Comprehensive mapping of debug settings throughout the codebase:
+
+- How debug flags flow from UI to console logging
+- Which files use each debug flag
+- Console logging patterns and best practices
+- Recommendations for debug flag usage
+
+### [TROUBLESHOOTING_GUIDE.md](./TROUBLESHOOTING_GUIDE.md)
+
+Practical troubleshooting guide for common issues:
+
+- Quick debug flag reference table
+- Step-by-step debugging procedures
+- Common issues and solutions
+- Where to find debug output
+- Known limitations and workarounds
+
+### [NOTIFICATION_SYSTEM_CURRENT_STATE.md](./NOTIFICATION_SYSTEM_CURRENT_STATE.md)
+
+Current state of the notification system:
+
+- System overview and architecture
+- Implementation status of all fixes
+- Performance metrics and improvements
+- Future improvement opportunities
+
 ### [FUTURE_IMPROVEMENTS.md](./FUTURE_IMPROVEMENTS.md)
 
 Tracking of planned improvements and optimizations:
