@@ -1430,7 +1430,7 @@ async function serverProductsResponse(data) {
 					try {
 						toolbar.updateVisibilityIcon();
 					} catch (visError) {
-						// Ignore visibility icon update errors
+						logger.add("WARN: Failed to update visibility icon: " + visError.message);
 					}
 				}
 				logger.add("DRAW: Done updating the toolbar");
@@ -1449,7 +1449,7 @@ async function serverProductsResponse(data) {
 				}
 			}
 		} catch (error) {
-			// Ignore errors in variant processing
+			logger.add("ERROR: Failed to process tile data: " + error.message);
 		}
 	}
 	// Process tiles that the server didn't return data for as unknown ETV
@@ -1464,7 +1464,7 @@ async function serverProductsResponse(data) {
 			}
 		}
 	} catch (error) {
-		// Ignore errors when processing missing ASINs
+		logger.add("WARN: Failed to process missing ASINs: " + error.message);
 	}
 
 	//Loading remote stored pinned items
