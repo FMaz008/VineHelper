@@ -2067,6 +2067,7 @@ window.addEventListener("keyup", async function (e) {
 		[Settings.get("keyBindings.RFYPage")]: () => (window.location.href = "/vine/vine-items?queue=potluck"),
 		[Settings.get("keyBindings.AFAPage")]: () => (window.location.href = "/vine/vine-items?queue=last_chance"),
 		[Settings.get("keyBindings.AIPage")]: () => (window.location.href = "/vine/vine-items?queue=encore"),
+		[Settings.get("keyBindings.ALLPage")]: () => (window.location.href = "/vine/vine-items?queue=all_items"),
 		[Settings.get("keyBindings.AIPage2")]: () =>
 			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=2"),
 		[Settings.get("keyBindings.AIPage3")]: () =>
