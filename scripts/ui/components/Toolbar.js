@@ -45,14 +45,20 @@ class Toolbar {
 
 	//Create the bare bone structure of the toolbar
 	async createProductToolbar() {
-		const toolbarId = "vh-toolbar-" + this.#tile.getAsin();
+		// Use a fallback ID if ASIN is not available
+		const asin = this.#tile.getAsin() || `no-asin-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+		const toolbarId = "vh-toolbar-" + asin;
 		let anchorTo = this.#tile.getDOM().querySelector(".vvp-item-tile-content"); //.vvp-item-tile-content should be the first child
+		
+		if (!anchorTo) {
+			throw new Error("Cannot find .vvp-item-tile-content to attach toolbar");
+		}
 
 		//Load the toolbar template
 		logger.add("DRAW: Creating #" + toolbarId);
 		const prom = await Tpl.loadFile("scripts/ui/templates/toolbar.html");
 		Tpl.setVar("toolbarId", toolbarId);
-		Tpl.setVar("asin", this.#tile.getAsin());
+		Tpl.setVar("asin", asin);
 		Tpl.setIf(
 			"announce",
 			Settings.get("discord.active") &&
@@ -81,11 +87,16 @@ class Toolbar {
 		//Attach the toolbar to the tile's .vvp-item-tile-content container.
 		anchorTo.insertAdjacentElement("afterbegin", this.#toolbarDOM);
 		const container = this.#toolbarDOM.querySelector(`.vh-status-container`);
-		container.style.backgroundColor = Settings.get("general.toolbarBackgroundColor");
+		if (container) {
+			container.style.backgroundColor = Settings.get("general.toolbarBackgroundColor");
+		}
 
 		const container2 = this.#toolbarDOM.querySelector(`.vh-status-container2`);
 
-		this.#toolbarDOM.querySelector(`.vh-toolbar-etv`).style.display = "none";
+		const etvToolbar = this.#toolbarDOM.querySelector(`.vh-toolbar-etv`);
+		if (etvToolbar) {
+			etvToolbar.style.display = "none";
+		}
 
 		// Activate the announce button when the ETV is set (changed)
 		const etvElements = container2.querySelectorAll(".etv");
@@ -96,7 +107,12 @@ class Toolbar {
 
 				if (env.data.vineQueue == null) throw new Exception("Cannot announce an item in an unknown queue.");
 
-				let etv = this.#tile.getDOM().querySelector(".etv").textContent;
+				const etvElement = this.#tile.getDOM().querySelector(".etv");
+				if (!etvElement) {
+					logger.add(`TOOLBAR: Cannot find .etv element for announcement - ASIN: ${this.#tile.getAsin()}`);
+					return;
+				}
+				let etv = etvElement.textContent;
 
 				// In case of price range, only send the highest value
 				etv = etv.split("-").pop();
@@ -287,6 +303,10 @@ class Toolbar {
 			return false;
 		}
 
+		if (!this.#toolbarDOM) {
+			return false;
+		}
+
 		let icon = this.#toolbarDOM.querySelector(`#vh-hide-link-${this.#tile.getAsin()} div.vh-toolbar-icon`);
 		let gridId = this.#tile.getGridId();
 
@@ -308,7 +328,19 @@ class Toolbar {
 	}
 
 	setETV(etv1, etv2, onlyIfEmpty = false) {
+		// Check if toolbar DOM exists
+		if (!this.#toolbarDOM) {
+			logger.add(`TOOLBAR: Cannot set ETV - toolbar DOM is null for ASIN: ${this.#tile.getAsin()}`);
+			return false;
+		}
+		
 		let span = this.#toolbarDOM.querySelector(".vh-toolbar-etv .etv");
+		
+		// Check if the ETV span exists
+		if (!span) {
+			logger.add(`TOOLBAR: Cannot set ETV - .vh-toolbar-etv .etv not found for ASIN: ${this.#tile.getAsin()}`);
+			return false;
+		}
 
 		if (onlyIfEmpty && span.textContent !== "") {
 			return false;
@@ -334,7 +366,10 @@ class Toolbar {
 		span.dispatchEvent(changeEvent);
 
 		if (Settings.get("general.displayETV")) {
-			this.#toolbarDOM.querySelector(".vh-toolbar-etv").style.display = "flex";
+			const etvToolbar = this.#toolbarDOM.querySelector(".vh-toolbar-etv");
+			if (etvToolbar) {
+				etvToolbar.style.display = "flex";
+			}
 		}
 	}
 

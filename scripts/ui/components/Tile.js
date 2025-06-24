@@ -75,9 +75,19 @@ class Tile {
 		this.#orderSuccess = 0;
 		this.#orderFailed = 0;
 
+		// Check if ASIN extraction failed
+		if (!this.#asin) {
+			logger.add("WARNING: Creating Tile with null ASIN - tile will have limited functionality");
+			console.warn("VineHelper: Tile created without ASIN", obj);
+			// Mark the tile DOM to indicate it has no ASIN
+			this.#tileDOM.classList.add("vh-no-asin");
+			this.#tileDOM.dataset.vhNoAsin = "true";
+		}
+
 		logger.add("Creating Tile: " + this.#asin + " to grid: " + gridInstance?.getId());
 
-		//Add the tile to the grid
+		//Add the tile to the grid even if ASIN extraction failed
+		//The tile might still have an ASIN in the DOM that we can use
 		if (gridInstance !== null) {
 			this.#grid.addTile(this);
 		}
@@ -130,17 +140,33 @@ class Tile {
 
 		//Insert a span to contain both buttons
 		const span = this.getDOM().querySelector(".vh-btn-container");
+		
+		// Check if the container exists before trying to append
+		if (!span) {
+			logger.add(`TILE: Cannot add variant button - .vh-btn-container not found for ASIN: ${this.#asin}`);
+			return;
+		}
 
 		//Insert the content into the span
 		span.appendChild(content);
 
 		//Add data-recommendation-id to the buy now button
 		const btnShowVariants = span.querySelector(".vh-btn-variants");
-		btnShowVariants.dataset.asin = this.#asin;
+		if (!btnShowVariants) {
+			logger.add(`TILE: Cannot find .vh-btn-variants button for ASIN: ${this.#asin}`);
+			return;
+		}
+		
+		if (this.#asin) {
+			btnShowVariants.dataset.asin = this.#asin;
+		}
 
 		//If using darktheme, invert the icon's color
 		if (Settings.get("thorvarium.darktheme")) {
-			btnShowVariants.querySelector(".vh-indicator-icon").style.filter = "invert(1)";
+			const indicatorIcon = btnShowVariants.querySelector(".vh-indicator-icon");
+			if (indicatorIcon) {
+				indicatorIcon.style.filter = "invert(1)";
+			}
 		}
 
 		//Add event listener to the buy now button
@@ -269,8 +295,13 @@ class Tile {
 	setPinned(isPinned) {
 		this.#isPinned = isPinned;
 
-		this.#tileDOM.querySelector("#vh-pin-icon-" + this.#asin).classList.toggle("vh-icon-pin", !isPinned);
-		this.#tileDOM.querySelector("#vh-pin-icon-" + this.#asin).classList.toggle("vh-icon-unpin", isPinned);
+		if (this.#asin) {
+			const pinIcon = this.#tileDOM.querySelector("#vh-pin-icon-" + this.#asin);
+			if (pinIcon) {
+				pinIcon.classList.toggle("vh-icon-pin", !isPinned);
+				pinIcon.classList.toggle("vh-icon-unpin", isPinned);
+			}
+		}
 	}
 
 	async animateVanish() {
@@ -292,8 +323,16 @@ class Tile {
 	}
 
 	setOrders(success, failed) {
-		this.#tileDOM.querySelector(".vh-order-success").textContent = success;
-		this.#tileDOM.querySelector(".vh-order-failed").textContent = failed;
+		const successElement = this.#tileDOM.querySelector(".vh-order-success");
+		const failedElement = this.#tileDOM.querySelector(".vh-order-failed");
+		
+		if (successElement) {
+			successElement.textContent = success;
+		}
+		if (failedElement) {
+			failedElement.textContent = failed;
+		}
+		
 		this.#orderSuccess = success;
 		this.#orderFailed = failed;
 	}
@@ -471,7 +510,11 @@ class Tile {
 
 		// Find the container and append the new div
 		const container = this.#tileDOM.querySelector(".vh-img-container");
-		container.appendChild(dateAddedDiv);
+		if (container) {
+			container.appendChild(dateAddedDiv);
+		} else {
+			logger.add(`TILE: Cannot add date - .vh-img-container not found for ASIN: ${this.#asin}`);
+		}
 
 		//Highlight the tile background if the bookmark date is in the past
 		if (
@@ -480,8 +523,10 @@ class Tile {
 			Settings.get("general.bookmarkDate") != 0
 		) {
 			logger.add("TILE: The item is more recent than the time marker, highlight its toolbar.");
-			this.#tileDOM.querySelector(".vh-status-container").style.backgroundColor =
-				Settings.get("general.bookmarkColor");
+			const statusContainer = this.#tileDOM.querySelector(".vh-status-container");
+			if (statusContainer) {
+				statusContainer.style.backgroundColor = Settings.get("general.bookmarkColor");
+			}
 			this.#tileDOM.classList.add("vh-new-item-highlight");
 		}
 	}
@@ -680,7 +725,9 @@ class Tile {
 			}
 		}
 		//Assign the ASIN to the tile content
-		this.getDOM().closest(".vvp-item-tile").dataset.asin = this.#asin;
+		if (this.#asin) {
+			this.getDOM().closest(".vvp-item-tile").dataset.asin = this.#asin;
+		}
 	}
 
 	colorizeHighlight() {
@@ -746,7 +793,7 @@ class Tile {
 	}
 
 	async isHidden() {
-		if (!Settings.get("hiddenTab.active")) {
+		if (!Settings.get("hiddenTab.active") || !this.#asin) {
 			return false;
 		}
 		return await HiddenList.isHidden(this.#asin);
@@ -754,6 +801,10 @@ class Tile {
 
 	async hideTile(animate = true, updateLocalStorage = true, skipHiddenListMgr = false) {
 		//Add the item to the list of hidden items
+		if (!this.#asin) {
+			logger.add("WARNING: Cannot hide tile without ASIN");
+			return;
+		}
 
 		if (!skipHiddenListMgr) {
 			HiddenList.addItem(this.#asin, updateLocalStorage);
@@ -762,7 +813,9 @@ class Tile {
 		//Move the tile
 		await this.moveToGrid(env.data.grid.gridHidden, animate);
 
-		this.#toolbar.updateVisibilityIcon();
+		if (this.#toolbar) {
+			this.#toolbar.updateVisibilityIcon();
+		}
 
 		//Refresh grid counts
 		updateTileCounts();
@@ -770,12 +823,19 @@ class Tile {
 
 	async showTile(animate = true, updateLocalStorage = true) {
 		//Remove the item from the array of hidden items
+		if (!this.#asin) {
+			logger.add("WARNING: Cannot show tile without ASIN");
+			return;
+		}
+
 		HiddenList.removeItem(this.#asin, updateLocalStorage);
 
 		//Move the tile
 		await this.moveToGrid(env.data.grid.gridRegular, animate);
 
-		this.#toolbar.updateVisibilityIcon();
+		if (this.#toolbar) {
+			this.#toolbar.updateVisibilityIcon();
+		}
 
 		//Refresh grid counts
 		updateTileCounts();
@@ -836,17 +896,57 @@ function timeSince(timenow, date) {
 
 function getAsinFromDom(tileDom) {
 	let regex = /^(?:.*\/dp\/)(.+?)(?:\?.*)?$/; //Isolate the product ID in the URL.
+	
+	// Try to find the product link - first try .a-link-normal
 	let urlElement = tileDom.querySelector(".a-link-normal");
-	let url = urlElement ? urlElement.getAttribute("href") : null;
-	if (url == null) {
-		throw new Error("The provided DOM content does not contain an .a-link-normal element.");
+	
+	// If not found, try any link with /dp/ in the href
+	if (!urlElement) {
+		urlElement = tileDom.querySelector("a[href*='/dp/']");
 	}
-	let arrasin = url.match(regex);
-	return arrasin[1];
+	
+	// If we found a link element, extract ASIN from href
+	if (urlElement) {
+		let url = urlElement.getAttribute("href");
+		if (url) {
+			let arrasin = url.match(regex);
+			if (arrasin && arrasin[1]) {
+				return arrasin[1];
+			}
+		}
+	}
+	
+	// Fallback: Try to extract ASIN from data-recommendation-id attribute
+	// Format: "ATVPDKIKX0DER#B0DWXBZW8K#vine.enrollment...."
+	const recommendationId = tileDom.getAttribute("data-recommendation-id");
+	if (recommendationId) {
+		const parts = recommendationId.split("#");
+		if (parts.length >= 2 && parts[1]) {
+			// The ASIN is the second part
+			logger.add("TILE: Extracted ASIN from data-recommendation-id: " + parts[1]);
+			return parts[1];
+		}
+	}
+	
+	// Last resort: Check if there's a data-asin attribute
+	const dataAsin = tileDom.getAttribute("data-asin");
+	if (dataAsin) {
+		logger.add("TILE: Extracted ASIN from data-asin attribute: " + dataAsin);
+		return dataAsin;
+	}
+	
+	// If all methods fail, log a warning and return null instead of throwing
+	logger.add("TILE: WARNING - Could not extract ASIN from tile. Tile HTML: " + tileDom.outerHTML.substring(0, 200));
+	console.warn("VineHelper: Could not extract ASIN from tile", tileDom);
+	return null;
 }
 
 function getTileFromDom(tileDom) {
 	const asin = getAsinFromDom(tileDom);
+	if (!asin) {
+		logger.add("TILE: WARNING - getTileFromDom called with tile that has no ASIN");
+		return null;
+	}
 	return getTileByAsin(asin);
 }
 

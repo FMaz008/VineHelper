@@ -599,19 +599,27 @@ function displayAccountDataEvaluationMetrics() {
 		return false; //Setting not activated.
 	}
 
-	const periodStart = new Date(parseInt(document.querySelector("#vvp-eval-start-stamp").innerText));
-	const periodEnd = new Date(parseInt(document.querySelector("#vvp-eval-end-stamp").innerText));
+	const evalStartStamp = document.querySelector("#vvp-eval-start-stamp");
+	const evalEndStamp = document.querySelector("#vvp-eval-end-stamp");
+	const evalTooltipTrigger = document.querySelector("#vvp-evaluation-period-tooltip-trigger");
+	
+	if (evalStartStamp && evalEndStamp && evalTooltipTrigger) {
+		const periodStart = new Date(parseInt(evalStartStamp.innerText));
+		const periodEnd = new Date(parseInt(evalEndStamp.innerText));
+		evalTooltipTrigger.innerText =
+			`Evaluation period: ${periodStart.toLocaleDateString()} - ${periodEnd.toLocaleString()}`;
+	}
 
-	document.querySelector("#vvp-evaluation-period-tooltip-trigger").innerText =
-		`Evaluation period: ${periodStart.toLocaleDateString()} - ${periodEnd.toLocaleString()}`;
-
-	const percent = Math.round(
-		parseFloat(document.querySelector("#vvp-perc-reviewed-metric-display strong").innerText)
-	);
+	const percReviewedElement = document.querySelector("#vvp-perc-reviewed-metric-display strong");
+	const numReviewedElement = document.querySelector("#vvp-num-reviewed-metric-display strong");
+	
+	if (!percReviewedElement || !numReviewedElement) {
+		return;
+	}
+	
+	const percent = Math.round(parseFloat(percReviewedElement.innerText));
 	if (percent > 0) {
-		const count = parseInt(
-			document.querySelector("#vvp-num-reviewed-metric-display strong").innerText.replace(/,/g, "")
-		);
+		const count = parseInt(numReviewedElement.innerText.replace(/,/g, ""));
 		const orderCount = Math.round((count / percent) * 100);
 		const orderMin = Math.min(Math.ceil((count / (percent + 0.5)) * 100), orderCount);
 		const orderMax = Math.max(Math.floor((count / (percent - 0.5)) * 100), orderCount);
@@ -620,12 +628,15 @@ function displayAccountDataEvaluationMetrics() {
 		const orderEstimate = orderMin == orderMax ? orderMax : `${orderMin}&ndash;${orderMax}`;
 		const targetRequired = targetMin == targetMax ? targetMax : `${targetMin}&ndash;${targetMax}`;
 
-		if (targetMax > 0) {
-			document.querySelector("#vvp-perc-reviewed-metric-display p").innerHTML =
-				`You have reviewed <strong>${percent}%</strong> of ${orderEstimate} items; review ${targetRequired} more to reach 90%`;
-		} else {
-			document.querySelector("#vvp-perc-reviewed-metric-display p").innerHTML =
-				`You have reviewed <strong>${percent}%</strong> of ${orderEstimate} Vine items this period`;
+		const percDisplayP = document.querySelector("#vvp-perc-reviewed-metric-display p");
+		if (percDisplayP) {
+			if (targetMax > 0) {
+				percDisplayP.innerHTML =
+					`You have reviewed <strong>${percent}%</strong> of ${orderEstimate} items; review ${targetRequired} more to reach 90%`;
+			} else {
+				percDisplayP.innerHTML =
+					`You have reviewed <strong>${percent}%</strong> of ${orderEstimate} Vine items this period`;
+			}
 		}
 
 		const periodFraction = (new Date().setUTCHours(0, 0, 0, 0) - periodStart) / (periodEnd - periodStart);
@@ -636,20 +647,24 @@ function displayAccountDataEvaluationMetrics() {
 			const projectedPercent = (projectedOrders - awaitingEstimate) / projectedOrders;
 			const countBar = document.querySelector("#vvp-num-reviewed-metric-display .animated-progress span");
 			const percentBar = document.querySelector("#vvp-perc-reviewed-metric-display .animated-progress span");
-			if (projectedCount < 70) {
-				countBar.style.backgroundColor = "red";
-			} else if (projectedCount < 77) {
-				countBar.style.backgroundColor = "orange";
-			} else if (projectedCount < 80) {
-				countBar.style.backgroundColor = "yellow";
+			if (countBar) {
+				if (projectedCount < 70) {
+					countBar.style.backgroundColor = "red";
+				} else if (projectedCount < 77) {
+					countBar.style.backgroundColor = "orange";
+				} else if (projectedCount < 80) {
+					countBar.style.backgroundColor = "yellow";
+				}
 			}
 
-			if (projectedPercent < 0.8) {
-				percentBar.style.backgroundColor = "red";
-			} else if (projectedPercent < 0.88) {
-				percentBar.style.backgroundColor = "orange";
-			} else if (projectedPercent < 0.92) {
-				percentBar.style.backgroundColor = "yellow";
+			if (percentBar) {
+				if (projectedPercent < 0.8) {
+					percentBar.style.backgroundColor = "red";
+				} else if (projectedPercent < 0.88) {
+					percentBar.style.backgroundColor = "orange";
+				} else if (projectedPercent < 0.92) {
+					percentBar.style.backgroundColor = "yellow";
+				}
 			}
 		}
 	}
@@ -1016,23 +1031,35 @@ async function initTilesAndDrawToolbars() {
 	for (let i = 0; i < arrObj.length; i++) {
 		try {
 			tile = await generateTile(arrObj[i]);
+			
+			// Always create toolbar, even for tiles without ASINs
+			// Some tiles may have ASINs in the DOM but fail extraction
 			let t = new Toolbar(tile);
+			
+			if (!tile.getAsin()) {
+				logger.add("WARNING: Creating toolbar for tile without extracted ASIN");
+			}
 
 			//Add tool tip to the truncated item title link
 			if (Settings.get("general.displayFullTitleTooltip")) {
 				const titleDOM = arrObj[i].querySelector(".a-link-normal");
-				tooltip.addTooltip(titleDOM, unescapeHTML(unescapeHTML(tile.getTitle())));
+				if (titleDOM) {
+					tooltip.addTooltip(titleDOM, unescapeHTML(unescapeHTML(tile.getTitle())));
+				}
 			}
 
 			//Wrap the See Details button in a span with the class vh-see-details-container
 			const seeDetails = arrObj[i].querySelector(".vvp-details-btn");
-			const span = document.createElement("span");
-			span.classList.add("vh-btn-container");
-			span.style.display = "flex";
-			seeDetails.insertAdjacentElement("beforebegin", span);
+			if (seeDetails) {
+				const span = document.createElement("span");
+				span.classList.add("vh-btn-container");
+				span.style.display = "flex";
+				seeDetails.insertAdjacentElement("beforebegin", span);
 
-			//Move the seeDetails button as a child span
-			span.appendChild(seeDetails);
+				//Move the seeDetails button as a child span
+				span.appendChild(seeDetails);
+			} else {
+				}
 
 			//Generate the toolbar
 			await t.createProductToolbar();
@@ -1061,16 +1088,26 @@ async function getAllProductsData() {
 	let arrUrl = []; //Will be use to store the URL identifier of the listed products.
 	const arrObj = document.querySelectorAll(".vvp-item-tile:not(.pinned)");
 
+
 	if (arrObj.length == 0) {
 		return { arr: [], s: await cryptoKeys.signData([]) };
 	}
 
 	for (let i = 0; i < arrObj.length; i++) {
 		let tile = getTileFromDom(arrObj[i]);
+		if (!tile) {
+			continue; // Skip tiles that couldn't be created
+		}
 		tile.initiateTile(); //Do not await this.
 
 		const asin = tile.getAsin();
+		if (!asin) {
+			continue; // Skip tiles without ASIN
+		}
 		const btn = arrObj[i].querySelector(`input[data-asin="${asin}"]`);
+		if (!btn) {
+			continue;
+		}
 		const isParent = btn.dataset.isParentAsin == "true";
 		const isPreRelease = btn.dataset.isPreRelease == "true";
 		const enrollmentGUID = btn.dataset.recommendationId.match(/#vine\.enrollment\.([a-f0-9-]+)/i)[1];
@@ -1097,8 +1134,17 @@ async function generateTile(obj) {
 	let tile;
 	tile = new Tile(obj, env.data.grid.gridRegular);
 
+	// Check if tile was created without ASIN
+	if (!tile.getAsin()) {
+		logger.add("WARNING: Tile created without ASIN, but continuing with DOM setup");
+		}
+
 	//Add a container for the image and place the image in it.
 	let img = obj.querySelector(".vvp-item-tile-content img"); // Get the img element
+	if (!img) {
+		logger.add("WARNING: No image found for tile");
+		return tile;
+	}
 	let imgContainer = document.createElement("div"); // Create a new div element
 	imgContainer.classList.add("vh-img-container"); // Add the 'vh-img-container' class to the div
 	img.parentNode.insertBefore(imgContainer, img); // Insert the imgContainer before the img element
@@ -1149,13 +1195,19 @@ async function generateTile(obj) {
 	if (Settings.isPremiumUser(2) && Settings.get("general.displayVariantIcon")) {
 		//Check if the item is a parent ASIN (as variants)
 		let buttonInput = obj.querySelector(".a-button-input");
-		let variant = buttonInput.getAttribute("data-is-parent-asin");
+		if (!buttonInput) {
+			logger.add("WARNING: No button input found for variant check");
+			} else {
+			let variant = buttonInput.getAttribute("data-is-parent-asin");
 
-		if (variant === "true") {
-			// Create the div element and add a class
-			let div = document.createElement("div");
-			div.classList.add("vh-variant-indicator-container");
-			imgContainer.appendChild(div);
+			if (variant === "true") {
+				// Find the image container in the DOM
+				let imgContainerDOM = obj.querySelector(".vh-img-container");
+				if (imgContainerDOM) {
+					// Create the div element and add a class
+					let div = document.createElement("div");
+					div.classList.add("vh-variant-indicator-container");
+					imgContainerDOM.appendChild(div);
 
 			// Create the <a> element with a link that does nothing
 			let alink = document.createElement("a");
@@ -1167,8 +1219,10 @@ async function generateTile(obj) {
 
 			// Create another div element for the icon and add classes
 			let iconDiv = document.createElement("div");
-			iconDiv.classList.add("vh-indicator-icon", "vh-icon-choice");
-			alink.appendChild(iconDiv);
+				iconDiv.classList.add("vh-indicator-icon", "vh-icon-choice");
+					alink.appendChild(iconDiv);
+				}
+			}
 		}
 	}
 
@@ -1267,7 +1321,6 @@ async function serverProductsResponse(data) {
 	}
 
 	const timenow = data["current_time"];
-
 	//Display notification from the server
 	if (Array.isArray(data["notification"])) {
 		if (data["notification"].length > 0) {
@@ -1287,29 +1340,62 @@ async function serverProductsResponse(data) {
 		const newsHandler = new News(data["news"]);
 	}
 
+	// Move missingASINs declaration before any usage
+	let missingASINs = [];
+	
 	logger.add("FETCH: Waiting toolbars to be drawn...");
 	while (toolbarsDrawn == false) {
 		await new Promise((r) => setTimeout(r, 10));
 	}
 	logger.add("FETCH: Interface loaded, processing fetch data...");
+	try {
+		// Get all ASINs from the page
+		const grid = env.data.grid.gridRegular;
+		if (!grid) {
+			} else {
+			// Use pArrTile property instead of getTiles method
+			const allTiles = grid.pArrTile || [];
+			const allPageASINs = allTiles.map(t => t.getAsin()).filter(a => a);
+			const serverASINs = Object.keys(data["products"]);
+			missingASINs = allPageASINs.filter(asin => !serverASINs.includes(asin));
+			
+			if (missingASINs.length > 0) {
+				} else {
+				}
+		}
+	} catch (error) {
+		logger.add("ERROR: Failed to get tiles from grid: " + error.message);
+	}
 
 	//For each product provided by the server, modify the local listings
+	let processedCount = 0;
+	const allProductKeys = Object.keys(data["products"]);
 	for (const [key, values] of Object.entries(data["products"])) {
-		logger.add("DRAW: Processing ASIN #" + key);
-		let tile = getTileByAsin(key);
+		try {
+			processedCount++;
+			logger.add("DRAW: Processing ASIN #" + key);
+			let tile = getTileByAsin(key);
 
 		if (tile == null) {
 			logger.add("No tile matching " + key);
-			return; //Continue the loop with the next item
+			continue; //Continue the loop with the next item - FIXED: was 'return'
 		}
-
+		
+		// Debug: Check tile state
 		//Load the ETV value
 		if (values.etv_min != null) {
 			logger.add("DRAW: Setting ETV");
-			tile.getToolbar().setETV(values.etv_min, values.etv_max);
+			const toolbar = tile.getToolbar();
+			if (toolbar) {
+				toolbar.setETV(values.etv_min, values.etv_max);
+			} else {
+				}
 		} else {
 			logger.add("DRAW: No ETV value found");
-			tile.getToolbar().unknownETV();
+			const toolbar = tile.getToolbar();
+			if (toolbar) {
+				toolbar.unknownETV();
+			}
 		}
 
 		if (values.date_added != null) {
@@ -1347,7 +1433,14 @@ async function serverProductsResponse(data) {
 			}
 
 			logger.add("DRAW: Updating the toolbar");
-			tile.getToolbar().updateVisibilityIcon();
+			const toolbar = tile.getToolbar();
+			if (toolbar) {
+				try {
+					toolbar.updateVisibilityIcon();
+				} catch (visError) {
+					}
+			} else {
+				}
 			logger.add("DRAW: Done updating the toolbar");
 		}
 
@@ -1363,7 +1456,24 @@ async function serverProductsResponse(data) {
 				tile.updateVariantCount();
 			}
 		}
+		} catch (error) {
+			}
 	}
+	// Process tiles that the server didn't return data for as unknown ETV
+	try {
+		if (typeof missingASINs !== 'undefined' && missingASINs.length > 0) {
+			for (const asin of missingASINs) {
+				const tile = getTileByAsin(asin);
+				if (tile && tile.getToolbar()) {
+					tile.getToolbar().unknownETV();
+					tile.colorizeHighlight();
+				} else {
+					}
+			}
+		} else {
+			}
+	} catch (error) {
+		}
 
 	//Loading remote stored pinned items
 	if (Settings.isPremiumUser(1) && Settings.get("pinnedTab.active") && Settings.get("pinnedTab.remote")) {

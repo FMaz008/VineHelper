@@ -172,22 +172,14 @@ class Grid {
 }
 
 function updateTileCounts() {
-	// Debug logging for count synchronization
 	const debugTabTitle = Settings.get("general.debugTabTitle");
-
-	if (debugTabTitle) {
-		console.log("📊 Updating tile counts...");
-	}
-
+	
 	//Calculate how many tiles within each grids
 	if (Settings.get("unavailableTab.active") || Settings.get("hiddenTab.active")) {
 		const tab1 = document.getElementById("vh-available-count");
 		if (tab1) {
 			const count = env.data.grid.gridRegular.getTileCount(true);
 			tab1.innerText = count;
-			if (debugTabTitle) {
-				console.log(`  ✅ Available tab count: ${count}`);
-			}
 		}
 	}
 	if (Settings.get("unavailableTab.active")) {
@@ -195,9 +187,6 @@ function updateTileCounts() {
 		if (tab2) {
 			const count = env.data.grid.gridUnavailable.getTileCount(true);
 			tab2.innerText = count;
-			if (debugTabTitle) {
-				console.log(`  ❌ Unavailable tab count: ${count}`);
-			}
 		}
 	}
 	if (Settings.get("hiddenTab.active")) {
@@ -205,9 +194,6 @@ function updateTileCounts() {
 		if (tab3) {
 			const count = env.data.grid.gridHidden.getTileCount(true);
 			tab3.innerText = count;
-			if (debugTabTitle) {
-				console.log(`  👻 Hidden tab count: ${count}`);
-			}
 		}
 	}
 	if (Settings.get("pinnedTab.active")) {
@@ -215,9 +201,6 @@ function updateTileCounts() {
 		if (tab4) {
 			const count = env.data.grid.gridPinned.getTileCount(true);
 			tab4.innerText = count;
-			if (debugTabTitle) {
-				console.log(`  📌 Pinned tab count: ${count}`);
-			}
 		}
 	}
 
@@ -528,9 +511,13 @@ async function hideAllItems() {
 	const vvpItemTiles = document.querySelectorAll(currentTab2 + " .vvp-item-tile");
 	for (const vvpItemTile of vvpItemTiles) {
 		let asin = getAsinFromDom(vvpItemTile);
+		if (!asin) {
+			console.warn("VineHelper: Skipping tile without ASIN in hideAllItems");
+			continue; // Skip this tile if no ASIN found
+		}
 		arrTile.push({ asin: asin, hidden: true });
 		let tile = getTileByAsin(asin); // Obtain the real tile
-		if (!tile.isPinned()) {
+		if (tile && !tile.isPinned()) {
 			await tile.hideTile(false, false); // Do not update local storage
 		}
 	}
@@ -566,9 +553,15 @@ async function showAllItems() {
 	const vvpItemTiles = document.querySelectorAll("#tab-hidden .vvp-item-tile");
 	for (const vvpItemTile of vvpItemTiles) {
 		let asin = getAsinFromDom(vvpItemTile);
+		if (!asin) {
+			console.warn("VineHelper: Skipping tile without ASIN in showAllItems");
+			continue; // Skip this tile if no ASIN found
+		}
 		arrTile.push({ asin: asin, hidden: false });
 		let tile = getTileByAsin(asin); //Obtain the real tile
-		await tile.showTile(false, false); //Do not update local storage
+		if (tile) {
+			await tile.showTile(false, false); //Do not update local storage
+		}
 	}
 	HiddenList.saveList();
 
@@ -611,7 +604,13 @@ function removeElements(selector) {
 }
 
 function getTileByAsin(asin) {
-	return arrTile.find((t) => t.getAsin() === asin);
+	if (!asin) {
+		return null;
+	}
+	const tile = arrTile.find((t) => t.getAsin() === asin);
+	if (!tile) {
+		}
+	return tile;
 }
 
 export {
