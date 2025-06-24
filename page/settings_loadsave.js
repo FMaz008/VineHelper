@@ -555,6 +555,7 @@ async function initiateSettings() {
 	manageInputText("keyBindings.previousPage");
 	manageInputText("keyBindings.RFYPage");
 	manageInputText("keyBindings.AFAPage");
+	manageInputText("keyBindings.ALLPage");
 	manageInputText("keyBindings.AIPage");
 	manageInputText("keyBindings.AIPage2");
 	manageInputText("keyBindings.AIPage3");

@@ -112,7 +112,13 @@ Chart.register({
 
 			const canvas5 = document.createElement("canvas");
 			document.getElementById("vh-drop-stats-stacked").appendChild(canvas5);
-			generateStackedGraph(canvas5, data.drop_stats_rfy, data.drop_stats_afa, data.drop_stats_ai);
+			generateStackedGraph(
+				canvas5,
+				data.drop_stats_rfy,
+				data.drop_stats_afa,
+				data.drop_stats_ai,
+				data.drop_stats_all
+			);
 
 			const canvas2 = document.createElement("canvas");
 			document.getElementById("vh-drop-stats-rfy").appendChild(canvas2);
@@ -125,6 +131,10 @@ Chart.register({
 			const canvas4 = document.createElement("canvas");
 			document.getElementById("vh-drop-stats-ai").appendChild(canvas4);
 			generateGraph(canvas4, data.drop_stats_ai);
+
+			const canvas6 = document.createElement("canvas");
+			document.getElementById("vh-drop-stats-all").appendChild(canvas6);
+			generateGraph(canvas6, data.drop_stats_all);
 		});
 })();
 
@@ -187,8 +197,8 @@ function generateGraph(canvas, data) {
 	});
 }
 
-function generateStackedGraph(canvas, dataRFY, dataAFA, dataAI) {
-	if (!dataRFY || !dataAFA || !dataAI) {
+function generateStackedGraph(canvas, dataRFY, dataAFA, dataAI, dataALL) {
+	if (!dataRFY || !dataAFA || !dataAI || !dataALL) {
 		console.error("No data for graph");
 		return;
 	}
@@ -203,6 +213,13 @@ function generateStackedGraph(canvas, dataRFY, dataAFA, dataAI) {
 			}),
 			_source_dates: dates, // Store the original dates here
 			datasets: [
+				{
+					label: "ALL Items",
+					data: dataALL.map((d) => d.item_count),
+					backgroundColor: "rgba(75, 192, 192, 0.8)",
+					borderColor: "rgb(75, 192, 192)",
+					borderWidth: 1,
+				},
 				{
 					label: "AI Items",
 					data: dataAI.map((d) => d.item_count),

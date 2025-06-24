@@ -18,6 +18,7 @@ async function openDynamicModal(
 		potluck: "VENDOR_TARGETED",
 		last_chance: "VENDOR_VINE_FOR_ALL",
 		encore: "VINE_FOR_ALL",
+		all_items: "ALL_ITEMS",
 	};
 
 	const recommendationType = recommendationTypes[queue] || null;

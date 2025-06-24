@@ -265,7 +265,7 @@ function connectWebSocket() {
 		const queue = data.queue;
 		const page = data.page;
 
-		const queueTable = { AI: "encore", AFA: "last_chance", RFY: "potluck" };
+		const queueTable = { AI: "encore", AFA: "last_chance", RFY: "potluck", ALL: "all_items" };
 		const url = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=${queueTable[queue]}&page=${page}#AR`;
 		console.log(`${new Date().toLocaleString()} - Reloading page: ${queue} page ${page}`);
 

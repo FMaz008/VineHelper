@@ -149,6 +149,7 @@ class SettingsMgr {
 			this.#settings.keyBindings.previousPage = "p";
 			this.#settings.keyBindings.RFYPage = "r";
 			this.#settings.keyBindings.AFAPage = "a";
+			this.#settings.keyBindings.ALLPage = "l";
 			this.#settings.keyBindings.AIPage = "i";
 			this.#settings.keyBindings.hideAll = "h";
 			this.#settings.keyBindings.showAll = "s";
@@ -409,6 +410,7 @@ class SettingsMgr {
 			keyBindings: {
 				active: true,
 				AFAPage: "a",
+				ALLPage: "l",
 				AIPage: "i",
 				debug: "d",
 				hideAll: "h",

@@ -101,7 +101,7 @@ class Environment {
 			if (arrMatches[1] == "queue" && arrMatches[2] != undefined) {
 				this.data.vineQueue = arrMatches[2];
 			} else if (arrMatches[1] == undefined) {
-				this.data.vineQueue = "last_chance"; //Default AFA
+				this.data.vineQueue = "all_items"; //Default ALL
 			} else {
 				this.data.vineQueue = null; //Could be a ?search, (but not a &search).
 			}
@@ -120,7 +120,7 @@ class Environment {
 			}
 		}
 
-		let arrQueues = { potluck: "RFY", last_chance: "AFA", encore: "AI" };
+		let arrQueues = { potluck: "RFY", last_chance: "AFA", encore: "AI", all_items: "ALL" };
 		if (this.data.vineQueue != null) {
 			this.data.vineQueueAbbr = arrQueues[this.data.vineQueue];
 		}
