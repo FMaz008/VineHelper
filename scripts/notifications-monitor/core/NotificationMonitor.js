@@ -80,10 +80,10 @@ class NotificationMonitor extends MonitorCore {
 
 	// Track items currently being processed for ETV to prevent duplicate processing
 	#etvProcessingItems = new Set();
-	
+
 	// Track zero ETV sound timestamps for deduplication across monitors
 	#zeroETVSoundTimestamps = new Map();
-	
+
 	// Track items currently being processed for visibility to prevent concurrent updates
 	#visibilityProcessingItems = new Set();
 
@@ -132,32 +132,32 @@ class NotificationMonitor extends MonitorCore {
 	_setupErrorHandlers() {
 		// Store reference to this instance
 		const monitor = this;
-		
+
 		// Only set up handlers once per window
 		if (!window._vhErrorHandlersSetup) {
 			window._vhErrorHandlersSetup = true;
-			
+
 			// Handle unhandled promise rejections
-			window.addEventListener('unhandledrejection', (event) => {
-				console.error('Unhandled promise rejection in NotificationMonitor:', event.reason);
-				
+			window.addEventListener("unhandledrejection", (event) => {
+				console.error("Unhandled promise rejection in NotificationMonitor:", event.reason);
+
 				// If we're fetching recent items and an error occurs, clean up the state
 				if (monitor._fetchingRecentItems) {
-					console.error('Error occurred during fetch operation, cleaning up state');
+					console.error("Error occurred during fetch operation, cleaning up state");
 					monitor.fetchRecentItemsEnd();
 				}
-				
+
 				// Prevent the default handler from running
 				event.preventDefault();
 			});
-			
+
 			// Handle general errors
-			window.addEventListener('error', (event) => {
-				console.error('Global error in NotificationMonitor:', event.error);
-				
+			window.addEventListener("error", (event) => {
+				console.error("Global error in NotificationMonitor:", event.error);
+
 				// If we're fetching recent items and an error occurs, clean up the state
 				if (monitor._fetchingRecentItems) {
-					console.error('Error occurred during fetch operation, cleaning up state');
+					console.error("Error occurred during fetch operation, cleaning up state");
 					monitor.fetchRecentItemsEnd();
 				}
 			});
@@ -347,13 +347,12 @@ class NotificationMonitor extends MonitorCore {
 	 */
 	#wouldVisibilityChange(element) {
 		if (!element) return false;
-		
+
 		const currentlyVisible = this.#isElementVisible(element);
 		const shouldBeVisible = this.#calculateNodeVisibility(element);
-		
+
 		return currentlyVisible !== shouldBeVisible;
 	}
-
 
 	/**
 	 * Handle visibility change detection and emit appropriate grid events
@@ -363,44 +362,44 @@ class NotificationMonitor extends MonitorCore {
 	#handleVisibilityChange(element, wasVisible) {
 		// ISSUE #2 FIX: Re-apply filtering when unknown ETV flag changes
 		// This ensures items are properly removed when their ETV becomes known
-		
+
 		if (this._visibilityStateManager) {
 			// For V3, we need to re-apply filtering to handle unknown ETV changes
 			// The unknown ETV flag might have changed, requiring re-filtering
 			const asin = element.dataset?.asin;
 			const debugNotifications = Settings.get("general.debugNotifications");
-			
+
 			if (debugNotifications && asin) {
 				console.log("[NotificationMonitor] handleVisibilityChange called for V3", {
 					asin,
 					wasVisible,
 					typeUnknownETV: element.dataset.typeUnknownETV,
 					currentFilter: this._filterType,
-					stackTrace: new Error().stack
+					stackTrace: new Error().stack,
 				});
 			}
-			
+
 			// Re-apply filtering to handle unknown ETV changes
 			const isNowVisible = this.#processNotificationFiltering(element);
-			
+
 			// The VisibilityStateManager will handle count updates through setVisibility
 			// called within processNotificationFiltering
-			
+
 			if (debugNotifications && asin) {
 				console.log("[NotificationMonitor] handleVisibilityChange result", {
 					asin,
 					wasVisible,
 					isNowVisible,
-					visibilityChanged: wasVisible !== isNowVisible
+					visibilityChanged: wasVisible !== isNowVisible,
 				});
 			}
-			
+
 			return isNowVisible;
 		}
 
 		// V2 fallback - re-apply filtering and check if visibility changed
 		const isNowVisible = this.#processNotificationFiltering(element);
-		
+
 		// Emit grid event if visibility changed
 		if (wasVisible !== isNowVisible) {
 			this.#emitGridEvent(isNowVisible ? "grid:items-added" : "grid:items-removed", { count: 1 });
@@ -434,10 +433,12 @@ class NotificationMonitor extends MonitorCore {
 			// V3 with VisibilityStateManager - batchSetVisibility already updated the count
 			// No need to recalculate as it would clear caches and force visibility checks on all elements
 			newCount = this._visibilityStateManager.getCount();
-			
+
 			if (debugBulkOperations) {
 				console.log("[updateVisibleCountAfterFiltering] Using count from VisibilityStateManager:", newCount);
-				console.log("[updateVisibleCountAfterFiltering] Skipping recalculateCount - batchSetVisibility already updated count accurately");
+				console.log(
+					"[updateVisibleCountAfterFiltering] Skipping recalculateCount - batchSetVisibility already updated count accurately"
+				);
 			}
 		} else {
 			// V2 fallback - count directly
@@ -464,7 +465,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		const asin = node.dataset?.asin || "unknown";
-		
+
 		// OPTIMIZATION: Prevent concurrent processing of the same item
 		// This helps reduce redundant visibility updates
 		if (this.#visibilityProcessingItems.has(asin)) {
@@ -473,7 +474,7 @@ class NotificationMonitor extends MonitorCore {
 			}
 			return this.#isElementVisible(node);
 		}
-		
+
 		// OPTIMIZATION: Early exit if visibility wouldn't change
 		// This prevents unnecessary processing of filter logic
 		if (!this.#wouldVisibilityChange(node)) {
@@ -482,171 +483,176 @@ class NotificationMonitor extends MonitorCore {
 				this._earlyExitCount = new Map();
 			}
 			this._earlyExitCount.set(asin, (this._earlyExitCount.get(asin) || 0) + 1);
-			
+
 			// Only log periodically or when debugging specific items
-			if (this._settings.get("general.debugTabTitle") &&
-			    (this._earlyExitCount.get(asin) === 1 || this._earlyExitCount.get(asin) % 10 === 0)) {
+			if (
+				this._settings.get("general.debugTabTitle") &&
+				(this._earlyExitCount.get(asin) === 1 || this._earlyExitCount.get(asin) % 10 === 0)
+			) {
 				console.log(`[NotificationMonitor] Early exit for ${asin} (count: ${this._earlyExitCount.get(asin)})`);
 			}
-			
+
 			return this.#isElementVisible(node);
 		}
-		
+
 		// Mark as processing
 		this.#visibilityProcessingItems.add(asin);
-		
+
 		try {
 			// Debug: Track call source
 			if (this._settings.get("general.debugTabTitle") || window.DEBUG_VISIBILITY_STATE) {
 				const stack = new Error().stack;
-				const caller = stack.split('\n')[2]?.trim() || "unknown caller";
-			
-			if (!this._filterCallTracking) {
-				this._filterCallTracking = new Map();
-			}
-			
-			const key = `${asin}-${Date.now()}`;
-			this._filterCallTracking.set(key, {
-				asin,
-				caller,
-				timestamp: Date.now()
-			});
-			
-			// Log if we see multiple calls for same item within 100ms
-			const recentCalls = Array.from(this._filterCallTracking.entries())
-				.filter(([k, v]) => v.asin === asin && (Date.now() - v.timestamp) < 100);
-			
-			if (recentCalls.length > 1) {
-				console.warn(`[NotificationMonitor] Multiple processNotificationFiltering calls for ${asin}:`, {
-					callCount: recentCalls.length,
-					callers: recentCalls.map(([k, v]) => v.caller),
-					timeDiffs: recentCalls.map(([k, v]) => Date.now() - v.timestamp)
+				const caller = stack.split("\n")[2]?.trim() || "unknown caller";
+
+				if (!this._filterCallTracking) {
+					this._filterCallTracking = new Map();
+				}
+
+				const key = `${asin}-${Date.now()}`;
+				this._filterCallTracking.set(key, {
+					asin,
+					caller,
+					timestamp: Date.now(),
 				});
-			}
-			
-			// Clean up old entries
-			if (this._filterCallTracking.size > 100) {
-				const cutoff = Date.now() - 5000;
-				for (const [k, v] of this._filterCallTracking.entries()) {
-					if (v.timestamp < cutoff) {
-						this._filterCallTracking.delete(k);
+
+				// Log if we see multiple calls for same item within 100ms
+				const recentCalls = Array.from(this._filterCallTracking.entries()).filter(
+					([k, v]) => v.asin === asin && Date.now() - v.timestamp < 100
+				);
+
+				if (recentCalls.length > 1) {
+					console.warn(`[NotificationMonitor] Multiple processNotificationFiltering calls for ${asin}:`, {
+						callCount: recentCalls.length,
+						callers: recentCalls.map(([k, v]) => v.caller),
+						timeDiffs: recentCalls.map(([k, v]) => Date.now() - v.timestamp),
+					});
+				}
+
+				// Clean up old entries
+				if (this._filterCallTracking.size > 100) {
+					const cutoff = Date.now() - 5000;
+					for (const [k, v] of this._filterCallTracking.entries()) {
+						if (v.timestamp < cutoff) {
+							this._filterCallTracking.delete(k);
+						}
 					}
 				}
 			}
-		}
 
-		const notificationTypeZeroETV = parseInt(node.dataset.typeZeroETV) === 1;
-		const notificationTypeHighlight = parseInt(node.dataset.typeHighlight) === 1;
-		const notificationTypeUnknownETV = parseInt(node.dataset.typeUnknownETV) === 1;
-		const queueType = node.dataset.queue;
-		const beforeDisplay = node.style.display;
+			const notificationTypeZeroETV = parseInt(node.dataset.typeZeroETV) === 1;
+			const notificationTypeHighlight = parseInt(node.dataset.typeHighlight) === 1;
+			const notificationTypeUnknownETV = parseInt(node.dataset.typeUnknownETV) === 1;
+			const queueType = node.dataset.queue;
+			const beforeDisplay = node.style.display;
 
-		//Feed Paused
-		if (node.dataset.feedPaused == "true") {
-			this.#setElementVisibility(node, false);
-			return false;
-		}
+			//Feed Paused
+			if (node.dataset.feedPaused == "true") {
+				this.#setElementVisibility(node, false);
+				return false;
+			}
 
-		// Gold item filter for silver users
-		if (
-			this._monitorV3 &&
-			!this._tierMgr.isGold() &&
-			this._settings.get("notification.monitor.hideGoldNotificationsForSilverUser")
-		) {
-			const etvObj = node.querySelector("div.etv");
+			// Gold item filter for silver users
 			if (
-				etvObj &&
-				this._tierMgr.getSilverTierETVLimit() != null &&
-				parseFloat(etvObj.dataset.etvMin) > this._tierMgr.getSilverTierETVLimit()
+				this._monitorV3 &&
+				!this._tierMgr.isGold() &&
+				this._settings.get("notification.monitor.hideGoldNotificationsForSilverUser")
 			) {
-				this.#setElementVisibility(node, false);
-				return false;
+				const etvObj = node.querySelector("div.etv");
+				if (
+					etvObj &&
+					this._tierMgr.getSilverTierETVLimit() != null &&
+					parseFloat(etvObj.dataset.etvMin) > this._tierMgr.getSilverTierETVLimit()
+				) {
+					this.#setElementVisibility(node, false);
+					return false;
+				}
 			}
-		}
 
-		// Search filter - if search text is not empty, check if item matches
-		if (this._searchText.trim()) {
-			const title = node.querySelector(".a-truncate-full")?.innerText?.toLowerCase() || "";
-			if (!title.includes(this._searchText.toLowerCase().trim())) {
-				this.#setElementVisibility(node, false);
-				return false;
+			// Search filter - if search text is not empty, check if item matches
+			if (this._searchText.trim()) {
+				const title = node.querySelector(".a-truncate-full")?.innerText?.toLowerCase() || "";
+				if (!title.includes(this._searchText.toLowerCase().trim())) {
+					this.#setElementVisibility(node, false);
+					return false;
+				}
 			}
-		}
 
-		const displayStyle = this.#getTileDisplayStyle();
-		let shouldBeVisible = false;
+			const displayStyle = this.#getTileDisplayStyle();
+			let shouldBeVisible = false;
 
-		if (this._filterType == -1) {
-			shouldBeVisible = true;
-		} else if (this._filterType == TYPE_HIGHLIGHT_OR_ZEROETV) {
-			shouldBeVisible = notificationTypeZeroETV || notificationTypeHighlight;
-		} else if (this._filterType == TYPE_HIGHLIGHT) {
-			shouldBeVisible = notificationTypeHighlight;
-		} else if (this._filterType == TYPE_ZEROETV) {
-			shouldBeVisible = notificationTypeZeroETV;
-		} else if (this._filterType == TYPE_REGULAR) {
-			shouldBeVisible = !notificationTypeZeroETV && !notificationTypeHighlight;
-		} else if (this._filterType == TYPE_UNKNOWN_ETV) {
-			shouldBeVisible = notificationTypeUnknownETV;
-		}
-
-		this.#setElementVisibility(node, shouldBeVisible, displayStyle);
-
-		//Queue filter
-		let styleDisplay;
-		// Use computed style for all browsers to ensure consistency
-		const computedStyle = window.getComputedStyle(node);
-		styleDisplay = computedStyle.display;
-
-		// Debug logging for visibility changes
-		const debugTabTitle = this._settings.get("general.debugTabTitle");
-		const debugPlaceholders = this._settings.get("general.debugPlaceholders");
-		if (debugTabTitle || debugPlaceholders) {
-			const afterDisplay = node.style.display;
-			if (beforeDisplay !== afterDisplay) {
-				console.log("[NotificationMonitor] Item visibility changed", {
-					asin: node.dataset.asin,
-					beforeDisplay,
-					afterDisplay,
-					typeZeroETV: notificationTypeZeroETV,
-					typeHighlight: notificationTypeHighlight,
-					currentFilter: this._filterType,
-					filterName:
-						this._filterType === TYPE_HIGHLIGHT_OR_ZEROETV
-							? "Zero ETV or KW match only"
-							: this._filterType === TYPE_HIGHLIGHT
-								? "Highlight only"
-								: this._filterType === TYPE_ZEROETV
-									? "Zero ETV only"
-									: this._filterType === TYPE_REGULAR
-										? "Regular only"
-										: "All",
-					styleDisplay,
-				});
+			if (this._filterType == -1) {
+				shouldBeVisible = true;
+			} else if (this._filterType == TYPE_HIGHLIGHT_OR_ZEROETV) {
+				shouldBeVisible = notificationTypeZeroETV || notificationTypeHighlight;
+			} else if (this._filterType == TYPE_HIGHLIGHT) {
+				shouldBeVisible = notificationTypeHighlight;
+			} else if (this._filterType == TYPE_ZEROETV) {
+				shouldBeVisible = notificationTypeZeroETV;
+			} else if (this._filterType == TYPE_REGULAR) {
+				shouldBeVisible = !notificationTypeZeroETV && !notificationTypeHighlight;
+			} else if (this._filterType == TYPE_UNKNOWN_ETV) {
+				shouldBeVisible = notificationTypeUnknownETV;
 			}
-		}
 
-		if (styleDisplay == "flex" || styleDisplay == "block") {
-			if (this._filterQueue == "-1") {
-				return true;
+			this.#setElementVisibility(node, shouldBeVisible, displayStyle);
+
+			//Queue filter
+			let styleDisplay;
+			// Use computed style for all browsers to ensure consistency
+			const computedStyle = window.getComputedStyle(node);
+			styleDisplay = computedStyle.display;
+
+			// Debug logging for visibility changes
+			const debugTabTitle = this._settings.get("general.debugTabTitle");
+			const debugPlaceholders = this._settings.get("general.debugPlaceholders");
+			if (debugTabTitle || debugPlaceholders) {
+				const afterDisplay = node.style.display;
+				if (beforeDisplay !== afterDisplay) {
+					console.log("[NotificationMonitor] Item visibility changed", {
+						asin: node.dataset.asin,
+						beforeDisplay,
+						afterDisplay,
+						typeZeroETV: notificationTypeZeroETV,
+						typeHighlight: notificationTypeHighlight,
+						currentFilter: this._filterType,
+						filterName:
+							this._filterType === TYPE_HIGHLIGHT_OR_ZEROETV
+								? "Zero ETV or KW match only"
+								: this._filterType === TYPE_HIGHLIGHT
+									? "Highlight only"
+									: this._filterType === TYPE_ZEROETV
+										? "Zero ETV only"
+										: this._filterType === TYPE_REGULAR
+											? "Regular only"
+											: "All",
+						styleDisplay,
+					});
+				}
+			}
+
+			if (styleDisplay == "flex" || styleDisplay == "block") {
+				if (this._filterQueue == "-1") {
+					return true;
+				} else {
+					const queueMatches = queueType == this._filterQueue;
+					this.#setElementVisibility(node, queueMatches, this.#getTileDisplayStyle());
+					return queueMatches;
+				}
 			} else {
-				const queueMatches = queueType == this._filterQueue;
-				this.#setElementVisibility(node, queueMatches, this.#getTileDisplayStyle());
-				return queueMatches;
+				return false;
 			}
-		} else {
-			return false;
-		}
 		} finally {
 			// Always remove from processing set
 			this.#visibilityProcessingItems.delete(asin);
-			
+
 			// Log early exit summary periodically
 			if (this._earlyExitCount && this._earlyExitCount.size > 0) {
 				if (!this._lastEarlyExitSummary || Date.now() - this._lastEarlyExitSummary > 30000) {
 					const totalEarlyExits = Array.from(this._earlyExitCount.values()).reduce((a, b) => a + b, 0);
 					if (totalEarlyExits > 10) {
-						console.log(`[NotificationMonitor] Early exit summary: ${totalEarlyExits} total early exits across ${this._earlyExitCount.size} items`);
+						console.log(
+							`[NotificationMonitor] Early exit summary: ${totalEarlyExits} total early exits across ${this._earlyExitCount.size} items`
+						);
 						// Reset counters after summary
 						this._earlyExitCount.clear();
 					}
@@ -731,17 +737,17 @@ class NotificationMonitor extends MonitorCore {
 	 */
 	async fetchRecentItemsEnd() {
 		this._fetchingRecentItems = false;
-		
+
 		// PERFORMANCE DEBUG: Track fetch completion
 		const perfDebug = this._settings.get("general.debugBulkOperations");
 		if (perfDebug) {
 			console.log("[BULK-PERF] Fetch complete, starting cleanup", {
 				itemsProcessed: this._bulkItemCount || 0,
-				timestamp: Date.now()
+				timestamp: Date.now(),
 			});
 			this._bulkItemCount = 0; // Reset counter
 		}
-		
+
 		// Clear the fetch timeout if it exists
 		if (this._fetchTimeout) {
 			clearTimeout(this._fetchTimeout);
@@ -757,19 +763,19 @@ class NotificationMonitor extends MonitorCore {
 			} else if (this._bulkSoundTypes.has(TYPE_HIGHLIGHT)) {
 				soundTypeToPlay = TYPE_HIGHLIGHT;
 			}
-			
+
 			console.log("[NotificationMonitor] Playing bulk notification sound:", {
 				soundType: soundTypeToPlay,
-				typeNames: {0: "REGULAR", 1: "ZEROETV", 2: "HIGHLIGHT"},
+				typeNames: { 0: "REGULAR", 1: "ZEROETV", 2: "HIGHLIGHT" },
 				itemTypesFound: Array.from(this._bulkSoundTypes),
 				itemCount: this._bulkSoundTypes.size,
 				isMasterMonitor: this._isMasterMonitor,
-				timestamp: Date.now()
+				timestamp: Date.now(),
 			});
-			
+
 			// Play the sound
 			this._soundPlayerMgr.play(soundTypeToPlay);
-			
+
 			// Reset bulk tracking
 			this._bulkSoundPending = false;
 			this._bulkSoundTypes.clear();
@@ -777,7 +783,7 @@ class NotificationMonitor extends MonitorCore {
 			console.log("[NotificationMonitor] No bulk sound to play:", {
 				bulkSoundPending: this._bulkSoundPending,
 				bulkSoundTypesSize: this._bulkSoundTypes.size,
-				isMasterMonitor: this._isMasterMonitor
+				isMasterMonitor: this._isMasterMonitor,
 			});
 		}
 
@@ -837,7 +843,7 @@ class NotificationMonitor extends MonitorCore {
 			this.#emitGridEvent("grid:fetch-complete", { visibleCount });
 
 			// Note: Sorting is now handled by GridEventManager after placeholders are updated
-			
+
 			// PERFORMANCE DEBUG: End total fetch time tracking
 			if (perfDebug) {
 				console.timeEnd("[BULK-PERF] Last 100 Fetch Total Time");
@@ -901,7 +907,7 @@ class NotificationMonitor extends MonitorCore {
 				// If isKeepSet is true, keep items IN the set
 				// If isKeepSet is false, keep items NOT in the set (remove items IN the set)
 				const shouldKeep = isKeepSet ? arrASINs.has(asin) : !arrASINs.has(asin);
-	
+
 				if (shouldKeep) {
 					// Get the DOM element for this item
 					const element = domElements.get(asin);
@@ -915,7 +921,7 @@ class NotificationMonitor extends MonitorCore {
 					// Count visible items being removed
 					const element = domElements.get(asin);
 					const isVisible = element && this.#isElementVisible(element);
-					
+
 					// Enhanced debugging for count mismatch investigation
 					if (debugBulkOperations) {
 						debugRemovedItems.push({
@@ -924,12 +930,14 @@ class NotificationMonitor extends MonitorCore {
 							isVisible,
 							elementId: element?.id,
 							unavailable: item.data.unavailable,
-							displayStyle: element ? window.getComputedStyle(element).display : 'no-element',
+							displayStyle: element ? window.getComputedStyle(element).display : "no-element",
 							// Check if VisibilityStateManager has different visibility state
-							vsmVisible: this._visibilityStateManager ? this._visibilityStateManager.isVisible(element) : null
+							vsmVisible: this._visibilityStateManager
+								? this._visibilityStateManager.isVisible(element)
+								: null,
 						});
 					}
-					
+
 					if (isVisible) {
 						visibleRemovedCount++;
 					}
@@ -956,9 +964,10 @@ class NotificationMonitor extends MonitorCore {
 					summary: {
 						totalRemoved: itemsToRemoveCount,
 						visibleRemoved: visibleRemovedCount,
-						withoutElements: debugRemovedItems.filter(item => !item.hasElement).length,
-						invisibleWithElements: debugRemovedItems.filter(item => item.hasElement && !item.isVisible).length
-					}
+						withoutElements: debugRemovedItems.filter((item) => !item.hasElement).length,
+						invisibleWithElements: debugRemovedItems.filter((item) => item.hasElement && !item.isVisible)
+							.length,
+					},
 				});
 			}
 
@@ -1273,7 +1282,7 @@ class NotificationMonitor extends MonitorCore {
 			// Check for unavailable == 1 (consistent with server data format)
 			if (item.data.unavailable == 1) {
 				unavailableAsins.add(asin);
-				
+
 				// Enhanced debugging: Check visibility state of unavailable items
 				if (debugBulkOperations) {
 					const element = document.getElementById(`vh-notification-${asin}`);
@@ -1282,10 +1291,13 @@ class NotificationMonitor extends MonitorCore {
 						asin,
 						hasElement: !!element,
 						isVisible,
-						displayStyle: element ? window.getComputedStyle(element).display : 'no-element',
+						displayStyle: element ? window.getComputedStyle(element).display : "no-element",
 						// Check both visibility methods
 						directCheck: element ? window.getComputedStyle(element).display !== "none" : false,
-						vsmCheck: this._visibilityStateManager && element ? this._visibilityStateManager.isVisible(element) : null
+						vsmCheck:
+							this._visibilityStateManager && element
+								? this._visibilityStateManager.isVisible(element)
+								: null,
 					});
 				}
 			}
@@ -1314,11 +1326,11 @@ class NotificationMonitor extends MonitorCore {
 				// Visibility analysis of unavailable items
 				unavailableVisibility: {
 					total: unavailableVisibilityDebug.length,
-					visible: unavailableVisibilityDebug.filter(item => item.isVisible).length,
-					invisible: unavailableVisibilityDebug.filter(item => !item.isVisible).length,
-					noElement: unavailableVisibilityDebug.filter(item => !item.hasElement).length,
-					samples: unavailableVisibilityDebug.slice(0, 10)
-				}
+					visible: unavailableVisibilityDebug.filter((item) => item.isVisible).length,
+					invisible: unavailableVisibilityDebug.filter((item) => !item.isVisible).length,
+					noElement: unavailableVisibilityDebug.filter((item) => !item.hasElement).length,
+					samples: unavailableVisibilityDebug.slice(0, 10),
+				},
 			});
 		}
 
@@ -1334,27 +1346,30 @@ class NotificationMonitor extends MonitorCore {
 		if (this._visibilityStateManager && this._visibilityStateManager.recalculateCount) {
 			// Get current tiles for recalculation
 			const tiles = this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
-			
+
 			if (debugBulkOperations) {
 				console.log("[clearUnavailableItems] Running count verification after bulk removal");
 			}
-			
+
 			// Recalculate to ensure accuracy - this will clear caches but is necessary for correctness
 			this._visibilityStateManager.recalculateCount(tiles);
-			
+
 			if (debugBulkOperations) {
-				console.log("[clearUnavailableItems] Count after verification:", this._visibilityStateManager.getCount());
+				console.log(
+					"[clearUnavailableItems] Count after verification:",
+					this._visibilityStateManager.getCount()
+				);
 			}
 		} else {
 			// V2 fallback - manually recount
 			const newCount = this._countVisibleItems();
 			this._updateTabTitle(newCount);
-			
+
 			if (debugBulkOperations) {
 				console.log("[clearUnavailableItems] V2 count after verification:", newCount);
 			}
 		}
-		
+
 		if (debugBulkOperations) {
 			console.log("[clearUnavailableItems] === CLEAR UNAVAIL OPERATION COMPLETE ===");
 		}
@@ -1716,7 +1731,7 @@ class NotificationMonitor extends MonitorCore {
 				console.log(`[BULK-PERF] Processing item ${this._bulkItemCount}`, {
 					asin,
 					feedPaused: this._feedPaused,
-					willBeInvisible: this._feedPaused // Items will be invisible if feed is paused
+					willBeInvisible: this._feedPaused, // Items will be invisible if feed is paused
 				});
 			}
 		}
@@ -1870,7 +1885,7 @@ class NotificationMonitor extends MonitorCore {
 		const etvObj = notif.querySelector("div.etv");
 		const etvTxt = etvObj.querySelector("span.etv");
 		const brendaAnnounce = notif.querySelector("#vh-announce-link-" + asin);
-		
+
 		// Declare wasHighlighted at function scope to avoid undefined errors
 		let wasHighlighted = false;
 
@@ -1943,7 +1958,7 @@ class NotificationMonitor extends MonitorCore {
 						// New highlight - play sound before visibility check
 						// Get current visibility for sound check
 						const currentlyVisible = this.#isElementVisible(notif);
-						
+
 						// Play sound if visible or fetching
 						if (
 							(currentlyVisible || this._fetchingRecentItems) &&
@@ -1953,7 +1968,7 @@ class NotificationMonitor extends MonitorCore {
 							if (this._fetchingRecentItems) {
 								this._bulkSoundPending = true;
 								this._bulkSoundTypes.add(TYPE_HIGHLIGHT);
-								
+
 								if (this._settings.get("general.debugNotifications")) {
 									console.log("[NotificationMonitor] Bulk mode - deferring highlight sound:", {
 										asin: notif.dataset.asin,
@@ -1961,7 +1976,7 @@ class NotificationMonitor extends MonitorCore {
 										fetchingRecentItems: this._fetchingRecentItems,
 										soundSetting: this._settings.get("notification.monitor.highlight.sound"),
 										bulkSoundTypes: Array.from(this._bulkSoundTypes),
-										isMasterMonitor: this._isMasterMonitor
+										isMasterMonitor: this._isMasterMonitor,
 									});
 								}
 							} else {
@@ -1971,7 +1986,7 @@ class NotificationMonitor extends MonitorCore {
 									currentlyVisible: currentlyVisible,
 									fetchingRecentItems: this._fetchingRecentItems,
 									soundSetting: this._settings.get("notification.monitor.highlight.sound"),
-									isMasterMonitor: this._isMasterMonitor
+									isMasterMonitor: this._isMasterMonitor,
 								});
 								this._soundPlayerMgr.play(TYPE_HIGHLIGHT);
 							}
@@ -1997,44 +2012,6 @@ class NotificationMonitor extends MonitorCore {
 	}
 
 	/**
-		* Check and update hide keyword status
-		* @param {Element} notif - The notification element
-		* @param {Element} etvObj - The ETV element
-		* @returns {Promise<boolean>} - True if hide status changed
-		*/
-	async #checkHideKeywords(notif, etvObj) {
-		// Check hide keywords separately (not dependent on highlight keywords)
-		if (this._settings.get("notification.hideList")) {
-			const hideKeywords = this._settings.get("general.hideKeywords");
-			if (hideKeywords) {
-				const title = notif.querySelector(".a-truncate-full").innerText;
-				if (title) {
-					const matchedHideKeyword = await keywordMatch(
-						hideKeywords,
-						title,
-						etvObj.dataset.etvMin,
-						etvObj.dataset.etvMax,
-						this._settings
-					);
-					if (matchedHideKeyword !== false) {
-						// Remove (permanently "hide") the tile
-						this._log.add(`NOTIF: Item ${asin} matched hide keyword ${matchedHideKeyword}. Hiding it.`);
-						this.#removeTile(notif, asin);
-						return true; // Exit early since item is removed
-					}
-				}
-			}
-		}
-
-		//Set the highlight color as needed
-		this._processNotificationHighlight(notif);
-
-		this.#disableGoldItemsForSilverUsers(notif);
-
-		return true;
-	}
-
-	/**
 	 * Check if an item has Zero ETV and update flags
 	 * This is separated from #setETV to avoid duplicate checks when setting min/max
 	 * @param {HTMLElement} notif - The notification element
@@ -2051,19 +2028,25 @@ class NotificationMonitor extends MonitorCore {
 		// Clear unknown ETV flag FIRST since we now have an ETV value
 		// This must happen before any other flag checks to ensure correct color priority
 		if (notif.dataset.typeUnknownETV == 1) {
-			// ISSUE #2 DEBUG: Track unknown ETV removal
 			const debugTabTitle = this._settings.get("general.debugTabTitle");
 			if (debugTabTitle) {
-				console.log("[NotificationMonitor] UNKNOWN ETV REMOVAL", {
+				console.log("[NotificationMonitor] Unknown ETV removal", {
 					asin: notif.dataset.asin,
 					currentFilter: this._filterType,
-					filterName: this._filterType === TYPE_UNKNOWN_ETV ? "Unknown ETV only" :
-						this._filterType === TYPE_HIGHLIGHT_OR_ZEROETV ? "Zero ETV or KW match only" :
-						this._filterType === TYPE_ZEROETV ? "Zero ETV only" :
-						this._filterType === TYPE_HIGHLIGHT ? "KW match only" :
-						this._filterType === TYPE_REGULAR ? "Regular only" : "All",
+					filterName:
+						this._filterType === TYPE_UNKNOWN_ETV
+							? "Unknown ETV only"
+							: this._filterType === TYPE_HIGHLIGHT_OR_ZEROETV
+								? "Zero ETV or KW match only"
+								: this._filterType === TYPE_ZEROETV
+									? "Zero ETV only"
+									: this._filterType === TYPE_HIGHLIGHT
+										? "KW match only"
+										: this._filterType === TYPE_REGULAR
+											? "Regular only"
+											: "All",
 					etvMin: etvObj.dataset.etvMin,
-					etvMax: etvObj.dataset.etvMax
+					etvMax: etvObj.dataset.etvMax,
 				});
 			}
 
@@ -2097,7 +2080,7 @@ class NotificationMonitor extends MonitorCore {
 					// OPTIMIZATION: Only process filtering if visibility would change
 					// This prevents redundant processing when setting zero ETV flag
 					let isNowVisible = wasVisible;
-					
+
 					if (this.#wouldVisibilityChange(notif)) {
 						// Process filtering to update visibility based on the new flag
 						this.#processNotificationFiltering(notif);
@@ -2146,11 +2129,11 @@ class NotificationMonitor extends MonitorCore {
 				const wasVisible = this.#isElementVisible(notif);
 
 				notif.dataset.typeZeroETV = 0;
-				
+
 				// OPTIMIZATION: Only re-apply filtering if visibility would change
 				// This prevents redundant processing when clearing zero ETV flag
 				let isNowVisible = wasVisible;
-				
+
 				if (this.#wouldVisibilityChange(notif)) {
 					// Re-apply filtering to update visibility
 					this.#processNotificationFiltering(notif);
@@ -2179,13 +2162,13 @@ class NotificationMonitor extends MonitorCore {
 				}
 			}
 		}
-		
+
 		// Update the visual highlight state after all flags have been set
 		// This ensures correct color priority when transitioning from unknown ETV to Zero ETV
 		if (flagsChanged) {
 			this._processNotificationHighlight(notif);
 		}
-		
+
 		return flagsChanged;
 	}
 
@@ -2383,41 +2366,42 @@ class NotificationMonitor extends MonitorCore {
 		// Play sound effect if conditions are met
 		if ((tileVisible || this._fetchingRecentItems) && playSoundEffect) {
 			const asin = notif.dataset.asin;
-			
+
 			// During bulk fetch, just track that we need to play a sound
 			if (this._fetchingRecentItems) {
 				this._bulkSoundPending = true;
 				this._bulkSoundTypes.add(itemType);
-				
+
 				if (this._settings.get("general.debugNotifications")) {
 					console.log("[NotificationMonitor] Bulk mode - deferring sound:", {
 						asin: asin,
 						itemType: itemType,
-						typeNames: {0: "REGULAR", 1: "ZEROETV", 2: "HIGHLIGHT"},
+						typeNames: { 0: "REGULAR", 1: "ZEROETV", 2: "HIGHLIGHT" },
 						bulkSoundTypes: Array.from(this._bulkSoundTypes),
-						isMasterMonitor: this._isMasterMonitor
+						isMasterMonitor: this._isMasterMonitor,
 					});
 				}
 			} else {
 				// Normal operation - play sound immediately with deduplication
 				const now = Date.now();
-				
+
 				// For zero ETV items, check if sound was recently played by another monitor
 				if (itemType === TYPE_ZEROETV) {
 					const lastPlayed = this.#zeroETVSoundTimestamps.get(asin);
-					if (lastPlayed && (now - lastPlayed) < 1000) { // 1 second deduplication window
+					if (lastPlayed && now - lastPlayed < 1000) {
+						// 1 second deduplication window
 						if (this._settings.get("general.debugNotifications")) {
 							console.log("[NotificationMonitor] Skipping duplicate zero ETV sound:", {
 								asin: asin,
 								timeSinceLastPlay: now - lastPlayed,
-								monitorId: this._monitorId
+								monitorId: this._monitorId,
 							});
 						}
 						return true; // Skip playing sound but continue with other processing
 					}
 					// Record timestamp for deduplication
 					this.#zeroETVSoundTimestamps.set(asin, now);
-					
+
 					// Clean up old timestamps (older than 5 seconds)
 					for (const [key, timestamp] of this.#zeroETVSoundTimestamps) {
 						if (now - timestamp > 5000) {
@@ -2425,16 +2409,16 @@ class NotificationMonitor extends MonitorCore {
 						}
 					}
 				}
-				
+
 				console.log("[NotificationMonitor] Playing notification sound:", {
 					asin: asin,
 					itemType: itemType,
-					typeNames: {0: "REGULAR", 1: "ZEROETV", 2: "HIGHLIGHT"},
+					typeNames: { 0: "REGULAR", 1: "ZEROETV", 2: "HIGHLIGHT" },
 					tileVisible: tileVisible,
 					fetchingRecentItems: this._fetchingRecentItems,
 					playSoundEffect: playSoundEffect,
 					isMasterMonitor: this._isMasterMonitor,
-					feedPaused: this._feedPaused
+					feedPaused: this._feedPaused,
 				});
 				this._soundPlayerMgr.play(itemType);
 			}
@@ -3146,33 +3130,33 @@ class NotificationMonitor extends MonitorCore {
 			this._fetchingRecentItems = true;
 			this._bulkSoundPending = false;
 			this._bulkSoundTypes.clear();
-			
+
 			// PERFORMANCE DEBUG: Track bulk fetch performance
 			if (this._settings.get("general.debugBulkOperations")) {
 				console.time("[BULK-PERF] Last 100 Fetch Total Time");
 				console.log("[BULK-PERF] Starting bulk fetch", {
 					timestamp: Date.now(),
 					currentItemCount: this._itemsMgr.items.size,
-					visibleCount: this._visibilityStateManager?.getCount() || 0
+					visibleCount: this._visibilityStateManager?.getCount() || 0,
 				});
 			}
-			
+
 			// Clear any existing fetch timeout
 			if (this._fetchTimeout) {
 				clearTimeout(this._fetchTimeout);
 			}
-			
+
 			// Set a timeout to recover if fetch takes too long (30 seconds)
 			this._fetchTimeout = setTimeout(() => {
-				console.error('Fetch operation timed out after 30 seconds, cleaning up state');
+				console.error("Fetch operation timed out after 30 seconds, cleaning up state");
 				this.fetchRecentItemsEnd();
 			}, 30000);
-			
+
 			// Suspend visibility count updates during fetch to improve performance
 			if (this._visibilityStateManager && this._visibilityStateManager.suspendCountUpdates) {
 				this._visibilityStateManager.suspendCountUpdates(true);
 			}
-			
+
 			if (!this._feedPaused) {
 				this.#handlePauseClick();
 			}
@@ -3226,10 +3210,10 @@ class NotificationMonitor extends MonitorCore {
 				if (this._fetchTimeout) {
 					clearTimeout(this._fetchTimeout);
 				}
-				
+
 				// Set a timeout to recover if fetch takes too long (30 seconds)
 				this._fetchTimeout = setTimeout(() => {
-					console.error('Fetch operation timed out after 30 seconds, cleaning up state');
+					console.error("Fetch operation timed out after 30 seconds, cleaning up state");
 					this.fetchRecentItemsEnd();
 				}, 30000);
 
@@ -3237,7 +3221,7 @@ class NotificationMonitor extends MonitorCore {
 				if (this._visibilityStateManager && this._visibilityStateManager.suspendCountUpdates) {
 					this._visibilityStateManager.suspendCountUpdates(true);
 				}
-				
+
 				if (!this._feedPaused) {
 					this.#handlePauseClick();
 				}
@@ -3365,7 +3349,7 @@ class NotificationMonitor extends MonitorCore {
 	#updatePauseButtonCount(count) {
 		const pauseBtn = document.getElementById("pauseFeed");
 		const pauseBtnFixed = document.getElementById("pauseFeed-fixed");
-		
+
 		if (pauseBtn) {
 			pauseBtn.value = `Resume Feed (${count})`;
 		}
@@ -3400,18 +3384,18 @@ class NotificationMonitor extends MonitorCore {
 			}
 			document.getElementById("pauseFeed").value = "Pause & Buffer Feed";
 			document.getElementById("pauseFeed-fixed").value = "Pause & Buffer Feed";
-			
+
 			// TACTICAL FIX #1: Batch visibility updates to avoid 200+ individual DOM operations
 			// This is a temporary fix until we migrate to DOM-based counting
 			const tiles = this._gridContainer.querySelectorAll(".vvp-item-tile");
-			
+
 			// PERFORMANCE DEBUG: Track individual visibility updates
 			const perfDebug = this._settings.get("general.debugBulkOperations");
 			let visibilityUpdateCount = 0;
 			if (perfDebug) {
 				console.time("[BULK-PERF] Making items visible");
 			}
-			
+
 			// Collect all tiles that need visibility updates
 			const tilesToUpdate = [];
 			for (const node of tiles) {
@@ -3420,7 +3404,7 @@ class NotificationMonitor extends MonitorCore {
 					visibilityUpdateCount++;
 				}
 			}
-			
+
 			if (tilesToUpdate.length > 0) {
 				// Use requestAnimationFrame to batch DOM updates
 				requestAnimationFrame(() => {
@@ -3428,27 +3412,27 @@ class NotificationMonitor extends MonitorCore {
 					if (this._visibilityStateManager && this._visibilityStateManager.suspendCountUpdates) {
 						this._visibilityStateManager.suspendCountUpdates(true);
 					}
-					
+
 					// Update all feedPaused flags first (no reflow)
 					for (const node of tilesToUpdate) {
 						node.dataset.feedPaused = "false";
 					}
-					
+
 					// Then process filtering for all items in one batch
 					for (const node of tilesToUpdate) {
 						this.#processNotificationFiltering(node);
 					}
-					
+
 					// Resume count updates
 					if (this._visibilityStateManager && this._visibilityStateManager.suspendCountUpdates) {
 						this._visibilityStateManager.suspendCountUpdates(false);
 					}
-					
+
 					if (perfDebug) {
 						console.timeEnd("[BULK-PERF] Making items visible");
 						console.log("[BULK-PERF] Visibility updates completed", {
 							itemsUpdated: visibilityUpdateCount,
-							totalTiles: tiles.length
+							totalTiles: tiles.length,
 						});
 					}
 
@@ -3474,7 +3458,7 @@ class NotificationMonitor extends MonitorCore {
 					this._visibilityStateManager.setCount(newCount);
 				}
 				this._updateTabTitle(newCount);
-				
+
 				if (!isHoverPause) {
 					this.#emitGridEvent("grid:unpaused");
 				}

@@ -33,7 +33,7 @@ class VisibilityStateManager {
 	constructor(hookMgr, settings) {
 		this.#hookMgr = hookMgr;
 		this.#settings = settings;
-		
+
 		// Initialize debug mode based on settings or global flags
 		this.#updateDebugMode();
 	}
@@ -43,12 +43,12 @@ class VisibilityStateManager {
 	 * @private
 	 */
 	#updateDebugMode() {
-		this.#debugMode = typeof window !== "undefined" && (
-			window.DEBUG_VISIBILITY_STATE ||
-			window.DEBUG_TAB_TITLE ||
-			this.#settings?.get("general.debugTabTitle") ||
-			this.#settings?.get("general.debugVisibilityState")
-		);
+		this.#debugMode =
+			typeof window !== "undefined" &&
+			(window.DEBUG_VISIBILITY_STATE ||
+				window.DEBUG_TAB_TITLE ||
+				this.#settings?.get("general.debugTabTitle") ||
+				this.#settings?.get("general.debugVisibilityState"));
 	}
 
 	/**
@@ -70,8 +70,8 @@ class VisibilityStateManager {
 	#getStackTrace() {
 		const stack = new Error().stack;
 		// Remove the first few lines that are internal to this method
-		const lines = stack.split('\n').slice(3, 8);
-		return lines.join('\n');
+		const lines = stack.split("\n").slice(3, 8);
+		return lines.join("\n");
 	}
 
 	/**
@@ -81,13 +81,13 @@ class VisibilityStateManager {
 	 */
 	#addToHistory(operation) {
 		if (!this.#debugMode) return;
-		
+
 		this.#operationHistory.push({
 			...operation,
 			timestamp: new Date().toISOString(),
-			stackTrace: this.#getStackTrace()
+			stackTrace: this.#getStackTrace(),
 		});
-		
+
 		// Trim history if it gets too large
 		if (this.#operationHistory.length > this.#maxHistorySize) {
 			this.#operationHistory = this.#operationHistory.slice(-this.#maxHistorySize);
@@ -101,7 +101,7 @@ class VisibilityStateManager {
 	suspendCountUpdates(suspend) {
 		this.#suspendCountUpdates = suspend;
 		if (this.#debugMode) {
-			console.log(`[VisibilityStateManager] Count updates ${suspend ? 'suspended' : 'resumed'}`);
+			console.log(`[VisibilityStateManager] Count updates ${suspend ? "suspended" : "resumed"}`);
 		}
 	}
 
@@ -128,35 +128,36 @@ class VisibilityStateManager {
 		if (!element.id) {
 			element.id = `vh-item-${Math.random().toString(36).substr(2, 9)}`;
 		}
-		
+
 		const isFirstTimeTracking = !this.#trackedItems.has(element);
 		const wasVisible = this.isVisible(element);
 		const asin = element.dataset?.asin || element.getAttribute("data-asin") || "unknown";
 		const elementId = element.id;
-		
+
 		// ISSUE #3 FIX: Additional safeguard - check for duplicate elements with same ASIN
 		if (isFirstTimeTracking && asin !== "unknown") {
 			// Check if we already have another element with this ASIN tracked
-			const existingTrackedWithSameAsin = Array.from(document.querySelectorAll(`[data-asin="${asin}"]`))
-				.filter(el => el !== element && this.#trackedItems.has(el));
-			
+			const existingTrackedWithSameAsin = Array.from(document.querySelectorAll(`[data-asin="${asin}"]`)).filter(
+				(el) => el !== element && this.#trackedItems.has(el)
+			);
+
 			if (existingTrackedWithSameAsin.length > 0 && this.#debugMode) {
 				console.error("[VisibilityStateManager] DUPLICATE ELEMENT DETECTED", {
 					asin,
 					newElementId: elementId,
-					existingElements: existingTrackedWithSameAsin.map(el => ({
+					existingElements: existingTrackedWithSameAsin.map((el) => ({
 						id: el.id,
 						tracked: this.#trackedItems.has(el),
-						visible: this.isVisible(el)
+						visible: this.isVisible(el),
 					})),
-					stackTrace: this.#getStackTrace()
+					stackTrace: this.#getStackTrace(),
 				});
 			}
 		}
-		
-		// ISSUE #3 DEBUG: Track duplicate item detection
+
+		// Track specific item for debugging if needed
 		if (this.#debugMode && asin === "B0F32SHGNR") {
-			console.log("[VisibilityStateManager] B0F32SHGNR TRACKING CHECK", {
+			console.log("[VisibilityStateManager] Tracking check for specific item", {
 				asin,
 				isFirstTimeTracking,
 				trackedItemsSize: this.#trackedItems.size,
@@ -164,20 +165,20 @@ class VisibilityStateManager {
 				element,
 				hasElement: this.#trackedItems.has(element),
 				currentCount: this.#count,
-				stackTrace: this.#getStackTrace()
+				stackTrace: this.#getStackTrace(),
 			});
-			
+
 			// Check if there are multiple elements with same ASIN
 			const allElements = document.querySelectorAll(`[data-asin="${asin}"]`);
 			if (allElements.length > 1) {
 				console.warn("[VisibilityStateManager] MULTIPLE ELEMENTS WITH SAME ASIN", {
 					asin,
 					elementCount: allElements.length,
-					elements: Array.from(allElements).map(el => ({
+					elements: Array.from(allElements).map((el) => ({
 						id: el.id,
 						className: el.className,
-						isTracked: this.#trackedItems.has(el)
-					}))
+						isTracked: this.#trackedItems.has(el),
+					})),
 				});
 			}
 		}
@@ -189,8 +190,8 @@ class VisibilityStateManager {
 		const callKey = `${asin}-${visible}`;
 		const now = Date.now();
 		const lastCall = this._callFrequencyMap.get(callKey);
-		
-		if (lastCall && (now - lastCall.timestamp) < 1000) {
+
+		if (lastCall && now - lastCall.timestamp < 1000) {
 			lastCall.count++;
 			if (this.#debugMode) {
 				console.warn(`[VisibilityStateManager] Rapid repeated call detected for ${asin}`, {
@@ -198,7 +199,7 @@ class VisibilityStateManager {
 					timeSinceLastCall: now - lastCall.timestamp,
 					visible,
 					wasVisible,
-					stackTrace: this.#getStackTrace()
+					stackTrace: this.#getStackTrace(),
 				});
 			}
 		} else {
@@ -211,7 +212,7 @@ class VisibilityStateManager {
 				console.log("[VisibilityStateManager] Early exit - no visibility change", {
 					asin,
 					visible,
-					elementId
+					elementId,
 				});
 			}
 			// Still update the display style in case it changed
@@ -224,7 +225,7 @@ class VisibilityStateManager {
 			console.warn("[VisibilityStateManager] Element has no parent node", {
 				elementId,
 				asin,
-				visible
+				visible,
 			});
 		}
 
@@ -238,13 +239,13 @@ class VisibilityStateManager {
 			isFirstTimeTracking,
 			currentCount: this.#count,
 			hasCache: this.#visibilityCache.has(element),
-			displayStyle
+			displayStyle,
 		};
 
 		if (this.#debugMode) {
 			console.log("[VisibilityStateManager] setVisibility called", {
 				...operation,
-				stackTrace: this.#getStackTrace()
+				stackTrace: this.#getStackTrace(),
 			});
 		}
 
@@ -269,17 +270,16 @@ class VisibilityStateManager {
 					wasVisible,
 					willChangeVisibility: wasVisible !== visible,
 					decision: visible && wasVisible !== visible ? "will-increment" : "no-count-change",
-					stackTrace: this.#getStackTrace()
+					stackTrace: this.#getStackTrace(),
 				});
 			}
 		}
-		
+
 		// Track the change if visibility actually changed
 		if (wasVisible !== visible) {
-
 			// Defensive check: Validate count before modification
 			const oldCount = this.#count;
-			
+
 			// ISSUE #3 FIX: Improved logic to prevent double counting
 			// Only increment count if:
 			// 1. Item is becoming visible AND
@@ -296,7 +296,7 @@ class VisibilityStateManager {
 				// Already tracked element becoming invisible
 				this.#decrementCount(1, asin, "visibility-change-to-invisible");
 			}
-			
+
 			// Debug check for the specific problematic ASIN
 			if (this.#debugMode && asin === "B0F32SHGNR") {
 				console.log("[VisibilityStateManager] B0F32SHGNR visibility change processed", {
@@ -305,9 +305,13 @@ class VisibilityStateManager {
 					wasVisible,
 					isVisible: visible,
 					isFirstTimeTracking,
-					countChange: visible && (isFirstTimeTracking || !wasVisible) ? "+1" :
-					            (!visible && wasVisible && !isFirstTimeTracking) ? "-1" : "0",
-					currentCount: this.#count
+					countChange:
+						visible && (isFirstTimeTracking || !wasVisible)
+							? "+1"
+							: !visible && wasVisible && !isFirstTimeTracking
+								? "-1"
+								: "0",
+					currentCount: this.#count,
 				});
 			}
 
@@ -318,7 +322,7 @@ class VisibilityStateManager {
 					newCount: this.#count,
 					asin,
 					visible,
-					isFirstTimeTracking
+					isFirstTimeTracking,
 				});
 				this.#count = 0;
 			}
@@ -359,16 +363,16 @@ class VisibilityStateManager {
 				}
 				// Cache was stale, update it
 				this.#visibilityCache.set(element, actuallyVisible);
-				
+
 				if (this.#debugMode) {
 					console.warn("[VisibilityStateManager] Cache was stale", {
 						elementId: element.id,
 						asin: element.dataset?.asin,
 						cached,
-						actual: actuallyVisible
+						actual: actuallyVisible,
 					});
 				}
-				
+
 				return actuallyVisible;
 			}
 
@@ -379,7 +383,7 @@ class VisibilityStateManager {
 					elementId: element.id,
 					asin: element.dataset?.asin,
 					className: element.className,
-					stackTrace: new Error().stack.split('\n').slice(2, 5).join('\n')
+					stackTrace: new Error().stack.split("\n").slice(2, 5).join("\n"),
 				});
 			}
 
@@ -397,7 +401,7 @@ class VisibilityStateManager {
 					computedDisplay: computedStyle?.display,
 					currentCount: this.#count,
 					isTracked: this.#trackedItems.has(element),
-					stackTrace: this.#getStackTrace()
+					stackTrace: this.#getStackTrace(),
 				});
 			}
 
@@ -418,7 +422,7 @@ class VisibilityStateManager {
 				console.error("[VisibilityStateManager] Error checking visibility", {
 					error,
 					element,
-					elementId: element?.id
+					elementId: element?.id,
 				});
 			}
 			return false;
@@ -438,7 +442,7 @@ class VisibilityStateManager {
 				if (!element.isConnected && this.#debugMode) {
 					console.warn("[VisibilityStateManager] Element not connected to DOM", {
 						elementId: element.id,
-						asin: element.dataset?.asin
+						asin: element.dataset?.asin,
 					});
 				}
 				this.#computedStyleCache.set(element, window.getComputedStyle(element));
@@ -448,7 +452,7 @@ class VisibilityStateManager {
 			if (this.#debugMode) {
 				console.error("[VisibilityStateManager] Error getting computed style", {
 					error,
-					elementId: element?.id
+					elementId: element?.id,
 				});
 			}
 			return null;
@@ -521,12 +525,12 @@ class VisibilityStateManager {
 		// Debug logging
 		const debugTabTitle = this.#settings?.get("general.debugTabTitle");
 		const debugBulkOperations = this.#settings?.get("general.debugBulkOperations");
-		
+
 		if (debugBulkOperations) {
 			console.log("[VisibilityStateManager] recalculateCount called with", elements.length, "elements");
 			console.log("[VisibilityStateManager] Cache sizes before clear:", {
 				visibilityCache: "WeakMap (size unknown)",
-				computedStyleCache: "WeakMap (size unknown)"
+				computedStyleCache: "WeakMap (size unknown)",
 			});
 		}
 
@@ -542,30 +546,31 @@ class VisibilityStateManager {
 			if (!wasCached) {
 				uncachedCount++;
 			}
-			
+
 			const isVisible = this.isVisible(element);
 			if (isVisible) {
 				count++;
 			}
 
 			// Collect debug info
-			if (debugBulkOperations && debugElements.length < 10) { // Only log first 10 for brevity
+			if (debugBulkOperations && debugElements.length < 10) {
+				// Only log first 10 for brevity
 				debugElements.push({
 					asin: element.getAttribute("data-asin"),
 					display: element.style.display || "not set",
 					computedDisplay: window.getComputedStyle(element).display,
 					isVisible,
-					wasCached
+					wasCached,
 				});
 			}
 		}
-		
+
 		if (debugBulkOperations) {
 			console.log("[VisibilityStateManager] Visibility check results:", {
 				totalElements: elements.length,
 				uncachedElements: uncachedCount,
 				visibleCount: count,
-				sampleElements: debugElements
+				sampleElements: debugElements,
 			});
 		}
 
@@ -646,15 +651,15 @@ class VisibilityStateManager {
 			newCount: this.#count,
 			amount,
 			asin,
-			source
+			source,
 		};
 
 		this.#addToHistory(operation);
-		
+
 		if (this.#debugMode) {
 			console.log("[VisibilityStateManager] Count incremented", {
 				...operation,
-				stackTrace: this.#getStackTrace()
+				stackTrace: this.#getStackTrace(),
 			});
 		}
 
@@ -664,7 +669,7 @@ class VisibilityStateManager {
 				oldCount,
 				newCount: this.#count,
 				amount,
-				source
+				source,
 			});
 			this.#count = Math.max(0, oldCount);
 		}
@@ -697,15 +702,15 @@ class VisibilityStateManager {
 			newCount: this.#count,
 			amount,
 			asin,
-			source
+			source,
 		};
 
 		this.#addToHistory(operation);
-		
+
 		if (this.#debugMode) {
 			console.log("[VisibilityStateManager] Count decremented", {
 				...operation,
-				stackTrace: this.#getStackTrace()
+				stackTrace: this.#getStackTrace(),
 			});
 		}
 
@@ -715,7 +720,7 @@ class VisibilityStateManager {
 				oldCount,
 				amount,
 				source,
-				asin
+				asin,
 			});
 		}
 
@@ -818,29 +823,29 @@ class VisibilityStateManager {
 	 * @returns {Object} Validation results
 	 */
 	validateState(elements) {
-		const actualVisibleCount = Array.from(elements).filter(el => this.isVisible(el)).length;
+		const actualVisibleCount = Array.from(elements).filter((el) => this.isVisible(el)).length;
 		const isValid = actualVisibleCount === this.#count;
-		
+
 		const result = {
 			isValid,
 			expectedCount: this.#count,
 			actualCount: actualVisibleCount,
-			difference: this.#count - actualVisibleCount
+			difference: this.#count - actualVisibleCount,
 		};
 
 		if (!isValid) {
 			console.error("[VisibilityStateManager] State validation failed!", result);
-			
+
 			if (this.#debugMode) {
 				// Log details about each element
-				const elementDetails = Array.from(elements).map(el => ({
+				const elementDetails = Array.from(elements).map((el) => ({
 					asin: el.dataset?.asin || el.getAttribute("data-asin"),
 					isVisible: this.isVisible(el),
 					isTracked: this.#trackedItems.has(el),
 					display: el.style.display,
-					computedDisplay: window.getComputedStyle(el).display
+					computedDisplay: window.getComputedStyle(el).display,
 				}));
-				
+
 				console.log("[VisibilityStateManager] Element details:", elementDetails);
 			}
 		}
@@ -856,12 +861,12 @@ class VisibilityStateManager {
 	#emitCountChanged(source = "unknown") {
 		// Update debug mode in case it changed
 		this.#updateDebugMode();
-		
+
 		if (this.#debugMode) {
 			console.log(`[VisibilityStateManager] Count changed to: ${this.#count}`, {
 				source,
 				timestamp: new Date().toISOString(),
-				recentHistory: this.#operationHistory.slice(-5)
+				recentHistory: this.#operationHistory.slice(-5),
 			});
 		}
 

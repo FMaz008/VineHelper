@@ -30,10 +30,10 @@ if (typeof chrome !== "undefined" && chrome.storage) {
 				"general.blurKeywords",
 				"notification.hideList",
 				"notification.pushNotifications",
-				"notification.pushNotificationsAFA"
+				"notification.pushNotificationsAFA",
 			];
-			
-			if (relevantKeys.some(key => changes[key])) {
+
+			if (relevantKeys.some((key) => changes[key])) {
 				// Update the handler's cached settings
 				if (transformHandler) {
 					transformHandler.updateCachedSettings();
@@ -58,29 +58,29 @@ function transformHandlerWrapper(data) {
 }
 
 function outputHandler(data) {
-	// ISSUE #3 DEBUG: Track item processing
 	const debugNotifications = Settings.get("general.debugNotifications");
 	const asin = data.notification?.item?.getAsin?.() || data.notification?.item?.asin || data.asin;
-	
+
+	// Track specific item processing for debugging if needed
 	if (debugNotifications && asin === "B0F32SHGNR") {
-		console.log("[NewItemStreamProcessing] B0F32SHGNR PROCESSING", {
+		console.log("[NewItemStreamProcessing] Processing specific item", {
 			asin,
 			hasNotification: !!data.notification,
 			dataKeys: Object.keys(data),
 			timestamp: Date.now(),
-			stackTrace: new Error().stack
+			stackTrace: new Error().stack,
 		});
 	}
-	
+
 	// Handle notification if present
 	if (data.notification) {
 		const asin = data.notification.item?.getAsin?.() || data.notification.item?.asin;
 		const now = Date.now();
-		
+
 		// Check for duplicate OS notifications
 		const lastNotificationTime = recentOSNotifications.get(asin);
-		const isDuplicate = lastNotificationTime && (now - lastNotificationTime) < OS_NOTIFICATION_DEDUP_WINDOW;
-		
+		const isDuplicate = lastNotificationTime && now - lastNotificationTime < OS_NOTIFICATION_DEDUP_WINDOW;
+
 		if (debugNotifications) {
 			console.log("[NewItemStreamProcessing] OS notification check:", {
 				title: data.notification.title,
@@ -88,28 +88,28 @@ function outputHandler(data) {
 				hasOutputFunction: !!outputFunctions.push,
 				timestamp: now,
 				isDuplicate: isDuplicate,
-				timeSinceLastNotification: lastNotificationTime ? now - lastNotificationTime : null
+				timeSinceLastNotification: lastNotificationTime ? now - lastNotificationTime : null,
 			});
 		}
-		
+
 		if (!isDuplicate) {
 			// Record this notification
 			recentOSNotifications.set(asin, now);
-			
+
 			// Clean up old entries (older than 10 seconds)
 			for (const [key, timestamp] of recentOSNotifications) {
 				if (now - timestamp > 10000) {
 					recentOSNotifications.delete(key);
 				}
 			}
-			
+
 			// Send the OS notification
 			outputFunctions.push(data.notification.title, data.notification.item);
 		} else if (debugNotifications) {
 			console.warn("[NewItemStreamProcessing] Skipping duplicate OS notification for ASIN:", asin);
 		}
 	}
-	
+
 	// Broadcast the notification
 	outputFunctions.broadcast(data);
 }
@@ -119,10 +119,7 @@ const filterStream = dataStream.filter(filterHandler);
 const transformStream = dataStream.transformer(transformHandlerWrapper);
 
 // Use single pipeline instead of multiple transforms
-dataStream
-	.pipe(filterStream)
-	.pipe(transformStream)
-	.output(outputHandler);
+dataStream.pipe(filterStream).pipe(transformStream).output(outputHandler);
 
 function broadcastFunction(fct) {
 	outputFunctions.broadcast = fct;

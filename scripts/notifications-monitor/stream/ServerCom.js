@@ -44,7 +44,7 @@ class ServerCom {
 		if (Settings.get("general.debugNotifications")) {
 			console.log("[ServerCom] Initializing notification push function:", {
 				isMasterMonitor: this._monitor._isMasterMonitor,
-				monitorId: this._monitor._monitorId
+				monitorId: this._monitor._monitorId,
 			});
 		}
 		if (this._monitor._isMasterMonitor) {
@@ -104,7 +104,10 @@ class ServerCom {
 		// Skip messages from our own instance to prevent duplicate processing
 		if (data.sourceInstanceId === this.#instanceId) {
 			if (this._monitor._settings.get("general.debugServercom")) {
-				console.log("[ServerCom] Skipping own broadcast message", { type: data.type, sourceInstanceId: data.sourceInstanceId });
+				console.log("[ServerCom] Skipping own broadcast message", {
+					type: data.type,
+					sourceInstanceId: data.sourceInstanceId,
+				});
 			}
 			return false;
 		}
@@ -160,22 +163,22 @@ class ServerCom {
 			if (itemKey) {
 				const now = Date.now();
 				const lastProcessed = this.#processedItems.get(itemKey);
-				
+
 				// Skip if we've processed this item in the last 2 seconds
-				if (lastProcessed && (now - lastProcessed) < 2000) {
+				if (lastProcessed && now - lastProcessed < 2000) {
 					if (this._monitor._settings.get("general.debugServercom")) {
 						console.log("[ServerCom] Skipping duplicate item", {
 							asin: itemKey,
 							timeSinceLastProcess: now - lastProcessed,
-							sourceInstanceId: data.sourceInstanceId
+							sourceInstanceId: data.sourceInstanceId,
 						});
 					}
 					return;
 				}
-				
+
 				// Track this item as processed
 				this.#processedItems.set(itemKey, now);
-				
+
 				// Clean up old entries (older than 10 seconds)
 				for (const [asin, timestamp] of this.#processedItems) {
 					if (now - timestamp > 10000) {
@@ -183,7 +186,7 @@ class ServerCom {
 					}
 				}
 			}
-			
+
 			if (this._monitor._settings.get("general.debugServercom")) {
 				console.log("[ServerCom] newItem", data);
 			}
@@ -207,7 +210,10 @@ class ServerCom {
 				for (const itemData of JSON.parse(data.data)) {
 					if (itemData.type == "newItem") {
 						try {
-							const item = this.#createValidatedItem(itemData.item?.data, `fetch100 batch item ${itemIndex}`);
+							const item = this.#createValidatedItem(
+								itemData.item?.data,
+								`fetch100 batch item ${itemIndex}`
+							);
 							if (item) {
 								await this._monitor.addTileInGrid(item, "Fetch latest");
 							}
@@ -235,7 +241,9 @@ class ServerCom {
 
 			const queueTable = { AI: "encore", AFA: "last_chance", RFY: "potluck" };
 			const url = `https://www.amazon.${this._monitor._i13nMgr.getDomainTLD()}/vine/vine-items?queue=${queueTable[queue]}&page=${page}#AR`;
-			console.log(`${new Date().toLocaleString()} - Reloading page: ${queue} page ${page}`);
+			if (this._monitor._settings.get("general.debugAutoload")) {
+				console.log(`${new Date().toLocaleString()} - Reloading page: ${queue} page ${page}`);
+			}
 			this._monitor.fetchAutoLoadUrl(url, queue, page);
 		}
 	}
@@ -324,7 +332,7 @@ class ServerCom {
 	#dataBuffering(data) {
 		// Add source instance ID to prevent self-processing
 		const dataWithSource = { ...data, sourceInstanceId: this.#instanceId };
-		
+
 		if (!this.fetch100) {
 			this._monitor._channel.postMessage(dataWithSource);
 			// Don't process our own broadcast messages
@@ -335,7 +343,11 @@ class ServerCom {
 		if (data.type == "fetchRecentItemsEnd") {
 			// Stringify once and reuse to avoid duplicate memory allocation
 			const stringifiedBuffer = JSON.stringify(this.#dataBuffer);
-			this._monitor._channel.postMessage({ type: "fetch100", data: stringifiedBuffer, sourceInstanceId: this.#instanceId });
+			this._monitor._channel.postMessage({
+				type: "fetch100",
+				data: stringifiedBuffer,
+				sourceInstanceId: this.#instanceId,
+			});
 			// Don't process our own broadcast messages
 			// this.processBroadcastMessage({ type: "fetch100", data: stringifiedBuffer }); // Removed
 			this.#dataBuffer = [];
@@ -357,7 +369,9 @@ class ServerCom {
 			//Only display notification for products with a title and image url
 			//And that are more recent than the latest notification received.
 			if (item.data.img_url == "" || item.data.title == "") {
-				console.log("FETCH LATEST: item without title or image url: " + item.data.asin);
+				if (this._monitor._settings.get("general.debugServercom")) {
+					console.log("FETCH LATEST: item without title or image url: " + item.data.asin);
+				}
 				continue;
 			}
 
@@ -386,14 +400,14 @@ class ServerCom {
 			asin: itemInfo.asin,
 			isMasterMonitor: isMasterMonitor,
 			hasMonitor: !!this._monitor,
-			timestamp: Date.now()
+			timestamp: Date.now(),
 		});
 		chrome.runtime.sendMessage({
 			type: "pushNotification",
 			item: itemInfo,
 			title: notificationTitle,
 		});
-	}
+	};
 
 	destroy() {
 		// Clear the service worker status timer to prevent memory leak

@@ -84,7 +84,7 @@ class MasterSlave {
 					event.data.type !== "masterMonitorPing" &&
 					event.data.type !== "masterMonitorPong"
 				) {
-					console.log("MasterSlave: Received message:", event.data);
+					console.log("[MasterSlave] Received message:", event.data);
 				}
 
 				// Handle broadcast messages (no destination required)
@@ -106,11 +106,13 @@ class MasterSlave {
 						this.#masterMonitorId = event.data.sender;
 						this.#masterMonitorLastActivity = Date.now();
 						if (this.#isMasterMonitor()) {
-							console.log("[MasterSlave] Setting as master monitor:", {
-								monitorId: this.#monitorId,
-								sender: event.data.sender,
-								timestamp: Date.now()
-							});
+							if (debugCoordination) {
+								console.log("[MasterSlave] Setting as master monitor:", {
+									monitorId: this.#monitorId,
+									sender: event.data.sender,
+									timestamp: Date.now(),
+								});
+							}
 							this._monitor.setMasterMonitor();
 							//Send a pong for the slave monitors to be marked as such
 							try {
@@ -118,17 +120,19 @@ class MasterSlave {
 							} catch (error) {
 								console.warn("[MasterSlave] Failed to send master pong:", error);
 							}
-	
+
 							//Update the status of the master monitor
 							if (this._monitor._serverComMgr && this._monitor._serverComMgr.updateServicesStatus) {
 								this._monitor._serverComMgr.updateServicesStatus();
 							}
 						} else {
-							console.log("[MasterSlave] Setting as slave monitor:", {
-								monitorId: this.#monitorId,
-								masterMonitorId: this.#masterMonitorId,
-								timestamp: Date.now()
-							});
+							if (debugCoordination) {
+								console.log("[MasterSlave] Setting as slave monitor:", {
+									monitorId: this.#monitorId,
+									masterMonitorId: this.#masterMonitorId,
+									timestamp: Date.now(),
+								});
+							}
 							this._monitor.setSlaveMonitor();
 						}
 					}
@@ -292,7 +296,7 @@ class MasterSlave {
 		console.log("[MasterSlave] Promoting self to master:", {
 			monitorId: this.#monitorId,
 			previousMaster: this.#masterMonitorId,
-			timestamp: Date.now()
+			timestamp: Date.now(),
 		});
 		this.#masterMonitorId = this.#monitorId;
 		this.#masterMonitorLastActivity = Date.now();
