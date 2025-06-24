@@ -60,7 +60,9 @@ class ItemsMgr {
 	 */
 	sortItems() {
 		// Only proceed if there are items to sort
-		if (this.items.size === 0) return;
+		if (this.items.size === 0) {
+			return [];
+		}
 
 		const sortType = this._settings.get("notification.monitor.sortType");
 
