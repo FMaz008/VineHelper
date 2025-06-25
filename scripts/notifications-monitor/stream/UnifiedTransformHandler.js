@@ -28,10 +28,6 @@ class UnifiedTransformHandler {
 
 		// Initialize cached settings
 		this.updateCachedSettings();
-
-		// Bind methods to ensure correct context
-		this.transform = this.transform.bind(this);
-		this.filter = this.filter.bind(this);
 	}
 
 	/**
