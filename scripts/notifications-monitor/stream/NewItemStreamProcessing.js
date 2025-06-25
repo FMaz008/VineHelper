@@ -239,11 +239,13 @@ dataStream.input = (function(originalInput) {
 	};
 })(dataStream.input.bind(dataStream));
 
-const filterStream = dataStream.filter(filterHandler);
+//ALL the Transformers needs to run before the filter
+//because it will generate the highlight match, which the filter for hide keywords needs to use
 const transformStream = dataStream.transformer(transformHandlerWrapper);
+const filterStream = dataStream.filter(filterHandler);
 
 // Use single pipeline instead of multiple transforms
-dataStream.pipe(filterStream).pipe(transformStream).output(outputHandler);
+dataStream.pipe(transformStream).pipe(filterStream).output(outputHandler);
 
 function broadcastFunction(fct) {
 	outputFunctions.broadcast = fct;
