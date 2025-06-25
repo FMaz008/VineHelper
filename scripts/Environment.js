@@ -91,20 +91,12 @@ class Environment {
 	}
 
 	#loadBrowsingContext() {
-		//Determine if we are browsing a queue
-		const currentUrl = window.location.href;
-		let regex = /^.+?amazon\..+\/vine\/vine-items(?:\?(queue|search)=(.+?))?(?:[#&].*)?$/;
-		let arrMatches = currentUrl.match(regex);
-		this.data.vineQueue = null;
-		if (arrMatches != null) {
-			this.data.vineBrowsingListing = true;
-			if (arrMatches[1] == "queue" && arrMatches[2] != undefined) {
-				this.data.vineQueue = arrMatches[2];
-			} else if (arrMatches[1] == undefined) {
-				this.data.vineQueue = "all_items"; //Default ALL
-			} else {
-				this.data.vineQueue = null; //Could be a ?search, (but not a &search).
-			}
+		//Try to obtain the queue from the vvpContext
+		this.data.vineQueue = this.#readQueue(false);
+
+		//If the queue was not obtained from the vvpContext, try to obtain it from the URL
+		if (!this.data.vineQueue) {
+			this.#readQueueFromURL("all_items");
 		}
 
 		//Determine if we are currently searching for an item
@@ -243,6 +235,35 @@ class Environment {
 			status = null;
 		}
 		return status;
+	}
+
+	#readQueue(defaultQueue = false) {
+		try {
+			const vvpContext = this.#readVVPContext();
+			if (vvpContext?.queueKey) {
+				this.data.vineBrowsingListing = true;
+			}
+			return vvpContext?.queueKey || defaultQueue;
+		} catch (err) {
+			return defaultQueue;
+		}
+	}
+
+	#readQueueFromURL(defaultQueue = false) {
+		//Determine if we are browsing a queue
+		const currentUrl = window.location.href;
+		let regex = /^.+?amazon\..+\/vine\/vine-items(?:\?(queue|search)=(.+?))?(?:[#&].*)?$/;
+		let arrMatches = currentUrl.match(regex);
+		if (arrMatches != null) {
+			this.data.vineBrowsingListing = true;
+			if (arrMatches[1] == "queue" && arrMatches[2] != undefined) {
+				this.data.vineQueue = arrMatches[2];
+			} else if (arrMatches[1] == undefined) {
+				this.data.vineQueue = defaultQueue; //Default queue
+			} else {
+				this.data.vineQueue = defaultQueue; //Could be a ?search, (but not a &search).
+			}
+		}
 	}
 
 	#readVVPContext() {
