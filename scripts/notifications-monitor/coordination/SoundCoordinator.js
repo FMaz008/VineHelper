@@ -22,6 +22,7 @@ class SoundCoordinator {
 	#settings = null;
 	#CACHE_DURATION = 1000; // Default 1 second cache for deduplication
 	#CLEANUP_INTERVAL = 5000; // Clean up old entries every 5 seconds
+	#isBulkFetchActive = false; // Track if any monitor is in bulk fetch mode
 
 	constructor(soundPlayerMgr, settings) {
 		if (SoundCoordinator.#instance) {
@@ -31,13 +32,13 @@ class SoundCoordinator {
 		this.#soundPlayerMgr = soundPlayerMgr;
 		this.#settings = settings;
 
-		// Use a separate deduplication window setting if available, otherwise default to 1 second
-		// This is intentionally separate from soundCooldownDelay which serves a different purpose
+		// Use the existing soundCooldownDelay setting for deduplication
+		// Default to 2000ms (2 seconds) if not set
 		try {
-			this.#CACHE_DURATION = this.#settings?.get("notification.soundDeduplicationWindow") || 1000;
+			this.#CACHE_DURATION = this.#settings?.get("notification.soundCooldownDelay") || 2000;
 		} catch (e) {
 			// Setting might not exist in older installations, use default
-			this.#CACHE_DURATION = 1000;
+			this.#CACHE_DURATION = 2000;
 		}
 
 		// Initialize BroadcastChannel if available
@@ -68,6 +69,19 @@ class SoundCoordinator {
 	tryPlaySound(asin, itemType, tileVisible) {
 		if (!asin) return false;
 
+		// During bulk fetch, individual sounds should be suppressed
+		// They will be accumulated and played as a bulk sound instead
+		if (this.#isBulkFetchActive) {
+			if (this.#settings?.get("general.debugNotifications")) {
+				console.log("[SoundCoordinator] Suppressing individual sound during bulk fetch:", {
+					asin,
+					itemType,
+					tileVisible,
+				});
+			}
+			return false;
+		}
+
 		const now = Date.now();
 
 		// Check if this item's sound was recently played
@@ -79,10 +93,11 @@ class SoundCoordinator {
 			}
 		}
 
-		// Mark this item as played
+		// Mark this item as played BEFORE broadcasting or playing
+		// This reduces the race condition window
 		this.#recentlyPlayedItems.set(asin, now);
 
-		// Broadcast to other monitors that we're playing this sound
+		// Broadcast to other monitors immediately
 		if (this.#channel) {
 			try {
 				this.#channel.postMessage({
@@ -95,8 +110,19 @@ class SoundCoordinator {
 			}
 		}
 
-		// Play the sound
-		this.#soundPlayerMgr.play(itemType);
+		// Small delay for slave monitors to allow master's broadcast to arrive
+		// This is a simple way to reduce race conditions without complex locking
+		if (!tileVisible) {
+			// If tile is not visible in this monitor, it's likely a slave
+			// Add a small delay to let master play first
+			setTimeout(() => {
+				this.#soundPlayerMgr.play(itemType);
+			}, 50);
+		} else {
+			// Play immediately if tile is visible (likely master)
+			this.#soundPlayerMgr.play(itemType);
+		}
+		
 		return true;
 	}
 
@@ -121,41 +147,65 @@ class SoundCoordinator {
 	 * Attempt to play a bulk sound (for multiple items at once)
 	 * @param {Set<number>} itemTypes - Set of item types found during bulk operation
 	 * @param {string} context - Context identifier for deduplication (e.g., "bulk-fetch")
-	 * @returns {boolean} - True if sound was played, false if it was blocked as duplicate
+	 * @param {boolean} isMaster - Whether this is the master monitor
+	 * @returns {Promise<boolean>} - True if sound was played, false if it was blocked as duplicate
 	 */
-	tryPlayBulkSound(itemTypes, context = "bulk") {
+	async tryPlayBulkSound(itemTypes, context = "bulk", isMaster = false) {
 		const soundType = SoundCoordinator.getHighestPrioritySound(itemTypes);
 		if (soundType === null) return false;
 
-		const key = `${context}-${soundType}`;
+		// Use context alone as the key for bulk operations
+		// This ensures only one sound plays per bulk operation across all monitors
+		const key = context;
 		const now = Date.now();
 
-		// Check if this bulk sound was recently played
+		// First, check if any bulk sound for this context was recently played
 		if (this.#recentlyPlayedItems.has(key)) {
 			const lastPlayed = this.#recentlyPlayedItems.get(key);
 			if (now - lastPlayed < this.#CACHE_DURATION) {
-				// Bulk sound was recently played, skip
+				// A bulk sound for this context was recently played, skip
 				return false;
 			}
 		}
 
-		// Mark this bulk sound as played
+		// For bulk sounds, implement a simple priority system:
+		// Master always plays immediately, slaves wait a bit to check for broadcasts
+		if (!isMaster) {
+			// Wait a longer delay to ensure master's broadcast arrives
+			// Increased to 500ms to handle network/processing delays
+			await new Promise(resolve => setTimeout(resolve, 500));
+			
+			// Check again after the delay
+			if (this.#recentlyPlayedItems.has(key)) {
+				const lastPlayed = this.#recentlyPlayedItems.get(key);
+				const timeSince = Date.now() - lastPlayed;
+				if (timeSince < this.#CACHE_DURATION) {
+					// Another monitor already played a sound for this bulk operation
+					return false;
+				}
+			}
+		}
+
+		// Mark this bulk operation as having played a sound BEFORE playing
+		// This reduces the window for race conditions
 		this.#recentlyPlayedItems.set(key, now);
 
-		// Broadcast to other monitors
+		// Broadcast to other monitors immediately
 		if (this.#channel) {
 			try {
 				this.#channel.postMessage({
 					type: "sound-played",
-					asin: key, // Use the key as identifier
+					asin: key, // Use the context key as identifier
 					timestamp: now,
 				});
 			} catch (error) {
 				console.warn("[SoundCoordinator] Failed to broadcast bulk sound message:", error);
 			}
+		} else {
+			console.warn("[SoundCoordinator] No BroadcastChannel available for coordination");
 		}
 
-		// Play the sound
+		// Play the highest priority sound from the types found
 		this.#soundPlayerMgr.play(soundType);
 		return true;
 	}
@@ -178,12 +228,66 @@ class SoundCoordinator {
 		return false;
 	}
 
+	/**
+	 * Notify all monitors that bulk fetch is starting
+	 */
+	notifyBulkFetchStart() {
+		this.#isBulkFetchActive = true;
+		if (this.#channel) {
+			try {
+				this.#channel.postMessage({
+					type: "bulk-fetch-start",
+					timestamp: Date.now(),
+				});
+			} catch (error) {
+				console.warn("[SoundCoordinator] Failed to broadcast bulk-fetch-start:", error);
+			}
+		}
+	}
+
+	/**
+	 * Notify all monitors that bulk fetch has ended
+	 */
+	notifyBulkFetchEnd() {
+		this.#isBulkFetchActive = false;
+		if (this.#channel) {
+			try {
+				this.#channel.postMessage({
+					type: "bulk-fetch-end",
+					timestamp: Date.now(),
+				});
+			} catch (error) {
+				console.warn("[SoundCoordinator] Failed to broadcast bulk-fetch-end:", error);
+			}
+		}
+	}
+
+	/**
+	 * Check if any monitor is currently in bulk fetch mode
+	 * @returns {boolean}
+	 */
+	isBulkFetchActive() {
+		return this.#isBulkFetchActive;
+	}
+
 	#setupChannelListener() {
 		this.#channel.addEventListener("message", (event) => {
 			if (event.data.type === "sound-played") {
 				// Another monitor played a sound for this item
 				// Update our cache to prevent duplicate
 				this.#recentlyPlayedItems.set(event.data.asin, event.data.timestamp);
+			} else if (event.data.type === "bulk-fetch-start") {
+				// A monitor has started bulk fetch
+				this.#isBulkFetchActive = true;
+				if (this.#settings?.get("general.debugNotifications")) {
+					console.log("[SoundCoordinator] Bulk fetch started by another monitor");
+				}
+			} else if (event.data.type === "bulk-fetch-end") {
+				// A monitor has ended bulk fetch
+				this.#isBulkFetchActive = false;
+				if (this.#settings?.get("general.debugNotifications")) {
+					console.log("[SoundCoordinator] Bulk fetch ended by another monitor");
+				}
 			}
 		});
 	}

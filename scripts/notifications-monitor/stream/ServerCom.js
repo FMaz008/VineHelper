@@ -210,8 +210,16 @@ class ServerCom {
 				for (const itemData of JSON.parse(data.data)) {
 					if (itemData.type == "newItem") {
 						try {
+							// Validate itemData.item exists before processing
+							if (!itemData.item) {
+								console.error(`[ServerCom] fetch100 item ${itemIndex}: No item data provided`);
+								itemIndex++;
+								continue;
+							}
+							
+							// itemData.item is now always plain data after serialization
 							const item = this.#createValidatedItem(
-								itemData.item?.data,
+								itemData.item,
 								`fetch100 batch item ${itemIndex}`
 							);
 							if (item) {
@@ -219,6 +227,8 @@ class ServerCom {
 							}
 						} catch (itemError) {
 							console.error(`Error processing fetch100 item ${itemIndex}:`, itemError);
+							// Log the problematic data for debugging
+							console.error(`Problematic item data:`, itemData);
 							// Continue processing other items
 						}
 						itemIndex++;
@@ -339,17 +349,60 @@ class ServerCom {
 			// this.processBroadcastMessage(data); // Removed to prevent duplicate processing
 			return;
 		}
-		this.#dataBuffer.push(data);
+		
+		// Convert Item instances to plain data before buffering
+		const dataToBuffer = { ...data };
+		if (data.item instanceof Item) {
+			dataToBuffer.item = data.item.getAllInfo();
+			if (this._monitor._settings.get("general.debugServercom")) {
+				console.log("[ServerCom] Converting Item to plain data for buffering:", {
+					type: data.type,
+					hasItem: !!data.item,
+					isItemInstance: true,
+					asin: dataToBuffer.item.asin,
+					hasConvertedData: !!dataToBuffer.item
+				});
+			}
+		} else if (data.item) {
+			if (this._monitor._settings.get("general.debugServercom")) {
+				console.log("[ServerCom] Item already plain data:", {
+					type: data.type,
+					item: data.item,
+					itemType: typeof data.item
+				});
+			}
+		} else if (data.type === "newItem") {
+			console.error("[ServerCom] WARNING: newItem with no item data being buffered!", {
+				data: data,
+				dataKeys: Object.keys(data)
+			});
+		}
+		
+		this.#dataBuffer.push(dataToBuffer);
 		if (data.type == "fetchRecentItemsEnd") {
 			// Stringify once and reuse to avoid duplicate memory allocation
 			const stringifiedBuffer = JSON.stringify(this.#dataBuffer);
+			
+			// Send to other tabs via BroadcastChannel
 			this._monitor._channel.postMessage({
 				type: "fetch100",
 				data: stringifiedBuffer,
 				sourceInstanceId: this.#instanceId,
 			});
-			// Don't process our own broadcast messages
-			// this.processBroadcastMessage({ type: "fetch100", data: stringifiedBuffer }); // Removed
+			
+			// Process our own fetch100 message directly
+			// This ensures bulk fetch works even with a single tab
+			// We use sourceInstanceId: "self" instead of this.#instanceId to bypass
+			// the duplicate check. This way:
+			// - Single tab: Processes items once (from this direct call)
+			// - Multiple tabs: Master processes once (direct), slaves process once (broadcast)
+			// The broadcast message with real instanceId will be skipped by the master
+			this.processBroadcastMessage({
+				type: "fetch100",
+				data: stringifiedBuffer,
+				sourceInstanceId: "self" // Different from this.#instanceId to bypass duplicate check
+			});
+			
 			this.#dataBuffer = [];
 			this.fetch100 = false;
 		}
@@ -375,12 +428,24 @@ class ServerCom {
 				continue;
 			}
 
-			myStream.input({
+			const inputData = {
 				index: i,
 				type: "newItem",
 				domain: this._monitor._settings.get("general.country"),
 				item: item,
-			});
+			};
+			
+			if (this._monitor._settings.get("general.debugServercom")) {
+				console.log("[ServerCom] Pushing item to stream:", {
+					index: i,
+					asin: item.data.asin,
+					hasItem: !!item,
+					itemType: typeof item,
+					isItemInstance: item instanceof Item
+				});
+			}
+			
+			myStream.input(inputData);
 		}
 		myStream.input({ type: "fetchRecentItemsEnd" });
 	}
@@ -395,13 +460,15 @@ class ServerCom {
 		}
 		const itemInfo = item.getAllInfo();
 		const isMasterMonitor = this._monitor && this._monitor._isMasterMonitor;
-		console.log("[ServerCom] Sending OS notification:", {
-			title: notificationTitle,
-			asin: itemInfo.asin,
-			isMasterMonitor: isMasterMonitor,
-			hasMonitor: !!this._monitor,
-			timestamp: Date.now(),
-		});
+		if (this._monitor._settings.get("general.debugServercom")) {
+			console.log("[ServerCom] Sending OS notification:", {
+				title: notificationTitle,
+				asin: itemInfo.asin,
+				isMasterMonitor: isMasterMonitor,
+				hasMonitor: !!this._monitor,
+				timestamp: Date.now(),
+			});
+		}
 		chrome.runtime.sendMessage({
 			type: "pushNotification",
 			item: itemInfo,

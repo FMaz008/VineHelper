@@ -205,9 +205,9 @@ function processBroadcastMessage(data) {
 			if (Settings.get("general.debugNotifications") || Settings.get("general.debugServiceWorker")) {
 				console.log("[ServiceWorker] Calling pushNotification function:", {
 					title: data.title,
-					asin: item.getAsin(),
-					itemTitle: item.getTitle(),
-					hasImage: !!item.getImgUrl()
+					asin: data.item.asin,
+					itemTitle: data.item.title,
+					hasImage: !!data.item.img_url
 				});
 			}
 			

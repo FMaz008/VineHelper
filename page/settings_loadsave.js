@@ -327,7 +327,6 @@ async function initiateSettings() {
 	manageSlider("notification.monitor.regular.volume");
 	manageSlider("notification.monitor.zeroETV.volume");
 	manageSelectBox("notification.soundCooldownDelay");
-	manageSelectBox("notification.soundDeduplicationWindow");
 
 	//Select boxes
 	manageSelectBox("general.hiddenItemsCacheSize");
@@ -1421,6 +1420,16 @@ function manageSelectBox(key) {
 	const val = Settings.get(key);
 	const keyE = CSS.escape(key);
 	const selectObj = document.querySelector(`label[for='${keyE}'] select`);
+
+	// DEBUG: Log when select element is not found
+	if (!selectObj) {
+		console.error(`[VineHelper Debug] manageSelectBox: Cannot find select element for key "${key}"`);
+		console.error(`[VineHelper Debug] Selector used: label[for='${keyE}'] select`);
+		console.error(
+			`[VineHelper Debug] This is likely because the HTML element doesn't exist in the current view (popup vs full settings)`
+		);
+		return; // Exit early to prevent the error
+	}
 
 	for (let i = 0; i < selectObj.options.length; i++) {
 		if (selectObj.options[i].value == val) {

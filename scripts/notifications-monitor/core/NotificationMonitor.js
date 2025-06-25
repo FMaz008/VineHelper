@@ -81,8 +81,6 @@ class NotificationMonitor extends MonitorCore {
 	// Track items currently being processed for ETV to prevent duplicate processing
 	#etvProcessingItems = new Set();
 
-	// Track zero ETV sound timestamps for deduplication across monitors
-	#zeroETVSoundTimestamps = new Map();
 
 	// Track items currently being processed for visibility to prevent concurrent updates
 	#visibilityProcessingItems = new Set();
@@ -650,9 +648,11 @@ class NotificationMonitor extends MonitorCore {
 				if (!this._lastEarlyExitSummary || Date.now() - this._lastEarlyExitSummary > 30000) {
 					const totalEarlyExits = Array.from(this._earlyExitCount.values()).reduce((a, b) => a + b, 0);
 					if (totalEarlyExits > 10) {
-						console.log(
-							`[NotificationMonitor] Early exit summary: ${totalEarlyExits} total early exits across ${this._earlyExitCount.size} items`
-						);
+						if (this._settings.get("general.debugTabTitle")) {
+							console.log(
+								`[NotificationMonitor] Early exit summary: ${totalEarlyExits} total early exits across ${this._earlyExitCount.size} items`
+							);
+						}
 						// Reset counters after summary
 						this._earlyExitCount.clear();
 					}
@@ -738,6 +738,11 @@ class NotificationMonitor extends MonitorCore {
 	async fetchRecentItemsEnd() {
 		this._fetchingRecentItems = false;
 
+		// Notify all monitors that bulk fetch has ended
+		if (this._soundCoordinator) {
+			this._soundCoordinator.notifyBulkFetchEnd();
+		}
+
 		// PERFORMANCE DEBUG: Track fetch completion
 		const perfDebug = this._settings.get("general.debugBulkOperations");
 		if (perfDebug) {
@@ -767,7 +772,8 @@ class NotificationMonitor extends MonitorCore {
 
 			// Play the sound using SoundCoordinator to prevent duplicates across monitors
 			// SoundCoordinator will determine the highest priority sound to play
-			this._soundCoordinator.tryPlayBulkSound(this._bulkSoundTypes, "bulk-fetch");
+			// Pass isMaster flag to help with race condition prevention
+			this._soundCoordinator.tryPlayBulkSound(this._bulkSoundTypes, "bulk-fetch", this._isMasterMonitor);
 
 			// Reset bulk tracking
 			this._bulkSoundPending = false;
@@ -838,8 +844,10 @@ class NotificationMonitor extends MonitorCore {
 			// Note: Sorting is now handled by GridEventManager after placeholders are updated
 
 			// PERFORMANCE DEBUG: End total fetch time tracking
-			if (perfDebug) {
+			// Only end the timer if it was started (same debug setting was enabled at start)
+			if (perfDebug && this._bulkPerfTimerStarted) {
 				console.timeEnd("[BULK-PERF] Last 100 Fetch Total Time");
+				this._bulkPerfTimerStarted = false;
 			}
 		}, 100); // Small delay to ensure DOM has settled
 	}
@@ -1260,6 +1268,9 @@ class NotificationMonitor extends MonitorCore {
 		// Get all unavailable ASINs
 		const unavailableAsins = new Set();
 
+		// Debug logging for clearing unavailable items
+		const debugBulkOperations = this._settings.get("general.debugBulkOperations");
+
 		// Debug: Check all items and their unavailable status
 		const allItemsDebug = [];
 		const unavailableVisibilityDebug = [];
@@ -1296,8 +1307,6 @@ class NotificationMonitor extends MonitorCore {
 			}
 		});
 
-		// Debug logging for clearing unavailable items
-		const debugBulkOperations = this._settings.get("general.debugBulkOperations");
 		if (debugBulkOperations) {
 			console.log("[clearUnavailableItems] === STARTING CLEAR UNAVAIL OPERATION ===");
 			console.log("[clearUnavailableItems] Current visibility count:", this._visibilityStateManager?.getCount());
@@ -1649,16 +1658,21 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		//Process the item according to the notification type (highlight > 0etv > regular)
-		//This is what determine & trigger what sound effect to play
-		// Handle item-specific logic (sound, moving to top, etc.)
 		// Note: type flags are already set above before filtering
 		// Pass skipFiltering=true since filtering was already done in line 1322
+		// Pass playSoundEffect=false to prevent playing sounds here - we'll play after all processing
 		if (KWsMatch) {
-			this.#highlightedItemFound(tileDOM, true, true); //Play the highlight sound, skip filtering
+			this.#highlightedItemFound(tileDOM, false, true); //Don't play sound yet, skip filtering
 		} else if (parseFloat(etv_min) === 0) {
-			this.#zeroETVItemFound(tileDOM, true, true); //Play the zeroETV sound, skip filtering
+			this.#zeroETVItemFound(tileDOM, false, true); //Don't play sound yet, skip filtering
 		} else {
-			this.#regularItemFound(tileDOM, true, true); //Play the regular sound, skip filtering
+			this.#regularItemFound(tileDOM, false, true); //Don't play sound yet, skip filtering
+		}
+
+		// Now play sound based on accumulated types (highest priority wins)
+		const tileVisible = this.#isElementVisible(tileDOM);
+		if (tileVisible || this._fetchingRecentItems) {
+			this.#playItemSound(tileDOM, tileVisible);
 		}
 
 		//Process the bluring
@@ -1948,45 +1962,13 @@ class NotificationMonitor extends MonitorCore {
 					notif.dataset.typeHighlight = 1;
 
 					if (!wasHighlighted) {
-						// New highlight - play sound before visibility check
+						// New highlight detected during ETV re-evaluation
 						// Get current visibility for sound check
 						const currentlyVisible = this.#isElementVisible(notif);
 
-						// Play sound if visible or fetching
-						if (
-							(currentlyVisible || this._fetchingRecentItems) &&
-							this._settings.get("notification.monitor.highlight.sound") != "0"
-						) {
-							// During bulk fetch, defer the sound to avoid duplicates
-							if (this._fetchingRecentItems) {
-								this._bulkSoundPending = true;
-								this._bulkSoundTypes.add(TYPE_HIGHLIGHT);
-
-								if (this._settings.get("general.debugNotifications")) {
-									console.log("[NotificationMonitor] Bulk mode - deferring highlight sound:", {
-										asin: notif.dataset.asin,
-										currentlyVisible: currentlyVisible,
-										fetchingRecentItems: this._fetchingRecentItems,
-										soundSetting: this._settings.get("notification.monitor.highlight.sound"),
-										bulkSoundTypes: Array.from(this._bulkSoundTypes),
-										isMasterMonitor: this._isMasterMonitor,
-									});
-								}
-							} else {
-								// Normal operation - play sound immediately
-								console.log("[NotificationMonitor] Playing highlight sound:", {
-									asin: notif.dataset.asin,
-									currentlyVisible: currentlyVisible,
-									fetchingRecentItems: this._fetchingRecentItems,
-									soundSetting: this._settings.get("notification.monitor.highlight.sound"),
-									isMasterMonitor: this._isMasterMonitor,
-								});
-								// Use SoundCoordinator to prevent duplicate sounds across monitors
-								const asin = notif.dataset.asin;
-								if (asin) {
-									this._soundCoordinator.tryPlaySound(asin, TYPE_HIGHLIGHT, tileVisible);
-								}
-							}
+						// Play sound based on accumulated types (highlight has priority)
+						if (currentlyVisible || this._fetchingRecentItems) {
+							this.#playItemSound(notif, currentlyVisible);
 						}
 
 						// Move to top if not fetching and sort allows it
@@ -2105,13 +2087,16 @@ class NotificationMonitor extends MonitorCore {
 						});
 					}
 
-					// Only call the item found handler for sound and sorting, not for visibility
+					// Only call the item found handler for sorting, not for sound or visibility
 					// Pass skipFiltering=true to avoid duplicate processing
-					this.#zeroETVItemFound(
-						notif,
-						this._settings.get("notification.monitor.zeroETV.sound") != "0",
-						true
-					);
+					// Pass playSoundEffect=false - sound will be played based on accumulated types
+					this.#zeroETVItemFound(notif, false, true);
+
+					// Play sound based on accumulated types
+					const currentlyVisible = this.#isElementVisible(notif);
+					if (currentlyVisible || this._fetchingRecentItems) {
+						this.#playItemSound(notif, currentlyVisible);
+					}
 
 					// Visibility changes are already handled by VisibilityStateManager via processNotificationFiltering
 				} finally {
@@ -2343,6 +2328,72 @@ class NotificationMonitor extends MonitorCore {
 	 * @returns {boolean} - True if the item was found, false otherwise
 	 * @private
 	 */
+	/**
+	 * Play sound for an item based on its accumulated types
+	 * Priority: Highlight > Zero ETV > Regular
+	 * @param {HTMLElement} notif - The notification element
+	 * @param {boolean} tileVisible - Whether the tile is visible
+	 * @returns {boolean} - True if sound was played
+	 */
+	#playItemSound(notif, tileVisible) {
+		if (!notif || !notif.dataset.asin) return false;
+
+		const asin = notif.dataset.asin;
+		
+		// Determine the highest priority type for this item
+		let itemType;
+		if (notif.dataset.typeHighlight == 1) {
+			itemType = TYPE_HIGHLIGHT;
+		} else if (notif.dataset.typeZeroEtv == 1) {
+			itemType = TYPE_ZEROETV;
+		} else {
+			itemType = TYPE_REGULAR;
+		}
+
+		// Check if sound should be played based on settings
+		const soundSettings = {
+			[TYPE_HIGHLIGHT]: this._settings.get("notification.monitor.highlight.sound") != "0",
+			[TYPE_ZEROETV]: this._settings.get("notification.monitor.zeroETV.sound") != "0",
+			[TYPE_REGULAR]: this._settings.get("notification.monitor.regular.sound") != "0"
+		};
+
+		if (!soundSettings[itemType]) {
+			return false;
+		}
+
+		// During bulk fetch (either local or from another monitor), defer sounds
+		if (this._fetchingRecentItems || (this._soundCoordinator && this._soundCoordinator.isBulkFetchActive())) {
+			this._bulkSoundPending = true;
+			this._bulkSoundTypes.add(itemType);
+			
+			if (this._settings.get("general.debugNotifications")) {
+				console.log("[NotificationMonitor] Bulk mode - deferring sound:", {
+					asin: asin,
+					itemType: itemType,
+					typeNames: { 0: "REGULAR", 1: "ZEROETV", 2: "HIGHLIGHT" },
+					bulkSoundTypes: Array.from(this._bulkSoundTypes),
+					isMasterMonitor: this._isMasterMonitor,
+					localBulkFetch: this._fetchingRecentItems,
+					globalBulkFetch: this._soundCoordinator?.isBulkFetchActive(),
+				});
+			}
+			return false;
+		}
+
+		// Normal operation - use SoundCoordinator
+		if (this._settings.get("general.debugNotifications")) {
+			console.log("[NotificationMonitor] Playing item sound:", {
+				asin: asin,
+				itemType: itemType,
+				typeNames: { 0: "REGULAR", 1: "ZEROETV", 2: "HIGHLIGHT" },
+				tileVisible: tileVisible,
+				isMasterMonitor: this._isMasterMonitor,
+			});
+		}
+
+		return this._soundCoordinator.tryPlaySound(asin, itemType, tileVisible);
+	}
+
 	#handleItemFound(notif, itemType, playSoundEffect = true, skipFiltering = false) {
 		if (!notif) {
 			return false;
@@ -2361,69 +2412,8 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Play sound effect if conditions are met
-		if ((tileVisible || this._fetchingRecentItems) && playSoundEffect) {
-			const asin = notif.dataset.asin;
-
-			// During bulk fetch, just track that we need to play a sound
-			if (this._fetchingRecentItems) {
-				this._bulkSoundPending = true;
-				this._bulkSoundTypes.add(itemType);
-
-				if (this._settings.get("general.debugNotifications")) {
-					console.log("[NotificationMonitor] Bulk mode - deferring sound:", {
-						asin: asin,
-						itemType: itemType,
-						typeNames: { 0: "REGULAR", 1: "ZEROETV", 2: "HIGHLIGHT" },
-						bulkSoundTypes: Array.from(this._bulkSoundTypes),
-						isMasterMonitor: this._isMasterMonitor,
-					});
-				}
-			} else {
-				// Normal operation - play sound immediately with deduplication
-				const now = Date.now();
-
-				// For zero ETV items, check if sound was recently played by another monitor
-				if (itemType === TYPE_ZEROETV) {
-					const lastPlayed = this.#zeroETVSoundTimestamps.get(asin);
-					if (lastPlayed && now - lastPlayed < 1000) {
-						// 1 second deduplication window
-						if (this._settings.get("general.debugNotifications")) {
-							console.log("[NotificationMonitor] Skipping duplicate zero ETV sound:", {
-								asin: asin,
-								timeSinceLastPlay: now - lastPlayed,
-								monitorId: this._monitorId,
-							});
-						}
-						return true; // Skip playing sound but continue with other processing
-					}
-					// Record timestamp for deduplication
-					this.#zeroETVSoundTimestamps.set(asin, now);
-
-					// Clean up old timestamps (older than 5 seconds)
-					for (const [key, timestamp] of this.#zeroETVSoundTimestamps) {
-						if (now - timestamp > 5000) {
-							this.#zeroETVSoundTimestamps.delete(key);
-						}
-					}
-				}
-
-				console.log("[NotificationMonitor] Playing notification sound:", {
-					asin: asin,
-					itemType: itemType,
-					typeNames: { 0: "REGULAR", 1: "ZEROETV", 2: "HIGHLIGHT" },
-					tileVisible: tileVisible,
-					fetchingRecentItems: this._fetchingRecentItems,
-					playSoundEffect: playSoundEffect,
-					isMasterMonitor: this._isMasterMonitor,
-					feedPaused: this._feedPaused,
-				});
-				// Use SoundCoordinator to prevent duplicate sounds across monitors
-				const asin = notif.dataset.asin;
-				if (asin) {
-					this._soundCoordinator.tryPlaySound(asin, itemType, tileVisible);
-				}
-			}
-		}
+		// Note: We don't play sound here anymore - it will be played based on accumulated types
+		// This prevents duplicate sounds when items have multiple types
 
 		// Handle moving to top or sorting
 		if (!this._fetchingRecentItems) {
@@ -3131,9 +3121,16 @@ class NotificationMonitor extends MonitorCore {
 			this._fetchingRecentItems = true;
 			this._bulkSoundPending = false;
 			this._bulkSoundTypes.clear();
+			
+			// Notify all monitors that bulk fetch is starting
+			if (this._soundCoordinator) {
+				this._soundCoordinator.notifyBulkFetchStart();
+			}
 
 			// PERFORMANCE DEBUG: Track bulk fetch performance
+			this._bulkPerfTimerStarted = false;
 			if (this._settings.get("general.debugBulkOperations")) {
+				this._bulkPerfTimerStarted = true;
 				console.time("[BULK-PERF] Last 100 Fetch Total Time");
 				console.log("[BULK-PERF] Starting bulk fetch", {
 					timestamp: Date.now(),
@@ -3206,6 +3203,11 @@ class NotificationMonitor extends MonitorCore {
 				this._fetchingRecentItems = true;
 				this._bulkSoundPending = false;
 				this._bulkSoundTypes.clear();
+				
+				// Notify all monitors that bulk fetch is starting
+				if (this._soundCoordinator) {
+					this._soundCoordinator.notifyBulkFetchStart();
+				}
 
 				// Clear any existing fetch timeout
 				if (this._fetchTimeout) {

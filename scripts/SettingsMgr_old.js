@@ -405,7 +405,6 @@ class SettingsMgr {
 					thumbnail: true,
 				},
 				soundCooldownDelay: 2000,
-				soundDeduplicationWindow: 1000, // Window for preventing duplicate sounds across monitors
 			},
 
 			keyBindings: {
