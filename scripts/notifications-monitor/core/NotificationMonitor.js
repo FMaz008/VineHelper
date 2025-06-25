@@ -1200,8 +1200,6 @@ class NotificationMonitor extends MonitorCore {
 			this._countVerificationInterval = setInterval(() => {
 				this._verifyCount();
 			}, 30000);
-
-			console.log("[NotificationMonitor] Count verification enabled - will check every 30 seconds"); // eslint-disable-line no-console
 		}, 5000); // Wait 5 seconds for initial load
 	}
 
@@ -1252,12 +1250,6 @@ class NotificationMonitor extends MonitorCore {
 			// 2. It's specifically meant to fix count mismatches
 			// 3. It runs infrequently (every 30 seconds)
 			this._visibilityStateManager.recalculateCount(tiles);
-			console.log("[NotificationMonitor] Count recalculated to fix mismatch"); // eslint-disable-line no-console
-		} else {
-			console.log("[NotificationMonitor] Count verification passed:", {
-				count: actualVisibleCount,
-				timestamp: new Date().toISOString(),
-			});
 		}
 	}
 
@@ -1564,7 +1556,7 @@ class NotificationMonitor extends MonitorCore {
 		// Create fragment and add the tile to it
 		const fragment = document.createDocumentFragment();
 		fragment.appendChild(tileDOM);
-
+		
 		this._preserveScrollPosition(() => {
 			// Insert the tile based on sort type
 			if (this._sortType === TYPE_PRICE_DESC || this._sortType === TYPE_PRICE_ASC) {
@@ -1592,6 +1584,14 @@ class NotificationMonitor extends MonitorCore {
 		// Store a reference to the DOM element
 		const wasMarkedUnavailable = this._itemsMgr.storeItemDOMElement(asin, tileDOM); //Store the DOM element
 		const tile = this._itemsMgr.getItemTile(asin);
+		
+		// Verify the tile was actually inserted
+		if (!tileDOM.parentElement) {
+			console.error("[NotificationMonitor] CRITICAL: Tile was not inserted into DOM!", {
+				asin: asin,
+				tileDOMId: tileDOM?.id
+			});
+		}
 
 		// Track tile creation for memory debugging
 		if (window.MEMORY_DEBUGGER) {
@@ -3474,8 +3474,6 @@ class NotificationMonitor extends MonitorCore {
 	 * to prevent memory leaks
 	 */
 	destroy() {
-		console.log("🧹 Destroying NotificationMonitor and cleaning up event listeners..."); // eslint-disable-line no-console
-
 		// Remove grid container listener
 		if (this.#eventHandlers.grid && this._gridContainer) {
 			this._gridContainer.removeEventListener("click", this.#eventHandlers.grid);
@@ -3576,14 +3574,11 @@ class NotificationMonitor extends MonitorCore {
 		if (this._countVerificationInterval) {
 			clearInterval(this._countVerificationInterval);
 			this._countVerificationInterval = null;
-			console.log("🧹 Cleared count verification interval"); // eslint-disable-line no-console
 		}
 
 		// Clear references
 		this._gridContainer = null;
 		this._visibilityStateManager = null;
-
-		console.log("✅ NotificationMonitor cleanup complete"); // eslint-disable-line no-console
 	}
 }
 

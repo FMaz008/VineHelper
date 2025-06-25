@@ -222,7 +222,7 @@ async function init() {
 		return;
 	}
 	if (isPageLogin(document)) {
-		console.log("loginpage detected");
+		// Login page detected - no logging needed in production
 		channel.postMessage({ type: "loginpage" });
 		return;
 	}
@@ -403,7 +403,10 @@ async function init() {
 		//Initate the notifications monitor
 		// CRITICAL: Clean up any existing instance to prevent memory leaks
 		if (notificationMonitor) {
-			console.log("🧹 Cleaning up existing NotificationMonitor instance before creating new one");
+			const debugMemory = Settings.get("general.debugMemory");
+			if (debugMemory) {
+				console.log("🧹 Cleaning up existing NotificationMonitor instance before creating new one");
+			}
 			try {
 				notificationMonitor.destroy();
 			} catch (error) {

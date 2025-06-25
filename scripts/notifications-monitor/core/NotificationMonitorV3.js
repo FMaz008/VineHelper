@@ -108,6 +108,12 @@ class NotificationMonitorV3 extends NotificationMonitor {
 
 		//Remove the existing items.
 		this._gridContainer = document.querySelector("#vvp-items-grid");
+		
+		if (!this._gridContainer) {
+			console.error("[NotificationMonitorV3] CRITICAL: Grid container #vvp-items-grid not found!");
+			throw new Error("Grid container #vvp-items-grid not found");
+		}
+		
 		this._gridContainer.innerHTML = "";
 
 		//Check if the user is a gold tier user

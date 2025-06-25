@@ -69,7 +69,7 @@ class ServerCom {
 			return item;
 		} catch (error) {
 			// Item constructor already logs the specific error with data
-			console.error(`[ServerCom] ${context}: ${error.message}`);
+			console.error(`[ServerCom] ${context}: Item creation failed - ${error.message}`);
 			return null;
 		}
 	}
@@ -113,6 +113,14 @@ class ServerCom {
 		}
 
 		if (data.type == "masterMonitorPong") {
+			const debugCoordination = this._monitor._settings?.get("general.debugCoordination");
+			if (debugCoordination) {
+				console.log("[ServerCom] DEBUG: Received masterMonitorPong", {
+					isMasterMonitor: this._monitor._isMasterMonitor,
+					instanceId: this.#instanceId,
+					timestamp: Date.now(),
+				});
+			}
 			window.clearTimeout(this.#statusTimer);
 			this.#statusTimer = null;
 			this.#setMasterMonitorStatus(true, "Running as slave ...");
@@ -190,14 +198,21 @@ class ServerCom {
 			if (this._monitor._settings.get("general.debugServercom")) {
 				console.log("[ServerCom] newItem", data);
 			}
+			
 			//The broadcastChannel will pass the item as an object, not an instance of Item.
 			if (!(data.item instanceof Item)) {
+				const itemData = data.item?.data || data.item;
+				
 				data.item = this.#createValidatedItem(
-					data.item?.data,
+					itemData,
 					`newItem from BroadcastChannel (reason: ${data.reason || "unknown"})`
 				);
-				if (!data.item) return;
+				
+				if (!data.item) {
+					return;
+				}
 			}
+			
 			await this._monitor.addTileInGrid(data.item, data.reason);
 		}
 
@@ -344,9 +359,23 @@ class ServerCom {
 		const dataWithSource = { ...data, sourceInstanceId: this.#instanceId };
 
 		if (!this.fetch100) {
+			// Always broadcast to other tabs
 			this._monitor._channel.postMessage(dataWithSource);
-			// Don't process our own broadcast messages
-			// this.processBroadcastMessage(data); // Removed to prevent duplicate processing
+			
+			// Process locally only if this is the master monitor
+			// This ensures items appear in single-tab scenarios while preventing duplicates in multi-tab
+			if (this._monitor._isMasterMonitor) {
+				const debugCoordination = this._monitor._settings?.get("general.debugCoordination");
+				if (debugCoordination) {
+					console.log("[ServerCom] DEBUG: Processing data locally (master only)", {
+						type: data.type,
+						isMasterMonitor: this._monitor._isMasterMonitor,
+						instanceId: this.#instanceId,
+						timestamp: Date.now(),
+					});
+				}
+				this.processBroadcastMessage(data);
+			}
 			return;
 		}
 		

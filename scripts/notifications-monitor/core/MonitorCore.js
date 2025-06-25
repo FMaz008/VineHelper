@@ -100,6 +100,14 @@ class MonitorCore {
 	}
 
 	setMasterMonitor() {
+		const debugCoordination = this._settings?.get("general.debugCoordination");
+		if (debugCoordination) {
+			console.log("[MonitorCore] DEBUG: setMasterMonitor called", {
+				wasAlreadyMaster: this._isMasterMonitor,
+				timestamp: Date.now(),
+				stackTrace: new Error().stack.split('\n').slice(1, 4).join('\n'),
+			}); // eslint-disable-line no-console
+		}
 		console.log("[MonitorCore] Setting as MASTER monitor"); // eslint-disable-line no-console
 		this._isMasterMonitor = true;
 		this._ws = new Websocket(this);
@@ -107,6 +115,14 @@ class MonitorCore {
 		console.log("[MonitorCore] WebSocket and AutoLoad initialized"); // eslint-disable-line no-console
 	}
 	setSlaveMonitor() {
+		const debugCoordination = this._settings?.get("general.debugCoordination");
+		if (debugCoordination) {
+			console.log("[MonitorCore] DEBUG: setSlaveMonitor called", {
+				wasAlreadyMaster: this._isMasterMonitor,
+				timestamp: Date.now(),
+				stackTrace: new Error().stack.split('\n').slice(1, 4).join('\n'),
+			}); // eslint-disable-line no-console
+		}
 		console.log("[MonitorCore] Setting as SLAVE monitor"); // eslint-disable-line no-console
 		this._isMasterMonitor = false;
 		if (this._ws !== null) {

@@ -89,6 +89,14 @@ class MasterSlave {
 
 				// Handle broadcast messages (no destination required)
 				if (event.data.type === "masterMonitorPing") {
+					if (debugCoordination) {
+						console.log("[MasterSlave] DEBUG: Received masterMonitorPing", {
+							monitorId: this.#monitorId,
+							isMaster: this._monitor._isMasterMonitor,
+							masterMonitorId: this.#masterMonitorId,
+							timestamp: Date.now(),
+						});
+					}
 					if (this._monitor._isMasterMonitor) {
 						try {
 							this._monitor._channel.postMessage({ type: "masterMonitorPong" });
@@ -103,6 +111,25 @@ class MasterSlave {
 				if (event.data.destination === this.#monitorId || event.data.destination === "*") {
 					//A tab has claimed to be the master
 					if (event.data.type === "ImTheMaster") {
+						if (debugCoordination) {
+							console.log("[MasterSlave] DEBUG: Received ImTheMaster claim", {
+								myMonitorId: this.#monitorId,
+								claimingMonitorId: event.data.sender,
+								currentMasterId: this.#masterMonitorId,
+								wasIAlreadyMaster: this.#isMasterMonitor(),
+								timestamp: Date.now(),
+							});
+						}
+						
+						// Check for conflict - if we think we're master and someone else claims to be
+						if (this.#isMasterMonitor() && event.data.sender !== this.#monitorId) {
+							console.warn("[MasterSlave] DEBUG: CONFLICT DETECTED - Multiple masters!", {
+								myMonitorId: this.#monitorId,
+								otherMonitorId: event.data.sender,
+								timestamp: Date.now(),
+							});
+						}
+						
 						this.#masterMonitorId = event.data.sender;
 						this.#masterMonitorLastActivity = Date.now();
 						if (this.#isMasterMonitor()) {
@@ -155,10 +182,27 @@ class MasterSlave {
 
 					//A tab is asking if we are the master. This occurs whena new monitor is loaded.
 					if (event.data.type === "areYouTheMaster") {
+						if (debugCoordination) {
+							console.log("[MasterSlave] DEBUG: Received areYouTheMaster query", {
+								fromMonitor: event.data.sender,
+								myMonitorId: this.#monitorId,
+								amIMaster: this.#isMasterMonitor(),
+								masterMonitorId: this.#masterMonitorId,
+								timestamp: Date.now(),
+							});
+						}
+						
 						//Add the sender to the monitorSet
 						this.#monitorSet.add(event.data.sender);
 
 						if (this.#isMasterMonitor()) {
+							if (debugCoordination) {
+								console.log("[MasterSlave] DEBUG: Responding as master to query", {
+									toMonitor: event.data.sender,
+									myMonitorId: this.#monitorId,
+									timestamp: Date.now(),
+								});
+							}
 							try {
 								this._monitor._channel.postMessage({
 									type: "ImTheMaster",
@@ -237,6 +281,16 @@ class MasterSlave {
 
 			//Fail safe: In the event that there is no more master monitor active, promote a new one.
 			if (this.#masterMonitorLastActivity < Date.now() - 2000) {
+				const debugCoordination = this._monitor._settings?.get("general.debugCoordination");
+				if (debugCoordination) {
+					console.log("[MasterSlave] DEBUG: Master timeout detected", {
+						myMonitorId: this.#monitorId,
+						lastMasterId: this.#masterMonitorId,
+						lastActivity: this.#masterMonitorLastActivity,
+						currentTime: Date.now(),
+						timeSinceLastActivity: Date.now() - this.#masterMonitorLastActivity,
+					});
+				}
 				this.#monitorSet.delete(this.#masterMonitorId);
 				this.#promoteMyself();
 			}
@@ -244,14 +298,35 @@ class MasterSlave {
 	}
 
 	#checkIfMasterTab() {
+		const debugCoordination = this._monitor._settings?.get("general.debugCoordination");
+		if (debugCoordination) {
+			console.log("[MasterSlave] DEBUG: Starting master election", {
+				monitorId: this.#monitorId,
+				timestamp: Date.now(),
+				currentMaster: this.#masterMonitorId,
+			});
+		}
+
 		//By default, set us as the master monitor.
 		this.#masterMonitorId = this.#monitorId;
 		this.#masterMonitorLastActivity = Date.now();
+		if (debugCoordination) {
+			console.log("[MasterSlave] DEBUG: Setting self as master by default", {
+				monitorId: this.#monitorId,
+				timestamp: Date.now(),
+			});
+		}
 		this._monitor.setMasterMonitor();
 
 		//Query other tabs to see if there is already a master
 		try {
 			if (this._monitor && this._monitor._channel) {
+				if (debugCoordination) {
+					console.log("[MasterSlave] DEBUG: Querying for existing master", {
+						monitorId: this.#monitorId,
+						timestamp: Date.now(),
+					});
+				}
 				this._monitor._channel.postMessage({
 					type: "areYouTheMaster",
 					destination: "*",
@@ -293,11 +368,14 @@ class MasterSlave {
 	}
 
 	#promoteMyself() {
-		console.log("[MasterSlave] Promoting self to master:", {
-			monitorId: this.#monitorId,
-			previousMaster: this.#masterMonitorId,
-			timestamp: Date.now(),
-		});
+		const debugCoordination = this._monitor._settings?.get("general.debugCoordination");
+		if (debugCoordination) {
+			console.log("[MasterSlave] DEBUG: Promoting self to master:", {
+				monitorId: this.#monitorId,
+				previousMaster: this.#masterMonitorId,
+				timestamp: Date.now(),
+			});
+		}
 		this.#masterMonitorId = this.#monitorId;
 		this.#masterMonitorLastActivity = Date.now();
 
