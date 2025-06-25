@@ -6,9 +6,9 @@
  * maintaining backward compatibility.
  */
 
-import { SettingsMgrDI } from "/scripts/core/services/SettingsMgrDI.js";
-import { ChromeStorageAdapter } from "/scripts/infrastructure/StorageAdapter.js";
-import { container } from "/scripts/infrastructure/DIContainer.js";
+import { SettingsMgrDI } from "../core/services/SettingsMgrDI.js";
+import { ChromeStorageAdapter } from "./StorageAdapter.js";
+import { container } from "./DIContainer.js";
 
 // Register the storage adapter in the DI container
 container.register("storageAdapter", () => new ChromeStorageAdapter("local"), {
