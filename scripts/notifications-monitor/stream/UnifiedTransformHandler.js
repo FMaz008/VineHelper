@@ -56,7 +56,7 @@ class UnifiedTransformHandler {
 		}
 
 		// Apply hide filter
-		if (this.cachedSettings.hideListEnabled && this.cachedSettings.hideKeywords) {
+		if (this.cachedSettings.hideListEnabled && this.cachedSettings.hideKeywords && !data.item.data.KWsMatch) {
 			const hideMatch = sharedKeywordMatcher.match(
 				this.cachedSettings.hideKeywords,
 				data.item.data.title,

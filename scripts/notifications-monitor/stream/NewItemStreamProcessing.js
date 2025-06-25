@@ -26,10 +26,10 @@ if (typeof chrome !== "undefined" && chrome.storage) {
 				"general.blurKeywords",
 				"notification.hideList",
 				"notification.pushNotifications",
-				"notification.pushNotificationsAFA"
+				"notification.pushNotificationsAFA",
 			];
-			
-			if (relevantKeys.some(key => changes[key])) {
+
+			if (relevantKeys.some((key) => changes[key])) {
 				// Update the handler's cached settings
 				if (transformHandler) {
 					transformHandler.updateCachedSettings();
@@ -58,20 +58,18 @@ function outputHandler(data) {
 	if (data.notification) {
 		outputFunctions.push(data.notification.title, data.notification.item);
 	}
-	
 	// Broadcast the notification
 	outputFunctions.broadcast(data);
 }
 
 const dataStream = new Streamy();
-const filterStream = dataStream.filter(filterHandler);
+//ALL the Transformers needs to run before the filter
+//because it will generate the highlight match, which the filter for hide keywords needs to use
 const transformStream = dataStream.transformer(transformHandlerWrapper);
+const filterStream = dataStream.filter(filterHandler);
 
 // Use single pipeline instead of multiple transforms
-dataStream
-	.pipe(filterStream)
-	.pipe(transformStream)
-	.output(outputHandler);
+dataStream.pipe(filterStream).pipe(transformStream).output(outputHandler);
 
 function broadcastFunction(fct) {
 	outputFunctions.broadcast = fct;
