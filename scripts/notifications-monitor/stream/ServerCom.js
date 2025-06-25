@@ -1,15 +1,13 @@
 /*global chrome*/
 
-import {
-	broadcastFunction,
-	dataStream as myStream,
-	notificationPushFunction,
-} from "/scripts/notifications-monitor/stream/NewItemStreamProcessing.js";
+import { NewItemStreamProcessing } from "/scripts/notifications-monitor/stream/NewItemStreamProcessing.js";
 import { Item } from "/scripts/core/models/Item.js";
+
 class ServerCom {
 	static #instance = null;
 
 	_monitor = null;
+	#streamProcessor = null;
 
 	#serviceWorkerStatusTimer = null;
 	#statusTimer = null;
@@ -25,6 +23,9 @@ class ServerCom {
 		}
 		ServerCom.#instance = this;
 
+		// Initialize the stream processor
+		this.#streamProcessor = new NewItemStreamProcessing();
+
 		//Create a timer to check if the master monitor is still running
 		this.#serviceWorkerStatusTimer = window.setInterval(() => {
 			this.#updateMasterMonitorStatus();
@@ -33,12 +34,12 @@ class ServerCom {
 		this.#createEventListeners();
 
 		// Bind the dataBuffering function to preserve this context
-		broadcastFunction((data) => this.#dataBuffering(data));
+		this.#streamProcessor.setBroadcastFunction((data) => this.#dataBuffering(data));
 
 		//Only the master monitor should push notifications
 		//Otherwise we get duplicates push notifications.
 		if (this._monitor._isMasterMonitor) {
-			notificationPushFunction(this.#pushNotification);
+			this.#streamProcessor.setNotificationPushFunction(this.#pushNotification);
 		}
 	}
 
@@ -125,7 +126,7 @@ class ServerCom {
 			}
 			const item = this.#createValidatedItem(data.item, "newPreprocessedItem from WebSocket");
 			if (item) {
-				myStream.input({
+				this.#streamProcessor.input({
 					index: 0,
 					type: "newItem",
 					domain: this._monitor._settings.get("general.country"),
@@ -298,14 +299,14 @@ class ServerCom {
 				continue;
 			}
 
-			myStream.input({
+			this.#streamProcessor.input({
 				index: i,
 				type: "newItem",
 				domain: this._monitor._settings.get("general.country"),
 				item: item,
 			});
 		}
-		myStream.input({ type: "fetchRecentItemsEnd" });
+		this.#streamProcessor.input({ type: "fetchRecentItemsEnd" });
 	}
 
 	//#####################################################

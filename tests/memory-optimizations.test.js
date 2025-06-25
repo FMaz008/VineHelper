@@ -3,7 +3,6 @@
  */
 
 import { sharedKeywordMatcher } from "../scripts/core/utils/SharedKeywordMatcher.js";
-import { UnifiedTransformHandler } from "../scripts/notifications-monitor/stream/UnifiedTransformHandler.js";
 
 describe("Memory Optimizations", () => {
 	describe("SharedKeywordMatcher", () => {
@@ -71,104 +70,6 @@ describe("Memory Optimizations", () => {
 			// Test string keyword
 			const tabletMatch = sharedKeywordMatcher.match(keywords, "Android tablet", null, null, "test");
 			expect(tabletMatch).toBe("tablet");
-		});
-	});
-
-	describe("UnifiedTransformHandler", () => {
-		let mockSettings;
-		let handler;
-
-		beforeEach(() => {
-			mockSettings = {
-				get: jest.fn((key) => {
-					const settings = {
-						"general.hideKeywords": [{ contains: "hide" }],
-						"general.highlightKeywords": [{ contains: "highlight" }],
-						"general.blurKeywords": [{ contains: "blur" }],
-						"notification.hideList": true,
-						"notification.pushNotifications": true,
-						"notification.pushNotificationsAFA": true,
-					};
-					return settings[key];
-				}),
-			};
-
-			handler = new UnifiedTransformHandler(mockSettings);
-		});
-
-		test("should filter items based on hide keywords", () => {
-			const data = {
-				item: {
-					data: {
-						title: "Item to hide",
-						etv_min: 100,
-						etv_max: 200,
-					},
-				},
-			};
-
-			const result = handler.filter(data);
-			expect(result).toBe(false);
-		});
-
-		test("should apply all transforms in single pass", () => {
-			const data = {
-				item: {
-					data: {
-						asin: "B123",
-						title: "Test highlight item for blur",
-						etv_min: 100,
-						etv_max: 200,
-						date: "2024-01-01 12:00:00",
-						queue: "encore",
-						is_parent_asin: false,
-						enrollment_guid: "test-guid",
-						img_url: "test.jpg",
-					},
-				},
-			};
-
-			const result = handler.transform(data);
-
-			// Check highlight transform
-			expect(result.item.data.KWsMatch).toBe(true);
-			expect(result.item.data.KW).toBe("highlight");
-
-			// Check blur transform
-			expect(result.item.data.BlurKWsMatch).toBe(true);
-			expect(result.item.data.BlurKW).toBe("blur");
-
-			// Check search phrase (first 40 chars)
-			expect(result.item.data.search).toBe("Test highlight item for");
-
-			// Check timestamp
-			expect(result.item.data.timestamp).toBeDefined();
-			expect(typeof result.item.data.timestamp).toBe("number");
-		});
-
-		test("should handle notifications correctly", () => {
-			const data = {
-				item: {
-					data: {
-						asin: "B123",
-						title: "Test highlight item",
-						etv_min: 100,
-						etv_max: 200,
-						queue: "encore",
-						KWsMatch: true,
-						img_url: "test.jpg",
-						search: "Test highlight item",
-						is_parent_asin: false,
-						enrollment_guid: "test-guid",
-					},
-				},
-			};
-
-			const result = handler.transform(data);
-
-			expect(result.notification).toBeDefined();
-			expect(result.notification.title).toBe("Test highlight item");
-			expect(result.notification.item).toBeDefined();
 		});
 	});
 
