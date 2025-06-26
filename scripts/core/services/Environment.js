@@ -92,7 +92,7 @@ class Environment {
 
 	#loadBrowsingContext() {
 		//Try to obtain the queue from the vvpContext
-		this.data.vineQueue = this.#readQueue(false);
+		this.data.vineQueue = this.#readQueue(null);
 
 		//If the queue was not obtained from the vvpContext, try to obtain it from the URL
 		if (!this.data.vineQueue) {
@@ -252,7 +252,7 @@ class Environment {
 		}
 	}
 
-	#readQueue(defaultQueue = false) {
+	#readQueue(defaultQueue = null) {
 		try {
 			const vvpContext = this.#readVVPContext();
 			if (vvpContext?.queueKey) {
@@ -264,7 +264,7 @@ class Environment {
 		}
 	}
 
-	#readQueueFromURL(defaultQueue = false) {
+	#readQueueFromURL(defaultQueue = null) {
 		//Determine if we are browsing a queue
 		const currentUrl = window.location.href;
 		let regex = /^.+?amazon\..+\/vine\/vine-items(?:\?(queue|search)=(.+?))?(?:[#&].*)?$/;
