@@ -71,7 +71,7 @@ class AutoLoad {
 		}
 
 		if (!this.#isTimeWithinRange()) {
-			console.log(`${new Date().toLocaleString()} - Auto-load is not active at this time`);
+			//console.log(`${new Date().toLocaleString()} - Auto-load is not active at this time`);
 			this.resetReloadTimer(1000 * 60 * 15); //15 minutes
 			return;
 		}
@@ -83,7 +83,7 @@ class AutoLoad {
 			!this._monitor._settings.get("thorvarium.mobileandroid") &&
 			!this._monitor._settings.get("thorvarium.mobileios")
 		) {
-			console.log("sending Reload request");
+			//console.log("sending Reload request");
 			this.#ws.emit("reloadRequest", {
 				uuid: this._monitor._settings.get("general.uuid", false),
 				fid: this._monitor._settings.get("general.fingerprint.id", false),
@@ -106,9 +106,9 @@ class AutoLoad {
 		this.#displayTimer = setTimeout(() => {
 			const timerInMinutes = Math.floor(timer / 60 / 1000);
 			const secondsLeft = Math.floor((timer - timerInMinutes * 60 * 1000) / 1000);
-			console.log(
-				`${new Date().toLocaleString()} - Setting reload timer to ${timerInMinutes} minutes and ${secondsLeft} seconds`
-			);
+			//console.log(
+			//	`${new Date().toLocaleString()} - Setting reload timer to ${timerInMinutes} minutes and ${secondsLeft} seconds`
+			//);
 		}, 500);
 
 		this.#reloadTimer = setTimeout(async () => {
@@ -271,9 +271,9 @@ class AutoLoad {
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(content),
 			}).finally(() => {
-				console.log(
+				/*console.log(
 					`${new Date().toLocaleString()} - ${items.length} items from ${queue}:${page} sent to the server.`
-				);
+				);*/
 			});
 		}
 	}
