@@ -140,7 +140,7 @@ class Tile {
 
 		//Insert a span to contain both buttons
 		const span = this.getDOM().querySelector(".vh-btn-container");
-		
+
 		// Check if the container exists before trying to append
 		if (!span) {
 			logger.add(`TILE: Cannot add variant button - .vh-btn-container not found for ASIN: ${this.#asin}`);
@@ -156,7 +156,7 @@ class Tile {
 			logger.add(`TILE: Cannot find .vh-btn-variants button for ASIN: ${this.#asin}`);
 			return;
 		}
-		
+
 		if (this.#asin) {
 			btnShowVariants.dataset.asin = this.#asin;
 		}
@@ -325,14 +325,14 @@ class Tile {
 	setOrders(success, failed) {
 		const successElement = this.#tileDOM.querySelector(".vh-order-success");
 		const failedElement = this.#tileDOM.querySelector(".vh-order-failed");
-		
+
 		if (successElement) {
 			successElement.textContent = success;
 		}
 		if (failedElement) {
 			failedElement.textContent = failed;
 		}
-		
+
 		this.#orderSuccess = success;
 		this.#orderFailed = failed;
 	}
@@ -895,46 +895,39 @@ function timeSince(timenow, date) {
 }
 
 function getAsinFromDom(tileDom) {
-	let regex = /^(?:.*\/dp\/)(.+?)(?:\?.*)?$/; //Isolate the product ID in the URL.
-	
-	// Try to find the product link - first try .a-link-normal
-	let urlElement = tileDom.querySelector(".a-link-normal");
-	
-	// If not found, try any link with /dp/ in the href
-	if (!urlElement) {
-		urlElement = tileDom.querySelector("a[href*='/dp/']");
-	}
-	
-	// If we found a link element, extract ASIN from href
-	if (urlElement) {
-		let url = urlElement.getAttribute("href");
-		if (url) {
-			let arrasin = url.match(regex);
-			if (arrasin && arrasin[1]) {
-				return arrasin[1];
+	const seeDetailsBtn = tileDom.querySelector("input[type='button'][value='See details']");
+	let asin = null;
+	if (seeDetailsBtn) {
+		asin = seeDetailsBtn.getAttribute("data-asin");
+		if (asin) {
+			//logger.add("TILE: Extracted ASIN from See details button: " + asin);
+			return asin;
+		} else {
+			// Fallback: Try to extract ASIN from data-recommendation-id attribute
+			// Format: "ATVPDKIKX0DER#B0DWXBZW8K#vine.enrollment...."
+			const recommendationId = tileDom.getAttribute("data-recommendation-id");
+			if (recommendationId) {
+				const parts = recommendationId.split("#");
+				if (parts.length >= 2 && parts[1]) {
+					// The ASIN is the second part
+					//logger.add("TILE: Extracted ASIN from data-recommendation-id: " + parts[1]);
+					return parts[1];
+				}
 			}
 		}
 	}
-	
-	// Fallback: Try to extract ASIN from data-recommendation-id attribute
-	// Format: "ATVPDKIKX0DER#B0DWXBZW8K#vine.enrollment...."
-	const recommendationId = tileDom.getAttribute("data-recommendation-id");
-	if (recommendationId) {
-		const parts = recommendationId.split("#");
-		if (parts.length >= 2 && parts[1]) {
-			// The ASIN is the second part
-			logger.add("TILE: Extracted ASIN from data-recommendation-id: " + parts[1]);
-			return parts[1];
+
+	//Extract the ASIN from the URL
+	const url = tileDom.querySelector("a.a-link-normal").href;
+	if (url) {
+		const regex = /\/dp\/([A-Z0-9]{10})/;
+		asin = url.match(regex)[1];
+		if (asin) {
+			//logger.add("TILE: Extracted ASIN from URL: " + asin);
+			return asin;
 		}
 	}
-	
-	// Last resort: Check if there's a data-asin attribute
-	const dataAsin = tileDom.getAttribute("data-asin");
-	if (dataAsin) {
-		logger.add("TILE: Extracted ASIN from data-asin attribute: " + dataAsin);
-		return dataAsin;
-	}
-	
+
 	// If all methods fail, log a warning and return null instead of throwing
 	logger.add("TILE: WARNING - Could not extract ASIN from tile. Tile HTML: " + tileDom.outerHTML.substring(0, 200));
 	console.warn("VineHelper: Could not extract ASIN from tile", tileDom);
