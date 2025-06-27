@@ -553,14 +553,43 @@ function timeSince(timenow, date) {
 }
 
 function getAsinFromDom(tileDom) {
-	let regex = /^(?:.*\/dp\/)(.+?)(?:\?.*)?$/; //Isolate the product ID in the URL.
-	let urlElement = tileDom.querySelector(".a-link-normal");
-	let url = urlElement ? urlElement.getAttribute("href") : null;
-	if (url == null) {
-		throw new Error("The provided DOM content does not contain an .a-link-normal element.");
+	const seeDetailsBtn = tileDom.querySelector("input[type='button'][value='See details']");
+	let asin = null;
+	if (seeDetailsBtn) {
+		asin = seeDetailsBtn.getAttribute("data-asin");
+		if (asin) {
+			//logger.add("TILE: Extracted ASIN from See details button: " + asin);
+			return asin;
+		} else {
+			// Fallback: Try to extract ASIN from data-recommendation-id attribute
+			// Format: "ATVPDKIKX0DER#B0DWXBZW8K#vine.enrollment...."
+			const recommendationId = tileDom.getAttribute("data-recommendation-id");
+			if (recommendationId) {
+				const parts = recommendationId.split("#");
+				if (parts.length >= 2 && parts[1]) {
+					// The ASIN is the second part
+					//logger.add("TILE: Extracted ASIN from data-recommendation-id: " + parts[1]);
+					return parts[1];
+				}
+			}
+		}
 	}
-	let arrasin = url.match(regex);
-	return arrasin[1];
+
+	//Extract the ASIN from the URL
+	const url = tileDom.querySelector("a.a-link-normal").href;
+	if (url) {
+		const regex = /\/dp\/([A-Z0-9]{10})/;
+		asin = url.match(regex)[1];
+		if (asin) {
+			//logger.add("TILE: Extracted ASIN from URL: " + asin);
+			return asin;
+		}
+	}
+
+	// If all methods fail, log a warning and return null instead of throwing
+	logger.add("TILE: WARNING - Could not extract ASIN from tile. Tile HTML: " + tileDom.outerHTML.substring(0, 200));
+	console.warn("VineHelper: Could not extract ASIN from tile", tileDom);
+	return null;
 }
 
 function getTileFromDom(tileDom) {
