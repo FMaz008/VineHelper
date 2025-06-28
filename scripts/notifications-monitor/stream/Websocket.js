@@ -29,7 +29,12 @@ class Websocket {
 	}
 
 	async #init() {
-		await this._monitor._settings.refresh();
+		try {
+			await this._monitor._settings.refresh();
+		} catch (e) {
+			this.#relayMessage({ type: "outOfContext" });
+		}
+
 		if (!this._monitor._settings.get("notification.active")) {
 			this.#socket?.disconnect();
 			return;
@@ -90,7 +95,7 @@ class Websocket {
 						asin: data.item?.asin,
 						hasImgUrl: !!data.item?.img_url,
 						imgUrl: data.item?.img_url,
-						itemKeys: data.item ? Object.keys(data.item) : []
+						itemKeys: data.item ? Object.keys(data.item) : [],
 					});
 				}
 				this.#relayMessage({ type: "newPreprocessedItem", item: data.item });

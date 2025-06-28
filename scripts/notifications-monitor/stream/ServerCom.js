@@ -117,6 +117,10 @@ class ServerCom {
 			this._monitor.markItemUnavailable(data.item.asin);
 		}
 
+		if (data.type == "outOfContext") {
+			this.#setMasterMonitorStatus(false, "Monitor out of context, reload the page.");
+		}
+
 		// Process the item as received from the websocket
 		// Send the item to the stream processing, to come out to the #dataBuffering function,
 		// which will pass them to the processBroadcastMessage as newItem, as the type is set by this function.
