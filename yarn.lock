@@ -7983,8 +7983,8 @@ eslint@latest:
 
 "vine-styling@https://github.com/FMaz008/vine-styling.git#main":
   version: 0.0.1
-  resolution: "vine-styling@https://github.com/FMaz008/vine-styling.git#commit=01798d01bf56565d1e9b2d615aca7ac948258bbd"
-  checksum: e7d6b2ff5644cf6432f78531cb4dd43a4cd23c60af23bab8e7aacd725651dbd6816ba4f32a11e65c2c4d60fcb35e5f445ee705277c9d11568182ad0764514477
+  resolution: "vine-styling@https://github.com/FMaz008/vine-styling.git#commit=1452715df38cc3b705ec9966600dc8d0b4379809"
+  checksum: 58c2b23d80caebbd5579086d880584006755bfa97b7efa98dbc3d03421f04e3164f5fa579d991afbaee4e7de54f5b6c8abbd01e08cb332d340207a86114c6125
   languageName: node
   linkType: hard
 
