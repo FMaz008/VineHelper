@@ -895,7 +895,7 @@ function timeSince(timenow, date) {
 }
 
 function getAsinFromDom(tileDom) {
-	const seeDetailsBtn = tileDom.querySelector("input[type='button'][value='See details']");
+	const seeDetailsBtn = tileDom.querySelector("input[type='submit']");
 	let asin = null;
 	if (seeDetailsBtn) {
 		asin = seeDetailsBtn.getAttribute("data-asin");
@@ -918,7 +918,7 @@ function getAsinFromDom(tileDom) {
 	}
 
 	//Extract the ASIN from the URL
-	const url = tileDom.querySelector("a.a-link-normal").href;
+	const url = tileDom.querySelector("a.a-link-normal")?.href;
 	if (url) {
 		const regex = /\/dp\/([A-Z0-9]{10})/;
 		asin = url.match(regex)[1];
