@@ -173,7 +173,7 @@ class Grid {
 
 function updateTileCounts() {
 	const debugTabTitle = Settings.get("general.debugTabTitle");
-	
+
 	//Calculate how many tiles within each grids
 	if (Settings.get("unavailableTab.active") || Settings.get("hiddenTab.active")) {
 		const tab1 = document.getElementById("vh-available-count");
@@ -378,7 +378,7 @@ async function addPinnedTile(item) {
 	Tpl.setVar("recommendationId", recommendationId);
 
 	let content = Tpl.render(prom2, true);
-	document.getElementById("tab-pinned").appendChild(content);
+	document.getElementById("tab-pinned").insertBefore(content, document.getElementById("tab-pinned").firstChild);
 
 	tileSizer.adjustAll(content);
 
@@ -608,8 +608,6 @@ function getTileByAsin(asin) {
 		return null;
 	}
 	const tile = arrTile.find((t) => t.getAsin() === asin);
-	if (!tile) {
-		}
 	return tile;
 }
 

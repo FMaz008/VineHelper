@@ -829,7 +829,7 @@ async function loadPinnedList() {
 		let mapPin = new Map();
 		mapPin = await PinnedList.getList();
 		//Sort the map by date_added descending
-		mapPin = new Map([...mapPin].sort((a, b) => a[1].date_added - b[1].date_added));
+		mapPin = new Map([...mapPin].sort((a, b) => b[1].date_added - a[1].date_added));
 		mapPin.forEach(async (value, key) => {
 			const tile = getTileByAsin(key);
 			if (tile) {
