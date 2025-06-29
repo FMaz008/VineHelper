@@ -110,35 +110,41 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 	}
 });
 
-// Context menu setup
-chrome.runtime.onInstalled.addListener(() => {
-	chrome.contextMenus.create({
-		id: "addToHideList",
-		title: "Add to Hide List",
-		contexts: ["selection"],
+//#####################################################
+//## CONTEXT MENU
+//#####################################################
+
+chrome.permissions.contains({ permissions: ["contextMenus"] }, (result) => {
+	// Context menu setup
+	chrome.runtime.onInstalled.addListener(() => {
+		chrome.contextMenus.create({
+			id: "addToHideList",
+			title: "Add to Hide List",
+			contexts: ["selection"],
+		});
+
+		chrome.contextMenus.create({
+			id: "addToHighlightList",
+			title: "Add to Highlight List",
+			contexts: ["selection"],
+		});
 	});
 
-	chrome.contextMenus.create({
-		id: "addToHighlightList",
-		title: "Add to Highlight List",
-		contexts: ["selection"],
+	// Context menu click handler
+	chrome.contextMenus.onClicked.addListener((info, tab) => {
+		if (info.menuItemId === "addToHideList" || info.menuItemId === "addToHighlightList") {
+			const list = info.menuItemId === "addToHideList" ? "Hide" : "Highlight";
+			chrome.tabs.sendMessage(tab.id, { action: "addWord", word: selectedWord, list: list });
+		}
 	});
-});
 
-// Context menu click handler
-chrome.contextMenus.onClicked.addListener((info, tab) => {
-	if (info.menuItemId === "addToHideList" || info.menuItemId === "addToHighlightList") {
-		const list = info.menuItemId === "addToHideList" ? "Hide" : "Highlight";
-		chrome.tabs.sendMessage(tab.id, { action: "addWord", word: selectedWord, list: list });
-	}
-});
-
-// Alarm for master check
-chrome.alarms.create("masterCheck", { periodInMinutes: masterCheckInterval });
-chrome.alarms.onAlarm.addListener((alarm) => {
-	if (alarm.name === "masterCheck") {
-		sendMessageToAllTabs({ type: "masterCheck" });
-	}
+	// Alarm for master check
+	chrome.alarms.create("masterCheck", { periodInMinutes: masterCheckInterval });
+	chrome.alarms.onAlarm.addListener((alarm) => {
+		if (alarm.name === "masterCheck") {
+			sendMessageToAllTabs({ type: "masterCheck" });
+		}
+	});
 });
 
 //#####################################################

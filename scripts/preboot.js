@@ -68,38 +68,40 @@ async function loadStyleSheets() {
 	}
 
 	//Load Thorvarium stylesheets
-	if (Settings.get("thorvarium.mobileios")) loadStyleSheet("node_modules/vine-styling/mobile/ios-with-bugfix.css");
+	if (Settings.get("thorvarium.mobileios")) loadStyleSheet("scripts/vendor/vine-styling/mobile/ios-with-bugfix.css");
 
-	if (Settings.get("thorvarium.mobileandroid")) loadStyleSheet("node_modules/vine-styling/mobile/mobile.css");
+	if (Settings.get("thorvarium.mobileandroid")) loadStyleSheet("scripts/vendor/vine-styling/mobile/mobile.css");
 
-	if (Settings.get("thorvarium.smallItems")) loadStyleSheet("node_modules/vine-styling/desktop/small-items.css");
+	if (Settings.get("thorvarium.smallItems")) loadStyleSheet("scripts/vendor/vine-styling/desktop/small-items.css");
 
-	if (Settings.get("thorvarium.removeHeader")) loadStyleSheet("node_modules/vine-styling/desktop/remove-header.css");
+	if (Settings.get("thorvarium.removeHeader"))
+		loadStyleSheet("scripts/vendor/vine-styling/desktop/remove-header.css");
 
-	if (Settings.get("thorvarium.removeFooter")) loadStyleSheet("node_modules/vine-styling/desktop/remove-footer.css");
+	if (Settings.get("thorvarium.removeFooter"))
+		loadStyleSheet("scripts/vendor/vine-styling/desktop/remove-footer.css");
 
 	if (Settings.get("thorvarium.removeAssociateHeader"))
-		loadStyleSheet("node_modules/vine-styling/desktop/remove-associate-header.css");
+		loadStyleSheet("scripts/vendor/vine-styling/desktop/remove-associate-header.css");
 
-	if (Settings.get("thorvarium.darktheme")) loadStyleSheet("node_modules/vine-styling/desktop/dark-theme.css");
+	if (Settings.get("thorvarium.darktheme")) loadStyleSheet("scripts/vendor/vine-styling/desktop/dark-theme.css");
 
 	if (Settings.get("thorvarium.ETVModalOnTop"))
-		loadStyleSheet("node_modules/vine-styling/desktop/etv-modal-on-top.css");
+		loadStyleSheet("scripts/vendor/vine-styling/desktop/etv-modal-on-top.css");
 
 	if (Settings.get("thorvarium.paginationOnTop"))
-		loadStyleSheet("node_modules/vine-styling/desktop/pagination-on-top.css");
+		loadStyleSheet("scripts/vendor/vine-styling/desktop/pagination-on-top.css");
 
 	if (Settings.get("thorvarium.collapsableCategories"))
-		loadStyleSheet("node_modules/vine-styling/desktop/collapsable-categories.css");
+		loadStyleSheet("scripts/vendor/vine-styling/desktop/collapsable-categories.css");
 
 	if (Settings.get("thorvarium.stripedCategories"))
-		loadStyleSheet("node_modules/vine-styling/desktop/striped-categories.css");
+		loadStyleSheet("scripts/vendor/vine-styling/desktop/striped-categories.css");
 
 	if (Settings.get("thorvarium.limitedQuantityIcon"))
-		loadStyleSheet("node_modules/vine-styling/desktop/limited-quantity-icon.css");
+		loadStyleSheet("scripts/vendor/vine-styling/desktop/limited-quantity-icon.css");
 
 	if (Settings.get("thorvarium.RFYAFAAITabs"))
-		loadStyleSheet("node_modules/vine-styling/desktop/rfy-afa-ai-tabs.css");
+		loadStyleSheet("scripts/vendor/vine-styling/desktop/rfy-afa-ai-tabs.css");
 
 	logger.add("PREBOOT: Thorvarium stylesheets injected");
 
@@ -114,7 +116,7 @@ async function loadStyleSheets() {
 		// For all other countries, append the country code to the stylesheet
 		if (i13n.getCountryCode() != "com") emojiList += "-" + i13n.getCountryCode().toUpperCase();
 
-		loadStyleSheet("node_modules/vine-styling/desktop/" + emojiList + ".css");
+		loadStyleSheet("scripts/vendor/vine-styling/desktop/" + emojiList + ".css");
 	}
 
 	logger.add("PREBOOT: Thorvarium country-specific stylesheets injected");

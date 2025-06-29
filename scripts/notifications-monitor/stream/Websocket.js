@@ -5,7 +5,7 @@ const VINE_HELPER_API_V5_WS_URL = "wss://api.vinehelper.ovh";
 //const VINE_HELPER_API_V5_WS_URL = "ws://127.0.0.1:3000";
 const WSReconnectInterval = 12 * 1000; //12 seconds
 
-import { io } from "/node_modules/socket.io/client-dist/socket.io.esm.min.js";
+import { io } from "/scripts/vendor/socket.io/client-dist/socket.io.esm.min.js";
 
 class Websocket {
 	static #instance = null;

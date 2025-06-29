@@ -1,0 +1,80 @@
+/*=======================================================
+{{ thorvarium | vine-styling | desktop | variable-defs }}
+=======================================================*/
+
+/* Amazon's original grid was based on a "item-title-height" of 80px
+Include a block with only this var if you want the simplest way to update the grid proportions
+The default css will calculate other related values
+
+Each of the variables defined or calculated below can be overridden with a corresponding variable using the naming convention of 
+  
+
+:root {
+    --custom-item-tile-height: 40px;
+}
+
+Here are the other variable override names
+In mobile & desktop css files:
+    --custom-grid-column-width //another method for resizing the grid and tiles
+    --custom-product-title-text-size //manually set the text size for the product title under the thumbnail
+
+
+In just desktop css files:
+    --custom-logo-link-height
+
+In just mobile css files:
+    --custom-max-product-title
+
+In cutoff.css
+    --custom-cutoff-background-color
+*/
+:root {
+  /*defaults--mostly for dev reference*/
+  --default-item-tile-height: 40px;
+  --default-logo-link-height: 30px;
+  --default-grid-column-width: 110px;
+  --default-product-title-text-size: 10px;
+  --default-cutoff-background-color: #d1d1d1;
+  --default-zoom-height: 285px;
+
+  /*users can define custom  overrides by defining
+    --custom-orgin-param-name
+  
+    in another file or block that occurs before this stylesheet
+  
+    otherwise, values are calculated */
+
+  /*item-title-height is the base value for derived items*/
+  --item-tile-height: var(
+    --custom-item-tile-height,
+    var(--default-item-tile-height)
+  );
+
+  --calc-logo-link-height: calc(var(--item-tile-height) * 0.75);
+  --logo-link-height: var(
+    --custom-logo-link-height,
+    var(--calc-logo-link-height)
+  );
+
+  --calc-grid-column-width: calc(var(--item-tile-height) * 2.75);
+  --grid-column-width: var(
+    --custom-item-grid-column-width,
+    var(--calc-grid-column-width)
+  );
+
+  --calc-product-title-text-size: calc(var(--item-tile-height) * 0.333);
+  --product-title-text-size: var(
+    --custom-product-title-text-size,
+    var(--calc-product-title-text-size)
+  );
+
+  --cutoff-background-color: var(
+    --custom-cutoff-background-color,
+    var(--default-cutoff-background-color)
+  );
+
+  --zoom-height: var(
+    --custom-zoom-height,
+    var(--default-zoom-height)
+  );
+}

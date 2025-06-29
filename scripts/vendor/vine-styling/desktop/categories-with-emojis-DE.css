@@ -1,0 +1,42 @@
+/*===================================================================
+{{ thorvarium | vine-styling | desktop | categories-with-emojis-de }}
+===================================================================*/
+
+/* Contributed by: @Vaskivskyi */
+
+.a-link-normal[href$="3167641"]:before { content: "🍴";}  /* Home & Kitchen | Küche, Haushalt & Wohnen */
+.a-link-normal[href$="562066"]:before { content: "📸";}  /* Electronics & Photo | Elektronik & Foto */
+.a-link-normal[href$="11961464031"]:before { content: "👚";}  /* Fashion | Fashion */
+.a-link-normal[href$="12950651"]:before { content: "🎲";}  /* Toys | Spielzeug */
+.a-link-normal[href$="16435051"]:before { content: "⚾";}  /* Sports & Outdoors | Sport & Freizeit */
+.a-link-normal[href$="80084031"]:before { content: "🔨";}  /* DIY & Tools | Baumarkt */
+.a-link-normal[href$="340843031"]:before { content: "💻";}  /* Computers & Accessories | Computer & Zubehör */
+.a-link-normal[href$="64187031"]:before { content: "👨‍⚕️";}  /* Health & Personal Care | Drogerie & Körperpflege */
+.a-link-normal[href$="10925031"]:before { content: "🌳";}  /* Garden | Garten */
+.a-link-normal[href$="192416031"]:before { content: "📁";}  /* Stationery & Office Supplies | Bürobedarf & Schreibwaren */
+.a-link-normal[href$="84230031"]:before { content: "💄";}  /* Beauty | Kosmetik */
+.a-link-normal[href$="340852031"]:before { content: "🐈";}  /* Pet Supplies | Haustier */
+.a-link-normal[href$="78191031"]:before { content: "🚐";}  /* Automotive | Auto & Motorrad */
+.a-link-normal[href$="213083031"]:before { content: "💡";}  /* Lighting | Beleuchtung */
+.a-link-normal[href$="355007011"]:before { content: "👶";}  /* Baby Products | Baby */
+.a-link-normal[href$="5866098031"]:before { content: "🔬";}  /* Business, Industry & Science | Gewerbe, Industrie & Wissenschaft */
+.a-link-normal[href$="300992"]:before { content: "🎮";}  /* PC & Video Games | Games */
+.a-link-normal[href$="908823031"]:before { content: "📻";}  /* Large Appliances | Elektro-Großgeräte */
+.a-link-normal[href$="340849031"]:before { content: "🎹";}  /* Musical Instruments & DJ | Musikinstrumente & DJ-Equipment */
+.a-link-normal[href$="340846031"]:before { content: "🍎";}  /* Grocery | Lebensmittel & Getränke */
+.a-link-normal[href$="9699311031"]:before { content: "🧤";}  /* Handmade Products | Handmade Produkte */
+.a-link-normal[href$="186606"]:before { content: "📘";}  /* Books | Bücher */
+.a-link-normal[href$="301927"]:before { content: "💽";}  /* Software | Software */
+
+#vvp-browse-nodes-container {
+    width: 270px !important;
+}
+
+#vvp-browse-nodes-container .parent-node {
+    width: 250px !important;
+}
+
+#vvp-browse-nodes-container .child-node {
+  margin-left: 38px !important;
+  width: 207px !important;
+}

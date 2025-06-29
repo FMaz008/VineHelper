@@ -39,7 +39,7 @@ import { getTileByAsin, updateTileCounts } from "/scripts/ui/components/Grid.js"
 import { unescapeHTML, escapeHTML } from "/scripts/core/utils/StringHelper.js";
 import { clickDynamicSeeDetailsButton, drawButton } from "/scripts/core/utils/DynamicModalHelper.js";
 
-import "/node_modules/canvas-confetti/dist/confetti.browser.js";
+import "/scripts/vendor/canvas-confetti/dist/confetti.browser.js";
 
 class Tile {
 	#tileDOM;

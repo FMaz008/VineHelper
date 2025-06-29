@@ -1,0 +1,34 @@
+/*
+Based on:
+=====================================================
+{{ thorvarium | vine-styling | desktop | small-items }}
+=====================================================*/
+
+
+
+#vvp-items-grid, #tab-unavailable, #tab-hidden, #tab-pinned {
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(var(--grid-column-width, 170px), auto)
+  ) !important;
+  margin-bottom: 0px !important;
+}
+
+#vvp-items-grid-container .vvp-item-tile .vvp-item-tile-content {
+  width: var(--grid-column-width, 170px) !important;
+  margin-bottom:10px !important;
+}
+
+#vvp-items-grid-container .vvp-item-tile .vvp-item-tile-content > * {
+  margin: 0 !important;
+}
+
+#vvp-items-grid-container .vvp-item-tile .vvp-item-tile-content > img {
+  margin-top: 0.5rem !important;
+}
+
+.vvp-item-tile,
+.a-tab-content {
+  border: none !important;
+}
+

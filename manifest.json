@@ -42,20 +42,7 @@
 	],
 	"web_accessible_resources": [
 		{
-			"resources": [
-				"resource/image/*",
-				"resource/css/*",
-				"resource/sound/*",
-				"page/*",
-				"node_modules/vine-styling/desktop/*",
-				"node_modules/vine-styling/mobile/*",
-				"node_modules/socket.io/client-dist/*",
-				"node_modules/stream-browserify/*",
-				"node_modules/canvas-confetti/*",
-				"scripts/inj.js",
-				"scripts/*",
-				"plugins/*"
-			],
+			"resources": ["resource/image/*", "resource/css/*", "resource/sound/*", "page/*", "scripts/*", "plugins/*"],
 			"matches": [
 				"*://*.amazon.ca/*",
 				"*://*.amazon.it/*",
