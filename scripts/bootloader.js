@@ -1492,7 +1492,7 @@ async function serverProductsResponse(data) {
 	if (Settings.isPremiumUser(1) && Settings.get("pinnedTab.active") && Settings.get("pinnedTab.remote")) {
 		if (data["pinned_products"] != undefined) {
 			logger.add("DRAW: Loading remote pinned products");
-			for (let i = 0; i < data["pinned_products"].length; i++) {
+			for (let i = data["pinned_products"].length - 1; i >= 0; i--) {
 				//Get the tile
 				const tile = getTileByAsin(data["pinned_products"][i]["asin"]);
 				if (tile) {
