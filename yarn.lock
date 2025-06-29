@@ -5375,8 +5375,8 @@ vary@^1:
   integrity sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==
 
 "vine-styling@github:FMaz008/vine-styling.git#main":
-  version "0.0.0"
-  resolved "https://codeload.github.com/FMaz008/vine-styling/tar.gz/01798d01bf56565d1e9b2d615aca7ac948258bbd"
+  version "0.0.1"
+  resolved "https://codeload.github.com/FMaz008/vine-styling/tar.gz/e936d7fd779453a1b5b58a6d4cada099a9f0691a"
 
 walker@^1.0.8:
   version "1.0.8"
