@@ -58,10 +58,10 @@
 	},
 	"lint-staged": {
 		"*.js": [
-			"prettier --write",
-			"eslint --fix"
+			"yarn prettier --write",
+			"yarn eslint --fix"
 		],
-		"*.{md, html, css}": "prettier --write"
+		"*.{md, html, css}": "yarn prettier --write"
 	},
 	"release-it": {
 		"git": {
