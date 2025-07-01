@@ -33,7 +33,7 @@ var modalMgr = new ModalMgr();
 import { Template } from "/scripts/core/utils/Template.js";
 var Tpl = new Template();
 
-import { sharedKeywordMatcher } from "/scripts/core/utils/SharedKeywordMatcher.js";
+import { keywordMatch } from "../../core/utils/KeywordMatch.js";
 import { YMDHiStoISODate } from "/scripts/core/utils/DateHelper.js";
 import { getTileByAsin, updateTileCounts } from "/scripts/ui/components/Grid.js";
 import { unescapeHTML, escapeHTML } from "/scripts/core/utils/StringHelper.js";
@@ -537,7 +537,7 @@ class Tile {
 		const blurKeywords = Settings.get("general.blurKeywords");
 		if (Settings.isPremiumUser() && blurKeywords?.length > 0) {
 			// SharedKeywordMatcher handles compilation internally
-			let match = sharedKeywordMatcher.match(blurKeywords, this.getTitle(), null, null, "blur", Settings);
+			let match = keywordMatch(blurKeywords, this.getTitle());
 			if (match) {
 				logger.add("TILE: The item match the keyword '" + match + "', blur it");
 				const img = this.#tileDOM.querySelector("img");
