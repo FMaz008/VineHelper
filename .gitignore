@@ -8,3 +8,6 @@
 *.zip
 node_modules
 .DS_Store
+/.pnp.cjs
+/.pnp.loader.mjs
+/.yarn/install-state.gz
