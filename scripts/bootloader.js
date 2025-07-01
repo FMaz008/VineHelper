@@ -1090,7 +1090,8 @@ async function initTilesAndDrawToolbars() {
 			}
 
 			//Wrap the See Details button in a span with the class vh-see-details-container
-			const seeDetails = arrObj[i].querySelector(".vvp-details-btn");
+			const seeDetails =
+				arrObj[i].querySelector(".vvp-details-btn") || arrObj[i].querySelector(".vvp-details-btn-mobile");
 			if (seeDetails) {
 				const span = document.createElement("span");
 				span.classList.add("vh-btn-container");
