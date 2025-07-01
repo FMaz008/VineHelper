@@ -916,7 +916,15 @@ function initInsertTopPagination() {
 			pagination.setStartPagePadding(parseInt(Settings.get("general.verbosePaginationStartPadding")));
 			let paginationObj = pagination.generatePagination(URL, TOTAL_ITEMS, ITEM_PER_PAGE, CURRENT_PAGE);
 
-			env.data.gridDOM.container.querySelector("p").appendChild(paginationObj);
+			const desktopContainer = env.data.gridDOM.container.querySelector("p");
+			if (desktopContainer) {
+				desktopContainer.appendChild(paginationObj);
+			} else {
+				const p = document.createElement("p");
+				//Insert the p as the first element of env.data.gridDOM.container
+				env.data.gridDOM.container.insertBefore(p, env.data.gridDOM.container.firstChild);
+				p.appendChild(paginationObj);
+			}
 		} else {
 			// Clone the bottom pagination to the top of the listing
 			let paginationElement = document.querySelector(".a-pagination");
@@ -927,7 +935,19 @@ function initInsertTopPagination() {
 				// Clone the parent element
 				let clonedElement = parentElement.cloneNode(true);
 				clonedElement.classList.add("topPagination");
-				env.data.gridDOM.container.querySelector("p").appendChild(clonedElement);
+				const desktopContainer = env.data.gridDOM.container.querySelector("p");
+				if (desktopContainer) {
+					desktopContainer.appendChild(clonedElement);
+				} else {
+					const p = document.createElement("p");
+					const tileSizeToolContainer = document.querySelector("#vh-tile-size-tool-container");
+					if (tileSizeToolContainer) {
+						env.data.gridDOM.container.insertBefore(p, tileSizeToolContainer.nextSibling);
+					} else {
+						env.data.gridDOM.container.insertBefore(p, env.data.gridDOM.container.firstChild);
+					}
+					p.appendChild(clonedElement);
+				}
 			}
 		}
 	}
