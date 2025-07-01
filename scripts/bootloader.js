@@ -906,7 +906,10 @@ async function initTilesAndDrawToolbars() {
 			//Add tool tip to the truncated item title link
 			if (Settings.get("general.displayFullTitleTooltip")) {
 				const titleDOM = arrObj[i].querySelector(".a-link-normal");
-				tooltip.addTooltip(titleDOM, unescapeHTML(unescapeHTML(tile.getTitle())));
+				//If the item does not have a title link, do not display the tooltip.
+				if (titleDOM) {
+					tooltip.addTooltip(titleDOM, unescapeHTML(unescapeHTML(tile.getTitle())));
+				}
 			}
 
 			//Wrap the See Details button in a span with the class vh-see-details-container
