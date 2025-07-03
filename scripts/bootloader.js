@@ -798,22 +798,37 @@ function initSetPageTitle() {
 }
 
 function initAddNotificationMonitorLink() {
-	const ul = document.querySelector("ul.vvp-header-links-container");
-	if (ul) {
-		const li = document.createElement("li");
-		li.classList.add("vvp-header-link");
-		ul.appendChild(li);
-
+	if (env.isMobileView()) {
+		const header = document.querySelector("#vvp-header");
 		const a = document.createElement("a");
-		//a.href = chrome.runtime.getURL("page/notifications.html");
+		a.id = "vvp-mobile-header-link";
+		a.classList.add("a-link-normal");
 		if (Settings.get("notification.monitor.blockNonEssentialListeners")) {
 			a.href = "/vine/vine-items?queue=encore#monitor";
 		} else {
 			a.href = "/vine/vine-items?queue=encore#monitorLoadAllListeners";
 		}
 		a.target = "_blank";
-		a.innerHTML = `<div class="vh-icon-16 vh-icon-vh"></div> Notifications Monitor`;
-		li.appendChild(a);
+		a.innerHTML = `<div class="vh-icon-16 vh-icon-vh"></div> NM`;
+		header.appendChild(a);
+	} else {
+		const ul = document.querySelector("ul.vvp-header-links-container");
+		if (ul) {
+			const li = document.createElement("li");
+			li.classList.add("vvp-header-link");
+			ul.appendChild(li);
+
+			const a = document.createElement("a");
+			//a.href = chrome.runtime.getURL("page/notifications.html");
+			if (Settings.get("notification.monitor.blockNonEssentialListeners")) {
+				a.href = "/vine/vine-items?queue=encore#monitor";
+			} else {
+				a.href = "/vine/vine-items?queue=encore#monitorLoadAllListeners";
+			}
+			a.target = "_blank";
+			a.innerHTML = `<div class="vh-icon-16 vh-icon-vh"></div> Notifications Monitor`;
+			li.appendChild(a);
+		}
 	}
 }
 
