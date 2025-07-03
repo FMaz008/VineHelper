@@ -310,6 +310,10 @@ class Environment {
 		return navigator.userAgent.includes("Firefox");
 	}
 
+	isMobileView() {
+		return document.querySelector("header#nav-main.nav-mobile") !== null;
+	}
+
 	//getWSSUrl() {
 	//	return "wss://api.vinehelper.ovh";
 	//}

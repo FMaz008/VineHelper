@@ -46,7 +46,11 @@ function drawButton(asin, isParent, isPreRelease, recommendationType, recommenda
 	const container1 = document.createElement("span");
 	env.data.gridDOM.regular.appendChild(container1);
 	container1.id = "dynamicModalBtnSpan-" + asin;
-	container1.classList.add("vvp-details-btn");
+	if (env.isMobileView()) {
+		container1.classList.add("vvp-details-btn-mobile");
+	} else {
+		container1.classList.add("vvp-details-btn");
+	}
 	const container2 = document.createElement("span");
 	container1.appendChild(container2);
 	const btn = document.createElement("input");
@@ -71,7 +75,12 @@ async function clickDynamicSeeDetailsButton(asin) {
 	//If DOM is loaded and ready
 	const btn = document.querySelector("#dynamicModalBtn-" + asin);
 	let attempt = 1;
-	while ((!document.querySelector(".a-popover-modal") && attempt <= 5) || attempt === 1) {
+	while (
+		(!document.querySelector(".a-popover-modal") &&
+			!document.querySelector(".a-sheet-web-container") &&
+			attempt <= 5) ||
+		attempt === 1
+	) {
 		console.log(`Attempt #${attempt} to open the modal window`);
 		btn.click();
 		await new Promise((r) => setTimeout(r, 200 * attempt));
