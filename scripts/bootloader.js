@@ -1720,7 +1720,7 @@ window.addEventListener("message", async function (event) {
 		}
 
 		//Show a notification
-		if (!Settings.get("notification.reduce")) {
+		if (!Settings.get("notification.reduce") && !env.isMobileView()) {
 			const note = new ScreenNotification();
 			note.title = "ETV data shared";
 			note.lifespan = 2;

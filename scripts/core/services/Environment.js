@@ -314,6 +314,10 @@ class Environment {
 		return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 	}
 
+	isMobileView() {
+		return document.querySelector("header#nav-main.nav-mobile") !== null;
+	}
+
 	//getWSSUrl() {
 	//	return "wss://api.vinehelper.ovh";
 	//}

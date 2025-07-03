@@ -27,7 +27,12 @@ function drawButton(item, variant_asin = null) {
 	const container1 = document.createElement("span");
 	document.querySelector("#vvp-items-grid").parentNode.appendChild(container1);
 	container1.id = "dynamicModalBtnSpan-" + (variant_asin ? variant_asin : asin);
-	container1.classList.add("vvp-details-btn");
+
+	if (env.isMobileView()) {
+		container1.classList.add("vvp-details-btn-mobile");
+	} else {
+		container1.classList.add("vvp-details-btn");
+	}
 	const container2 = document.createElement("span");
 	container1.appendChild(container2);
 	const btn = document.createElement("input");
@@ -62,7 +67,12 @@ async function clickDynamicSeeDetailsButton(asin) {
 	//If DOM is loaded and ready
 	const btn = document.querySelector("#dynamicModalBtn-" + asin);
 	attempts = 1;
-	while ((!document.querySelector(".a-popover-modal") && attempts <= 5) || attempts === 1) {
+	while (
+		(!document.querySelector(".a-popover-modal") &&
+			!document.querySelector(".a-sheet-web-container") &&
+			attempts <= 5) ||
+		attempts === 1
+	) {
 		console.log(`Attempt #${attempts} to open the modal window`);
 		btn.click();
 		await new Promise((r) => setTimeout(r, 200 * attempts));
@@ -76,7 +86,7 @@ async function clickDynamicSeeDetailsButton(asin) {
 	setTimeout(function () {
 		const container1 = document.querySelector("#dynamicModalBtnSpan-" + asin);
 		if (container1) {
-			//container1.remove(); // Removes container1 from the DOM
+			container1.remove(); // Removes container1 from the DOM
 		}
 	}, 500);
 }
