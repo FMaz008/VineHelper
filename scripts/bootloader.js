@@ -832,6 +832,11 @@ function initAddNotificationMonitorLink() {
 	}
 }
 
+/**
+ * Load the pinned list from the local storage and add the tiles to the grid.
+ * If the pinned list is cloud stored, it will be loaded when the get_info API request comes back.
+ * @returns
+ */
 async function loadPinnedList() {
 	if (env.data.gridDOM.container == null) {
 		//There is no listing on this page
