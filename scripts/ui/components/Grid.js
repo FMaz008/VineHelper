@@ -203,20 +203,6 @@ function updateTileCounts() {
 			tab4.innerText = count;
 		}
 	}
-
-	if (debugTabTitle) {
-		// Also log the actual DOM element counts for comparison
-		const regularTiles = document.querySelectorAll("#vh-grid-regular .vvp-item-tile").length;
-		const unavailableTiles = document.querySelectorAll("#vh-grid-unavailable .vvp-item-tile").length;
-		const hiddenTiles = document.querySelectorAll("#vh-grid-hidden .vvp-item-tile").length;
-		const pinnedTiles = document.querySelectorAll("#vh-grid-pinned .vvp-item-tile").length;
-
-		console.log("📊 Actual DOM tile counts:");
-		console.log(`  ✅ Regular grid DOM tiles: ${regularTiles}`);
-		console.log(`  ❌ Unavailable grid DOM tiles: ${unavailableTiles}`);
-		console.log(`  👻 Hidden grid DOM tiles: ${hiddenTiles}`);
-		console.log(`  📌 Pinned grid DOM tiles: ${pinnedTiles}`);
-	}
 }
 
 async function createGridInterface() {

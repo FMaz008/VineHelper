@@ -51,7 +51,9 @@ class Websocket {
 		}
 
 		if (this.#socket_connecting) {
-			console.log(`${new Date().toLocaleString()} - WS already connecting, skipping.`);
+			if (this._monitor._settings.get("general.debugWebsocket")) {
+				console.log(`${new Date().toLocaleString()} - WS already connecting, skipping.`);
+			}
 			return;
 		}
 
@@ -84,7 +86,9 @@ class Websocket {
 		this.#socketHandlers = {
 			connect: () => {
 				this.#socket_connecting = false;
-				console.log(`${new Date().toLocaleString()} - WS Connected`);
+				if (this._monitor._settings.get("general.debugWebsocket")) {
+					console.log(`${new Date().toLocaleString()} - WS Connected`);
+				}
 				this.#relayMessage({ type: "wsStatus", status: "wsOpen" });
 			},
 
@@ -98,6 +102,7 @@ class Websocket {
 						itemKeys: data.item ? Object.keys(data.item) : [],
 					});
 				}
+
 				this.#relayMessage({ type: "newPreprocessedItem", item: data.item });
 			},
 
@@ -128,7 +133,9 @@ class Websocket {
 
 			disconnect: () => {
 				this.#socket_connecting = false;
-				console.log(`${new Date().toLocaleString()} - Socket.IO Disconnected`);
+				if (this._monitor._settings.get("general.debugWebsocket")) {
+					console.log(`${new Date().toLocaleString()} - Socket.IO Disconnected`);
+				}
 				this.#relayMessage({ type: "wsStatus", status: "wsClosed" });
 			},
 

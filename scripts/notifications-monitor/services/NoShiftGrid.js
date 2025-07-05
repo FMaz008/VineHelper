@@ -318,7 +318,6 @@ class NoShiftGrid {
 
 			// Insert all placeholders at once at the beginning
 			if (fragment.childNodes.length > 0) {
-				const debugPlaceholders = this._monitor._settings?.get("general.debugPlaceholders");
 				if (debugPlaceholders) {
 					// Log detailed grid state before insertion
 					const gridChildren = Array.from(this._monitor._gridContainer.children);
@@ -356,8 +355,8 @@ class NoShiftGrid {
 				// This ensures they don't end up in the middle of rows
 				this._monitor._gridContainer.insertBefore(fragment, this._monitor._gridContainer.firstChild);
 
+				// Log state after insertion (still within the outer debugPlaceholders check)
 				if (debugPlaceholders) {
-					// Log state after insertion
 					const gridChildren = Array.from(this._monitor._gridContainer.children);
 					const placeholderPositions = [];
 

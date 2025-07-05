@@ -290,6 +290,11 @@ async function initiateSettings() {
 	manageCheckboxSetting("general.debugServiceWorker", false);
 	manageCheckboxSetting("general.debugSettings", false);
 	manageCheckboxSetting("general.debugStorage", false);
+	manageCheckboxSetting("general.debugSound", false);
+	manageCheckboxSetting("general.debugCoordination", false);
+	manageCheckboxSetting("general.debugDuplicates", false);
+	manageCheckboxSetting("general.debugVisibility", false);
+	manageCheckboxSetting("general.debugItemProcessing", false);
 
 	//##TAB - NOTIFICATIONS
 

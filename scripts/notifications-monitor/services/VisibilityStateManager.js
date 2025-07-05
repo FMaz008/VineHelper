@@ -41,7 +41,7 @@ class VisibilityStateManager {
 		const wasVisible = this.isVisible(element);
 
 		// Debug logging for setVisibility calls
-		if (typeof window !== "undefined" && window.DEBUG_TAB_TITLE) {
+		if (this.#settings.get("general.debugTabTitle")) {
 			console.log("[VisibilityStateManager] setVisibility called", {
 				elementId: element.id,
 				asin: element.dataset?.asin,
@@ -62,7 +62,41 @@ class VisibilityStateManager {
 
 		// Track the change if visibility actually changed
 		if (wasVisible !== visible) {
+			// Debug logging for visibility state changes
+			if (this.#settings.get("general.debugTabTitle") || this.#settings.get("general.debugItemProcessing")) {
+				console.log("[VisibilityStateManager] Visibility state change detected", {
+					asin: element.dataset?.asin,
+					wasVisible,
+					isVisible: visible,
+					countBefore: this.#count,
+					countAfter: this.#count + (visible ? 1 : -1),
+					displayStyle,
+					elementDisplay: element.style.display,
+					timestamp: new Date().toISOString(),
+					stack: new Error().stack.split("\n").slice(2, 5).join("\n"),
+				});
+			}
+
+			// RACE CONDITION DEBUG: Check if element is actually visible before incrementing
 			if (visible) {
+				// Double-check visibility state before incrementing
+				const computedStyle = window.getComputedStyle(element);
+				const actuallyVisible = computedStyle.display !== "none";
+
+				if (!actuallyVisible) {
+					console.error("[VisibilityStateManager] RACE CONDITION DETECTED!", {
+						asin: element.dataset?.asin,
+						requestedVisible: visible,
+						actuallyVisible,
+						computedDisplay: computedStyle.display,
+						inlineDisplay: element.style.display,
+						countBefore: this.#count,
+						timestamp: new Date().toISOString(),
+					});
+					// Don't increment if element is not actually visible
+					return false;
+				}
+
 				this.increment(1);
 			} else {
 				this.decrement(1);
@@ -94,8 +128,20 @@ class VisibilityStateManager {
 		if (this.#visibilityCache.has(element)) {
 			const cached = this.#visibilityCache.get(element);
 			// Validate cache by checking computed style
+			// TODO: this removes the perf benefit of the cache, remove after debugging
 			const computedStyle = this.#getComputedStyle(element);
 			const actuallyVisible = computedStyle.display !== "none";
+
+			// DEBUG: Always log cache mismatches
+			if (cached !== actuallyVisible) {
+				console.warn("[DEBUG-VISIBILITY] Cache mismatch detected!", {
+					asin: element.dataset?.asin,
+					cached,
+					actuallyVisible,
+					display: computedStyle.display,
+					timestamp: new Date().toISOString(),
+				});
+			}
 
 			if (cached === actuallyVisible) {
 				return cached;
@@ -110,7 +156,7 @@ class VisibilityStateManager {
 		const isVisible = computedStyle.display !== "none";
 
 		// Debug logging for uncached elements (likely new items)
-		if (typeof window !== "undefined" && window.DEBUG_TAB_TITLE) {
+		if (this.#settings.get("general.debugTabTitle")) {
 			console.log("[VisibilityStateManager] isVisible called for uncached element", {
 				elementId: element.id,
 				asin: element.dataset?.asin,
@@ -205,6 +251,16 @@ class VisibilityStateManager {
 		// Clear caches before recalculation
 		this.clearCache();
 
+		// DEBUG: Track recalculation source
+		if (this.#settings.get("general.debugVisibility")) {
+			console.log("[DEBUG-VISIBILITY] Starting recalculation", {
+				elementCount: elements.length,
+				currentCount: this.#count,
+				timestamp: new Date().toISOString(),
+				stack: new Error().stack.split("\n").slice(2, 5).join("\n"),
+			});
+		}
+
 		// Debug: log all elements and their visibility
 		const debugElements = [];
 		for (const element of elements) {
@@ -291,7 +347,7 @@ class VisibilityStateManager {
 		this.#count += amount;
 
 		// Debug logging (only if debug flag is set)
-		if (typeof window !== "undefined" && window.DEBUG_VISIBILITY_STATE) {
+		if (this.#settings.get("general.debugVisibility")) {
 			console.log("[VisibilityStateManager] Count incremented", {
 				oldCount,
 				newCount: this.#count,
@@ -314,7 +370,7 @@ class VisibilityStateManager {
 		this.#count = Math.max(0, this.#count - amount);
 
 		// Debug logging (only if debug flag is set)
-		if (typeof window !== "undefined" && window.DEBUG_VISIBILITY_STATE) {
+		if (this.#settings.get("general.debugVisibility")) {
 			console.log("[VisibilityStateManager] Count decremented", {
 				oldCount,
 				newCount: this.#count,
@@ -366,7 +422,7 @@ class VisibilityStateManager {
 	 */
 	#emitCountChanged() {
 		// Debug logging for count changes
-		if (typeof window !== "undefined" && window.DEBUG_TAB_TITLE) {
+		if (this.#settings.get("general.debugTabTitle")) {
 			console.log(`[VisibilityStateManager] Count changed to: ${this.#count}`, {
 				timestamp: new Date().toISOString(),
 				stack: new Error().stack.split("\n").slice(2, 5).join("\n"),
@@ -377,6 +433,13 @@ class VisibilityStateManager {
 			count: this.#count,
 			timestamp: Date.now(),
 		});
+	}
+
+	/**
+	 * Clean up resources when the manager is destroyed
+	 */
+	destroy() {
+		this.clearCache();
 	}
 }
 

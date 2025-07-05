@@ -182,7 +182,9 @@ class ServerCom {
 
 			const queueTable = { AI: "encore", AFA: "last_chance", RFY: "potluck" };
 			const url = `https://www.amazon.${this._monitor._i13nMgr.getDomainTLD()}/vine/vine-items?queue=${queueTable[queue]}&page=${page}#AR`;
-			console.log(`${new Date().toLocaleString()} - Reloading page: ${queue} page ${page}`);
+			if (this._monitor._settings.get("general.debugServercom")) {
+				console.log(`${new Date().toLocaleString()} - Reloading page: ${queue} page ${page}`);
+			}
 			this._monitor.fetchAutoLoadUrl(url, queue, page);
 		}
 	}
@@ -299,7 +301,9 @@ class ServerCom {
 			//Only display notification for products with a title and image url
 			//And that are more recent than the latest notification received.
 			if (item.data.img_url == "" || item.data.title == "") {
-				console.log("FETCH LATEST: item without title or image url: " + item.data.asin);
+				if (this._monitor._settings.get("general.debugServercom")) {
+					console.log("FETCH LATEST: item without title or image url: " + item.data.asin);
+				}
 				continue;
 			}
 

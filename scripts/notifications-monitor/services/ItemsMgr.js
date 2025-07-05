@@ -199,10 +199,32 @@ class ItemsMgr {
 				element: null, // Element will be set later
 			});
 			addedStatus = true;
+
+			// DEBUG: Track new item additions
+			if (this._settings?.get("general.debugItemProcessing")) {
+				console.log("[DEBUG-ITEMSMGR] New item added", {
+					asin,
+					imgUrl: internedData.img_url,
+					totalItems: this.items.size,
+					timestamp: new Date().toISOString(),
+				});
+			}
 		} else {
 			// Update existing item data, preserving the element reference
 			// both the old data and the new data are merged into the existing object, new data will override old data
 			const existing = this.items.get(asin);
+
+			// DEBUG: Track updates to existing items
+			if (this._settings?.get("general.debugItemProcessing")) {
+				console.log("[DEBUG-ITEMSMGR] Updating existing item", {
+					asin,
+					oldImgUrl: existing.data.img_url,
+					newImgUrl: internedData.img_url,
+					hasElement: !!existing.element,
+					timestamp: new Date().toISOString(),
+				});
+			}
+
 			this.items.set(asin, {
 				data: {
 					...existing.data, //The spread operator will convert null values to empty strings.

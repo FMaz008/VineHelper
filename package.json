@@ -10,6 +10,7 @@
 		"test:coverage": "jest --coverage",
 		"test:watch": "jest --watch",
 		"lint": "eslint .",
+		"qlint": "eslint . --quiet",
 		"build:release": "node build.js",
 		"prepare": "husky"
 	},
