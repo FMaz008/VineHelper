@@ -253,7 +253,7 @@ class AutoLoad {
 
 			const content = {
 				api_version: 5,
-				app_version: chrome.runtime.getManifest().version,
+				app_version: this._monitor._env.data.appVersion,
 				country: this._monitor._i13nMgr.getCountryCode(),
 				uuid: await this._monitor._settings.get("general.uuid", false),
 				fid: await this._monitor._settings.get("general.fingerprint.id", false),
