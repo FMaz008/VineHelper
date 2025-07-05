@@ -262,29 +262,76 @@ class MonitorCore {
 		const highlightColor = this._settings.get("notification.monitor.highlight.color");
 		const zeroETVColor = this._settings.get("notification.monitor.zeroETV.color");
 		const unknownETVColor = this._settings.get("notification.monitor.unknownETV.color");
+		const debugItemProcessing = this._settings.get("general.debugItemProcessing");
+		const ignoreUnknownETVhighlight = this._settings.get(
+			"notification.monitor.highlight.ignoreUnknownETVhighlight"
+		);
+		const ignore0ETVhighlight = this._settings.get("notification.monitor.highlight.ignore0ETVhighlight");
+		// Debug logging for styling application
+		if (debugItemProcessing) {
+			const asin = notif.id?.replace("vh-notification-", "") || "unknown";
+			console.log("[DEBUG-ETV-STYLING] Processing highlight/color for item:", {
+				asin,
+				typeHighlight: notif.dataset.typeHighlight,
+				typeZeroETV: notif.dataset.typeZeroETV,
+				typeUnknownETV: notif.dataset.typeUnknownETV,
+				isHighlighted,
+				isZeroETV,
+				isUnknownETV,
+				ignoreUnknownETVhighlight: ignoreUnknownETVhighlight,
+				ignore0ETVhighlight: ignore0ETVhighlight,
+				willApplyStriped:
+					(isUnknownETV && isHighlighted && !ignoreUnknownETVhighlight) ||
+					(isZeroETV && isHighlighted && !ignore0ETVhighlight),
+				timestamp: new Date().toISOString(),
+			});
+		}
 
 		// Clear both background properties first to ensure clean state
 		notif.style.background = "";
 		notif.style.backgroundColor = "";
 
-		if (isZeroETV && isHighlighted && !this._settings.get("notification.monitor.highlight.ignore0ETVhighlight")) {
+		if (isZeroETV && isHighlighted && !ignore0ETVhighlight) {
 			const color1 = zeroETVColor;
 			const color2 = highlightColor;
 			notif.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;
-		} else if (
-			isUnknownETV &&
-			isHighlighted &&
-			!this._settings.get("notification.monitor.highlight.ignoreUnknownETVhighlight")
-		) {
+			if (debugItemProcessing) {
+				console.log("[DEBUG-ETV-STYLING] Applied Zero ETV + Highlight striped styling", {
+					asin: notif.id?.replace("vh-notification-", ""),
+				});
+			}
+		} else if (isUnknownETV && isHighlighted && !ignoreUnknownETVhighlight) {
 			const color1 = unknownETVColor;
 			const color2 = highlightColor;
 			notif.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;
+			if (debugItemProcessing) {
+				console.log("[DEBUG-ETV-STYLING] Applied Unknown ETV + Highlight striped styling", {
+					asin: notif.id?.replace("vh-notification-", ""),
+				});
+			}
 		} else if (isHighlighted) {
 			notif.style.backgroundColor = highlightColor;
+			if (debugItemProcessing) {
+				console.log("[DEBUG-ETV-STYLING] Applied Highlight solid color", {
+					asin: notif.id?.replace("vh-notification-", ""),
+				});
+			}
 		} else if (isZeroETV) {
 			notif.style.backgroundColor = zeroETVColor;
+			if (debugItemProcessing) {
+				console.log("[DEBUG-ETV-STYLING] Applied Zero ETV solid color", {
+					asin: notif.id?.replace("vh-notification-", ""),
+				});
+			}
 		} else if (isUnknownETV) {
 			notif.style.backgroundColor = unknownETVColor;
+			if (debugItemProcessing) {
+				console.log("[DEBUG-ETV-STYLING] Applied Unknown ETV solid color", {
+					asin: notif.id?.replace("vh-notification-", ""),
+				});
+			}
+		} else if (debugItemProcessing) {
+			console.log("[DEBUG-ETV-STYLING] No styling applied", { asin: notif.id?.replace("vh-notification-", "") });
 		}
 	}
 
