@@ -485,8 +485,19 @@ function displayAccountData() {
 	displayAccountHideOptOutButton();
 
 	//Add a container to the status table
-	document.getElementById("vvp-current-status-box").style.height = "auto";
-	let elem = document.getElementById("vvp-current-status-box").children[0];
+	const statusBox = document.getElementById("vvp-current-status-box");
+	if (!statusBox) {
+		console.warn("[VineHelper] vvp-current-status-box element not found on account page");
+		return;
+	}
+
+	statusBox.style.height = "auto";
+	if (!statusBox.children || statusBox.children.length === 0) {
+		console.warn("[VineHelper] vvp-current-status-box has no children");
+		return;
+	}
+
+	let elem = statusBox.children[0];
 	let parentContainer = document.createElement("div");
 	parentContainer.classList.add("a-row");
 	elem.append(parentContainer);
