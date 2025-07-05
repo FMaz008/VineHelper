@@ -1424,7 +1424,6 @@ async function serverProductsResponse(data) {
 
 	//For each product provided by the server, modify the local listings
 	let processedCount = 0;
-	const allProductKeys = Object.keys(data["products"]);
 	for (const [key, values] of Object.entries(data["products"])) {
 		try {
 			processedCount++;
@@ -1754,9 +1753,16 @@ window.addEventListener("message", async function (event) {
 		}
 
 		if (Settings.get("general.displayModalETV")) {
-			document.getElementById("vvp-product-details-modal--tax-value").style.display = "block";
-			document.getElementById("vvp-product-details-modal--tax-spinner").style.display = "none";
-			document.getElementById("vvp-product-details-modal--tax-value-string").innerText = event.data.data.etv;
+			if (env.isMobileView()) {
+				document.getElementById("product-details-sheet-tax-value").classList.remove("aok-hidden");
+				document.getElementById("product-details-sheet-tax-value").style.display = "block";
+				document.getElementById("product-details-sheet-tax-spinner").style.display = "none";
+				document.getElementById("product-details-sheet-tax-value-string").innerText = event.data.data.etv;
+			} else {
+				document.getElementById("vvp-product-details-modal--tax-value").style.display = "block";
+				document.getElementById("vvp-product-details-modal--tax-spinner").style.display = "none";
+				document.getElementById("vvp-product-details-modal--tax-value-string").innerText = event.data.data.etv;
+			}
 		}
 	}
 
