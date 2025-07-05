@@ -3,6 +3,7 @@ import { VisibilityStateManager } from "../../../scripts/notifications-monitor/s
 describe("VisibilityStateManager", () => {
 	let visibilityStateManager;
 	let mockHookMgr;
+	let mockSettings;
 	let executeCallCount;
 	let lastExecuteArgs;
 
@@ -17,7 +18,11 @@ describe("VisibilityStateManager", () => {
 			}),
 		};
 
-		visibilityStateManager = new VisibilityStateManager(mockHookMgr);
+		mockSettings = {
+			get: jest.fn().mockReturnValue(false), // Default to false for all debug settings
+		};
+
+		visibilityStateManager = new VisibilityStateManager(mockHookMgr, mockSettings);
 	});
 
 	describe("constructor", () => {
