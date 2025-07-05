@@ -27,6 +27,39 @@
 				Logs detailed information about placeholder tile calculations and grid layout adjustments.
 			</div>
 		</div>
+
+		<div class="setting-container">
+			<label for="general.debugSound">
+				<input type="checkbox" name="general.debugSound" value="1" />
+				Debug Sound Notifications
+			</label>
+			<div class="setting-summary">
+				<div class="vh-toolbar-icon vh-icon-question"></div>
+				Logs detailed information about sound notification decisions during item processing. Useful for debugging sound playback issues but can be verbose during bulk fetches.
+			</div>
+		</div>
+
+		<div class="setting-container">
+			<label for="general.debugDuplicates">
+				<input type="checkbox" name="general.debugDuplicates" value="1" />
+				Debug Duplicate Detection
+			</label>
+			<div class="setting-summary">
+				<div class="vh-toolbar-icon vh-icon-question"></div>
+				Logs detailed information about duplicate item detection, including ASIN processing, debouncing, and image URL matching.
+			</div>
+		</div>
+
+		<div class="setting-container">
+			<label for="general.debugItemProcessing">
+				<input type="checkbox" name="general.debugItemProcessing" value="1" />
+				Debug Item Processing
+			</label>
+			<div class="setting-summary">
+				<div class="vh-toolbar-icon vh-icon-question"></div>
+				Logs detailed information about item processing, including new items added to DOM and item manager operations.
+			</div>
+		</div>
 	</fieldset>
 
 	<fieldset>
@@ -129,6 +162,17 @@
 			<div class="setting-summary">
 				<div class="vh-toolbar-icon vh-icon-question"></div>
 				Logs detailed information about Chrome storage read/write operations.
+			</div>
+		</div>
+
+		<div class="setting-container">
+			<label for="general.debugVisibility">
+				<input type="checkbox" name="general.debugVisibility" value="1" />
+				Debug Visibility State
+			</label>
+			<div class="setting-summary">
+				<div class="vh-toolbar-icon vh-icon-question"></div>
+				Logs detailed information about visibility state management, including cache mismatches and recalculation events.
 			</div>
 		</div>
 	</fieldset>

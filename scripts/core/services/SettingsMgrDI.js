@@ -904,6 +904,10 @@ export class SettingsMgrDI {
 				debugSettings: false,
 				debugStorage: false,
 				debugCoordination: false,
+				debugSound: false,
+				debugDuplicates: false,
+				debugVisibility: false,
+				debugItemProcessing: false,
 			},
 			metrics: {
 				minutesUsed: 0,
