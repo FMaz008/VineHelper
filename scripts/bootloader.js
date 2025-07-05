@@ -687,7 +687,7 @@ async function loadPinnedList() {
 				value.title,
 				value.thumbnail,
 				value.is_parent_asin,
-				!!value.is_pre_release,
+				value.is_pre_release || value.is_pre_release == "true",
 				value.enrollment_guid
 			);
 		});
