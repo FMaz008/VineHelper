@@ -650,9 +650,9 @@ async function initiateSettings() {
 
 	//Patreon load page link:
 	if (Settings.get("general.country") == null) {
-		document.getElementById("PatreonLoadPage").style.display = "none";
+		document.getElementById("RefreshVinePage").style.display = "none";
 	} else {
-		document.getElementById("PatreonLoadPage").href =
+		document.getElementById("RefreshVinePage").href =
 			`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore`;
 	}
 
