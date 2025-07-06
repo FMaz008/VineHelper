@@ -403,7 +403,7 @@ class MonitorCore {
 		const debugTabTitle = this._settings.get("general.debugTabTitle");
 		if (debugTabTitle) {
 			console.log(`[TabTitle] Updated to: ${visibleTilesCount}`, {
-				providedCount: count,
+				providedCount: visibleTilesCount,
 				timestamp: new Date().toISOString(),
 			});
 		}
@@ -437,6 +437,14 @@ class MonitorCore {
 			// Insert the notification at the top
 			container.insertBefore(notif, firstChild);
 		});
+	}
+
+	/**
+	 * Get the TileCounter instance for testing purposes
+	 * @returns {TileCounter} The TileCounter instance
+	 */
+	getTileCounter() {
+		return this._tileCounter;
 	}
 }
 

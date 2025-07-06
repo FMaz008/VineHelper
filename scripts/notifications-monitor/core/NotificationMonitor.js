@@ -17,6 +17,10 @@ import { Item } from "/scripts/core/models/Item.js";
 let MemoryDebugger = null;
 let memoryDebuggerInitialized = false;
 
+// TileCounter debugging - will be initialized if debug mode is enabled
+let TileCounterDebugger = null;
+let tileCounterDebuggerInitialized = false;
+
 // Create a promise that will be resolved when we check for debug mode
 window.MEMORY_DEBUGGER_READY = new Promise((resolve) => {
 	// This will be resolved when NotificationMonitor is initialized
@@ -100,6 +104,107 @@ class NotificationMonitor extends MonitorCore {
 
 		// Initialize memory debugger if enabled in settings
 		this._initializeMemoryDebugger();
+
+		// Initialize debug mode for TileCounter and monitor exposure
+		this._initializeDebugMode();
+
+		// Register this instance for testing if the expose script is loaded
+		if (window.VineHelper && typeof window.VineHelper.registerMonitor === "function") {
+			window.VineHelper.registerMonitor(this);
+			console.log("[NotificationMonitor] Registered instance for testing at window.VineHelper.monitor");
+		}
+	}
+
+	/**
+	 * Initialize debug mode for TileCounter and monitor exposure
+	 * @private
+	 */
+	async _initializeDebugMode() {
+		// Wait for settings to load
+		await this._settings.waitForLoad();
+
+		// Check for debug flags from settings
+		const debugTileCounter = this._settings.get("general.debugTileCounter");
+		const debugMonitor = localStorage.getItem("vh_debug_monitor") === "true";
+
+		// Create VineHelper namespace if it doesn't exist
+		window.VineHelper = window.VineHelper || {};
+
+		// Expose monitor instance if debug mode is enabled
+		if (debugMonitor || debugTileCounter) {
+			window.VineHelper.monitor = this;
+			console.log("[NotificationMonitor] Debug mode enabled - Monitor exposed at window.VineHelper.monitor");
+
+			// Initialize TileCounter debugging if enabled
+			if (debugTileCounter) {
+				await this._initializeTileCounterDebugger();
+			}
+
+			// Log debug instructions
+			console.log(`
+╔════════════════════════════════════════════════════════════╗
+║                    Debug Mode Enabled                      ║
+╚════════════════════════════════════════════════════════════╝
+
+Available debug objects:
+	 window.VineHelper.monitor     - NotificationMonitor instance
+	 window.tileCounter           - TileCounter instance (if enabled)
+	 window.tileCounterDebugger   - TileCounterDebugger instance (if enabled)
+
+To enable/disable debug modes:
+	 - Use the Debug tab in VineHelper settings
+	 - Or: localStorage.setItem('vh_debug_monitor', 'true')
+
+TileCounter methods:
+	 .recountVisibleTiles(delay, priority)
+	 .getCount()
+	 .getPerformanceMetrics()
+	 .setPerformanceMetrics(enabled)
+	 .waitUntilCountComplete()
+			`);
+		}
+	}
+
+	/**
+	 * Initialize the TileCounter debugger if enabled in settings
+	 * @private
+	 */
+	async _initializeTileCounterDebugger() {
+		try {
+			// Get the TileCounter instance
+			const tileCounter = this.getTileCounter();
+			if (!tileCounter) {
+				console.error("[NotificationMonitor] TileCounter not available for debugging");
+				return;
+			}
+
+			// Dynamically import the TileCounter debugger
+			const module = await import("/scripts/notifications-monitor/debug/TileCounterDebugger.js");
+			TileCounterDebugger = module.TileCounterDebugger || module.default || module;
+
+			if (!TileCounterDebugger) {
+				console.error("[NotificationMonitor] TileCounterDebugger module not found");
+				return;
+			}
+
+			// Create the debugger instance
+			const debuggerInstance = new TileCounterDebugger(tileCounter);
+
+			// Expose globally for convenience
+			window.tileCounter = tileCounter;
+			window.tileCounterDebugger = debuggerInstance;
+
+			console.log(
+				"🔍 TileCounter Debugger loaded. Use window.tileCounter and window.tileCounterDebugger to access."
+			);
+
+			// Enable performance metrics
+			tileCounter.setPerformanceMetrics(true);
+
+			tileCounterDebuggerInitialized = true;
+		} catch (error) {
+			console.error("Failed to initialize TileCounterDebugger:", error);
+		}
 	}
 
 	/**
@@ -2187,8 +2292,8 @@ class NotificationMonitor extends MonitorCore {
 			this.#processNotificationFiltering(node);
 		}
 
-		//Recount the visible tiles
-		this._tileCounter.recountVisibleTiles(0); //Don't wait.
+		//Recount the visible tiles with priority (user-initiated filtering)
+		this._tileCounter.recountVisibleTiles(0, true); //Don't wait, high priority
 	}
 
 	#mouseoverHandler(e) {
