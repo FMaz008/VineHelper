@@ -7,7 +7,6 @@ import { TierMgr } from "/scripts/notifications-monitor/services/TierMgr.js";
 import { NoShiftGrid } from "/scripts/notifications-monitor/services/NoShiftGrid.js";
 import { ErrorAlertManager } from "/scripts/notifications-monitor/services/ErrorAlertManager.js";
 import { GridEventManager } from "/scripts/notifications-monitor/services/GridEventManager.js";
-import { VisibilityStateManager } from "/scripts/notifications-monitor/services/VisibilityStateManager.js";
 import { DIContainer } from "/scripts/infrastructure/DIContainer.js";
 
 class NotificationMonitorV3 extends NotificationMonitor {
@@ -28,9 +27,6 @@ class NotificationMonitorV3 extends NotificationMonitor {
 
 		// New service uses DI
 		this._errorAlertManager = this.#container.resolve("errorAlertManager");
-
-		// Initialize VisibilityStateManager
-		this._visibilityStateManager = this.#container.resolve("visibilityStateManager");
 	}
 
 	/**
@@ -44,26 +40,14 @@ class NotificationMonitorV3 extends NotificationMonitor {
 			singleton: true,
 		});
 
-		// Register VisibilityStateManager as a singleton
-		// Manages both visible items count and element visibility state with centralized control
-		this.#container.register(
-			"visibilityStateManager",
-			(hookMgr, settings) => new VisibilityStateManager(hookMgr, settings),
-			{
-				singleton: true,
-				dependencies: ["hookMgr", "settings"],
-			}
-		);
-
 		// Register GridEventManager with its dependencies
 		// This demonstrates proper DI with dependency injection
 		this.#container.register(
 			"gridEventManager",
-			(hookMgr, noShiftGrid, monitor, visibilityStateManager) =>
-				new GridEventManager(hookMgr, noShiftGrid, monitor, visibilityStateManager),
+			(hookMgr, noShiftGrid, monitor) => new GridEventManager(hookMgr, noShiftGrid, monitor),
 			{
 				singleton: true,
-				dependencies: ["hookMgr", "noShiftGrid", "monitor", "visibilityStateManager"],
+				dependencies: ["hookMgr", "noShiftGrid", "monitor"],
 			}
 		);
 
@@ -185,28 +169,8 @@ class NotificationMonitorV3 extends NotificationMonitor {
 			grid.style.gridTemplateColumns = `repeat(auto-fill,minmax(${width}px,auto))`;
 		}
 
-		// Initialize the VisibilityStateManager with the current count
-		// This ensures placeholders show correctly on initial load
-		const initialCount = this._countVisibleItems();
-		if (this._visibilityStateManager && initialCount >= 0) {
-			this._visibilityStateManager.setCount(initialCount);
-
-			// Debug initial count
-			if (this._settings.get("general.debugTabTitle")) {
-				console.log("[NotificationMonitorV3] Initial count set", {
-					initialCount,
-					totalTiles: this._gridContainer.querySelectorAll(".vvp-item-tile").length,
-					placeholders: this._gridContainer.querySelectorAll(".vh-placeholder-tile").length,
-					itemTiles: this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)").length,
-				});
-			}
-		}
-
 		// Initialize event-driven tab title updates
 		this._initializeTabTitleListener();
-
-		// Set up periodic count verification to catch off-by-one errors
-		this._setupCountVerification();
 
 		//Insert the header
 		const parentContainer = document.querySelector("div.vvp-tab-content");
@@ -315,7 +279,7 @@ class NotificationMonitorV3 extends NotificationMonitor {
 			!this._settings.get("notification.monitor.listView") &&
 			this._settings.get("general.tileSize.enabled")
 		) {
-			this._noShiftGrid = new NoShiftGrid(this, this._visibilityStateManager);
+			this._noShiftGrid = new NoShiftGrid(this);
 
 			// Update the dependency registrations with the actual instances
 			this.#container.register("noShiftGrid", () => this._noShiftGrid);
@@ -382,18 +346,6 @@ class NotificationMonitorV3 extends NotificationMonitor {
 				return obj[prop];
 			},
 		});
-	}
-
-	/**
-	 * Update the tab title with the current visible items count
-	 * @override
-	 */
-	_updateTabTitle() {
-		// Get the current visible items count from VisibilityStateManager
-		const itemsCount = this._visibilityStateManager ? this._visibilityStateManager.getCount() : 0;
-
-		// Update the tab title to match parent implementation
-		document.title = "VHNM (" + itemsCount + ")";
 	}
 
 	/**

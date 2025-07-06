@@ -17,7 +17,6 @@ class GridEventManager {
 	#hookMgr;
 	#noShiftGrid;
 	#monitor;
-	#visibilityStateManager;
 	#isEnabled = true;
 
 	// Event batching properties
@@ -25,11 +24,10 @@ class GridEventManager {
 	#batchTimer = null;
 	#batchDelay = 50; // milliseconds
 
-	constructor(hookMgr, noShiftGrid, monitor, visibilityStateManager) {
+	constructor(hookMgr, noShiftGrid, monitor) {
 		this.#hookMgr = hookMgr;
 		this.#noShiftGrid = noShiftGrid;
 		this.#monitor = monitor;
-		this.#visibilityStateManager = visibilityStateManager;
 
 		this.#setupEventListeners();
 	}
@@ -65,13 +63,6 @@ class GridEventManager {
 			return;
 		}
 
-		// Note: Visibility count is now managed entirely by VisibilityStateManager
-		// when setVisibility is called, preventing double counting
-		if (operation === "remove" && data.count && this.#visibilityStateManager) {
-			// Only decrement on remove since add is handled by setVisibility
-			this.#visibilityStateManager.decrement(data.count);
-		}
-
 		// Only update placeholders for operations that affect grid layout
 		if (this.#shouldUpdatePlaceholders(operation)) {
 			// Use requestAnimationFrame for visual stability
@@ -97,9 +88,7 @@ class GridEventManager {
 			this.#updatePlaceholders();
 		} else if (visibleItemsRemovedCount > 0) {
 			// Decrement visibility count by removed items
-			if (this.#visibilityStateManager) {
-				this.#visibilityStateManager.decrement(visibleItemsRemovedCount);
-			}
+
 			this.#noShiftGrid.insertEndPlaceholderTiles(visibleItemsRemovedCount);
 			this.#updatePlaceholders();
 		}
@@ -112,11 +101,6 @@ class GridEventManager {
 	#handleGridClear(data = {}) {
 		if (!this.#isEnabled || !this.#noShiftGrid) {
 			return;
-		}
-
-		// Update visibility count based on items removed
-		if (this.#visibilityStateManager && data.count) {
-			this.#visibilityStateManager.decrement(data.count);
 		}
 
 		// Reset end placeholders count and update placeholders
@@ -133,11 +117,6 @@ class GridEventManager {
 	#handleGridFiltered(data = {}) {
 		if (!this.#isEnabled || !this.#noShiftGrid) {
 			return;
-		}
-
-		// Update visibility count to new filtered count
-		if (this.#visibilityStateManager && data.visibleCount !== undefined) {
-			this.#visibilityStateManager.setCount(data.visibleCount);
 		}
 
 		// Don't reset end placeholders count during filtering
@@ -286,11 +265,6 @@ class GridEventManager {
 				visibleCount: data.visibleCount,
 				endPlaceholdersCountBefore: this.#noShiftGrid._endPlaceholdersCount,
 			});
-		}
-
-		// Update visibility count if provided
-		if (this.#visibilityStateManager && data.visibleCount !== undefined) {
-			this.#visibilityStateManager.setCount(data.visibleCount);
 		}
 
 		// Reset end placeholders count after fetch completes
@@ -510,7 +484,6 @@ class GridEventManager {
 		this.#hookMgr = null;
 		this.#noShiftGrid = null;
 		this.#monitor = null;
-		this.#visibilityStateManager = null;
 	}
 }
 

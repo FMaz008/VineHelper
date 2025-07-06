@@ -68,7 +68,6 @@ class NotificationMonitor extends MonitorCore {
 	_sortType = TYPE_DATE_DESC;
 	_noShiftGrid = null;
 	_gridEventManager = null;
-	_visibilityStateManager = null;
 
 	#pinDebounceTimer = null;
 	#pinDebounceClickable = true;
@@ -234,146 +233,6 @@ class NotificationMonitor extends MonitorCore {
 	}
 
 	/**
-	 * Set element visibility using VisibilityStateManager for V3 or direct style for V2
-	 * @param {HTMLElement} element - The element to update
-	 * @param {boolean} visible - Whether the element should be visible
-	 * @param {string} displayStyle - The display style to use when visible
-	 */
-	#setElementVisibility(element, visible, displayStyle = null) {
-		if (this._visibilityStateManager && this._visibilityStateManager.setVisibility) {
-			// V3 with VisibilityStateManager
-			this._visibilityStateManager.setVisibility(element, visible, displayStyle || this.#getTileDisplayStyle());
-		} else {
-			// V2 fallback - set style directly
-			element.style.display = visible ? displayStyle || this.#getTileDisplayStyle() : "none";
-		}
-	}
-
-	/**
-	 * Log Zero ETV visibility changes (consolidated method)
-	 * @private
-	 * @param {string} action - The action being performed (e.g., "visibility check", "clearing flag")
-	 * @param {Object} details - Details to log
-	 */
-	#logZeroETVVisibility(action, details) {
-		const debugTabTitle = this._settings.get("general.debugTabTitle");
-		if (debugTabTitle) {
-			console.log(`[NotificationMonitor] Zero ETV ${action}`, {
-				...details,
-				currentFilter: this._filterType,
-				filterName:
-					this._filterType === TYPE_HIGHLIGHT_OR_ZEROETV
-						? "Zero ETV or KW match only"
-						: this._filterType === TYPE_ZEROETV
-							? "Zero ETV only"
-							: "Other",
-				timestamp: new Date().toISOString(),
-			});
-		}
-	}
-
-	/**
-	 * Check if an element is visible
-	 * @param {HTMLElement} element - The element to check
-	 * @returns {boolean} - True if the element is visible, false otherwise
-	 */
-	#isElementVisible(element) {
-		// Delegate to VisibilityStateManager for V3, fall back to direct check for V2
-		if (this._visibilityStateManager && this._visibilityStateManager.isVisible) {
-			return this._visibilityStateManager.isVisible(element);
-		}
-
-		// Fallback for V2 or if VisibilityStateManager is not available
-		if (!element) return false;
-		const style = window.getComputedStyle(element);
-		return style.display !== "none";
-	}
-
-	/**
-	 * Clear the computed style cache when styles might have changed
-	 * Call this when filters change or bulk style operations occur
-	 */
-	#invalidateComputedStyleCache() {
-		// Delegate to VisibilityStateManager for V3
-		if (this._visibilityStateManager && this._visibilityStateManager.clearCache) {
-			this._visibilityStateManager.clearCache();
-		}
-		// No cache to clear for V2 since we removed #computedStyleCache
-	}
-
-	/**
-	 * Handle visibility change detection and emit appropriate grid events
-	 * @param {HTMLElement} element - The element to check and process
-	 * @param {boolean} wasVisible - The visibility state before the change
-	 */
-	#handleVisibilityChange(element, wasVisible) {
-		// For V3 with VisibilityStateManager, visibility is already handled by setElementVisibility
-		// We just need to re-apply filtering without triggering another visibility change
-		if (this._visibilityStateManager && this._visibilityStateManager.handlePossibleVisibilityChange) {
-			// Get current visibility state from the element
-			const isNowVisible = this._visibilityStateManager.isVisible(element);
-
-			// Only emit change event if visibility actually changed
-			// The count update was already handled by setElementVisibility
-			if (wasVisible !== isNowVisible) {
-				// Emit element-specific change event without updating count
-				this._hookMgr?.hookExecute("visibility:element-changed", {
-					element,
-					wasVisible,
-					isVisible: isNowVisible,
-					timestamp: Date.now(),
-				});
-			}
-
-			return isNowVisible;
-		} else {
-			// Fallback for V2 - re-apply filtering and check if visibility changed
-			const isNowVisible = this.#processNotificationFiltering(element);
-
-			// Emit grid event if visibility changed
-			if (wasVisible !== isNowVisible) {
-				this.#emitGridEvent(isNowVisible ? "grid:items-added" : "grid:items-removed", { count: 1 });
-			}
-
-			return isNowVisible;
-		}
-	}
-
-	/**
-	 * Update visible count after filtering and emit appropriate events
-	 */
-	#updateVisibleCountAfterFiltering() {
-		// For filter operations, update immediately to prevent placeholder bounce
-		// The DOM is already updated by applyFilteringToAllItems
-
-		// Invalidate computed style cache after bulk filtering
-		// This prevents stale cached values after style changes
-		this.#invalidateComputedStyleCache();
-
-		// Force a reflow to ensure styles are applied
-		void this._gridContainer.offsetHeight;
-
-		// Recalculate visible count after filtering
-		let newCount;
-		if (this._visibilityStateManager && this._visibilityStateManager.recalculateCount) {
-			// V3 with VisibilityStateManager - use its recalculation method
-			const tiles = this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
-			newCount = this._visibilityStateManager.recalculateCount(tiles);
-		} else {
-			// V2 fallback - count directly
-			newCount = this._countVisibleItems();
-			// Update the visibility state manager with new count (V3 only)
-			this._visibilityStateManager?.setCount(newCount);
-		}
-
-		// Update tab title
-		this._updateTabTitle(newCount);
-		// Emit event for filter change with visible count
-		// The GridEventManager will handle placeholder updates via this event
-		this.#emitGridEvent("grid:items-filtered", { visibleCount: newCount });
-	}
-
-	/**
 	 * Determine if the item should be displayed based on the filters settings. Will hide the item if it doesn't match the filters.
 	 * @param {object} node - The DOM element of the tile
 	 * @returns {boolean} - If the node should be visible.
@@ -391,7 +250,7 @@ class NotificationMonitor extends MonitorCore {
 
 		//Feed Paused
 		if (node.dataset.feedPaused == "true") {
-			this.#setElementVisibility(node, false);
+			node.style.display = "none";
 			return false;
 		}
 
@@ -407,7 +266,7 @@ class NotificationMonitor extends MonitorCore {
 				this._tierMgr.getSilverTierETVLimit() != null &&
 				parseFloat(etvObj.dataset.etvMin) > this._tierMgr.getSilverTierETVLimit()
 			) {
-				this.#setElementVisibility(node, false);
+				node.style.display = "none";
 				return false;
 			}
 		}
@@ -416,12 +275,11 @@ class NotificationMonitor extends MonitorCore {
 		if (this._searchText.trim()) {
 			const title = node.querySelector(".a-truncate-full")?.innerText?.toLowerCase() || "";
 			if (!title.includes(this._searchText.toLowerCase().trim())) {
-				this.#setElementVisibility(node, false);
+				node.style.display = "none";
 				return false;
 			}
 		}
 
-		const displayStyle = this.#getTileDisplayStyle();
 		let shouldBeVisible = false;
 
 		if (this._filterType == -1) {
@@ -439,7 +297,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		if (!unpausing) {
-			this.#setElementVisibility(node, shouldBeVisible, displayStyle);
+			node.style.display = shouldBeVisible ? this.#getTileDisplayStyle() : "none";
 		}
 
 		//Queue filter
@@ -471,7 +329,7 @@ class NotificationMonitor extends MonitorCore {
 									: this._filterType === TYPE_REGULAR
 										? "Regular only"
 										: "All",
-					styleDisplay,
+					styleDisplay: this.#getTileDisplayStyle(),
 				});
 			}
 		}
@@ -488,7 +346,7 @@ class NotificationMonitor extends MonitorCore {
 			const finalVisibility = shouldBeVisible && queueMatches;
 
 			if (!unpausing) {
-				this.#setElementVisibility(node, finalVisibility, this.#getTileDisplayStyle());
+				node.style.display = finalVisibility ? this.#getTileDisplayStyle() : "none";
 			}
 			return finalVisibility;
 		}
@@ -582,28 +440,24 @@ class NotificationMonitor extends MonitorCore {
 		setTimeout(() => {
 			// Always recount to ensure accuracy after fetch, as items may have been
 			// added with isVisible=false during the fetch process
-			const visibleCount = this._countVisibleItems();
-			if (this._visibilityStateManager) {
-				// Update the VisibilityStateManager with the accurate count
-				this._visibilityStateManager.setCount(visibleCount);
-			}
+			this._tileCounter.recountVisibleTiles(0);
 
 			const debugPlaceholders = this._settings?.get("general.debugPlaceholders");
 			if (debugPlaceholders) {
 				const itemTiles = this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
 				const placeholderTiles = this._gridContainer.querySelectorAll(".vh-placeholder-tile");
 				console.log("[fetchRecentItemsEnd] Fetch complete (after DOM settle)", {
-					visibleCount,
+					visibleCount: this._tileCounter.getCount(),
 					totalItems: this._itemsMgr.items.size,
 					gridChildren: this._gridContainer.children.length,
 					itemTiles: itemTiles.length,
 					placeholders: placeholderTiles.length,
-					visibilityStateCount: this._visibilityStateManager?.getCount(),
+					visibilityStateCount: this._tileCounter.getCount(),
 				});
 			}
 
 			// Emit fetch-complete event first to allow placeholder updates
-			this.#emitGridEvent("grid:fetch-complete", { visibleCount });
+			this.#emitGridEvent("grid:fetch-complete", { visibleCount: this._tileCounter.getCount() });
 
 			// Note: Sorting is now handled by GridEventManager after placeholders are updated
 		}, 100); // Small delay to ensure DOM has settled
@@ -786,11 +640,7 @@ class NotificationMonitor extends MonitorCore {
 
 		// Emit event if any visible items were removed
 		if (visibleRemovedCount > 0) {
-			// Atomic count update - decrement by the total visible items removed at once
-			// This prevents race conditions during bulk operations
-			if (this._visibilityStateManager) {
-				this._visibilityStateManager.decrement(visibleRemovedCount);
-			}
+			this._tileCounter.recountVisibleTiles();
 
 			// DEBUG: Log atomic bulk operation
 			if (debugBulkOperations) {
@@ -912,92 +762,9 @@ class NotificationMonitor extends MonitorCore {
 		this.#bulkRemoveItems(asins, false);
 	}
 
-	/**
-	 * Set up periodic count verification to catch off-by-one errors
-	 * @private
-	 */
-	_setupCountVerification() {
-		// Only set up if debug is enabled
-		if (!this._settings.get("general.debugTabTitle")) {
-			return;
-		}
-
-		// Clear any existing interval
-		if (this._countVerificationInterval) {
-			clearInterval(this._countVerificationInterval);
-		}
-
-		// Wait for initial load to complete
-		setTimeout(() => {
-			// Verify count immediately
-			this._verifyCount();
-
-			// Then set up periodic verification every 30 seconds
-			this._countVerificationInterval = setInterval(() => {
-				this._verifyCount();
-			}, 30000);
-
-			if (this._settings.get("general.debugTabTitle")) {
-				console.log("[NotificationMonitor] Count verification enabled - will check every 30 seconds");
-			}
-		}, 5000); // Wait 5 seconds for initial load
-	}
-
-	/**
-	 * Verify that the tab title count matches the actual visible items
-	 * @private
-	 */
-	_verifyCount() {
-		if (!this._gridContainer || !this._visibilityStateManager) {
-			return;
-		}
-
-		const tiles = this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
-		// Check actual visibility using computed style, not just the hidden class
-		const actualVisibleCount = Array.from(tiles).filter((tile) => {
-			const style = window.getComputedStyle(tile);
-			return style.display !== "none" && !tile.classList.contains("hidden");
-		}).length;
-		const reportedCount = this._visibilityStateManager.getCount();
-		const debugTabTitle = this._settings.get("general.debugTabTitle");
-
-		if (actualVisibleCount !== reportedCount) {
-			console.error("[NotificationMonitor] Count mismatch detected!", {
-				actualVisibleCount,
-				reportedCount,
-				difference: actualVisibleCount - reportedCount,
-				timestamp: new Date().toISOString(),
-			});
-
-			// Debug: Log sample of tiles to understand visibility
-			if (debugTabTitle) {
-				const sampleTiles = Array.from(tiles).slice(0, 5);
-				console.log("[NotificationMonitor] Sample tile visibility:", {
-					samples: sampleTiles.map((tile) => ({
-						asin: tile.dataset.asin,
-						hasHiddenClass: tile.classList.contains("hidden"),
-						inlineDisplay: tile.style.display,
-						computedDisplay: window.getComputedStyle(tile).display,
-						isVisible:
-							window.getComputedStyle(tile).display !== "none" && !tile.classList.contains("hidden"),
-					})),
-					totalTiles: tiles.length,
-				});
-			}
-
-			// Auto-fix the count
-			this._visibilityStateManager.recalculateCount(tiles);
-			if (debugTabTitle) {
-				console.log("[NotificationMonitor] Count recalculated to fix mismatch");
-			}
-		} else {
-			if (debugTabTitle) {
-				console.log("[NotificationMonitor] Count verification passed:", {
-					count: actualVisibleCount,
-					timestamp: new Date().toISOString(),
-				});
-			}
-		}
+	#isElementVisible(element) {
+		const computerStyle = window.getComputedStyle(element);
+		return computerStyle.display !== "none";
 	}
 
 	/**
@@ -1045,15 +812,7 @@ class NotificationMonitor extends MonitorCore {
 		// Use the bulk remove method - it will handle counting and event emission
 		this.#bulkRemoveItems(unavailableAsins, false);
 
-		// After clearing unavailable items, recalculate the count to ensure accuracy
-		// This fixes any off-by-one errors that may have accumulated
-		if (this._visibilityStateManager) {
-			if (debugBulkOperations) {
-				console.log("[clearUnavailableItems] Recalculating count after clearing unavailable items");
-			}
-			const tiles = this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
-			this._visibilityStateManager.recalculateCount(tiles);
-		}
+		this._tileCounter.recountVisibleTiles(0);
 	}
 
 	/**
@@ -1168,10 +927,6 @@ class NotificationMonitor extends MonitorCore {
 							stack: new Error().stack.split("\n").slice(2, 5).join("\n"),
 						});
 					}
-
-					// Check visibility before update
-					const wasVisible = this.#isElementVisible(element);
-
 					// Update the data
 					this._itemsMgr.addItemData(asin, item.data);
 
@@ -1186,9 +941,6 @@ class NotificationMonitor extends MonitorCore {
 					if (!item.data.unavailable) {
 						this._enableItem(element); //Return the DOM element of the tile.
 					}
-
-					// Handle visibility change and emit events if needed
-					this.#handleVisibilityChange(element, wasVisible);
 
 					return element;
 				}
@@ -1340,7 +1092,7 @@ class NotificationMonitor extends MonitorCore {
 					isVisible,
 					display: tileDOM.style.display,
 					hasHiddenClass: tileDOM.classList.contains("hidden"),
-					currentVisibilityStateCount: this._visibilityStateManager?.getCount(),
+					currentVisibilityStateCount: this._tileCounter.getCount(),
 					itemDataIsVisible: item.isVisible,
 					timestamp: new Date().toISOString(),
 				});
@@ -1459,49 +1211,7 @@ class NotificationMonitor extends MonitorCore {
 
 			// BUG FIX 2: Move sound playing AFTER filtering to respect filter settings
 			// First apply filtering to determine visibility
-			const countBeforeFiltering = this._visibilityStateManager?.getCount();
-
-			// DEBUG: Check type flags BEFORE filtering
-			if (this._settings.get("general.debugSound") && KWsMatch) {
-				console.log("[SOUND DEBUG] Type flags BEFORE filtering (after fix):", {
-					asin,
-					KWsMatch,
-					typeHighlight: tileDOM.dataset.typeHighlight,
-					typeZeroETV: tileDOM.dataset.typeZeroETV,
-					filterType: this._filterType,
-					filterName:
-						this._filterType === TYPE_HIGHLIGHT
-							? "KW match only"
-							: this._filterType === TYPE_HIGHLIGHT_OR_ZEROETV
-								? "Zero ETV or KW match only"
-								: this._filterType === TYPE_ZEROETV
-									? "Zero ETV only"
-									: "Other",
-				});
-			}
-
 			const isVisible = this.#processNotificationFiltering(tileDOM);
-			const countAfterFiltering = this._visibilityStateManager?.getCount();
-
-			// Debug count changes during filtering
-			if (
-				(this._settings.get("general.debugItemProcessing") || this._settings.get("general.debugTabTitle")) &&
-				countBeforeFiltering !== countAfterFiltering
-			) {
-				console.log("[NotificationMonitor] Count changed during processNotificationFiltering", {
-					asin,
-					countBefore: countBeforeFiltering,
-					countAfter: countAfterFiltering,
-					delta: countAfterFiltering - countBeforeFiltering,
-					isVisible,
-					timestamp: new Date().toISOString(),
-					typeHighlight: tileDOM.dataset.typeHighlight,
-					typeZeroETV: tileDOM.dataset.typeZeroETV,
-					typeUnknownETV: tileDOM.dataset.typeUnknownETV,
-					filterType: this._filterType,
-					filterQueue: this._filterQueue,
-				});
-			}
 
 			// BUG FIX 1: During bulk fetch, only play sounds for items that will be visible
 			// This prevents sounds from playing for items that are filtered out
@@ -1567,15 +1277,8 @@ class NotificationMonitor extends MonitorCore {
 				this._mostRecentItemDate = date;
 			}
 
-			// Capture visibility state AFTER filtering but BEFORE any other changes
-			const wasVisible = this.#isElementVisible(tileDOM);
-
 			//Set the highlight color as needed - MUST be called AFTER setting type attributes
 			this._processNotificationHighlight(tileDOM);
-
-			// Handle visibility change ONCE after all type flags are set
-			// This prevents double counting when an item matches multiple criteria
-			this.#handleVisibilityChange(tileDOM, wasVisible);
 
 			// Note: Filtering is now done BEFORE sound playing (see above)
 			// This ensures sounds only play for visible items
@@ -1583,29 +1286,12 @@ class NotificationMonitor extends MonitorCore {
 			// Emit grid events during normal operation or when fetching recent items
 			// Always emit during fetch to ensure counts stay accurate
 			if (!this._feedPaused || this._fetchingRecentItems) {
-				const countBeforeEvent = this._visibilityStateManager?.getCount();
-
-				// Emit event immediately to avoid visual delays
-				// Don't include count - visibility is tracked by VisibilityStateManager when setElementVisibility is called
-				this.#emitGridEvent("grid:items-added", {});
-
-				const countAfterEvent = this._visibilityStateManager?.getCount();
-
 				// Debug: Log when new items are added
 				if (this._settings.get("general.debugItemProcessing") || this._settings.get("general.debugTabTitle")) {
-					if (countBeforeEvent !== countAfterEvent) {
-						console.log("[NotificationMonitor] Count changed after grid:items-added event", {
-							asin,
-							countBefore: countBeforeEvent,
-							countAfter: countAfterEvent,
-							delta: countAfterEvent - countBeforeEvent,
-							timestamp: new Date().toISOString(),
-						});
-					}
 					console.log("[NotificationMonitor] New item added - FINAL STATE", {
 						asin,
 						isVisible,
-						currentCount: this._visibilityStateManager?.getCount(),
+						currentCount: this._tileCounter.getCount(),
 						feedPaused: this._feedPaused,
 						fetchingRecentItems: this._fetchingRecentItems,
 						tileVisible: this.#isElementVisible(tileDOM),
@@ -1617,6 +1303,8 @@ class NotificationMonitor extends MonitorCore {
 						timestamp: new Date().toISOString(),
 					});
 				}
+
+				this._tileCounter.recountVisibleTiles();
 			}
 
 			//Autotruncate the items if there are too many
@@ -1696,9 +1384,6 @@ class NotificationMonitor extends MonitorCore {
 			window.MEMORY_DEBUGGER.markRemoved(tile);
 		}
 
-		// Check if tile was visible before removal
-		const wasVisible = this.#isElementVisible(tile);
-
 		// Get the item data to access its image URL
 		const item = this._itemsMgr.items.get(asin);
 		const imgUrl = item?.data?.img_url;
@@ -1732,8 +1417,8 @@ class NotificationMonitor extends MonitorCore {
 		});
 		tile = null;
 
-		// Emit event for item removal with count
-		this.#emitGridEvent("grid:items-removed", { count: wasVisible ? 1 : 0 });
+		// Recount the visible tiles
+		this._tileCounter.recountVisibleTiles(0);
 	}
 
 	/**
@@ -1812,9 +1497,6 @@ class NotificationMonitor extends MonitorCore {
 					if (technicalBtn) {
 						technicalBtn.dataset.highlightkw = matchedKeyword;
 					}
-
-					// Check visibility before changing highlight status
-					const wasVisible = this.#isElementVisible(notif);
 
 					// Set the highlight flag
 					notif.dataset.typeHighlight = 1;
@@ -1916,9 +1598,6 @@ class NotificationMonitor extends MonitorCore {
 
 		// Clear unknown ETV flag since we now have an ETV value
 		if (notif.dataset.typeUnknownETV == 1) {
-			// Check visibility BEFORE clearing the flag
-			const wasVisible = this.#isElementVisible(notif);
-
 			// Debug logging for unknown ETV flag clearing
 			if (this._settings.get("general.debugItemProcessing")) {
 				const asin = notif.id?.replace("vh-notification-", "") || "unknown";
@@ -1927,7 +1606,6 @@ class NotificationMonitor extends MonitorCore {
 					wasUnknownETV: true,
 					typeHighlight: notif.dataset.typeHighlight,
 					typeZeroETV: notif.dataset.typeZeroETV,
-					wasVisible,
 					currentFilterType: this._filterType,
 					isUnknownETVFilter: this._filterType === TYPE_UNKNOWN_ETV,
 					TYPE_UNKNOWN_ETV_VALUE: TYPE_UNKNOWN_ETV,
@@ -1940,13 +1618,12 @@ class NotificationMonitor extends MonitorCore {
 			notif.dataset.typeUnknownETV = 0;
 
 			// Re-apply filter since the item no longer matches unknown ETV criteria
-			if (this._filterType === TYPE_UNKNOWN_ETV && wasVisible) {
+			if (this._filterType === TYPE_UNKNOWN_ETV) {
 				// Item was visible on Unknown ETV filter but now has ETV data, so it should be hidden
 				if (this._settings.get("general.debugItemProcessing")) {
 					console.log("[DEBUG-ETV-STYLING] Hiding item that no longer matches Unknown ETV filter", {
 						asin: notif.id?.replace("vh-notification-", "") || "unknown",
 						filterType: this._filterType,
-						wasVisible,
 						timestamp: new Date().toISOString(),
 					});
 				}
@@ -1957,9 +1634,8 @@ class NotificationMonitor extends MonitorCore {
 				if (this._settings.get("general.debugItemProcessing")) {
 					console.log("[DEBUG-ETV-STYLING] Filter re-applied after clearing unknown ETV", {
 						asin: notif.id?.replace("vh-notification-", "") || "unknown",
-						wasVisible,
 						newVisibility,
-						shouldBeHidden: wasVisible && !newVisibility,
+						shouldBeHidden: !newVisibility,
 						timestamp: new Date().toISOString(),
 					});
 				}
@@ -1969,14 +1645,6 @@ class NotificationMonitor extends MonitorCore {
 				return;
 			} else {
 				// For other filters, just check if visibility changed
-				const isNowVisible = this.#isElementVisible(notif);
-				if (wasVisible !== isNowVisible) {
-					// For V3, VisibilityStateManager handles count changes
-					// For V2, emit grid event
-					if (!this._visibilityStateManager) {
-						this.#emitGridEvent(isNowVisible ? "grid:items-added" : "grid:items-removed", { count: 1 });
-					}
-				}
 			}
 		}
 
@@ -1996,28 +1664,11 @@ class NotificationMonitor extends MonitorCore {
 				this.#etvProcessingItems.add(asin);
 
 				try {
-					// Check visibility BEFORE setting the flag
-					const wasVisible = this.#isElementVisible(notif);
-
 					// Set the flag before calling the handler
 					notif.dataset.typeZeroETV = 1;
 
 					// Process filtering to update visibility based on the new flag
 					this.#processNotificationFiltering(notif);
-
-					// Check if visibility changed after processing
-					const isNowVisible = this.#isElementVisible(notif);
-
-					// Debug logging for Zero ETV visibility changes
-					this.#logZeroETVVisibility("item visibility check", {
-						asin: notif.dataset.asin,
-						wasVisible,
-						isNowVisible,
-						visibilityChanged: wasVisible !== isNowVisible,
-						etvMin: etvObj.dataset.etvMin,
-						etvMax: etvObj.dataset.etvMax,
-						stackTrace: new Error().stack.split("\n").slice(2, 5).join(" -> "),
-					});
 
 					// Only call the item found handler for sound and sorting, not for visibility
 					// Pass skipFiltering=true to avoid duplicate processing
@@ -2026,12 +1677,6 @@ class NotificationMonitor extends MonitorCore {
 						this._settings.get("notification.monitor.zeroETV.sound") != "0",
 						true
 					);
-
-					// Visibility changes are already handled by VisibilityStateManager via processNotificationFiltering
-					// For V2, we need to emit grid events manually
-					if (wasVisible !== isNowVisible && !this._visibilityStateManager) {
-						this.#emitGridEvent(isNowVisible ? "grid:items-added" : "grid:items-removed", { count: 1 });
-					}
 				} finally {
 					// Always remove from processing set
 					this.#etvProcessingItems.delete(asin);
@@ -2040,30 +1685,9 @@ class NotificationMonitor extends MonitorCore {
 		} else {
 			// Clear the zero ETV flag when item is not zero ETV
 			if (notif.dataset.typeZeroETV == 1) {
-				// Check visibility BEFORE clearing the flag
-				const wasVisible = this.#isElementVisible(notif);
-
 				notif.dataset.typeZeroETV = 0;
 				// Re-apply filtering to update visibility
 				this.#processNotificationFiltering(notif);
-
-				// Check if visibility changed after processing
-				const isNowVisible = this.#isElementVisible(notif);
-
-				// Debug logging
-				this.#logZeroETVVisibility("Clearing flag", {
-					asin: notif.dataset.asin,
-					wasVisible,
-					isNowVisible,
-					visibilityChanged: wasVisible !== isNowVisible,
-					etvMin: etvObj.dataset.etvMin,
-					etvMax: etvObj.dataset.etvMax,
-				});
-
-				// For V2, emit grid event if visibility changed
-				if (wasVisible !== isNowVisible && !this._visibilityStateManager) {
-					this.#emitGridEvent(isNowVisible ? "grid:items-added" : "grid:items-removed", { count: 1 });
-				}
 			}
 		}
 	}
@@ -2089,18 +1713,12 @@ class NotificationMonitor extends MonitorCore {
 			return false;
 		}
 
-		// Check visibility before update
-		const wasVisible = this.#isElementVisible(notif);
-
 		// Update the DOM element
 		notif.dataset.tier = tier;
 		const vvpDetailsBtn = notif.querySelector(".vvp-details-btn");
 		if (vvpDetailsBtn) {
 			vvpDetailsBtn.dataset.tier = tier;
 		}
-
-		// Handle visibility change and emit events if needed
-		this.#handleVisibilityChange(notif, wasVisible);
 
 		return true;
 	}
@@ -2127,20 +1745,11 @@ class NotificationMonitor extends MonitorCore {
 			return false;
 		}
 
-		// CRITICAL: Check visibility BEFORE updating ETV
-		// This captures items that might become visible when they receive a zero ETV value
-		const wasVisible = this.#isElementVisible(notif);
-
 		// Update the DOM element
 		this.#setETV(notif, etv);
 
 		// Check Zero ETV status after update
 		this.#checkZeroETVStatus(notif);
-
-		// CRITICAL: Check if visibility changed due to ETV update
-		// For example: item with unknown ETV -> zero ETV with Zero ETV filter active
-		// This single call handles all visibility changes from ETV updates
-		this.#handleVisibilityChange(notif, wasVisible);
 
 		// Re-position the item if using price sort and the value changed significantly
 		if (this._sortType === TYPE_PRICE_DESC || this._sortType === TYPE_PRICE_ASC) {
@@ -2573,101 +2182,13 @@ class NotificationMonitor extends MonitorCore {
 	 * @private
 	 */
 	#applyFilteringToAllItems() {
-		// For V3 with batch support, use batch operations to reduce reflows
-		if (this._visibilityStateManager && this._visibilityStateManager.batchSetVisibility) {
-			const tiles = this._gridContainer.querySelectorAll(".vvp-item-tile");
-			const updates = [];
-
-			// Calculate visibility for all tiles
-			for (const node of tiles) {
-				const shouldBeVisible = this.#calculateNodeVisibility(node);
-				updates.push({
-					element: node,
-					visible: shouldBeVisible,
-					displayStyle: this.#getTileDisplayStyle(),
-				});
-			}
-
-			// Apply all visibility changes in one batch
-			this._visibilityStateManager.batchSetVisibility(updates);
-		} else {
-			// V2 fallback - process items individually
-			const tiles = this._gridContainer.querySelectorAll(".vvp-item-tile");
-			for (const node of tiles) {
-				this.#processNotificationFiltering(node);
-			}
-		}
-	}
-
-	/**
-	 * Calculate if a node should be visible based on all filters
-	 * This is a pure function that doesn't modify the DOM
-	 * @param {HTMLElement} node - The node to check
-	 * @returns {boolean} Whether the node should be visible
-	 */
-	#calculateNodeVisibility(node) {
-		if (!node) return false;
-
-		// Feed paused check
-		if (node.dataset.feedPaused == "true") {
-			return false;
+		const tiles = this._gridContainer.querySelectorAll(".vvp-item-tile");
+		for (const node of tiles) {
+			this.#processNotificationFiltering(node);
 		}
 
-		// Gold item filter for silver users
-		if (
-			this._monitorV3 &&
-			!this._tierMgr.isGold() &&
-			this._settings.get("notification.monitor.hideGoldNotificationsForSilverUser")
-		) {
-			const etvObj = node.querySelector("div.etv");
-			if (
-				etvObj &&
-				this._tierMgr.getSilverTierETVLimit() != null &&
-				parseFloat(etvObj.dataset.etvMin) > this._tierMgr.getSilverTierETVLimit()
-			) {
-				return false;
-			}
-		}
-
-		// Search filter
-		if (this._searchText.trim()) {
-			const title = node.querySelector(".a-truncate-full")?.innerText?.toLowerCase() || "";
-			if (!title.includes(this._searchText.toLowerCase().trim())) {
-				return false;
-			}
-		}
-
-		// Type filter
-		const notificationTypeZeroETV = parseInt(node.dataset.typeZeroETV) === 1;
-		const notificationTypeHighlight = parseInt(node.dataset.typeHighlight) === 1;
-		const notificationTypeUnknownETV = parseInt(node.dataset.typeUnknownETV) === 1;
-
-		let passesTypeFilter = false;
-		if (this._filterType == -1) {
-			passesTypeFilter = true;
-		} else if (this._filterType == TYPE_HIGHLIGHT_OR_ZEROETV) {
-			passesTypeFilter = notificationTypeZeroETV || notificationTypeHighlight;
-		} else if (this._filterType == TYPE_HIGHLIGHT) {
-			passesTypeFilter = notificationTypeHighlight;
-		} else if (this._filterType == TYPE_ZEROETV) {
-			passesTypeFilter = notificationTypeZeroETV;
-		} else if (this._filterType == TYPE_REGULAR) {
-			passesTypeFilter = !notificationTypeZeroETV && !notificationTypeHighlight;
-		} else if (this._filterType == TYPE_UNKNOWN_ETV) {
-			passesTypeFilter = notificationTypeUnknownETV;
-		}
-
-		if (!passesTypeFilter) {
-			return false;
-		}
-
-		// Queue filter
-		if (this._filterQueue != "-1") {
-			const queueType = node.dataset.queue;
-			return queueType == this._filterQueue;
-		}
-
-		return true;
+		//Recount the visible tiles
+		this._tileCounter.recountVisibleTiles(0); //Don't wait.
 	}
 
 	#mouseoverHandler(e) {
@@ -2926,8 +2447,6 @@ class NotificationMonitor extends MonitorCore {
 					this._searchText = event.target.value;
 					// Apply search filter to all items
 					this.#applyFilteringToAllItems();
-					// Update visible count and emit events
-					this.#updateVisibleCountAfterFiltering();
 				}, 750); // 300ms debounce delay
 			};
 			searchInput.addEventListener("input", searchHandler);
@@ -3103,8 +2622,6 @@ class NotificationMonitor extends MonitorCore {
 			this._settings.set("notification.monitor.filterType", this._filterType);
 			//Display a specific type of notifications only
 			this.#applyFilteringToAllItems();
-			// Update visible count and emit events
-			this.#updateVisibleCountAfterFiltering();
 		};
 		filterType.addEventListener("change", filterTypeHandler);
 		this.#eventHandlers.buttons.set(filterType, { event: "change", handler: filterTypeHandler });
@@ -3119,8 +2636,6 @@ class NotificationMonitor extends MonitorCore {
 			this._settings.set("notification.monitor.filterQueue", this._filterQueue);
 			//Display a specific queue only
 			this.#applyFilteringToAllItems();
-			// Update visible count and emit events
-			this.#updateVisibleCountAfterFiltering();
 		};
 		filterQueue.addEventListener("change", filterQueueHandler);
 		this.#eventHandlers.buttons.set(filterQueue, { event: "change", handler: filterQueueHandler });
@@ -3194,28 +2709,15 @@ class NotificationMonitor extends MonitorCore {
 			// In current implementation, items don't get marked with feedPaused="true"
 			// Use for...of to avoid function allocation
 			const tiles = this._gridContainer.querySelectorAll(".vvp-item-tile");
-			let arrChanges = [];
 			let visible = false;
 			for (const node of tiles) {
 				if (node.dataset.feedPaused == "true") {
 					node.dataset.feedPaused = "false";
 					visible = this.#processNotificationFiltering(node, true); //Unpausing,
-					arrChanges.push({ element: node, visible: visible, displayStyle: this.#getTileDisplayStyle() });
+					node.style.display = visible ? this.#getTileDisplayStyle() : "none";
 				}
 			}
-			if (arrChanges.length > 0) {
-				this._visibilityStateManager.batchSetVisibility(arrChanges);
-			}
-
-			// Update visibility count after unpause
-			// We need to recount because items added during pause might not have been counted
-			// if they were filtered out (isVisible = false) during the fetch
-			const newCount = this._countVisibleItems();
-			if (this._visibilityStateManager) {
-				// Update the VisibilityStateManager with the correct count
-				this._visibilityStateManager.setCount(newCount);
-			}
-			this._updateTabTitle(newCount);
+			this._tileCounter.recountVisibleTiles();
 
 			// Only emit unpause event for manual unpause, not hover unpause
 			if (!isHoverPause) {
@@ -3290,12 +2792,6 @@ class NotificationMonitor extends MonitorCore {
 			this.#processingASINs.clear();
 		}
 
-		// Destroy VisibilityStateManager if it exists
-		if (this._visibilityStateManager && typeof this._visibilityStateManager.destroy === "function") {
-			this._visibilityStateManager.destroy();
-			this._visibilityStateManager = null;
-		}
-
 		// Destroy GridEventManager if it exists
 		if (this._gridEventManager && typeof this._gridEventManager.destroy === "function") {
 			this._gridEventManager.destroy();
@@ -3341,7 +2837,6 @@ class NotificationMonitor extends MonitorCore {
 
 		// Clear references
 		this._gridContainer = null;
-		this._visibilityStateManager = null;
 
 		console.log("✅ NotificationMonitor cleanup complete"); // eslint-disable-line no-console
 	}

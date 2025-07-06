@@ -27,6 +27,7 @@ import { ItemsMgr } from "/scripts/notifications-monitor/services/ItemsMgr.js";
 import { Websocket } from "/scripts/notifications-monitor/stream/Websocket.js";
 import { AutoLoad } from "/scripts/notifications-monitor/stream/AutoLoad.js";
 import { MasterSlave } from "/scripts/notifications-monitor/coordination/MasterSlave.js";
+import { TileCounter } from "/scripts/notifications-monitor/services/TileCounter.js";
 
 class MonitorCore {
 	//Variables linked to monitor V2 vs V3
@@ -39,20 +40,9 @@ class MonitorCore {
 	_isMasterMonitor = false; //True if the monitor is the master monitor
 
 	_fetchLimit = 100; //The fetch limit for the monitor
-	// Removed _visibleItemsCount - now using getter that delegates to VisibilityStateManager
 	_tabTitleTimer = null; // Timer for batching tab title updates
 
 	_channel = null;
-
-	// Single source of truth - delegate to VisibilityStateManager
-	get _visibleItemsCount() {
-		// For V3, use VisibilityStateManager; for V2, fall back to counting
-		if (this._visibilityStateManager) {
-			return this._visibilityStateManager.getCount();
-		}
-		// Fallback for V2 monitors that don't have VisibilityStateManager
-		return this._countVisibleItems();
-	}
 
 	constructor(monitorV3 = false) {
 		// Prevent direct instantiation of the abstract class
@@ -77,7 +67,7 @@ class MonitorCore {
 		this._soundPlayerMgr = new NotificationsSoundPlayer();
 		this._hookMgr = new HookMgr();
 		this._masterSlave = new MasterSlave(this);
-
+		this._tileCounter = new TileCounter();
 		if (this._env.data.gridDOM) {
 			//v3
 			this._env.data.gridDOM.regular = document.getElementById("vvp-items-grid");
@@ -387,85 +377,7 @@ class MonitorCore {
 	}
 
 	_countVisibleItems() {
-		// Count visible items directly from DOM to ensure accuracy
-		// This avoids issues with ItemsMgr Map being out of sync
-		const allTiles = this._gridContainer.querySelectorAll(".vvp-item-tile");
-		const placeholderTiles = this._gridContainer.querySelectorAll(".vh-placeholder-tile");
-
-		// Get all non-placeholder tiles
-		const itemTiles = this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
-
-		// Count visible items by checking computed style
-		// This is more reliable than checking inline styles
-		let count = 0;
-		let hiddenCount = 0;
-
-		// Performance optimization: batch style calculations
-		// Force a single reflow by reading offsetHeight first
-		void this._gridContainer.offsetHeight;
-
-		// For Safari and large item counts, use optimized approach
-		const useOptimizedApproach = this._env.isSafari() || itemTiles.length > 50;
-
-		if (useOptimizedApproach) {
-			// Collect all tiles that need style checks
-			const tilesToCheck = Array.from(itemTiles);
-
-			// Batch read all computed styles at once to minimize reflows
-			const computedStyles = tilesToCheck.map((tile) => ({
-				tile,
-				display: window.getComputedStyle(tile).display,
-			}));
-
-			// Now process the results without triggering additional reflows
-			for (const { display } of computedStyles) {
-				if (display !== "none") {
-					count++;
-				} else {
-					hiddenCount++;
-				}
-			}
-		} else {
-			// For smaller counts, use direct approach
-			for (const tile of itemTiles) {
-				const computedStyle = window.getComputedStyle(tile);
-				if (computedStyle.display !== "none") {
-					count++;
-				} else {
-					hiddenCount++;
-				}
-			}
-		}
-
-		// Debug logging
-		const debugTabTitle = this._settings.get("general.debugTabTitle");
-		const debugPlaceholders = this._settings.get("general.debugPlaceholders");
-		if (debugTabTitle || debugPlaceholders) {
-			console.log("[MonitorCore] Counting visible items", {
-				allTiles: allTiles.length,
-				placeholderTiles: placeholderTiles.length,
-				itemTiles: itemTiles.length,
-				hiddenCount: hiddenCount,
-				visibleCount: count,
-				expectedVisible: itemTiles.length - hiddenCount,
-			});
-		}
-
-		// Debug logging
-		if (debugTabTitle || debugPlaceholders) {
-			console.log("[MonitorCore] Final count", {
-				count,
-				visibilityStateCount: this._visibilityStateManager?.getCount(),
-				mismatch: this._visibilityStateManager && this._visibilityStateManager.getCount() !== count,
-			});
-		}
-
-		// Update the single source of truth if available
-		if (this._visibilityStateManager) {
-			this._visibilityStateManager.setCount(count);
-		}
-
-		return count;
+		return this._tileCounter.getCount();
 	}
 
 	/**
@@ -476,30 +388,25 @@ class MonitorCore {
 		if (this._hookMgr) {
 			// Listen to visibility count changes
 			this._hookMgr.hookBind("visibility:count-changed", (data) => {
-				this._updateTabTitle(data.count);
+				this._updateTabTitle();
 			});
 		}
 	}
 
-	_updateTabTitle(count) {
-		// Batch tab title updates to avoid excessive DOM operations
-		clearTimeout(this._tabTitleTimer);
-		this._tabTitleTimer = setTimeout(() => {
-			// Use provided count or fall back to counting
-			const itemsCount = count !== undefined ? count : this._countVisibleItems();
+	async _updateTabTitle() {
+		const visibleTilesCount = this._tileCounter.getCount();
 
-			// Update the tab title
-			document.title = "VHNM (" + itemsCount + ")";
+		// Update the tab title
+		document.title = "VHNM (" + visibleTilesCount + ")";
 
-			// Debug logging for truncation issues
-			const debugTabTitle = this._settings.get("general.debugTabTitle");
-			if (debugTabTitle) {
-				console.log(`[TabTitle] Updated to: ${itemsCount}`, {
-					providedCount: count,
-					timestamp: new Date().toISOString(),
-				});
-			}
-		}, 100); // 100ms delay for UI updates
+		// Debug logging for truncation issues
+		const debugTabTitle = this._settings.get("general.debugTabTitle");
+		if (debugTabTitle) {
+			console.log(`[TabTitle] Updated to: ${visibleTilesCount}`, {
+				providedCount: count,
+				timestamp: new Date().toISOString(),
+			});
+		}
 	}
 
 	// Helper method to preserve scroll position during DOM operations

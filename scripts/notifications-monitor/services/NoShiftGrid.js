@@ -185,55 +185,48 @@ class NoShiftGrid {
 				return;
 			}
 
-			// Use VisibilityStateManager count if available for consistency
+			// Count visible tiles
 			let visibleItemsCount;
 			let debugInfo = {};
 
-			if (this._visibilityStateManager) {
-				visibleItemsCount = this._visibilityStateManager.getCount();
-				debugInfo.source = "VisibilityStateManager";
-			} else {
-				// Fallback to DOM count using computed styles
-				const allTiles = this._monitor._gridContainer.querySelectorAll(
-					".vvp-item-tile:not(.vh-placeholder-tile)"
-				);
+			// Fallback to DOM count using computed styles
+			const allTiles = this._monitor._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
 
-				// Performance optimization: batch style calculations
-				// Force a single reflow by reading offsetHeight first
-				void this._monitor._gridContainer.offsetHeight;
+			// Performance optimization: batch style calculations
+			// Force a single reflow by reading offsetHeight first
+			void this._monitor._gridContainer.offsetHeight;
 
-				// Count hidden tiles by checking computed style
-				let hiddenCount = 0;
+			// Count hidden tiles by checking computed style
+			let hiddenCount = 0;
 
-				// For Safari and large item counts, use optimized approach
-				const useOptimizedApproach = this._monitor._env.isSafari() || allTiles.length > 50;
+			// For Safari and large item counts, use optimized approach
+			const useOptimizedApproach = this._monitor._env.isSafari() || allTiles.length > 50;
 
-				if (useOptimizedApproach) {
-					// Batch read all computed styles at once to minimize reflows
-					const tilesToCheck = Array.from(allTiles);
-					const computedStyles = tilesToCheck.map((tile) => window.getComputedStyle(tile).display);
+			if (useOptimizedApproach) {
+				// Batch read all computed styles at once to minimize reflows
+				const tilesToCheck = Array.from(allTiles);
+				const computedStyles = tilesToCheck.map((tile) => window.getComputedStyle(tile).display);
 
-					// Now process the results without triggering additional reflows
-					for (const display of computedStyles) {
-						if (display === "none") {
-							hiddenCount++;
-						}
-					}
-				} else {
-					// For smaller counts, use direct approach
-					for (const tile of allTiles) {
-						const computedStyle = window.getComputedStyle(tile);
-						if (computedStyle.display === "none") {
-							hiddenCount++;
-						}
+				// Now process the results without triggering additional reflows
+				for (const display of computedStyles) {
+					if (display === "none") {
+						hiddenCount++;
 					}
 				}
-
-				visibleItemsCount = allTiles.length - hiddenCount;
-				debugInfo.source = "DOM count";
-				debugInfo.totalTiles = allTiles.length;
-				debugInfo.hiddenCount = hiddenCount;
+			} else {
+				// For smaller counts, use direct approach
+				for (const tile of allTiles) {
+					const computedStyle = window.getComputedStyle(tile);
+					if (computedStyle.display === "none") {
+						hiddenCount++;
+					}
+				}
 			}
+
+			visibleItemsCount = allTiles.length - hiddenCount;
+			debugInfo.source = "DOM count";
+			debugInfo.totalTiles = allTiles.length;
+			debugInfo.hiddenCount = hiddenCount;
 
 			// Debug logging
 			const debugPlaceholders = this._monitor._settings.get("general.debugPlaceholders");
