@@ -147,6 +147,7 @@ async function validateReceipt() {
 		initTabs();
 		initiateSettings(); //page/settings_loadsave.js, initialize the loading and saving code for the page
 		initMemoryDebugging(); // Initialize memory debugging controls
+		initTileCounterDebugging(); // Initialize TileCounter debugging controls
 	}
 
 	if (env.isSafari()) {
@@ -389,6 +390,322 @@ function initMemoryDebugging() {
 			});
 		} else {
 			addToLog(`Failed to run cleanup: ${result?.error || "Unknown error"}`, "error");
+		}
+	});
+}
+
+// TileCounter Debugging Functions
+function initTileCounterDebugging() {
+	// Check if TileCounter debugging is enabled
+	const debugTileCounterCheckbox = document.querySelector('input[name="general.debugTileCounter"]');
+	const tileCounterDebugControls = document.getElementById("tileCounterDebugControls");
+
+	if (!debugTileCounterCheckbox || !tileCounterDebugControls) return;
+
+	// Show/hide controls based on checkbox state
+	function updateTileCounterDebugVisibility() {
+		tileCounterDebugControls.style.display = debugTileCounterCheckbox.checked ? "block" : "none";
+	}
+
+	// Initial visibility
+	updateTileCounterDebugVisibility();
+
+	// Listen for changes
+	debugTileCounterCheckbox.addEventListener("change", updateTileCounterDebugVisibility);
+
+	// TileCounter debug log
+	const logElement = document.getElementById("tileCounterDebugLog");
+	let logContent = [];
+	let isMonitoring = false;
+	let monitoringInterval = null;
+
+	function addToLog(message, type = "info") {
+		const timestamp = new Date().toLocaleTimeString("en-US", {
+			hour: "2-digit",
+			minute: "2-digit",
+			second: "2-digit",
+			hour12: false,
+		});
+
+		// Use icons/symbols for different types
+		const typeSymbol = type === "error" ? "❌" : type === "success" ? "✅" : type === "warning" ? "⚠️" : "ℹ️";
+		const color =
+			type === "error" ? "#d32f2f" : type === "success" ? "#2e7d32" : type === "warning" ? "#f57c00" : "#555";
+
+		// Format message more compactly - all on one line
+		const logEntry =
+			`<div style="margin: 3px 0; font-size: 11px; line-height: 1.3;">` +
+			`<span style="color: #999; font-size: 10px; display: inline-block; width: 55px;">${timestamp}</span> ` +
+			`<span style="display: inline-block; width: 20px; text-align: center;">${typeSymbol}</span> ` +
+			`<span style="color: ${color};">${message}</span>` +
+			`</div>`;
+
+		logContent.push(logEntry);
+
+		// Keep only last 50 entries for dropdown view
+		if (logContent.length > 50) {
+			logContent.shift();
+		}
+
+		logElement.innerHTML = logContent.join("");
+		logElement.scrollTop = logElement.scrollHeight;
+	}
+
+	// Clear log button
+	document.getElementById("clearTileCounterLogBtn")?.addEventListener("click", () => {
+		logContent = [];
+		logElement.innerHTML =
+			'<div style="color: #888; font-style: italic;">TileCounter performance log cleared.</div>';
+		addToLog("Log cleared", "info");
+	});
+
+	// Copy log button
+	document.getElementById("copyTileCounterLogBtn")?.addEventListener("click", async () => {
+		try {
+			// Extract text content from log entries
+			const logText = logContent
+				.map((entry) => {
+					// Parse the HTML to extract text
+					const tempDiv = document.createElement("div");
+					tempDiv.innerHTML = entry;
+					return tempDiv.textContent || tempDiv.innerText || "";
+				})
+				.join("\n");
+
+			// Copy to clipboard
+			await navigator.clipboard.writeText(logText);
+
+			// Show success feedback
+			const copyBtn = document.getElementById("copyTileCounterLogBtn");
+			const originalText = copyBtn.textContent;
+			copyBtn.textContent = "✓";
+			copyBtn.style.background = "#d4edda";
+
+			setTimeout(() => {
+				copyBtn.textContent = originalText;
+				copyBtn.style.background = "#f0f0f0";
+			}, 1500);
+
+			addToLog("Log copied to clipboard", "success");
+		} catch (error) {
+			console.error("Failed to copy log:", error);
+			addToLog("Failed to copy log: " + error.message, "error");
+		}
+	});
+
+	// TileCounter debugging API communication
+	async function sendTileCounterCommand(command, params = {}) {
+		try {
+			// First try to find an active Vine tab
+			const tabs = await chrome.tabs.query({});
+			const vineTab = tabs.find((tab) => tab.url && tab.url.includes("amazon.") && tab.url.includes("/vine/"));
+
+			if (!vineTab) {
+				if (command !== "getMetrics") {
+					// Don't spam log for polling
+					addToLog("No Vine tab found. Please open a Vine page first.", "error");
+				}
+				return null;
+			}
+
+			// For the initial start command, try to inject the script
+			if (command === "startMonitoring") {
+				try {
+					await chrome.scripting.executeScript({
+						target: { tabId: vineTab.id },
+						files: ["scripts/bootloaderLoader.js"],
+					});
+					// Give the script more time to initialize
+					await new Promise((resolve) => setTimeout(resolve, 500));
+				} catch (e) {
+					// Script might already be injected, which is fine
+				}
+			}
+
+			return new Promise((resolve) => {
+				chrome.tabs.sendMessage(
+					vineTab.id,
+					{
+						type: "TILECOUNTER_DEBUG_COMMAND",
+						command: command,
+						params: params,
+					},
+					(response) => {
+						if (chrome.runtime.lastError) {
+							// Only log errors for non-polling commands
+							if (command !== "getMetrics") {
+								addToLog(`Error: ${chrome.runtime.lastError.message}`, "error");
+							}
+							resolve(null);
+						} else {
+							resolve(response);
+						}
+					}
+				);
+			});
+		} catch (error) {
+			if (command !== "getMetrics") {
+				// Don't spam log for polling
+				addToLog(`Error: ${error.message}`, "error");
+			}
+			return null;
+		}
+	}
+
+	// Update metrics display
+	function updateMetricsDisplay(metrics) {
+		document.getElementById("tcStatus").textContent = isMonitoring ? "Monitoring" : "Not monitoring";
+		document.getElementById("tcStatus").style.color = isMonitoring ? "#2e7d32" : "#888";
+
+		if (metrics) {
+			document.getElementById("tcVisibleCount").textContent = metrics.visibleCount || "-";
+			document.getElementById("tcLastRecount").textContent = metrics.lastRecountDuration
+				? `${metrics.lastRecountDuration.toFixed(2)}ms`
+				: "-";
+			document.getElementById("tcAvgDelay").textContent = metrics.averageDelay
+				? `${metrics.averageDelay.toFixed(2)}ms`
+				: "-";
+			document.getElementById("tcCacheHitRate").textContent = metrics.cacheHitRate
+				? `${metrics.cacheHitRate.toFixed(1)}%`
+				: "-";
+
+			// Determine optimization status
+			let optimizationStatus = "Unknown";
+			let optimizationColor = "#888";
+
+			if (metrics.averageDelay !== undefined) {
+				if (metrics.averageDelay < 10) {
+					optimizationStatus = "Optimized";
+					optimizationColor = "#2e7d32";
+				} else if (metrics.averageDelay < 50) {
+					optimizationStatus = "Partial";
+					optimizationColor = "#f57c00";
+				} else {
+					optimizationStatus = "Not optimized";
+					optimizationColor = "#d32f2f";
+				}
+			}
+
+			const tcOptimization = document.getElementById("tcOptimization");
+			tcOptimization.textContent = optimizationStatus;
+			tcOptimization.style.color = optimizationColor;
+		}
+	}
+
+	// Start monitoring button
+	document.getElementById("startTileCounterMonitorBtn")?.addEventListener("click", async () => {
+		if (isMonitoring) {
+			addToLog("Already monitoring", "warning");
+			return;
+		}
+
+		addToLog("Starting TileCounter monitoring...");
+
+		const result = await sendTileCounterCommand("startMonitoring");
+		if (result && result.success) {
+			isMonitoring = true;
+			document.getElementById("startTileCounterMonitorBtn").disabled = true;
+			document.getElementById("stopTileCounterMonitorBtn").disabled = false;
+
+			addToLog("Monitoring started", "success");
+
+			// Start polling for metrics
+			monitoringInterval = setInterval(async () => {
+				const metricsResult = await sendTileCounterCommand("getMetrics");
+				if (metricsResult && metricsResult.success) {
+					updateMetricsDisplay(metricsResult.data);
+				} else if (!metricsResult) {
+					// Connection lost, stop monitoring
+					clearInterval(monitoringInterval);
+					monitoringInterval = null;
+					isMonitoring = false;
+					document.getElementById("startTileCounterMonitorBtn").disabled = false;
+					document.getElementById("stopTileCounterMonitorBtn").disabled = true;
+					updateMetricsDisplay(null);
+					addToLog(
+						"Monitoring stopped - connection lost. Please reload the Vine page and try again.",
+						"error"
+					);
+				}
+			}, 2000); // Update every 2 seconds (less frequent to reduce errors)
+		} else {
+			addToLog(`Failed to start monitoring: ${result?.error || "Unknown error"}`, "error");
+		}
+	});
+
+	// Stop monitoring button
+	document.getElementById("stopTileCounterMonitorBtn")?.addEventListener("click", async () => {
+		if (!isMonitoring) {
+			addToLog("Not currently monitoring", "warning");
+			return;
+		}
+
+		addToLog("Stopping TileCounter monitoring...");
+
+		// Stop polling first
+		if (monitoringInterval) {
+			clearInterval(monitoringInterval);
+			monitoringInterval = null;
+		}
+
+		const result = await sendTileCounterCommand("stopMonitoring");
+
+		// Update UI regardless of result (connection might be lost)
+		isMonitoring = false;
+		document.getElementById("startTileCounterMonitorBtn").disabled = false;
+		document.getElementById("stopTileCounterMonitorBtn").disabled = true;
+		updateMetricsDisplay(null);
+
+		if (result && result.success) {
+			addToLog("Monitoring stopped", "success");
+		} else if (!result) {
+			addToLog("Monitoring stopped (connection was lost)", "warning");
+		} else {
+			addToLog(`Monitoring stopped with error: ${result?.error || "Unknown error"}`, "warning");
+		}
+	});
+
+	// Generate report button
+	document.getElementById("generateTileCounterReportBtn")?.addEventListener("click", async () => {
+		addToLog("Generating TileCounter performance report...");
+
+		const result = await sendTileCounterCommand("generateReport");
+		if (result && result.success) {
+			const report = result.data;
+			addToLog("Performance report generated:", "success");
+
+			// Log report details
+			addToLog(`Total observations: ${report.summary.totalObservationTime}ms`);
+			addToLog(`DOM mutations: ${report.summary.domMutations}`);
+			addToLog(`Count updates: ${report.summary.countUpdates}`);
+
+			if (report.debounceAnalysis) {
+				addToLog(`Debounce pattern: ${report.debounceAnalysis.pattern}`);
+				addToLog(`Average delay: ${report.debounceAnalysis.averageDelay.toFixed(2)}ms`);
+			}
+
+			// Log recommendations
+			if (report.recommendations && report.recommendations.length > 0) {
+				addToLog("Optimizations detected:");
+				report.recommendations.forEach((rec) => {
+					addToLog(`  ${rec}`, "success");
+				});
+			}
+		} else {
+			addToLog(`Failed to generate report: ${result?.error || "Unknown error"}`, "error");
+		}
+	});
+
+	// Clear data button
+	document.getElementById("clearTileCounterDataBtn")?.addEventListener("click", async () => {
+		addToLog("Clearing TileCounter performance data...");
+
+		const result = await sendTileCounterCommand("clearData");
+		if (result && result.success) {
+			addToLog("Performance data cleared", "success");
+			updateMetricsDisplay(null);
+		} else {
+			addToLog(`Failed to clear data: ${result?.error || "Unknown error"}`, "error");
 		}
 	});
 }

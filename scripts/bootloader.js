@@ -1977,6 +1977,12 @@ async function processMessage(data, sender = null, sendResponse = null) {
 		return true; // Keep message channel open for async response
 	}
 
+	// Handle TileCounter debugging commands from settings page
+	if (data.type == "TILECOUNTER_DEBUG_COMMAND") {
+		handleTileCounterDebugCommand(data, sendResponse);
+		return true; // Keep message channel open for async response
+	}
+
 	if (data.type == "newItem") {
 		if (sendResponse) {
 			sendResponse({ success: true });
@@ -2317,6 +2323,56 @@ async function handleMemoryDebugCommand(data, sendResponse) {
 		}
 	} catch (error) {
 		console.error("Memory debug command error:", error);
+		sendResponse({ success: false, error: error.message });
+	}
+}
+
+// TileCounter debugging command handler
+async function handleTileCounterDebugCommand(data, sendResponse) {
+	try {
+		// Check if TileCounter debugger is available
+		if (!window.tileCounterDebugger) {
+			sendResponse({
+				success: false,
+				error: "TileCounter debugger not initialized. Please enable TileCounter debugging in settings and reload the page.",
+			});
+			return;
+		}
+
+		const { command, params } = data;
+		let result;
+
+		switch (command) {
+			case "startMonitoring":
+				result = window.tileCounterDebugger.startMonitoring();
+				sendResponse(result);
+				break;
+
+			case "stopMonitoring":
+				result = window.tileCounterDebugger.stopMonitoring();
+				sendResponse(result);
+				break;
+
+			case "getMetrics":
+				result = window.tileCounterDebugger.getMetrics();
+				sendResponse(result);
+				break;
+
+			case "generateReport":
+				result = window.tileCounterDebugger.generateReport();
+				sendResponse(result);
+				break;
+
+			case "clearData":
+				result = window.tileCounterDebugger.clearData();
+				sendResponse(result);
+				break;
+
+			default:
+				sendResponse({ success: false, error: `Unknown command: ${command}` });
+		}
+	} catch (error) {
+		console.error("TileCounter debug command error:", error);
 		sendResponse({ success: false, error: error.message });
 	}
 }
