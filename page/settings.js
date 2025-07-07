@@ -415,16 +415,13 @@ function initTileCounterDebugging() {
 			hasShownReloadNotice = true;
 
 			// Add a temporary notice to the log
-			addToLog("⚠️ IMPORTANT: Reload your Vine page now to initialize the debugger!", "warning");
-			addToLog(
-				"The TileCounter debugger only initializes when the Vine page loads with this setting enabled.",
-				"info"
-			);
+			addToLog("⚠️ IMPORTANT: Open or reload the Notification Monitor to initialize the debugger!", "warning");
+			addToLog("The TileCounter debugger only works in the Notification Monitor tab.", "info");
 
 			// Also update the status to show it's not initialized
 			const statusElement = document.getElementById("tcStatus");
 			if (statusElement) {
-				statusElement.textContent = "Not initialized - reload Vine page";
+				statusElement.textContent = "Not initialized - open Notification Monitor";
 				statusElement.style.color = "#f57c00";
 			}
 		}
@@ -461,7 +458,7 @@ function initTileCounterDebugging() {
 					// Only show "not initialized" if we haven't seen it initialized before
 					const currentText = statusElement.textContent;
 					if (currentText !== "Initialized" && currentText !== "Monitoring") {
-						statusElement.textContent = "Not initialized - reload Vine page";
+						statusElement.textContent = "Not initialized - open Notification Monitor";
 						statusElement.style.color = "#f57c00";
 					}
 				}
@@ -575,14 +572,27 @@ function initTileCounterDebugging() {
 	// TileCounter debugging API communication
 	async function sendTileCounterCommand(command, params = {}) {
 		try {
-			// First try to find an active Vine tab
+			// First try to find an active Notification Monitor tab
 			const tabs = await chrome.tabs.query({});
-			const vineTab = tabs.find((tab) => tab.url && tab.url.includes("amazon.") && tab.url.includes("/vine/"));
+			const monitorTab = tabs.find(
+				(tab) =>
+					tab.url && tab.url.includes("amazon.") && tab.url.includes("/vine/") && tab.url.includes("#monitor")
+			);
 
-			if (!vineTab) {
+			if (!monitorTab) {
 				if (command !== "getMetrics") {
 					// Don't spam log for polling
-					addToLog("No Vine tab found. Please open a Vine page first.", "error");
+					addToLog("No Notification Monitor tab found. Please open the Notification Monitor first.", "error");
+					// Debug: show all vine tabs
+					const vineTabs = tabs.filter(
+						(tab) => tab.url && tab.url.includes("amazon.") && tab.url.includes("/vine/")
+					);
+					if (vineTabs.length > 0) {
+						console.log(
+							"Found Vine tabs but none with #monitor:",
+							vineTabs.map((t) => t.url)
+						);
+					}
 				}
 				return null;
 			}
@@ -591,7 +601,7 @@ function initTileCounterDebugging() {
 			if (command === "startMonitoring") {
 				try {
 					await chrome.scripting.executeScript({
-						target: { tabId: vineTab.id },
+						target: { tabId: monitorTab.id },
 						files: ["scripts/bootloaderLoader.js"],
 					});
 					// Give the script more time to initialize
@@ -601,9 +611,14 @@ function initTileCounterDebugging() {
 				}
 			}
 
+			// Debug log when we find the monitor tab
+			if (command === "startMonitoring") {
+				console.log("Found Notification Monitor tab:", monitorTab.url);
+			}
+
 			return new Promise((resolve) => {
 				chrome.tabs.sendMessage(
-					vineTab.id,
+					monitorTab.id,
 					{
 						type: "TILECOUNTER_DEBUG_COMMAND",
 						command: command,
@@ -614,9 +629,13 @@ function initTileCounterDebugging() {
 							// Only log errors for non-polling commands
 							if (command !== "getMetrics") {
 								addToLog(`Error: ${chrome.runtime.lastError.message}`, "error");
+								console.error("Message send error:", chrome.runtime.lastError);
 							}
 							resolve(null);
 						} else {
+							if (command === "startMonitoring") {
+								console.log("Response from monitor tab:", response);
+							}
 							resolve(response);
 						}
 					}
@@ -650,7 +669,7 @@ function initTileCounterDebugging() {
 				// Debugger was previously initialized, keep showing as initialized
 				statusElement.textContent = "Initialized";
 				statusElement.style.color = "#2e7d32";
-			} else if (currentText === "Not initialized - reload Vine page") {
+			} else if (currentText === "Not initialized - open Notification Monitor") {
 				// Keep the not initialized message
 				statusElement.style.color = "#f57c00";
 			} else {
@@ -735,8 +754,8 @@ function initTileCounterDebugging() {
 			const errorMsg = result?.error || "Unknown error";
 			if (errorMsg.includes("not initialized") || errorMsg.includes("not available")) {
 				addToLog("TileCounter debugger not initialized!", "error");
-				addToLog("Please reload your Vine page and try again.", "warning");
-				addToLog("The debugger only initializes when the Vine page loads with this setting enabled.", "info");
+				addToLog("Please open or reload the Notification Monitor and try again.", "warning");
+				addToLog("The debugger only works in the Notification Monitor tab.", "info");
 			} else {
 				addToLog(`Failed to start monitoring: ${errorMsg}`, "error");
 			}
