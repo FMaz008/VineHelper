@@ -937,25 +937,25 @@ function initInsertTopPagination() {
 			currentPageDOM != undefined
 		) {
 			//Fetch total items from the page
-			const TOTAL_ITEMS = parseInt(
-				env.data.gridDOM.container.querySelector("p strong:last-child").innerText.replace(/,/g, "")
-			);
+			const totalItemsElement = env.data.gridDOM.container.querySelector("p strong:last-child");
+			if (!totalItemsElement) {
+				return;
+			}
+			const totalText = totalItemsElement.innerText || totalItemsElement.textContent;
+			const TOTAL_ITEMS = parseInt(totalText.replace(/,/g, ""));
 			const ITEM_PER_PAGE = 36;
-			const CURRENT_PAGE = parseInt(currentPageDOM.innerText.replace(/,/g, ""));
+			const currentPageText = currentPageDOM.innerText || currentPageDOM.textContent;
+			const CURRENT_PAGE = parseInt(currentPageText.replace(/,/g, ""));
 
 			const URL = window.location.pathname + window.location.search; //Sample URL to be modified
 			pagination.setStartPagePadding(parseInt(Settings.get("general.verbosePaginationStartPadding")));
 			let paginationObj = pagination.generatePagination(URL, TOTAL_ITEMS, ITEM_PER_PAGE, CURRENT_PAGE);
 
-			const desktopContainer = env.data.gridDOM.container.querySelector("p");
-			if (desktopContainer) {
-				desktopContainer.appendChild(paginationObj);
-			} else {
-				const p = document.createElement("p");
-				//Insert the p as the first element of env.data.gridDOM.container
-				env.data.gridDOM.container.insertBefore(p, env.data.gridDOM.container.firstChild);
-				p.appendChild(paginationObj);
-			}
+			// Always create a new p element at the top for verbose pagination
+			const p = document.createElement("p");
+			//Insert the p as the first element of env.data.gridDOM.container
+			env.data.gridDOM.container.insertBefore(p, env.data.gridDOM.container.firstChild);
+			p.appendChild(paginationObj);
 		} else {
 			// Clone the bottom pagination to the top of the listing
 			let paginationElement = document.querySelector(".a-pagination");
@@ -1977,6 +1977,12 @@ async function processMessage(data, sender = null, sendResponse = null) {
 		return true; // Keep message channel open for async response
 	}
 
+	// Handle TileCounter debugging commands from settings page
+	if (data.type == "TILECOUNTER_DEBUG_COMMAND") {
+		handleTileCounterDebugCommand(data, sendResponse);
+		return true; // Keep message channel open for async response
+	}
+
 	if (data.type == "newItem") {
 		if (sendResponse) {
 			sendResponse({ success: true });
@@ -2317,6 +2323,65 @@ async function handleMemoryDebugCommand(data, sendResponse) {
 		}
 	} catch (error) {
 		console.error("Memory debug command error:", error);
+		sendResponse({ success: false, error: error.message });
+	}
+}
+
+// TileCounter debugging command handler
+async function handleTileCounterDebugCommand(data, sendResponse) {
+	try {
+		// Check if TileCounter debugger is available
+		if (!window.tileCounterDebugger) {
+			// Check if we're in notification monitor context
+			if (!window.location.href.includes("#monitor")) {
+				sendResponse({
+					success: false,
+					error: "TileCounter debugger is only available in the Notification Monitor. Please open the Notification Monitor tab and try again.",
+				});
+				return;
+			}
+
+			sendResponse({
+				success: false,
+				error: "TileCounter debugger not initialized. Please enable TileCounter debugging in settings and reload the page.",
+			});
+			return;
+		}
+
+		const { command, params } = data;
+		let result;
+
+		switch (command) {
+			case "startMonitoring":
+				result = window.tileCounterDebugger.startMonitoring();
+				sendResponse(result);
+				break;
+
+			case "stopMonitoring":
+				result = window.tileCounterDebugger.stopMonitoring();
+				sendResponse(result);
+				break;
+
+			case "getMetrics":
+				result = window.tileCounterDebugger.getMetrics();
+				sendResponse(result);
+				break;
+
+			case "generateReport":
+				result = window.tileCounterDebugger.generateReport();
+				sendResponse(result);
+				break;
+
+			case "clearData":
+				result = window.tileCounterDebugger.clearData();
+				sendResponse(result);
+				break;
+
+			default:
+				sendResponse({ success: false, error: `Unknown command: ${command}` });
+		}
+	} catch (error) {
+		console.error("TileCounter debug command error:", error);
 		sendResponse({ success: false, error: error.message });
 	}
 }

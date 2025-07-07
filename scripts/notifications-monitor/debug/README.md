@@ -1,12 +1,18 @@
-# Memory Debugging Tools
+# Debug Tools for Notification Monitor
 
-This directory contains debugging utilities for tracking memory usage and detecting memory leaks in the notification monitor.
+This directory contains debugging utilities for the notification monitor system, including memory analysis and performance monitoring tools.
 
 ## Files
+
+### Memory Debugging
 
 - **MemoryDebugger.js**: Main debugging class that tracks memory usage, event listeners, and DOM nodes
 - **HeapSnapshotHelper.js**: Utility for taking and comparing heap snapshots
 - **expose-debugger.js**: Helper script for exposing debugger in console (development only)
+
+### TileCounter Performance
+
+- **TileCounterDebugger.js**: Performance monitoring and analysis for TileCounter operations (integrated into settings panel)
 
 ## Usage
 
@@ -85,17 +91,99 @@ The report will show:
 - Memory change from first to last snapshot (MB and %)
 - Individual snapshot details with timestamps and heap sizes
 
+## TileCounter Performance Debugging
+
+### Enabling TileCounter Debugging
+
+TileCounter performance monitoring helps identify bottlenecks in tile counting operations within the Notification Monitor.
+
+**Note: TileCounter debugging only works in the Notification Monitor tab.**
+
+To enable:
+
+#### Via Settings (Recommended)
+
+1. Go to VineHelper Settings > Debug tab
+2. Enable "Enable TileCounter Performance Monitoring"
+3. Save settings
+4. Open or reload the **Notification Monitor** tab
+5. The TileCounter debug panel will appear below the checkbox in settings
+
+### Using the TileCounter Debugger
+
+#### Via Debug Panel (Recommended)
+
+1. Click "Start Monitoring" to begin collecting performance data
+2. Interact with the page (filter items, hide/show tiles, etc.)
+3. View real-time metrics:
+    - **Visible Tiles**: Current count of visible tiles
+    - **Last Recount**: Time taken for the last recount operation
+    - **Avg Delay**: Average debounce delay (target: <10ms)
+    - **Cache Hit Rate**: Percentage of visibility checks served from cache
+    - **Optimization**: Overall optimization status
+
+4. Click "Generate Report" for detailed analysis
+5. Click "Stop Monitoring" when done
+
+#### Via Console
+
+```javascript
+// Access TileCounter instance
+window.tileCounter;
+
+// Access TileCounter debugger
+window.tileCounterDebugger;
+
+// Get current performance metrics
+window.tileCounter.getPerformanceMetrics();
+
+// Start monitoring programmatically
+window.tileCounterDebugger.startMonitoring();
+
+// Generate performance report
+window.tileCounterDebugger.generateReport();
+
+// Stop monitoring
+window.tileCounterDebugger.stopMonitoring();
+```
+
+### Performance Benchmarks
+
+Expected performance with optimizations:
+
+- **Average recount time**: < 10ms for 100 tiles
+- **Debounce delay**: 0ms for user actions, 50ms for bulk operations
+- **Cache hit rate**: > 70% during rapid operations
+- **Optimization status**: "Optimized" (green in UI)
+
 ## Production Safety
 
-- The debugger is **never loaded in production** unless explicitly enabled
+- Debuggers are **never loaded in production** unless explicitly enabled
 - When disabled, the only overhead is a single conditional check
 - All tracking calls are wrapped in existence checks to prevent errors
+- Performance monitoring has minimal overhead when active
 
 ## When to Use
 
-Use memory debugging when:
+### Memory Debugging
+
+Use when:
 
 - Investigating reported memory leaks
 - Testing after major refactoring
 - Validating cleanup in destroy() methods
 - Monitoring long-running sessions
+
+### TileCounter Debugging
+
+Use when:
+
+- Investigating slow tile count updates
+- Testing filter performance
+- Optimizing bulk operations
+- Verifying debounce behavior
+
+## See Also
+
+- [TileCounter Debug Settings Guide](/docs/TILECOUNTER_DEBUG_SETTINGS.md) - Detailed guide on debug settings
+- [Memory Management](/docs/MEMORY_MANAGEMENT.md) - Memory optimization strategies

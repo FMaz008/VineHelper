@@ -24,6 +24,13 @@ class GridEventManager {
 	#batchTimer = null;
 	#batchDelay = 50; // milliseconds
 
+	// Visibility count change debouncing
+	#visibilityDebounceTimer = null;
+	#visibilityDebounceDelay = 100; // milliseconds
+	#lastVisibilityUpdate = 0;
+	#visibilityUpdateCount = 0;
+	#visibilityUpdateResetTimer = null;
+
 	constructor(hookMgr, noShiftGrid, monitor) {
 		this.#hookMgr = hookMgr;
 		this.#noShiftGrid = noShiftGrid;
@@ -67,7 +74,7 @@ class GridEventManager {
 		if (this.#shouldUpdatePlaceholders(operation)) {
 			// Use requestAnimationFrame for visual stability
 			requestAnimationFrame(() => {
-				this.#updatePlaceholders(data.fetchingRecentItems);
+				this.#updatePlaceholders(data?.fetchingRecentItems);
 			});
 		}
 	}
@@ -83,6 +90,15 @@ class GridEventManager {
 
 		const { fetchingRecentItems, visibleItemsRemovedCount } = data || {};
 
+		const debugPlaceholders = this.#monitor._settings?.get("general.debugPlaceholders");
+		if (debugPlaceholders) {
+			console.log("[GridEventManager] DIAGNOSTIC - handleTruncation", {
+				fetchingRecentItems,
+				visibleItemsRemovedCount,
+				endPlaceholdersCountBefore: this.#noShiftGrid._endPlaceholdersCount,
+			});
+		}
+
 		if (fetchingRecentItems) {
 			this.#noShiftGrid.resetEndPlaceholdersCount();
 			this.#updatePlaceholders();
@@ -90,6 +106,12 @@ class GridEventManager {
 			// Decrement visibility count by removed items
 
 			this.#noShiftGrid.insertEndPlaceholderTiles(visibleItemsRemovedCount);
+			if (debugPlaceholders) {
+				console.log("[GridEventManager] DIAGNOSTIC - After insertEndPlaceholderTiles", {
+					visibleItemsRemovedCount,
+					endPlaceholdersCountAfter: this.#noShiftGrid._endPlaceholdersCount,
+				});
+			}
 			this.#updatePlaceholders();
 		}
 	}
@@ -119,6 +141,17 @@ class GridEventManager {
 			return;
 		}
 
+		const debugPlaceholders = this.#monitor._settings?.get("general.debugPlaceholders");
+		if (debugPlaceholders) {
+			console.log("[GridEventManager] Grid filtered event", {
+				data,
+				timestamp: Date.now(),
+			});
+		}
+
+		// Note: We don't clear tile width cache on filter changes because
+		// filters don't affect the CSS grid layout or tile dimensions
+
 		// Don't reset end placeholders count during filtering
 		// This preserves the placeholder state when items are being loaded concurrently
 		// The insertPlaceholderTiles method will recalculate based on current visible count
@@ -136,7 +169,12 @@ class GridEventManager {
 			return;
 		}
 
-		const { sortType } = data || {};
+		const { sortType, placeholdersHandled } = data || {};
+
+		// Skip if placeholders were already handled during sort
+		if (placeholdersHandled) {
+			return;
+		}
 
 		// Delete placeholder tiles if not in date descending sort
 		if (sortType && sortType !== "date_desc") {
@@ -160,11 +198,11 @@ class GridEventManager {
 		const debugPlaceholders = this.#monitor._settings?.get("general.debugPlaceholders");
 
 		// Get current placeholder tiles before sorting
-		const placeholderTiles = Array.from(container.querySelectorAll(".vh-placeholder-tile"));
+		const existingPlaceholders = Array.from(container.querySelectorAll(".vh-placeholder-tile"));
 
 		if (debugPlaceholders) {
 			console.log("[GridEventManager] Starting sort", {
-				placeholderCount: placeholderTiles.length,
+				placeholderCount: existingPlaceholders.length,
 				containerChildren: container.children.length,
 			});
 		}
@@ -188,14 +226,63 @@ class GridEventManager {
 				}
 			});
 
+			// Calculate how many placeholders we need BEFORE building the fragment
+			let placeholdersNeeded = 0;
+			if (this.#monitor._sortType === "date_desc" && this.#noShiftGrid) {
+				// Count visible items
+				const visibleCount = sortedItems.filter((item) => {
+					const element = asinToElement.get(item.asin);
+					return element && element.style.display !== "none";
+				}).length;
+
+				// Calculate placeholders needed
+				const tilesPerRow = this.#noShiftGrid.getTilesPerRow();
+				if (tilesPerRow > 0 && visibleCount > 0) {
+					const remainder = visibleCount % tilesPerRow;
+					placeholdersNeeded = remainder > 0 ? tilesPerRow - remainder : 0;
+				}
+
+				if (debugPlaceholders) {
+					console.log("[GridEventManager] Calculated placeholders needed", {
+						visibleCount,
+						tilesPerRow,
+						placeholdersNeeded,
+						existingPlaceholders: existingPlaceholders.length,
+					});
+				}
+			}
+
 			// Create a DocumentFragment for better performance
 			const fragment = document.createDocumentFragment();
 
-			// Add placeholder tiles at the beginning
-			placeholderTiles.forEach((placeholder) => {
+			// Adjust placeholder count to match what we need
+			const placeholderTiles = [];
+
+			// Reuse existing placeholders up to what we need
+			for (let i = 0; i < Math.min(existingPlaceholders.length, placeholdersNeeded); i++) {
+				const placeholder = existingPlaceholders[i];
 				if (placeholder.parentNode) {
 					placeholder.remove();
 				}
+				placeholderTiles.push(placeholder);
+			}
+
+			// Create new placeholders if we need more
+			for (let i = existingPlaceholders.length; i < placeholdersNeeded; i++) {
+				const placeholder = this.#noShiftGrid.createPlaceholderTile();
+				placeholderTiles.push(placeholder);
+			}
+
+			// Remove excess placeholders
+			for (let i = placeholdersNeeded; i < existingPlaceholders.length; i++) {
+				const placeholder = existingPlaceholders[i];
+				if (placeholder.parentNode) {
+					placeholder.remove();
+				}
+			}
+
+			// Add the correct number of placeholder tiles at the beginning
+			placeholderTiles.forEach((placeholder) => {
 				fragment.appendChild(placeholder);
 			});
 
@@ -232,7 +319,11 @@ class GridEventManager {
 		});
 
 		// Emit sorted event to trigger any additional handling
-		this.#hookMgr.hookExecute("grid:sorted", { sortType: this.#monitor._sortType });
+		// Note: We've already handled placeholders, so the handler should skip updating them
+		this.#hookMgr.hookExecute("grid:sorted", {
+			sortType: this.#monitor._sortType,
+			placeholdersHandled: true,
+		});
 	}
 
 	/**
@@ -246,7 +337,7 @@ class GridEventManager {
 		// Insert end placeholder tiles when unpaused
 		this.#noShiftGrid.insertEndPlaceholderTiles(0);
 		if (this.#shouldUpdatePlaceholders("unpause")) {
-			this.#updatePlaceholders();
+			this.#updatePlaceholders(false, true); // Pass forceForFilter = true for resize events
 		}
 	}
 
@@ -269,7 +360,17 @@ class GridEventManager {
 
 		// Reset end placeholders count after fetch completes
 		// This prevents accumulation of removed items affecting placeholder calculations
+		const endPlaceholdersCountBefore = this.#noShiftGrid._endPlaceholdersCount;
 		this.#noShiftGrid.resetEndPlaceholdersCount();
+
+		if (debugPlaceholders) {
+			console.log("[GridEventManager] DIAGNOSTIC - Reset endPlaceholdersCount", {
+				before: endPlaceholdersCountBefore,
+				after: this.#noShiftGrid._endPlaceholdersCount,
+				visibleCount: data.visibleCount,
+				totalItems: data.totalItems,
+			});
+		}
 
 		// Update placeholders after fetch completes
 		if (this.#shouldUpdatePlaceholders("fetch")) {
@@ -308,6 +409,7 @@ class GridEventManager {
 		}
 
 		// Update placeholders after grid resize
+		// Note: NoShiftGrid already handles resize events and clears its cache
 		// The resize event is already debounced in NoShiftGrid
 		const shouldUpdate = this.#shouldUpdatePlaceholders("resize");
 		if (debugPlaceholders) {
@@ -321,7 +423,7 @@ class GridEventManager {
 			if (debugPlaceholders) {
 				console.log("[GridEventManager] Updating placeholders after resize");
 			}
-			this.#updatePlaceholders();
+			this.#updatePlaceholders(false, true); // Pass forceForFilter = true for resize events
 		}
 	}
 
@@ -329,8 +431,35 @@ class GridEventManager {
 	 * Handle grid initialized event (initial load)
 	 */
 	#handleGridInitialized() {
+		console.log("[GridEventManager] DEBUG - handleGridInitialized called", {
+			isEnabled: this.#isEnabled,
+			hasNoShiftGrid: !!this.#noShiftGrid,
+			noShiftGridState: this.#noShiftGrid
+				? {
+						isEnabled: this.#noShiftGrid._isEnabled,
+						hasGridContainer: !!this.#noShiftGrid._gridContainer,
+					}
+				: null,
+		});
+
 		if (!this.#isEnabled || !this.#noShiftGrid) {
+			console.warn("[GridEventManager] Cannot handle grid initialized - not enabled or no NoShiftGrid");
 			return;
+		}
+
+		// Initialize NoShiftGrid with the grid container
+		const gridContainer = this.#monitor._gridContainer;
+		if (gridContainer) {
+			if (!this.#noShiftGrid._gridContainer) {
+				console.log("[GridEventManager] Initializing NoShiftGrid with grid container");
+				this.#noShiftGrid.initialize(gridContainer);
+			}
+
+			// Always enable NoShiftGrid if not already enabled
+			if (!this.#noShiftGrid._isEnabled) {
+				console.log("[GridEventManager] Enabling NoShiftGrid");
+				this.#noShiftGrid.enable();
+			}
 		}
 
 		// Insert initial placeholders
@@ -432,16 +561,73 @@ class GridEventManager {
 		}
 
 		const debugPlaceholders = this.#monitor?._settings?.get("general.debugPlaceholders");
+		const now = Date.now();
+
+		// Track rapid updates to detect loops
+		if (now - this.#lastVisibilityUpdate < 500) {
+			this.#visibilityUpdateCount++;
+
+			// If we've had more than 5 updates in 500ms, we're likely in a loop
+			if (this.#visibilityUpdateCount > 5) {
+				if (debugPlaceholders) {
+					console.warn("[GridEventManager] Detected rapid visibility updates, breaking potential loop", {
+						updateCount: this.#visibilityUpdateCount,
+						timeSinceLastUpdate: now - this.#lastVisibilityUpdate,
+					});
+				}
+				return;
+			}
+		} else {
+			// Reset counter if enough time has passed
+			this.#visibilityUpdateCount = 1;
+		}
+
+		this.#lastVisibilityUpdate = now;
+
+		// Reset the counter after 1 second of no updates
+		if (this.#visibilityUpdateResetTimer) {
+			clearTimeout(this.#visibilityUpdateResetTimer);
+		}
+		this.#visibilityUpdateResetTimer = setTimeout(() => {
+			this.#visibilityUpdateCount = 0;
+		}, 1000);
+
 		if (debugPlaceholders) {
 			console.log("[GridEventManager] Visibility count changed", {
 				newCount: data.count,
 				source: data.source || "unknown",
+				timestamp: now,
+				updateCount: this.#visibilityUpdateCount,
+				stack: new Error().stack.split("\n").slice(2, 5).join(" -> "),
 			});
 		}
 
-		// Update placeholders immediately when count changes from recalculation
-		// This ensures placeholders are updated even when no items are being added/removed
-		this.#updatePlaceholders(false, true);
+		// Debounce visibility count changes to prevent rapid recalculations
+		if (this.#visibilityDebounceTimer) {
+			clearTimeout(this.#visibilityDebounceTimer);
+		}
+
+		this.#visibilityDebounceTimer = setTimeout(() => {
+			// Always update placeholders for:
+			// 1. Count changes
+			// 2. Bulk operations (like "Clear Unavailable")
+			// 3. Filter changes (even if count remains the same)
+			const shouldUpdate =
+				data.changed ||
+				data.isBulkOperation ||
+				data.source === "bulk-operation" ||
+				data.source === "filter-change";
+
+			if (!shouldUpdate) {
+				if (debugPlaceholders) {
+					console.log("[GridEventManager] Skipping placeholder update - no changes detected");
+				}
+				return;
+			}
+
+			// Update placeholders with debouncing
+			this.#updatePlaceholders(false, true);
+		}, this.#visibilityDebounceDelay);
 	}
 
 	/**
@@ -471,6 +657,18 @@ class GridEventManager {
 		if (this.#batchTimer) {
 			clearTimeout(this.#batchTimer);
 			this.#batchTimer = null;
+		}
+
+		// Clear visibility debounce timer
+		if (this.#visibilityDebounceTimer) {
+			clearTimeout(this.#visibilityDebounceTimer);
+			this.#visibilityDebounceTimer = null;
+		}
+
+		// Clear visibility update reset timer
+		if (this.#visibilityUpdateResetTimer) {
+			clearTimeout(this.#visibilityUpdateResetTimer);
+			this.#visibilityUpdateResetTimer = null;
 		}
 
 		// Clear batched updates
