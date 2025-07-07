@@ -937,25 +937,25 @@ function initInsertTopPagination() {
 			currentPageDOM != undefined
 		) {
 			//Fetch total items from the page
-			const TOTAL_ITEMS = parseInt(
-				env.data.gridDOM.container.querySelector("p strong:last-child").innerText.replace(/,/g, "")
-			);
+			const totalItemsElement = env.data.gridDOM.container.querySelector("p strong:last-child");
+			if (!totalItemsElement) {
+				return;
+			}
+			const totalText = totalItemsElement.innerText || totalItemsElement.textContent;
+			const TOTAL_ITEMS = parseInt(totalText.replace(/,/g, ""));
 			const ITEM_PER_PAGE = 36;
-			const CURRENT_PAGE = parseInt(currentPageDOM.innerText.replace(/,/g, ""));
+			const currentPageText = currentPageDOM.innerText || currentPageDOM.textContent;
+			const CURRENT_PAGE = parseInt(currentPageText.replace(/,/g, ""));
 
 			const URL = window.location.pathname + window.location.search; //Sample URL to be modified
 			pagination.setStartPagePadding(parseInt(Settings.get("general.verbosePaginationStartPadding")));
 			let paginationObj = pagination.generatePagination(URL, TOTAL_ITEMS, ITEM_PER_PAGE, CURRENT_PAGE);
 
-			const desktopContainer = env.data.gridDOM.container.querySelector("p");
-			if (desktopContainer) {
-				desktopContainer.appendChild(paginationObj);
-			} else {
-				const p = document.createElement("p");
-				//Insert the p as the first element of env.data.gridDOM.container
-				env.data.gridDOM.container.insertBefore(p, env.data.gridDOM.container.firstChild);
-				p.appendChild(paginationObj);
-			}
+			// Always create a new p element at the top for verbose pagination
+			const p = document.createElement("p");
+			//Insert the p as the first element of env.data.gridDOM.container
+			env.data.gridDOM.container.insertBefore(p, env.data.gridDOM.container.firstChild);
+			p.appendChild(paginationObj);
 		} else {
 			// Clone the bottom pagination to the top of the listing
 			let paginationElement = document.querySelector(".a-pagination");
@@ -2332,6 +2332,15 @@ async function handleTileCounterDebugCommand(data, sendResponse) {
 	try {
 		// Check if TileCounter debugger is available
 		if (!window.tileCounterDebugger) {
+			// Check if we're in notification monitor context
+			if (!window.location.href.includes("#monitor")) {
+				sendResponse({
+					success: false,
+					error: "TileCounter debugger is only available in the Notification Monitor. Please open the Notification Monitor tab and try again.",
+				});
+				return;
+			}
+
 			sendResponse({
 				success: false,
 				error: "TileCounter debugger not initialized. Please enable TileCounter debugging in settings and reload the page.",

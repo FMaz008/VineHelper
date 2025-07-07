@@ -95,7 +95,9 @@ The report will show:
 
 ### Enabling TileCounter Debugging
 
-TileCounter performance monitoring helps identify bottlenecks in tile counting operations.
+TileCounter performance monitoring helps identify bottlenecks in tile counting operations within the Notification Monitor.
+
+**Note: TileCounter debugging only works in the Notification Monitor tab.**
 
 To enable:
 
@@ -103,8 +105,9 @@ To enable:
 
 1. Go to VineHelper Settings > Debug tab
 2. Enable "Enable TileCounter Performance Monitoring"
-3. Save settings and reload the page
-4. The TileCounter debug panel will appear below the checkbox
+3. Save settings
+4. Open or reload the **Notification Monitor** tab
+5. The TileCounter debug panel will appear below the checkbox in settings
 
 ### Using the TileCounter Debugger
 

@@ -1,13 +1,14 @@
 # TileCounter Debug Settings Guide
 
-Quick guide for using the TileCounter debug panel to monitor performance and troubleshoot issues.
+Quick guide for using the TileCounter debug panel to monitor performance and troubleshoot issues in the Notification Monitor.
 
 ## Enabling Debug Mode
 
 1. Navigate to **VineHelper Settings → Debug tab**
 2. Check **"Enable TileCounter Performance Monitoring"**
 3. Save settings and reload the page
-4. The debug panel will appear below the checkbox
+4. Open the **Notification Monitor** tab
+5. The debug panel will appear below the checkbox in the settings
 
 ## Using the Debug Panel
 
@@ -53,9 +54,9 @@ window.tileCounter.recountVisibleTiles(0, true);
 
 **Debug panel shows "Not monitoring"**
 
-- Ensure you're on a Vine page with items
+- Ensure you're in the **Notification Monitor** tab (the debugger only works there)
 - Verify the debug setting is enabled
-- Reload the page after enabling
+- Reload the Notification Monitor page after enabling
 
 **Poor performance metrics**
 

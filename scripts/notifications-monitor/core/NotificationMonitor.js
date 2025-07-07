@@ -125,43 +125,16 @@ class NotificationMonitor extends MonitorCore {
 
 		// Check for debug flags from settings
 		const debugTileCounter = this._settings.get("general.debugTileCounter");
-		const debugMonitor = localStorage.getItem("vh_debug_monitor") === "true";
 
-		// Create VineHelper namespace if it doesn't exist
-		window.VineHelper = window.VineHelper || {};
-
-		// Expose monitor instance if debug mode is enabled
-		if (debugMonitor || debugTileCounter) {
+		// Only check localStorage if we're actually going to use it
+		// This prevents the debug banner from showing when not needed
+		if (debugTileCounter) {
+			// Create VineHelper namespace if it doesn't exist
+			window.VineHelper = window.VineHelper || {};
 			window.VineHelper.monitor = this;
-			console.log("[NotificationMonitor] Debug mode enabled - Monitor exposed at window.VineHelper.monitor");
 
-			// Initialize TileCounter debugging if enabled
-			if (debugTileCounter) {
-				await this._initializeTileCounterDebugger();
-			}
-
-			// Log debug instructions
-			console.log(`
-╔════════════════════════════════════════════════════════════╗
-║                    Debug Mode Enabled                      ║
-╚════════════════════════════════════════════════════════════╝
-
-Available debug objects:
-	 window.VineHelper.monitor     - NotificationMonitor instance
-	 window.tileCounter           - TileCounter instance (if enabled)
-	 window.tileCounterDebugger   - TileCounterDebugger instance (if enabled)
-
-To enable/disable debug modes:
-	 - Use the Debug tab in VineHelper settings
-	 - Or: localStorage.setItem('vh_debug_monitor', 'true')
-
-TileCounter methods:
-	 .recountVisibleTiles(delay, priority)
-	 .getCount()
-	 .getPerformanceMetrics()
-	 .setPerformanceMetrics(enabled)
-	 .waitUntilCountComplete()
-			`);
+			// Initialize TileCounter debugging
+			await this._initializeTileCounterDebugger();
 		}
 	}
 
