@@ -83,6 +83,15 @@ class GridEventManager {
 
 		const { fetchingRecentItems, visibleItemsRemovedCount } = data || {};
 
+		const debugPlaceholders = this.#monitor._settings?.get("general.debugPlaceholders");
+		if (debugPlaceholders) {
+			console.log("[GridEventManager] DIAGNOSTIC - handleTruncation", {
+				fetchingRecentItems,
+				visibleItemsRemovedCount,
+				endPlaceholdersCountBefore: this.#noShiftGrid._endPlaceholdersCount,
+			});
+		}
+
 		if (fetchingRecentItems) {
 			this.#noShiftGrid.resetEndPlaceholdersCount();
 			this.#updatePlaceholders();
@@ -90,6 +99,12 @@ class GridEventManager {
 			// Decrement visibility count by removed items
 
 			this.#noShiftGrid.insertEndPlaceholderTiles(visibleItemsRemovedCount);
+			if (debugPlaceholders) {
+				console.log("[GridEventManager] DIAGNOSTIC - After insertEndPlaceholderTiles", {
+					visibleItemsRemovedCount,
+					endPlaceholdersCountAfter: this.#noShiftGrid._endPlaceholdersCount,
+				});
+			}
 			this.#updatePlaceholders();
 		}
 	}
@@ -246,7 +261,7 @@ class GridEventManager {
 		// Insert end placeholder tiles when unpaused
 		this.#noShiftGrid.insertEndPlaceholderTiles(0);
 		if (this.#shouldUpdatePlaceholders("unpause")) {
-			this.#updatePlaceholders();
+			this.#updatePlaceholders(false, true); // Pass forceForFilter = true for resize events
 		}
 	}
 
@@ -269,7 +284,17 @@ class GridEventManager {
 
 		// Reset end placeholders count after fetch completes
 		// This prevents accumulation of removed items affecting placeholder calculations
+		const endPlaceholdersCountBefore = this.#noShiftGrid._endPlaceholdersCount;
 		this.#noShiftGrid.resetEndPlaceholdersCount();
+
+		if (debugPlaceholders) {
+			console.log("[GridEventManager] DIAGNOSTIC - Reset endPlaceholdersCount", {
+				before: endPlaceholdersCountBefore,
+				after: this.#noShiftGrid._endPlaceholdersCount,
+				visibleCount: data.visibleCount,
+				totalItems: data.totalItems,
+			});
+		}
 
 		// Update placeholders after fetch completes
 		if (this.#shouldUpdatePlaceholders("fetch")) {
@@ -321,7 +346,7 @@ class GridEventManager {
 			if (debugPlaceholders) {
 				console.log("[GridEventManager] Updating placeholders after resize");
 			}
-			this.#updatePlaceholders();
+			this.#updatePlaceholders(false, true); // Pass forceForFilter = true for resize events
 		}
 	}
 
@@ -329,8 +354,35 @@ class GridEventManager {
 	 * Handle grid initialized event (initial load)
 	 */
 	#handleGridInitialized() {
+		console.log("[GridEventManager] DEBUG - handleGridInitialized called", {
+			isEnabled: this.#isEnabled,
+			hasNoShiftGrid: !!this.#noShiftGrid,
+			noShiftGridState: this.#noShiftGrid
+				? {
+						isEnabled: this.#noShiftGrid._isEnabled,
+						hasGridContainer: !!this.#noShiftGrid._gridContainer,
+					}
+				: null,
+		});
+
 		if (!this.#isEnabled || !this.#noShiftGrid) {
+			console.warn("[GridEventManager] Cannot handle grid initialized - not enabled or no NoShiftGrid");
 			return;
+		}
+
+		// Initialize NoShiftGrid with the grid container
+		const gridContainer = this.#monitor._gridContainer;
+		if (gridContainer) {
+			if (!this.#noShiftGrid._gridContainer) {
+				console.log("[GridEventManager] Initializing NoShiftGrid with grid container");
+				this.#noShiftGrid.initialize(gridContainer);
+			}
+
+			// Always enable NoShiftGrid if not already enabled
+			if (!this.#noShiftGrid._isEnabled) {
+				console.log("[GridEventManager] Enabling NoShiftGrid");
+				this.#noShiftGrid.enable();
+			}
 		}
 
 		// Insert initial placeholders
