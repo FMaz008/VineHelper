@@ -24,6 +24,13 @@ class GridEventManager {
 	#batchTimer = null;
 	#batchDelay = 50; // milliseconds
 
+	// Visibility count change debouncing
+	#visibilityDebounceTimer = null;
+	#visibilityDebounceDelay = 100; // milliseconds
+	#lastVisibilityUpdate = 0;
+	#visibilityUpdateCount = 0;
+	#visibilityUpdateResetTimer = null;
+
 	constructor(hookMgr, noShiftGrid, monitor) {
 		this.#hookMgr = hookMgr;
 		this.#noShiftGrid = noShiftGrid;
@@ -132,6 +139,19 @@ class GridEventManager {
 	#handleGridFiltered(data = {}) {
 		if (!this.#isEnabled || !this.#noShiftGrid) {
 			return;
+		}
+
+		const debugPlaceholders = this.#monitor._settings?.get("general.debugPlaceholders");
+		if (debugPlaceholders) {
+			console.log("[GridEventManager] Grid filtered event", {
+				data,
+				timestamp: Date.now(),
+			});
+		}
+
+		// Clear tile width cache when filter changes as grid layout may change
+		if (this.#noShiftGrid._clearTileWidthCache) {
+			this.#noShiftGrid._clearTileWidthCache();
 		}
 
 		// Don't reset end placeholders count during filtering
@@ -332,6 +352,14 @@ class GridEventManager {
 			return;
 		}
 
+		// Clear tile width cache on resize as tile dimensions change
+		if (this.#noShiftGrid._clearTileWidthCache) {
+			this.#noShiftGrid._clearTileWidthCache();
+			if (debugPlaceholders) {
+				console.log("[GridEventManager] Cleared tile width cache after resize");
+			}
+		}
+
 		// Update placeholders after grid resize
 		// The resize event is already debounced in NoShiftGrid
 		const shouldUpdate = this.#shouldUpdatePlaceholders("resize");
@@ -484,16 +512,64 @@ class GridEventManager {
 		}
 
 		const debugPlaceholders = this.#monitor?._settings?.get("general.debugPlaceholders");
+		const now = Date.now();
+
+		// Track rapid updates to detect loops
+		if (now - this.#lastVisibilityUpdate < 500) {
+			this.#visibilityUpdateCount++;
+
+			// If we've had more than 5 updates in 500ms, we're likely in a loop
+			if (this.#visibilityUpdateCount > 5) {
+				if (debugPlaceholders) {
+					console.warn("[GridEventManager] Detected rapid visibility updates, breaking potential loop", {
+						updateCount: this.#visibilityUpdateCount,
+						timeSinceLastUpdate: now - this.#lastVisibilityUpdate,
+					});
+				}
+				return;
+			}
+		} else {
+			// Reset counter if enough time has passed
+			this.#visibilityUpdateCount = 1;
+		}
+
+		this.#lastVisibilityUpdate = now;
+
+		// Reset the counter after 1 second of no updates
+		if (this.#visibilityUpdateResetTimer) {
+			clearTimeout(this.#visibilityUpdateResetTimer);
+		}
+		this.#visibilityUpdateResetTimer = setTimeout(() => {
+			this.#visibilityUpdateCount = 0;
+		}, 1000);
+
 		if (debugPlaceholders) {
 			console.log("[GridEventManager] Visibility count changed", {
 				newCount: data.count,
 				source: data.source || "unknown",
+				timestamp: now,
+				updateCount: this.#visibilityUpdateCount,
+				stack: new Error().stack.split("\n").slice(2, 5).join(" -> "),
 			});
 		}
 
-		// Update placeholders immediately when count changes from recalculation
-		// This ensures placeholders are updated even when no items are being added/removed
-		this.#updatePlaceholders(false, true);
+		// Debounce visibility count changes to prevent rapid recalculations
+		if (this.#visibilityDebounceTimer) {
+			clearTimeout(this.#visibilityDebounceTimer);
+		}
+
+		this.#visibilityDebounceTimer = setTimeout(() => {
+			// Only update if count actually changed
+			if (!data.changed) {
+				if (debugPlaceholders) {
+					console.log("[GridEventManager] Skipping placeholder update - count unchanged");
+				}
+				return;
+			}
+
+			// Update placeholders with debouncing
+			this.#updatePlaceholders(false, true);
+		}, this.#visibilityDebounceDelay);
 	}
 
 	/**
@@ -523,6 +599,18 @@ class GridEventManager {
 		if (this.#batchTimer) {
 			clearTimeout(this.#batchTimer);
 			this.#batchTimer = null;
+		}
+
+		// Clear visibility debounce timer
+		if (this.#visibilityDebounceTimer) {
+			clearTimeout(this.#visibilityDebounceTimer);
+			this.#visibilityDebounceTimer = null;
+		}
+
+		// Clear visibility update reset timer
+		if (this.#visibilityUpdateResetTimer) {
+			clearTimeout(this.#visibilityUpdateResetTimer);
+			this.#visibilityUpdateResetTimer = null;
 		}
 
 		// Clear batched updates
