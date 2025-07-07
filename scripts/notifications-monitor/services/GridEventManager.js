@@ -431,16 +431,19 @@ class GridEventManager {
 	 * Handle grid initialized event (initial load)
 	 */
 	#handleGridInitialized() {
-		console.log("[GridEventManager] DEBUG - handleGridInitialized called", {
-			isEnabled: this.#isEnabled,
-			hasNoShiftGrid: !!this.#noShiftGrid,
-			noShiftGridState: this.#noShiftGrid
-				? {
-						isEnabled: this.#noShiftGrid._isEnabled,
-						hasGridContainer: !!this.#noShiftGrid._gridContainer,
-					}
-				: null,
-		});
+		const debugPlaceholders = this.#monitor._settings.get("general.debugPlaceholders");
+		if (debugPlaceholders) {
+			console.log("[GridEventManager] DEBUG - handleGridInitialized called", {
+				isEnabled: this.#isEnabled,
+				hasNoShiftGrid: !!this.#noShiftGrid,
+				noShiftGridState: this.#noShiftGrid
+					? {
+							isEnabled: this.#noShiftGrid._isEnabled,
+							hasGridContainer: !!this.#noShiftGrid._gridContainer,
+						}
+					: null,
+			});
+		}
 
 		if (!this.#isEnabled || !this.#noShiftGrid) {
 			console.warn("[GridEventManager] Cannot handle grid initialized - not enabled or no NoShiftGrid");
@@ -451,13 +454,17 @@ class GridEventManager {
 		const gridContainer = this.#monitor._gridContainer;
 		if (gridContainer) {
 			if (!this.#noShiftGrid._gridContainer) {
-				console.log("[GridEventManager] Initializing NoShiftGrid with grid container");
+				if (debugPlaceholders) {
+					console.log("[GridEventManager] Initializing NoShiftGrid with grid container");
+				}
 				this.#noShiftGrid.initialize(gridContainer);
 			}
 
 			// Always enable NoShiftGrid if not already enabled
 			if (!this.#noShiftGrid._isEnabled) {
-				console.log("[GridEventManager] Enabling NoShiftGrid");
+				if (debugPlaceholders) {
+					console.log("[GridEventManager] Enabling NoShiftGrid");
+				}
 				this.#noShiftGrid.enable();
 			}
 		}
