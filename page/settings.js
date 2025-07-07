@@ -402,9 +402,73 @@ function initTileCounterDebugging() {
 
 	if (!debugTileCounterCheckbox || !tileCounterDebugControls) return;
 
+	// Track if this is the first time enabling
+	let hasShownReloadNotice = false;
+
 	// Show/hide controls based on checkbox state
 	function updateTileCounterDebugVisibility() {
-		tileCounterDebugControls.style.display = debugTileCounterCheckbox.checked ? "block" : "none";
+		const isEnabled = debugTileCounterCheckbox.checked;
+		tileCounterDebugControls.style.display = isEnabled ? "block" : "none";
+
+		// Show a one-time notice when first enabled
+		if (isEnabled && !hasShownReloadNotice) {
+			hasShownReloadNotice = true;
+
+			// Add a temporary notice to the log
+			addToLog("⚠️ IMPORTANT: Reload your Vine page now to initialize the debugger!", "warning");
+			addToLog(
+				"The TileCounter debugger only initializes when the Vine page loads with this setting enabled.",
+				"info"
+			);
+
+			// Also update the status to show it's not initialized
+			const statusElement = document.getElementById("tcStatus");
+			if (statusElement) {
+				statusElement.textContent = "Not initialized - reload Vine page";
+				statusElement.style.color = "#f57c00";
+			}
+		}
+	}
+
+	// Function to check if debugger is already initialized
+	async function checkDebuggerStatus() {
+		if (!debugTileCounterCheckbox.checked) return;
+
+		try {
+			// Check if debugger is initialized by sending a test command
+			const result = await sendTileCounterCommand("getMetrics");
+			if (result && result.success) {
+				// Debugger is initialized and responding
+				const statusElement = document.getElementById("tcStatus");
+				if (statusElement) {
+					statusElement.textContent = "Initialized";
+					statusElement.style.color = "#2e7d32";
+				}
+				// Don't log this on every check, only on initial load
+				if (!window.hasLoggedDebuggerReady) {
+					window.hasLoggedDebuggerReady = true;
+					addToLog("TileCounter debugger is initialized and ready", "success");
+				}
+
+				// Update metrics display with current data
+				if (result.data) {
+					updateMetricsDisplay(result.data);
+				}
+			} else {
+				// Debugger not initialized - but only show warning if checkbox is checked
+				const statusElement = document.getElementById("tcStatus");
+				if (statusElement && debugTileCounterCheckbox.checked) {
+					// Only show "not initialized" if we haven't seen it initialized before
+					const currentText = statusElement.textContent;
+					if (currentText !== "Initialized" && currentText !== "Monitoring") {
+						statusElement.textContent = "Not initialized - reload Vine page";
+						statusElement.style.color = "#f57c00";
+					}
+				}
+			}
+		} catch (error) {
+			console.error("Error checking debugger status:", error);
+		}
 	}
 
 	// Initial visibility
@@ -412,6 +476,21 @@ function initTileCounterDebugging() {
 
 	// Listen for changes
 	debugTileCounterCheckbox.addEventListener("change", updateTileCounterDebugVisibility);
+
+	// Check debugger status on load if debugging is enabled
+	if (debugTileCounterCheckbox.checked) {
+		// Small delay to ensure everything is initialized
+		setTimeout(() => {
+			checkDebuggerStatus();
+		}, 500);
+	}
+
+	// Periodically check if debugger becomes available (e.g., when user opens a Vine tab)
+	setInterval(() => {
+		if (debugTileCounterCheckbox.checked && !isMonitoring) {
+			checkDebuggerStatus();
+		}
+	}, 3000); // Check every 3 seconds
 
 	// TileCounter debug log
 	const logElement = document.getElementById("tileCounterDebugLog");
@@ -554,8 +633,32 @@ function initTileCounterDebugging() {
 
 	// Update metrics display
 	function updateMetricsDisplay(metrics) {
-		document.getElementById("tcStatus").textContent = isMonitoring ? "Monitoring" : "Not monitoring";
-		document.getElementById("tcStatus").style.color = isMonitoring ? "#2e7d32" : "#888";
+		const statusElement = document.getElementById("tcStatus");
+
+		// Determine status text based on current state
+		if (isMonitoring) {
+			statusElement.textContent = "Monitoring";
+			statusElement.style.color = "#2e7d32";
+		} else if (metrics) {
+			// We have metrics but not monitoring - debugger is initialized
+			statusElement.textContent = "Initialized";
+			statusElement.style.color = "#2e7d32";
+		} else {
+			// No metrics - check if we should keep the current status
+			const currentText = statusElement.textContent;
+			if (currentText === "Initialized" || currentText === "Monitoring") {
+				// Debugger was previously initialized, keep showing as initialized
+				statusElement.textContent = "Initialized";
+				statusElement.style.color = "#2e7d32";
+			} else if (currentText === "Not initialized - reload Vine page") {
+				// Keep the not initialized message
+				statusElement.style.color = "#f57c00";
+			} else {
+				// Default state
+				statusElement.textContent = "Not monitoring";
+				statusElement.style.color = "#888";
+			}
+		}
 
 		if (metrics) {
 			document.getElementById("tcVisibleCount").textContent = metrics.visibleCount || "-";
@@ -629,7 +732,14 @@ function initTileCounterDebugging() {
 				}
 			}, 2000); // Update every 2 seconds (less frequent to reduce errors)
 		} else {
-			addToLog(`Failed to start monitoring: ${result?.error || "Unknown error"}`, "error");
+			const errorMsg = result?.error || "Unknown error";
+			if (errorMsg.includes("not initialized") || errorMsg.includes("not available")) {
+				addToLog("TileCounter debugger not initialized!", "error");
+				addToLog("Please reload your Vine page and try again.", "warning");
+				addToLog("The debugger only initializes when the Vine page loads with this setting enabled.", "info");
+			} else {
+				addToLog(`Failed to start monitoring: ${errorMsg}`, "error");
+			}
 		}
 	});
 
