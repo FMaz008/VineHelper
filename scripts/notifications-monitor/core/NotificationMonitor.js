@@ -890,7 +890,8 @@ class NotificationMonitor extends MonitorCore {
 		// Use the bulk remove method - it will handle counting and event emission
 		this.#bulkRemoveItems(unavailableAsins, false);
 
-		this._tileCounter.recountVisibleTiles(0);
+		// Recount with bulk operation flag to ensure placeholders update
+		this._tileCounter.recountVisibleTiles(0, false, { isBulkOperation: true });
 	}
 
 	/**
@@ -2266,7 +2267,7 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		//Recount the visible tiles with priority (user-initiated filtering)
-		this._tileCounter.recountVisibleTiles(0, true); //Don't wait, high priority
+		this._tileCounter.recountVisibleTiles(0, true, { source: "filter-change" }); //Don't wait, high priority
 	}
 
 	#mouseoverHandler(e) {

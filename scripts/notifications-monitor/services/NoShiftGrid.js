@@ -298,7 +298,7 @@ class NoShiftGrid {
 		try {
 			// Get current state
 			const visibleItemsCount = this._monitor.getTileCounter()?.getCount() || 0;
-			const sortType = this._monitor._settings?.get("notification.monitor.sortType");
+			const sortType = this._monitor._sortType;
 			const fetchingRecentItems = this._monitor._fetchingRecentItems;
 
 			// Calculate how many placeholder tiles we need
@@ -346,6 +346,22 @@ class NoShiftGrid {
 				}
 			}
 
+			if (debugPlaceholders) {
+				console.log("[NoShiftGrid] Placeholder calculation logic", {
+					sortType,
+					isDateSort: sortType === "date_desc" || sortType === "date_asc",
+					visibleItemsCount,
+					tilesPerRow,
+					remainder: visibleItemsCount % tilesPerRow,
+					numPlaceholderTiles,
+					fetchingRecentItems,
+					hasVisibilityState: !!this._monitor._visibilityState,
+					visibilityStateCount: this._monitor._visibilityState
+						? Object.keys(this._monitor._visibilityState).length
+						: 0,
+				});
+			}
+
 			// Always use the calculated placeholder count for proper grid updates
 			const finalPlaceholderCount = forceForFilter
 				? numPlaceholderTiles
@@ -379,12 +395,46 @@ class NoShiftGrid {
 				return;
 			}
 
-			// Remove existing placeholders
-			this.removeAllPlaceholderTiles();
+			// To avoid the "jump in" effect, we need to update placeholders atomically
+			// We'll create all new placeholders first, then swap them in a single operation
 
-			// Insert new placeholders
-			if (finalPlaceholderCount > 0) {
-				this._insertPlaceholderTilesAtStart(finalPlaceholderCount);
+			if (debugPlaceholders) {
+				console.log("[NoShiftGrid] Updating placeholders", {
+					callId,
+					currentCount: currentPlaceholderCount,
+					targetCount: finalPlaceholderCount,
+					difference: finalPlaceholderCount - currentPlaceholderCount,
+				});
+			}
+
+			// Create new placeholders in a document fragment
+			const fragment = document.createDocumentFragment();
+			for (let i = 0; i < finalPlaceholderCount; i++) {
+				const placeholder = document.createElement("div");
+				placeholder.className = "vh-placeholder-tile vvp-item-tile vh-logo-vh";
+				fragment.appendChild(placeholder);
+			}
+
+			// Remove all existing placeholders and insert new ones in one operation
+			const existingPlaceholders = this._gridContainer.querySelectorAll(
+				".vh-placeholder-tile:not(.vh-end-placeholder)"
+			);
+			const firstRealTile = this._gridContainer.querySelector(".vvp-item-tile:not(.vh-placeholder-tile)");
+
+			// Remove old placeholders
+			existingPlaceholders.forEach((p) => p.remove());
+
+			// Insert new placeholders at the beginning
+			if (firstRealTile) {
+				this._gridContainer.insertBefore(fragment, firstRealTile);
+			} else {
+				// If no real tiles, just prepend to container
+				const firstChild = this._gridContainer.firstChild;
+				if (firstChild) {
+					this._gridContainer.insertBefore(fragment, firstChild);
+				} else {
+					this._gridContainer.appendChild(fragment);
+				}
 			}
 
 			if (debugPlaceholders) {
@@ -537,26 +587,14 @@ class NoShiftGrid {
 			this._cachedTileWidth > 50 &&
 			now - this._tileWidthCacheTime < this._tileWidthCacheDuration
 		) {
-			// Don't use cache during active DOM operations or transitions
-			const isTransitioning =
-				this._monitor._fetchingRecentItems ||
-				(this._monitor._filterType && this._monitor._filterType !== "all");
-
-			if (!isTransitioning) {
-				if (debugPlaceholders) {
-					console.log("[NoShiftGrid] Using cached tile width", {
-						cachedWidth: this._cachedTileWidth,
-						cacheAge: now - this._tileWidthCacheTime,
-						timestamp: now,
-					});
-				}
-				return this._cachedTileWidth;
-			} else if (debugPlaceholders) {
-				console.log("[NoShiftGrid] Skipping cache due to active transition", {
-					fetchingRecentItems: this._monitor._fetchingRecentItems,
-					filterType: this._monitor._filterType,
+			if (debugPlaceholders) {
+				console.log("[NoShiftGrid] Using cached tile width", {
+					cachedWidth: this._cachedTileWidth,
+					cacheAge: now - this._tileWidthCacheTime,
+					timestamp: now,
 				});
 			}
+			return this._cachedTileWidth;
 		}
 
 		// Clear invalid cached values
@@ -702,6 +740,30 @@ class NoShiftGrid {
 		}
 
 		return width;
+	}
+
+	/**
+	 * Get the number of tiles per row
+	 * @returns {number} Number of tiles per row
+	 */
+	getTilesPerRow() {
+		if (!this._gridContainer) return 0;
+
+		// Use the centralized tile width calculation which includes caching
+		const tileWidth = this._calculateTileWidth();
+		if (!tileWidth || tileWidth <= 0) return 1;
+
+		return Math.floor(this._gridWidth / tileWidth) || 1;
+	}
+
+	/**
+	 * Create a single placeholder tile element
+	 * @returns {HTMLElement} The placeholder tile element
+	 */
+	createPlaceholderTile() {
+		const placeholder = document.createElement("div");
+		placeholder.className = "vh-placeholder-tile vvp-item-tile vh-logo-vh";
+		return placeholder;
 	}
 }
 

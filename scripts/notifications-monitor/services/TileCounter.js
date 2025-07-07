@@ -25,8 +25,10 @@ class TileCounter {
 	 * Recount the number of tiles on the page
 	 * @param {number} waitTime - The time to wait before recounting the tiles, in milliseconds
 	 * @param {boolean} priority - If true, uses immediate execution for user-initiated actions
+	 * @param {Object} options - Additional options for the recount
+	 * @param {boolean} options.isBulkOperation - Whether this is a bulk operation
 	 */
-	recountVisibleTiles(waitTime = 50, priority = false) {
+	recountVisibleTiles(waitTime = 50, priority = false, options = {}) {
 		this.#state = STATE_WAITING;
 
 		// Clear any existing timeout
@@ -37,18 +39,19 @@ class TileCounter {
 
 		// Create a new timeout
 		if (effectiveWaitTime === 0) {
-			this.#startRecount();
+			this.#startRecount(options);
 		} else {
 			this.#timeoutInstance = setTimeout(() => {
-				this.#startRecount();
+				this.#startRecount(options);
 			}, effectiveWaitTime);
 		}
 	}
 
 	/**
 	 * Start the recount timer
+	 * @param {Object} options - Options passed from recountVisibleTiles
 	 */
-	#startRecount() {
+	#startRecount(options = {}) {
 		this.#state = STATE_COUNTING;
 
 		const startTime = this.#performanceMetrics.enabled ? performance.now() : 0;
@@ -98,7 +101,17 @@ class TileCounter {
 			);
 		}
 
-		this.#hookMgr.hookExecute("visibility:count-changed", { count: this.#count });
+		const previousCount = this.#count;
+		this.#count = count;
+		const countChanged = previousCount !== count;
+
+		this.#hookMgr.hookExecute("visibility:count-changed", {
+			count: count,
+			previousCount: previousCount,
+			changed: countChanged,
+			source: options.source || "recount",
+			isBulkOperation: options.isBulkOperation || false,
+		});
 
 		// Clear cache after successful recount
 		this.#clearCache();
