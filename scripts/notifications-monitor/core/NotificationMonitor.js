@@ -2376,12 +2376,17 @@ class NotificationMonitor extends MonitorCore {
 						enrollment_guid: seeDetailsBtn.dataset.enrollmentGuid,
 					});
 
-					// Get core info and open modal
+					//Mobile browsers handle window.open the way they want, a link with a target of _blank will open in a new tab more reliably.
 					const options = item.getCoreInfo();
-					window.open(
-						`https://www.amazon.${this._i13nMgr.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${encodeURIComponent(JSON.stringify(options))}`,
-						"_blank"
-					);
+					const link = document.createElement("a");
+					link.href = `https://www.amazon.${this._i13nMgr.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${encodeURIComponent(JSON.stringify(options))}`;
+					link.target = "_blank";
+					link.rel = "noopener noreferrer";
+					link.style.display = "none";
+
+					document.body.appendChild(link);
+					link.click();
+					document.body.removeChild(link);
 				} catch (error) {
 					console.error("[NotificationMonitor] Cannot create item for modal -", error.message, {
 						source: "see details button click",
