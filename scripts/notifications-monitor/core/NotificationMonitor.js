@@ -320,6 +320,11 @@ class NotificationMonitor extends MonitorCore {
 			return false;
 		}
 
+		// Skip filtering for placeholder elements
+		if (node.classList.contains("vh-placeholder-tile")) {
+			return false;
+		}
+
 		const notificationTypeZeroETV = parseInt(node.dataset.typeZeroETV) === 1;
 		const notificationTypeHighlight = parseInt(node.dataset.typeHighlight) === 1;
 		const notificationTypeUnknownETV = parseInt(node.dataset.typeUnknownETV) === 1;
@@ -518,8 +523,9 @@ class NotificationMonitor extends MonitorCore {
 		setTimeout(() => {
 			// Always recount to ensure accuracy after fetch, as items may have been
 			// added with isVisible=false during the fetch process
-			this._tileCounter.recountVisibleTiles(0);
+			this._tileCounter.recountVisibleTiles(0, true, { source: "fetch-complete" });
 
+			// Fetch complete - recount and emit event
 			const debugPlaceholders = this._settings?.get("general.debugPlaceholders");
 			if (debugPlaceholders) {
 				const itemTiles = this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
@@ -550,7 +556,7 @@ class NotificationMonitor extends MonitorCore {
 		// Count visible items being removed before the operation
 		let visibleRemovedCount = 0;
 
-		// Debug logging controlled by setting
+		// Bulk remove operation starting
 		const debugBulkOperations = this._settings.get("general.debugBulkOperations");
 		if (debugBulkOperations) {
 			console.log("[bulkRemoveItems] Starting with:", {
@@ -584,6 +590,7 @@ class NotificationMonitor extends MonitorCore {
 			// First, collect items to keep and items to remove
 			const itemsToKeep = [];
 			let itemsToRemoveCount = 0;
+			// Track items to keep and remove
 			// DEBUG: Track bulk operation start
 			if (debugBulkOperations) {
 				console.log("[DEBUG-BULK] Starting bulk remove operation", {
@@ -624,6 +631,7 @@ class NotificationMonitor extends MonitorCore {
 				}
 			});
 
+			// Update items map with kept items
 			if (debugBulkOperations) {
 				console.log("[bulkRemoveItems] After processing:", {
 					itemsToKeepCount: itemsToKeep.length,
@@ -640,21 +648,19 @@ class NotificationMonitor extends MonitorCore {
 				this._itemsMgr.items.set(asin, item);
 			});
 
+			// Sort the kept items
 			if (debugBulkOperations) {
 				console.log("[bulkRemoveItems] Before sort:", {
 					itemsToKeepCount: itemsToKeep.length,
-					itemsMgrSize: this._itemsMgr.items.size,
-					itemsToKeepSample: itemsToKeep.slice(0, 5).map(({ asin, item }) => ({
-						asin,
-						unavailable: item.data.unavailable,
-						hasElement: !!item.element,
-					})),
+					itemsMapSize: this._itemsMgr.items.size,
+					newItemsSize: newItems.size,
 				});
 			}
 
 			// Now sort only the items we're keeping
 			const sortedItems = this._itemsMgr.sortItems();
 
+			// Add sorted items to new container
 			if (debugBulkOperations) {
 				console.log("[bulkRemoveItems] After sort:", {
 					sortedItemsCount: sortedItems.length,
@@ -662,7 +668,6 @@ class NotificationMonitor extends MonitorCore {
 					sortedItemsSample: sortedItems.slice(0, 5).map((item) => ({
 						asin: item.asin,
 						unavailable: item.data.unavailable,
-						hasElement: !!item.element,
 					})),
 				});
 			}
@@ -681,6 +686,7 @@ class NotificationMonitor extends MonitorCore {
 				}
 			});
 
+			// Replace container and update references
 			if (debugBulkOperations) {
 				console.log("[bulkRemoveItems] Final state:", {
 					newItemsSize: newItems.size,
@@ -718,8 +724,9 @@ class NotificationMonitor extends MonitorCore {
 
 		// Emit event if any visible items were removed
 		if (visibleRemovedCount > 0) {
-			this._tileCounter.recountVisibleTiles();
+			this._tileCounter.recountVisibleTiles(0, false, { isBulkOperation: true, source: "bulk-remove" });
 
+			// Emit grid event for removed items
 			// DEBUG: Log atomic bulk operation
 			if (debugBulkOperations) {
 				console.log("[DEBUG-BULK] Atomic count update for bulk remove", {
@@ -757,7 +764,7 @@ class NotificationMonitor extends MonitorCore {
 						`NOTIF: Auto truncating item(s) from the page using the ${this._sortType} sort method.`
 					);
 
-					// Debug logging for truncation
+					// Start truncation process
 					const debugTabTitle = this._settings.get("general.debugTabTitle");
 					if (debugTabTitle) {
 						console.log(`[Truncation] Starting truncation`, {
@@ -800,7 +807,7 @@ class NotificationMonitor extends MonitorCore {
 						visibleItemsRemovedCount,
 					});
 
-					// Debug logging for truncation completion
+					// Truncation completed
 					if (debugTabTitle) {
 						console.log(`[Truncation] Completed truncation`, {
 							visibleItemsRemoved: visibleItemsRemovedCount,
@@ -852,38 +859,21 @@ class NotificationMonitor extends MonitorCore {
 		// Get all unavailable ASINs
 		const unavailableAsins = new Set();
 
-		// Debug: Check all items and their unavailable status
-		const allItemsDebug = [];
+		// Collect unavailable ASINs
 		this._itemsMgr.items.forEach((item, asin) => {
-			allItemsDebug.push({
-				asin,
-				unavailable: item.data.unavailable,
-				unavailableType: typeof item.data.unavailable,
-				isUnavailable: item.data.unavailable == 1,
-			});
-
 			// Check for unavailable == 1 (consistent with server data format)
 			if (item.data.unavailable == 1) {
 				unavailableAsins.add(asin);
 			}
 		});
 
-		// Debug logging for clearing unavailable items
+		// Clear unavailable items
 		const debugBulkOperations = this._settings.get("general.debugBulkOperations");
 		if (debugBulkOperations) {
 			console.log("[clearUnavailableItems] Debug info:", {
 				totalItems: this._itemsMgr.items.size,
 				unavailableCount: unavailableAsins.size,
 				unavailableAsins: Array.from(unavailableAsins).slice(0, 5), // Show first 5 for debugging
-				allItemsDebug: allItemsDebug.slice(0, 20), // Show first 20 items
-				sampleItems: Array.from(this._itemsMgr.items.entries())
-					.slice(0, 10)
-					.map(([asin, item]) => ({
-						asin,
-						unavailable: item.data.unavailable,
-						unavailableType: typeof item.data.unavailable,
-						isInSet: unavailableAsins.has(asin),
-					})),
 			});
 		}
 
@@ -891,7 +881,7 @@ class NotificationMonitor extends MonitorCore {
 		this.#bulkRemoveItems(unavailableAsins, false);
 
 		// Recount with bulk operation flag to ensure placeholders update
-		this._tileCounter.recountVisibleTiles(0, false, { isBulkOperation: true });
+		this._tileCounter.recountVisibleTiles(0, false, { isBulkOperation: true, source: "clear-unavailable" });
 	}
 
 	/**
@@ -949,12 +939,7 @@ class NotificationMonitor extends MonitorCore {
 
 		// Check if this ASIN is currently being processed
 		if (this.#processingASINs.has(asin)) {
-			if (this._settings.get("general.debugDuplicates")) {
-				console.log("[DEBUG-DUPLICATE] ASIN already being processed, skipping", {
-					asin,
-					timestamp: new Date().toISOString(),
-				});
-			}
+			// ASIN already being processed
 			return false;
 		}
 
@@ -1188,10 +1173,16 @@ class NotificationMonitor extends MonitorCore {
 				this._settings.get("general.displayVariantButton")
 			) {
 				if (is_parent_asin && item.data.variants) {
-					for (const variant of item.data.variants) {
-						await tile.addVariant(variant.asin, variant.title, variant.etv);
+					// Only process variants if they haven't been added yet
+					if (tile.getVariants().length === 0) {
+						// Process all variants in parallel for better performance
+						await Promise.all(
+							item.data.variants.map((variant) =>
+								tile.addVariant(variant.asin, variant.title, variant.etv)
+							)
+						);
+						tile.updateVariantCount();
 					}
-					tile.updateVariantCount();
 				}
 			}
 
@@ -1295,20 +1286,7 @@ class NotificationMonitor extends MonitorCore {
 			// BUG FIX 1: During bulk fetch, only play sounds for items that will be visible
 			// This prevents sounds from playing for items that are filtered out
 			const shouldPlaySound = isVisible && !this._feedPaused;
-			if (this._settings.get("general.debugSound")) {
-				console.log("[SOUND DEBUG] Sound decision AFTER filtering:", {
-					asin,
-					isVisible,
-					_fetchingRecentItems: this._fetchingRecentItems,
-					_feedPaused: this._feedPaused,
-					shouldPlaySound,
-					soundType: KWsMatch ? "HIGHLIGHT" : parseFloat(etv_min) === 0 ? "ZERO_ETV" : "REGULAR",
-					// Additional debug info to diagnose keyword sound issue
-					KWsMatch,
-					highlightSoundEnabled: this._settings.get("notification.monitor.highlight.sound") != "0",
-					wouldPlayWithOldLogic: (isVisible || this._fetchingRecentItems) && !this._feedPaused,
-				});
-			}
+			// Play appropriate sound for item type
 
 			// Now play sounds only for visible items
 			if (KWsMatch) {
@@ -1383,7 +1361,15 @@ class NotificationMonitor extends MonitorCore {
 					});
 				}
 
-				this._tileCounter.recountVisibleTiles();
+				// During bulk operations (fetchingRecentItems), use debounced recount
+				// For individual items, recount immediately
+				if (this._fetchingRecentItems) {
+					// Use debounced recount during bulk operations
+					this._tileCounter.recountVisibleTiles(50, false, { isBulkOperation: true, source: "bulk-add" });
+				} else {
+					// Immediate recount for individual items
+					this._tileCounter.recountVisibleTiles(0, true, { source: "single-add" });
+				}
 			}
 
 			//Autotruncate the items if there are too many
@@ -1402,9 +1388,10 @@ class NotificationMonitor extends MonitorCore {
 				const tile = this._itemsMgr.getItemTile(data.asin);
 				if (tile) {
 					if (data.variants && data.variants.length > 0) {
-						for (const variant of data.variants) {
-							await tile.addVariant(variant.asin, variant.title, variant.etv);
-						}
+						// Process all variants in parallel for better performance
+						await Promise.all(
+							data.variants.map((variant) => tile.addVariant(variant.asin, variant.title, variant.etv))
+						);
 						tile.updateVariantCount();
 					}
 				}
@@ -1497,7 +1484,7 @@ class NotificationMonitor extends MonitorCore {
 		tile = null;
 
 		// Recount the visible tiles
-		this._tileCounter.recountVisibleTiles(0);
+		this._tileCounter.recountVisibleTiles(0, true, { source: "single-remove" });
 	}
 
 	/**
@@ -1896,22 +1883,26 @@ class NotificationMonitor extends MonitorCore {
 
 			// Only reposition if the item needs to move
 			if (currentIndex !== targetIndex && currentIndex !== -1) {
-				// Remove the element from DOM
-				notif.remove();
+				// Use atomic DOM update to prevent visual shifts
+				// Build the new order in a document fragment
+				const fragment = document.createDocumentFragment();
+				const allItems = Array.from(this._gridContainer.children);
 
-				// Insert at the correct position
-				if (targetIndex >= orderedItems.length - 1) {
-					// Append to the end
-					this._gridContainer.appendChild(notif);
-				} else {
-					// Insert before the target element
-					const targetElement = orderedItems[targetIndex];
-					if (targetElement && targetElement !== notif) {
-						this._gridContainer.insertBefore(notif, targetElement);
-					} else {
-						this._gridContainer.appendChild(notif);
-					}
-				}
+				// Remove the item from its current position
+				allItems.splice(currentIndex, 1);
+
+				// Insert at the target position
+				allItems.splice(targetIndex, 0, notif);
+
+				// Clone all items to the fragment to maintain DOM state
+				allItems.forEach((item) => {
+					fragment.appendChild(item.cloneNode(true));
+				});
+
+				// Replace all children atomically
+				// This prevents the container from ever being empty
+				this._gridContainer.replaceChildren(...fragment.childNodes);
+
 				return true;
 			}
 		}
@@ -2262,12 +2253,59 @@ class NotificationMonitor extends MonitorCore {
 	 */
 	#applyFilteringToAllItems() {
 		const tiles = this._gridContainer.querySelectorAll(".vvp-item-tile");
-		for (const node of tiles) {
-			this.#processNotificationFiltering(node);
+
+		// Start atomic update at the beginning to batch all DOM changes
+		let atomicUpdateStarted = false;
+		if (this._noShiftGrid && !this._noShiftGrid._atomicUpdateInProgress) {
+			this._noShiftGrid.beginAtomicUpdate();
+			atomicUpdateStarted = true;
 		}
 
-		//Recount the visible tiles with priority (user-initiated filtering)
-		this._tileCounter.recountVisibleTiles(0, true, { source: "filter-change" }); //Don't wait, high priority
+		// Process items in chunks to prevent UI freezing
+		const chunkSize = 100;
+		let currentIndex = 0;
+
+		const processChunk = () => {
+			const endIndex = Math.min(currentIndex + chunkSize, tiles.length);
+
+			for (let i = currentIndex; i < endIndex; i++) {
+				this.#processNotificationFiltering(tiles[i]);
+			}
+
+			currentIndex = endIndex;
+
+			// If there are more items, process next chunk
+			if (currentIndex < tiles.length) {
+				// Use setTimeout to allow browser to update UI
+				setTimeout(processChunk, 0);
+			} else {
+				// All filtering is complete
+
+				// Recount the visible tiles with priority (user-initiated filtering)
+				// This must happen AFTER all items have been filtered
+				if (this._tileCounter) {
+					this._tileCounter.recountVisibleTiles(0, true, { isBulkOperation: true, source: "filter-change" }); // 0 wait time, priority = true, source = filter-change
+				}
+
+				// Trigger sort after filtering is complete
+				// Pass flag to indicate we're in a filter operation
+				this._hookMgr.hookExecute("grid:sort-needed", {
+					source: "filter-change",
+					atomicUpdateHandled: atomicUpdateStarted,
+				});
+
+				// End atomic update after all operations are complete
+				if (atomicUpdateStarted && this._noShiftGrid) {
+					// Use requestAnimationFrame to ensure all DOM updates are complete
+					requestAnimationFrame(() => {
+						this._noShiftGrid.endAtomicUpdate();
+					});
+				}
+			}
+		};
+
+		// Start processing
+		processChunk();
 	}
 
 	#mouseoverHandler(e) {
@@ -2531,7 +2569,7 @@ class NotificationMonitor extends MonitorCore {
 					this._searchText = event.target.value;
 					// Apply search filter to all items
 					this.#applyFilteringToAllItems();
-				}, 750); // 300ms debounce delay
+				}, 300); // Reduced from 750ms for better responsiveness
 			};
 			searchInput.addEventListener("input", searchHandler);
 			this.#eventHandlers.buttons.set(searchInput, { event: "input", handler: searchHandler });
@@ -2801,7 +2839,7 @@ class NotificationMonitor extends MonitorCore {
 					node.style.display = visible ? this.#getTileDisplayStyle() : "none";
 				}
 			}
-			this._tileCounter.recountVisibleTiles();
+			this._tileCounter.recountVisibleTiles(0, true, { isBulkOperation: true, source: "feed-unpause" });
 
 			// Only emit unpause event for manual unpause, not hover unpause
 			if (!isHoverPause) {
