@@ -36,6 +36,8 @@ describe("GridEventManager", () => {
 			resetEndPlaceholdersCount: jest.fn(),
 			insertEndPlaceholderTiles: jest.fn(),
 			deletePlaceholderTiles: jest.fn(),
+			beginAtomicUpdate: jest.fn(),
+			endAtomicUpdate: jest.fn(),
 		};
 
 		mockMonitor = {
