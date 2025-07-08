@@ -167,19 +167,26 @@ class TileCounter {
 			return this.#batchedVisibilityCheckWithEarlyExit(tilesArray);
 		}
 
-		// Original implementation for smaller sets
-		// Create visibility cache for rapid subsequent calls
+		// OPTIMIZED: Check inline styles first (no reflow)
+		// Only use getComputedStyle as fallback
 		this.#visibilityCache = new Map();
 
-		// Batch all style reads together
-		const visibilityData = [];
 		for (let i = 0; i < tiles.length; i++) {
 			const tile = tiles[i];
-			// Check multiple visibility indicators at once
-			const style = window.getComputedStyle(tile);
-			const isVisible = style.display !== "none" && style.visibility !== "hidden" && style.opacity !== "0";
+			let isVisible = false;
 
-			visibilityData.push(isVisible);
+			// First check inline style (no reflow)
+			if (tile.style.display === "none") {
+				isVisible = false;
+			} else if (tile.style.display === "flex" || tile.style.display === "block") {
+				// Explicitly set to visible
+				isVisible = true;
+			} else {
+				// Fallback to computed style only when necessary
+				const style = window.getComputedStyle(tile);
+				isVisible = style.display !== "none" && style.visibility !== "hidden" && style.opacity !== "0";
+			}
+
 			this.#visibilityCache.set(tile, isVisible);
 
 			if (isVisible) {
@@ -219,8 +226,18 @@ class TileCounter {
 
 		for (let i = 0; i < phase1Limit; i++) {
 			const tile = prioritizedTiles[i];
-			const style = window.getComputedStyle(tile);
-			const isVisible = style.display !== "none" && style.visibility !== "hidden" && style.opacity !== "0";
+			let isVisible = false;
+
+			// OPTIMIZED: Check inline styles first (no reflow)
+			if (tile.style.display === "none") {
+				isVisible = false;
+			} else if (tile.style.display === "flex" || tile.style.display === "block") {
+				isVisible = true;
+			} else {
+				// Fallback to computed style only when necessary
+				const style = window.getComputedStyle(tile);
+				isVisible = style.display !== "none" && style.visibility !== "hidden" && style.opacity !== "0";
+			}
 
 			this.#visibilityCache.set(tile, isVisible);
 			checkedCount++;
@@ -241,18 +258,30 @@ class TileCounter {
 		}
 
 		// Phase 2: If we haven't found many visible tiles, check remaining
-		// This handles cases where visible tiles are scattered throughout
-		if (count < 50 && checkedCount < prioritizedTiles.length) {
+		// IMPORTANT: For filters like "Regular only" with 500+ items, we need to check them all
+		if (checkedCount < prioritizedTiles.length) {
 			if (this.#performanceMetrics.enabled) {
 				console.log(
-					`[TileCounter] Continuing full scan: only found ${count} visible tiles in first ${checkedCount} checks`
+					`[TileCounter] Entering phase 2: found ${count} visible tiles so far, checking remaining ${
+						prioritizedTiles.length - checkedCount
+					}`
 				);
 			}
 
 			for (let i = checkedCount; i < prioritizedTiles.length; i++) {
 				const tile = prioritizedTiles[i];
-				const style = window.getComputedStyle(tile);
-				const isVisible = style.display !== "none" && style.visibility !== "hidden" && style.opacity !== "0";
+				let isVisible = false;
+
+				// OPTIMIZED: Check inline styles first
+				if (tile.style.display === "none") {
+					isVisible = false;
+				} else if (tile.style.display === "flex" || tile.style.display === "block") {
+					isVisible = true;
+				} else {
+					// Fallback to computed style only when necessary
+					const style = window.getComputedStyle(tile);
+					isVisible = style.display !== "none" && style.visibility !== "hidden" && style.opacity !== "0";
+				}
 
 				this.#visibilityCache.set(tile, isVisible);
 				checkedCount++;

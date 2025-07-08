@@ -29,6 +29,17 @@
 		</div>
 
 		<div class="setting-container">
+			<label for="general.debugStackTraces">
+				<input type="checkbox" name="general.debugStackTraces" value="1" />
+				Include Stack Traces in Debug Logs
+			</label>
+			<div class="setting-summary">
+				<div class="vh-toolbar-icon vh-icon-question"></div>
+				Includes stack traces in visibility count change logs. This provides more debugging context but can impact performance due to frequent events. Only enable when actively debugging visibility issues.
+			</div>
+		</div>
+
+		<div class="setting-container">
 			<label for="general.debugSound">
 				<input type="checkbox" name="general.debugSound" value="1" />
 				Debug Sound Notifications

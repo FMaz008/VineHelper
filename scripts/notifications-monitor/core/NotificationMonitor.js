@@ -45,6 +45,16 @@ const TYPE_HIGHLIGHT = 2;
 const TYPE_UNKNOWN_ETV = 3;
 const TYPE_HIGHLIGHT_OR_ZEROETV = 9;
 
+// Filter names lookup table
+const FILTER_NAMES = {
+	[-1]: "All",
+	[TYPE_REGULAR]: "Regular only",
+	[TYPE_ZEROETV]: "Zero ETV only",
+	[TYPE_HIGHLIGHT]: "KW match only",
+	[TYPE_UNKNOWN_ETV]: "Unknown ETV only",
+	[TYPE_HIGHLIGHT_OR_ZEROETV]: "Zero ETV or KW match only",
+};
+
 const TYPE_DATE_ASC = "date_asc";
 const TYPE_DATE_DESC = "date_desc";
 const TYPE_PRICE_DESC = "price_desc";
@@ -287,14 +297,14 @@ class NotificationMonitor extends MonitorCore {
 	}
 
 	/**
-	 * Emit a grid event if GridEventManager is available
+	 * Emit a grid event through HookMgr
 	 * @private
 	 * @param {string} eventName - The event name
 	 * @param {Object} data - Optional event data
 	 */
 	#emitGridEvent(eventName, data = null) {
-		if (this._gridEventManager) {
-			this._gridEventManager.emitGridEvent(eventName, data);
+		if (this._hookMgr) {
+			this._hookMgr.hookExecute(eventName, data);
 		}
 	}
 
@@ -313,9 +323,11 @@ class NotificationMonitor extends MonitorCore {
 	/**
 	 * Determine if the item should be displayed based on the filters settings. Will hide the item if it doesn't match the filters.
 	 * @param {object} node - The DOM element of the tile
+	 * @param {boolean} unpausing - Whether we're unpausing the feed
+	 * @param {boolean} skipLogging - Skip debug logging for bulk operations
 	 * @returns {boolean} - If the node should be visible.
 	 */
-	#processNotificationFiltering(node, unpausing = false) {
+	#processNotificationFiltering(node, unpausing = false, skipLogging = false) {
 		if (!node) {
 			return false;
 		}
@@ -363,21 +375,17 @@ class NotificationMonitor extends MonitorCore {
 			}
 		}
 
-		let shouldBeVisible = false;
+		// Simplified filter logic using a lookup table
+		const filterVisibility = {
+			[-1]: () => true, // Show all
+			[TYPE_HIGHLIGHT_OR_ZEROETV]: () => notificationTypeZeroETV || notificationTypeHighlight,
+			[TYPE_HIGHLIGHT]: () => notificationTypeHighlight,
+			[TYPE_ZEROETV]: () => notificationTypeZeroETV,
+			[TYPE_REGULAR]: () => !notificationTypeZeroETV && !notificationTypeHighlight,
+			[TYPE_UNKNOWN_ETV]: () => notificationTypeUnknownETV,
+		};
 
-		if (this._filterType == -1) {
-			shouldBeVisible = true;
-		} else if (this._filterType == TYPE_HIGHLIGHT_OR_ZEROETV) {
-			shouldBeVisible = notificationTypeZeroETV || notificationTypeHighlight;
-		} else if (this._filterType == TYPE_HIGHLIGHT) {
-			shouldBeVisible = notificationTypeHighlight;
-		} else if (this._filterType == TYPE_ZEROETV) {
-			shouldBeVisible = notificationTypeZeroETV;
-		} else if (this._filterType == TYPE_REGULAR) {
-			shouldBeVisible = !notificationTypeZeroETV && !notificationTypeHighlight;
-		} else if (this._filterType == TYPE_UNKNOWN_ETV) {
-			shouldBeVisible = notificationTypeUnknownETV;
-		}
+		const shouldBeVisible = filterVisibility[this._filterType]?.() || false;
 
 		if (!unpausing) {
 			node.style.display = shouldBeVisible ? this.#getTileDisplayStyle() : "none";
@@ -389,31 +397,24 @@ class NotificationMonitor extends MonitorCore {
 		const computedStyle = window.getComputedStyle(node);
 		styleDisplay = computedStyle.display;
 
-		// Debug logging for visibility changes
-		const debugTabTitle = this._settings.get("general.debugTabTitle");
-		const debugPlaceholders = this._settings.get("general.debugPlaceholders");
-		if (debugTabTitle || debugPlaceholders) {
-			const afterDisplay = node.style.display;
-			if (beforeDisplay !== afterDisplay) {
-				console.log("[NotificationMonitor] Item visibility changed", {
-					asin: node.dataset.asin,
-					beforeDisplay,
-					afterDisplay,
-					typeZeroETV: notificationTypeZeroETV,
-					typeHighlight: notificationTypeHighlight,
-					currentFilter: this._filterType,
-					filterName:
-						this._filterType === TYPE_HIGHLIGHT_OR_ZEROETV
-							? "Zero ETV or KW match only"
-							: this._filterType === TYPE_HIGHLIGHT
-								? "Highlight only"
-								: this._filterType === TYPE_ZEROETV
-									? "Zero ETV only"
-									: this._filterType === TYPE_REGULAR
-										? "Regular only"
-										: "All",
-					styleDisplay: this.#getTileDisplayStyle(),
-				});
+		// Debug logging for visibility changes - skip for bulk operations
+		if (!skipLogging) {
+			const debugTabTitle = this._settings.get("general.debugTabTitle");
+			const debugPlaceholders = this._settings.get("general.debugPlaceholders");
+			if (debugTabTitle || debugPlaceholders) {
+				const afterDisplay = node.style.display;
+				if (beforeDisplay !== afterDisplay) {
+					console.log("[NotificationMonitor] Item visibility changed", {
+						asin: node.dataset.asin,
+						beforeDisplay,
+						afterDisplay,
+						typeZeroETV: notificationTypeZeroETV,
+						typeHighlight: notificationTypeHighlight,
+						currentFilter: this._filterType,
+						filterName: FILTER_NAMES[this._filterType] || "Unknown",
+						styleDisplay: this.#getTileDisplayStyle(),
+					});
+				}
 			}
 		}
 
@@ -704,14 +705,12 @@ class NotificationMonitor extends MonitorCore {
 			this._gridContainer.parentNode.replaceChild(newContainer, this._gridContainer);
 			this._gridContainer = newContainer;
 
-			// Re-add placeholders after bulk removal
-			// This ensures placeholders are maintained after clearing unavailable items
-			if (this._noShiftGrid) {
-				this._noShiftGrid.insertPlaceholderTiles();
-			}
-
+			// Update NoShiftGrid with the new container BEFORE inserting placeholders
 			if (this._noShiftGrid) {
 				this._noShiftGrid.updateGridContainer(this._gridContainer);
+				// Re-add placeholders after bulk removal
+				// This ensures placeholders are maintained after clearing unavailable items
+				this._noShiftGrid.insertPlaceholderTiles();
 			}
 
 			// Reattach event listeners to the new container
@@ -879,9 +878,6 @@ class NotificationMonitor extends MonitorCore {
 
 		// Use the bulk remove method - it will handle counting and event emission
 		this.#bulkRemoveItems(unavailableAsins, false);
-
-		// Recount with bulk operation flag to ensure placeholders update
-		this._tileCounter.recountVisibleTiles(0, false, { isBulkOperation: true, source: "clear-unavailable" });
 	}
 
 	/**
@@ -2254,58 +2250,30 @@ class NotificationMonitor extends MonitorCore {
 	#applyFilteringToAllItems() {
 		const tiles = this._gridContainer.querySelectorAll(".vvp-item-tile");
 
-		// Start atomic update at the beginning to batch all DOM changes
-		let atomicUpdateStarted = false;
-		if (this._noShiftGrid && !this._noShiftGrid._atomicUpdateInProgress) {
-			this._noShiftGrid.beginAtomicUpdate();
-			atomicUpdateStarted = true;
+		// Process all items synchronously for filter changes to avoid event storms
+		// Skip logging during bulk operations
+		for (let i = 0; i < tiles.length; i++) {
+			this.#processNotificationFiltering(tiles[i], false, true); // skipLogging = true
 		}
 
-		// Process items in chunks to prevent UI freezing
-		const chunkSize = 100;
-		let currentIndex = 0;
+		// All filtering is complete
 
-		const processChunk = () => {
-			const endIndex = Math.min(currentIndex + chunkSize, tiles.length);
+		// Trigger sort after filtering is complete
+		this._hookMgr.hookExecute("grid:sort-needed", {
+			source: "filter-change",
+		});
 
-			for (let i = currentIndex; i < endIndex; i++) {
-				this.#processNotificationFiltering(tiles[i]);
-			}
-
-			currentIndex = endIndex;
-
-			// If there are more items, process next chunk
-			if (currentIndex < tiles.length) {
-				// Use setTimeout to allow browser to update UI
-				setTimeout(processChunk, 0);
-			} else {
-				// All filtering is complete
-
-				// Recount the visible tiles with priority (user-initiated filtering)
-				// This must happen AFTER all items have been filtered
+		// IMPORTANT: Recount visible tiles AFTER atomic update completes
+		// This ensures the DOM is fully updated before counting
+		// Use requestAnimationFrame to ensure DOM has been painted
+		// NOTE: Skip recount if feed is paused - the feed-unpause event will handle it
+		if (!this._feedPaused) {
+			requestAnimationFrame(() => {
 				if (this._tileCounter) {
 					this._tileCounter.recountVisibleTiles(0, true, { isBulkOperation: true, source: "filter-change" }); // 0 wait time, priority = true, source = filter-change
 				}
-
-				// Trigger sort after filtering is complete
-				// Pass flag to indicate we're in a filter operation
-				this._hookMgr.hookExecute("grid:sort-needed", {
-					source: "filter-change",
-					atomicUpdateHandled: atomicUpdateStarted,
-				});
-
-				// End atomic update after all operations are complete
-				if (atomicUpdateStarted && this._noShiftGrid) {
-					// Use requestAnimationFrame to ensure all DOM updates are complete
-					requestAnimationFrame(() => {
-						this._noShiftGrid.endAtomicUpdate();
-					});
-				}
-			}
-		};
-
-		// Start processing
-		processChunk();
+			});
+		}
 	}
 
 	#mouseoverHandler(e) {

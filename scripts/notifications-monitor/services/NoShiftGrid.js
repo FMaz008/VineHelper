@@ -15,17 +15,26 @@ class NoShiftGrid {
 		this._endPlaceholdersCount = 0;
 
 		// Cache for tile width calculation
+		// IMPORTANT: This cache prevents recalculation during filter changes
+		// Without caching, placeholder counts can be lost when the grid is temporarily empty
+		// The cache is only cleared on resize/zoom events, not by time
 		this._cachedTileWidth = null;
-		this._tileWidthCacheTime = 0;
-		this._tileWidthCacheDuration = 1000; // Reduced to 1 second for better responsiveness
+		this._retryPending = false; // Flag to prevent multiple retry attempts
 
 		// Placeholder update state management
 		this._isUpdatingPlaceholders = false;
 		this._pendingUpdate = false;
-		this._pendingForceForFilter = false;
 		this._lastPlaceholderUpdate = 0;
 		this._placeholderUpdateCount = 0;
-		this._minUpdateInterval = 50; // Minimum 50ms between updates
+		this._minUpdateInterval = 16; // Reduced to 16ms (one frame) for more responsive updates
+
+		// Cache for calculation results to prevent redundant calculations
+		this._lastCalculationResult = {
+			visibleCount: -1,
+			tileWidth: -1,
+			gridWidth: -1,
+			placeholderCount: -1,
+		};
 
 		this._boundResizeHandler = this._resizeHandler.bind(this);
 		this._boundHandleTruncation = this.handleTruncation.bind(this);
@@ -133,14 +142,36 @@ class NoShiftGrid {
 	 */
 	_clearTileWidthCache() {
 		const debugPlaceholders = this._monitor._settings?.get("general.debugPlaceholders");
+
+		// Don't clear cache during atomic updates or while fetching
+		if (this._atomicUpdateInProgress || this._monitor._fetchingRecentItems) {
+			if (debugPlaceholders) {
+				console.log("[NoShiftGrid] Skipping cache clear during batch operation", {
+					atomicUpdateInProgress: this._atomicUpdateInProgress,
+					fetchingRecentItems: this._monitor._fetchingRecentItems,
+					cachedWidth: this._cachedTileWidth,
+				});
+			}
+			// Schedule a retry after the operation completes
+			if (!this._cacheClearPending) {
+				this._cacheClearPending = true;
+				setTimeout(() => {
+					this._cacheClearPending = false;
+					// Only clear if we're still not in a batch operation
+					if (!this._atomicUpdateInProgress && !this._monitor._fetchingRecentItems) {
+						this._clearTileWidthCache();
+					}
+				}, 100);
+			}
+			return;
+		}
+
 		if (debugPlaceholders && this._cachedTileWidth !== null) {
 			console.log("[NoShiftGrid] Clearing tile width cache", {
 				previousWidth: this._cachedTileWidth,
-				cacheAge: this._tileWidthCacheTime ? Date.now() - this._tileWidthCacheTime : 0,
 			});
 		}
 		this._cachedTileWidth = null;
-		this._tileWidthCacheTime = 0;
 	}
 
 	/**
@@ -241,27 +272,49 @@ class NoShiftGrid {
 
 	/**
 	 * Insert placeholder tiles to maintain grid structure
-	 * @param {boolean} forceForFilter - Force insertion for filter operations
+	 * @param {Object} options - Options for the update
+	 * @param {boolean} options.immediate - Skip deferred update logic for immediate changes
 	 */
-	insertPlaceholderTiles(forceForFilter = false) {
+	insertPlaceholderTiles(options = {}) {
 		const debugPlaceholders = this._monitor._settings?.get("general.debugPlaceholders");
 		const callId = Date.now();
+		const { immediate = false } = options;
 
 		if (!this._isEnabled || !this._gridContainer) {
 			return;
 		}
 
-		// Check minimum update interval to prevent rapid updates
+		// Calculate time since last update
 		const timeSinceLastUpdate = callId - this._lastPlaceholderUpdate;
-		if (timeSinceLastUpdate < this._minUpdateInterval && !forceForFilter) {
-			if (debugPlaceholders) {
-				console.log("[NoShiftGrid] Skipping update - too soon since last update", {
-					callId,
-					timeSinceLastUpdate,
-					minInterval: this._minUpdateInterval,
-				});
+
+		// Check minimum update interval to prevent rapid updates
+		// Skip this check for immediate updates (like filter changes)
+		if (!immediate) {
+			if (timeSinceLastUpdate < this._minUpdateInterval) {
+				// Queue this update to run after the minimum interval
+				if (!this._pendingUpdate) {
+					this._pendingUpdate = true;
+					const delay = this._minUpdateInterval - timeSinceLastUpdate;
+
+					if (debugPlaceholders) {
+						console.log("[NoShiftGrid] Deferring update due to minimum interval", {
+							callId,
+							timeSinceLastUpdate,
+							minInterval: this._minUpdateInterval,
+							delayMs: delay,
+						});
+					}
+
+					// Use RAF instead of setTimeout for better performance
+					requestAnimationFrame(() => {
+						if (this._pendingUpdate) {
+							this._pendingUpdate = false;
+							this.insertPlaceholderTiles();
+						}
+					});
+				}
+				return;
 			}
-			return;
 		}
 
 		// Track rapid updates to detect potential loops
@@ -285,12 +338,10 @@ class NoShiftGrid {
 		// Check if we're in a pending update loop
 		if (this._isUpdatingPlaceholders) {
 			this._pendingUpdate = true;
-			this._pendingForceForFilter = forceForFilter || this._pendingForceForFilter;
 			if (debugPlaceholders) {
 				console.log("[NoShiftGrid] Placeholder update already in progress, queuing", {
 					callId,
 					pendingUpdate: this._pendingUpdate,
-					pendingForceForFilter: this._pendingForceForFilter,
 				});
 			}
 			return;
@@ -309,6 +360,30 @@ class NoShiftGrid {
 			const tileWidth = this._calculateTileWidth();
 			const tilesPerRow = Math.floor(this._gridWidth / tileWidth);
 
+			// Check if calculation inputs have changed
+			if (
+				this._lastCalculationResult.visibleCount === visibleItemsCount &&
+				this._lastCalculationResult.tileWidth === tileWidth &&
+				this._lastCalculationResult.gridWidth === this._gridWidth
+			) {
+				// Inputs haven't changed, use cached result
+				const cachedCount = this._lastCalculationResult.placeholderCount;
+				const currentCount = this._getExistingPlaceholderCount();
+
+				if (cachedCount === currentCount) {
+					if (debugPlaceholders) {
+						console.log("[NoShiftGrid] Calculation inputs unchanged, skipping", {
+							callId,
+							visibleCount: visibleItemsCount,
+							cachedPlaceholderCount: cachedCount,
+						});
+					}
+					// Clean up state before returning
+					this._isUpdatingPlaceholders = false;
+					return;
+				}
+			}
+
 			if (debugPlaceholders) {
 				console.log("[NoShiftGrid] Starting placeholder calculation", {
 					callId,
@@ -316,15 +391,37 @@ class NoShiftGrid {
 					tileWidth,
 					gridWidth: this._gridWidth,
 					tilesPerRow,
-					forceForFilter,
 					fetchingRecentItems,
 					sortType,
 					timestamp: Date.now(),
 				});
 			}
 
-			// For date sorting, we need to add placeholders at the beginning
-			// to complete the first row of visible items
+			// PLACEHOLDER CALCULATION LOGIC:
+			// The purpose of placeholders is to prevent grid shifting when new items arrive.
+			//
+			// CRITICAL: Placeholders are ALWAYS inserted at the START (beginning) of the grid!
+			// This is NOT at the visual bottom - it's at DOM positions 0, 1, 2, etc.
+			//
+			// For DATE SORTING (newest → oldest):
+			// - New items are inserted at the beginning of the item list
+			// - Placeholders at the start reserve this space
+			// - Example with 5-column grid and 1 existing item:
+			//   [PH] [PH] [PH] [PH] [Item1]
+			// - When new item arrives:
+			//   [PH] [PH] [PH] [New] [Item1]
+			// - Grid fills from right to left in the first row
+			//
+			// For DATE SORTING (oldest → newest):
+			// - New items typically go to the end, but placeholders still go at start
+			// - This maintains grid alignment and consistent behavior
+			//
+			// For PRICE SORTING:
+			// - Items are positioned based on their price value
+			// - New items can be inserted anywhere in the grid based on their price
+			// - Placeholders may not prevent all shifting since insertion position is unpredictable
+			//
+			// Currently, placeholders are only calculated for date sorting modes
 			let numPlaceholderTiles = 0;
 
 			if (sortType === "date_desc" || sortType === "date_asc") {
@@ -349,6 +446,8 @@ class NoShiftGrid {
 					}
 				}
 			}
+			// TODO: Consider if placeholders should be added for price sorting modes
+			// Currently no placeholders for TYPE_PRICE_ASC or TYPE_PRICE_DESC
 
 			if (debugPlaceholders) {
 				console.log("[NoShiftGrid] Placeholder calculation logic", {
@@ -367,9 +466,15 @@ class NoShiftGrid {
 			}
 
 			// Always use the calculated placeholder count for proper grid updates
-			const finalPlaceholderCount = forceForFilter
-				? numPlaceholderTiles
-				: Math.max(numPlaceholderTiles, this._getExistingPlaceholderCount());
+			const finalPlaceholderCount = numPlaceholderTiles;
+
+			// Update calculation cache
+			this._lastCalculationResult = {
+				visibleCount: visibleItemsCount,
+				tileWidth: tileWidth,
+				gridWidth: this._gridWidth,
+				placeholderCount: finalPlaceholderCount,
+			};
 
 			// Get current placeholder count
 			const currentPlaceholderCount = this._getExistingPlaceholderCount();
@@ -413,43 +518,45 @@ class NoShiftGrid {
 
 			// Function to perform the actual DOM update
 			const performUpdate = () => {
-				// Temporarily disable CSS transitions for placeholders
-				const style = document.createElement("style");
-				style.textContent = `
-					.vh-placeholder-tile {
-						transition: none !important;
-					}
-				`;
-				document.head.appendChild(style);
-
-				// Create an array to hold all children in their final order
-				const allChildren = [];
-
-				// Create new placeholders
-				for (let i = 0; i < finalPlaceholderCount; i++) {
-					const placeholder = document.createElement("div");
-					placeholder.className = "vh-placeholder-tile vvp-item-tile vh-logo-vh";
-					allChildren.push(placeholder);
-				}
-
-				// Add all non-placeholder tiles to the array
-				const realTiles = Array.from(this._gridContainer.children).filter(
-					(child) =>
-						!child.classList.contains("vh-placeholder-tile") ||
-						child.classList.contains("vh-end-placeholder")
+				// OPTIMIZED: Only manipulate placeholders, not all tiles
+				// Remove existing placeholders
+				const existingPlaceholders = this._gridContainer.querySelectorAll(
+					".vh-placeholder-tile:not(.vh-end-placeholder)"
 				);
-				allChildren.push(...realTiles);
+				existingPlaceholders.forEach((p) => p.remove());
 
-				// Replace all children atomically
-				this._gridContainer.replaceChildren(...allChildren);
+				// If we need placeholders, add them at the start
+				if (finalPlaceholderCount > 0) {
+					// Create fragment for new placeholders
+					const fragment = document.createDocumentFragment();
 
-				// Force layout recalculation
-				void this._gridContainer.offsetHeight;
+					// CRITICAL: Placeholders MUST go at the START (beginning) of the grid
+					// NOT at the "bottom" or "end" - they go at DOM position 0!
+					//
+					// Why this works:
+					// 1. CSS Grid flows left-to-right, top-to-bottom
+					// 2. Placeholders occupy positions 0, 1, 2, etc.
+					// 3. Items come after placeholders in DOM order
+					// 4. For date_desc: new items fill from the right side of first row
+					// 5. This prevents existing items from shifting position
+					//
+					// Visual example (5 columns):
+					// [PH0] [PH1] [PH2] [PH3] [Item1]  <- Item1 stays in position 4
+					// When new item arrives, it takes PH3's spot, Item1 doesn't move
+					for (let i = 0; i < finalPlaceholderCount; i++) {
+						const placeholder = document.createElement("div");
+						placeholder.className = "vh-placeholder-tile vvp-item-tile vh-logo-vh";
+						fragment.appendChild(placeholder);
+					}
 
-				// Re-enable transitions after a short delay
-				setTimeout(() => {
-					style.remove();
-				}, 50);
+					// Insert at the beginning
+					const firstChild = this._gridContainer.firstChild;
+					if (firstChild) {
+						this._gridContainer.insertBefore(fragment, firstChild);
+					} else {
+						this._gridContainer.appendChild(fragment);
+					}
+				}
 			};
 
 			// If we're in an atomic update, queue the operation for batch execution
@@ -483,17 +590,14 @@ class NoShiftGrid {
 			// If there was a pending update, process it now
 			if (this._pendingUpdate) {
 				this._pendingUpdate = false;
-				const pendingForceForFilter = this._pendingForceForFilter || false;
-				this._pendingForceForFilter = false;
 				if (debugPlaceholders) {
 					console.log("[NoShiftGrid] Processing pending update", {
 						callId,
-						pendingForceForFilter,
 						timestamp: Date.now(),
 					});
 				}
-				// Use setTimeout to avoid stack overflow
-				setTimeout(() => this.insertPlaceholderTiles(pendingForceForFilter), 0);
+				// Use RAF to avoid stack overflow and better performance
+				requestAnimationFrame(() => this.insertPlaceholderTiles());
 			}
 		}
 	}
@@ -505,7 +609,8 @@ class NoShiftGrid {
 	 */
 	_getExistingPlaceholderCount() {
 		if (!this._gridContainer) return 0;
-		return this._gridContainer.querySelectorAll(".vh-placeholder-tile").length;
+		// Only count regular placeholders, not end placeholders
+		return this._gridContainer.querySelectorAll(".vh-placeholder-tile:not(.vh-end-placeholder)").length;
 	}
 
 	/**
@@ -636,16 +741,26 @@ class NoShiftGrid {
 		const debugPlaceholders = this._monitor._settings?.get("general.debugPlaceholders");
 		const now = Date.now();
 
+		// Don't calculate during atomic updates or while fetching
+		if (this._atomicUpdateInProgress || this._monitor._fetchingRecentItems) {
+			if (debugPlaceholders) {
+				console.log("[NoShiftGrid] Skipping tile width calculation during batch operation", {
+					atomicUpdateInProgress: this._atomicUpdateInProgress,
+					fetchingRecentItems: this._monitor._fetchingRecentItems,
+					cachedWidth: this._cachedTileWidth,
+				});
+			}
+			// Always return cached value during batch operations
+			// If we don't have one yet, we'll calculate it after the batch completes
+			return this._cachedTileWidth || this._calculateInitialTileWidth();
+		}
+
 		// Check if we have a valid cached value
-		if (
-			this._cachedTileWidth !== null &&
-			this._cachedTileWidth > 50 &&
-			now - this._tileWidthCacheTime < this._tileWidthCacheDuration
-		) {
+		// Cache never expires by time - only cleared on resize/zoom
+		if (this._cachedTileWidth !== null && this._cachedTileWidth > 50) {
 			if (debugPlaceholders) {
 				console.log("[NoShiftGrid] Using cached tile width", {
 					cachedWidth: this._cachedTileWidth,
-					cacheAge: now - this._tileWidthCacheTime,
 					timestamp: now,
 				});
 			}
@@ -661,11 +776,12 @@ class NoShiftGrid {
 		// Try to get tile width from CSS Grid
 		const cssGridWidth = this._getTileWidthFromCSSGrid();
 		if (cssGridWidth && cssGridWidth > 50) {
+			// Cache any valid value
 			this._cachedTileWidth = cssGridWidth;
-			this._tileWidthCacheTime = now;
 			if (debugPlaceholders) {
 				console.log("[NoShiftGrid] Calculated tile width from CSS Grid", {
 					width: cssGridWidth,
+					cached: true,
 					timestamp: now,
 				});
 			}
@@ -676,21 +792,55 @@ class NoShiftGrid {
 		const measuredWidth = this._measureTileWidth();
 		if (measuredWidth && measuredWidth > 50) {
 			this._cachedTileWidth = measuredWidth;
-			this._tileWidthCacheTime = now;
 			if (debugPlaceholders) {
 				console.log("[NoShiftGrid] Measured tile width from DOM", {
 					width: measuredWidth,
+					cached: true,
 					timestamp: now,
 				});
 			}
 			return measuredWidth;
 		}
 
-		// Fall back to settings
-		const settingWidth = parseInt(this._monitor._settings?.get("general.tileSize.width") || "236");
-		const fallbackWidth = settingWidth + 1; // Add 1px for margin
+		// If calculation failed and we have no cache, retry after a delay
+		if (!this._cachedTileWidth && !this._retryPending) {
+			this._retryPending = true;
+			setTimeout(() => {
+				this._retryPending = false;
+				// Only retry if we still don't have a cached value and not in batch operation
+				if (!this._cachedTileWidth && !this._atomicUpdateInProgress && !this._monitor._fetchingRecentItems) {
+					if (debugPlaceholders) {
+						console.log("[NoShiftGrid] Retrying tile width calculation");
+					}
+					this.insertPlaceholderTiles();
+				}
+			}, 100);
+		}
 
-		return fallbackWidth;
+		// If we still don't have a width, use the initial calculation method
+		const initialWidth = this._calculateInitialTileWidth();
+		this._cachedTileWidth = initialWidth;
+
+		if (debugPlaceholders) {
+			console.log("[NoShiftGrid] Using initial tile width calculation", {
+				width: initialWidth,
+				timestamp: now,
+			});
+		}
+
+		return initialWidth;
+	}
+
+	/**
+	 * Calculate initial tile width using settings
+	 * This is only used when we have no cached value and can't calculate from DOM
+	 * @private
+	 * @returns {number} The initial tile width
+	 */
+	_calculateInitialTileWidth() {
+		// Use settings as the most reliable initial source
+		const settingWidth = parseInt(this._monitor._settings?.get("general.tileSize.width") || "236");
+		return settingWidth + 1; // Add 1px for margin
 	}
 
 	/**
@@ -700,6 +850,19 @@ class NoShiftGrid {
 	 */
 	_getTileWidthFromCSSGrid() {
 		if (!this._gridContainer) return null;
+
+		// First, try to get width from an actual tile if one exists
+		// This is more reliable than parsing CSS Grid template
+		const existingTile = this._gridContainer.querySelector(".vvp-item-tile:not(.vh-placeholder-tile)");
+		if (existingTile) {
+			const rect = existingTile.getBoundingClientRect();
+			if (rect.width > 50) {
+				const computedStyle = window.getComputedStyle(existingTile);
+				const marginLeft = parseFloat(computedStyle.marginLeft) || 0;
+				const marginRight = parseFloat(computedStyle.marginRight) || 0;
+				return rect.width + marginLeft + marginRight;
+			}
+		}
 
 		const computedStyle = window.getComputedStyle(this._gridContainer);
 		const gridTemplateColumns = computedStyle.gridTemplateColumns;
@@ -847,7 +1010,7 @@ class NoShiftGrid {
 
 	/**
 	 * End an atomic update operation and apply all batched changes
-	 * Uses requestAnimationFrame to ensure smooth visual updates
+	 * Optimized for performance - executes immediately without requestAnimationFrame
 	 */
 	endAtomicUpdate() {
 		if (!this._atomicUpdateInProgress) {
@@ -856,11 +1019,11 @@ class NoShiftGrid {
 		}
 
 		const debugPlaceholders = this._monitor._settings?.get("general.debugPlaceholders");
+		const startTime = performance.now();
 
-		// Apply all operations in a single frame
-		requestAnimationFrame(() => {
-			const startTime = performance.now();
-
+		// Execute operations immediately for better performance
+		// Only use requestAnimationFrame if we have many operations
+		const executeOperations = () => {
 			// Temporarily disable CSS transitions for placeholders
 			const style = document.createElement("style");
 			style.textContent = `
@@ -878,14 +1041,12 @@ class NoShiftGrid {
 				});
 			}
 
+			// Execute all operations at once without individual logging
 			for (let i = 0; i < this._atomicOperations.length; i++) {
-				if (debugPlaceholders) {
-					console.log(`[NoShiftGrid] Executing operation ${i + 1}/${this._atomicOperations.length}`);
-				}
 				this._atomicOperations[i]();
 			}
 
-			// Force layout recalculation
+			// Force layout recalculation only once at the end
 			if (this._gridContainer) {
 				void this._gridContainer.offsetHeight;
 			}
@@ -907,7 +1068,15 @@ class NoShiftGrid {
 			// Reset atomic update state
 			this._atomicUpdateInProgress = false;
 			this._atomicOperations = [];
-		});
+		};
+
+		// For small numbers of operations, execute immediately
+		// For larger batches, use requestAnimationFrame
+		if (this._atomicOperations.length <= 5) {
+			executeOperations();
+		} else {
+			requestAnimationFrame(executeOperations);
+		}
 	}
 }
 
