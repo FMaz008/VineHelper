@@ -29,6 +29,10 @@ class NoShiftGrid {
 
 		this._boundResizeHandler = this._resizeHandler.bind(this);
 		this._boundHandleTruncation = this.handleTruncation.bind(this);
+
+		// Atomic update support
+		this._atomicUpdateInProgress = false;
+		this._atomicOperations = [];
 	}
 
 	/**
@@ -407,34 +411,61 @@ class NoShiftGrid {
 				});
 			}
 
-			// Create new placeholders in a document fragment
-			const fragment = document.createDocumentFragment();
-			for (let i = 0; i < finalPlaceholderCount; i++) {
-				const placeholder = document.createElement("div");
-				placeholder.className = "vh-placeholder-tile vvp-item-tile vh-logo-vh";
-				fragment.appendChild(placeholder);
-			}
+			// Function to perform the actual DOM update
+			const performUpdate = () => {
+				// Temporarily disable CSS transitions for placeholders
+				const style = document.createElement("style");
+				style.textContent = `
+					.vh-placeholder-tile {
+						transition: none !important;
+					}
+				`;
+				document.head.appendChild(style);
 
-			// Remove all existing placeholders and insert new ones in one operation
-			const existingPlaceholders = this._gridContainer.querySelectorAll(
-				".vh-placeholder-tile:not(.vh-end-placeholder)"
-			);
-			const firstRealTile = this._gridContainer.querySelector(".vvp-item-tile:not(.vh-placeholder-tile)");
+				// Create an array to hold all children in their final order
+				const allChildren = [];
 
-			// Remove old placeholders
-			existingPlaceholders.forEach((p) => p.remove());
-
-			// Insert new placeholders at the beginning
-			if (firstRealTile) {
-				this._gridContainer.insertBefore(fragment, firstRealTile);
-			} else {
-				// If no real tiles, just prepend to container
-				const firstChild = this._gridContainer.firstChild;
-				if (firstChild) {
-					this._gridContainer.insertBefore(fragment, firstChild);
-				} else {
-					this._gridContainer.appendChild(fragment);
+				// Create new placeholders
+				for (let i = 0; i < finalPlaceholderCount; i++) {
+					const placeholder = document.createElement("div");
+					placeholder.className = "vh-placeholder-tile vvp-item-tile vh-logo-vh";
+					allChildren.push(placeholder);
 				}
+
+				// Add all non-placeholder tiles to the array
+				const realTiles = Array.from(this._gridContainer.children).filter(
+					(child) =>
+						!child.classList.contains("vh-placeholder-tile") ||
+						child.classList.contains("vh-end-placeholder")
+				);
+				allChildren.push(...realTiles);
+
+				// Replace all children atomically
+				this._gridContainer.replaceChildren(...allChildren);
+
+				// Force layout recalculation
+				void this._gridContainer.offsetHeight;
+
+				// Re-enable transitions after a short delay
+				setTimeout(() => {
+					style.remove();
+				}, 50);
+			};
+
+			// If we're in an atomic update, queue the operation for batch execution
+			// Otherwise, use requestAnimationFrame for smooth visual updates
+			if (this._atomicUpdateInProgress) {
+				// Queue the operation instead of executing immediately
+				this._atomicOperations.push(performUpdate);
+				if (debugPlaceholders) {
+					console.log("[NoShiftGrid] Queued placeholder update for atomic execution", {
+						atomicOperationsLength: this._atomicOperations.length,
+						callId,
+						timestamp: Date.now(),
+					});
+				}
+			} else {
+				requestAnimationFrame(performUpdate);
 			}
 
 			if (debugPlaceholders) {
@@ -485,31 +516,40 @@ class NoShiftGrid {
 	_insertPlaceholderTilesAtStart(count) {
 		if (!this._gridContainer || count <= 0) return;
 
-		const debugPlaceholders = this._monitor._settings?.get("general.debugPlaceholders");
+		const operation = () => {
+			const debugPlaceholders = this._monitor._settings?.get("general.debugPlaceholders");
 
-		// Create document fragment for better performance
-		const fragment = document.createDocumentFragment();
+			// Create document fragment for better performance
+			const fragment = document.createDocumentFragment();
 
-		// Create placeholder tiles
-		for (let i = 0; i < count; i++) {
-			const placeholder = document.createElement("div");
-			placeholder.className = "vh-placeholder-tile vvp-item-tile vh-logo-vh";
-			fragment.appendChild(placeholder);
-		}
+			// Create placeholder tiles
+			for (let i = 0; i < count; i++) {
+				const placeholder = document.createElement("div");
+				placeholder.className = "vh-placeholder-tile vvp-item-tile vh-logo-vh";
+				fragment.appendChild(placeholder);
+			}
 
-		// Insert at the beginning of the grid
-		const firstChild = this._gridContainer.firstChild;
-		if (firstChild) {
-			this._gridContainer.insertBefore(fragment, firstChild);
+			// Insert at the beginning of the grid
+			const firstChild = this._gridContainer.firstChild;
+			if (firstChild) {
+				this._gridContainer.insertBefore(fragment, firstChild);
+			} else {
+				this._gridContainer.appendChild(fragment);
+			}
+
+			if (debugPlaceholders) {
+				console.log("[NoShiftGrid] Inserted placeholders", {
+					count,
+					totalChildren: this._gridContainer.children.length,
+				});
+			}
+		};
+
+		// If atomic update is in progress, queue the operation
+		if (this._atomicUpdateInProgress) {
+			this._atomicOperations.push(operation);
 		} else {
-			this._gridContainer.appendChild(fragment);
-		}
-
-		if (debugPlaceholders) {
-			console.log("[NoShiftGrid] Inserted placeholders", {
-				count,
-				totalChildren: this._gridContainer.children.length,
-			});
+			operation();
 		}
 	}
 
@@ -519,8 +559,23 @@ class NoShiftGrid {
 	removeAllPlaceholderTiles() {
 		if (!this._gridContainer) return;
 
-		const placeholders = this._gridContainer.querySelectorAll(".vh-placeholder-tile");
-		placeholders.forEach((placeholder) => placeholder.remove());
+		const operation = () => {
+			// Get all non-placeholder children to preserve
+			const nonPlaceholders = Array.from(this._gridContainer.children).filter(
+				(child) => !child.classList.contains("vh-placeholder-tile")
+			);
+
+			// Replace all children atomically with only non-placeholder items
+			// This is more efficient than individual .remove() calls
+			this._gridContainer.replaceChildren(...nonPlaceholders);
+		};
+
+		// If atomic update is in progress, queue the operation
+		if (this._atomicUpdateInProgress) {
+			this._atomicOperations.push(operation);
+		} else {
+			operation();
+		}
 	}
 
 	/**
@@ -764,6 +819,95 @@ class NoShiftGrid {
 		const placeholder = document.createElement("div");
 		placeholder.className = "vh-placeholder-tile vvp-item-tile vh-logo-vh";
 		return placeholder;
+	}
+
+	/**
+	 * Begin an atomic update operation
+	 * All DOM operations will be batched until endAtomicUpdate is called
+	 */
+	beginAtomicUpdate() {
+		if (this._atomicUpdateInProgress) {
+			console.warn("[NoShiftGrid] Atomic update already in progress");
+			return;
+		}
+
+		this._atomicUpdateInProgress = true;
+		this._atomicOperations = [];
+
+		// Atomic update started
+		const debugPlaceholders = this._monitor._settings?.get("general.debugPlaceholders");
+		if (debugPlaceholders) {
+			console.log("[NoShiftGrid] Beginning atomic update", {
+				operationsLength: this._atomicOperations.length,
+				timestamp: Date.now(),
+				stackTrace: new Error().stack,
+			});
+		}
+	}
+
+	/**
+	 * End an atomic update operation and apply all batched changes
+	 * Uses requestAnimationFrame to ensure smooth visual updates
+	 */
+	endAtomicUpdate() {
+		if (!this._atomicUpdateInProgress) {
+			console.warn("[NoShiftGrid] No atomic update in progress");
+			return;
+		}
+
+		const debugPlaceholders = this._monitor._settings?.get("general.debugPlaceholders");
+
+		// Apply all operations in a single frame
+		requestAnimationFrame(() => {
+			const startTime = performance.now();
+
+			// Temporarily disable CSS transitions for placeholders
+			const style = document.createElement("style");
+			style.textContent = `
+				.vh-placeholder-tile {
+					transition: none !important;
+				}
+			`;
+			document.head.appendChild(style);
+
+			// Apply all batched operations
+			if (debugPlaceholders) {
+				console.log("[NoShiftGrid] Executing batched operations", {
+					operationCount: this._atomicOperations.length,
+					timestamp: Date.now(),
+				});
+			}
+
+			for (let i = 0; i < this._atomicOperations.length; i++) {
+				if (debugPlaceholders) {
+					console.log(`[NoShiftGrid] Executing operation ${i + 1}/${this._atomicOperations.length}`);
+				}
+				this._atomicOperations[i]();
+			}
+
+			// Force layout recalculation
+			if (this._gridContainer) {
+				void this._gridContainer.offsetHeight;
+			}
+
+			// Re-enable transitions after a short delay
+			setTimeout(() => {
+				style.remove();
+			}, 50);
+
+			// Atomic update completed
+			if (debugPlaceholders) {
+				console.log("[NoShiftGrid] Atomic update completed", {
+					operationCount: this._atomicOperations.length,
+					duration: `${(performance.now() - startTime).toFixed(2)}ms`,
+					timestamp: new Date().toISOString(),
+				});
+			}
+
+			// Reset atomic update state
+			this._atomicUpdateInProgress = false;
+			this._atomicOperations = [];
+		});
 	}
 }
 

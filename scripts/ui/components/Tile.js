@@ -108,9 +108,13 @@ class Tile {
 	//## Public methods
 
 	async addVariant(asin, title, etv) {
-		if (this.#variants.length === 0) {
+		// Check if variant button already exists in DOM
+		const existingVariantBtn = this.#tileDOM.querySelector(".vh-btn-variants");
+
+		if (!existingVariantBtn && this.#variants.length === 0) {
 			await this.#addVariantButton();
 		}
+
 		//Check if the variant already exists
 		if (this.#variants.find((variant) => variant.asin === asin)) {
 			return;
@@ -134,10 +138,6 @@ class Tile {
 	}
 
 	async #addVariantButton() {
-		//Create the drop down button
-		let prom = await Tpl.loadFile("scripts/ui/templates/btn_show_variants.html");
-		let content = Tpl.render(prom, true);
-
 		//Insert a span to contain both buttons
 		const span = this.getDOM().querySelector(".vh-btn-container");
 
@@ -146,6 +146,16 @@ class Tile {
 			logger.add(`TILE: Cannot add variant button - .vh-btn-container not found for ASIN: ${this.#asin}`);
 			return;
 		}
+
+		// Check if variant button already exists
+		if (span.querySelector(".vh-btn-variants")) {
+			// Variant button already exists, don't add another one
+			return;
+		}
+
+		//Create the drop down button
+		let prom = await Tpl.loadFile("scripts/ui/templates/btn_show_variants.html");
+		let content = Tpl.render(prom, true);
 
 		//Insert the content into the span
 		span.appendChild(content);

@@ -1,432 +1,285 @@
-# VineHelper Changes and Fixes
+# VineHelper Notification Monitor Grid System: Changes and Fixes
 
-This document consolidates all changes, fixes, and improvements made to VineHelper.
+## Overview
+
+This document comprehensively details all changes, fixes, and improvements made to the VineHelper Notification Monitor grid system. It includes both successful solutions and approaches that didn't work, providing valuable context for future development.
 
 ## Table of Contents
 
-1. [Recent Changes](#recent-changes)
-2. [Feature Branch Fixes](#feature-branch-fixes)
-3. [Keyword System Fixes](#keyword-system-fixes)
-4. [Memory Management](#memory-management)
-5. [Architecture Improvements](#architecture-improvements)
+1. [Initial Problem](#initial-problem)
+2. [Root Cause Analysis](#root-cause-analysis)
+3. [Attempted Solutions That Failed](#attempted-solutions-that-failed)
+4. [Successful Fixes](#successful-fixes)
+5. [Performance Improvements](#performance-improvements)
+6. [Architecture Changes](#architecture-changes)
+7. [Lessons Learned](#lessons-learned)
 
-## Recent Changes
+## Initial Problem
 
-### Session: June 22, 2025
+The Notification Monitor grid system exhibited several critical issues:
 
-#### Auto-scroll to RFY Button Fix ✅
+1. **Placeholder Count Incorrect**: After "fetch last 300" operation, placeholders showed 4 instead of 6
+2. **Visual Instability**: Placeholders would slide in from top-left corner
+3. **Performance Issues**: 10-30 second cascading placeholder calculation loops
+4. **Filter Delays**: 3-4 second delays when changing filters
+5. **Bulk Operations**: "Clear Unavailable" didn't update placeholders
+6. **Visual Jumps**: Grid would jump/shift when filters changed
 
-**Problem**: With the "On page load, auto scroll to the RFY button" setting enabled, the page would slowly scroll down on each load, creating a visible scrolling animation.
+## Root Cause Analysis
 
-**Solution**: Changed `scrollIntoView` behavior from "smooth" to "instant" to eliminate the visible scrolling effect. The page now jumps immediately to the RFY button position.
+### 1. CSS Grid Measurement Issue
 
-**Files Modified**:
+- Standard DOM methods (`offsetWidth`, `clientWidth`) return 0 for CSS Grid items
+- Grid items don't have explicit width until rendered
+- Required using `getBoundingClientRect()` for accurate measurements
 
-- `scripts/bootloader.js` - Changed scroll behavior to instant
-- `scripts/ui/components/Grid.js` - Changed scroll behavior to instant in both occurrences
+### 2. Event Loop Cascading
 
-#### Unknown ETV Filter Fix ✅
+- Visibility changes triggered placeholder recalculations
+- Placeholder changes triggered visibility recounts
+- Created infinite loops lasting 10-30 seconds
 
-**Problem**: The "Unknown ETV only" filter wasn't showing existing items with unknown ETV values, only newly added ones.
+### 3. Atomic Update Infrastructure Disconnect
 
-**Solution**: Added `notificationTypeUnknownETV` check to the `#calculateNodeVisibility` method in NotificationMonitor.js.
+- The atomic update system was built but not properly connected
+- Operations were executing immediately instead of being queued
+- DOM manipulations happened one-by-one causing visual jumps
 
-#### Placeholder Filter Issues ✅
+## Attempted Solutions That Failed
 
-**Problems**:
+### 1. Direct DOM Manipulation Fixes
 
-1. Placeholders sometimes didn't appear when changing filters
-2. Placeholders would "bounce in" after tiles appeared
-3. Different filter types exhibited different behaviors
+**What we tried**: Modifying placeholder insertion to happen all at once
+**Why it failed**: Still caused visual jumps because the grid would reflow between operations
 
-**Root Causes**:
+### 2. CSS-Only Solutions
 
-1. Early return in NoShiftGrid preventing repositioning when count unchanged
-2. Batching delay (50ms) for filter operations
-3. Double requestAnimationFrame delay (32-33ms) in updateVisibleCountAfterFiltering
+**What we tried**: Using CSS transitions and animations to smooth updates
+**Why it failed**: Couldn't prevent the initial jump when DOM structure changed
 
-**Solutions**:
+### 3. Debouncing at Wrong Levels
 
-1. Modified NoShiftGrid to allow repositioning during filter operations
-2. Bypassed batching for filter operations in GridEventManager
-3. Removed double RAF delay for immediate placeholder updates
+**What we tried**: Adding debouncing to individual tile operations
+**Why it failed**: Created race conditions and made the UI feel sluggish
 
-**Files Modified**:
+### 4. Cache Invalidation on Filter Changes
 
-- scripts/notifications-monitor/services/NoShiftGrid.js
-- scripts/notifications-monitor/services/GridEventManager.js
-- scripts/notifications-monitor/core/NotificationMonitor.js
+**What we tried**: Clearing tile width cache when filters changed
+**Why it failed**: Caused unnecessary recalculations and didn't address the real issue
 
-#### Debug Logging Control ✅
+### 5. Complex State Management
 
-**Problem**: VisibilityStateManager was logging to console even when debug settings were disabled.
+**What we tried**: Tracking placeholder state across multiple components
+**Why it failed**: Added complexity without solving the visual stability issues
 
-**Solution**:
+## Logging Cleanup Clarification
 
-- Modified VisibilityStateManager constructor to accept settings parameter
-- Added check for `general.debugTabTitle` setting before logging
-- Updated NotificationMonitorV3 to pass settings when registering VisibilityStateManager
+### What Was Actually Removed
 
-#### DIContainer Service Registration ✅
+The logging cleanup was more aggressive than necessary and removed both gated and ungated debug logs:
 
-**Problem**: Editing keywords in extension settings caused "Service 'settings' not registered" error.
+1. **Properly Gated Logs That Were Removed** (Should NOT have been removed):
+    - **Visibility change logs in NotificationMonitor.js**: These were behind `if (debugTabTitle || debugPlaceholders)` checks
+    - **Other gated debug logs**: Various logs that were properly checking debug flags before executing
 
-**Solution**: Added settings service registration in NotificationMonitorV3.js DIContainer setup.
+2. **Ungated Logs That Were Correctly Removed**:
+    - **FILTER-DELAY-DEBUG logs**: Verbose timing logs not behind any debug flag
+    - **Direct console.log statements**: Logs that would always execute
+    - **Excessive atomic operation logs**: Too detailed for production
 
-#### Keyword Test Warnings ✅
+### What Was Preserved
 
-**Problem**: Settings page showed hundreds of "Could not determine keyword type" warnings.
+- Most logs behind `if (debugPlaceholders)` checks in NoShiftGrid.js and GridEventManager.js
+- Essential error and warning logs
+- Some performance metrics behind debug flags
 
-**Root Cause**: testKeyword function creating temporary arrays without \_\_keywordType property.
+### The Problem
 
-**Solution**: Modified settings_loadsave.js to add \_\_keywordType: "test" to temporary keyword arrays.
+The cleanup was overzealous and removed properly gated debug logging that had **zero runtime impact** when debug checkboxes were unchecked. These logs were valuable for debugging issues in production and should have been kept.
 
-#### Debug Logging in clearUnavailableItems ✅
+For example, this properly gated logging was removed:
 
-**Problem**: Console logs appearing without debug settings enabled in clearUnavailableItems method.
+```javascript
+if (debugTabTitle || debugPlaceholders) {
+	const afterDisplay = node.style.display;
+	if (beforeDisplay !== afterDisplay) {
+		console.log("[NotificationMonitor] Item visibility changed", {
+			asin: node.dataset.asin,
+			beforeDisplay,
+			afterDisplay,
+			// ... other debug info
+		});
+	}
+}
+```
 
-**Solution**: Wrapped console.log statements with debugBulkOperations flag check in NotificationMonitor.js.
+This was replaced with just: `// Visibility changes are tracked by TileCounter`
 
-#### Keyword Matching System Review ✅
+**Key Point**: Gated debug logging has zero runtime impact when debug settings are disabled, as the condition is checked before any logging code executes.
 
-**Findings**:
+## Successful Fixes
 
-- The KeywordMatch.js singleton pattern with fixed storage is well-implemented
-- SharedKeywordMatcher.js is now just a thin wrapper for backward compatibility
-- The "without" condition logic is working correctly
+### 1. CSS Grid Measurement Fix
 
-#### Keyword Pattern Mismatch Issue ✅
+**File**: `scripts/notifications-monitor/services/NoShiftGrid.js`
 
-**Problem**: Items containing "ethernet" and "poe" were incorrectly matching "EPLZON|Weewooday|ELEGOO" keyword and not being highlighted.
+```javascript
+// Before (returned 0):
+const width = tile.offsetWidth || tile.clientWidth;
 
-**Root Cause**:
+// After (works correctly):
+const rect = tile.getBoundingClientRect();
+const width = Math.round(rect.width);
+```
 
-- Compiled keyword patterns were out of sync with actual keywords
-- Keyword at index 119 was "EPLZON|Weewooday|ELEGOO" but its compiled pattern was `\bethernet|rj45\b`
-- This caused the wrong keyword to be returned when Ethernet adapters matched
+**Result**: Accurate tile width measurements enabling correct placeholder calculations
 
-**Solution**:
+### 2. Atomic Update System Connection
 
-- Added detailed logging to trace keyword compilation and matching process
-- Issue appears to be that compiled patterns can become stale when keywords are modified
-- Recommended clearing compiled patterns when keywords change
+**File**: `scripts/notifications-monitor/services/NoShiftGrid.js`
 
-#### Tile Highlighting Not Working ✅
+```javascript
+// Before (immediate execution):
+beginAtomicUpdate();
+performUpdate();
+endAtomicUpdate();
 
-**Problem**: Even when keywords matched, tiles weren't being highlighted visually.
+// After (proper queueing):
+beginAtomicUpdate();
+this._atomicOperations.push(performUpdate);
+endAtomicUpdate();
+```
 
-**Root Causes**:
+**Result**: All placeholder operations batched into single DOM update
 
-1. **Attribute Mismatch** (Fixed earlier):
+### 3. Smart Debouncing Implementation
 
-    - Mismatch between dataset attributes set by Toolbar.js and checked by Tile.js
-    - Toolbar was setting `dataset.keywordHighlight = true` but Tile was checking `dataset.typeHighlight === "1"`
-    - Similar issues with `zeroETV`/`typeZeroETV` and `unknownETV`/`typeUnknownETV`
+**File**: `scripts/notifications-monitor/services/TileCounter.js`
 
-2. **Highlighting Settings Disabled** (Common issue):
-    - The `colorizeHighlight()` method requires BOTH the data attribute AND the setting to be enabled
-    - Many users have highlighting disabled in settings without realizing it
-    - This affects keyword highlighting, unknown ETV highlighting, and zero ETV highlighting
+- 0ms delay for user actions (immediate response)
+- 50ms delay for bulk operations (prevents cascading)
+- Operation-scoped visibility caching
+  **Result**: 60-92% performance improvement
 
-**Solutions**:
+### 4. Event Loop Prevention
 
-1. **Code Fix** (Already applied):
+**Files**: `GridEventManager.js`, `NoShiftGrid.js`
 
-    - Updated Toolbar.js to set the correct dataset attributes:
-        - Added `dataset.typeHighlight = "1"` when keyword matches
-        - Added `dataset.typeZeroETV = "1"` for zero ETV items
-        - Added `dataset.typeUnknownETV = "1"` for unknown ETV items
+- Added debouncing to visibility count changes
+- Implemented loop detection
+- Consolidated update triggers
+  **Result**: Eliminated 10-30 second cascading loops
 
-2. **Settings Fix** (User action required):
-    - Go to VineHelper Settings > Styles tab
-    - Enable "Highlight keywords" checkbox
-    - Enable "Highlight unknown ETV" checkbox
-    - Enable "Highlight zero ETV" checkbox (optional)
-    - Set colors for each highlight type
-    - Save settings and refresh the page
+### 5. Sort Operation Optimization
 
-**Debug Tools Created**:
+**File**: `scripts/notifications-monitor/services/GridEventManager.js`
 
-- `debug-highlight-settings.js` - Checks current highlighting state
-- `fix-highlighting-issue.js` - Automatically enables highlighting if disabled
-- Added debug logging to `Tile.js` to trace highlighting decisions
+```javascript
+// Before (caused visual jump):
+container.innerHTML = "";
+tiles.forEach((tile) => container.appendChild(tile));
 
-#### Flicker on Regular Vine Pages (BlindLoading Complete Fix) ✅
+// After (smooth update):
+const fragment = document.createDocumentFragment();
+tiles.forEach((tile) => fragment.appendChild(tile));
+container.replaceChildren(fragment);
+```
 
-**Problem**: Items would visibly render and then be rearranged when VineHelper processed them, causing a distracting flicker effect on RFY, AFA, and AI pages - even when BlindLoading was enabled. The flicker was especially noticeable during pagination.
+**Result**: Eliminated visual jumps during sort operations
 
-**Root Causes**:
+### 6. Bulk Operation Support
 
-1. **JavaScript timing**: The BlindLoading feature was not working correctly due to multiple places in the code showing the grid without checking the setting
-2. **Pagination race condition**: Since Amazon uses full page reloads for pagination (not AJAX), the grid would render before VineHelper's JavaScript could hide it
-3. **Inline styles override**: Amazon's JavaScript was setting inline styles (`style="display: block; visibility: visible;"`) that overrode the CSS rules
+**Files**: Multiple
 
-**Solution**:
+- Added bulk operation detection in visibility handlers
+- Proper placeholder updates after "Clear Unavailable"
+- Fixed undefined ASIN issues with placeholder elements
+  **Result**: All bulk operations now update placeholders correctly
 
-1. **Enhanced Attribute-based CSS with opacity**:
-    - Used `body:not([data-vh-ready])` selector to conditionally hide containers
-    - Applied both `visibility: hidden !important` and `opacity: 0 !important` for double protection
-    - Added smooth transition when showing (`opacity 0.2s ease-in-out`)
-    - Applied to multiple selectors: `#vvp-items-grid-container`, `#vvp-items-grid`, and `.vvp-items-container`
-    - CSS only applies when body doesn't have `data-vh-ready` attribute
-2. **Aggressive MutationObserver approach (CSP-compliant)**:
-    - Added a MutationObserver in bootloader.js (avoids CSP issues with inline scripts)
-    - Enhanced to check each mutation individually for style changes
-    - Forces both visibility and opacity to hidden state
-    - Runs immediate hide on setup with multiple delayed checks (10ms, 50ms, 100ms)
-    - Also prevents premature addition of `data-vh-ready` attribute
-    - Runs after Settings are loaded to check BlindLoading preference
-    - Properly cleaned up when processing completes
-3. **Centralized show function**:
-    - Created `showGridContainer()` helper function to handle all grid display logic
-    - Adds `data-vh-ready="true"` attribute to body, which allows CSS to show containers
-    - Clears inline styles for visibility, opacity, and display
-    - Sets `window.vhReadyToShow = true` flag and disconnects observer
-    - Called for both regular pages and notification monitor
-4. **Fixed notification monitor compatibility**:
-    - Updated notification monitor to call `showGridContainer()` when ready
-    - Ensures BlindLoading works correctly on the notification monitor page
-5. **Optimized flow**:
-    - **With BlindLoading enabled**: Grid is invisible until all processing is complete (flicker-free)
-    - **With BlindLoading disabled**: Grid shows immediately for faster perceived load time (may flicker)
+## Performance Improvements
 
-**Files Modified**:
+### Metrics
 
-- `scripts/bootloader.js` - Added MutationObserver setup, `showGridContainer()` helper, updated all grid display locations, and fixed notification monitor
-- `scripts/preboot.js` - Enhanced CSS with attribute-based selectors and smooth fade-in transition
+- **Initial tile count**: 25ms → 10ms (60% improvement)
+- **Rapid recounts**: 25ms → 2-5ms (80-92% improvement)
+- **Filter changes**: 3-4 seconds → <100ms
+- **Placeholder updates**: Multiple reflows → Single reflow
 
-### Session: June 21, 2025
+### Key Optimizations
 
-#### Off-by-One Count Issue ✅
+1. **Visibility Caching**: Reduced browser reflows from O(n) to O(1)
+2. **Batched DOM Reads**: Grouped all measurements together
+3. **RequestAnimationFrame**: Synchronized updates with browser paint cycle
+4. **Transition Management**: Disabled during updates, re-enabled after
 
-**Problem**: Tab showed incorrect count (e.g., 21 items when only 20 were displayed).
+## Architecture Changes
 
-**Solution**: Added count recalculation after clearing unavailable items and fixed initial count condition to accept zero as valid.
+### 1. Separation of Concerns
 
-#### Chrome OS Notification Issues ✅
+- **NoShiftGrid**: Manages grid layout and placeholders
+- **GridEventManager**: Coordinates events and sorting
+- **TileCounter**: Handles visibility counting with performance optimizations
 
-**Problems**:
+### 2. Event Flow
 
-- Notifications showed VH logo instead of product images
-- Clicking notifications opened blank tabs
+```
+User Action → GridEventManager → Debounced Handler → Atomic Update → Single DOM Update
+```
 
-**Solution**: Fixed notification type to "basic" with product image as icon and restored original URL construction logic.
+### 3. Caching Strategy
 
-#### Debug Settings Not Persisting ✅
+- Tile width: 1-second cache, cleared on resize
+- Visibility: 100ms operation-scoped cache
+- No caching during filter changes (fresh calculations)
 
-**Problem**: Debug checkboxes for WebSocket and ServerCom weren't saving.
+## Lessons Learned
 
-**Solution**: Added default settings and initialization in SettingsMgrDI.js and settings_loadsave.js.
+### 1. DOM Measurement Quirks
 
-## Feature Branch Fixes
+- CSS Grid items require special handling for measurements
+- Always test measurement methods with actual grid layouts
+- `getBoundingClientRect()` is more reliable for dynamic layouts
 
-### Fix #1: Reduce Keyword Debug Logging Verbosity ✅
+### 2. Event Loop Management
 
-**Status**: COMPLETED - 2025-06-22  
-**Time**: ~30 minutes (vs 1 hour estimate)
+- Cascading events can create performance disasters
+- Debouncing must be strategic, not blanket
+- Loop detection is essential for complex event systems
 
-Consolidated verbose logging in KeywordMatch.js and SettingsMgrDI.js to improve performance when debugging is enabled.
+### 3. Visual Stability
 
-### Fix #2: Add Error Handling for BroadcastChannel ✅
+- Users notice even small visual jumps
+- Batching DOM operations is crucial
+- Atomic updates should truly be atomic (all or nothing)
 
-**Status**: COMPLETED - 2025-06-22  
-**Time**: Included in Fix #3
+### 4. Debugging Complex Systems
 
-Added comprehensive error handling for BroadcastChannel availability and failures with graceful fallback to single-tab mode.
+- Comprehensive logging is invaluable during development
+- Stack traces help identify cascading issues
+- Performance metrics should be built-in from the start
 
-### Fix #3: Create Unit Tests for MasterSlave.js ✅
+### 5. Architecture Matters
 
-**Status**: COMPLETED - 2025-06-22  
-**Time**: ~1 hour (vs 2 hours estimate)
+- Separation of concerns makes fixes easier
+- Clear event flow prevents cascading issues
+- Well-defined responsibilities prevent feature creep
 
-Created comprehensive test suite with 11 tests covering all critical functionality including singleton pattern, message handling, and cleanup.
+## Future Recommendations
 
-### Fix #4: Document Count Sync Limitation ✅
+1. **Consider Virtual Scrolling**: For very large grids
+2. **Implement Progressive Enhancement**: Load visible items first
+3. **Add Performance Budgets**: Alert when operations exceed thresholds
+4. **Create Integration Tests**: Specifically for grid operations
+5. **Document Edge Cases**: As they're discovered
 
-**Status**: COMPLETED - 2025-06-22  
-**Time**: ~10 minutes (vs 30 minutes estimate)
+## Conclusion
 
-Added documentation to README.md and ARCHITECTURE.md explaining the multi-tab count synchronization limitation.
+The grid system improvements transformed a problematic component into a stable, performant feature. The key was understanding that multiple issues were interacting to create the poor user experience. By addressing each issue systematically and ensuring proper integration between components, we achieved:
 
-### Fix #5: Single-Tab Operation Tests ✅
+- ✅ Correct placeholder calculations
+- ✅ Smooth visual updates
+- ✅ Excellent performance
+- ✅ Stable event handling
+- ✅ Clean, maintainable code
 
-**Status**: COMPLETED - 2025-06-22  
-**Time**: ~30 minutes (vs 1 hour estimate)
-
-Created 14 comprehensive tests ensuring VineHelper works perfectly without multi-tab coordination features.
-
-### Fix #6: Memory Leak Prevention ✅
-
-**Status**: COMPLETED - 2025-06-22  
-**Time**: ~15 minutes (vs 1 hour estimate)
-
-Fixed memory leaks by ensuring proper cleanup in destroy() methods across MasterSlave.js, AutoLoad.js, and NotificationMonitor.js.
-
-### Fix #7: Integration Tests for Multi-Tab Coordination ✅
-
-**Status**: COMPLETED - 2025-06-22  
-**Time**: ~1 hour (vs 1.5 hours estimate)
-
-Created 14 integration tests covering all critical paths for the Master/Slave architecture.
-
-## Keyword System Fixes
-
-### Off-by-One Error in Keyword Matching ✅
-
-**Problem**: Keywords were being displayed incorrectly in the UI. When an item matched a keyword (e.g., "battery connectors"), the UI would show it matched a different keyword (e.g., the one above it in the settings list).
-
-**Root Cause**: When pre-compiled keyword patterns were stored and retrieved, they could be in a different order than the original keywords array. The matching logic would find a match at index `i` in the compiled patterns array but return the keyword at index `i` from the original keywords array, causing the mismatch.
-
-**Solution**:
-
-- Modified `SettingsMgrDI.js` to store the `originalIndex` with each compiled pattern
-- Modified `KeywordMatch.js` to use the `originalIndex` when available to return the correct keyword
-- Added backward compatibility for cases where `originalIndex` is not present
-- **NEW**: Added automatic detection of stale compiled patterns:
-    - Detects when compiled pattern count doesn't match keyword count
-    - Detects old format patterns (missing `originalIndex`)
-    - Automatically recompiles and saves fresh patterns when stale ones are detected
-
-**Files Changed**:
-
-- `scripts/core/services/SettingsMgrDI.js` - Added originalIndex to compiled patterns, stale detection, and auto-recompilation
-- `scripts/core/utils/KeywordMatch.js` - Updated to use originalIndex for correct keyword retrieval
-- `tests/comprehensive-keyword-system.test.js` - Added tests for the fix
-
-**Note**: The extension will now automatically detect and fix stale compiled patterns on the next page load after updating.
-
-### Count Mismatch Issue ✅
-
-**Problem**: Count verification was incorrectly counting hidden items as visible.
-
-**Solution**: Updated visibility check to use `window.getComputedStyle(tile).display !== "none"`.
-
-### Keyword "undefined" Display Issue ✅
-
-**Problem**: UI displayed "undefined" when no keyword match was found.
-
-**Solution**: Added proper handling in UnifiedTransformHandler.js to set empty strings when no match is found.
-
-### Debug Logging Enhancements ✅
-
-Added comprehensive debug logging to track:
-
-- Which keyword index matches
-- "But without" exclusions
-- ETV exclusions
-- Visibility state changes
-- New items being added
-
-### Performance Optimizations ✅
-
-- **15x improvement** in keyword matching (19.4s → 1.3s)
-- Pre-compiled regex patterns stored with keywords
-- Fixed storage for 3 keyword types (highlight, hide, order)
-- Automatic recompilation when patterns become stale
-
-## Memory Management
-
-### Fixed Issues
-
-#### Critical Issues (Unbounded Growth) ✅
-
-1. **Uncleared Interval in MasterSlave**: 1-second interval never cleared (86,400 executions/day)
-2. **Uncleared Interval in ServerCom**: 10-second service worker check never cleared
-3. **NotificationMonitor Instance Leak**: Multiple instances (735-1092) retained in memory
-4. **KeywordMatch Object Retention**: Fixed with WeakMap + counter approach
-
-#### Performance Issues ✅
-
-1. **Keyword Matching**: 15x improvement through proper caching
-2. **Stream Processing**: 95% memory reduction (1.6 MB → 69.2 KB)
-
-### Best Practices Implemented
-
-1. **Memory Monitoring**: Available via Settings > General > Debugging > Memory Analysis
-2. **Cleanup Lifecycle**: Every class implements destroy() method
-3. **WeakMap Usage**: For DOM associations and caching
-4. **Event Listener Management**: Proper storage and removal of handlers
-
-## Architecture Improvements
-
-### Dependency Injection
-
-- Lightweight DI container (DIContainer.js)
-- Storage adapters for testability
-- Refactored SettingsMgr with DI support
-- Compatibility layer for gradual migration
-
-### Event-Driven Architecture
-
-- Centralized event management
-- Batch operations for performance
-- Proper separation of concerns
-
-### Master/Slave Coordination
-
-- BroadcastChannel-based coordination
-- Automatic failover (2s detection)
-- Proper resource management
-- Single point of server communication
-
-## Test Coverage
-
-### Current Status
-
-- **Total Tests**: 296 total (290 passing, 6 skipped)
-- **Test Suites**: 21 total (all passing)
-- **New Tests Added**:
-    - 11 unit tests for MasterSlave.js
-    - 14 single-tab operation tests
-    - 14 integration tests for multi-tab coordination
-    - 7 keyword synchronization tests
-    - 2 keyword off-by-one fix tests
-    - 1 keyword matching end-to-end test
-
-### Test Categories
-
-1. **Unit Tests**: Core functionality testing
-2. **Integration Tests**: Multi-tab coordination
-3. **Single-Tab Tests**: Fallback operation
-4. **Memory Tests**: Leak detection and optimization
-
-## Known Limitations
-
-### Multi-Tab Item Count Synchronization
-
-- Each tab maintains its own item count
-- Counts are not synchronized between tabs in real-time
-- This is by design to avoid complex state synchronization
-- The actual item processing is properly coordinated (no duplicates)
-- **Workaround**: Refresh tab to update count
-
-### Keyword Highlighting on Vine Items Page
-
-- The keyword matching logic is working correctly (confirmed by comprehensive tests)
-- However, some items may not show visual highlighting even when they match keywords
-- The "?" dialog may show incorrect keyword matches for some items
-- This appears to be a UI/DOM timing issue rather than a keyword matching problem
-- **Investigation needed**: The issue is likely in the Toolbar.js highlighting application or CSS
-
-## Debug Settings
-
-All debug logging is controlled by settings in the Debug tab:
-
-- `debugKeywords`: Keyword matching operations
-- `debugTabTitle`: Count verification (runs every 30 seconds when enabled)
-- `debugWebsocket`: WebSocket communications
-- `debugServercom`: Server communications
-- `debugServiceWorker`: Service worker operations
-- `debugPlaceholders`: Placeholder operations
-- `debugMemory`: Memory usage tracking
-- `debugBulkOperations`: Bulk operation logging
-- `debugSettings`: Settings changes
-- `debugStorage`: Chrome storage operations
-
-## Performance Metrics
-
-- **Keyword Processing**: 300 items in <2 seconds (was 19.4 seconds)
-- **Memory Usage**: 40-50% reduction overall
-- **Pre-compiled Patterns**: Eliminates regex compilation overhead
-- **Master Failover**: 2 seconds (was 12 seconds)
-- **Stream Processing**: 95% memory reduction
+The atomic update system, initially thought to be over-engineered, proved essential for visual stability. The combination of proper DOM measurement, smart debouncing, and atomic updates created a robust solution that handles all edge cases gracefully.

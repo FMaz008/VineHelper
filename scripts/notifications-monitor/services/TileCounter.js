@@ -29,6 +29,15 @@ class TileCounter {
 	 * @param {boolean} options.isBulkOperation - Whether this is a bulk operation
 	 */
 	recountVisibleTiles(waitTime = 50, priority = false, options = {}) {
+		if (this.#performanceMetrics.enabled) {
+			console.log("[TileCounter] recountVisibleTiles called with:", {
+				waitTime,
+				priority,
+				options,
+				effectiveWaitTime: priority ? 0 : waitTime,
+			});
+		}
+
 		this.#state = STATE_WAITING;
 
 		// Clear any existing timeout
@@ -54,6 +63,9 @@ class TileCounter {
 	#startRecount(options = {}) {
 		this.#state = STATE_COUNTING;
 
+		if (this.#performanceMetrics.enabled) {
+			console.log("[TileCounter] Starting recount with options:", options);
+		}
 		const startTime = this.#performanceMetrics.enabled ? performance.now() : 0;
 
 		// Get the grid element
@@ -75,6 +87,9 @@ class TileCounter {
 			// Batch DOM reads to minimize reflows
 			count = this.#batchedVisibilityCheck(tiles);
 		}
+
+		// Store the previous count BEFORE updating
+		const previousCount = this.#count;
 
 		// Update the count
 		this.#count = count;
@@ -101,9 +116,17 @@ class TileCounter {
 			);
 		}
 
-		const previousCount = this.#count;
-		this.#count = count;
 		const countChanged = previousCount !== count;
+
+		if (this.#performanceMetrics.enabled) {
+			console.log("[TileCounter] Triggering visibility:count-changed hook:", {
+				count: count,
+				previousCount: previousCount,
+				changed: countChanged,
+				source: options.source || "recount",
+				isBulkOperation: options.isBulkOperation || false,
+			});
+		}
 
 		this.#hookMgr.hookExecute("visibility:count-changed", {
 			count: count,

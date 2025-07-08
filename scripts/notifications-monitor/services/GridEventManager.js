@@ -50,7 +50,7 @@ class GridEventManager {
 		this.#hookMgr.hookBind("grid:items-filtered", (data) => this.#handleGridFiltered(data));
 		this.#hookMgr.hookBind("grid:truncated", (data) => this.#handleTruncation(data));
 		this.#hookMgr.hookBind("grid:sorted", (data) => this.#handleGridSorted(data));
-		this.#hookMgr.hookBind("grid:sort-needed", () => this.#handleSortNeeded());
+		this.#hookMgr.hookBind("grid:sort-needed", (data) => this.#handleSortNeeded(data));
 		this.#hookMgr.hookBind("grid:unpaused", () => this.#handleGridUnpaused());
 		this.#hookMgr.hookBind("grid:fetch-complete", (data) => this.#handleFetchComplete(data));
 		this.#hookMgr.hookBind("grid:resized", () => this.#handleGridResized());
@@ -141,13 +141,7 @@ class GridEventManager {
 			return;
 		}
 
-		const debugPlaceholders = this.#monitor._settings?.get("general.debugPlaceholders");
-		if (debugPlaceholders) {
-			console.log("[GridEventManager] Grid filtered event", {
-				data,
-				timestamp: Date.now(),
-			});
-		}
+		// Grid filtered event received
 
 		// Note: We don't clear tile width cache on filter changes because
 		// filters don't affect the CSS grid layout or tile dimensions
@@ -187,7 +181,7 @@ class GridEventManager {
 	/**
 	 * Handle sort needed event - performs the actual sorting while preserving placeholders
 	 */
-	#handleSortNeeded() {
+	#handleSortNeeded(data = {}) {
 		if (!this.#isEnabled || !this.#monitor) {
 			return;
 		}
@@ -204,15 +198,21 @@ class GridEventManager {
 			console.log("[GridEventManager] Starting sort", {
 				placeholderCount: existingPlaceholders.length,
 				containerChildren: container.children.length,
+				placeholdersHandled: data?.placeholdersHandled,
+				source: data?.source,
 			});
 		}
 
+		// Don't manage atomic updates here - let the caller handle it
+		// This simplifies the code and prevents nested atomic update issues
 		this.#monitor._preserveScrollPosition(() => {
 			// Sort the items - reuse the sorting logic from ItemsMgr
 			const sortedItems = this.#monitor._itemsMgr.sortItems();
 
 			// Only proceed if we have items
-			if (!sortedItems || sortedItems.length === 0) return;
+			if (!sortedItems || sortedItems.length === 0) {
+				return;
+			}
 
 			// Get all current item tiles from the DOM
 			const itemTiles = Array.from(container.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)"));
@@ -226,88 +226,44 @@ class GridEventManager {
 				}
 			});
 
-			// Calculate how many placeholders we need BEFORE building the fragment
-			let placeholdersNeeded = 0;
-			if (this.#monitor._sortType === "date_desc" && this.#noShiftGrid) {
-				// Count visible items
-				const visibleCount = sortedItems.filter((item) => {
-					const element = asinToElement.get(item.asin);
-					return element && element.style.display !== "none";
-				}).length;
-
-				// Calculate placeholders needed
-				const tilesPerRow = this.#noShiftGrid.getTilesPerRow();
-				if (tilesPerRow > 0 && visibleCount > 0) {
-					const remainder = visibleCount % tilesPerRow;
-					placeholdersNeeded = remainder > 0 ? tilesPerRow - remainder : 0;
-				}
-
-				if (debugPlaceholders) {
-					console.log("[GridEventManager] Calculated placeholders needed", {
-						visibleCount,
-						tilesPerRow,
-						placeholdersNeeded,
-						existingPlaceholders: existingPlaceholders.length,
-					});
-				}
-			}
+			// IMPORTANT: GridEventManager should NOT manage placeholders during sort
+			// NoShiftGrid is the single source of truth for placeholder management
+			// We only need to preserve existing placeholders in the DOM order
 
 			// Create a DocumentFragment for better performance
 			const fragment = document.createDocumentFragment();
 
-			// Adjust placeholder count to match what we need
-			const placeholderTiles = [];
-
-			// Reuse existing placeholders up to what we need
-			for (let i = 0; i < Math.min(existingPlaceholders.length, placeholdersNeeded); i++) {
-				const placeholder = existingPlaceholders[i];
-				if (placeholder.parentNode) {
-					placeholder.remove();
-				}
-				placeholderTiles.push(placeholder);
-			}
-
-			// Create new placeholders if we need more
-			for (let i = existingPlaceholders.length; i < placeholdersNeeded; i++) {
-				const placeholder = this.#noShiftGrid.createPlaceholderTile();
-				placeholderTiles.push(placeholder);
-			}
-
-			// Remove excess placeholders
-			for (let i = placeholdersNeeded; i < existingPlaceholders.length; i++) {
-				const placeholder = existingPlaceholders[i];
-				if (placeholder.parentNode) {
-					placeholder.remove();
-				}
-			}
-
-			// Add the correct number of placeholder tiles at the beginning
-			placeholderTiles.forEach((placeholder) => {
-				fragment.appendChild(placeholder);
+			// Clone placeholders to preserve them in the DOM until replacement
+			const placeholderClones = [];
+			existingPlaceholders.forEach((placeholder) => {
+				const clone = placeholder.cloneNode(true);
+				placeholderClones.push(clone);
+				fragment.appendChild(clone);
 			});
 
 			// Add items to fragment in sorted order after placeholders
 			sortedItems.forEach((item) => {
 				const element = asinToElement.get(item.asin);
-				if (element && element.parentNode) {
-					element.remove();
-					fragment.appendChild(element);
+				if (element) {
+					// Clone the element to avoid removing it from DOM prematurely
+					const clone = element.cloneNode(true);
+					fragment.appendChild(clone);
 				}
 			});
 
 			if (debugPlaceholders) {
-				console.log("[GridEventManager] Before appending fragment", {
+				console.log("[GridEventManager] Before replacing children", {
 					fragmentChildCount: fragment.childNodes.length,
 					containerChildrenBefore: container.children.length,
-					placeholdersInFragment: placeholderTiles.length,
+					placeholdersInFragment: placeholderClones.length,
 					itemsInFragment: sortedItems.length,
 					itemTilesFound: itemTiles.length,
 				});
 			}
 
-			// Append the sorted content to the container
-			// Don't clear the container - just move elements to their new positions
-			container.appendChild(fragment);
+			// Replace all children atomically using replaceChildren
+			// This avoids the visual shift caused by clearing the container
+			container.replaceChildren(...fragment.childNodes);
 
 			if (debugPlaceholders) {
 				console.log("[GridEventManager] After sort", {
@@ -346,7 +302,19 @@ class GridEventManager {
 	 * @param {Object} data - Fetch complete event data containing visible count
 	 */
 	#handleFetchComplete(data = {}) {
+		console.log("[GridEventManager] DEBUG - handleGridInitialized called", {
+			isEnabled: this.#isEnabled,
+			hasNoShiftGrid: !!this.#noShiftGrid,
+			noShiftGridState: this.#noShiftGrid
+				? {
+						isEnabled: this.#noShiftGrid._isEnabled,
+						hasGridContainer: !!this.#noShiftGrid._gridContainer,
+					}
+				: null,
+		});
+
 		if (!this.#isEnabled || !this.#noShiftGrid) {
+			console.warn("[GridEventManager] Cannot handle grid initialized - not enabled or no NoShiftGrid");
 			return;
 		}
 
@@ -379,16 +347,12 @@ class GridEventManager {
 			}
 			this.#updatePlaceholders();
 
-			// Trigger a sort to ensure placeholders are positioned correctly
-			// This is needed because items were added in bulk during fetch
-			// Use setTimeout to ensure DOM has updated before sorting
-			// Use longer delay to ensure it happens after the count update
-			setTimeout(() => {
-				if (debugPlaceholders) {
-					console.log("[GridEventManager] Triggering sort after fetch to position placeholders");
-				}
-				this.#handleSortNeeded();
-			}, 150); // Slightly longer than NotificationMonitor's delay
+			// Trigger sort after fetch to ensure proper ordering
+			// Pass a flag to indicate placeholders are already handled
+			this.#hookMgr.hookExecute("grid:sort-needed", {
+				placeholdersHandled: true,
+				source: "fetch-complete",
+			});
 		}
 	}
 
@@ -432,18 +396,17 @@ class GridEventManager {
 	 */
 	#handleGridInitialized() {
 		const debugPlaceholders = this.#monitor._settings.get("general.debugPlaceholders");
-		if (debugPlaceholders) {
-			console.log("[GridEventManager] DEBUG - handleGridInitialized called", {
-				isEnabled: this.#isEnabled,
-				hasNoShiftGrid: !!this.#noShiftGrid,
-				noShiftGridState: this.#noShiftGrid
-					? {
-							isEnabled: this.#noShiftGrid._isEnabled,
-							hasGridContainer: !!this.#noShiftGrid._gridContainer,
-						}
-					: null,
-			});
-		}
+
+		console.log("[GridEventManager] DEBUG - handleGridInitialized called", {
+			isEnabled: this.#isEnabled,
+			hasNoShiftGrid: !!this.#noShiftGrid,
+			noShiftGridState: this.#noShiftGrid
+				? {
+						isEnabled: this.#noShiftGrid._isEnabled,
+						hasGridContainer: !!this.#noShiftGrid._gridContainer,
+					}
+				: null,
+		});
 
 		if (!this.#isEnabled || !this.#noShiftGrid) {
 			console.warn("[GridEventManager] Cannot handle grid initialized - not enabled or no NoShiftGrid");
@@ -599,6 +562,7 @@ class GridEventManager {
 			this.#visibilityUpdateCount = 0;
 		}, 1000);
 
+		// Visibility count changed event received
 		if (debugPlaceholders) {
 			console.log("[GridEventManager] Visibility count changed", {
 				newCount: data.count,
@@ -607,6 +571,25 @@ class GridEventManager {
 				updateCount: this.#visibilityUpdateCount,
 				stack: new Error().stack.split("\n").slice(2, 5).join(" -> "),
 			});
+		}
+
+		// For filter changes, update placeholders immediately without debouncing
+		if (data.source === "filter-change") {
+			if (debugPlaceholders) {
+				console.log("[GridEventManager] Filter change detected - updating placeholders immediately", {
+					timestamp: now,
+				});
+			}
+
+			// Clear any pending debounced update
+			if (this.#visibilityDebounceTimer) {
+				clearTimeout(this.#visibilityDebounceTimer);
+				this.#visibilityDebounceTimer = null;
+			}
+
+			// Update placeholders immediately for filter changes
+			this.#updatePlaceholders(false, true);
+			return;
 		}
 
 		// Debounce visibility count changes to prevent rapid recalculations
@@ -643,7 +626,8 @@ class GridEventManager {
 	 * @param {boolean} forceForFilter - Force placeholder insertion for filter operations
 	 */
 	#updatePlaceholders(fetchingRecentItems, forceForFilter = false) {
-		// For filter operations, always update immediately to prevent visual bounce
+		// For filter operations, just update placeholders directly
+		// NotificationMonitor already manages the atomic update for the entire filter operation
 		if (forceForFilter) {
 			this.#noShiftGrid.insertPlaceholderTiles(forceForFilter);
 		} else if (fetchingRecentItems) {
