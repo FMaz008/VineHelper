@@ -15,6 +15,10 @@ class TileCounter {
 		enabled: false,
 		lastRecountDuration: 0,
 		recountHistory: [],
+		earlyExitSavings: 0,
+		averageCheckedTiles: 0,
+		totalCheckedTiles: 0,
+		totalPossibleTiles: 0,
 	};
 
 	constructor() {
@@ -154,6 +158,16 @@ class TileCounter {
 			void grid.offsetHeight;
 		}
 
+		// Early exit optimization for large tile sets
+		const tilesArray = Array.from(tiles);
+		const totalTiles = tilesArray.length;
+
+		// If we have many tiles, use early exit strategy
+		if (totalTiles > 200) {
+			return this.#batchedVisibilityCheckWithEarlyExit(tilesArray);
+		}
+
+		// Original implementation for smaller sets
 		// Create visibility cache for rapid subsequent calls
 		this.#visibilityCache = new Map();
 
@@ -177,6 +191,144 @@ class TileCounter {
 		this.#setCacheExpiration();
 
 		return count;
+	}
+
+	/**
+	 * Optimized visibility check with early exit for large tile sets
+	 * @param {Array} tilesArray - Array of tile elements
+	 * @returns {number} The count of visible tiles
+	 */
+	#batchedVisibilityCheckWithEarlyExit(tilesArray) {
+		const startTime = this.#performanceMetrics.enabled ? performance.now() : 0;
+		let count = 0;
+
+		// Create visibility cache
+		this.#visibilityCache = new Map();
+
+		// Determine expected visible tiles based on typical grid size
+		// Most users see 50-100 tiles max on screen
+		const maxExpectedVisible = 150;
+
+		// Sort tiles by likelihood of being visible
+		// Tiles at the top of the grid are more likely to be visible
+		const prioritizedTiles = this.#prioritizeTilesByPosition(tilesArray);
+
+		// Phase 1: Check most likely visible tiles
+		const phase1Limit = Math.min(prioritizedTiles.length, maxExpectedVisible * 2);
+		let checkedCount = 0;
+
+		for (let i = 0; i < phase1Limit; i++) {
+			const tile = prioritizedTiles[i];
+			const style = window.getComputedStyle(tile);
+			const isVisible = style.display !== "none" && style.visibility !== "hidden" && style.opacity !== "0";
+
+			this.#visibilityCache.set(tile, isVisible);
+			checkedCount++;
+
+			if (isVisible) {
+				count++;
+			}
+
+			// Early exit if we've found enough visible tiles
+			if (count >= maxExpectedVisible && i >= maxExpectedVisible * 1.5) {
+				if (this.#performanceMetrics.enabled) {
+					console.log(
+						`[TileCounter] Early exit triggered: found ${count} visible tiles after checking ${checkedCount}/${prioritizedTiles.length}`
+					);
+				}
+				break;
+			}
+		}
+
+		// Phase 2: If we haven't found many visible tiles, check remaining
+		// This handles cases where visible tiles are scattered throughout
+		if (count < 50 && checkedCount < prioritizedTiles.length) {
+			if (this.#performanceMetrics.enabled) {
+				console.log(
+					`[TileCounter] Continuing full scan: only found ${count} visible tiles in first ${checkedCount} checks`
+				);
+			}
+
+			for (let i = checkedCount; i < prioritizedTiles.length; i++) {
+				const tile = prioritizedTiles[i];
+				const style = window.getComputedStyle(tile);
+				const isVisible = style.display !== "none" && style.visibility !== "hidden" && style.opacity !== "0";
+
+				this.#visibilityCache.set(tile, isVisible);
+				checkedCount++;
+
+				if (isVisible) {
+					count++;
+				}
+			}
+		}
+
+		// Track performance metrics
+		if (this.#performanceMetrics.enabled) {
+			const duration = performance.now() - startTime;
+			const savings = ((prioritizedTiles.length - checkedCount) / prioritizedTiles.length) * 100;
+
+			this.#performanceMetrics.earlyExitSavings = savings;
+			this.#performanceMetrics.totalCheckedTiles += checkedCount;
+			this.#performanceMetrics.totalPossibleTiles += prioritizedTiles.length;
+			this.#performanceMetrics.averageCheckedTiles =
+				this.#performanceMetrics.totalCheckedTiles / (this.#performanceMetrics.recountHistory.length + 1);
+
+			console.log(
+				`[TileCounter] Early exit optimization: checked ${checkedCount}/${prioritizedTiles.length} tiles (${savings.toFixed(1)}% savings) in ${duration.toFixed(2)}ms`
+			);
+		}
+
+		// Set cache expiration
+		this.#setCacheExpiration();
+
+		return count;
+	}
+
+	/**
+	 * Prioritize tiles by their position in the grid
+	 * Tiles at the top are more likely to be visible
+	 * @param {Array} tiles - Array of tile elements
+	 * @returns {Array} Sorted array of tiles
+	 */
+	#prioritizeTilesByPosition(tiles) {
+		// Get viewport bounds for reference
+		const viewportHeight = window.innerHeight;
+		const scrollTop = window.scrollY;
+		const viewportBottom = scrollTop + viewportHeight;
+
+		// Score each tile based on likelihood of visibility
+		const tilesWithScores = tiles.map((tile) => {
+			const rect = tile.getBoundingClientRect();
+			const tileTop = rect.top + scrollTop;
+
+			let score = 0;
+
+			// Tiles in viewport get highest priority
+			if (tileTop >= scrollTop && tileTop <= viewportBottom) {
+				score = 1000;
+			}
+			// Tiles near viewport get medium priority
+			else if (Math.abs(tileTop - scrollTop) < viewportHeight * 2) {
+				score = 500;
+			}
+			// Tiles at the top of the document get some priority
+			else if (tileTop < viewportHeight * 3) {
+				score = 100;
+			}
+
+			return { tile, score, top: tileTop };
+		});
+
+		// Sort by score (descending) then by position (ascending)
+		tilesWithScores.sort((a, b) => {
+			if (a.score !== b.score) {
+				return b.score - a.score;
+			}
+			return a.top - b.top;
+		});
+
+		return tilesWithScores.map((item) => item.tile);
 	}
 
 	/**
@@ -296,12 +448,23 @@ class TileCounter {
 		const avgDuration =
 			history.length > 0 ? history.reduce((sum, entry) => sum + entry.duration, 0) / history.length : 0;
 
+		const earlyExitStats =
+			this.#performanceMetrics.totalPossibleTiles > 0
+				? {
+						averageEarlyExitSavings: this.#performanceMetrics.earlyExitSavings,
+						averageCheckedTiles: this.#performanceMetrics.averageCheckedTiles,
+						totalSavedChecks:
+							this.#performanceMetrics.totalPossibleTiles - this.#performanceMetrics.totalCheckedTiles,
+					}
+				: {};
+
 		return {
 			enabled: true,
 			lastRecountDuration: this.#performanceMetrics.lastRecountDuration,
 			averageRecountDuration: avgDuration,
 			recountCount: history.length,
 			recentHistory: history.slice(-10), // Last 10 recounts
+			...earlyExitStats,
 		};
 	}
 }
