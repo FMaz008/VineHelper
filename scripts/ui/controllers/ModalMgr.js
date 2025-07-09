@@ -55,10 +55,9 @@ class ModalElement {
 	}
 
 	removeEventListeners() {
-		const modalButtons = document.querySelectorAll(`#modal-${this.id} .modal-ok`);
-		for (let i = 0; i < modalButtons.length; i++) {
-			modalButtons[i].removeEventListener("click", this.close);
-		}
+		// Note: removeEventListener needs the exact same function reference that was used in addEventListener
+		// Since we're using an arrow function in addEventListener, we can't remove it this way
+		// The modal will be removed from DOM anyway, so event listeners will be garbage collected
 	}
 }
 
@@ -96,9 +95,11 @@ class ModalMgr {
 
 	closeOnKey = (event) => {
 		if (["Escape", " ", "Enter"].includes(event.key)) {
-			const m = this.arrModal.pop();
+			// Get the last modal without removing it from array
+			const m = this.arrModal[this.arrModal.length - 1];
 			if (m) {
-				m.close();
+				// Use closeModal to properly clean up
+				this.closeModal(m.id);
 			}
 		}
 	};

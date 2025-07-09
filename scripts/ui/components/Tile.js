@@ -55,6 +55,7 @@ class Tile {
 	#thumbnailUrl = null;
 	#variants = [];
 	#eventListeners = []; // Track event listeners for cleanup
+	#isAddingVariantButton = false; // Flag to prevent duplicate button creation
 
 	constructor(obj, gridInstance) {
 		this.#tileDOM = obj;
@@ -111,8 +112,14 @@ class Tile {
 		// Check if variant button already exists in DOM
 		const existingVariantBtn = this.#tileDOM.querySelector(".vh-btn-variants");
 
-		if (!existingVariantBtn && this.#variants.length === 0) {
-			await this.#addVariantButton();
+		// Only add button if it doesn't exist and we're not already adding one
+		if (!existingVariantBtn && !this.#isAddingVariantButton) {
+			this.#isAddingVariantButton = true;
+			try {
+				await this.#addVariantButton();
+			} finally {
+				this.#isAddingVariantButton = false;
+			}
 		}
 
 		//Check if the variant already exists
@@ -120,6 +127,9 @@ class Tile {
 			return;
 		}
 		this.#variants.push({ asin, title, etv });
+
+		// Update the count after adding the variant
+		this.updateVariantCount();
 	}
 
 	getVariants() {
@@ -194,6 +204,7 @@ class Tile {
 
 	async btnShowVariantsClick(event) {
 		event.preventDefault();
+		event.stopPropagation(); // Prevent event from bubbling up to NotificationMonitor
 
 		//Find the asin from the data-asin attribute
 		const asin = this.#asin;
