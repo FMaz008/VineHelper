@@ -529,31 +529,31 @@ class NotificationMonitor extends MonitorCore {
 
 		// Always emit event to update placeholders after fetching recent items
 		// Use setTimeout to ensure DOM has settled before counting
-		setTimeout(() => {
-			// Always recount to ensure accuracy after fetch, as items may have been
-			// added with isVisible=false during the fetch process
-			this._tileCounter.recountVisibleTiles(0, true, { source: "fetch-complete" });
+		//setTimeout(() => {
+		// Always recount to ensure accuracy after fetch, as items may have been
+		// added with isVisible=false during the fetch process
+		this._tileCounter.recountVisibleTiles(0, true, { source: "fetch-complete" });
 
-			// Fetch complete - recount and emit event
-			const debugPlaceholders = this._settings?.get("general.debugPlaceholders");
-			if (debugPlaceholders) {
-				const itemTiles = this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
-				const placeholderTiles = this._gridContainer.querySelectorAll(".vh-placeholder-tile");
-				console.log("[fetchRecentItemsEnd] Fetch complete (after DOM settle)", {
-					visibleCount: this._tileCounter.getCount(),
-					totalItems: this._itemsMgr.items.size,
-					gridChildren: this._gridContainer.children.length,
-					itemTiles: itemTiles.length,
-					placeholders: placeholderTiles.length,
-					visibilityStateCount: this._tileCounter.getCount(),
-				});
-			}
+		// Fetch complete - recount and emit event
+		const debugPlaceholders = this._settings?.get("general.debugPlaceholders");
+		if (debugPlaceholders) {
+			const itemTiles = this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
+			const placeholderTiles = this._gridContainer.querySelectorAll(".vh-placeholder-tile");
+			console.log("[fetchRecentItemsEnd] Fetch complete (after DOM settle)", {
+				visibleCount: this._tileCounter.getCount(),
+				totalItems: this._itemsMgr.items.size,
+				gridChildren: this._gridContainer.children.length,
+				itemTiles: itemTiles.length,
+				placeholders: placeholderTiles.length,
+				visibilityStateCount: this._tileCounter.getCount(),
+			});
+		}
 
-			// Emit fetch-complete event first to allow placeholder updates
-			this.#emitGridEvent("grid:fetch-complete", { visibleCount: this._tileCounter.getCount() });
+		// Emit fetch-complete event first to allow placeholder updates
+		this.#emitGridEvent("grid:fetch-complete", { visibleCount: this._tileCounter.getCount() });
 
-			// Note: Sorting is now handled by GridEventManager after placeholders are updated
-		}, 100); // Small delay to ensure DOM has settled
+		// Note: Sorting is now handled by GridEventManager after placeholders are updated
+		//}, 100); // Small delay to ensure DOM has settled
 	}
 
 	/**
@@ -2704,10 +2704,6 @@ class NotificationMonitor extends MonitorCore {
 			await this._settings.set("notification.monitor.sortType", this._sortType);
 			// Emit event to trigger sorting instead of calling directly
 			this.#emitGridEvent("grid:sort-needed");
-			// Force immediate truncate when sort type changes
-			this.#autoTruncate(true);
-			// Emit sort event with sort type
-			this.#emitGridEvent("grid:sorted", { sortType: this._sortType });
 		};
 		sortQueue.addEventListener("change", sortQueueHandler);
 		this.#eventHandlers.buttons.set(sortQueue, { event: "change", handler: sortQueueHandler });

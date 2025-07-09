@@ -361,6 +361,9 @@ class NoShiftGrid {
 			const tilesPerRow = Math.floor(this._gridWidth / tileWidth);
 
 			// Check if calculation inputs have changed
+			// CACHE IS PREVENTING SORT CHANGE FROM ETV TO DATE_DESC TO
+			// REGENERATE NEW PLACEHOLDERS. DISABLING CACHE FOR NOW.
+			/*
 			if (
 				this._lastCalculationResult.visibleCount === visibleItemsCount &&
 				this._lastCalculationResult.tileWidth === tileWidth &&
@@ -382,7 +385,7 @@ class NoShiftGrid {
 					this._isUpdatingPlaceholders = false;
 					return;
 				}
-			}
+			}*/
 
 			if (debugPlaceholders) {
 				console.log("[NoShiftGrid] Starting placeholder calculation", {

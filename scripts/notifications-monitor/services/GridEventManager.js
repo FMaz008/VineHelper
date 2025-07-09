@@ -50,7 +50,7 @@ export class GridEventManager {
 		// Listen for actually emitted grid events
 		this.#hookMgr.hookBind("grid:items-removed", (data) => this.#handleItemsRemoved(data));
 		this.#hookMgr.hookBind("grid:truncated", (data) => this.#handleTruncation(data));
-		this.#hookMgr.hookBind("grid:sorted", (data) => this.#handleSort(data));
+		//this.#hookMgr.hookBind("grid:sorted", (data) => this.#handleSort(data));
 		this.#hookMgr.hookBind("grid:unpaused", () => this.#handleUnpause());
 		this.#hookMgr.hookBind("grid:sort-needed", () => this.#handleSortNeeded());
 		this.#hookMgr.hookBind("grid:fetch-complete", (data) => this.#handleFetchComplete(data));
@@ -134,6 +134,7 @@ export class GridEventManager {
 	 * Handle sort events
 	 * @param {Object} data - Event data
 	 */
+	/*
 	#handleSort(data) {
 		if (!this.#canHandleEvent("Sort")) return;
 
@@ -189,12 +190,14 @@ export class GridEventManager {
 			}
 		});
 	}
+	*/
 
 	/**
 	 * Find the index of the last real tile (non-placeholder)
 	 * @param {Array} tiles - Array of tile elements
 	 * @returns {number} Index of last real tile, or -1 if none found
 	 */
+	/*
 	#findLastRealTileIndex(tiles) {
 		for (let i = tiles.length - 1; i >= 0; i--) {
 			if (!tiles[i].classList.contains("vh-placeholder-tile")) {
@@ -203,7 +206,7 @@ export class GridEventManager {
 		}
 		return -1;
 	}
-
+	*/
 	/**
 	 * Handle unpause events
 	 */
@@ -252,6 +255,7 @@ export class GridEventManager {
 
 		// Let updatePlaceholders handle ALL placeholder management
 		// This ensures placeholders are calculated fresh based on current state
+		this.#noShiftGrid.resetEndPlaceholdersCount();
 		this.#updatePlaceholders();
 	}
 
@@ -266,15 +270,6 @@ export class GridEventManager {
 
 		this.#logDebug(debugPlaceholders, "Handling fetch complete", {
 			visibleCount: data.visibleCount,
-		});
-
-		// Reset end placeholders count after fetch
-		const endPlaceholdersCountBefore = this.#noShiftGrid._endPlaceholdersCount;
-		this.#noShiftGrid.resetEndPlaceholdersCount();
-
-		this.#logDebug(debugPlaceholders, "DIAGNOSTIC - Reset endPlaceholdersCount", {
-			before: endPlaceholdersCountBefore,
-			after: this.#noShiftGrid._endPlaceholdersCount,
 		});
 
 		// Sort the items & update placeholders after fetch completes
