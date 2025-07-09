@@ -35,10 +35,7 @@ class TileCounter {
 	 */
 	alterCount(value) {
 		this.#count += value;
-		this.#hookMgr.hookExecute("visibility:count-changed", {
-			count: this.#count,
-			source: "alterCount",
-		});
+		this.#hookMgr.hookExecute("nm-update-tab-title");
 
 		// Update placeholders
 		if (this.#monitor._noShiftGrid) {
@@ -143,7 +140,7 @@ class TileCounter {
 		const countChanged = previousCount !== count;
 
 		if (this.#performanceMetrics.enabled) {
-			console.log("[TileCounter] Triggering visibility:count-changed hook:", {
+			console.log("[TileCounter] Triggering nm-update-tab-title hook:", {
 				count: count,
 				previousCount: previousCount,
 				changed: countChanged,
@@ -153,13 +150,7 @@ class TileCounter {
 		}
 
 		//Will update the tab title, no need for any options.
-		this.#hookMgr.hookExecute("visibility:count-changed", {
-			count: count,
-			previousCount: previousCount,
-			changed: countChanged,
-			source: options.source || "recount",
-			isBulkOperation: options.isBulkOperation || false,
-		});
+		this.#hookMgr.hookExecute("nm-update-tab-title");
 
 		// Update placeholders
 		if (this.#monitor._noShiftGrid) {

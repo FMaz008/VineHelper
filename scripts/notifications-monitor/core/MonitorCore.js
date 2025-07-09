@@ -461,7 +461,7 @@ class MonitorCore {
 	_initializeTabTitleListener() {
 		if (this._hookMgr) {
 			// Listen to visibility count changes
-			this._hookMgr.hookBind("visibility:count-changed", (data) => {
+			this._hookMgr.hookBind("nm-update-tab-title", (data) => {
 				this._updateTabTitle();
 			});
 		}
