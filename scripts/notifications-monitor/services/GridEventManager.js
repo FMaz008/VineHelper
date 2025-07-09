@@ -224,7 +224,34 @@ export class GridEventManager {
 	#handleSortNeeded() {
 		if (!this.#canHandleEvent("Sort needed")) return;
 
-		// Update placeholders after sort
+		// Get the sorted items from ItemsMgr
+		const sortedItems = this.#monitor._itemsMgr.sortItems();
+
+		// Only proceed if we have items to sort
+		if (sortedItems.length === 0) {
+			this.#updatePlaceholders();
+			return;
+		}
+
+		// Create document fragment for efficient DOM manipulation
+		const fragment = document.createDocumentFragment();
+
+		// Add items to fragment in sorted order
+		sortedItems.forEach((sortedItem) => {
+			const element = this.#monitor._itemsMgr.getItemDOMElement(sortedItem.asin);
+			if (element && element.parentNode) {
+				fragment.appendChild(element);
+			}
+		});
+
+		// Clear the grid container (this removes both items AND placeholders)
+		this.#monitor._gridContainer.innerHTML = "";
+
+		// Add sorted items first
+		this.#monitor._gridContainer.appendChild(fragment);
+
+		// Let updatePlaceholders handle ALL placeholder management
+		// This ensures placeholders are calculated fresh based on current state
 		this.#updatePlaceholders();
 	}
 
@@ -250,9 +277,8 @@ export class GridEventManager {
 			after: this.#noShiftGrid._endPlaceholdersCount,
 		});
 
-		// Update placeholders after fetch completes
-		this.#logDebug(debugPlaceholders, "Updating placeholders after fetch");
-		this.#updatePlaceholders();
+		// Sort the items & update placeholders after fetch completes
+		this.#handleSortNeeded();
 	}
 
 	/**
