@@ -97,8 +97,7 @@ describe("GridEventManager", () => {
 			expect(mockHookMgr.hookBind).toHaveBeenCalledWith("grid:sort-needed", expect.any(Function));
 			expect(mockHookMgr.hookBind).toHaveBeenCalledWith("grid:resized", expect.any(Function));
 			expect(mockHookMgr.hookBind).toHaveBeenCalledWith("grid:initialized", expect.any(Function));
-			expect(mockHookMgr.hookBind).toHaveBeenCalledWith("visibility:count-changed", expect.any(Function));
-			expect(mockHookMgr.hookBind).toHaveBeenCalledTimes(9); // Only 9 events are actually listened to
+			expect(mockHookMgr.hookBind).toHaveBeenCalledTimes(8); // Only 8 events are actually listened to
 		});
 	});
 
