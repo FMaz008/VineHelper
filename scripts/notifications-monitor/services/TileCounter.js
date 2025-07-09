@@ -86,7 +86,7 @@ class TileCounter {
 		const startTime = this.#performanceMetrics.enabled ? performance.now() : 0;
 
 		// Get the grid element
-		const grid = document.querySelector("#vvp-items-grid");
+		const grid = this.#monitor._gridContainer;
 		if (!grid) {
 			throw new Error("Grid #vvp-items-grid not found");
 		}
