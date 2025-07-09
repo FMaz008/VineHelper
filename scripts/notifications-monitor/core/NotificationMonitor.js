@@ -795,7 +795,8 @@ class NotificationMonitor extends MonitorCore {
 
 					//Count how many of the items to be removed are visible
 					for (let i = max; i < itemsArray.length; i++) {
-						if (this.#isElementVisible(itemsArray[i].element)) {
+						const element = this._itemsMgr.getItemDOMElement(itemsArray[i].asin);
+						if (this.#isElementVisible(element)) {
 							visibleItemsRemovedCount++;
 						}
 					}
