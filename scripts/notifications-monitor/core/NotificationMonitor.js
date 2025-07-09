@@ -80,7 +80,6 @@ class NotificationMonitor extends MonitorCore {
 	_filterQueue = -1;
 	_filterType = -1;
 	_sortType = TYPE_DATE_DESC;
-	_noShiftGrid = null;
 	_gridEventManager = null;
 
 	#pinDebounceTimer = null;
@@ -341,11 +340,11 @@ class NotificationMonitor extends MonitorCore {
 		const notificationTypeHighlight = parseInt(node.dataset.typeHighlight) === 1;
 		const notificationTypeUnknownETV = parseInt(node.dataset.typeUnknownETV) === 1;
 		const queueType = node.dataset.queue;
-		const beforeDisplay = node.style.display;
+		const beforeDisplay = node.dataset.display;
 
 		//Feed Paused
 		if (node.dataset.feedPaused == "true") {
-			node.style.display = "none";
+			this.#setTileDisplay(node, "none");
 			return false;
 		}
 
@@ -361,7 +360,7 @@ class NotificationMonitor extends MonitorCore {
 				this._tierMgr.getSilverTierETVLimit() != null &&
 				parseFloat(etvObj.dataset.etvMin) > this._tierMgr.getSilverTierETVLimit()
 			) {
-				node.style.display = "none";
+				this.#setTileDisplay(node, "none");
 				return false;
 			}
 		}
@@ -370,7 +369,7 @@ class NotificationMonitor extends MonitorCore {
 		if (this._searchText.trim()) {
 			const title = node.querySelector(".a-truncate-full")?.innerText?.toLowerCase() || "";
 			if (!title.includes(this._searchText.toLowerCase().trim())) {
-				node.style.display = "none";
+				this.#setTileDisplay(node, "none");
 				return false;
 			}
 		}
@@ -388,7 +387,7 @@ class NotificationMonitor extends MonitorCore {
 		const shouldBeVisible = filterVisibility[this._filterType]?.() || false;
 
 		if (!unpausing) {
-			node.style.display = shouldBeVisible ? this.#getTileDisplayStyle() : "none";
+			this.#setTileDisplay(node, shouldBeVisible ? this.#getTileDisplayStyle() : "none");
 		}
 
 		//Queue filter
@@ -402,7 +401,7 @@ class NotificationMonitor extends MonitorCore {
 			const debugTabTitle = this._settings.get("general.debugTabTitle");
 			const debugPlaceholders = this._settings.get("general.debugPlaceholders");
 			if (debugTabTitle || debugPlaceholders) {
-				const afterDisplay = node.style.display;
+				const afterDisplay = node.dataset.display;
 				if (beforeDisplay !== afterDisplay) {
 					console.log("[NotificationMonitor] Item visibility changed", {
 						asin: node.dataset.asin,
@@ -439,7 +438,7 @@ class NotificationMonitor extends MonitorCore {
 			const finalVisibility = shouldBeVisible && queueMatches;
 
 			if (!unpausing) {
-				node.style.display = finalVisibility ? this.#getTileDisplayStyle() : "none";
+				this.#setTileDisplay(node, finalVisibility ? this.#getTileDisplayStyle() : "none");
 			}
 			return finalVisibility;
 		}
@@ -1155,11 +1154,11 @@ class NotificationMonitor extends MonitorCore {
 
 			// Debug logging for count tracking
 			if (this._settings.get("general.debugItemProcessing") || this._settings.get("general.debugTabTitle")) {
-				const isVisible = tileDOM.style.display !== "none" && !tileDOM.classList.contains("hidden");
+				const isVisible = tileDOM.dataset.display !== "none" && !tileDOM.classList.contains("hidden");
 				console.log("[NotificationMonitor] New item added to DOM", {
 					asin,
 					isVisible,
-					display: tileDOM.style.display,
+					display: tileDOM.dataset.display,
 					hasHiddenClass: tileDOM.classList.contains("hidden"),
 					currentVisibilityStateCount: this._tileCounter.getCount(),
 					itemDataIsVisible: item.isVisible,
@@ -1287,6 +1286,7 @@ class NotificationMonitor extends MonitorCore {
 			// BUG FIX 2: Move sound playing AFTER filtering to respect filter settings
 			// First apply filtering to determine visibility
 			const isVisible = this.#processNotificationFiltering(tileDOM);
+			this.#setTileDisplay(tileDOM, isVisible ? this.#getTileDisplayStyle() : "none");
 
 			// BUG FIX 1: During bulk fetch, only play sounds for items that will be visible
 			// This prevents sounds from playing for items that are filtered out
@@ -1358,7 +1358,7 @@ class NotificationMonitor extends MonitorCore {
 						fetchingRecentItems: this._fetchingRecentItems,
 						tileVisible: this.#isElementVisible(tileDOM),
 						computedDisplay: window.getComputedStyle(tileDOM).display,
-						inlineDisplay: tileDOM.style.display,
+						inlineDisplay: tileDOM.dataset.display,
 						typeHighlight: tileDOM.dataset.typeHighlight,
 						typeZeroETV: tileDOM.dataset.typeZeroETV,
 						filterType: this._filterType,
@@ -1489,7 +1489,7 @@ class NotificationMonitor extends MonitorCore {
 		tile = null;
 
 		// Recount the visible tiles
-		this._tileCounter.recountVisibleTiles(0, true, { source: "single-remove" });
+		this._tileCounter.alterCount(-1);
 	}
 
 	/**
@@ -2813,7 +2813,8 @@ class NotificationMonitor extends MonitorCore {
 				if (node.dataset.feedPaused == "true") {
 					node.dataset.feedPaused = "false";
 					visible = this.#processNotificationFiltering(node, true); //Unpausing,
-					node.style.display = visible ? this.#getTileDisplayStyle() : "none";
+					const displayValue = visible ? this.#getTileDisplayStyle() : "none";
+					this.#setTileDisplay(node, displayValue);
 				}
 			}
 			this._tileCounter.recountVisibleTiles(0, true, { isBulkOperation: true, source: "feed-unpause" });
@@ -2824,6 +2825,12 @@ class NotificationMonitor extends MonitorCore {
 			}
 		}
 	}
+
+	#setTileDisplay(tile, value) {
+		tile.dataset.display = value;
+		tile.style.display = value;
+	}
+
 	/**
 	 * Clean up all event listeners and references
 	 * This method should be called when the monitor is being destroyed

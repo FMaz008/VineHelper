@@ -9,8 +9,11 @@ class TileCounter {
 	#state = STATE_READY;
 	#timeoutInstance = null;
 	#hookMgr = null;
-	#visibilityCache = null;
-	#cacheTimeout = null;
+	#monitor = null;
+
+	//Non-critical variables:
+	//#visibilityCache = null;
+	//#cacheTimeout = null;
 	#performanceMetrics = {
 		enabled: false,
 		lastRecountDuration: 0,
@@ -21,24 +24,40 @@ class TileCounter {
 		totalPossibleTiles: 0,
 	};
 
-	constructor() {
+	constructor(monitor) {
+		this.#monitor = monitor;
 		this.#hookMgr = new HookMgr();
+	}
+
+	/**
+	 * Manually alter the count for known reasons
+	 * @param {number} value - The value to add to the count
+	 */
+	alterCount(value) {
+		this.#count += value;
+		this.#hookMgr.hookExecute("visibility:count-changed", {
+			count: this.#count,
+			source: "alterCount",
+		});
+
+		// Update placeholders
+		if (this.#monitor._noShiftGrid) {
+			this.#monitor._noShiftGrid.insertPlaceholderTiles();
+		}
 	}
 
 	/**
 	 * Recount the number of tiles on the page
 	 * @param {number} waitTime - The time to wait before recounting the tiles, in milliseconds
-	 * @param {boolean} priority - If true, uses immediate execution for user-initiated actions
 	 * @param {Object} options - Additional options for the recount
 	 * @param {boolean} options.isBulkOperation - Whether this is a bulk operation
 	 */
-	recountVisibleTiles(waitTime = 50, priority = false, options = {}) {
+	recountVisibleTiles(waitTime = 50, options = {}) {
 		if (this.#performanceMetrics.enabled) {
 			console.log("[TileCounter] recountVisibleTiles called with:", {
 				waitTime,
-				priority,
 				options,
-				effectiveWaitTime: priority ? 0 : waitTime,
+				effectiveWaitTime: waitTime,
 			});
 		}
 
@@ -47,16 +66,13 @@ class TileCounter {
 		// Clear any existing timeout
 		window.clearTimeout(this.#timeoutInstance);
 
-		// Smart debouncing: immediate for priority/user actions, delayed for bulk operations
-		const effectiveWaitTime = priority ? 0 : waitTime;
-
 		// Create a new timeout
-		if (effectiveWaitTime === 0) {
+		if (waitTime === 0) {
 			this.#startRecount(options);
 		} else {
 			this.#timeoutInstance = setTimeout(() => {
 				this.#startRecount(options);
-			}, effectiveWaitTime);
+			}, waitTime);
 		}
 	}
 
@@ -79,11 +95,16 @@ class TileCounter {
 		}
 
 		// Get all tiles at once
-		const tiles = grid.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
+		const tiles = grid.querySelectorAll(
+			'.vvp-item-tile:not(.vh-placeholder-tile)[data-display]:not([data-display="none"])'
+		);
 
-		// Optimize visibility checking
-		let count = 0;
+		// Store the previous count BEFORE updating
+		const previousCount = this.#count;
+		let count = tiles.length;
 
+		/*
+        // Optimize visibility checking
 		if (this.#visibilityCache) {
 			// Use cached visibility data if available
 			count = this.#countWithCache(tiles);
@@ -91,9 +112,8 @@ class TileCounter {
 			// Batch DOM reads to minimize reflows
 			count = this.#batchedVisibilityCheck(tiles);
 		}
-
-		// Store the previous count BEFORE updating
-		const previousCount = this.#count;
+		*/
+		//count = this.#justCountTheGoddamnTiles(tiles);
 
 		// Update the count
 		this.#count = count;
@@ -132,6 +152,7 @@ class TileCounter {
 			});
 		}
 
+		//Will update the tab title, no need for any options.
 		this.#hookMgr.hookExecute("visibility:count-changed", {
 			count: count,
 			previousCount: previousCount,
@@ -140,8 +161,13 @@ class TileCounter {
 			isBulkOperation: options.isBulkOperation || false,
 		});
 
+		// Update placeholders
+		if (this.#monitor._noShiftGrid) {
+			this.#monitor._noShiftGrid.insertPlaceholderTiles();
+		}
+
 		// Clear cache after successful recount
-		this.#clearCache();
+		//this.#clearCache();
 	}
 
 	/**
@@ -149,6 +175,7 @@ class TileCounter {
 	 * @param {NodeList} tiles - The tiles to check
 	 * @returns {number} The count of visible tiles
 	 */
+	/*
 	#batchedVisibilityCheck(tiles) {
 		let count = 0;
 
@@ -199,12 +226,14 @@ class TileCounter {
 
 		return count;
 	}
+        */
 
 	/**
 	 * Optimized visibility check with early exit for large tile sets
 	 * @param {Array} tilesArray - Array of tile elements
 	 * @returns {number} The count of visible tiles
 	 */
+	/*
 	#batchedVisibilityCheckWithEarlyExit(tilesArray) {
 		const startTime = this.#performanceMetrics.enabled ? performance.now() : 0;
 		let count = 0;
@@ -313,13 +342,14 @@ class TileCounter {
 
 		return count;
 	}
-
+    */
 	/**
 	 * Prioritize tiles by their position in the grid
 	 * Tiles at the top are more likely to be visible
 	 * @param {Array} tiles - Array of tile elements
 	 * @returns {Array} Sorted array of tiles
 	 */
+	/*
 	#prioritizeTilesByPosition(tiles) {
 		// Get viewport bounds for reference
 		const viewportHeight = window.innerHeight;
@@ -359,12 +389,13 @@ class TileCounter {
 
 		return tilesWithScores.map((item) => item.tile);
 	}
-
+    */
 	/**
 	 * Count visible tiles using cached data
 	 * @param {NodeList} tiles - The tiles to check
 	 * @returns {number} The count of visible tiles
 	 */
+	/*
 	#countWithCache(tiles) {
 		let count = 0;
 		let cacheHits = 0;
@@ -397,10 +428,11 @@ class TileCounter {
 
 		return count;
 	}
-
+    */
 	/**
 	 * Set cache expiration timer
 	 */
+	/*
 	#setCacheExpiration() {
 		// Clear any existing cache timeout
 		if (this.#cacheTimeout) {
@@ -412,10 +444,11 @@ class TileCounter {
 			this.#clearCache();
 		}, 100);
 	}
-
+    */
 	/**
 	 * Clear the visibility cache
 	 */
+	/*
 	#clearCache() {
 		if (this.#visibilityCache) {
 			this.#visibilityCache.clear();
@@ -427,7 +460,7 @@ class TileCounter {
 			this.#cacheTimeout = null;
 		}
 	}
-
+    */
 	/**
 	 * Get the current count
 	 * @returns {number} The current count
@@ -513,9 +546,9 @@ class TileCounter {
 			});
 
 			// Log cache state
-			if (this.#visibilityCache) {
+			/*if (this.#visibilityCache) {
 				console.log("[TileCounter] Cache size:", this.#visibilityCache.size);
-			}
+			}*/
 		}
 
 		return diagnosis;

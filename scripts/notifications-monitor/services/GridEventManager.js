@@ -32,8 +32,8 @@ export class GridEventManager {
 	#isEnabled = true;
 
 	// Visibility count change debouncing
-	#visibilityDebounceTimer = null;
-	#visibilityDebounceDelay = 100; // milliseconds
+	//#visibilityDebounceTimer = null;
+	//#visibilityDebounceDelay = 100; // milliseconds
 
 	constructor(hookMgr, noShiftGrid, monitor) {
 		this.#hookMgr = hookMgr;
@@ -59,7 +59,7 @@ export class GridEventManager {
 		// are never emitted in the codebase, so we don't listen for them
 		this.#hookMgr.hookBind("grid:resized", () => this.#handleGridResized());
 		this.#hookMgr.hookBind("grid:initialized", () => this.#handleGridInitialized());
-		this.#hookMgr.hookBind("visibility:count-changed", (data) => this.#handleVisibilityCountChanged(data));
+		//this.#hookMgr.hookBind("visibility:count-changed", (data) => this.#handleVisibilityCountChanged(data));
 	}
 
 	/**
@@ -335,10 +335,12 @@ export class GridEventManager {
 	disable() {
 		this.#isEnabled = false;
 		// Clear visibility debounce timer
+		/*
 		if (this.#visibilityDebounceTimer) {
 			clearTimeout(this.#visibilityDebounceTimer);
 			this.#visibilityDebounceTimer = null;
 		}
+		*/
 	}
 
 	/**
@@ -377,6 +379,7 @@ export class GridEventManager {
 	 * Handle visibility count changed events
 	 * @param {Object} data - Event data containing count and source
 	 */
+	/*
 	#handleVisibilityCountChanged(data) {
 		if (!this.#canHandleEvent("Visibility count changed")) return;
 
@@ -429,6 +432,7 @@ export class GridEventManager {
 		// Debounce other visibility changes
 		this.#debounceVisibilityUpdate(data, debugPlaceholders);
 	}
+	*/
 
 	/**
 	 * Get debug setting value
@@ -466,6 +470,7 @@ export class GridEventManager {
 	 * @param {number} now - Current timestamp
 	 * @param {boolean} debugPlaceholders - Debug flag
 	 */
+	/*
 	#handleFilterChangeImmediate(now, debugPlaceholders) {
 		this.#logDebug(debugPlaceholders, "Filter change detected - updating placeholders immediately", {
 			timestamp: now,
@@ -477,12 +482,13 @@ export class GridEventManager {
 		// Update placeholders immediately for filter changes
 		this.#updatePlaceholders(true); // immediate = true
 	}
-
+	*/
 	/**
 	 * Debounce visibility update
 	 * @param {Object} data - Event data
 	 * @param {boolean} debugPlaceholders - Debug flag
 	 */
+	/*
 	#debounceVisibilityUpdate(data, debugPlaceholders) {
 		clearTimeout(this.#visibilityDebounceTimer);
 
@@ -496,4 +502,5 @@ export class GridEventManager {
 			this.#updatePlaceholders();
 		}, this.#visibilityDebounceDelay);
 	}
+	*/
 }

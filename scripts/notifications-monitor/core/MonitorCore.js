@@ -28,8 +28,14 @@ import { Websocket } from "/scripts/notifications-monitor/stream/Websocket.js";
 import { AutoLoad } from "/scripts/notifications-monitor/stream/AutoLoad.js";
 import { MasterSlave } from "/scripts/notifications-monitor/coordination/MasterSlave.js";
 import { TileCounter } from "/scripts/notifications-monitor/services/TileCounter.js";
+import { NoShiftGrid } from "/scripts/notifications-monitor/services/NoShiftGrid.js";
+import { GridEventManager } from "/scripts/notifications-monitor/services/GridEventManager.js";
+import { DIContainer } from "/scripts/infrastructure/DIContainer.js";
+import { ErrorAlertManager } from "/scripts/notifications-monitor/services/ErrorAlertManager.js";
 
 class MonitorCore {
+	#container;
+
 	//Variables linked to monitor V2 vs V3
 	_monitorV2 = false; //True if the monitor is in V2 mode
 	_monitorV3 = false; //True if the monitor is in V3 mode
@@ -38,10 +44,11 @@ class MonitorCore {
 	_ws = null; //The websocket object
 	_autoLoad = null; //The auto load object
 	_isMasterMonitor = false; //True if the monitor is the master monitor
+	_noShiftGrid = null; //The no shift grid object
 
 	_fetchLimit = 100; //The fetch limit for the monitor
 	_tabTitleTimer = null; // Timer for batching tab title updates
-
+	_gridContainer = null; //The grid container DOM element
 	_channel = null;
 
 	constructor(monitorV3 = false) {
@@ -49,6 +56,13 @@ class MonitorCore {
 		if (this.constructor === MonitorCore) {
 			throw new TypeError('Abstract class "MonitorLib" cannot be instantiated directly.');
 		}
+
+		this._gridContainer = document.querySelector("#vvp-items-grid");
+
+		// Initialize DI container for this component
+		// This demonstrates how we can gradually migrate to DI
+		this.#container = new DIContainer();
+		this.#registerServices();
 
 		this._channel = new BroadcastChannel("vinehelper-notification-monitor");
 		this._monitorV3 = monitorV3;
@@ -67,7 +81,7 @@ class MonitorCore {
 		this._soundPlayerMgr = new NotificationsSoundPlayer();
 		this._hookMgr = new HookMgr();
 		this._masterSlave = new MasterSlave(this);
-		this._tileCounter = new TileCounter();
+		this._tileCounter = new TileCounter(this);
 		if (this._env.data.gridDOM) {
 			//v3
 			this._env.data.gridDOM.regular = document.getElementById("vvp-items-grid");
@@ -85,17 +99,77 @@ class MonitorCore {
 		this._pinMgr.setGetItemDOMElementCallback(this._itemsMgr.getItemDOMElement.bind(this._itemsMgr));
 
 		this.#getFetchLimit();
+
+		if (
+			this._settings.get("notification.monitor.placeholders") &&
+			!this._settings.get("notification.monitor.listView") &&
+			this._settings.get("general.tileSize.enabled")
+		) {
+			this._noShiftGrid = new NoShiftGrid(this);
+			// Update the dependency registrations with the actual instances
+			this.#container.register("noShiftGrid", () => this._noShiftGrid);
+
+			// Use DI container to resolve GridEventManager with its dependencies
+			this._gridEventManager = this.#container.resolve("gridEventManager");
+
+			// Insert initial placeholders after DOM is ready and grid has width
+			// Use setTimeout to ensure the grid container has been rendered and has width
+			setTimeout(() => {
+				if (this._noShiftGrid && this._gridContainer && this._gridContainer.offsetWidth > 0) {
+					// Emit event instead of direct call
+					this._hookMgr.hookExecute("grid:initialized");
+				}
+			}, 100);
+		}
+
+		// New service uses DI
+		this._errorAlertManager = this.#container.resolve("errorAlertManager");
+	}
+
+	/**
+	 * Register services in the DI container
+	 * This is where we define how services are created and their dependencies
+	 */
+	#registerServices() {
+		// Register ErrorAlertManager as a singleton
+		// No dependencies for now, but this makes it easy to add them later
+		this.#container.register("errorAlertManager", () => new ErrorAlertManager(), {
+			singleton: true,
+		});
+
+		// Register GridEventManager with its dependencies
+		// This demonstrates proper DI with dependency injection
+		this.#container.register(
+			"gridEventManager",
+			(hookMgr, noShiftGrid, monitor) => new GridEventManager(hookMgr, noShiftGrid, monitor),
+			{
+				singleton: true,
+				dependencies: ["hookMgr", "noShiftGrid", "monitor"],
+			}
+		);
+
+		// Register dependencies that GridEventManager needs
+		// These are registered as factories (not singletons) since they're provided externally
+		this.#container.register("hookMgr", () => this._hookMgr);
+		this.#container.register("monitor", () => this);
+		this.#container.register("settings", () => this._settings);
+
+		// Future services can be registered here as we migrate them
+		// Example for when TileSizer is migrated:
+		// this.#container.register('tileSizer', () => new TileSizer("notification.monitor.tileSize"), {
+		//     singleton: true
+		// });
 	}
 
 	setMasterMonitor() {
-		console.log("[MonitorCore] Setting as MASTER monitor"); // eslint-disable-line no-console
+		//console.log("[MonitorCore] Setting as MASTER monitor"); // eslint-disable-line no-console
 		this._isMasterMonitor = true;
 		this._ws = new Websocket(this);
 		this._autoLoad = new AutoLoad(this, this._ws);
 		//console.log("[MonitorCore] WebSocket and AutoLoad initialized"); // eslint-disable-line no-console
 	}
 	setSlaveMonitor() {
-		console.log("[MonitorCore] Setting as SLAVE monitor"); // eslint-disable-line no-console
+		//console.log("[MonitorCore] Setting as SLAVE monitor"); // eslint-disable-line no-console
 		this._isMasterMonitor = false;
 		if (this._ws !== null) {
 			this._ws.destroyInstance();

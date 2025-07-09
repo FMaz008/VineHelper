@@ -4,65 +4,14 @@ import { NotificationMonitor } from "/scripts/notifications-monitor/core/Notific
 
 import { TileSizer } from "/scripts/ui/controllers/TileSizer.js";
 import { TierMgr } from "/scripts/notifications-monitor/services/TierMgr.js";
-import { NoShiftGrid } from "/scripts/notifications-monitor/services/NoShiftGrid.js";
-import { ErrorAlertManager } from "/scripts/notifications-monitor/services/ErrorAlertManager.js";
-import { GridEventManager } from "/scripts/notifications-monitor/services/GridEventManager.js";
-import { DIContainer } from "/scripts/infrastructure/DIContainer.js";
-
 class NotificationMonitorV3 extends NotificationMonitor {
-	#container;
-
 	constructor() {
 		super(true);
 		this._monitorV3 = true;
 
-		// Initialize DI container for this component
-		// This demonstrates how we can gradually migrate to DI
-		this.#container = new DIContainer();
-		this.#registerServices();
-
 		// Existing services still use direct instantiation (for now)
 		this._tileSizer = new TileSizer("notification.monitor.tileSize");
 		this._tierMgr = new TierMgr(this._env);
-
-		// New service uses DI
-		this._errorAlertManager = this.#container.resolve("errorAlertManager");
-	}
-
-	/**
-	 * Register services in the DI container
-	 * This is where we define how services are created and their dependencies
-	 */
-	#registerServices() {
-		// Register ErrorAlertManager as a singleton
-		// No dependencies for now, but this makes it easy to add them later
-		this.#container.register("errorAlertManager", () => new ErrorAlertManager(), {
-			singleton: true,
-		});
-
-		// Register GridEventManager with its dependencies
-		// This demonstrates proper DI with dependency injection
-		this.#container.register(
-			"gridEventManager",
-			(hookMgr, noShiftGrid, monitor) => new GridEventManager(hookMgr, noShiftGrid, monitor),
-			{
-				singleton: true,
-				dependencies: ["hookMgr", "noShiftGrid", "monitor"],
-			}
-		);
-
-		// Register dependencies that GridEventManager needs
-		// These are registered as factories (not singletons) since they're provided externally
-		this.#container.register("hookMgr", () => this._hookMgr);
-		this.#container.register("noShiftGrid", () => this._noShiftGrid);
-		this.#container.register("monitor", () => this);
-		this.#container.register("settings", () => this._settings);
-
-		// Future services can be registered here as we migrate them
-		// Example for when TileSizer is migrated:
-		// this.#container.register('tileSizer', () => new TileSizer("notification.monitor.tileSize"), {
-		//     singleton: true
-		// });
 	}
 
 	async initialize() {
@@ -272,29 +221,6 @@ class NotificationMonitorV3 extends NotificationMonitor {
 		if (debugInit) {
 			console.log("[NotificationMonitorV3] Error alert manager initialized");
 			console.log("[NotificationMonitorV3] Is Master Monitor:", this._isMasterMonitor);
-		}
-
-		if (
-			this._settings.get("notification.monitor.placeholders") &&
-			!this._settings.get("notification.monitor.listView") &&
-			this._settings.get("general.tileSize.enabled")
-		) {
-			this._noShiftGrid = new NoShiftGrid(this);
-
-			// Update the dependency registrations with the actual instances
-			this.#container.register("noShiftGrid", () => this._noShiftGrid);
-
-			// Use DI container to resolve GridEventManager with its dependencies
-			this._gridEventManager = this.#container.resolve("gridEventManager");
-
-			// Insert initial placeholders after DOM is ready and grid has width
-			// Use setTimeout to ensure the grid container has been rendered and has width
-			setTimeout(() => {
-				if (this._noShiftGrid && this._gridContainer && this._gridContainer.offsetWidth > 0) {
-					// Emit event instead of direct call
-					this._hookMgr.hookExecute("grid:initialized");
-				}
-			}, 100);
 		}
 	}
 
