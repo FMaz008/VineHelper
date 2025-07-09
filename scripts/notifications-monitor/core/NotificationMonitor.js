@@ -414,6 +414,15 @@ class NotificationMonitor extends MonitorCore {
 						filterName: FILTER_NAMES[this._filterType] || "Unknown",
 						styleDisplay: this.#getTileDisplayStyle(),
 					});
+
+					// Trigger a recount when visibility changes
+					// Use a small delay to batch multiple changes
+					if (this._tileCounter) {
+						this._tileCounter.recountVisibleTiles(100, false, {
+							source: "visibility-change",
+							asin: node.dataset.asin,
+						});
+					}
 				}
 			}
 		}

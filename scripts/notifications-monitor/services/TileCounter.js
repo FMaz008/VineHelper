@@ -437,6 +437,91 @@ class TileCounter {
 	}
 
 	/**
+	 * Diagnostic method to verify tile count accuracy
+	 * @returns {Object} Diagnostic information about tile counting
+	 */
+	diagnoseCount() {
+		const grid = document.querySelector("#vvp-items-grid");
+		if (!grid) {
+			return { error: "Grid not found" };
+		}
+
+		// Get all tiles
+		const allTiles = grid.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)");
+		const placeholders = grid.querySelectorAll(".vh-placeholder-tile");
+
+		// Manual count with detailed info
+		const visibleTiles = [];
+		const hiddenTiles = [];
+		const edgeCases = [];
+
+		allTiles.forEach((tile, index) => {
+			const style = window.getComputedStyle(tile);
+			const rect = tile.getBoundingClientRect();
+
+			const visibility = {
+				display: style.display,
+				visibility: style.visibility,
+				opacity: style.opacity,
+				width: rect.width,
+				height: rect.height,
+				inlineDisplay: tile.style.display,
+				classList: Array.from(tile.classList).join(" "),
+				asin: tile.id?.replace("vh-notification-", "") || "unknown",
+			};
+
+			// Standard visibility check
+			const isVisible = style.display !== "none" && style.visibility !== "hidden" && style.opacity !== "0";
+
+			// Additional edge case checks
+			const hasZeroDimensions = rect.width === 0 || rect.height === 0;
+			const isOffscreen = rect.bottom < 0 || rect.top > window.innerHeight;
+
+			if (isVisible && !hasZeroDimensions && !isOffscreen) {
+				visibleTiles.push(visibility);
+			} else if (!isVisible) {
+				hiddenTiles.push(visibility);
+			} else {
+				// Edge cases - technically visible but might not be
+				visibility.zeroDimensions = hasZeroDimensions;
+				visibility.offscreen = isOffscreen;
+				edgeCases.push(visibility);
+			}
+		});
+
+		const diagnosis = {
+			reportedCount: this.#count,
+			actualVisibleCount: visibleTiles.length,
+			totalTiles: allTiles.length,
+			placeholderCount: placeholders.length,
+			hiddenCount: hiddenTiles.length,
+			edgeCaseCount: edgeCases.length,
+			discrepancy: visibleTiles.length - this.#count,
+			visibleTiles: visibleTiles.slice(0, 5), // First 5 for brevity
+			hiddenTiles: hiddenTiles.slice(0, 5),
+			edgeCases: edgeCases,
+		};
+
+		console.log("[TileCounter] Diagnosis:", diagnosis);
+
+		// If there's a discrepancy, log more details
+		if (diagnosis.discrepancy !== 0) {
+			console.warn("[TileCounter] Count discrepancy detected!", {
+				reported: this.#count,
+				actual: visibleTiles.length,
+				difference: diagnosis.discrepancy,
+			});
+
+			// Log cache state
+			if (this.#visibilityCache) {
+				console.log("[TileCounter] Cache size:", this.#visibilityCache.size);
+			}
+		}
+
+		return diagnosis;
+	}
+
+	/**
 	 * Wait until the recount is complete
 	 * @returns {Promise<void>} Promise that resolves when the recount is complete
 	 */
