@@ -100,15 +100,14 @@ async function validateReceipt() {
 	const promTab5 = await Tpl.loadFile("/page/settings_brenda.tpl.html");
 	const promTab6 = await Tpl.loadFile("/page/settings_keywords.tpl.html");
 	const promTab7 = await Tpl.loadFile("/page/settings_keybindings.tpl.html");
-	// Set Safari detection before loading premium template so it can be used within the template
-	Tpl.setIf("isSafari", env.isSafari());
 	const promTab8 = await Tpl.loadFile("/page/settings_premium.tpl.html");
 	const promTab9 = await Tpl.loadFile("/page/settings_debug.tpl.html");
 	const promTab10 = await Tpl.loadFile("/page/settings_about.tpl.html");
 
 	// Clear any existing template variables before setting new ones
 	Tpl.clearVariables();
-
+	// Set Safari detection before loading premium template so it can be used within the template
+	Tpl.setIf("isSafari", env.isSafari());
 	Tpl.setVar("APP_VERSION", getAppVersion());
 	Tpl.setVar("TAB1", Tpl.render(promTab1));
 	Tpl.setVar("TAB2", Tpl.render(promTab2));
