@@ -80,42 +80,98 @@ export class ChromeStorageAdapter extends StorageAdapter {
 	}
 
 	async get(key) {
-		return new Promise((resolve) => {
+		return new Promise((resolve, reject) => {
 			this.#storage.get(key, (result) => {
-				resolve(result[key]);
+				if (chrome.runtime.lastError) {
+					reject(new Error(chrome.runtime.lastError.message));
+				} else {
+					resolve(result[key]);
+				}
 			});
 		});
 	}
 
 	async getMultiple(keys) {
-		return new Promise((resolve) => {
+		return new Promise((resolve, reject) => {
 			this.#storage.get(keys, (result) => {
-				resolve(result);
+				if (chrome.runtime.lastError) {
+					reject(new Error(chrome.runtime.lastError.message));
+				} else {
+					resolve(result);
+				}
 			});
 		});
 	}
 
 	async set(key, value) {
-		return new Promise((resolve) => {
-			this.#storage.set({ [key]: value }, resolve);
+		return new Promise((resolve, reject) => {
+			this.#storage.set({ [key]: value }, () => {
+				if (chrome.runtime.lastError) {
+					const error = chrome.runtime.lastError;
+					// Safari-specific quota error handling
+					if (error.message && error.message.includes("Exceeded storage quota")) {
+						const quotaError = new Error(error.message);
+						quotaError.name = "QuotaExceededError";
+						reject(quotaError);
+					} else if (error.message && error.message.includes("QUOTA_BYTES quota exceeded")) {
+						const quotaError = new Error(error.message);
+						quotaError.name = "QuotaExceededError";
+						reject(quotaError);
+					} else {
+						reject(new Error(error.message));
+					}
+				} else {
+					resolve();
+				}
+			});
 		});
 	}
 
 	async setMultiple(items) {
-		return new Promise((resolve) => {
-			this.#storage.set(items, resolve);
+		return new Promise((resolve, reject) => {
+			this.#storage.set(items, () => {
+				if (chrome.runtime.lastError) {
+					const error = chrome.runtime.lastError;
+					// Safari-specific quota error handling
+					if (error.message && error.message.includes("Exceeded storage quota")) {
+						const quotaError = new Error(error.message);
+						quotaError.name = "QuotaExceededError";
+						reject(quotaError);
+					} else if (error.message && error.message.includes("QUOTA_BYTES quota exceeded")) {
+						const quotaError = new Error(error.message);
+						quotaError.name = "QuotaExceededError";
+						reject(quotaError);
+					} else {
+						reject(new Error(error.message));
+					}
+				} else {
+					resolve();
+				}
+			});
 		});
 	}
 
 	async remove(key) {
-		return new Promise((resolve) => {
-			this.#storage.remove(key, resolve);
+		return new Promise((resolve, reject) => {
+			this.#storage.remove(key, () => {
+				if (chrome.runtime.lastError) {
+					reject(new Error(chrome.runtime.lastError.message));
+				} else {
+					resolve();
+				}
+			});
 		});
 	}
 
 	async clear() {
-		return new Promise((resolve) => {
-			this.#storage.clear(resolve);
+		return new Promise((resolve, reject) => {
+			this.#storage.clear(() => {
+				if (chrome.runtime.lastError) {
+					reject(new Error(chrome.runtime.lastError.message));
+				} else {
+					resolve();
+				}
+			});
 		});
 	}
 }

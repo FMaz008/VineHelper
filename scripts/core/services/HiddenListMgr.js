@@ -198,12 +198,18 @@ class HiddenListMgr {
 			return false;
 		}
 
-		const storageMaxSize = Settings.get("general.hiddenItemsCacheSize");
+		let storageMaxSize = Settings.get("general.hiddenItemsCacheSize");
 		if (isNaN(storageMaxSize)) {
 			return false;
 		}
 		if (storageMaxSize < 1 || storageMaxSize > 9) {
 			return false;
+		}
+
+		//Safari has a lower storage limit (5MB), so we need to reduce the size of the cache.
+		if (storageMaxSize > 4 && env.isSafari()) {
+			storageMaxSize = 4;
+			Settings.set("general.hiddenItemsCacheSize", storageMaxSize);
 		}
 
 		//Delete items older than 90 days

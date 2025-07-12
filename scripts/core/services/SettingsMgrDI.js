@@ -581,17 +581,31 @@ export class SettingsMgrDI {
 				console.log(`[SettingsMgrDI] Settings SAVED successfully`);
 			}
 		} catch (e) {
-			if (e.name === "QuotaExceededError") {
-				// The local storage space has been exceeded
-				alert("Local storage quota exceeded! Hidden items will be cleared to make space.");
-				await this.#storageAdapter.set("hiddenItems", []);
-				await this.#save();
+			// Enhanced error handling for Safari and other browsers
+			const isQuotaError =
+				e.name === "QuotaExceededError" ||
+				(e.message &&
+					(e.message.includes("Exceeded storage quota") ||
+						e.message.includes("QUOTA_BYTES quota exceeded") ||
+						e.message.includes("quota exceeded")));
+
+			if (isQuotaError) {
+				this.#logger.add("SettingsMgr: Storage quota exceeded, attempting cleanup...");
+
+				try {
+					await this.#storageAdapter.set("hiddenItems", []);
+					await this.#save();
+				} catch (retryError) {
+					this.#logger.add(`SettingsMgr: Storage quota cleanup failed: ${retryError.message}`);
+					return false;
+				}
 			} else {
 				// Some other error occurred
 				alert("Error:", e.name, e.message);
 				return false;
 			}
 		}
+		return true;
 	}
 
 	async #loadSettingsFromStorage(skipMigration = false) {
