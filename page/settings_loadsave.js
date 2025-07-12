@@ -619,47 +619,49 @@ async function initiateSettings() {
 
 	//##TAB - ?
 
-	//Copy buttons
-	document.getElementById("copyBTC").addEventListener("click", function () {
-		navigator.clipboard
-			.writeText("bc1q0f82vk79u7hzxcrqe6q2levzvhdrqe72fm5w8z")
-			.then(() => {
-				// Alert the user that the text has been copied
-				alert("BTC address copied to clipboard: ");
-			})
-			.catch((err) => {
-				console.error("Failed to copy: ", err);
-			});
-	});
-	document.getElementById("copyETH").addEventListener("click", function () {
-		navigator.clipboard
-			.writeText("0xF5b68799b43C358E0A54482f0D8445DFBEA9BDF1")
-			.then(() => {
-				// Alert the user that the text has been copied
-				alert("ETH address copied to clipboard");
-			})
-			.catch((err) => {
-				console.error("Failed to copy: ", err);
-			});
-	});
+	if (!env.isSafari()) {
+		//Copy buttons
+		document.getElementById("copyBTC")?.addEventListener("click", function () {
+			navigator.clipboard
+				.writeText("bc1q0f82vk79u7hzxcrqe6q2levzvhdrqe72fm5w8z")
+				.then(() => {
+					// Alert the user that the text has been copied
+					alert("BTC address copied to clipboard: ");
+				})
+				.catch((err) => {
+					console.error("Failed to copy: ", err);
+				});
+		});
+		document.getElementById("copyETH")?.addEventListener("click", function () {
+			navigator.clipboard
+				.writeText("0xF5b68799b43C358E0A54482f0D8445DFBEA9BDF1")
+				.then(() => {
+					// Alert the user that the text has been copied
+					alert("ETH address copied to clipboard");
+				})
+				.catch((err) => {
+					console.error("Failed to copy: ", err);
+				});
+		});
 
-	//Patreon login link:
-	document.getElementById("PatreonLogin").href =
-		"https://www.patreon.com/oauth2/authorize" +
-		"?response_type=code" +
-		"&client_id=AqsjZu6eHaLtO3y8bj0VPydtRCNNV2n-5aQoWVKil4IPNb3qoxkT75VQMhSALTcO" +
-		"&redirect_uri=" +
-		encodeURIComponent(env.getAPIUrl() + "/patreon-login") +
-		//"&scope=pledges-to-me" +
-		"&state=" +
-		Settings.get("general.uuid", false);
+		//Patreon login link:
+		document.getElementById("PatreonLogin").href =
+			"https://www.patreon.com/oauth2/authorize" +
+			"?response_type=code" +
+			"&client_id=AqsjZu6eHaLtO3y8bj0VPydtRCNNV2n-5aQoWVKil4IPNb3qoxkT75VQMhSALTcO" +
+			"&redirect_uri=" +
+			encodeURIComponent(env.getAPIUrl() + "/patreon-login") +
+			//"&scope=pledges-to-me" +
+			"&state=" +
+			Settings.get("general.uuid", false);
 
-	//Patreon load page link:
-	if (Settings.get("general.country") == null) {
-		document.getElementById("RefreshVinePage").style.display = "none";
-	} else {
-		document.getElementById("RefreshVinePage").href =
-			`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore`;
+		//Patreon load page link:
+		if (Settings.get("general.country") == null) {
+			document.getElementById("RefreshVinePage").style.display = "none";
+		} else {
+			document.getElementById("RefreshVinePage").href =
+				`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore`;
+		}
 	}
 
 	//Make the save button follow the scroll in the keyword tab
