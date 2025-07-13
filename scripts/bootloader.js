@@ -1191,6 +1191,27 @@ async function getAllProductsData() {
 		const title = tile.getTitle();
 		const thumbnail = tile.getThumbnail();
 
+		//Get the queue from the item's information
+		const recommendationId = btn.dataset.recommendationId;
+		const recommendationType = btn.dataset.recommendationType;
+		const queueNames = {
+			VINE_FOR_ALL: "encore",
+			VENDOR_VINE_FOR_ALL: "last_chance",
+			VENDOR_TARGETED: "potluck",
+		};
+		let queue = "encore"; //Default queue
+		if (recommendationType == "SEARCH") {
+			//Count the number of # in the recommendationId
+			const numHashes = (recommendationId.match(/#/g) || []).length;
+			if (numHashes == 2) {
+				queue = "encore"; //or last_chance
+			} else if (numHashes == 3) {
+				queue = "potluck";
+			}
+		} else if (queueNames[recommendationType]) {
+			queue = queueNames[recommendationType];
+		}
+
 		//Do not query product info for product without a title or a thumbnail.
 		if (title && thumbnail) {
 			arrUrl.push({
@@ -1200,6 +1221,7 @@ async function getAllProductsData() {
 				is_parent_asin: isParent,
 				enrollment_guid: enrollmentGUID,
 				is_pre_release: isPreRelease,
+				queue: queue,
 			});
 		}
 	}
