@@ -390,12 +390,6 @@ class NotificationMonitor extends MonitorCore {
 			this.#setTileDisplay(node, shouldBeVisible ? this.#getTileDisplayStyle() : "none");
 		}
 
-		//Queue filter
-		let styleDisplay;
-		// Use computed style for all browsers to ensure consistency
-		const computedStyle = window.getComputedStyle(node);
-		styleDisplay = computedStyle.display;
-
 		// Debug logging for visibility changes - skip for bulk operations
 		if (!skipLogging) {
 			const debugTabTitle = this._settings.get("general.debugTabTitle");
