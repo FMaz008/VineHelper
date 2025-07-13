@@ -814,6 +814,9 @@ function initAddNotificationMonitorLink() {
 		const a = document.createElement("a");
 		a.id = "vvp-mobile-header-link";
 		a.classList.add("a-link-normal");
+		a.style.display = "flex";
+		a.style.alignItems = "center";
+		a.style.gap = "0.25rem";
 		if (Settings.get("notification.monitor.blockNonEssentialListeners")) {
 			a.href = "/vine/vine-items?queue=encore#monitor";
 		} else {
@@ -837,6 +840,9 @@ function initAddNotificationMonitorLink() {
 				a.href = "/vine/vine-items?queue=encore#monitorLoadAllListeners";
 			}
 			a.target = "_blank";
+			a.style.display = "flex";
+			a.style.alignItems = "center";
+			a.style.gap = "0.25rem";
 			a.innerHTML = `<div class="vh-icon-16 vh-icon-vh"></div> Notifications Monitor`;
 			li.appendChild(a);
 		}
