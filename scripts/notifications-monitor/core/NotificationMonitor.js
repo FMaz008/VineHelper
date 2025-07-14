@@ -1305,8 +1305,8 @@ class NotificationMonitor extends MonitorCore {
 			//If we received ETV data (ie: Fetch last 100), process them
 			if (etv_min != null && etv_max != null) {
 				//Set the ETV values (min and max)
-				this.#setETV(tileDOM, etv_min);
-				this.#setETV(tileDOM, etv_max);
+				this.#setETV(tileDOM, item.data, etv_min);
+				this.#setETV(tileDOM, item.data, etv_max);
 
 				// Check for Zero ETV after both values are set
 				// This prevents duplicate checks when setting min and max separately
@@ -1490,10 +1490,32 @@ class NotificationMonitor extends MonitorCore {
 	/**
 	 * Set the ETV for an item. Call it twice with min and max values to set a range.
 	 * @param {object} notif - The DOM element of the tile
+	 * @param {object} data - The item data
 	 * @param {number} etv - The ETV value
 	 * @returns {boolean} - True if the ETV was set, false otherwise
 	 */
-	async #setETV(notif, etv) {
+	async #setETV(notif, data, etv) {
+		/*
+		const {
+				asin,
+				queue,
+				tier,
+				date,
+				date_added,
+				title,
+				img_url,
+				is_parent_asin,
+				is_pre_release,
+				enrollment_guid,
+				etv_min,
+				etv_max,
+				KW,
+				KWsMatch,
+				BlurKW,
+				BlurKWsMatch,
+				unavailable,
+			} = item.data
+		*/
 		if (!notif) {
 			return false;
 		}
@@ -1544,12 +1566,11 @@ class NotificationMonitor extends MonitorCore {
 		// Re-evaluate keywords if any have ETV conditions
 		const highlightKeywords = this._settings.get("general.highlightKeywords");
 		if (highlightKeywords && hasAnyEtvConditions(highlightKeywords)) {
-			const title = notif.querySelector(".a-truncate-full").innerText;
-			if (title) {
+			if (data.title) {
 				// Check keyword match with new ETV values
 				const matchedKeyword = await keywordMatch(
 					highlightKeywords,
-					title,
+					data.title,
 					etvObj.dataset.etvMin,
 					etvObj.dataset.etvMax,
 					this._settings
@@ -1608,11 +1629,10 @@ class NotificationMonitor extends MonitorCore {
 		if (this._settings.get("notification.hideList")) {
 			const hideKeywords = this._settings.get("general.hideKeywords");
 			if (hideKeywords) {
-				const title = notif.querySelector(".a-truncate-full").innerText;
-				if (title) {
+				if (data.title) {
 					const matchedHideKeyword = await keywordMatch(
 						hideKeywords,
-						title,
+						data.title,
 						etvObj.dataset.etvMin,
 						etvObj.dataset.etvMax,
 						this._settings
@@ -1811,8 +1831,13 @@ class NotificationMonitor extends MonitorCore {
 			return false;
 		}
 
+		const data = this._itemsMgr.items.get(asin)?.data;
+		if (!data) {
+			return false;
+		}
+
 		// Update the DOM element
-		this.#setETV(notif, etv);
+		this.#setETV(notif, data, etv);
 
 		// Check Zero ETV status after update
 		this.#checkZeroETVStatus(notif);
