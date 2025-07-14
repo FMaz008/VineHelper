@@ -97,12 +97,12 @@ export class ErrorAlertManager {
 	 */
 	#setupObserver() {
 		// Store scroll position before mutations are processed
-		const win = this.#document.defaultView || (typeof window !== "undefined" ? window : null);
-		let preScrollY = win ? win.scrollY || 0 : 0;
+		//const win = this.#document.defaultView || (typeof window !== "undefined" ? window : null);
+		//let preScrollY = win ? win.scrollY || 0 : 0;
 
 		this.#observer = new MutationObserver((mutations) => {
 			// Capture scroll position at the start of mutation processing
-			const currentScrollY = win ? win.scrollY || 0 : 0;
+			//const currentScrollY = win ? win.scrollY || 0 : 0;
 
 			mutations.forEach((mutation) => {
 				// Check for alerts becoming visible (class change)
@@ -130,15 +130,17 @@ export class ErrorAlertManager {
 			});
 
 			// If scroll position changed during mutation processing, restore it
+			/*
 			if (win && (win.scrollY || 0) !== preScrollY && (win.scrollY || 0) !== currentScrollY) {
 				win.scrollTo({
 					top: preScrollY,
 					behavior: "instant",
 				});
 			}
+			*/
 
 			// Update pre-scroll position for next mutation batch
-			preScrollY = win ? win.scrollY || 0 : 0;
+			//preScrollY = win ? win.scrollY || 0 : 0;
 		});
 
 		// Observe the entire document for changes
