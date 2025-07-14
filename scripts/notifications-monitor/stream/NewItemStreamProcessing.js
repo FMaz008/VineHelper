@@ -4,6 +4,7 @@ import { Streamy } from "../../core/utils/Streamy.js";
 import { keywordMatch } from "../../core/utils/KeywordMatch.js";
 import { SettingsMgr } from "../../core/services/SettingsMgrCompat.js";
 import { Item } from "../../core/models/Item.js";
+import { YMDHiStoISODate, DateToUnixTimeStamp } from "../../core/utils/DateHelper.js";
 
 const SEARCH_PHRASE_REGEX = /^([a-zA-Z0-9\s'".,]{0,40})[\s]+.*$/;
 
@@ -153,7 +154,7 @@ class NewItemStreamProcessing {
 			return rawData; //Skip this transformer
 		}
 		const data = rawData.item.data;
-		data.timestamp = this.dateToUnixTimestamp(data.date);
+		rawData.item.data.timestamp = this.dateToUnixTimestamp(data.date);
 		return rawData;
 	}
 
@@ -216,8 +217,9 @@ class NewItemStreamProcessing {
 	}
 
 	dateToUnixTimestamp(dateString) {
-		const date = new Date(dateString + " UTC");
-		return Math.floor(date.getTime() / 1000);
+		// Use the proper date parsing utilities instead of Safari-incompatible string concatenation
+		const date = YMDHiStoISODate(dateString);
+		return DateToUnixTimeStamp(date);
 	}
 
 	setBroadcastFunction(fct) {
