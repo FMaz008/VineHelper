@@ -11,7 +11,6 @@ class NoShiftGrid {
 		this._gridContainer = null;
 		this._gridWidth = 0;
 		this._resizeTimeout = null;
-		this._isEnabled = false;
 		this._endPlaceholdersCount = 0;
 
 		// Cache for tile width calculation
@@ -198,30 +197,6 @@ class NoShiftGrid {
 	}
 
 	/**
-	 * Enable the NoShiftGrid functionality
-	 */
-	enable() {
-		this._isEnabled = true;
-		this.insertPlaceholderTiles();
-	}
-
-	/**
-	 * Disable the NoShiftGrid functionality
-	 */
-	disable() {
-		this._isEnabled = false;
-		this.removeAllPlaceholderTiles();
-	}
-
-	/**
-	 * Check if NoShiftGrid is enabled
-	 * @returns {boolean}
-	 */
-	isEnabled() {
-		return this._isEnabled;
-	}
-
-	/**
 	 * Reset the end placeholders count to 0
 	 * This is called after fetch operations complete to prevent accumulation
 	 */
@@ -260,9 +235,7 @@ class NoShiftGrid {
 			}
 
 			// Re-insert placeholders if needed
-			if (this._isEnabled) {
-				this.insertPlaceholderTiles();
-			}
+			this.insertPlaceholderTiles();
 		}
 	}
 
@@ -276,7 +249,7 @@ class NoShiftGrid {
 		const callId = Date.now();
 		const { immediate = false } = options;
 
-		if (!this._isEnabled || !this._gridContainer) {
+		if (!this._gridContainer) {
 			return;
 		}
 
@@ -687,7 +660,7 @@ class NoShiftGrid {
 	 * @param {number} count - Number of items that were removed
 	 */
 	insertEndPlaceholderTiles(count) {
-		if (!this._isEnabled || !this._gridContainer || count <= 0) return;
+		if (!this._gridContainer || count <= 0) return;
 
 		const debugPlaceholders = this._monitor._settings?.get("general.debugPlaceholders");
 

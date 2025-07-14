@@ -106,7 +106,6 @@ class MonitorCore {
 		) {
 			this._noShiftGrid = new NoShiftGrid(this);
 			this._noShiftGrid.initialize(this._gridContainer);
-			this._noShiftGrid.enable();
 
 			// Update the dependency registrations with the actual instances
 			this.#container.register("noShiftGrid", () => this._noShiftGrid);
