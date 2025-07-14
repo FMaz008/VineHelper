@@ -89,7 +89,7 @@ The logging cleanup was more aggressive than necessary and removed both gated an
 
 ### What Was Preserved
 
-- Most logs behind `if (debugPlaceholders)` checks in NoShiftGrid.js and GridEventManager.js
+- Most logs behind `if (debugPlaceholders)` checks in NoShiftGrid.js
 - Essential error and warning logs
 - Some performance metrics behind debug flags
 
@@ -163,26 +163,18 @@ endAtomicUpdate();
 
 ### 4. Event Loop Prevention
 
-**Files**: `GridEventManager.js`, `NoShiftGrid.js`
+**Files**: `NoShiftGrid.js`
 
 - Added debouncing to visibility count changes
 - Implemented loop detection
-- Consolidated update triggers
-  **Result**: Eliminated 10-30 second cascading loops
 
 ### 5. Sort Operation Optimization
 
-**File**: `scripts/notifications-monitor/services/GridEventManager.js`
+**File**: `NotificationMonitor.js` (grid event handling moved to core)
 
 ```javascript
-// Before (caused visual jump):
-container.innerHTML = "";
-tiles.forEach((tile) => container.appendChild(tile));
-
-// After (smooth update):
-const fragment = document.createDocumentFragment();
-tiles.forEach((tile) => fragment.appendChild(tile));
-container.replaceChildren(fragment);
+// Grid sorting and DOM manipulation now handled directly in NotificationMonitor
+// Eliminated visual jumps during sort operations through atomic updates
 ```
 
 **Result**: Eliminated visual jumps during sort operations
@@ -217,13 +209,13 @@ container.replaceChildren(fragment);
 ### 1. Separation of Concerns
 
 - **NoShiftGrid**: Manages grid layout and placeholders
-- **GridEventManager**: Coordinates events and sorting
+- **NotificationMonitor**: Handles events and sorting directly
 - **TileCounter**: Handles visibility counting with performance optimizations
 
 ### 2. Event Flow
 
 ```
-User Action → GridEventManager → Debounced Handler → Atomic Update → Single DOM Update
+User Action → NotificationMonitor → Debounced Handler → Atomic Update → Single DOM Update
 ```
 
 ### 3. Caching Strategy
@@ -283,3 +275,5 @@ The grid system improvements transformed a problematic component into a stable, 
 - ✅ Clean, maintainable code
 
 The atomic update system, initially thought to be over-engineered, proved essential for visual stability. The combination of proper DOM measurement, smart debouncing, and atomic updates created a robust solution that handles all edge cases gracefully.
+
+**Note**: GridEventManager was removed and its functionality integrated directly into NotificationMonitor for better performance and simpler architecture.

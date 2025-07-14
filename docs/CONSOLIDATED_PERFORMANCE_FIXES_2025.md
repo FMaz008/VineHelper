@@ -48,7 +48,7 @@ if (!existingVariantBtn && !this.#isAddingVariantButton) {
 }
 ```
 
-### 2. Placeholder System Stability (NoShiftGrid.js, GridEventManager.js)
+### 2. Placeholder System Stability (NoShiftGrid.js, NotificationMonitor.js)
 
 **Problem**: Placeholders would "bounce" during filter changes, showing incorrect counts.
 
@@ -219,7 +219,7 @@ Filter changes now follow this optimized path:
 1. `applyFilteringToAllItems()` processes all tiles synchronously
 2. Single `grid:sort-needed` event triggers sorting
 3. `recountVisibleTiles()` updates counts after DOM settles
-4. GridEventManager handles placeholder updates
+4. NotificationMonitor handles placeholder updates directly
 
 Both event paths are necessary and complementary:
 
@@ -267,9 +267,8 @@ Both event paths are necessary and complementary:
 
 - `/scripts/ui/controllers/ModalMgr.js` - Modal cleanup fix
 - `/scripts/ui/components/Tile.js` - Event propagation and race condition fixes
-- `/scripts/notifications-monitor/core/NotificationMonitor.js` - Event storm prevention
+- `/scripts/notifications-monitor/core/NotificationMonitor.js` - Event storm prevention and grid event handling
 - `/scripts/notifications-monitor/services/NoShiftGrid.js` - Placeholder system improvements
-- `/scripts/notifications-monitor/services/GridEventManager.js` - Event handling optimization
 - `/scripts/notifications-monitor/services/TileCounter.js` - Visibility checking optimization
 
 ## Future Considerations

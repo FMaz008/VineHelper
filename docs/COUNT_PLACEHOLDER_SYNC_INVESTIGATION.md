@@ -62,7 +62,6 @@ The Zero ETV duplicate processing prevention mechanism was failing due to a scop
 #### Changes in `NotificationMonitor.js`:
 
 1. **Immediate Count Updates**: Modified `updateVisibleCountAfterFiltering` to:
-
     - Invalidate computed style cache after bulk filtering
     - Force a reflow to ensure styles are applied
     - Recalculate visible count immediately after filtering
@@ -73,19 +72,17 @@ The Zero ETV duplicate processing prevention mechanism was failing due to a scop
     - Filter type changes
     - Queue filter changes
 
-#### Changes in `GridEventManager.js`:
+#### Changes in `NotificationMonitor.js` (formerly GridEventManager):
 
 1. **Immediate Placeholder Updates**: Modified filter event handling to:
-    - Update placeholders immediately when `grid:items-filtered` is received
-    - Use the provided visible count from the event
-    - Skip debouncing for filter operations to prevent visual delays
+    - Update placeholders immediately when filtering is applied
+    - Use the current visible count from the visibility state manager
 
 ### Fix 2: Placeholder Positioning with Immediate Updates
 
 #### Changes in `NoShiftGrid.js`:
 
 1. **Force Update Flag**: Added `forceForFilter` parameter to `insertPlaceholderTiles`:
-
     - Forces immediate placeholder recalculation during filter operations
     - Prevents using stale placeholder counts
     - Ensures placeholders are always in sync with visible items
@@ -96,7 +93,7 @@ The Zero ETV duplicate processing prevention mechanism was failing due to a scop
     - Zoom detection
     - Filter-triggered updates
 
-#### Changes in `GridEventManager.js`:
+#### Changes in `NotificationMonitor.js`:
 
 1. **Fetch Complete Handling**: Modified to:
     - Update placeholders immediately after fetch completes
@@ -108,13 +105,11 @@ The Zero ETV duplicate processing prevention mechanism was failing due to a scop
 #### Changes in `NotificationMonitor.js`:
 
 1. **Processing Tracker**: Added `#etvProcessingItems` Set to track items currently being processed:
-
     - Prevents duplicate Zero ETV visibility checks for the same item
     - Ensures each item's visibility is only updated once per ETV update cycle
     - Automatically cleaned up when items are removed
 
 2. **Modified `#setETV` Method**:
-
     - Check if item is already being processed before running Zero ETV logic
     - Add item to processing set at start of Zero ETV check
     - Remove from set after processing completes
@@ -146,7 +141,7 @@ The Zero ETV duplicate processing prevention mechanism was failing due to a scop
     - Forces DOM reflow
     - Recalculates visible count
     - Emits `grid:items-filtered` event
-5. `GridEventManager` receives event and immediately updates placeholders
+5. `NotificationMonitor` receives event and immediately updates placeholders
 6. Placeholders are recalculated with accurate count
 
 ### Event Flow for Fetch Complete:
@@ -156,7 +151,7 @@ The Zero ETV duplicate processing prevention mechanism was failing due to a scop
 3. After 100ms delay (to ensure DOM has settled):
     - Visible count is recalculated
     - `grid:fetch-complete` event is emitted
-4. `GridEventManager` handles the event:
+4. `NotificationMonitor` handles the event:
     - Updates placeholders first
     - Triggers sort to position placeholders correctly
 
@@ -186,14 +181,12 @@ To troubleshoot count/placeholder issues, enable these debug settings:
 ## Verification Steps
 
 1. **For KW Match Filter Issue**:
-
     - Enable "Zero ETV or KW match only" filter
     - Verify count in tab title matches visible items
     - Check that placeholders fill the bottom row correctly
     - Switch filters and verify count updates immediately
 
 2. **For Placeholder Positioning**:
-
     - Reload the page
     - Watch for placeholders during "fetching recent items"
     - Verify placeholders appear at bottom, not top

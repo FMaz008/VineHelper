@@ -2,7 +2,6 @@ import { jest } from "@jest/globals";
 
 describe("NotificationMonitor - Visibility Operations", () => {
 	let monitor;
-	let mockGridEventManager;
 	let mockVisibilityStateManager;
 	let mockItemsMgr;
 	let mockSettings;
@@ -21,11 +20,6 @@ describe("NotificationMonitor - Visibility Operations", () => {
 			parentNode: {
 				replaceChild: jest.fn(),
 			},
-		};
-
-		// Mock GridEventManager
-		mockGridEventManager = {
-			emit: jest.fn(),
 		};
 
 		// Mock VisibilityStateManager
@@ -57,7 +51,6 @@ describe("NotificationMonitor - Visibility Operations", () => {
 		// Create a mock NotificationMonitor class
 		NotificationMonitor = class {
 			constructor() {
-				this._gridEventManager = mockGridEventManager;
 				this._visibilityStateManager = mockVisibilityStateManager;
 				this._itemsMgr = mockItemsMgr;
 				this._settings = mockSettings;
@@ -70,9 +63,8 @@ describe("NotificationMonitor - Visibility Operations", () => {
 
 				// Mock private methods
 				this["#processNotificationFiltering"] = jest.fn();
-				this["#emitGridEvent"] = jest.fn((event, data) => {
-					mockGridEventManager.emit(event, data);
-				});
+				// Grid events are now handled directly without GridEventManager
+				this["#emitGridEvent"] = jest.fn();
 				this["#bulkRemoveItems"] = jest.fn(this.bulkRemoveItems.bind(this));
 				this["#clearAllVisibleItems"] = jest.fn(this.clearAllVisibleItems.bind(this));
 				this["#clearUnavailableItems"] = jest.fn(this.clearUnavailableItems.bind(this));
@@ -216,7 +208,7 @@ describe("NotificationMonitor - Visibility Operations", () => {
 			expect(monitor._disableItem).toHaveBeenCalledWith(mockElement);
 			// No filtering or visibility changes - items remain visible with "Unavailable" banner
 			expect(monitor["#processNotificationFiltering"]).not.toHaveBeenCalled();
-			expect(mockGridEventManager.emit).not.toHaveBeenCalled();
+			expect(monitor["#emitGridEvent"]).not.toHaveBeenCalled();
 		});
 
 		it("should handle case when item element does not exist", async () => {
@@ -230,7 +222,7 @@ describe("NotificationMonitor - Visibility Operations", () => {
 			// Verify
 			expect(mockItemsMgr.markItemUnavailable).toHaveBeenCalledWith(asin);
 			expect(monitor._disableItem).toHaveBeenCalledWith(null);
-			expect(mockGridEventManager.emit).not.toHaveBeenCalled();
+			expect(monitor["#emitGridEvent"]).not.toHaveBeenCalled();
 		});
 	});
 
@@ -262,7 +254,7 @@ describe("NotificationMonitor - Visibility Operations", () => {
 			monitor.bulkRemoveItems(asinsToRemove, false);
 
 			// Verify - 2 items removed but only 1 was visible
-			expect(mockGridEventManager.emit).toHaveBeenCalledWith("grid:items-removed", { count: 1 });
+			expect(monitor["#emitGridEvent"]).toHaveBeenCalledWith("grid:items-removed", { count: 1 });
 			expect(mockItemsMgr.items.size).toBe(1);
 			expect(mockItemsMgr.items.has("ASIN3")).toBe(true);
 		});
@@ -289,7 +281,7 @@ describe("NotificationMonitor - Visibility Operations", () => {
 			monitor.bulkRemoveItems(asinsToKeep, true);
 
 			// Verify - ASIN2 should be removed (visible)
-			expect(mockGridEventManager.emit).toHaveBeenCalledWith("grid:items-removed", { count: 1 });
+			expect(monitor["#emitGridEvent"]).toHaveBeenCalledWith("grid:items-removed", { count: 1 });
 			expect(mockItemsMgr.items.size).toBe(1);
 			expect(mockItemsMgr.items.has("ASIN1")).toBe(true);
 		});
@@ -316,7 +308,7 @@ describe("NotificationMonitor - Visibility Operations", () => {
 			monitor.bulkRemoveItems(asinsToRemove, false);
 
 			// Verify - no visible items removed
-			expect(mockGridEventManager.emit).not.toHaveBeenCalled();
+			expect(monitor["#emitGridEvent"]).not.toHaveBeenCalled();
 			expect(mockItemsMgr.items.size).toBe(0);
 		});
 	});
@@ -426,7 +418,7 @@ describe("NotificationMonitor - Visibility Operations", () => {
 			expect(global.window.getComputedStyle).toHaveBeenCalledWith(visibleItem.element);
 			expect(global.window.getComputedStyle).toHaveBeenCalledWith(hiddenItem.element);
 			// Only 1 visible item should be counted as removed
-			expect(mockGridEventManager.emit).toHaveBeenCalledWith("grid:items-removed", { count: 1 });
+			expect(monitor["#emitGridEvent"]).toHaveBeenCalledWith("grid:items-removed", { count: 1 });
 		});
 	});
 

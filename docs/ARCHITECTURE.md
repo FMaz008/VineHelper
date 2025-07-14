@@ -9,7 +9,6 @@ VineHelper is a browser extension that enhances the Amazon Vine experience. The 
 ### Core Components
 
 1. **Bootloader System** (`scripts/bootloader.js`)
-
     - Initializes all singleton instances
     - Sets up the environment and dependencies
     - Creates grid instances and manages tabs
@@ -21,7 +20,6 @@ VineHelper is a browser extension that enhances the Amazon Vine experience. The 
         - Direct DOM manipulation of existing Amazon elements
 
 2. **Notifications Monitor** (`scripts/notification_monitor/`)
-
     - Complex subsystem with multiple components
     - Master/Slave architecture for multi-tab coordination
     - Stream-based processing for new items
@@ -33,7 +31,6 @@ VineHelper is a browser extension that enhances the Amazon Vine experience. The 
         - Complete UI replacement, not enhancement
 
 3. **Settings Management** (`scripts/SettingsMgr.js`)
-
     - Dependency injection pattern with StorageAdapter
     - Migration from singleton pattern in progress
     - Array caching for stable references
@@ -52,7 +49,6 @@ VineHelper is a browser extension that enhances the Amazon Vine experience. The 
 **Important Distinction**: VineHelper operates in two distinct modes:
 
 1. **Page Enhancement Mode** (Bootloader):
-
     - Runs on Amazon Vine pages (RFY, AFA, AI)
     - Enhances existing Amazon UI elements
     - Adds toolbars with order tracking, pinning, hiding
@@ -69,17 +65,15 @@ These systems share some services (Settings, Environment) but have separate rend
 ### Architectural Patterns
 
 1. **Singleton Pattern (Overused)**
-
     - Almost every major component is a singleton
     - Makes testing difficult
     - Creates tight coupling
 
 2. **Event-Driven Architecture**
-
     - Hook system for extensibility
     - Browser message passing
     - DOM event handling
-    - **GridEventManager** for centralized grid modifications
+    - Direct grid event handling within NotificationMonitor
     - Event batching for performance optimization
 
 3. **Stream Processing**
@@ -195,17 +189,14 @@ Key features:
 #### Critical Issues (Unbounded Growth)
 
 1. **Uncleared Interval in MasterSlave** ✅ FIXED
-
     - 1-second interval never cleared
     - Added proper cleanup in destroy()
 
 2. **Uncleared Interval in ServerCom** ✅ FIXED
-
     - 10-second service worker check never cleared
     - Added destroy() method
 
 3. **NotificationMonitor Instance Leak** ✅ FIXED
-
     - Multiple instances retained in memory
     - Added cleanup in bootloader.js
 
@@ -218,7 +209,6 @@ Key features:
 #### Performance Issues
 
 1. **Keyword Matching Performance** ✅ FIXED
-
     - 15x improvement (19.4s → 1.3s)
     - WeakMap + counter approach for cache keys
     - Module-level caching
@@ -230,13 +220,11 @@ Key features:
 ### Best Practices
 
 1. **Memory Monitoring**
-
     - Enable via Settings > General > Debugging > Memory Analysis
     - Available as `VH_MEMORY` in console
     - Automatic snapshots and leak detection
 
 2. **Cleanup Lifecycle Pattern**
-
     - Every class must implement destroy() method
     - Track and clean all event listeners
     - Clear timers and intervals
@@ -301,13 +289,11 @@ The dependency injection refactoring introduces:
 ### Critical Implementation Guidelines
 
 1. **Visibility State Changes**: Any operation that might change item visibility MUST:
-
     - Track the visibility state before and after the operation
     - Emit appropriate grid events when visibility changes
     - Update the VisibilityStateManager count accordingly
 
     **Operations requiring visibility tracking:**
-
     - `addTileInGrid()` - when updating existing items
     - `setTierFromASIN()` - when tier changes affect visibility
     - `#bulkRemoveItems()` - count visible items being removed
@@ -317,13 +303,11 @@ The dependency injection refactoring introduces:
     - Any filtering operations (search, type, queue filters)
 
 2. **Event Batching**: Use batching for performance-sensitive operations:
-
     - Placeholder updates: 50ms batch delay
     - Tab title updates: 100ms batch delay
     - Prevents UI thrashing during rapid updates
 
 3. **Testing Strategy**:
-
     - Write tests that verify behavior, not implementation
     - Include edge cases and browser-specific scenarios
     - Ensure tests remain maintainable as implementation evolves
@@ -345,9 +329,8 @@ The dependency injection refactoring introduces:
 ### High Priority
 
 1. **HookMgr Enhancement**
-
     - Implement unbind functionality for event listeners
-    - Prevent memory leaks in GridEventManager
+    - Prevent memory leaks in event handling systems
 
 2. **Virtual Scrolling**
     - Only render visible items
@@ -357,7 +340,6 @@ The dependency injection refactoring introduces:
 ### Medium Priority
 
 1. **Event System Improvements**
-
     - Implement event batching for performance
     - Create typed event system
     - Add event debugging capabilities
@@ -370,7 +352,6 @@ The dependency injection refactoring introduces:
 ### Low Priority
 
 1. **Advanced Filtering System**
-
     - Multi-criteria filtering
     - Custom filter expressions
     - Filter presets and saving

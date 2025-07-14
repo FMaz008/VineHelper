@@ -1,6 +1,6 @@
 # Batching System Analysis for GridEventManager
 
-## Overview
+**⚠️ ARCHIVED DOCUMENT**: GridEventManager has been removed as of 2025. Its functionality has been integrated directly into NotificationMonitor for better performance and simpler architecture.
 
 The GridEventManager uses a batching system with a 50ms delay to prevent rapid consecutive updates. This analysis examines when batching is useful, its performance implications, and whether it's necessary.
 
@@ -9,7 +9,6 @@ The GridEventManager uses a batching system with a 50ms delay to prevent rapid c
 Based on the code analysis, batching is currently used when:
 
 1. **`fetchingRecentItems` is true** - This occurs when:
-
     - User clicks "Last 100" button to fetch recent items
     - Bulk items are being loaded from the server
     - Multiple items are being added in rapid succession
@@ -24,13 +23,11 @@ Based on the code analysis, batching is currently used when:
 ### Performance Benefits
 
 1. **DOM Reflow Optimization**: Each placeholder update triggers a DOM reflow. Without batching, rapid updates could cause:
-
     - Multiple reflows in quick succession (expensive)
     - Browser janking/stuttering
     - Poor user experience during bulk operations
 
 2. **Calculation Efficiency**: The `insertPlaceholderTiles` method performs:
-
     - Grid width calculations
     - Tile counting (visible vs hidden)
     - Style computations
@@ -85,7 +82,6 @@ Based on the code analysis, batching is currently used when:
 **Keep batching for bulk operations, bypass for user interactions:**
 
 1. **Keep Batching For**:
-
     - `fetchingRecentItems === true` (bulk loads)
     - Multiple rapid grid modifications
     - WebSocket stream processing
