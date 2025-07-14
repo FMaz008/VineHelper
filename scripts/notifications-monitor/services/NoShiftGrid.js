@@ -126,11 +126,7 @@ class NoShiftGrid {
 
 				// Emit resize event using hookMgr if available
 				if (this._monitor._hookMgr) {
-					this._monitor._hookMgr.hookExecute("grid:resized", {
-						oldWidth: oldWidth,
-						newWidth: this._gridWidth,
-						isEnabled: this._isEnabled,
-					});
+					this.insertPlaceholderTiles();
 				}
 			}
 		}, 100);

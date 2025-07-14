@@ -295,18 +295,6 @@ class NotificationMonitor extends MonitorCore {
 		}
 	}
 
-	/**
-	 * Emit a grid event through HookMgr
-	 * @private
-	 * @param {string} eventName - The event name
-	 * @param {Object} data - Optional event data
-	 */
-	#emitGridEvent(eventName, data = null) {
-		if (this._hookMgr) {
-			this._hookMgr.hookExecute(eventName, data);
-		}
-	}
-
 	//###################################################################
 	// DOM element related methods
 	//###################################################################
@@ -521,9 +509,6 @@ class NotificationMonitor extends MonitorCore {
 			//Can happen if the user click unpause while the feed is filling.
 		}
 
-		// Always emit event to update placeholders after fetching recent items
-		// Use setTimeout to ensure DOM has settled before counting
-		//setTimeout(() => {
 		// Always recount to ensure accuracy after fetch, as items may have been
 		// added with isVisible=false during the fetch process
 		this._tileCounter.recountVisibleTiles(0, true, { source: "fetch-complete" });
@@ -543,11 +528,8 @@ class NotificationMonitor extends MonitorCore {
 			});
 		}
 
-		// Emit fetch-complete event first to allow placeholder updates
-		this.#emitGridEvent("grid:fetch-complete", { visibleCount: this._tileCounter.getCount() });
-
-		// Note: Sorting is now handled by GridEventManager after placeholders are updated
-		//}, 100); // Small delay to ensure DOM has settled
+		//Sort the grid after the fetch is complete
+		this.#sortItems();
 	}
 
 	/**
@@ -736,11 +718,13 @@ class NotificationMonitor extends MonitorCore {
 				});
 			}
 
-			this.#emitGridEvent("grid:items-removed", { count: visibleRemovedCount });
+			if (this._noShiftGrid) {
+				this._noShiftGrid.insertPlaceholderTiles();
+			}
 		}
 
 		// Trigger a re-sort to ensure proper ordering and placeholder management
-		this.#emitGridEvent("grid:sort-needed");
+		this.#sortItems();
 	}
 
 	/**
@@ -803,11 +787,13 @@ class NotificationMonitor extends MonitorCore {
 					// Use bulk removal method with the optimized approach for large sets
 					this.#bulkRemoveItems(asinsToKeep, true);
 
-					// Emit truncation event with context
-					this.#emitGridEvent("grid:truncated", {
-						fetchingRecentItems,
-						visibleItemsRemovedCount,
-					});
+					if (this._noShiftGrid) {
+						this._noShiftGrid.resetEndPlaceholdersCount();
+						if (visibleItemsRemovedCount > 0 && !fetchingRecentItems) {
+							this._noShiftGrid.insertEndPlaceholderTiles(visibleItemsRemovedCount);
+						}
+						this._noShiftGrid.insertPlaceholderTiles();
+					}
 
 					// Truncation completed
 					if (debugTabTitle) {
@@ -1996,7 +1982,7 @@ class NotificationMonitor extends MonitorCore {
 			if (itemType === TYPE_ZEROETV) {
 				// For price-based sorting, always trigger a re-sort
 				if (this._sortType === TYPE_PRICE_DESC || this._sortType === TYPE_PRICE_ASC) {
-					this.#emitGridEvent("grid:sort-needed");
+					this.#sortItems();
 				} else if (this._sortType === TYPE_DATE_DESC && this._settings.get("notification.monitor.bump0ETV")) {
 					// Only move to top for date descending sort if bump0ETV is enabled
 					this._moveNotifToTop(notif);
@@ -2026,6 +2012,43 @@ class NotificationMonitor extends MonitorCore {
 
 	#regularItemFound(notif, playSoundEffect = true, skipFiltering = false) {
 		return this.#handleItemFound(notif, TYPE_REGULAR, playSoundEffect, skipFiltering);
+	}
+
+	#sortItems() {
+		// Get the sorted items from ItemsMgr
+		const sortedItems = this._itemsMgr.sortItems();
+
+		// Only proceed if we have items to sort
+		if (sortedItems.length === 0) {
+			if (this._noShiftGrid) {
+				this._noShiftGrid.insertPlaceholderTiles();
+			}
+			return;
+		}
+
+		// Create document fragment for efficient DOM manipulation
+		const fragment = document.createDocumentFragment();
+
+		// Add items to fragment in sorted order
+		sortedItems.forEach((sortedItem) => {
+			const element = this._itemsMgr.getItemDOMElement(sortedItem.asin);
+			if (element && element.parentNode) {
+				fragment.appendChild(element);
+			}
+		});
+
+		// Clear the grid container (this removes both items AND placeholders)
+		this._gridContainer.innerHTML = "";
+
+		// Add sorted items first
+		this._gridContainer.appendChild(fragment);
+
+		// Let updatePlaceholders handle ALL placeholder management
+		// This ensures placeholders are calculated fresh based on current state
+		if (this._noShiftGrid) {
+			this._noShiftGrid.resetEndPlaceholdersCount();
+			this._noShiftGrid.insertPlaceholderTiles();
+		}
 	}
 
 	//############################################################
@@ -2288,9 +2311,7 @@ class NotificationMonitor extends MonitorCore {
 		// All filtering is complete
 
 		// Trigger sort after filtering is complete
-		this._hookMgr.hookExecute("grid:sort-needed", {
-			source: "filter-change",
-		});
+		this.#sortItems();
 
 		// IMPORTANT: Recount visible tiles AFTER atomic update completes
 		// This ensures the DOM is fully updated before counting
@@ -2722,7 +2743,7 @@ class NotificationMonitor extends MonitorCore {
 			this._sortType = sortQueue.value;
 			await this._settings.set("notification.monitor.sortType", this._sortType);
 			// Emit event to trigger sorting instead of calling directly
-			this.#emitGridEvent("grid:sort-needed");
+			this.#sortItems();
 		};
 		sortQueue.addEventListener("change", sortQueueHandler);
 		this.#eventHandlers.buttons.set(sortQueue, { event: "change", handler: sortQueueHandler });
@@ -2836,8 +2857,9 @@ class NotificationMonitor extends MonitorCore {
 			this._tileCounter.recountVisibleTiles(0, true, { isBulkOperation: true, source: "feed-unpause" });
 
 			// Only emit unpause event for manual unpause, not hover unpause
-			if (!isHoverPause) {
-				this.#emitGridEvent("grid:unpaused");
+			if (!isHoverPause && this._noShiftGrid) {
+				this._noShiftGrid.insertEndPlaceholderTiles(0);
+				this._noShiftGrid.insertPlaceholderTiles();
 			}
 		}
 	}
@@ -2912,12 +2934,6 @@ class NotificationMonitor extends MonitorCore {
 		// Clear processing map to prevent memory leaks
 		if (this.#processingASINs) {
 			this.#processingASINs.clear();
-		}
-
-		// Destroy GridEventManager if it exists
-		if (this._gridEventManager && typeof this._gridEventManager.destroy === "function") {
-			this._gridEventManager.destroy();
-			this._gridEventManager = null;
 		}
 
 		// Destroy NoShiftGrid if it exists

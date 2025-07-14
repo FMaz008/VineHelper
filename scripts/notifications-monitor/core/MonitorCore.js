@@ -29,7 +29,6 @@ import { AutoLoad } from "/scripts/notifications-monitor/stream/AutoLoad.js";
 import { MasterSlave } from "/scripts/notifications-monitor/coordination/MasterSlave.js";
 import { TileCounter } from "/scripts/notifications-monitor/services/TileCounter.js";
 import { NoShiftGrid } from "/scripts/notifications-monitor/services/NoShiftGrid.js";
-import { GridEventManager } from "/scripts/notifications-monitor/services/GridEventManager.js";
 import { DIContainer } from "/scripts/infrastructure/DIContainer.js";
 import { ErrorAlertManager } from "/scripts/notifications-monitor/services/ErrorAlertManager.js";
 
@@ -106,20 +105,14 @@ class MonitorCore {
 			this._settings.get("general.tileSize.enabled")
 		) {
 			this._noShiftGrid = new NoShiftGrid(this);
+			this._noShiftGrid.initialize(this._gridContainer);
+			this._noShiftGrid.enable();
+
 			// Update the dependency registrations with the actual instances
 			this.#container.register("noShiftGrid", () => this._noShiftGrid);
 
-			// Use DI container to resolve GridEventManager with its dependencies
-			this._gridEventManager = this.#container.resolve("gridEventManager");
-
 			// Insert initial placeholders after DOM is ready and grid has width
-			// Use setTimeout to ensure the grid container has been rendered and has width
-			setTimeout(() => {
-				if (this._noShiftGrid && this._gridContainer && this._gridContainer.offsetWidth > 0) {
-					// Emit event instead of direct call
-					this._hookMgr.hookExecute("grid:initialized");
-				}
-			}, 100);
+			this._noShiftGrid.insertPlaceholderTiles();
 		}
 
 		// New service uses DI
@@ -137,18 +130,7 @@ class MonitorCore {
 			singleton: true,
 		});
 
-		// Register GridEventManager with its dependencies
-		// This demonstrates proper DI with dependency injection
-		this.#container.register(
-			"gridEventManager",
-			(hookMgr, noShiftGrid, monitor) => new GridEventManager(hookMgr, noShiftGrid, monitor),
-			{
-				singleton: true,
-				dependencies: ["hookMgr", "noShiftGrid", "monitor"],
-			}
-		);
-
-		// Register dependencies that GridEventManager needs
+		// Register dependencies that the -now deleted- GridEventManager needs
 		// These are registered as factories (not singletons) since they're provided externally
 		this.#container.register("hookMgr", () => this._hookMgr);
 		this.#container.register("monitor", () => this);
