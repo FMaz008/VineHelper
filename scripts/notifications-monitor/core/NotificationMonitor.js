@@ -611,17 +611,6 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		this._preserveScrollPosition(() => {
-			// Get all current DOM elements for quick lookup
-			const domElements = new Map();
-			Array.from(this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)")).forEach(
-				(element) => {
-					const asin = element.id?.replace("vh-notification-", "");
-					if (asin) {
-						domElements.set(asin, element);
-					}
-				}
-			);
-
 			// First, collect items to keep and items to remove
 			const itemsToKeep = [];
 			const itemsToRemove = [];

@@ -85,11 +85,12 @@ class NewItemStreamProcessing {
 			return true; //Skip this filter
 		}
 		const data = rawData.item.data;
-		if (data.title === undefined || data.etv_min === undefined || data.etv_max === undefined) {
+		if (data.title === undefined) {
 			return true; //Skip this filter
 		}
 		//Only hide the keyword if the item is not a highlight match.
 		if (this.cachedSettings.hideListEnabled && !data.KWsMatch) {
+			// Check hide keywords with available ETV data (null/undefined values are handled by keywordMatch)
 			const hideKWMatch = keywordMatch(this.cachedSettings.hideKeywords, data.title, data.etv_min, data.etv_max);
 			if (hideKWMatch !== false) {
 				return false; //Do not display the notification as it matches the hide list.
@@ -104,9 +105,10 @@ class NewItemStreamProcessing {
 		}
 		const data = rawData.item.data;
 
-		if (data.title === undefined || data.etv_min === undefined || data.etv_max === undefined) {
-			return rawData; //Skip this transformer
+		if (data.title === undefined) {
+			return rawData; //Skip this transformer if no title
 		}
+		// Check highlight keywords with available ETV data (null/undefined values are handled by keywordMatch)
 		const highlightKWMatch = keywordMatch(
 			this.cachedSettings.highlightKeywords,
 			data.title,
