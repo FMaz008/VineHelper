@@ -9,8 +9,8 @@ const TYPE_PRICE_ASC = "price_asc";
 class ItemsMgr {
 	imageUrls = new Set(); // Set of image URLs used for duplicate thumbnail detection (kept separate for O(1) lookup performance)
 	items = new Map(); // Map to store item data
-	domElements = new WeakMap(); // WeakMap for DOM elements to allow garbage collection
-	tiles = new WeakMap(); // WeakMap for Tile instances
+	domElements = new Map(); // Map for DOM elements using ASIN as key
+	tiles = new Map(); // Map for Tile instances using ASIN as key
 
 	// URL string interning pool to prevent duplicate strings in memory
 	static #urlInternPool = new Map();
@@ -258,7 +258,7 @@ class ItemsMgr {
 	}
 
 	/**
-	 * Store the DOM element reference in WeakMap
+	 * Store the DOM element reference in Map
 	 * @param {string} asin - The ASIN of the item
 	 * @param {object} element - The DOM element to store
 	 * @returns {boolean} - Returns true if the item was marked as unavailable
@@ -267,12 +267,12 @@ class ItemsMgr {
 		if (this.items.has(asin)) {
 			const item = this.items.get(asin);
 
-			// Store DOM element in WeakMap using item object as key
-			this.domElements.set(item, element);
+			// Store DOM element in Map using ASIN as key
+			this.domElements.set(asin, element);
 
-			// Store Tile instance in WeakMap
+			// Store Tile instance in Map using ASIN as key
 			const tile = new Tile(element, null);
-			this.tiles.set(item, tile);
+			this.tiles.set(asin, tile);
 
 			// Check if this item was marked as unavailable before its DOM was ready
 			return item.data.unavailable == 1;
@@ -302,7 +302,7 @@ class ItemsMgr {
 		const item = this.items.get(asin);
 		if (item) {
 			// Store DOM element in WeakMap using item object as key
-			const element = this.domElements.get(item);
+			const element = this.domElements.get(asin);
 			if (element) {
 				return element;
 			}
@@ -320,13 +320,13 @@ class ItemsMgr {
 		const item = this.items.get(asin);
 		if (item) {
 			// Check if tile exists in WeakMap
-			let tile = this.tiles.get(item);
+			let tile = this.tiles.get(asin);
 			if (!tile) {
 				// Create tile if we have a DOM element
-				const element = this.domElements.get(item);
+				const element = this.domElements.get(asin);
 				if (element) {
 					tile = new Tile(element, null);
-					this.tiles.set(item, tile);
+					this.tiles.set(asin, tile);
 				}
 			}
 			return tile;
@@ -348,8 +348,8 @@ class ItemsMgr {
 
 			// Explicitly remove from WeakMaps BEFORE removing from main Map
 			// This ensures proper cleanup even if the item object is still referenced
-			this.domElements.delete(item);
-			this.tiles.delete(item);
+			this.domElements.delete(asin);
+			this.tiles.delete(asin);
 
 			// Now remove from the main Map
 			this.items.delete(asin);

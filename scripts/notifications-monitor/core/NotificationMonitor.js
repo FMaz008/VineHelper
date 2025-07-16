@@ -1557,8 +1557,19 @@ class NotificationMonitor extends MonitorCore {
 					if (matchedHideKeyword !== false) {
 						// Remove (permanently "hide") the tile
 						this._log.add(`NOTIF: Item ${asin} matched hide keyword ${matchedHideKeyword}. Hiding it.`);
-						this.#removeTile(asin);
-						return true; // Exit early since item is removed
+
+						// Check if the tile is fully registered before attempting removal
+						const element = this._itemsMgr.getItemDOMElement(asin);
+						if (element) {
+							// Tile is fully registered, safe to remove
+							this.#removeTile(asin);
+						} else {
+							// Tile not fully registered yet (probably called during addTileInGrid)
+							console.warn(
+								`Hide keyword matched for ${asin} but tile not fully registered. Marked as unavailable.`
+							);
+						}
+						return true; // Exit early since item is processed
 					}
 				}
 			}
@@ -1951,6 +1962,8 @@ class NotificationMonitor extends MonitorCore {
 
 		// Only proceed if we have items to sort
 		if (sortedItems.length === 0) {
+			// Clear empty container
+			this._clearGridContainer();
 			if (this._noShiftGrid) {
 				this._noShiftGrid.insertPlaceholderTiles();
 			}
@@ -1960,18 +1973,20 @@ class NotificationMonitor extends MonitorCore {
 		// Create document fragment for efficient DOM manipulation
 		const fragment = document.createDocumentFragment();
 
-		// Add items to fragment in sorted order
+		// Add items to fragment in sorted orde
 		sortedItems.forEach((sortedItem) => {
 			const element = this._itemsMgr.getItemDOMElement(sortedItem.asin);
+
 			if (element && element.parentNode) {
 				fragment.appendChild(element);
 			}
 		});
 
-		// Properly clear the grid container to prevent memory leaks
+		// Clear the grid container ONLY of remaining elements (placeholders, etc.)
+		// The actual item elements are already in the fragment
 		this._clearGridContainer();
 
-		// Add sorted items first
+		// Add sorted items back to the grid
 		this._gridContainer.appendChild(fragment);
 
 		// Let updatePlaceholders handle ALL placeholder management
@@ -1991,18 +2006,36 @@ class NotificationMonitor extends MonitorCore {
 		// For VineHelper tiles, we need to do proper cleanup before removal
 		const children = Array.from(this._gridContainer.children);
 
-		// Clean up VineHelper tiles properly
+		// Clean up VineHelper tiles properly - only for elements still in the grid
 		for (const child of children) {
 			// For placeholder tiles, just remove them directly
 			if (child.classList.contains("vh-placeholder-tile")) {
 				continue; // Will be removed by replaceChildren() below
 			}
 
-			// For item tiles, ensure proper cleanup
+			// For item tiles, do basic cleanup before removal
+			// Only clean up elements that are actually still in the grid
 			const asin = child.id?.replace("vh-notification-", "");
 			if (asin) {
-				// Use the dedicated cleanup function
-				this.#removeTile(asin);
+				// Clean up any tooltips
+				const linkElement = child.querySelector(".a-link-normal");
+				if (linkElement) {
+					this._tooltipMgr.removeTooltip(linkElement);
+				}
+
+				// Clean up dataset properties that might hold references
+				if (child.dataset) {
+					delete child.dataset.vhOriginalTitle;
+					delete child.dataset.vhTileInstance;
+				}
+
+				// Clear any direct references on the element
+				child.vhTileInstance = null;
+
+				// Notify memory debugger BEFORE removing from DOM
+				if (window.MEMORY_DEBUGGER) {
+					window.MEMORY_DEBUGGER.markRemoved(child);
+				}
 			}
 		}
 
