@@ -941,7 +941,6 @@ export class SettingsMgrDI {
 					"24hrsFormat": false,
 					autoTruncate: true,
 					autoTruncateLimit: 1000,
-					blockNonEssentialListeners: false,
 					mouseoverPause: false,
 					pauseOverlay: false,
 					bump0ETV: true,

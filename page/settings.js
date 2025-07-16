@@ -127,14 +127,7 @@ async function validateReceipt() {
 		domainTLD = i13n.getDomainTLD();
 	}
 	Tpl.setIf("country_known", countryCode != null);
-	if (Settings.get("notification.monitor.blockNonEssentialListeners")) {
-		Tpl.setVar("monitor_link", "https://www.amazon." + domainTLD + "/vine/vine-items?queue=encore#monitor");
-	} else {
-		Tpl.setVar(
-			"monitor_link",
-			"https://www.amazon." + domainTLD + "/vine/vine-items?queue=encore#monitorLoadAllListeners"
-		);
-	}
+	Tpl.setVar("monitor_link", "https://www.amazon." + domainTLD + "/vine/vine-items?queue=encore#monitor");
 
 	Tpl.setVar("light_monitor_link", chrome.runtime.getURL("page/notification_monitor_light.html"));
 	Tpl.setVar("item_explorer_link", chrome.runtime.getURL("page/item_explorer.html"));

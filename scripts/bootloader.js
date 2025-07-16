@@ -817,11 +817,7 @@ function initAddNotificationMonitorLink() {
 		a.style.display = "flex";
 		a.style.alignItems = "center";
 		a.style.gap = "0.25rem";
-		if (Settings.get("notification.monitor.blockNonEssentialListeners")) {
-			a.href = "/vine/vine-items?queue=encore#monitor";
-		} else {
-			a.href = "/vine/vine-items?queue=encore#monitorLoadAllListeners";
-		}
+		a.href = "/vine/vine-items?queue=encore#monitor";
 		a.target = "_blank";
 		a.innerHTML = `<div class="vh-icon-16 vh-icon-vh"></div> NM`;
 		header.appendChild(a);
@@ -834,11 +830,7 @@ function initAddNotificationMonitorLink() {
 
 			const a = document.createElement("a");
 			//a.href = chrome.runtime.getURL("page/notifications.html");
-			if (Settings.get("notification.monitor.blockNonEssentialListeners")) {
-				a.href = "/vine/vine-items?queue=encore#monitor";
-			} else {
-				a.href = "/vine/vine-items?queue=encore#monitorLoadAllListeners";
-			}
+			a.href = "/vine/vine-items?queue=encore#monitor";
 			a.target = "_blank";
 			a.style.display = "flex";
 			a.style.alignItems = "center";
