@@ -41,7 +41,8 @@ class NotificationMonitorV3 extends NotificationMonitor {
 
 		//Remove the existing items.
 		this._gridContainer = document.querySelector("#vvp-items-grid");
-		this._gridContainer.innerHTML = "";
+		// Use proper cleanup instead of innerHTML = "" to prevent memory leaks
+		this._clearGridContainer();
 
 		//Check if the user is a gold tier user
 		this._tierMgr.readTierInfo();

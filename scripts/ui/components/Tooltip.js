@@ -47,6 +47,11 @@ class Tooltip {
 	removeTooltip(bindTo) {
 		bindTo.removeAttribute("data-tooltip");
 		this.#tooltipTexts.delete(bindTo);
+
+		//remove events listeners
+		bindTo.removeEventListener("mouseenter", this.#handleMouseEnter);
+		bindTo.removeEventListener("mouseleave", this.#handleMouseLeave);
+		bindTo.removeEventListener("mousemove", this.#handleMouseMove);
 	}
 
 	#handleMouseEnter(event) {

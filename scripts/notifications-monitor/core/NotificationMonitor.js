@@ -3,7 +3,7 @@
 //Todo: insertTileAccordingToETV and ETVChangeRepositioning are very similar. Could we merge some logic?
 
 // Tile import kept for future use
-// eslint-disable-next-line no-unused-vars
+ 
 import { Tile } from "/scripts/ui/components/Tile.js";
 
 import { YMDHiStoISODate } from "/scripts/core/utils/DateHelper.js";
@@ -142,8 +142,10 @@ class NotificationMonitor extends MonitorCore {
 			window.VineHelper = window.VineHelper || {};
 			window.VineHelper.monitor = this;
 
-			// Initialize TileCounter debugging
-			await this._initializeTileCounterDebugger();
+			// Initialize TileCounter debugging if enabled
+			if (debugTileCounter) {
+				await this._initializeTileCounterDebugger();
+			}
 		}
 	}
 
@@ -533,6 +535,62 @@ class NotificationMonitor extends MonitorCore {
 	}
 
 	/**
+	 * Remove "one" item from the monitor.
+	 * not used by: the auto-truncate feature
+	 * used by: hide click handler, etv filtering.
+	 *
+	 * This method ensures proper cleanup order to prevent memory leaks
+	 * @param {string} asin - The ASIN of the tile
+	 * @private
+	 */
+	#removeTile(asin) {
+		this.#etvProcessingItems.delete(asin);
+
+		const element = this._itemsMgr.getItemDOMElement(asin);
+		if (!element) {
+			console.error("Item " + asin + " can't be located to remove it.");
+			return false;
+		}
+
+		// Clean up any tooltips
+		const linkElement = element.querySelector(".a-link-normal");
+		if (linkElement) {
+			this._tooltipMgr.removeTooltip(linkElement);
+		}
+
+		// CRITICAL FIX: Clean up dataset properties that might hold references
+		if (element.dataset) {
+			delete element.dataset.vhOriginalTitle;
+			delete element.dataset.vhTileInstance;
+		}
+
+		// Clear any direct references on the element
+		element.vhTileInstance = null;
+
+		// Notify memory debugger BEFORE removing from DOM
+		if (window.MEMORY_DEBUGGER) {
+			window.MEMORY_DEBUGGER.markRemoved(element);
+		}
+
+		// Remove from ItemsMgr (this will now properly clean up WeakMaps)
+		this._itemsMgr.removeAsin(asin);
+
+		// CRITICAL FIX: Clean up shared MutationObserver references
+		// Import Tile class and call cleanup if available
+		if (typeof Tile !== "undefined" && Tile.checkAndCleanupSharedObserver) {
+			Tile.checkAndCleanupSharedObserver();
+		}
+
+		// Remove the element from the DOM AFTER cleanup
+		this._preserveScrollPosition(() => {
+			element.remove();
+		});
+
+		// Recount the visible tiles
+		this._tileCounter.alterCount(-1);
+	}
+
+	/**
 	 * Bulk remove items from the monitor
 	 * @param {Set} asinsToKeep - A Set of ASINs to process
 	 * @param {boolean} isKeepSet - If true, keep the items in the array and delete all other items, otherwise remove them
@@ -553,14 +611,6 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		this._preserveScrollPosition(() => {
-			// Always use the optimized container replacement approach
-			// Create a new empty container
-			const newContainer = this._gridContainer.cloneNode(false); //Clone the container, but not the children items
-
-			// Create a new items map to store the updated collection
-			const newItems = new Map();
-			const newImageUrls = new Set();
-
 			// Get all current DOM elements for quick lookup
 			const domElements = new Map();
 			Array.from(this._gridContainer.querySelectorAll(".vvp-item-tile:not(.vh-placeholder-tile)")).forEach(
@@ -574,8 +624,9 @@ class NotificationMonitor extends MonitorCore {
 
 			// First, collect items to keep and items to remove
 			const itemsToKeep = [];
+			const itemsToRemove = [];
 			let itemsToRemoveCount = 0;
-			// Track items to keep and remove
+
 			// DEBUG: Track bulk operation start
 			if (debugBulkOperations) {
 				console.log("[DEBUG-BULK] Starting bulk remove operation", {
@@ -592,79 +643,56 @@ class NotificationMonitor extends MonitorCore {
 				const shouldKeep = isKeepSet ? arrASINs.has(asin) : !arrASINs.has(asin);
 
 				if (shouldKeep) {
-					// Get the DOM element for this item
-					const element = domElements.get(asin);
-					itemsToKeep.push({ asin, item, element });
-					// Keep track of the image URL for duplicate detection
-					if (item.data.img_url && this._settings.get("notification.monitor.hideDuplicateThumbnail")) {
-						newImageUrls.add(item.data.img_url);
-					}
+					itemsToKeep.push({ asin });
 				} else {
 					itemsToRemoveCount++;
+					itemsToRemove.push({ asin });
+
 					// Count visible items being removed
-					const element = domElements.get(asin);
+					const element = this._itemsMgr.getItemDOMElement(asin);
 					if (element && this.#isElementVisible(element)) {
 						visibleRemovedCount++;
-					}
-					// Clean up DOM references for items being removed
-					if (item.element) {
-						item.element = null;
-					}
-					if (item.tile) {
-						item.tile = null;
 					}
 				}
 			});
 
-			// Update items map with kept items
+			// CRITICAL: Clean up items that are being removed BEFORE any DOM manipulation
+			itemsToRemove.forEach(({ asin }) => {
+				// Remove from ItemsMgr
+				this.#removeTile(asin);
+			});
+
+			// Update items map with kept items only
 			if (debugBulkOperations) {
-				console.log("[bulkRemoveItems] After processing:", {
+				console.log("[bulkRemoveItems] After cleanup:", {
 					itemsToKeepCount: itemsToKeep.length,
 					itemsToRemoveCount,
 					visibleRemovedCount,
 					logic: `isKeepSet=${isKeepSet}, so shouldKeep = ${isKeepSet ? "arrASINs.has(asin)" : "!arrASINs.has(asin)"}`,
-					expectedItemsAfter: this._itemsMgr.items.size - itemsToRemoveCount,
+					expectedItemsAfter: itemsToKeep.length,
 				});
 			}
 
-			// First update the items map to only contain items we're keeping
+			// Rebuild the items map with only kept items
 			this._itemsMgr.items.clear();
+			const newImageUrls = new Set();
 			itemsToKeep.forEach(({ asin, item }) => {
 				this._itemsMgr.items.set(asin, item);
+				// Keep track of the image URL for duplicate detection
+				if (item.data.img_url && this._settings.get("notification.monitor.hideDuplicateThumbnail")) {
+					newImageUrls.add(item.data.img_url);
+				}
 			});
+			this._itemsMgr.imageUrls = newImageUrls;
 
 			// Sort the kept items
-			if (debugBulkOperations) {
-				console.log("[bulkRemoveItems] Before sort:", {
-					itemsToKeepCount: itemsToKeep.length,
-					itemsMapSize: this._itemsMgr.items.size,
-					newItemsSize: newItems.size,
-				});
-			}
-
-			// Now sort only the items we're keeping
 			const sortedItems = this._itemsMgr.sortItems();
 
-			// Add sorted items to new container
-			if (debugBulkOperations) {
-				console.log("[bulkRemoveItems] After sort:", {
-					sortedItemsCount: sortedItems.length,
-					itemsMgrSize: this._itemsMgr.items.size,
-					sortedItemsSample: sortedItems.slice(0, 5).map((item) => ({
-						asin: item.asin,
-						unavailable: item.data.unavailable,
-					})),
-				});
-			}
-
-			// Add items to new container in sorted order
+			// Create a new container and add sorted items
+			const newContainer = this._gridContainer.cloneNode(false);
 			sortedItems.forEach((sortedItem) => {
 				// Find the corresponding kept item with DOM element
 				const keptItem = itemsToKeep.find((k) => k.asin === sortedItem.asin);
-
-				// Add to new items map
-				newItems.set(sortedItem.asin, sortedItem);
-
 				// Append DOM element if it exists
 				if (keptItem && keptItem.element) {
 					newContainer.appendChild(keptItem.element);
@@ -674,7 +702,7 @@ class NotificationMonitor extends MonitorCore {
 			// Replace container and update references
 			if (debugBulkOperations) {
 				console.log("[bulkRemoveItems] Final state:", {
-					newItemsSize: newItems.size,
+					newItemsSize: this._itemsMgr.items.size,
 					newContainerChildren: newContainer.children.length,
 					expectedItems: itemsToKeep.length,
 				});
@@ -684,6 +712,9 @@ class NotificationMonitor extends MonitorCore {
 			if (window.MEMORY_DEBUGGER && this.#eventHandlers.grid) {
 				window.MEMORY_DEBUGGER.untrackListener(this._gridContainer, "click", this.#eventHandlers.grid);
 			}
+
+			// Clear the old container (should now only contain placeholders since items were already removed)
+			this._clearGridContainer();
 
 			// Replace the old container with the new one
 			this._gridContainer.parentNode.replaceChild(newContainer, this._gridContainer);
@@ -698,11 +729,7 @@ class NotificationMonitor extends MonitorCore {
 			}
 
 			// Reattach event listeners to the new container
-			this._createListeners(true); //True to limit the creation of a listener to the grid container only.
-
-			// Update the data structures
-			this._itemsMgr.items = newItems;
-			this._itemsMgr.imageUrls = newImageUrls;
+			this._createListeners(true);
 		});
 
 		// Emit event if any visible items were removed
@@ -1386,94 +1413,6 @@ class NotificationMonitor extends MonitorCore {
 	}
 
 	/**
-	 * Remove "one" item from the monitor.
-	 * not used by: the auto-truncate feature
-	 * used by: hide click handler, etv filtering.
-	 * @param {object} tile - The DOM element of the tile
-	 * @param {string} asin - The ASIN of the item
-	 */
-	#removeTile(tile, asin) {
-		if (!tile || !asin) {
-			return;
-		}
-
-		// Clean up from ETV processing tracking
-		this.#etvProcessingItems.delete(asin);
-
-		// Enhanced logging for memory debugging
-		if (window.MEMORY_DEBUGGER && this._settings.get("general.debugMemory")) {
-			console.log(`🗑️ Removing tile for ASIN: ${asin}`);
-
-			// Check for event listeners on tile elements before removal
-			const elementsWithListeners = [];
-
-			// Check the tile itself
-			if (tile.onclick || tile.addEventListener) {
-				elementsWithListeners.push({ element: "tile", tag: tile.tagName, classes: tile.className });
-			}
-
-			// Check all buttons in the tile
-			const buttons = tile.querySelectorAll('button, a, input[type="button"], input[type="submit"]');
-			buttons.forEach((btn) => {
-				if (btn.onclick || btn.addEventListener) {
-					elementsWithListeners.push({
-						element: "button/link",
-						tag: btn.tagName,
-						classes: btn.className,
-						text: btn.textContent?.substring(0, 30),
-					});
-				}
-			});
-
-			if (elementsWithListeners.length > 0) {
-				console.warn(
-					`⚠️ Tile ${asin} has ${elementsWithListeners.length} elements that might have listeners:`,
-					elementsWithListeners
-				);
-			}
-
-			// Mark the tile as removed in the debugger
-			window.MEMORY_DEBUGGER.markRemoved(tile);
-		}
-
-		// Get the item data to access its image URL
-		const item = this._itemsMgr.items.get(asin);
-		const imgUrl = item?.data?.img_url;
-
-		// Remove the tooltip
-		const a = tile.querySelector(".a-link-normal");
-		if (a) {
-			this._tooltipMgr.removeTooltip(a);
-		}
-
-		// Call the tile's destroy method to clean up event listeners
-		// Get the Tile instance from ItemsMgr
-		const tileInstance = this._itemsMgr.tiles.get(item);
-		if (tileInstance && typeof tileInstance.destroy === "function") {
-			tileInstance.destroy();
-		} else if (window.MEMORY_DEBUGGER && this._settings.get("general.debugMemory")) {
-			console.warn(`⚠️ Tile ${asin} does not have a destroy method or could not find Tile instance!`);
-		}
-
-		// Remove from data structures
-		this._itemsMgr.removeAsin(asin);
-
-		// Also remove the image URL from the set if duplicate detection is enabled
-		if (imgUrl && this._settings.get("notification.monitor.hideDuplicateThumbnail")) {
-			this._itemsMgr.imageUrls.delete(imgUrl);
-		}
-
-		// Remove the element from DOM with scroll position preserved
-		this._preserveScrollPosition(() => {
-			tile.remove();
-		});
-		tile = null;
-
-		// Recount the visible tiles
-		this._tileCounter.alterCount(-1);
-	}
-
-	/**
 	 * Set the ETV for an item. Call it twice with min and max values to set a range.
 	 * @param {object} notif - The DOM element of the tile
 	 * @param {object} data - The item data
@@ -1626,7 +1565,7 @@ class NotificationMonitor extends MonitorCore {
 					if (matchedHideKeyword !== false) {
 						// Remove (permanently "hide") the tile
 						this._log.add(`NOTIF: Item ${asin} matched hide keyword ${matchedHideKeyword}. Hiding it.`);
-						this.#removeTile(notif, asin);
+						this.#removeTile(asin);
 						return true; // Exit early since item is removed
 					}
 				}
@@ -2037,8 +1976,8 @@ class NotificationMonitor extends MonitorCore {
 			}
 		});
 
-		// Clear the grid container (this removes both items AND placeholders)
-		this._gridContainer.innerHTML = "";
+		// Properly clear the grid container to prevent memory leaks
+		this._clearGridContainer();
 
 		// Add sorted items first
 		this._gridContainer.appendChild(fragment);
@@ -2048,6 +1987,42 @@ class NotificationMonitor extends MonitorCore {
 		if (this._noShiftGrid) {
 			this._noShiftGrid.resetEndPlaceholdersCount();
 			this._noShiftGrid.insertPlaceholderTiles();
+		}
+	}
+
+	/**
+	 * Properly clear the grid container to prevent memory leaks
+	 * This method ensures all DOM elements are properly removed without creating detached nodes
+	 * @protected
+	 */
+	_clearGridContainer() {
+		// For VineHelper tiles, we need to do proper cleanup before removal
+		const children = Array.from(this._gridContainer.children);
+
+		// Clean up VineHelper tiles properly
+		for (const child of children) {
+			// For placeholder tiles, just remove them directly
+			if (child.classList.contains("vh-placeholder-tile")) {
+				continue; // Will be removed by replaceChildren() below
+			}
+
+			// For item tiles, ensure proper cleanup
+			const asin = child.id?.replace("vh-notification-", "");
+			if (asin) {
+				// Use the dedicated cleanup function
+				this.#removeTile(asin);
+			}
+		}
+
+		// Now use the most efficient method to clear the container
+		if (this._gridContainer.replaceChildren) {
+			// Modern browsers - most efficient method that prevents detached nodes
+			this._gridContainer.replaceChildren();
+		} else {
+			// Fallback for older browsers
+			while (this._gridContainer.firstChild) {
+				this._gridContainer.removeChild(this._gridContainer.firstChild);
+			}
 		}
 	}
 
@@ -2069,7 +2044,7 @@ class NotificationMonitor extends MonitorCore {
 		// Get the DOM element from our Map
 		const tile = this._itemsMgr.getItemDOMElement(asin);
 		if (tile) {
-			this.#removeTile(tile, asin);
+			this.#removeTile(asin);
 		}
 	}
 

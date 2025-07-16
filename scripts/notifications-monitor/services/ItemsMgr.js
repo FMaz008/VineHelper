@@ -196,7 +196,6 @@ class ItemsMgr {
 					...internedData, //The spread operator will convert null values to empty strings.
 					dateAdded: new Date(),
 				},
-				element: null, // Element will be set later
 			});
 			addedStatus = true;
 
@@ -220,7 +219,6 @@ class ItemsMgr {
 					asin,
 					oldImgUrl: existing.data.img_url,
 					newImgUrl: internedData.img_url,
-					hasElement: !!existing.element,
 					timestamp: new Date().toISOString(),
 				});
 			}
@@ -230,7 +228,6 @@ class ItemsMgr {
 					...existing.data, //The spread operator will convert null values to empty strings.
 					...internedData, //The spread operator will convert null values to empty strings.
 				},
-				element: existing.element,
 			});
 			addedStatus = false;
 		}
@@ -297,14 +294,17 @@ class ItemsMgr {
 	 * @returns {object} - The DOM element of the item
 	 */
 	getItemDOMElement(asin) {
-		// First try to get from stored element reference
 		const item = this.items.get(asin);
-		if (item?.element) {
-			return item.element;
+		if (item) {
+			// Store DOM element in WeakMap using item object as key
+			const element = this.domElements.get(item);
+			if (element) {
+				return element;
+			}
 		}
-
 		// Fallback to querying the DOM directly
-		return document.getElementById(`vh-notification-${asin}`);
+		//return document.getElementById(`vh-notification-${asin}`);
+		return null;
 	}
 
 	/**
@@ -330,9 +330,25 @@ class ItemsMgr {
 	}
 
 	removeAsin(asin) {
-		// WeakMaps will automatically clean up when item is removed
-		// No need to manually clear DOM element or tile references
-		this.items.delete(asin);
+		// CRITICAL FIX: WeakMaps do NOT automatically clean up when the item is removed
+		// from the main Map because the item object may still be referenced elsewhere
+		// We must explicitly clean up WeakMap entries to prevent memory leaks
+
+		const item = this.items.get(asin);
+		if (item) {
+			const imgUrl = item?.data?.img_url;
+			if (imgUrl && this._settings.get("notification.monitor.hideDuplicateThumbnail")) {
+				this.imageUrls.delete(imgUrl);
+			}
+
+			// Explicitly remove from WeakMaps BEFORE removing from main Map
+			// This ensures proper cleanup even if the item object is still referenced
+			this.domElements.delete(item);
+			this.tiles.delete(item);
+
+			// Now remove from the main Map
+			this.items.delete(asin);
+		}
 	}
 }
 
