@@ -69,12 +69,14 @@ class ItemsMgr {
 		// Convert Map to array for sorting - reuse array to reduce allocations
 		const itemsArray = [];
 		for (const [asin, item] of this.items.entries()) {
-			itemsArray.push({
-				asin,
-				data: item.data,
-				element: item.element,
-				tile: item.tile,
-			});
+			if (item) {
+				itemsArray.push({
+					asin,
+					data: item.data,
+					element: item.element,
+					tile: item.tile,
+				});
+			}
 		}
 
 		// Sort based on the current sort type
@@ -135,6 +137,9 @@ class ItemsMgr {
 		}
 
 		const item = this.items.get(asin);
+		if (!item) {
+			return false;
+		}
 
 		// Update min and max ETV values
 		if (!item.data.etv_min || etv < item.data.etv_min) {

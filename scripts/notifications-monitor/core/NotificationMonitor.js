@@ -3,7 +3,7 @@
 //Todo: insertTileAccordingToETV and ETVChangeRepositioning are very similar. Could we merge some logic?
 
 // Tile import kept for future use
- 
+
 import { Tile } from "/scripts/ui/components/Tile.js";
 
 import { YMDHiStoISODate } from "/scripts/core/utils/DateHelper.js";
@@ -677,6 +677,9 @@ class NotificationMonitor extends MonitorCore {
 			this._itemsMgr.items.clear();
 			const newImageUrls = new Set();
 			itemsToKeep.forEach(({ asin, item }) => {
+				if (!item) {
+					return;
+				}
 				this._itemsMgr.items.set(asin, item);
 				// Keep track of the image URL for duplicate detection
 				if (item.data.img_url && this._settings.get("notification.monitor.hideDuplicateThumbnail")) {
