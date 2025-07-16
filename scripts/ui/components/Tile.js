@@ -649,100 +649,63 @@ class Tile {
 				}
 			}
 
-			// Only apply MutationObserver fix on Amazon pages where the issue occurs
+			// Only apply title restoration on Amazon pages where the issue occurs
+			//(is this a made up problem?)
 			// Skip on Notification Monitor where titles display correctly
 			const isNotificationMonitor = window.location.href.includes("#monitor");
 			const isAmazonVinePage = window.location.href.includes("/vine/vine-items") && !isNotificationMonitor;
 
 			if (isAmazonVinePage) {
-				// Use a single shared observer for better performance
-				if (!Tile.sharedTitleObserver) {
-					// Track mutations being processed to prevent loops
-					const processingMutations = new WeakSet();
+				// Store the original title for restoration
+				this.#tileDOM.dataset.vhOriginalTitle = unescapedText;
 
-					Tile.sharedTitleObserver = new MutationObserver((mutations) => {
-						mutations.forEach((mutation) => {
-							if (mutation.type === "characterData" || mutation.type === "childList") {
-								const target = mutation.target;
-								// Check if this is a title element that was cleared
-								if (
-									target.classList?.contains("a-truncate-full") ||
-									target.classList?.contains("a-truncate-cut")
-								) {
-									const tileElement = target.closest(".vvp-item-tile");
-									if (tileElement) {
-										const asin = tileElement.dataset.asin;
+				// Use a simpler periodic check instead of MutationObserver
+				// This avoids memory leaks and is much simpler
+				if (!Tile.titleRestorationInterval) {
+					Tile.titleRestorationInterval = setInterval(() => {
+						// Check all tiles with stored titles
+						const tilesWithStoredTitles = document.querySelectorAll(
+							".vvp-item-tile[data-vh-original-title]"
+						);
 
-										// Skip if we're already processing this element to prevent loops
-										if (processingMutations.has(target)) {
-											return;
-										}
+						tilesWithStoredTitles.forEach((tileElement) => {
+							const storedTitle = tileElement.dataset.vhOriginalTitle;
+							if (storedTitle) {
+								// Check both title elements
+								const truncateFull = tileElement.querySelector(".a-truncate-full");
+								const truncateCut = tileElement.querySelector(".a-truncate-cut");
 
-										// Log the mutation - only if debug is enabled
-										if (Settings.get("general.debugTitleDisplay")) {
-											getTitleDebugger().then((logger) =>
-												logger.logMutation(asin, mutation, target)
-											);
-										}
+								// Restore if text was cleared
+								if (truncateFull && !truncateFull.innerText) {
+									truncateFull.innerText = storedTitle;
+									truncateFull.classList.remove("a-offscreen");
 
-										// Check if text was cleared
-										const storedTitle = tileElement.dataset.vhOriginalTitle;
-										if (storedTitle && !target.innerText) {
-											// Log the clearing event - only if debug is enabled
-											if (Settings.get("general.debugTitleDisplay")) {
-												getTitleDebugger().then((logger) =>
-													logger.logTextCleared(asin, target, storedTitle)
-												);
-											}
+									if (Settings.get("general.debugTitleDisplay")) {
+										console.log(
+											`🔄 [TitleFix] Restored title for ASIN: ${tileElement.dataset.asin}`
+										);
+									}
+								}
 
-											// Mark this element as being processed to prevent re-entry
-											processingMutations.add(target);
+								if (truncateCut && !truncateCut.innerText) {
+									truncateCut.innerText = storedTitle;
+									truncateCut.style.visibility = "visible";
+									truncateCut.style.display = "";
 
-											// Restore the title
-											target.innerText = storedTitle;
-											if (Settings.get("general.debugTitleDisplay")) {
-												getTitleDebugger().then((logger) =>
-													logger.logTextRestored(
-														asin,
-														target,
-														storedTitle,
-														"MutationObserver"
-													)
-												);
-											}
-
-											// Remove from processing set after a microtask to allow the DOM to update
-											Promise.resolve().then(() => {
-												processingMutations.delete(target);
-											});
-										}
+									if (Settings.get("general.debugTitleDisplay")) {
+										console.log(
+											`🔄 [TitleFix] Restored title for ASIN: ${tileElement.dataset.asin}`
+										);
 									}
 								}
 							}
 						});
-					});
+					}, 2000); // Check every 2 seconds
 
-					// Observe the entire grid container for better performance
-					const gridContainer = document.querySelector("#vvp-items-grid");
-					if (gridContainer) {
-						Tile.sharedTitleObserver.observe(gridContainer, {
-							characterData: true,
-							childList: true,
-							subtree: true,
-							characterDataOldValue: true,
-						});
-						if (Settings.get("general.debugTitleDisplay")) {
-							getTitleDebugger().then((logger) =>
-								logger.log("GLOBAL", "OBSERVER_STARTED", {
-									container: "#vvp-items-grid",
-								})
-							);
-						}
+					if (Settings.get("general.debugTitleDisplay")) {
+						console.log("🔄 [TitleFix] Started periodic title restoration");
 					}
 				}
-
-				// Store the original title in the tile's dataset for restoration
-				this.#tileDOM.dataset.vhOriginalTitle = unescapedText;
 			}
 		}
 		//Assign the ASIN to the tile content
@@ -887,10 +850,26 @@ class Tile {
 		// Clear the array
 		this.#eventListeners = [];
 
+		// CRITICAL FIX: Clear the stored title from dataset to prevent memory leaks
+		if (this.#tileDOM && this.#tileDOM.dataset) {
+			delete this.#tileDOM.dataset.vhOriginalTitle;
+		}
+
+		// CRITICAL FIX: Clear any direct references on the tile DOM
+		if (this.#tileDOM) {
+			this.#tileDOM.vhTileInstance = null;
+		}
+
 		// Mark the tile as cleaned up in MemoryDebugger
 		if (window.MEMORY_DEBUGGER) {
 			window.MEMORY_DEBUGGER.markElementRemoved(this.#tileDOM);
 		}
+
+		// CRITICAL FIX: Clear the DOM reference to help garbage collection
+		this.#tileDOM = null;
+
+		// CRITICAL FIX: Check if shared observer should be cleaned up
+		Tile.checkAndCleanupSharedObserver();
 	}
 }
 
@@ -1030,9 +1009,9 @@ function animateOpacity(element, targetOpacity, duration) {
 
 // Add static cleanup method for the shared observer
 Tile.cleanupSharedObserver = function () {
-	if (Tile.sharedTitleObserver) {
-		Tile.sharedTitleObserver.disconnect();
-		Tile.sharedTitleObserver = null;
+	if (Tile.titleRestorationInterval) {
+		clearInterval(Tile.titleRestorationInterval);
+		Tile.titleRestorationInterval = null;
 
 		// Log cleanup if debug is enabled
 		const settings = new SettingsMgr();
@@ -1042,18 +1021,17 @@ Tile.cleanupSharedObserver = function () {
 	}
 };
 
-// Set up cleanup on page unload
-if (typeof window !== "undefined") {
-	window.addEventListener("beforeunload", () => {
-		Tile.cleanupSharedObserver();
-	});
-
-	// Also clean up if the extension is disabled/reloaded
-	if (chrome?.runtime?.onSuspend) {
-		chrome.runtime.onSuspend.addListener(() => {
-			Tile.cleanupSharedObserver();
-		});
+// CRITICAL FIX: Add method to check if shared observer should be cleaned up
+Tile.checkAndCleanupSharedObserver = function () {
+	if (Tile.titleRestorationInterval) {
+		// Check if there are any tiles left in the document that might need the observer
+		const remainingTiles = document.querySelectorAll(".vvp-item-tile[data-vh-original-title]");
+		if (remainingTiles.length === 0) {
+			console.log("🧹 [TitleFix] No tiles with stored titles remain, cleaning up interval");
+			clearInterval(Tile.titleRestorationInterval);
+			Tile.titleRestorationInterval = null;
+		}
 	}
-}
+};
 
 export { Tile, getTileFromDom, getAsinFromDom };
