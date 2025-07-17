@@ -543,7 +543,7 @@ class NotificationMonitor extends MonitorCore {
 	 * @param {string} asin - The ASIN of the tile
 	 * @private
 	 */
-	#removeTile(asin) {
+	#removeTile(asin, skipDOMremoval = false) {
 		this.#etvProcessingItems.delete(asin);
 
 		const element = this._itemsMgr.getItemDOMElement(asin);
@@ -582,9 +582,11 @@ class NotificationMonitor extends MonitorCore {
 		}
 
 		// Remove the element from the DOM AFTER cleanup
-		this._preserveScrollPosition(() => {
-			element.remove();
-		});
+		if (!skipDOMremoval) {
+			this._preserveScrollPosition(() => {
+				element.remove();
+			});
+		}
 
 		// Recount the visible tiles
 		this._tileCounter.alterCount(-1);
@@ -632,10 +634,10 @@ class NotificationMonitor extends MonitorCore {
 				const shouldKeep = isKeepSet ? arrASINs.has(asin) : !arrASINs.has(asin);
 
 				if (shouldKeep) {
-					itemsToKeep.push({ asin });
+					itemsToKeep.push({ asin, item });
 				} else {
 					itemsToRemoveCount++;
-					itemsToRemove.push({ asin });
+					itemsToRemove.push({ asin, item });
 
 					// Count visible items being removed
 					const element = this._itemsMgr.getItemDOMElement(asin);
@@ -648,7 +650,7 @@ class NotificationMonitor extends MonitorCore {
 			// CRITICAL: Clean up items that are being removed BEFORE any DOM manipulation
 			itemsToRemove.forEach(({ asin }) => {
 				// Remove from ItemsMgr
-				this.#removeTile(asin);
+				this.#removeTile(asin, true);
 			});
 
 			// Update items map with kept items only
@@ -667,6 +669,7 @@ class NotificationMonitor extends MonitorCore {
 			const newImageUrls = new Set();
 			itemsToKeep.forEach(({ asin, item }) => {
 				if (!item) {
+					console.log("[bulkRemoveItems] Item is null", asin);
 					return;
 				}
 				this._itemsMgr.items.set(asin, item);
@@ -686,8 +689,9 @@ class NotificationMonitor extends MonitorCore {
 				// Find the corresponding kept item with DOM element
 				const keptItem = itemsToKeep.find((k) => k.asin === sortedItem.asin);
 				// Append DOM element if it exists
-				if (keptItem && keptItem.element) {
-					newContainer.appendChild(keptItem.element);
+				const element = this._itemsMgr.getItemDOMElement(keptItem.asin);
+				if (element) {
+					newContainer.appendChild(element);
 				}
 			});
 
@@ -1865,6 +1869,7 @@ class NotificationMonitor extends MonitorCore {
 
 	/**
 	 * Common handler for item found events
+	 * This is the common code between zeroETVItemFound, highlightedItemFound, and regularItemFound
 	 * @param {object} notif - The DOM element of the tile
 	 * @param {string} itemType - The type of item (TYPE_ZEROETV, TYPE_HIGHLIGHT, TYPE_REGULAR)
 	 * @param {boolean} playSoundEffect - If true, play the sound effect
