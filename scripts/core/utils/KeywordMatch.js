@@ -236,7 +236,7 @@ class KeywordMatcher {
 		}
 
 		// Check ETV filtering
-		if (word.etv_min === null && word.etv_max === null) {
+		if (word.etv_min === "" && word.etv_max === "") {
 			// No ETV filtering defined, we have a match
 			return true;
 		}
