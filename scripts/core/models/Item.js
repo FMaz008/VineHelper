@@ -45,8 +45,8 @@ class Item {
 		//Optional data
 		this.data.title = coreAttributes.title;
 		this.data.img_url = coreAttributes.img_url; //Thumbnail
-		this.data.etv_min = coreAttributes.etv_min;
-		this.data.etv_max = coreAttributes.etv_max;
+		this.data.etv_min = coreAttributes.etv_min || null;
+		this.data.etv_max = coreAttributes.etv_max || null;
 		this.data.search = coreAttributes.search; //Search string based on the title
 		this.data.tier = coreAttributes.tier; //Lowest tier known to have seen the item
 		this.data.date = coreAttributes.date; //Date the item was transmitted
