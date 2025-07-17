@@ -1559,6 +1559,7 @@ class NotificationMonitor extends MonitorCore {
 						this._settings
 					);
 					if (matchedHideKeyword !== false) {
+						console.log("[setETV] Hide keyword matched for", data, matchedHideKeyword);
 						// Remove (permanently "hide") the tile
 						this._log.add(`NOTIF: Item ${asin} matched hide keyword ${matchedHideKeyword}. Hiding it.`);
 
@@ -1569,9 +1570,7 @@ class NotificationMonitor extends MonitorCore {
 							this.#removeTile(asin);
 						} else {
 							// Tile not fully registered yet (probably called during addTileInGrid)
-							console.warn(
-								`Hide keyword matched for ${asin} but tile not fully registered. Marked as unavailable.`
-							);
+							console.warn(`Hide keyword matched for ${asin} but tile not fully registered. Skipping.`);
 						}
 						return true; // Exit early since item is processed
 					}
