@@ -136,15 +136,27 @@ class ServerCom {
 			const item = this.#createValidatedItem(data.item, "newPreprocessedItem from WebSocket");
 			if (item) {
 				// Diagnostic logging for duplicate processing detection
-				if (this._monitor._settings.get("general.debugKeywords")) {
+				if (this._monitor._settings.get("general.debugDuplicates")) {
 					const timestamp = Date.now();
 					console.log("[ServerCom] Sending item to stream processor:", {
 						asin: item.data?.asin,
 						title: item.data?.title?.substring(0, 50) + "...",
+						enrollment_guid: item.data?.enrollment_guid,
 						source: "newPreprocessedItem",
+						reason: data.item.reason || "no reason provided",
 						timestamp,
 						timestampMs: timestamp,
 					});
+
+					// Check if reason indicates enrollment_guid change
+					if (data.item.reason && data.item.reason.includes("enrollment_guid")) {
+						console.warn("[ServerCom] ENROLLMENT_GUID CHANGE DETECTED:", {
+							asin: item.data?.asin,
+							reason: data.item.reason,
+							new_enrollment_guid: item.data?.enrollment_guid,
+							timestamp: new Date().toISOString(),
+						});
+					}
 				}
 
 				this.#streamProcessor.input({

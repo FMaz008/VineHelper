@@ -1026,14 +1026,29 @@ class NotificationMonitor extends MonitorCore {
 
 					// DEBUG: Log duplicate detection
 					if (this._settings.get("general.debugDuplicates")) {
+						const existingItem = this._itemsMgr.items.get(asin);
 						console.log("[DEBUG-DUPLICATE] Item already exists", {
 							asin,
 							hasElement: !!element,
 							imgUrl: item.data.img_url,
-							existingImgUrl: this._itemsMgr.items.get(asin)?.data?.img_url,
+							existingImgUrl: existingItem?.data?.img_url,
+							new_enrollment_guid: item.data.enrollment_guid,
+							existing_enrollment_guid: existingItem?.data?.enrollment_guid,
+							enrollment_guid_changed: existingItem?.data?.enrollment_guid !== item.data.enrollment_guid,
+							reason: reason,
 							timestamp: new Date().toISOString(),
 							stack: new Error().stack.split("\n").slice(2, 5).join("\n"),
 						});
+
+						// Log enrollment_guid changes specifically
+						if (existingItem?.data?.enrollment_guid !== item.data.enrollment_guid) {
+							console.warn("[NotificationMonitor] ENROLLMENT_GUID UPDATE:", {
+								asin,
+								old_enrollment_guid: existingItem?.data?.enrollment_guid,
+								new_enrollment_guid: item.data.enrollment_guid,
+								reason: reason,
+							});
+						}
 					}
 					// Update the data
 					this._itemsMgr.addItemData(asin, item.data);

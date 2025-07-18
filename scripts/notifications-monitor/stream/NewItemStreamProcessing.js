@@ -133,7 +133,7 @@ class NewItemStreamProcessing {
 		}
 
 		// Diagnostic logging for duplicate processing
-		if (this.settingsManager.get("general.debugKeywords")) {
+		if (this.settingsManager.get("general.debugDuplicates")) {
 			const timestamp = Date.now();
 			const asin = data.asin;
 
@@ -144,17 +144,24 @@ class NewItemStreamProcessing {
 			console.log("[NewItemStreamProcessing] transformIsHighlight called:", {
 				asin: asin,
 				title: data.title?.substring(0, 50) + "...",
+				enrollment_guid: data.enrollment_guid,
 				processingCount: currentCount + 1,
 				isDuplicate: currentCount > 0,
 				timestamp,
 				timestampMs: timestamp,
+				reason: rawData.reason || "no reason",
 				callStack: new Error().stack.split("\n").slice(2, 5).join(" <- "),
 			});
 
 			// Warn if this is a duplicate processing
 			if (currentCount > 0) {
 				console.warn(
-					`[NewItemStreamProcessing] DUPLICATE PROCESSING DETECTED for ASIN ${asin} - processed ${currentCount + 1} times`
+					`[NewItemStreamProcessing] DUPLICATE PROCESSING DETECTED for ASIN ${asin} - processed ${currentCount + 1} times`,
+					{
+						enrollment_guid: data.enrollment_guid,
+						reason: rawData.reason,
+						timestamp: new Date().toISOString(),
+					}
 				);
 			}
 		}
