@@ -141,6 +141,9 @@ class KeywordMatcher {
 			return { total: 0, compiled: 0, failed: 0 };
 		}
 
+		// Debug logging for keyword compilation
+		const debugKeywords = this.settingsMgr ? this.settingsMgr.get("general.debugKeywords") : false;
+
 		// Create a new Map for this keyword type
 		const compiledMap = new Map();
 		let failedCount = 0;
@@ -148,7 +151,27 @@ class KeywordMatcher {
 		keywords.forEach((word, index) => {
 			const compiled = this.compileKeyword(word);
 			if (compiled) {
+				// Store the original index with the compiled pattern
+				// This is necessary to maintain index mapping consistency between KeywordMatch.js's
+				// internal compilation and the indices provided by SettingsMgrDI.js. When keywords
+				// are passed from SettingsMgrDI, they come with specific index positions that are
+				// used throughout the system for keyword identification and tracking. By preserving
+				// the original index here, we ensure that:
+				// 1. The compiled patterns maintain their association with the original keyword positions
+				// 2. Any keyword lookups or matches can correctly reference back to the source configuration
+				// 3. We prevent potential mismatches where a keyword might be identified by the wrong index
+				// Without this mapping, there could be discrepancies between which keyword was actually
+				// matched and which one the system thinks was matched, leading to incorrect filtering behavior.
+				compiled.originalIndex = index;
 				compiledMap.set(index, compiled);
+
+				// Log compilation success for debugging
+				if (debugKeywords && index === 0) {
+					// Log only the first compilation to confirm process started
+					console.log(
+						`[KeywordMatcher] Starting compilation for ${keywordType} (${keywords.length} keywords)`
+					);
+				}
 			} else {
 				failedCount++;
 			}
@@ -157,6 +180,13 @@ class KeywordMatcher {
 		// Store the compiled patterns for this keyword type
 		this.compiledPatterns[keywordType] = compiledMap;
 		this.stats.compilations++;
+
+		// Log compilation summary if debug is enabled and there were failures
+		if (debugKeywords && failedCount > 0) {
+			console.warn(
+				`[KeywordMatcher] Compilation completed for ${keywordType}: ${compiledMap.size} succeeded, ${failedCount} failed`
+			);
+		}
 
 		// Return stats for logging by caller
 		return {
@@ -191,9 +221,7 @@ class KeywordMatcher {
 	 */
 	testKeywordMatch(word, compiled, title, etv_min, etv_max) {
 		// Debug logging for keyword operations
-		const effectiveSettingsMgr =
-			this.settingsMgr || (typeof SettingsMgr !== "undefined" ? new SettingsMgr() : null);
-		const debugKeywords = effectiveSettingsMgr && effectiveSettingsMgr.get("general.debugKeywords");
+		const debugKeywords = this.settingsMgr ? this.settingsMgr.get("general.debugKeywords") : false;
 
 		// Test the main regex
 		const matches = compiled.regex.test(title);
@@ -306,24 +334,16 @@ class KeywordMatcher {
 				const compiled = effectiveSettingsMgr.getCompiledKeywords(keywordType);
 				if (compiled && compiled.length > 0) {
 					// Debug logging for pre-compiled keywords
-					const debugKeywords = effectiveSettingsMgr && effectiveSettingsMgr.get("general.debugKeywords");
-					if (debugKeywords) {
-						console.log("[KeywordMatcher] Using pre-compiled patterns", {
+					const debugKeywords = effectiveSettingsMgr
+						? effectiveSettingsMgr.get("general.debugKeywords")
+						: false;
+					// Only log summary info, not individual keywords
+					if (debugKeywords && keywords.length !== compiled.length) {
+						console.log("[KeywordMatcher] Pre-compiled length mismatch", {
 							keywordType,
-							title: title.substring(0, 100) + (title.length > 100 ? "..." : ""),
-							keywordsLength: keywords.length,
-							compiledLength: compiled.length,
-							firstKeyword: keywords[0]?.contains || keywords[0],
-							lastKeyword: keywords[keywords.length - 1]?.contains || keywords[keywords.length - 1],
+							expected: keywords.length,
+							actual: compiled.length,
 						});
-
-						if (keywords.length !== compiled.length) {
-							console.log("[KeywordMatcher] Pre-compiled length mismatch", {
-								keywordType,
-								expected: keywords.length,
-								actual: compiled.length,
-							});
-						}
 					}
 
 					// Successfully using pre-compiled keywords
@@ -348,6 +368,8 @@ class KeywordMatcher {
 						}
 
 						const word = keywords[keywordIndex];
+
+						// Removed verbose logging that prints every keyword during testing
 
 						if (this.testKeywordMatch(word, compiledRegex, title, etv_min, etv_max)) {
 							if (debugKeywords) {
@@ -379,6 +401,13 @@ class KeywordMatcher {
 									});
 								}
 							}
+
+							// Log match found with the actual keyword for better debugging
+							if (debugKeywords) {
+								const keywordStr = typeof word === "string" ? word : word.contains;
+								console.log(`[KeywordMatch] Match found at index ${keywordIndex}: "${keywordStr}"`);
+							}
+
 							return word;
 						}
 					}
@@ -433,13 +462,15 @@ class KeywordMatcher {
 			return undefined;
 		}
 
+		// Debug logging for keyword operations
+		const debugKeywords = effectiveSettingsMgr ? effectiveSettingsMgr.get("general.debugKeywords") : false;
+
 		// Check if we have compiled patterns for this keyword type
 		if (!this.compiledPatterns[keywordType]) {
 			// Compile the keywords for this type
 			const stats = this.precompileKeywords(keywordType, keywords);
 
 			// Log compilation if debug is enabled
-			const debugKeywords = effectiveSettingsMgr && effectiveSettingsMgr.get("general.debugKeywords");
 			if (debugKeywords && (typeof process === "undefined" || process.env.NODE_ENV !== "test")) {
 				console.log(`[KeywordMatcher] Compiled ${stats.compiled}/${stats.total} patterns for ${keywordType}`);
 			}
@@ -451,9 +482,6 @@ class KeywordMatcher {
 			return undefined;
 		}
 
-		// Debug logging for keyword operations
-		const debugKeywords = effectiveSettingsMgr && effectiveSettingsMgr.get("general.debugKeywords");
-
 		for (let index = 0; index < keywords.length; index++) {
 			const word = keywords[index];
 			const compiled = compiledMap.get(index);
@@ -463,12 +491,16 @@ class KeywordMatcher {
 			}
 
 			if (this.testKeywordMatch(word, compiled, title, etv_min, etv_max)) {
+				// Log match found with the actual keyword for better debugging
 				if (debugKeywords) {
+					const keywordStr = typeof word === "string" ? word : word.contains;
 					console.log("[KeywordMatcher] Match found:", {
 						type: keywordType,
-						keyword: typeof word === "string" ? word : word.contains,
+						index: index,
+						keyword: keywordStr,
 					});
 				}
+
 				return word;
 			}
 		}

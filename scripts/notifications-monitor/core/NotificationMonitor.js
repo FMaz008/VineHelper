@@ -7,7 +7,7 @@
 import { Tile } from "/scripts/ui/components/Tile.js";
 
 import { YMDHiStoISODate } from "/scripts/core/utils/DateHelper.js";
-import { keywordMatch, hasAnyEtvConditions } from "/scripts/core/utils/KeywordMatch.js";
+import { keywordMatch, hasAnyEtvConditions, keywordMatcher } from "/scripts/core/utils/KeywordMatch.js";
 import { ETV_REPOSITION_THRESHOLD } from "/scripts/core/utils/KeywordUtils.js";
 import { escapeHTML, unescapeHTML, removeSpecialHTML } from "/scripts/core/utils/StringHelper.js";
 import { MonitorCore } from "/scripts/notifications-monitor/core/MonitorCore.js";
@@ -131,6 +131,10 @@ class NotificationMonitor extends MonitorCore {
 	async _initializeDebugMode() {
 		// Wait for settings to load
 		await this._settings.waitForLoad();
+
+		// Set the settings manager on the keyword matcher singleton
+		// This enables debug logging in KeywordMatch
+		keywordMatcher.setSettingsManager(this._settings);
 
 		// Check for debug flags from settings
 		const debugTileCounter = this._settings.get("general.debugTileCounter");
@@ -375,6 +379,38 @@ class NotificationMonitor extends MonitorCore {
 		};
 
 		const shouldBeVisible = filterVisibility[this._filterType]?.() || false;
+
+		// Debug logging for keyword matching and filter visibility
+		if (this._settings.get("general.debugKeywords")) {
+			const asin = node.dataset.asin;
+			const typeHighlight = parseInt(node.dataset.typeHighlight) || 0;
+			const typeZeroETV = parseInt(node.dataset.typeZeroETV) || 0;
+
+			// Log filter check details
+			console.log("[NotificationMonitor] Filter check:", {
+				asin,
+				typeHighlight,
+				typeZeroETV,
+				currentFilter: this._filterType,
+				filterName: FILTER_NAMES[this._filterType] || "Unknown",
+				notificationTypeHighlight,
+				notificationTypeZeroETV,
+				willBeVisible: shouldBeVisible,
+				timestamp: new Date().toISOString(),
+			});
+
+			// Check for visibility mismatch - items with typeHighlight=1 should be visible when filter=2 (KW Match Only)
+			if (this._filterType === TYPE_HIGHLIGHT && typeHighlight === 1 && !shouldBeVisible) {
+				console.warn("[NotificationMonitor] Visibility mismatch detected:", {
+					asin,
+					issue: "Item has typeHighlight=1 but willBeVisible=false with KW Match Only filter",
+					typeHighlight,
+					notificationTypeHighlight,
+					filterType: this._filterType,
+					timestamp: new Date().toISOString(),
+				});
+			}
+		}
 
 		if (!unpausing) {
 			this.#setTileDisplay(node, shouldBeVisible ? this.#getTileDisplayStyle() : "none");
@@ -1095,6 +1131,12 @@ class NotificationMonitor extends MonitorCore {
 			this._tpl.setVar("queue", queue);
 			this._tpl.setVar("description", escapeHTML(title));
 			this._tpl.setVar("reason", reason);
+
+			// Debug logging for keyword setting
+			if (this._settings.get("general.debugKeywords")) {
+				console.log(`[NotificationMonitor] Setting highlightKW for ASIN ${asin}: "${KW}"`);
+			}
+
 			this._tpl.setVar("highlightKW", KW);
 			this._tpl.setVar("blurKW", BlurKW);
 			this._tpl.setVar("is_parent_asin", is_parent_asin); //"true" or "false"
@@ -1255,6 +1297,19 @@ class NotificationMonitor extends MonitorCore {
 			// This must happen before processNotificationFiltering to ensure proper visibility calculation
 			if (KWsMatch) {
 				tileDOM.dataset.typeHighlight = 1;
+
+				// Debug logging for typeHighlight being set
+				if (this._settings.get("general.debugKeywords")) {
+					console.log("[NotificationMonitor] Setting typeHighlight=1 for keyword match:", {
+						asin,
+						title,
+						keyword: KW,
+						typeHighlight: 1,
+						currentFilter: this._filterType,
+						filterName: FILTER_NAMES[this._filterType] || "Unknown",
+						timestamp: new Date().toISOString(),
+					});
+				}
 			}
 
 			// Check ETV status independently of keyword matching
@@ -1291,6 +1346,23 @@ class NotificationMonitor extends MonitorCore {
 			// First apply filtering to determine visibility
 			const isVisible = this.#processNotificationFiltering(tileDOM);
 			this.#setTileDisplay(tileDOM, isVisible ? this.#getTileDisplayStyle() : "none");
+
+			// Debug logging for the complete flow sequence
+			if (this._settings.get("general.debugKeywords") && KWsMatch) {
+				console.log("[NotificationMonitor] Complete keyword match flow:", {
+					step: "Final visibility decision",
+					asin,
+					title,
+					keyword: KW,
+					typeHighlight: tileDOM.dataset.typeHighlight,
+					currentFilter: this._filterType,
+					filterName: FILTER_NAMES[this._filterType] || "Unknown",
+					isVisible,
+					displayStyle: isVisible ? this.#getTileDisplayStyle() : "none",
+					note: "This item matched a keyword and its visibility has been determined",
+					timestamp: new Date().toISOString(),
+				});
+			}
 
 			// BUG FIX 1: During bulk fetch, only play sounds for items that will be visible
 			// This prevents sounds from playing for items that are filtered out
@@ -1484,17 +1556,37 @@ class NotificationMonitor extends MonitorCore {
 			}
 		}
 
-		// Re-evaluate keywords if any have ETV conditions
+		// Re-evaluate keywords ONLY if:
+		// 1. Keywords have ETV conditions AND
+		// 2. The item hasn't already been matched to a keyword without ETV conditions
 		const highlightKeywords = this._settings.get("general.highlightKeywords");
-		if (highlightKeywords && hasAnyEtvConditions(highlightKeywords)) {
+		const hasEtvConds = highlightKeywords && hasAnyEtvConditions(highlightKeywords);
+		const currentlyHighlighted = notif.dataset.typeHighlight == 1;
+
+		// Debug logging to understand duplicate processing
+		if (this._settings.get("general.debugKeywords")) {
+			console.log("[NotificationMonitor] #setETV keyword re-evaluation check:", {
+				asin,
+				hasHighlightKeywords: !!highlightKeywords,
+				hasEtvConditions: hasEtvConds,
+				currentlyHighlighted,
+				willReEvaluate: hasEtvConds && data.title && !currentlyHighlighted,
+				etvMin: etvObj.dataset.etvMin,
+				etvMax: etvObj.dataset.etvMax,
+				timestamp: Date.now(),
+			});
+		}
+
+		// Skip re-evaluation if item is already highlighted (matched in stream processing)
+		// and continue re-evaluation only for items that might match ETV conditions
+		if (hasEtvConds && !currentlyHighlighted) {
 			if (data.title) {
 				// Check keyword match with new ETV values
 				const matchedKeyword = await keywordMatch(
 					highlightKeywords,
 					data.title,
 					etvObj.dataset.etvMin,
-					etvObj.dataset.etvMax,
-					this._settings
+					etvObj.dataset.etvMax
 				);
 
 				const wasHighlighted = notif.dataset.typeHighlight == 1;
@@ -1503,6 +1595,12 @@ class NotificationMonitor extends MonitorCore {
 				if (matchedKeyword !== false) {
 					// Item matches a keyword
 					if (technicalBtn) {
+						// Debug logging for updating dataset
+						if (this._settings.get("general.debugKeywords")) {
+							console.log(
+								`[NotificationMonitor] Updating technicalBtn.dataset.highlightkw for ASIN ${asin}: "${matchedKeyword}"`
+							);
+						}
 						technicalBtn.dataset.highlightkw = matchedKeyword;
 					}
 
@@ -1544,6 +1642,37 @@ class NotificationMonitor extends MonitorCore {
 					this.#processNotificationFiltering(notif);
 				}
 			}
+		} else if (hasEtvConds && currentlyHighlighted && data.title) {
+			// Item is already highlighted, but we should check if the matched keyword has ETV conditions
+			// that might invalidate the match now that we have actual ETV values
+			const technicalBtn = this._gridContainer.querySelector("#vh-reason-link-" + asin + ">div");
+			const currentKeyword = technicalBtn?.dataset.highlightkw;
+
+			if (currentKeyword) {
+				// Find the keyword object to check if it has ETV conditions
+				const keywordObj = highlightKeywords.find(
+					(kw) =>
+						(typeof kw === "string" && kw === currentKeyword) ||
+						(typeof kw === "object" && kw.word === currentKeyword)
+				);
+
+				// Only re-evaluate if the current keyword has ETV conditions
+				if (keywordObj && typeof keywordObj === "object" && (keywordObj.etv_min || keywordObj.etv_max)) {
+					const matchedKeyword = await keywordMatch(
+						highlightKeywords,
+						data.title,
+						etvObj.dataset.etvMin,
+						etvObj.dataset.etvMax
+					);
+
+					if (matchedKeyword === false) {
+						// No longer matches with actual ETV values
+						notif.dataset.typeHighlight = 0;
+						delete technicalBtn.dataset.highlightkw;
+						this.#processNotificationFiltering(notif);
+					}
+				}
+			}
 		}
 
 		// Check hide keywords separately (not dependent on highlight keywords)
@@ -1555,8 +1684,7 @@ class NotificationMonitor extends MonitorCore {
 						hideKeywords,
 						data.title,
 						etvObj.dataset.etvMin,
-						etvObj.dataset.etvMax,
-						this._settings
+						etvObj.dataset.etvMax
 					);
 					if (matchedHideKeyword !== false) {
 						console.log("[setETV] Hide keyword matched for", data, matchedHideKeyword);
