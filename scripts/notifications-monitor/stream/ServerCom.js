@@ -23,8 +23,9 @@ class ServerCom {
 		}
 		ServerCom.#instance = this;
 
-		// Initialize the stream processor
-		this.#streamProcessor = new NewItemStreamProcessing();
+		// Initialize the stream processor with the monitor's settings manager
+		// This ensures both components use the same settings instance
+		this.#streamProcessor = new NewItemStreamProcessing(this._monitor._settings);
 
 		//Create a timer to check if the master monitor is still running
 		this.#serviceWorkerStatusTimer = window.setInterval(() => {
@@ -39,7 +40,11 @@ class ServerCom {
 		//Only the master monitor should push notifications
 		//Otherwise we get duplicates push notifications.
 		if (this._monitor._isMasterMonitor) {
-			this.#streamProcessor.setNotificationPushFunction(this.#pushNotification);
+			// .bind(this) is required here to preserve the correct 'this' context when #pushNotification
+			// is called by the stream processor. Without bind, 'this' would refer to the stream processor
+			// instance instead of the ServerCom instance, causing errors when accessing this._monitor
+			// for settings and other ServerCom properties.
+			this.#streamProcessor.setNotificationPushFunction(this.#pushNotification.bind(this));
 		}
 	}
 
@@ -130,6 +135,18 @@ class ServerCom {
 			}
 			const item = this.#createValidatedItem(data.item, "newPreprocessedItem from WebSocket");
 			if (item) {
+				// Diagnostic logging for duplicate processing detection
+				if (this._monitor._settings.get("general.debugKeywords")) {
+					const timestamp = Date.now();
+					console.log("[ServerCom] Sending item to stream processor:", {
+						asin: item.data?.asin,
+						title: item.data?.title?.substring(0, 50) + "...",
+						source: "newPreprocessedItem",
+						timestamp,
+						timestampMs: timestamp,
+					});
+				}
+
 				this.#streamProcessor.input({
 					index: 0,
 					type: "newItem",
@@ -325,6 +342,20 @@ class ServerCom {
 		if (!(item instanceof Item)) {
 			throw new Error("item is not an instance of Item");
 		}
+
+		// Debug logging for OS notification being sent
+		if (this._monitor._settings.get("general.debugKeywords")) {
+			const itemInfo = item.getAllInfo();
+			console.log("[NotificationMonitor] Sending OS notification:", {
+				title: notificationTitle,
+				asin: itemInfo.asin,
+				itemTitle: itemInfo.title,
+				queue: itemInfo.queue,
+				isKeywordMatch: notificationTitle.includes("match KW"),
+				timestamp: new Date().toISOString(),
+			});
+		}
+
 		chrome.runtime.sendMessage({
 			type: "pushNotification",
 			item: item.getAllInfo(),

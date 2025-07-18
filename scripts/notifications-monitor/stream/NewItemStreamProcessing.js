@@ -1,13 +1,23 @@
 /*global chrome*/
 
 import { Streamy } from "../../core/utils/Streamy.js";
-import { keywordMatch } from "../../core/utils/KeywordMatch.js";
+import { keywordMatch, keywordMatcher } from "../../core/utils/KeywordMatch.js";
 import { SettingsMgr } from "../../core/services/SettingsMgrCompat.js";
 import { Item } from "../../core/models/Item.js";
 import { YMDHiStoISODate, DateToUnixTimeStamp } from "../../core/utils/DateHelper.js";
 
 const SEARCH_PHRASE_REGEX = /^([a-zA-Z0-9\s'".,]{0,40})[\s]+.*$/;
 
+/**
+ * NewItemStreamProcessing handles real-time item processing with keyword matching.
+ *
+ * CRITICAL: This class MUST use the same SettingsMgr instance as NotificationMonitor
+ * to prevent keyword array synchronization issues. When keywords are edited, both
+ * components must see the same array indices to avoid:
+ * - OS notifications firing but items not showing in grid (different match results)
+ * - Off-by-one errors in keyword display (index mismatch)
+ * - "but without" conditions getting out of sync (contains/without at different indices)
+ */
 class NewItemStreamProcessing {
 	constructor(settingsManager = null, enableChromeListener = true) {
 		this.settingsManager = settingsManager || new SettingsMgr();
@@ -28,12 +38,19 @@ class NewItemStreamProcessing {
 			pushNotificationsAFA: false,
 		};
 
+		// Diagnostic: Track processing counts per ASIN
+		this.processingCounts = new Map();
+
 		this.setupPipeline();
 		this.initialize();
 	}
 
 	async initialize() {
 		await this.updateCachedSettings();
+
+		// Set the settings manager on the keyword matcher singleton
+		// This enables debug logging in KeywordMatch
+		keywordMatcher.setSettingsManager(this.settingsManager);
 
 		if (this.enableChromeListener) {
 			this.addSettingsListener();
@@ -56,7 +73,7 @@ class NewItemStreamProcessing {
 		if (typeof chrome === "undefined" || !chrome.storage) {
 			throw new Error("chrome.storage is not defined");
 		}
-		chrome.storage.onChanged.addListener((changes, namespace) => {
+		chrome.storage.onChanged.addListener(async (changes, namespace) => {
 			if (namespace === "local") {
 				// Check if any relevant settings changed
 				const relevantKeys = [
@@ -70,7 +87,13 @@ class NewItemStreamProcessing {
 
 				if (relevantKeys.some((key) => changes[key])) {
 					// Update the handler's cached settings
-					this.updateCachedSettings();
+					// CRITICAL: Must await to ensure settings are fully updated before processing new items
+					await this.updateCachedSettings();
+
+					// Also clear the keyword matcher's cache to ensure it uses fresh compiled patterns
+					if (this.settingsManager && typeof this.settingsManager.clearKeywordCache === "function") {
+						this.settingsManager.clearKeywordCache();
+					}
 				}
 			}
 		});
@@ -108,6 +131,34 @@ class NewItemStreamProcessing {
 		if (data.title === undefined) {
 			return rawData; //Skip this transformer if no title
 		}
+
+		// Diagnostic logging for duplicate processing
+		if (this.settingsManager.get("general.debugKeywords")) {
+			const timestamp = Date.now();
+			const asin = data.asin;
+
+			// Track processing count
+			const currentCount = this.processingCounts.get(asin) || 0;
+			this.processingCounts.set(asin, currentCount + 1);
+
+			console.log("[NewItemStreamProcessing] transformIsHighlight called:", {
+				asin: asin,
+				title: data.title?.substring(0, 50) + "...",
+				processingCount: currentCount + 1,
+				isDuplicate: currentCount > 0,
+				timestamp,
+				timestampMs: timestamp,
+				callStack: new Error().stack.split("\n").slice(2, 5).join(" <- "),
+			});
+
+			// Warn if this is a duplicate processing
+			if (currentCount > 0) {
+				console.warn(
+					`[NewItemStreamProcessing] DUPLICATE PROCESSING DETECTED for ASIN ${asin} - processed ${currentCount + 1} times`
+				);
+			}
+		}
+
 		// Check highlight keywords with available ETV data (null/undefined values are handled by keywordMatch)
 		const highlightKWMatch = keywordMatch(
 			this.cachedSettings.highlightKeywords,
@@ -187,6 +238,16 @@ class NewItemStreamProcessing {
 			item.setSearch(data.search);
 
 			if (KWNotification) {
+				// Debug logging for OS notification triggered by keyword match
+				if (this.settingsManager.get("general.debugKeywords")) {
+					console.log("[NotificationMonitor] OS notification triggered for keyword match:", {
+						asin: data.asin,
+						title: data.title,
+						keyword: data.KW,
+						KWsMatch: data.KWsMatch,
+						timestamp: new Date().toISOString(),
+					});
+				}
 				this.outputFunctions.push("Vine Helper - New item match KW!", item);
 			} else if (AFANotification) {
 				this.outputFunctions.push("Vine Helper - New AFA item", item);
@@ -233,6 +294,18 @@ class NewItemStreamProcessing {
 	}
 
 	input(data) {
+		// Diagnostic logging for stream input
+		if (this.settingsManager.get("general.debugKeywords") && data.item) {
+			const timestamp = Date.now();
+			console.log("[NewItemStreamProcessing] Stream input received:", {
+				asin: data.item.data?.asin,
+				title: data.item.data?.title?.substring(0, 50) + "...",
+				type: data.type,
+				reason: data.reason,
+				timestamp,
+				timestampMs: timestamp,
+			});
+		}
 		this.dataStream.input(data);
 	}
 
