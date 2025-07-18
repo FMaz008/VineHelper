@@ -1622,40 +1622,28 @@ class NotificationMonitor extends MonitorCore {
 					// Set the highlight flag
 					notif.dataset.typeHighlight = 1;
 
-					if (!wasHighlighted) {
-						// New highlight - play sound and move to top
-						const tileVisible = this.#processNotificationFiltering(notif);
+					// Since we're in the !currentlyHighlighted block, this is always a new highlight
+					// Play sound and move to top
+					const tileVisible = this.#processNotificationFiltering(notif);
 
-						// Play sound if visible or fetching
-						if (
-							(tileVisible || this._fetchingRecentItems) &&
-							this._settings.get("notification.monitor.highlight.sound") != "0"
-						) {
-							this._soundPlayerMgr.play(TYPE_HIGHLIGHT);
-						}
-
-						// Move to top if not fetching and sort allows it
-						if (!this._fetchingRecentItems && this._sortType !== TYPE_DATE_ASC) {
-							this._moveNotifToTop(notif);
-						}
-
-						// Don't handle visibility change here - it will be handled by the caller
-						// This prevents double counting when an item is both highlighted and zero ETV
-					} else {
-						// Already highlighted - just re-apply filtering
-						this.#processNotificationFiltering(notif);
-					}
-				} else if (wasHighlighted) {
-					// Was highlighted but no longer matches - clear highlight
-					notif.dataset.typeHighlight = 0;
-					if (technicalBtn) {
-						delete technicalBtn.dataset.highlightkw;
+					// Play sound if visible or fetching
+					if (
+						(tileVisible || this._fetchingRecentItems) &&
+						this._settings.get("notification.monitor.highlight.sound") != "0"
+					) {
+						this._soundPlayerMgr.play(TYPE_HIGHLIGHT);
 					}
 
-					// Re-apply filtering but don't handle visibility change here
-					// The caller will handle it to prevent double counting
-					this.#processNotificationFiltering(notif);
+					// Move to top if not fetching and sort allows it
+					if (!this._fetchingRecentItems && this._sortType !== TYPE_DATE_ASC) {
+						this._moveNotifToTop(notif);
+					}
+
+					// Don't handle visibility change here - it will be handled by the caller
+					// This prevents double counting when an item is both highlighted and zero ETV
 				}
+				// Note: No else block needed here because if we're in !currentlyHighlighted
+				// and the item doesn't match keywords, it wasn't highlighted before and still isn't
 			}
 		} else if (hasEtvConds && currentlyHighlighted && data.title) {
 			// Item is already highlighted, but we should check if the matched keyword has ETV conditions
