@@ -28,6 +28,7 @@ var HiddenList = new HiddenListMgr();
 import { Item } from "/scripts/core/models/Item.js";
 
 import { ModalMgr } from "/scripts/ui/controllers/ModalMgr.js";
+import { StyleUtils } from "/scripts/ui/utils/StyleUtils.js";
 var modalMgr = new ModalMgr();
 
 import { Template } from "/scripts/core/utils/Template.js";
@@ -749,23 +750,26 @@ class Tile {
 			});
 		}
 
-		this.#tileDOM.style.backgroundColor = "unset";
-		this.#tileDOM.style.background = "unset";
-
+		// Use StyleUtils to handle background styling
 		if (zeroETV && highlight && !Settings.get("general.highlightColor.ignore0ETVhighlight")) {
 			const color1 = Settings.get("general.zeroETVHighlight.color");
 			const color2 = Settings.get("general.highlightColor.color");
-			this.#tileDOM.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;
+			const gradient = StyleUtils.createStripedGradient(color1, color2);
+			StyleUtils.applyBackground(this.#tileDOM, gradient, true);
 		} else if (unknownETV && highlight && !Settings.get("general.highlightColor.ignoreUnknownETVhighlight")) {
 			const color1 = Settings.get("general.unknownETVHighlight.color");
 			const color2 = Settings.get("general.highlightColor.color");
-			this.#tileDOM.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;
+			const gradient = StyleUtils.createStripedGradient(color1, color2);
+			StyleUtils.applyBackground(this.#tileDOM, gradient, true);
 		} else if (highlight) {
-			this.#tileDOM.style.backgroundColor = Settings.get("general.highlightColor.color");
+			StyleUtils.applyBackground(this.#tileDOM, Settings.get("general.highlightColor.color"), false);
 		} else if (zeroETV) {
-			this.#tileDOM.style.backgroundColor = Settings.get("general.zeroETVHighlight.color");
+			StyleUtils.applyBackground(this.#tileDOM, Settings.get("general.zeroETVHighlight.color"), false);
 		} else if (unknownETV) {
-			this.#tileDOM.style.backgroundColor = Settings.get("general.unknownETVHighlight.color");
+			StyleUtils.applyBackground(this.#tileDOM, Settings.get("general.unknownETVHighlight.color"), false);
+		} else {
+			// Clear any existing styling
+			StyleUtils.clearBackgrounds(this.#tileDOM);
 		}
 	}
 

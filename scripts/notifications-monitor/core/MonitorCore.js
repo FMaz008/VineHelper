@@ -18,6 +18,7 @@ import { PinMgr } from "/scripts/notifications-monitor/services/PinMgr.js";
 import { HookMgr } from "/scripts/core/utils/HookMgr.js";
 import { Internationalization } from "/scripts/core/services/Internationalization.js";
 import { ScreenNotifier, ScreenNotification } from "/scripts/ui/components/ScreenNotifier.js";
+import { StyleUtils } from "/scripts/ui/utils/StyleUtils.js";
 import { Tooltip } from "/scripts/ui/components/Tooltip.js";
 import { BrendaAnnounceQueue } from "/scripts/core/services/BrendaAnnounce.js";
 import { ModalMgr } from "/scripts/ui/controllers/ModalMgr.js";
@@ -332,44 +333,39 @@ class MonitorCore {
 			});
 		}
 
-		// Clear both background properties first to ensure clean state
-		notif.style.background = "";
-		notif.style.backgroundColor = "";
-
+		// Use StyleUtils to handle background styling
 		if (isZeroETV && isHighlighted && !ignore0ETVhighlight) {
-			const color1 = zeroETVColor;
-			const color2 = highlightColor;
-			notif.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;
+			const gradient = StyleUtils.createStripedGradient(zeroETVColor, highlightColor);
+			StyleUtils.applyBackground(notif, gradient, true);
 			if (debugItemProcessing) {
 				console.log("[DEBUG-ETV-STYLING] Applied Zero ETV + Highlight striped styling", {
 					asin: notif.id?.replace("vh-notification-", ""),
 				});
 			}
 		} else if (isUnknownETV && isHighlighted && !ignoreUnknownETVhighlight) {
-			const color1 = unknownETVColor;
-			const color2 = highlightColor;
-			notif.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;
+			const gradient = StyleUtils.createStripedGradient(unknownETVColor, highlightColor);
+			StyleUtils.applyBackground(notif, gradient, true);
 			if (debugItemProcessing) {
 				console.log("[DEBUG-ETV-STYLING] Applied Unknown ETV + Highlight striped styling", {
 					asin: notif.id?.replace("vh-notification-", ""),
 				});
 			}
 		} else if (isHighlighted) {
-			notif.style.backgroundColor = highlightColor;
+			StyleUtils.applyBackground(notif, highlightColor, false);
 			if (debugItemProcessing) {
 				console.log("[DEBUG-ETV-STYLING] Applied Highlight solid color", {
 					asin: notif.id?.replace("vh-notification-", ""),
 				});
 			}
 		} else if (isZeroETV) {
-			notif.style.backgroundColor = zeroETVColor;
+			StyleUtils.applyBackground(notif, zeroETVColor, false);
 			if (debugItemProcessing) {
 				console.log("[DEBUG-ETV-STYLING] Applied Zero ETV solid color", {
 					asin: notif.id?.replace("vh-notification-", ""),
 				});
 			}
 		} else if (isUnknownETV) {
-			notif.style.backgroundColor = unknownETVColor;
+			StyleUtils.applyBackground(notif, unknownETVColor, false);
 			if (debugItemProcessing) {
 				console.log("[DEBUG-ETV-STYLING] Applied Unknown ETV solid color", {
 					asin: notif.id?.replace("vh-notification-", ""),

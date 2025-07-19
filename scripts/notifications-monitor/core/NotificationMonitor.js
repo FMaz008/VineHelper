@@ -1844,27 +1844,6 @@ class NotificationMonitor extends MonitorCore {
 	}
 
 	/**
-	 * Override parent method to also update Tile styling
-	 * @param {HTMLElement} notif - The notification element
-	 * @protected
-	 */
-	_processNotificationHighlight(notif) {
-		// Call parent method first to apply direct DOM styling
-		super._processNotificationHighlight(notif);
-
-		// Also update the Tile component's styling
-		if (notif) {
-			const asin = notif.id?.replace("vh-notification-", "") || notif.dataset?.asin;
-			if (asin) {
-				const tile = this._itemsMgr.getItemTile(asin);
-				if (tile && typeof tile.updateHighlight === "function") {
-					tile.updateHighlight();
-				}
-			}
-		}
-	}
-
-	/**
 	 * Check if an item has Zero ETV and handle visibility changes
 	 * This is separated from #setETV to avoid duplicate checks when setting min/max
 	 * @param {HTMLElement} notif - The notification element
