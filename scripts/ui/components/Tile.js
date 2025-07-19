@@ -33,7 +33,8 @@ var modalMgr = new ModalMgr();
 import { Template } from "/scripts/core/utils/Template.js";
 var Tpl = new Template();
 
-import { keywordMatch } from "../../core/utils/KeywordMatch.js";
+import { compile as compileKeywords, compileKeywordObjects } from "../../core/utils/KeywordCompiler.js";
+import { findMatch } from "../../core/utils/KeywordMatcher.js";
 import { YMDHiStoISODate } from "/scripts/core/utils/DateHelper.js";
 import { getTileByAsin, updateTileCounts } from "/scripts/ui/components/Grid.js";
 import { unescapeHTML, escapeHTML } from "/scripts/core/utils/StringHelper.js";
@@ -557,10 +558,22 @@ class Tile {
 		this.#tileDOM.dataset.blurredKeyword = "";
 		const blurKeywords = Settings.get("general.blurKeywords");
 		if (Settings.isPremiumUser() && blurKeywords?.length > 0) {
-			// SharedKeywordMatcher handles compilation internally
-			let match = keywordMatch(blurKeywords, this.getTitle());
-			if (match) {
-				logger.add("TILE: The item match the keyword '" + match + "', blur it");
+			// Compile and match blur keywords
+			const compiledBlurKeywords = compileKeywordObjects(blurKeywords);
+			const matchResult = findMatch(this.getTitle(), compiledBlurKeywords);
+			if (matchResult) {
+				// Extract keyword string from match result
+				// Priority: contains string > first contains array item > keyword property
+				let keywordString = '';
+				if (typeof matchResult.contains === 'string') {
+					keywordString = matchResult.contains;
+				} else if (Array.isArray(matchResult.contains) && matchResult.contains.length > 0) {
+					keywordString = matchResult.contains[0];
+				} else if (matchResult.keyword) {
+					keywordString = matchResult.keyword;
+				}
+				
+				logger.add("TILE: The item match the keyword '" + keywordString + "', blur it");
 				const img = this.#tileDOM.querySelector("img");
 				if (img) {
 					if (Settings.get("general.unblurImageOnHover")) {
@@ -570,8 +583,7 @@ class Tile {
 					}
 				}
 				this.#tileDOM.querySelector(".vvp-item-product-title-container")?.classList.add("dynamic-blur");
-				const blurMatchString = typeof match === "object" ? match.contains || match.word || "" : match;
-				this.#tileDOM.dataset.blurredKeyword = escapeHTML(blurMatchString);
+				this.#tileDOM.dataset.blurredKeyword = escapeHTML(keywordString);
 			}
 		}
 

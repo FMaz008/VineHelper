@@ -22,6 +22,14 @@ export function removeSpecialHTML(string) {
 }
 
 export function escapeHTML(string) {
+	// Add defensive check for null/undefined
+	if (!string) {
+		return '';
+	}
+	
+	// Convert to string if not already
+	string = String(string);
+	
 	//Escape all special characters
 	return string.replace(
 		/[&<>"']/g,
