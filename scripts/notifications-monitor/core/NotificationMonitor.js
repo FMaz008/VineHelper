@@ -7,7 +7,8 @@
 import { Tile } from "/scripts/ui/components/Tile.js";
 
 import { YMDHiStoISODate } from "/scripts/core/utils/DateHelper.js";
-import { keywordMatch, hasAnyEtvConditions, keywordMatcher } from "/scripts/core/utils/KeywordMatch.js";
+import { compile as compileKeywords, compileKeywordObjects } from "/scripts/core/utils/KeywordCompiler.js";
+import { findMatch, hasEtvConditions } from "/scripts/core/utils/KeywordMatcher.js";
 import { ETV_REPOSITION_THRESHOLD } from "/scripts/core/utils/KeywordUtils.js";
 import { escapeHTML, unescapeHTML, removeSpecialHTML } from "/scripts/core/utils/StringHelper.js";
 import { MonitorCore } from "/scripts/notifications-monitor/core/MonitorCore.js";
@@ -103,6 +104,10 @@ class NotificationMonitor extends MonitorCore {
 		buttons: new Map(),
 	};
 
+	// Compiled keyword patterns
+	#compiledHighlightKeywords = null;
+	#compiledHideKeywords = null;
+
 	constructor(monitorV3 = false) {
 		super(monitorV3);
 
@@ -120,7 +125,10 @@ class NotificationMonitor extends MonitorCore {
 		// Register this instance for testing if the expose script is loaded
 		if (window.VineHelper && typeof window.VineHelper.registerMonitor === "function") {
 			window.VineHelper.registerMonitor(this);
-			console.log("[NotificationMonitor] Registered instance for testing at window.VineHelper.monitor");
+			// Only log if debugMemory or debugTileCounter is enabled
+			if (this._settings.get("general.debugMemory") || this._settings.get("general.debugTileCounter")) {
+				console.log("[NotificationMonitor] Registered instance for testing at window.VineHelper.monitor");
+			}
 		}
 	}
 
@@ -132,9 +140,8 @@ class NotificationMonitor extends MonitorCore {
 		// Wait for settings to load
 		await this._settings.waitForLoad();
 
-		// Set the settings manager on the keyword matcher singleton
-		// This enables debug logging in KeywordMatch
-		keywordMatcher.setSettingsManager(this._settings);
+		// Compile keywords on initialization
+		this._compileKeywords();
 
 		// Check for debug flags from settings
 		const debugTileCounter = this._settings.get("general.debugTileCounter");
@@ -150,6 +157,38 @@ class NotificationMonitor extends MonitorCore {
 			if (debugTileCounter) {
 				await this._initializeTileCounterDebugger();
 			}
+		}
+	}
+
+	/**
+	 * Compile keywords from settings
+	 * @private
+	 */
+	_compileKeywords() {
+		// Compile highlight keywords
+		const highlightKeywords = this._settings.get("general.highlightKeywords");
+		if (highlightKeywords && highlightKeywords.length > 0) {
+			this.#compiledHighlightKeywords = compileKeywordObjects(highlightKeywords);
+		} else {
+			this.#compiledHighlightKeywords = null;
+		}
+
+		// Compile hide keywords
+		const hideKeywords = this._settings.get("general.hideKeywords");
+		if (hideKeywords && hideKeywords.length > 0) {
+			this.#compiledHideKeywords = compileKeywordObjects(hideKeywords);
+		} else {
+			this.#compiledHideKeywords = null;
+		}
+
+		// Debug logging
+		if (this._settings.get("general.debugKeywords")) {
+			console.log("[NotificationMonitor] Keywords compiled:", {
+				highlightCount: highlightKeywords?.length || 0,
+				hideCount: hideKeywords?.length || 0,
+				hasCompiledHighlight: !!this.#compiledHighlightKeywords,
+				hasCompiledHide: !!this.#compiledHideKeywords,
+			});
 		}
 	}
 
@@ -1574,15 +1613,26 @@ class NotificationMonitor extends MonitorCore {
 		// Re-evaluate keywords ONLY if:
 		// 1. Keywords have ETV conditions AND
 		// 2. The item hasn't already been matched to a keyword without ETV conditions
-		const highlightKeywords = this._settings.get("general.highlightKeywords");
-		const hasEtvConds = highlightKeywords && hasAnyEtvConditions(highlightKeywords);
+		const hasEtvConds = this.#compiledHighlightKeywords && hasEtvConditions(this.#compiledHighlightKeywords);
 		const currentlyHighlighted = notif.dataset.typeHighlight == 1;
+		
+		// Debug: Log why re-evaluation might be triggered
+		if (hasEtvConds && currentlyHighlighted) {
+			console.log(`[KEYWORD-DEBUG] Re-evaluation conditions met:`, {
+				asin,
+				hasEtvConds,
+				currentlyHighlighted,
+				hasTitle: !!data.title,
+				willTriggerReEvaluation: hasEtvConds && currentlyHighlighted && data.title,
+				timestamp: new Date().toISOString()
+			});
+		}
 
 		// Debug logging to understand duplicate processing
 		if (this._settings.get("general.debugKeywords")) {
 			console.log("[NotificationMonitor] #setETV keyword re-evaluation check:", {
 				asin,
-				hasHighlightKeywords: !!highlightKeywords,
+				hasCompiledHighlightKeywords: !!this.#compiledHighlightKeywords,
 				hasEtvConditions: hasEtvConds,
 				currentlyHighlighted,
 				willReEvaluate: hasEtvConds && data.title && !currentlyHighlighted,
@@ -1597,12 +1647,24 @@ class NotificationMonitor extends MonitorCore {
 		if (hasEtvConds && !currentlyHighlighted) {
 			if (data.title) {
 				// Check keyword match with new ETV values
-				const matchedKeyword = await keywordMatch(
-					highlightKeywords,
+				const matchResult = findMatch(
 					data.title,
-					etvObj.dataset.etvMin,
-					etvObj.dataset.etvMax
+					this.#compiledHighlightKeywords,
+					parseFloat(etvObj.dataset.etvMin) || null,
+					parseFloat(etvObj.dataset.etvMax) || null
 				);
+				
+				// Extract keyword string from match result
+				let matchedKeyword = false;
+				if (matchResult) {
+					if (typeof matchResult.contains === 'string') {
+						matchedKeyword = matchResult.contains;
+					} else if (Array.isArray(matchResult.contains) && matchResult.contains.length > 0) {
+						matchedKeyword = matchResult.contains[0];
+					} else if (matchResult.keyword) {
+						matchedKeyword = matchResult.keyword;
+					}
+				}
 
 				const wasHighlighted = notif.dataset.typeHighlight == 1;
 				const technicalBtn = this._gridContainer.querySelector("#vh-reason-link-" + asin + ">div");
@@ -1651,60 +1713,110 @@ class NotificationMonitor extends MonitorCore {
 			const technicalBtn = this._gridContainer.querySelector("#vh-reason-link-" + asin + ">div");
 			const currentKeyword = technicalBtn?.dataset.highlightkw;
 
-			if (currentKeyword) {
-				// Find the keyword object to check if it has ETV conditions
-				const keywordObj = highlightKeywords.find(
-					(kw) =>
-						(typeof kw === "string" && kw === currentKeyword) ||
-						(typeof kw === "object" && kw.word === currentKeyword)
+			if (currentKeyword && this.#compiledHighlightKeywords) {
+				// Debug: Log re-evaluation details
+				const etvMin = parseFloat(etvObj.dataset.etvMin) || null;
+				const etvMax = parseFloat(etvObj.dataset.etvMax) || null;
+				console.log(`[KEYWORD-DEBUG] Re-evaluating highlighted item:`, {
+					asin,
+					currentKeyword,
+					title: data.title,
+					etvMin,
+					etvMax,
+					etvObjDataset: { ...etvObj.dataset },
+					timestamp: new Date().toISOString()
+				});
+
+				// Check if the current keyword still matches with actual ETV values
+				const matchResult = findMatch(
+					data.title,
+					this.#compiledHighlightKeywords,
+					etvMin,
+					etvMax
 				);
 
-				// Only re-evaluate if the current keyword has ETV conditions
-				if (keywordObj && typeof keywordObj === "object" && (keywordObj.etv_min || keywordObj.etv_max)) {
-					const matchedKeyword = await keywordMatch(
-						highlightKeywords,
-						data.title,
-						etvObj.dataset.etvMin,
-						etvObj.dataset.etvMax
-					);
-
-					if (matchedKeyword === false) {
-						// No longer matches with actual ETV values
-						notif.dataset.typeHighlight = 0;
-						delete technicalBtn.dataset.highlightkw;
-						this.#processNotificationFiltering(notif);
+				// Extract keyword string from match result
+				let matchedKeywordString = null;
+				if (matchResult) {
+					if (typeof matchResult.contains === 'string') {
+						matchedKeywordString = matchResult.contains;
+					} else if (Array.isArray(matchResult.contains) && matchResult.contains.length > 0) {
+						matchedKeywordString = matchResult.contains[0];
+					} else if (matchResult.keyword) {
+						matchedKeywordString = matchResult.keyword;
 					}
+				}
+
+				console.log(`[KEYWORD-DEBUG] Re-evaluation result:`, {
+					asin,
+					matchFound: !!matchResult,
+					matchedKeyword: matchedKeywordString,
+					currentKeyword,
+					keywordsMatch: matchedKeywordString === currentKeyword,
+					timestamp: new Date().toISOString()
+				});
+
+				// If no match or matched a different keyword, update accordingly
+				if (!matchResult || matchedKeywordString !== currentKeyword) {
+					console.log(`[KEYWORD-DEBUG] Removing highlight:`, {
+						asin,
+						reason: !matchResult ? 'no match found' : 'different keyword matched',
+						previousKeyword: currentKeyword,
+						newKeyword: matchedKeywordString,
+						timestamp: new Date().toISOString()
+					});
+					// No longer matches with actual ETV values
+					notif.dataset.typeHighlight = 0;
+					delete technicalBtn.dataset.highlightkw;
+					this.#processNotificationFiltering(notif);
 				}
 			}
 		}
 
-		// Check hide keywords separately (not dependent on highlight keywords)
-		if (this._settings.get("notification.hideList")) {
-			const hideKeywords = this._settings.get("general.hideKeywords");
-			if (hideKeywords) {
-				if (data.title) {
-					const matchedHideKeyword = await keywordMatch(
-						hideKeywords,
-						data.title,
-						etvObj.dataset.etvMin,
-						etvObj.dataset.etvMax
-					);
-					if (matchedHideKeyword !== false) {
-						console.log("[setETV] Hide keyword matched for", data, matchedHideKeyword);
-						// Remove (permanently "hide") the tile
-						this._log.add(`NOTIF: Item ${asin} matched hide keyword ${matchedHideKeyword}. Hiding it.`);
-
-						// Check if the tile is fully registered before attempting removal
-						const element = this._itemsMgr.getItemDOMElement(asin);
-						if (element) {
-							// Tile is fully registered, safe to remove
-							this.#removeTile(asin);
-						} else {
-							// Tile not fully registered yet (probably called during addTileInGrid)
-							console.warn(`Hide keyword matched for ${asin} but tile not fully registered. Skipping.`);
-						}
-						return true; // Exit early since item is processed
+		// KEYWORD PRIORITY LOGIC:
+		// Hide keywords should ONLY be checked if the item does NOT match a highlight keyword.
+		// This ensures highlighted items are never hidden, maintaining the intended priority:
+		// 1. Highlight keywords take precedence
+		// 2. Hide keywords only apply to non-highlighted items
+		const isHighlighted = notif.dataset.typeHighlight == 1;
+		
+		if (!isHighlighted && this._settings.get("notification.hideList") && this.#compiledHideKeywords) {
+			if (data.title) {
+				const hideMatchResult = findMatch(
+					data.title,
+					this.#compiledHideKeywords,
+					parseFloat(etvObj.dataset.etvMin) || null,
+					parseFloat(etvObj.dataset.etvMax) || null
+				);
+				
+				if (hideMatchResult) {
+					// Extract keyword string from match result
+					// Priority: contains string > first contains array item > keyword property
+					let hideKeywordString = '';
+					if (typeof hideMatchResult.contains === 'string') {
+						hideKeywordString = hideMatchResult.contains;
+					} else if (Array.isArray(hideMatchResult.contains) && hideMatchResult.contains.length > 0) {
+						hideKeywordString = hideMatchResult.contains[0];
+					} else if (hideMatchResult.keyword) {
+						hideKeywordString = hideMatchResult.keyword;
 					}
+					
+					if (this._settings.get("general.debugKeywords")) {
+						console.log("[setETV] Hide keyword matched for", data, hideKeywordString);
+					}
+					// Remove (permanently "hide") the tile
+					this._log.add(`NOTIF: Item ${asin} matched hide keyword ${hideKeywordString}. Hiding it.`);
+
+					// Check if the tile is fully registered before attempting removal
+					const element = this._itemsMgr.getItemDOMElement(asin);
+					if (element) {
+						// Tile is fully registered, safe to remove
+						this.#removeTile(asin);
+					} else {
+						// Tile not fully registered yet (probably called during addTileInGrid)
+						console.warn(`Hide keyword matched for ${asin} but tile not fully registered. Skipping.`);
+					}
+					return true; // Exit early since item is processed
 				}
 			}
 		}
@@ -3010,7 +3122,10 @@ class NotificationMonitor extends MonitorCore {
 	 * to prevent memory leaks
 	 */
 	destroy() {
-		console.log("🧹 Destroying NotificationMonitor and cleaning up event listeners..."); // eslint-disable-line no-console
+		// Only log cleanup messages if debugMemory is enabled
+		if (this._settings.get("general.debugMemory")) {
+			console.log("🧹 Destroying NotificationMonitor and cleaning up event listeners..."); // eslint-disable-line no-console
+		}
 
 		// Remove grid container listener
 		if (this.#eventHandlers.grid && this._gridContainer) {
@@ -3111,7 +3226,9 @@ class NotificationMonitor extends MonitorCore {
 		// Clear references
 		this._gridContainer = null;
 
-		console.log("✅ NotificationMonitor cleanup complete"); // eslint-disable-line no-console
+		if (this._settings.get("general.debugMemory")) {
+			console.log("✅ NotificationMonitor cleanup complete"); // eslint-disable-line no-console
+		}
 	}
 }
 

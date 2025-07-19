@@ -1,7 +1,8 @@
 /*global chrome*/
 
 import { Streamy } from "../../core/utils/Streamy.js";
-import { keywordMatch, keywordMatcher } from "../../core/utils/KeywordMatch.js";
+import { compile as compileKeywords, compileKeywordObjects } from "../../core/utils/KeywordCompiler.js";
+import { findMatch, getMatchedKeyword } from "../../core/utils/KeywordMatcher.js";
 import { SettingsMgr } from "../../core/services/SettingsMgrCompat.js";
 import { Item } from "../../core/models/Item.js";
 import { YMDHiStoISODate, DateToUnixTimeStamp } from "../../core/utils/DateHelper.js";
@@ -11,12 +12,10 @@ const SEARCH_PHRASE_REGEX = /^([a-zA-Z0-9\s'".,]{0,40})[\s]+.*$/;
 /**
  * NewItemStreamProcessing handles real-time item processing with keyword matching.
  *
- * CRITICAL: This class MUST use the same SettingsMgr instance as NotificationMonitor
- * to prevent keyword array synchronization issues. When keywords are edited, both
- * components must see the same array indices to avoid:
- * - OS notifications firing but items not showing in grid (different match results)
- * - Off-by-one errors in keyword display (index mismatch)
- * - "but without" conditions getting out of sync (contains/without at different indices)
+ * This class uses the simplified KeywordCompiler/KeywordMatcher pattern where:
+ * - Keywords are compiled once on initialization
+ * - Keywords are recompiled when settings change
+ * - No complex caching logic is needed
  */
 class NewItemStreamProcessing {
 	constructor(settingsManager = null, enableChromeListener = true) {
@@ -29,14 +28,15 @@ class NewItemStreamProcessing {
 			push: () => {},
 		};
 
-		this.cachedSettings = {
-			hideKeywords: null,
-			highlightKeywords: null,
-			blurKeywords: null,
-			hideListEnabled: false,
-			pushNotifications: false,
-			pushNotificationsAFA: false,
-		};
+		// Compiled keywords - compiled once and reused
+		this.compiledHideKeywords = null;
+		this.compiledHighlightKeywords = null;
+		this.compiledBlurKeywords = null;
+
+		// Settings that affect behavior
+		this.hideListEnabled = false;
+		this.pushNotifications = false;
+		this.pushNotificationsAFA = false;
 
 		// Diagnostic: Track processing counts per ASIN
 		this.processingCounts = new Map();
@@ -46,58 +46,38 @@ class NewItemStreamProcessing {
 	}
 
 	async initialize() {
-		await this.updateCachedSettings();
-
-		// Set the settings manager on the keyword matcher singleton
-		// This enables debug logging in KeywordMatch
-		keywordMatcher.setSettingsManager(this.settingsManager);
-
-		if (this.enableChromeListener) {
-			this.addSettingsListener();
-		}
+		await this.compileKeywords();
 	}
 
-	async updateCachedSettings() {
+	async compileKeywords() {
 		await this.settingsManager.waitForLoad();
 
-		this.cachedSettings.hideKeywords = this.settingsManager.get("general.hideKeywords");
-		this.cachedSettings.highlightKeywords = this.settingsManager.get("general.highlightKeywords");
-		this.cachedSettings.blurKeywords = this.settingsManager.get("general.blurKeywords");
-		this.cachedSettings.hideListEnabled = this.settingsManager.get("notification.hideList");
-		this.cachedSettings.pushNotifications = this.settingsManager.get("notification.pushNotifications");
-		this.cachedSettings.pushNotificationsAFA = this.settingsManager.get("notification.pushNotificationsAFA");
-	}
+		// Get keywords from settings
+		const hideKeywords = this.settingsManager.get("general.hideKeywords") || [];
+		const highlightKeywords = this.settingsManager.get("general.highlightKeywords") || [];
+		const blurKeywords = this.settingsManager.get("general.blurKeywords") || [];
 
-	addSettingsListener() {
-		// Listen for settings changes to update handler
-		if (typeof chrome === "undefined" || !chrome.storage) {
-			throw new Error("chrome.storage is not defined");
+		// Compile keywords into arrays of compiled keyword objects
+		this.compiledHideKeywords = hideKeywords.length > 0 ? compileKeywordObjects(hideKeywords) : null;
+		this.compiledHighlightKeywords = highlightKeywords.length > 0 ? compileKeywordObjects(highlightKeywords) : null;
+		this.compiledBlurKeywords = blurKeywords.length > 0 ? compileKeywordObjects(blurKeywords) : null;
+
+		// Update behavior settings
+		this.hideListEnabled = this.settingsManager.get("notification.hideList");
+		this.pushNotifications = this.settingsManager.get("notification.pushNotifications");
+		this.pushNotificationsAFA = this.settingsManager.get("notification.pushNotificationsAFA");
+
+		// Debug logging
+		if (this.settingsManager.get("general.debugKeywords")) {
+			console.log("[NewItemStreamProcessing] Keywords compiled:", {
+				hideKeywordsCount: hideKeywords.length,
+				highlightKeywordsCount: highlightKeywords.length,
+				blurKeywordsCount: blurKeywords.length,
+				timestamp: Date.now()
+			});
 		}
-		chrome.storage.onChanged.addListener(async (changes, namespace) => {
-			if (namespace === "local") {
-				// Check if any relevant settings changed
-				const relevantKeys = [
-					"general.hideKeywords",
-					"general.highlightKeywords",
-					"general.blurKeywords",
-					"notification.hideList",
-					"notification.pushNotifications",
-					"notification.pushNotificationsAFA",
-				];
-
-				if (relevantKeys.some((key) => changes[key])) {
-					// Update the handler's cached settings
-					// CRITICAL: Must await to ensure settings are fully updated before processing new items
-					await this.updateCachedSettings();
-
-					// Also clear the keyword matcher's cache to ensure it uses fresh compiled patterns
-					if (this.settingsManager && typeof this.settingsManager.clearKeywordCache === "function") {
-						this.settingsManager.clearKeywordCache();
-					}
-				}
-			}
-		});
 	}
+
 
 	//#####################################################
 	//## PIPELINE
@@ -111,11 +91,20 @@ class NewItemStreamProcessing {
 		if (data.title === undefined) {
 			return true; //Skip this filter
 		}
-		//Only hide the keyword if the item is not a highlight match.
-		if (this.cachedSettings.hideListEnabled && !data.KWsMatch) {
-			// Check hide keywords with available ETV data (null/undefined values are handled by keywordMatch)
-			const hideKWMatch = keywordMatch(this.cachedSettings.hideKeywords, data.title, data.etv_min, data.etv_max);
-			if (hideKWMatch !== false) {
+		
+		// KEYWORD PRIORITY: Only check hide keywords if the item is NOT highlighted
+		// This ensures highlight keywords take precedence over hide keywords
+		if (this.hideListEnabled && !data.KWsMatch && this.compiledHideKeywords) {
+			const hideKeyword = getMatchedKeyword(data.title, this.compiledHideKeywords, data.etv_min, data.etv_max);
+			if (hideKeyword !== false) {
+				if (this.settingsManager.get("general.debugKeywords")) {
+					console.log("[NewItemStreamProcessing] Item hidden by keyword:", {
+						asin: data.asin,
+						title: data.title,
+						keyword: hideKeyword,
+						timestamp: Date.now()
+					});
+				}
 				return false; //Do not display the notification as it matches the hide list.
 			}
 		}
@@ -166,15 +155,24 @@ class NewItemStreamProcessing {
 			}
 		}
 
-		// Check highlight keywords with available ETV data (null/undefined values are handled by keywordMatch)
-		const highlightKWMatch = keywordMatch(
-			this.cachedSettings.highlightKeywords,
-			data.title,
-			data.etv_min,
-			data.etv_max
-		);
-		rawData.item.data.KWsMatch = highlightKWMatch !== false;
-		rawData.item.data.KW = highlightKWMatch;
+		// Check highlight keywords using the compiled keywords
+		if (this.compiledHighlightKeywords) {
+			const matchedKeyword = getMatchedKeyword(data.title, this.compiledHighlightKeywords, data.etv_min, data.etv_max);
+			rawData.item.data.KWsMatch = matchedKeyword !== false;
+			rawData.item.data.KW = matchedKeyword;
+			
+			if (matchedKeyword && this.settingsManager.get("general.debugKeywords")) {
+				console.log("[NewItemStreamProcessing] Item highlighted by keyword:", {
+					asin: data.asin,
+					title: data.title,
+					keyword: matchedKeyword,
+					timestamp: Date.now()
+				});
+			}
+		} else {
+			rawData.item.data.KWsMatch = false;
+			rawData.item.data.KW = false;
+		}
 
 		return rawData;
 	}
@@ -187,9 +185,16 @@ class NewItemStreamProcessing {
 		if (data.title == undefined) {
 			return rawData; //Skip this transformer
 		}
-		const blurKWMatch = keywordMatch(this.cachedSettings.blurKeywords, data.title);
-		rawData.item.data.BlurKWsMatch = blurKWMatch !== false;
-		rawData.item.data.BlurKW = blurKWMatch;
+		
+		// Check blur keywords using the compiled keywords
+		if (this.compiledBlurKeywords) {
+			const blurKeyword = getMatchedKeyword(data.title, this.compiledBlurKeywords);
+			rawData.item.data.BlurKWsMatch = blurKeyword !== false;
+			rawData.item.data.BlurKW = blurKeyword;
+		} else {
+			rawData.item.data.BlurKWsMatch = false;
+			rawData.item.data.BlurKW = false;
+		}
 
 		return rawData;
 	}
@@ -228,8 +233,8 @@ class NewItemStreamProcessing {
 		}
 
 		//If the new item match a highlight keyword, push a real notification.
-		const KWNotification = this.cachedSettings.pushNotifications && data.KWsMatch;
-		const AFANotification = this.cachedSettings.pushNotificationsAFA && data.queue == "last_chance";
+		const KWNotification = this.pushNotifications && data.KWsMatch;
+		const AFANotification = this.pushNotificationsAFA && data.queue == "last_chance";
 
 		if (KWNotification || AFANotification) {
 			//Create a new clean item with just the info needed to display the notification
@@ -247,7 +252,7 @@ class NewItemStreamProcessing {
 			if (KWNotification) {
 				// Debug logging for OS notification triggered by keyword match
 				if (this.settingsManager.get("general.debugKeywords")) {
-					console.log("[NotificationMonitor] OS notification triggered for keyword match:", {
+					console.log("[NewItemStreamProcessing] OS notification triggered for keyword match:", {
 						asin: data.asin,
 						title: data.title,
 						keyword: data.KW,
@@ -316,14 +321,13 @@ class NewItemStreamProcessing {
 		this.dataStream.input(data);
 	}
 
-	// Expose settings for testing
-	getCachedSettings() {
-		return this.cachedSettings;
-	}
-
-	// Allow manual settings update for testing
-	setCachedSettings(settings) {
-		Object.assign(this.cachedSettings, settings);
+	// Expose compiled keywords for testing
+	getCompiledKeywords() {
+		return {
+			hideKeywords: this.compiledHideKeywords,
+			highlightKeywords: this.compiledHighlightKeywords,
+			blurKeywords: this.compiledBlurKeywords
+		};
 	}
 }
 

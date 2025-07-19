@@ -23,7 +23,8 @@ import { getTileByAsin, addPinnedTile, removePinnedTile, updateTileCounts } from
 import { Template } from "/scripts/core/utils/Template.js";
 var Tpl = new Template();
 
-import { sharedKeywordMatcher } from "/scripts/core/utils/SharedKeywordMatcher.js";
+import { compile as compileKeywords, compileKeywordObjects } from "/scripts/core/utils/KeywordCompiler.js";
+import { findMatch } from "/scripts/core/utils/KeywordMatcher.js";
 import { escapeHTML } from "/scripts/core/utils/StringHelper.js";
 import { BrendaAnnounceQueue } from "/scripts/core/services/BrendaAnnounce.js";
 var brendaAnnounceQueue = new BrendaAnnounceQueue();
@@ -37,10 +38,35 @@ class Toolbar {
 
 	#pinDebounceTimer = null;
 	#pinDebounceClickable = true;
+	
+	// Pre-compiled keywords for performance
+	#compiledHighlightKeywords = null;
+	#compiledHideKeywords = null;
 
 	constructor(tileInstance) {
 		this.#tile = tileInstance;
 		this.#tile.setToolbar(this);
+		
+		// Initialize compiled keywords
+		this.#updateCompiledKeywords();
+	}
+	
+	#updateCompiledKeywords() {
+		// Compile highlight keywords
+		const highlightKeywords = Settings.get("general.highlightKeywords");
+		if (highlightKeywords && highlightKeywords.length > 0) {
+			this.#compiledHighlightKeywords = compileKeywordObjects(highlightKeywords);
+		} else {
+			this.#compiledHighlightKeywords = [];
+		}
+		
+		// Compile hide keywords
+		const hideKeywords = Settings.get("general.hideKeywords");
+		if (hideKeywords && hideKeywords.length > 0) {
+			this.#compiledHideKeywords = compileKeywordObjects(hideKeywords);
+		} else {
+			this.#compiledHideKeywords = [];
+		}
 	}
 
 	//Create the bare bone structure of the toolbar
@@ -398,8 +424,8 @@ class Toolbar {
 				});
 			}
 
-			// SharedKeywordMatcher handles compilation internally
-			match = sharedKeywordMatcher.match(highlightKeywords, title, etv1, etv2, "highlight", Settings);
+			// Use pre-compiled keywords for matching
+			match = findMatch(title, this.#compiledHighlightKeywords, etv1, etv2);
 			if (!match) {
 				logger.add("Toolbar: processHighlight: no match");
 				//No match now, remove the highlight
@@ -445,8 +471,8 @@ class Toolbar {
 			//Check if the item should be hidden
 			const hideKeywords = Settings.get("general.hideKeywords");
 			if (Settings.get("hiddenTab.active") && hideKeywords?.length > 0) {
-				// SharedKeywordMatcher handles compilation internally
-				match = sharedKeywordMatcher.match(hideKeywords, this.#tile.getTitle(), etv1, etv2, "hide", Settings);
+				// Use pre-compiled keywords for matching
+				match = findMatch(this.#tile.getTitle(), this.#compiledHideKeywords, etv1, etv2);
 				if (match) {
 					logger.add("Toolbar: processHide: hide match");
 					this.#tile.hideTile(false, false, true); //Do not save, skip the hidden manager: just move the tile.
