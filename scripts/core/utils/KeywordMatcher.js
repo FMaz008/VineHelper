@@ -1,10 +1,10 @@
 /**
  * @fileoverview KeywordMatcher - Pure functions for matching text against compiled keyword patterns
- * 
+ *
  * This module provides stateless matching functions that work with pre-compiled
  * keyword patterns from KeywordCompiler. It handles various matching scenarios
  * including simple contains, exclusion (without), and ETV (Estimated Time Value) conditions.
- * 
+ *
  * Key principles:
  * - Pure functions with no side effects
  * - Works with pre-compiled patterns for efficiency
@@ -19,13 +19,13 @@
  * @returns {boolean} True if the text matches the pattern
  */
 function matchesPattern(text, pattern) {
-    if (!text || !pattern || !(pattern instanceof RegExp)) {
-        return false;
-    }
-    
-    // Reset lastIndex for global regexes to ensure consistent behavior
-    pattern.lastIndex = 0;
-    return pattern.test(text);
+	if (!text || !pattern || !(pattern instanceof RegExp)) {
+		return false;
+	}
+
+	// Reset lastIndex for global regexes to ensure consistent behavior
+	pattern.lastIndex = 0;
+	return pattern.test(text);
 }
 
 /**
@@ -35,11 +35,11 @@ function matchesPattern(text, pattern) {
  * @returns {boolean} True if the text matches any pattern
  */
 function matchesAnyPattern(text, patterns) {
-    if (!text || !Array.isArray(patterns)) {
-        return false;
-    }
-    
-    return patterns.some(({ pattern }) => matchesPattern(text, pattern));
+	if (!text || !Array.isArray(patterns)) {
+		return false;
+	}
+
+	return patterns.some(({ pattern }) => matchesPattern(text, pattern));
 }
 
 /**
@@ -49,11 +49,11 @@ function matchesAnyPattern(text, patterns) {
  * @returns {boolean} True if the text matches all patterns
  */
 function matchesAllPatterns(text, patterns) {
-    if (!text || !Array.isArray(patterns) || patterns.length === 0) {
-        return false;
-    }
-    
-    return patterns.every(({ pattern }) => matchesPattern(text, pattern));
+	if (!text || !Array.isArray(patterns) || patterns.length === 0) {
+		return false;
+	}
+
+	return patterns.every(({ pattern }) => matchesPattern(text, pattern));
 }
 
 /**
@@ -64,26 +64,26 @@ function matchesAllPatterns(text, patterns) {
  * @returns {boolean} True if ETV conditions are satisfied or not specified
  */
 function satisfiesEtvConditions(keywordObj, itemEtvMin, itemEtvMax) {
-    // If no ETV conditions specified, always match
-    if (!keywordObj.etv_min && !keywordObj.etv_max) {
-        return true;
-    }
-    
-    // Check minimum ETV condition
-    if (keywordObj.etv_min !== undefined && keywordObj.etv_min !== null) {
-        if (itemEtvMax === null || itemEtvMax === undefined || itemEtvMax < keywordObj.etv_min) {
-            return false;
-        }
-    }
-    
-    // Check maximum ETV condition
-    if (keywordObj.etv_max !== undefined && keywordObj.etv_max !== null) {
-        if (itemEtvMin === null || itemEtvMin === undefined || itemEtvMin > keywordObj.etv_max) {
-            return false;
-        }
-    }
-    
-    return true;
+	// If no ETV conditions specified, always match
+	if (!keywordObj.etv_min && !keywordObj.etv_max) {
+		return true;
+	}
+
+	// Check minimum ETV condition
+	if (keywordObj.etv_min !== undefined && keywordObj.etv_min !== null) {
+		if (itemEtvMax === null || itemEtvMax === undefined || itemEtvMax < keywordObj.etv_min) {
+			return false;
+		}
+	}
+
+	// Check maximum ETV condition
+	if (keywordObj.etv_max !== undefined && keywordObj.etv_max !== null) {
+		if (itemEtvMin === null || itemEtvMin === undefined || itemEtvMin > keywordObj.etv_max) {
+			return false;
+		}
+	}
+
+	return true;
 }
 
 /**
@@ -95,63 +95,62 @@ function satisfiesEtvConditions(keywordObj, itemEtvMin, itemEtvMax) {
  * @returns {boolean} True if the text matches all conditions
  */
 function matchKeywordObject(text, compiledKeyword, itemEtvMin = null, itemEtvMax = null) {
-    if (!text || !compiledKeyword) {
-        return false;
-    }
-    
-    // Check ETV conditions first (early exit if not satisfied)
-    if (!satisfiesEtvConditions(compiledKeyword, itemEtvMin, itemEtvMax)) {
-        return false;
-    }
-    
-    // Check 'contains' conditions
-    let containsMatch = false;
-    
-    if (compiledKeyword.containsPattern) {
-        containsMatch = matchesPattern(text, compiledKeyword.containsPattern);
-    } else if (compiledKeyword.containsPatterns) {
-        // For array of contains patterns, match if ANY pattern matches
-        containsMatch = matchesAnyPattern(text, compiledKeyword.containsPatterns);
-    } else if (!compiledKeyword.withoutPattern && !compiledKeyword.withoutPatterns) {
-        // If no contains or without patterns, it's not a valid match
-        return false;
-    } else {
-        // If only 'without' patterns exist, consider it a match so far
-        containsMatch = true;
-    }
-    
-    if (!containsMatch) {
-        return false;
-    }
-    
-    // Check 'without' conditions (exclusions)
-    // Check 'without' conditions (exclusions)
-    if (compiledKeyword.withoutPattern) {
-        if (matchesPattern(text, compiledKeyword.withoutPattern)) {
-            return false;
-        }
-    }
-    
-    if (compiledKeyword.withoutPatterns) {
-        // For array of without patterns, fail if ANY pattern matches
-        if (matchesAnyPattern(text, compiledKeyword.withoutPatterns)) {
-            return false;
-        }
-    }
-    if (compiledKeyword.withoutPattern) {
-        if (matchesPattern(text, compiledKeyword.withoutPattern)) {
-            return false;
-        }
-    }
-    
-    if (compiledKeyword.withoutPatterns) {
-        // For array of without patterns, fail if ANY pattern matches
-        if (matchesAnyPattern(text, compiledKeyword.withoutPatterns)) {
-            return false;
-        }
-    }
-    
-    return true;
+	if (!text || !compiledKeyword) {
+		return false;
+	}
+
+	// Check ETV conditions first (early exit if not satisfied)
+	if (!satisfiesEtvConditions(compiledKeyword, itemEtvMin, itemEtvMax)) {
+		return false;
+	}
+
+	// Check 'contains' conditions
+	let containsMatch = false;
+
+	if (compiledKeyword.containsPattern) {
+		containsMatch = matchesPattern(text, compiledKeyword.containsPattern);
+	} else if (compiledKeyword.containsPatterns) {
+		// For array of contains patterns, match if ANY pattern matches
+		containsMatch = matchesAnyPattern(text, compiledKeyword.containsPatterns);
+	} else if (!compiledKeyword.withoutPattern && !compiledKeyword.withoutPatterns) {
+		// If no contains or without patterns, it's not a valid match
+		return false;
+	} else {
+		// If only 'without' patterns exist, consider it a match so far
+		containsMatch = true;
+	}
+
+	if (!containsMatch) {
+		return false;
+	}
+
+	// Check 'without' conditions (exclusions)
+	if (compiledKeyword.withoutPattern) {
+		if (matchesPattern(text, compiledKeyword.withoutPattern)) {
+			return false;
+		}
+	}
+
+	if (compiledKeyword.withoutPatterns) {
+		// For array of without patterns, fail if ANY pattern matches
+		if (matchesAnyPattern(text, compiledKeyword.withoutPatterns)) {
+			return false;
+		}
+	}
+	if (compiledKeyword.withoutPattern) {
+		if (matchesPattern(text, compiledKeyword.withoutPattern)) {
+			return false;
+		}
+	}
+
+	if (compiledKeyword.withoutPatterns) {
+		// For array of without patterns, fail if ANY pattern matches
+		if (matchesAnyPattern(text, compiledKeyword.withoutPatterns)) {
+			return false;
+		}
+	}
+
+	return true;
 }
 
 /**
@@ -163,13 +162,11 @@ function matchKeywordObject(text, compiledKeyword, itemEtvMin = null, itemEtvMax
  * @returns {Object|null} The first matching keyword object or null
  */
 function findMatch(text, compiledKeywords, itemEtvMin = null, itemEtvMax = null) {
-    if (!text || !Array.isArray(compiledKeywords)) {
-        return null;
-    }
-    
-    return compiledKeywords.find(keyword => 
-        matchKeywordObject(text, keyword, itemEtvMin, itemEtvMax)
-    ) || null;
+	if (!text || !Array.isArray(compiledKeywords)) {
+		return null;
+	}
+
+	return compiledKeywords.find((keyword) => matchKeywordObject(text, keyword, itemEtvMin, itemEtvMax)) || null;
 }
 
 /**
@@ -181,13 +178,11 @@ function findMatch(text, compiledKeywords, itemEtvMin = null, itemEtvMax = null)
  * @returns {Array<Object>} Array of all matching keyword objects
  */
 function findAllMatches(text, compiledKeywords, itemEtvMin = null, itemEtvMax = null) {
-    if (!text || !Array.isArray(compiledKeywords)) {
-        return [];
-    }
-    
-    return compiledKeywords.filter(keyword => 
-        matchKeywordObject(text, keyword, itemEtvMin, itemEtvMax)
-    );
+	if (!text || !Array.isArray(compiledKeywords)) {
+		return [];
+	}
+
+	return compiledKeywords.filter((keyword) => matchKeywordObject(text, keyword, itemEtvMin, itemEtvMax));
 }
 
 /**
@@ -199,7 +194,7 @@ function findAllMatches(text, compiledKeywords, itemEtvMin = null, itemEtvMax = 
  * @returns {boolean} True if any keyword matches
  */
 function hasMatch(text, compiledKeywords, itemEtvMin = null, itemEtvMax = null) {
-    return findMatch(text, compiledKeywords, itemEtvMin, itemEtvMax) !== null;
+	return findMatch(text, compiledKeywords, itemEtvMin, itemEtvMax) !== null;
 }
 
 /**
@@ -211,27 +206,27 @@ function hasMatch(text, compiledKeywords, itemEtvMin = null, itemEtvMax = null) 
  * @returns {string|false} The matched keyword string or false
  */
 function getMatchedKeyword(text, compiledKeywords, itemEtvMin = null, itemEtvMax = null) {
-    const match = findMatch(text, compiledKeywords, itemEtvMin, itemEtvMax);
-    
-    if (!match) {
-        return false;
-    }
-    
-    // Return the original keyword string for legacy compatibility
-    // Priority: contains string > first contains array item > keyword property
-    if (typeof match.contains === 'string') {
-        return match.contains;
-    }
-    
-    if (Array.isArray(match.contains) && match.contains.length > 0) {
-        return match.contains[0];
-    }
-    
-    if (match.keyword) {
-        return match.keyword;
-    }
-    
-    return false;
+	const match = findMatch(text, compiledKeywords, itemEtvMin, itemEtvMax);
+
+	if (!match) {
+		return false;
+	}
+
+	// Return the original keyword string for legacy compatibility
+	// Priority: contains string > first contains array item > keyword property
+	if (typeof match.contains === "string") {
+		return match.contains;
+	}
+
+	if (Array.isArray(match.contains) && match.contains.length > 0) {
+		return match.contains[0];
+	}
+
+	if (match.keyword) {
+		return match.keyword;
+	}
+
+	return false;
 }
 
 /**
@@ -240,30 +235,30 @@ function getMatchedKeyword(text, compiledKeywords, itemEtvMin = null, itemEtvMax
  * @returns {boolean} True if any keyword has ETV conditions
  */
 function hasEtvConditions(compiledKeywords) {
-    if (!Array.isArray(compiledKeywords)) {
-        return false;
-    }
-    
-    return compiledKeywords.some(keyword =>
-        keyword && (
-            (keyword.etv_min !== undefined && keyword.etv_min !== null) ||
-            (keyword.etv_max !== undefined && keyword.etv_max !== null)
-        )
-    );
+	if (!Array.isArray(compiledKeywords)) {
+		return false;
+	}
+
+	return compiledKeywords.some(
+		(keyword) =>
+			keyword &&
+			((keyword.etv_min !== undefined && keyword.etv_min !== null) ||
+				(keyword.etv_max !== undefined && keyword.etv_max !== null))
+	);
 }
 
 // Export all functions for maximum flexibility
 export {
-    matchesPattern,
-    matchesAnyPattern,
-    matchesAllPatterns,
-    satisfiesEtvConditions,
-    matchKeywordObject,
-    findMatch,
-    findAllMatches,
-    hasMatch,
-    getMatchedKeyword,
-    hasEtvConditions
+	matchesPattern,
+	matchesAnyPattern,
+	matchesAllPatterns,
+	satisfiesEtvConditions,
+	matchKeywordObject,
+	findMatch,
+	findAllMatches,
+	hasMatch,
+	getMatchedKeyword,
+	hasEtvConditions,
 };
 
 // Default export is the main matching function

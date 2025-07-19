@@ -38,7 +38,7 @@ class Toolbar {
 
 	#pinDebounceTimer = null;
 	#pinDebounceClickable = true;
-	
+
 	// Pre-compiled keywords for performance
 	#compiledHighlightKeywords = null;
 	#compiledHideKeywords = null;
@@ -46,12 +46,7 @@ class Toolbar {
 	constructor(tileInstance) {
 		this.#tile = tileInstance;
 		this.#tile.setToolbar(this);
-		
-		// Initialize compiled keywords
-		this.#updateCompiledKeywords();
-	}
-	
-	#updateCompiledKeywords() {
+
 		// Compile highlight keywords
 		const highlightKeywords = Settings.get("general.highlightKeywords");
 		if (highlightKeywords && highlightKeywords.length > 0) {
@@ -59,7 +54,7 @@ class Toolbar {
 		} else {
 			this.#compiledHighlightKeywords = [];
 		}
-		
+
 		// Compile hide keywords
 		const hideKeywords = Settings.get("general.hideKeywords");
 		if (hideKeywords && hideKeywords.length > 0) {
@@ -75,7 +70,7 @@ class Toolbar {
 		const asin = this.#tile.getAsin() || `no-asin-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 		const toolbarId = "vh-toolbar-" + asin;
 		let anchorTo = this.#tile.getDOM().querySelector(".vvp-item-tile-content"); //.vvp-item-tile-content should be the first child
-		
+
 		if (!anchorTo) {
 			throw new Error("Cannot find .vvp-item-tile-content to attach toolbar");
 		}
@@ -359,9 +354,9 @@ class Toolbar {
 			logger.add(`TOOLBAR: Cannot set ETV - toolbar DOM is null for ASIN: ${this.#tile.getAsin()}`);
 			return false;
 		}
-		
+
 		let span = this.#toolbarDOM.querySelector(".vh-toolbar-etv .etv");
-		
+
 		// Check if the ETV span exists
 		if (!span) {
 			logger.add(`TOOLBAR: Cannot set ETV - .vh-toolbar-etv .etv not found for ASIN: ${this.#tile.getAsin()}`);

@@ -52,10 +52,27 @@ class NewItemStreamProcessing {
 	async compileKeywords() {
 		await this.settingsManager.waitForLoad();
 
-		// Get keywords from settings
+		// Get keywords from settings - all should be arrays
 		const hideKeywords = this.settingsManager.get("general.hideKeywords") || [];
 		const highlightKeywords = this.settingsManager.get("general.highlightKeywords") || [];
-		const blurKeywords = this.settingsManager.get("general.blurKeywords") || [];
+		const blurKeywordsRaw = this.settingsManager.get("general.blurKeywords") || [];
+
+		// Convert blur keywords array to keyword objects
+		const blurKeywords = Array.isArray(blurKeywordsRaw)
+			? blurKeywordsRaw.filter((kw) => kw && kw.length > 0).map((kw) => ({ contains: kw }))
+			: [];
+
+		// Debug logging for keyword loading
+		if (this.settingsManager.get("general.debugKeywords")) {
+			console.log("[NewItemStreamProcessing] Loading keywords from settings:", {
+				highlightKeywordsRaw: highlightKeywords,
+				blurKeywordsRaw: blurKeywordsRaw,
+				blurKeywordsParsed: blurKeywords,
+				highlightCount: highlightKeywords.length,
+				blurCount: blurKeywords.length,
+				timestamp: Date.now(),
+			});
+		}
 
 		// Compile keywords into arrays of compiled keyword objects
 		this.compiledHideKeywords = hideKeywords.length > 0 ? compileKeywordObjects(hideKeywords) : null;
@@ -73,11 +90,10 @@ class NewItemStreamProcessing {
 				hideKeywordsCount: hideKeywords.length,
 				highlightKeywordsCount: highlightKeywords.length,
 				blurKeywordsCount: blurKeywords.length,
-				timestamp: Date.now()
+				timestamp: Date.now(),
 			});
 		}
 	}
-
 
 	//#####################################################
 	//## PIPELINE
@@ -91,7 +107,7 @@ class NewItemStreamProcessing {
 		if (data.title === undefined) {
 			return true; //Skip this filter
 		}
-		
+
 		// KEYWORD PRIORITY: Only check hide keywords if the item is NOT highlighted
 		// This ensures highlight keywords take precedence over hide keywords
 		if (this.hideListEnabled && !data.KWsMatch && this.compiledHideKeywords) {
@@ -102,7 +118,7 @@ class NewItemStreamProcessing {
 						asin: data.asin,
 						title: data.title,
 						keyword: hideKeyword,
-						timestamp: Date.now()
+						timestamp: Date.now(),
 					});
 				}
 				return false; //Do not display the notification as it matches the hide list.
@@ -130,17 +146,19 @@ class NewItemStreamProcessing {
 			const currentCount = this.processingCounts.get(asin) || 0;
 			this.processingCounts.set(asin, currentCount + 1);
 
-			console.log("[NewItemStreamProcessing] transformIsHighlight called:", {
-				asin: asin,
-				title: data.title?.substring(0, 50) + "...",
-				enrollment_guid: data.enrollment_guid,
-				processingCount: currentCount + 1,
-				isDuplicate: currentCount > 0,
-				timestamp,
-				timestampMs: timestamp,
-				reason: rawData.reason || "no reason",
-				callStack: new Error().stack.split("\n").slice(2, 5).join(" <- "),
-			});
+			if (this.settingsManager.get("general.debugKeywords")) {
+				console.log("[NewItemStreamProcessing] transformIsHighlight called:", {
+					asin: asin,
+					title: data.title?.substring(0, 50) + "...",
+					enrollment_guid: data.enrollment_guid,
+					processingCount: currentCount + 1,
+					isDuplicate: currentCount > 0,
+					timestamp,
+					timestampMs: timestamp,
+					reason: rawData.reason || "no reason",
+					callStack: new Error().stack.split("\n").slice(2, 5).join(" <- "),
+				});
+			}
 
 			// Warn if this is a duplicate processing
 			if (currentCount > 0) {
@@ -157,16 +175,21 @@ class NewItemStreamProcessing {
 
 		// Check highlight keywords using the compiled keywords
 		if (this.compiledHighlightKeywords) {
-			const matchedKeyword = getMatchedKeyword(data.title, this.compiledHighlightKeywords, data.etv_min, data.etv_max);
+			const matchedKeyword = getMatchedKeyword(
+				data.title,
+				this.compiledHighlightKeywords,
+				data.etv_min,
+				data.etv_max
+			);
 			rawData.item.data.KWsMatch = matchedKeyword !== false;
 			rawData.item.data.KW = matchedKeyword;
-			
+
 			if (matchedKeyword && this.settingsManager.get("general.debugKeywords")) {
 				console.log("[NewItemStreamProcessing] Item highlighted by keyword:", {
 					asin: data.asin,
 					title: data.title,
 					keyword: matchedKeyword,
-					timestamp: Date.now()
+					timestamp: Date.now(),
 				});
 			}
 		} else {
@@ -178,6 +201,18 @@ class NewItemStreamProcessing {
 	}
 
 	transformIsBlur(rawData) {
+		// Always log entry to this transformer when debugging
+		if (this.settingsManager.get("general.debugKeywords")) {
+			console.log("[NewItemStreamProcessing] transformIsBlur called:", {
+				hasItem: !!rawData.item,
+				hasData: !!rawData.item?.data,
+				hasTitle: !!rawData.item?.data?.title,
+				asin: rawData.item?.data?.asin,
+				titlePreview: rawData.item?.data?.title?.substring(0, 50) + "...",
+				timestamp: Date.now(),
+			});
+		}
+
 		if (!rawData.item) {
 			return rawData; //Skip this transformer
 		}
@@ -185,15 +220,32 @@ class NewItemStreamProcessing {
 		if (data.title == undefined) {
 			return rawData; //Skip this transformer
 		}
-		
+
 		// Check blur keywords using the compiled keywords
 		if (this.compiledBlurKeywords) {
 			const blurKeyword = getMatchedKeyword(data.title, this.compiledBlurKeywords);
 			rawData.item.data.BlurKWsMatch = blurKeyword !== false;
 			rawData.item.data.BlurKW = blurKeyword;
+
+			// Debug logging for blur keyword matching
+			if (this.settingsManager.get("general.debugKeywords")) {
+				console.log("[NewItemStreamProcessing] Blur keyword check:", {
+					asin: data.asin,
+					title: data.title,
+					compiledBlurKeywords: this.compiledBlurKeywords,
+					blurKeywordFound: blurKeyword,
+					BlurKWsMatch: rawData.item.data.BlurKWsMatch,
+					BlurKW: rawData.item.data.BlurKW,
+					timestamp: Date.now(),
+				});
+			}
 		} else {
 			rawData.item.data.BlurKWsMatch = false;
 			rawData.item.data.BlurKW = false;
+
+			if (this.settingsManager.get("general.debugKeywords")) {
+				console.log("[NewItemStreamProcessing] No blur keywords configured");
+			}
 		}
 
 		return rawData;
@@ -326,7 +378,7 @@ class NewItemStreamProcessing {
 		return {
 			hideKeywords: this.compiledHideKeywords,
 			highlightKeywords: this.compiledHighlightKeywords,
-			blurKeywords: this.compiledBlurKeywords
+			blurKeywords: this.compiledBlurKeywords,
 		};
 	}
 }

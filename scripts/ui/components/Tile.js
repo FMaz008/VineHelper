@@ -34,7 +34,7 @@ import { Template } from "/scripts/core/utils/Template.js";
 var Tpl = new Template();
 
 import { compile as compileKeywords, compileKeywordObjects } from "../../core/utils/KeywordCompiler.js";
-import { findMatch } from "../../core/utils/KeywordMatcher.js";
+import { findMatch, getMatchedKeyword } from "../../core/utils/KeywordMatcher.js";
 import { YMDHiStoISODate } from "/scripts/core/utils/DateHelper.js";
 import { getTileByAsin, updateTileCounts } from "/scripts/ui/components/Grid.js";
 import { unescapeHTML, escapeHTML } from "/scripts/core/utils/StringHelper.js";
@@ -554,37 +554,38 @@ class Tile {
 	}
 
 	async initiateTile() {
-		//Match with blur keywords.
-		this.#tileDOM.dataset.blurredKeyword = "";
-		const blurKeywords = Settings.get("general.blurKeywords");
-		if (Settings.isPremiumUser() && blurKeywords?.length > 0) {
-			// Compile and match blur keywords
-			const compiledBlurKeywords = compileKeywordObjects(blurKeywords);
-			const matchResult = findMatch(this.getTitle(), compiledBlurKeywords);
-			if (matchResult) {
-				// Extract keyword string from match result
-				// Priority: contains string > first contains array item > keyword property
-				let keywordString = '';
-				if (typeof matchResult.contains === 'string') {
-					keywordString = matchResult.contains;
-				} else if (Array.isArray(matchResult.contains) && matchResult.contains.length > 0) {
-					keywordString = matchResult.contains[0];
-				} else if (matchResult.keyword) {
-					keywordString = matchResult.keyword;
+		// Check if blur should be applied based on pre-computed blur keyword match
+		// The blur keyword matching is done in NewItemStreamProcessing.js
+		// dataset.blurkw contains the actual blur keyword if matched, or empty/undefined if not
+		const shouldBlur = this.#tileDOM.dataset.blurkw && this.#tileDOM.dataset.blurkw !== "false";
+
+		// Debug logging for blur keyword application
+		if (Settings.get("general.debugKeywords")) {
+			console.log("[Tile.initiateTile] Applying blur based on pre-computed match", {
+				asin: this.getAsin(),
+				title: this.getTitle(),
+				shouldBlur: shouldBlur,
+				dataBlurKw: this.#tileDOM.dataset.blurkw,
+			});
+		}
+
+		if (Settings.isPremiumUser() && shouldBlur) {
+			// Get the blur keyword from the DOM data (set during stream processing)
+			const blurKeyword = this.#tileDOM.dataset.blurkw || "blur keyword";
+
+			logger.add("TILE: The item matches blur keyword, applying blur");
+			const img = this.#tileDOM.querySelector("img");
+			if (img) {
+				if (Settings.get("general.unblurImageOnHover")) {
+					img.classList.add("dynamic-blur");
+				} else {
+					img.classList.add("blur");
 				}
-				
-				logger.add("TILE: The item match the keyword '" + keywordString + "', blur it");
-				const img = this.#tileDOM.querySelector("img");
-				if (img) {
-					if (Settings.get("general.unblurImageOnHover")) {
-						img.classList.add("dynamic-blur");
-					} else {
-						img.classList.add("blur");
-					}
-				}
-				this.#tileDOM.querySelector(".vvp-item-product-title-container")?.classList.add("dynamic-blur");
-				this.#tileDOM.dataset.blurredKeyword = escapeHTML(keywordString);
 			}
+			this.#tileDOM.querySelector(".vvp-item-product-title-container")?.classList.add("dynamic-blur");
+			this.#tileDOM.dataset.blurredKeyword = escapeHTML(blurKeyword);
+		} else {
+			this.#tileDOM.dataset.blurredKeyword = "";
 		}
 
 		//Unescape titles and ensure they remain visible
