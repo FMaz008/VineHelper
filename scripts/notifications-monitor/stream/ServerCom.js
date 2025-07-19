@@ -23,9 +23,9 @@ class ServerCom {
 		}
 		ServerCom.#instance = this;
 
-		// Initialize the stream processor with the monitor's settings manager
-		// This ensures both components use the same settings instance
-		this.#streamProcessor = new NewItemStreamProcessing(this._monitor._settings);
+		// Initialize the stream processor
+		// It will create its own SettingsMgr instance via the singleton pattern
+		this.#streamProcessor = new NewItemStreamProcessing();
 
 		//Create a timer to check if the master monitor is still running
 		this.#serviceWorkerStatusTimer = window.setInterval(() => {
