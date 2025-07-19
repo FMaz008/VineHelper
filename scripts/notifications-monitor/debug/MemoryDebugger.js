@@ -8,7 +8,7 @@
  * - Memory growth patterns
  */
 
-import { clearKeywordCache } from "../../core/utils/KeywordMatch.js";
+// Removed import of clearKeywordCache - new keyword system doesn't use a cache
 
 class MemoryDebugger {
 	constructor() {
@@ -430,12 +430,8 @@ class MemoryDebugger {
 		// Clear keyword cache every 10 minutes to prevent memory buildup
 		const keywordCacheClearInterval = setInterval(
 			() => {
-				try {
-					clearKeywordCache();
-					console.log("[MemoryDebugger] Cleared keyword cache as part of periodic cleanup");
-				} catch (error) {
-					console.error("[MemoryDebugger] Error clearing keyword cache:", error);
-				}
+				// Keyword cache clearing removed - new system doesn't use a cache
+				console.log("[MemoryDebugger] Keyword system uses compiled patterns, no cache to clear");
 			},
 			10 * 60 * 1000
 		);
