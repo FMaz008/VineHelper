@@ -1,8 +1,8 @@
 {
 	"manifest_version": 3,
-	"name": "Amazon Vine Helper",
+	"name": "Vine Helper",
 	"description": "Improve the Amazon Vine experience.",
-	"version": "3.5.14",
+	"version": "3.6.0",
 	"permissions": [
 		"alarms",
 		"contextMenus",
@@ -11,7 +11,7 @@
 		"notifications"
 	],
 	"content_security_policy": {
-		"extension_pages": "default-src 'self'; script-src 'self';  style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.vinehelper.ovh wss://api.vinehelper.ovh https://*.media-amazon.com https://api.llamastories.com https://*.amazon.com https://*.amazon.co.uk https://*.amazon.de https://*.amazon.fr https://*.amazon.es https://*.amazon.it https://*.amazon.co.jp https://*.amazon.com.au https://*.amazon.com.br https://*.amazon.com.mx https://*.amazon.sg https://*.amazon.ca; img-src 'self' https://*.media-amazon.com https://*.paypal.com https://*.paypalobjects.com;"
+		"extension_pages": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.vinehelper.ovh wss://api.vinehelper.ovh https://*.media-amazon.com https://api.llamastories.com https://*.amazon.com https://*.amazon.co.uk https://*.amazon.de https://*.amazon.fr https://*.amazon.es https://*.amazon.it https://*.amazon.co.jp https://*.amazon.com.au https://*.amazon.com.br https://*.amazon.com.mx https://*.amazon.sg https://*.amazon.ca; img-src 'self' https://*.media-amazon.com https://*.paypal.com https://*.paypalobjects.com;"
 	},
 	"icons": {
 		"32": "resource/image/icon-32.png",
@@ -45,14 +45,8 @@
 			"resources": [
 				"resource/image/*",
 				"resource/css/*",
-				"view/*",
 				"resource/sound/*",
 				"page/*",
-				"node_modules/vine-styling/desktop/*",
-				"node_modules/vine-styling/mobile/*",
-				"node_modules/socket.io/client-dist/*",
-				"node_modules/canvas-confetti/*",
-				"scripts/inj.js",
 				"scripts/*"
 			],
 			"matches": [
@@ -73,7 +67,7 @@
 	],
 	"background": {
 		"type": "module",
-		"service_worker": "scripts/vh_service_worker.js"
+		"service_worker": "scripts/vh_service_worker_di.js"
 	},
 	"content_scripts": [
 		{

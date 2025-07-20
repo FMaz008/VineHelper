@@ -1,0 +1,16 @@
+/*============================================================
+{{ thorvarium | vine-styling | desktop | striped-categories }}
+============================================================*/
+
+#vvp-browse-nodes-container .parent-node {
+  background-color: transparent;
+}
+#vvp-browse-nodes-container > div:nth-child(odd) {
+    background-color: rgb(127 127 127 / 10%) !important;
+}
+#vvp-browse-nodes-container .parent-node, #vvp-browse-nodes-container .child-node  {
+  display: flex !important;
+}
+#vvp-browse-nodes-container .parent-node a, #vvp-browse-nodes-container .child-node a {
+  flex-grow: 1 !important;
+}

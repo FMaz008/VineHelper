@@ -1,0 +1,11 @@
+/*=======================================================
+{{ thorvarium | vine-styling | desktop | remove-header }}
+=======================================================*/
+
+body {
+  padding-right: 0px !important;
+}
+
+#navbar-main, #skiplink {
+  display: none;
+}

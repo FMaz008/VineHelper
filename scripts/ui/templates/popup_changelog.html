@@ -1,0 +1,54 @@
+<br />
+<br /><strong>Version {{$appVersion}} change notes:</strong>
+<br />
+The extension has been rehauled internally to allow for compatibility with iOS/Safari.
+<br />
+<br />
+<br />
+<h2>Change log:</h2>
+<h3>General:</h3>
+<ul>
+	<li>
+		<span style="color: #ff9900">CHANGE:</span> Additional messaging protocol implemented to allow for compatibility
+		with iOS/Safari.
+	</li>
+</ul>
+<br />
+<h3>Notifications Monitor:</h3>
+<ul>
+	<li>
+		<span style="color: #ff9900">CHANGE:</span> The service worker no longer handles the websocket connection.
+		Instead, multiple monitors now designate a master monitor to handle the communcations.
+	</li>
+	<li>
+		<span style="color: #0099ff">FIX:</span> Memory leak from Amazon's mutation observers keeping multiple copies of
+		deleted html elements in memory. This was causing the monitor to use more and more memory over time.
+	</li>
+	<li><span style="color: #0099ff">FIX:</span> Improved fetch latest items processing speed.</li>
+</ul>
+<br />
+<h3>Premium feature(s):</h3>
+<ul>
+	<li>N/A</li>
+</ul>
+<br />
+
+<div class="support-links">
+	<div>
+		<a href="https://www.patreon.com/VineHelper" class="patreon-link" target="_blank">VineHelper's Patreon</a>
+	</div>
+	<div>
+		<form action="https://www.paypal.com/donate" method="post" target="_blank">
+			<input type="hidden" name="hosted_button_id" value="MMS5MYRDRALBG" />
+			<input
+				type="image"
+				src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif"
+				border="0"
+				name="submit"
+				title="PayPal - The safer, easier way to pay online!"
+				alt="Donate with PayPal button"
+			/>
+			<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" />
+		</form>
+	</div>
+</div>

@@ -1,0 +1,27 @@
+/*================================================================
+{{ thorvarium | vine-styling | desktop | collapsible-categories }}
+================================================================*/
+
+#vvp-browse-nodes-container {
+  transition: width 0.5s !important;
+}
+#vvp-browse-nodes-container:not(:hover) {
+  width: 80px !important;
+  margin-right: 20px;
+}
+#vvp-browse-nodes-container:not(:hover) .parent-node {
+  height: 15px !important;
+  width: unset !important;
+}
+#vvp-browse-nodes-container:not(:hover) .parent-node .selectedNode~span {
+  font-weight: bold !important;
+}
+#vvp-browse-nodes-container:not(:hover) .child-node {
+  display: none !important;
+}
+#vvp-browse-nodes-container:not(:hover) .parent-node a {
+  font-size: 0 !important;
+}
+#vvp-browse-nodes-container:not(:hover) .parent-node a:before {
+  font-size: 15px !important;
+} 

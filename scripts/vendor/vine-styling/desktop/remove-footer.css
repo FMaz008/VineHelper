@@ -1,0 +1,7 @@
+/*=======================================================
+{{ thorvarium | vine-styling | desktop | remove-footer }}
+=======================================================*/
+
+#rhf, #rhf-shoveler, .rhf-frame, #navFooter {
+  display: none !important;
+}

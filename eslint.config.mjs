@@ -1,3 +1,4 @@
+import { defineConfig, globalIgnores } from "eslint/config";
 import globals from "globals";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -7,42 +8,48 @@ import { FlatCompat } from "@eslint/eslintrc";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const compat = new FlatCompat({
-	baseDirectory: __dirname,
-	recommendedConfig: js.configs.recommended,
-	allConfig: js.configs.all,
+    baseDirectory: __dirname,
+    recommendedConfig: js.configs.recommended,
+    allConfig: js.configs.all
 });
 
-// Filter out globals with leading/trailing whitespace
-const cleanGlobals = (globalsObj) => {
-	const cleaned = {};
-	for (const [key, value] of Object.entries(globalsObj)) {
-		const cleanKey = key.trim();
-		if (cleanKey && cleanKey === key) {
-			cleaned[cleanKey] = value;
-		}
-	}
-	return cleaned;
-};
+export default defineConfig([globalIgnores(["**/scripts/vendor/**/*"]), {
+    extends: compat.extends("eslint:recommended", "prettier"),
 
-export default [
-	{
-		...compat.extends("eslint:recommended", "prettier")[0],
+    languageOptions: {
+        globals: {
+            ...globals.browser,
+            ...globals.node,
+        },
 
-		languageOptions: {
-			globals: {
-				...cleanGlobals(globals.browser),
-				...cleanGlobals(globals.node),
-			},
+        ecmaVersion: 2022,
+        sourceType: "module",
+    },
 
-			ecmaVersion: 2022,
-			sourceType: "module",
-		},
+    rules: {
+        "no-console": "warn",
+        "no-undef": "warn",
+        "no-unsafe-finally": "warn",
+        "no-unused-vars": "warn",
+    },
+}, {
+    files: ["**/*.test.js", "**/tests/**/*.js", "**/unit_tests/**/*.js"],
 
-		rules: {
-			"no-console": "warn",
-			"no-undef": "warn",
-			"no-unsafe-finally": "warn",
-			"no-unused-vars": "warn",
-		},
-	},
-];
+    languageOptions: {
+        globals: {
+            ...globals.jest,
+        },
+    },
+}, {
+    files: ["**/scripts/vendor/**/*.js"],
+
+    rules: {
+        "no-console": "off",
+        "no-undef": "off",
+        "no-unsafe-finally": "off",
+        "no-unused-vars": "off",
+        "no-self-assign": "off",
+        "no-empty": "off",
+        "no-fallthrough": "off",
+    },
+}]);

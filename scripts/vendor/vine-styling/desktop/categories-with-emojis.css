@@ -1,0 +1,45 @@
+/*================================================================
+{{ thorvarium | vine-styling | desktop | categories-with-emojis }}
+================================================================*/
+
+/* emoji list: https://html-css-js.com/html/character-codes/ */
+
+.a-link-normal[href$="1055398"]:before { content: "🏠";}  /* Home & Kitchen */
+.a-link-normal[href$="7141123011"]:before { content: "👚";} /* Clothing, Shoes & Jewelry */
+.a-link-normal[href$="228013"]:before { content: "🔨";} /* Tools & Home Improvement */
+.a-link-normal[href$="165793011"]:before { content: "🎲"; } /* Toys & Games */
+.a-link-normal[href$="172282"]:before { content: "💻"; } /* Electronics */
+.a-link-normal[href$="3760901"]:before { content: "👨‍⚕️"; } /* Health & Household */
+.a-link-normal[href$="3375251"]:before { content: "⚾"; } /* Sports & Outdoors */
+.a-link-normal[href$="2972638011"]:before { content: "🌳"; } /* Patio, Lawn & Garden */
+.a-link-normal[href$="1064954"]:before { content: "📁"; }  /* Office Products */ 
+.a-link-normal[href$="2619533011"]:before { content: "🐈"; } /* Pet Supplies */
+.a-link-normal[href$="2335752011"]:before { content: "📱"; } /* Cell Phones & Accessories */ 
+.a-link-normal[href$="3760911"]:before { content: "💄"; } /* Beauty & Personal Care */
+.a-link-normal[href$="15684181"]:before { content: "🚐"; } /* Automotive */
+.a-link-normal[href$="2617941011"]:before { content: "🎨"; } /* Arts, Crafts & Sewing */
+.a-link-normal[href$="165796011"]:before { content: "👶"; } /* Baby Products */
+.a-link-normal[href$="16310091"]:before { content: "🔬"; } /* Industrial & Scientific */
+.a-link-normal[href$="11091801"]:before { content: "🎹"; } /* Musical Instruments */
+.a-link-normal[href$="468642"]:before { content: "🎮"; } /* Video Games */
+.a-link-normal[href$="16310101"]:before { content: "🍎"; } /* Grocery & Gourmet Food */
+.a-link-normal[href$="11260432011"]:before { content: "🧤"; } /* Handmade Products */
+.a-link-normal[href$="2619525011"]:before { content: "📻"; } /* Appliances */
+.a-link-normal[href$="283155"]:before { content: "📘"; } /* Books */
+.a-link-normal[href$="229534"]:before { content: "💽"; } /* Software */
+.a-link-normal[href$="2625373011"]:before { content: "🎥"; } /* Movies & TV */
+.a-link-normal[href$="5174"]:before { content: "💿"; } /* CDs & Vinyl */
+.a-link-normal[href$="4991425011"]:before { content: "🖼️"; } /* Collectables & Fine Art */
+
+#vvp-browse-nodes-container {
+    width: 270px !important;
+}
+
+#vvp-browse-nodes-container .parent-node {
+    width: 250px !important;
+}
+
+#vvp-browse-nodes-container .child-node {
+  margin-left: 38px !important;
+  width: 207px !important;
+}

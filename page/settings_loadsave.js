@@ -1,23 +1,25 @@
-import { SettingsMgr } from "../scripts/SettingsMgr.js";
+import { SettingsMgr } from "/scripts/core/services/SettingsMgrCompat.js";
 const Settings = new SettingsMgr();
 
-import { Environment } from "../scripts/Environment.js";
+import { Environment } from "/scripts/core/services/Environment.js";
 const env = new Environment();
 
-import { Internationalization } from "../scripts/Internationalization.js";
+import { Internationalization } from "/scripts/core/services/Internationalization.js";
 const i13n = new Internationalization();
 
-import { HiddenListMgr } from "../scripts/HiddenListMgr.js";
+import { HiddenListMgr } from "/scripts/core/services/HiddenListMgr.js";
 var HiddenList = new HiddenListMgr();
 
-import { DeviceFingerprintMgr } from "../scripts/DeviceFingerprintMgr.js";
+import { DeviceFingerprintMgr } from "/scripts/core/services/DeviceFingerprintMgr.js";
 var fingerprintMgr = new DeviceFingerprintMgr(Settings);
 
-import { DeviceMgr } from "../scripts/DeviceMgr.js";
+import { DeviceMgr } from "/scripts/core/services/DeviceMgr.js";
 var deviceMgr = new DeviceMgr(Settings);
 
-import { CryptoKeys } from "../scripts/CryptoKeys.js";
+import { CryptoKeys } from "/scripts/core/utils/CryptoKeys.js";
 var cryptoKeys = new CryptoKeys();
+
+import { compile as compileKeywords, compileKeywordObjects } from "/scripts/core/utils/KeywordCompiler.js";
 
 async function drawDiscord() {
 	//Show or hide the discord options
@@ -244,7 +246,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("general.displayFirstSeen");
 	manageCheckboxSetting("general.bookmark");
 	manageCheckboxSetting("hiddenTab.active");
-	manageCheckboxSetting("hiddenTab.scrollToRFY");
+	manageCheckboxSetting("hiddenTab.scrollToRFY", false);
 	manageCheckboxSetting("pinnedTab.active");
 	manageCheckboxSetting("unavailableTab.active");
 	manageCheckboxSetting("general.modalNavigation");
@@ -263,6 +265,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("general.projectedAccountStatistics");
 	manageCheckboxSetting("general.discoveryFirst");
 	manageCheckboxSetting("general.blindLoading");
+	manageCheckboxSetting("general.skipPrimeAd");
 	manageColorPicker("general.bookmarkColor");
 	manageCheckboxSetting("general.highlightColor.active");
 	manageColorPicker("general.highlightColor.color");
@@ -273,6 +276,26 @@ async function initiateSettings() {
 	manageCheckboxSetting("general.unknownETVHighlight.active");
 	manageColorPicker("general.unknownETVHighlight.color");
 	manageColorPicker("general.toolbarBackgroundColor");
+
+	//## TAB - DEBUG
+	manageCheckboxSetting("general.debugTabTitle");
+	manageCheckboxSetting("general.debugPlaceholders");
+	manageCheckboxSetting("general.debugTitleDisplay");
+	manageCheckboxSetting("general.debugMemory");
+	manageCheckboxSetting("general.debugMemoryAutoSnapshot");
+	manageCheckboxSetting("general.debugKeywords", false);
+	manageCheckboxSetting("general.debugBulkOperations", false);
+	manageCheckboxSetting("general.debugWebsocket", false);
+	manageCheckboxSetting("general.debugServercom", false);
+	manageCheckboxSetting("general.debugServiceWorker", false);
+	manageCheckboxSetting("general.debugSettings", false);
+	manageCheckboxSetting("general.debugStorage", false);
+	manageCheckboxSetting("general.debugSound", false);
+	manageCheckboxSetting("general.debugCoordination", false);
+	manageCheckboxSetting("general.debugDuplicates", false);
+	manageCheckboxSetting("general.debugVisibility", false);
+	manageCheckboxSetting("general.debugItemProcessing", false);
+	manageCheckboxSetting("general.debugTileCounter", false);
 
 	//##TAB - NOTIFICATIONS
 
@@ -295,11 +318,9 @@ async function initiateSettings() {
 	manageRadio("notification.monitor.openLinksInNewTab");
 	manageCheckboxSetting("notification.monitor.preventUnload");
 	manageCheckboxSetting("notification.monitor.24hrsFormat");
-	manageCheckboxSetting("notification.monitor.blockNonEssentialListeners");
 	manageCheckboxSetting("notification.monitor.bump0ETV");
 	manageCheckboxSetting("notification.monitor.mouseoverPause");
 	manageCheckboxSetting("notification.monitor.pauseOverlay");
-	manageCheckboxSetting("notification.autoload.tab");
 	manageTimeSetting("notification.autoload.hourStart");
 	manageTimeSetting("notification.autoload.hourEnd");
 
@@ -520,6 +541,7 @@ async function initiateSettings() {
 	manageKeywords("general.highlightKeywords");
 	manageKeywords("general.hideKeywords");
 	manageTextareaCSK("general.blurKeywords");
+	manageCheckboxSetting("general.unblurImageOnHover");
 	initiateTogglers();
 	initiateTestKeywords();
 
@@ -584,7 +606,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("thorvarium.removeHeader");
 	manageCheckboxSetting("thorvarium.removeFooter");
 	manageCheckboxSetting("thorvarium.removeAssociateHeader");
-	manageCheckboxSetting("thorvarium.darktheme");
+	manageCheckboxSetting("thorvarium.darktheme", false);
 	manageCheckboxSetting("thorvarium.ETVModalOnTop");
 	manageCheckboxSetting("thorvarium.categoriesWithEmojis");
 	manageCheckboxSetting("thorvarium.paginationOnTop");
@@ -596,47 +618,49 @@ async function initiateSettings() {
 
 	//##TAB - ?
 
-	//Copy buttons
-	document.getElementById("copyBTC").addEventListener("click", function () {
-		navigator.clipboard
-			.writeText("bc1q0f82vk79u7hzxcrqe6q2levzvhdrqe72fm5w8z")
-			.then(() => {
-				// Alert the user that the text has been copied
-				alert("BTC address copied to clipboard: ");
-			})
-			.catch((err) => {
-				console.error("Failed to copy: ", err);
-			});
-	});
-	document.getElementById("copyETH").addEventListener("click", function () {
-		navigator.clipboard
-			.writeText("0xF5b68799b43C358E0A54482f0D8445DFBEA9BDF1")
-			.then(() => {
-				// Alert the user that the text has been copied
-				alert("ETH address copied to clipboard");
-			})
-			.catch((err) => {
-				console.error("Failed to copy: ", err);
-			});
-	});
+	if (!env.isSafari()) {
+		//Copy buttons
+		document.getElementById("copyBTC")?.addEventListener("click", function () {
+			navigator.clipboard
+				.writeText("bc1q0f82vk79u7hzxcrqe6q2levzvhdrqe72fm5w8z")
+				.then(() => {
+					// Alert the user that the text has been copied
+					alert("BTC address copied to clipboard: ");
+				})
+				.catch((err) => {
+					console.error("Failed to copy: ", err);
+				});
+		});
+		document.getElementById("copyETH")?.addEventListener("click", function () {
+			navigator.clipboard
+				.writeText("0xF5b68799b43C358E0A54482f0D8445DFBEA9BDF1")
+				.then(() => {
+					// Alert the user that the text has been copied
+					alert("ETH address copied to clipboard");
+				})
+				.catch((err) => {
+					console.error("Failed to copy: ", err);
+				});
+		});
 
-	//Patreon login link:
-	document.getElementById("PatreonLogin").href =
-		"https://www.patreon.com/oauth2/authorize" +
-		"?response_type=code" +
-		"&client_id=AqsjZu6eHaLtO3y8bj0VPydtRCNNV2n-5aQoWVKil4IPNb3qoxkT75VQMhSALTcO" +
-		"&redirect_uri=" +
-		encodeURIComponent(env.getAPIUrl() + "/patreon-login") +
-		//"&scope=pledges-to-me" +
-		"&state=" +
-		Settings.get("general.uuid", false);
+		//Patreon login link:
+		document.getElementById("PatreonLogin").href =
+			"https://www.patreon.com/oauth2/authorize" +
+			"?response_type=code" +
+			"&client_id=AqsjZu6eHaLtO3y8bj0VPydtRCNNV2n-5aQoWVKil4IPNb3qoxkT75VQMhSALTcO" +
+			"&redirect_uri=" +
+			encodeURIComponent(env.getAPIUrl() + "/patreon-login") +
+			//"&scope=pledges-to-me" +
+			"&state=" +
+			Settings.get("general.uuid", false);
 
-	//Patreon load page link:
-	if (Settings.get("general.country") == null) {
-		document.getElementById("PatreonLoadPage").style.display = "none";
-	} else {
-		document.getElementById("PatreonLoadPage").href =
-			`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore`;
+		//Patreon load page link:
+		if (Settings.get("general.country") == null) {
+			document.getElementById("RefreshVinePage").style.display = "none";
+		} else {
+			document.getElementById("RefreshVinePage").href =
+				`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore`;
+		}
 	}
 
 	//Make the save button follow the scroll in the keyword tab
@@ -820,7 +844,7 @@ function initiateTestKeywords() {
 	});
 }
 
-import { keywordMatch } from "../scripts/service_worker/keywordMatch.js";
+import { findMatch } from "../scripts/core/utils/KeywordMatcher.js";
 function testKeyword(key, title) {
 	const keyE = CSS.escape(key);
 
@@ -828,7 +852,10 @@ function testKeyword(key, title) {
 	for (let i = 0; i < lines.length; i++) {
 		const containsObj = lines[i].querySelector(`td input[name="contains"]`);
 		const contains = containsObj.value.trim();
-		if (keywordMatch([{ contains: contains, without: "", etv_min: "", etv_max: "" }], title) != false) {
+
+		// Compile and test the keyword
+		const compiledKeywords = compileKeywordObjects([{ contains: contains, without: "", etv_min: "", etv_max: "" }]);
+		if (findMatch(title, compiledKeywords, null, null)) {
 			containsObj.style.background = "lightgreen";
 		} else {
 			containsObj.style.background = "white";
@@ -836,7 +863,10 @@ function testKeyword(key, title) {
 
 		const withoutObj = lines[i].querySelector(`td input[name="without"]`);
 		const without = withoutObj.value.trim();
-		if (keywordMatch([{ contains: without, without: "", etv_min: "", etv_max: "" }], title) != false) {
+
+		// Test the 'without' field as if it were a 'contains' field
+		const compiledWithout = compileKeywordObjects([{ contains: without, without: "", etv_min: "", etv_max: "" }]);
+		if (findMatch(title, compiledWithout, null, null)) {
 			withoutObj.style.background = "lightgreen";
 		} else {
 			withoutObj.style.background = "white";
@@ -1003,6 +1033,20 @@ function keywordsToJSON(key) {
 		const etv_min = lines[i].querySelector(`td input[name="etv_min"]`).value.trim();
 		const etv_max = lines[i].querySelector(`td input[name="etv_max"]`).value.trim();
 
+		//Validate that contains and without have valid regex syntax
+		try {
+			new RegExp(contains);
+		} catch (e) {
+			alert("Invalid regex syntax: " + contains);
+			lines[i].querySelector(`td input[name="contains"]`).focus();
+		}
+		try {
+			new RegExp(without);
+		} catch (e) {
+			alert("Invalid regex syntax: " + without);
+			lines[i].querySelector(`td input[name="without"]`).focus();
+		}
+
 		//Skip empty lines
 		if (contains == "" && without == "" && etv_min == "" && etv_max == "") {
 			continue;
@@ -1044,6 +1088,7 @@ function manageKeywords(key) {
 		btnSave.disabled = true;
 		const arrContent = keywordsToJSON(key);
 		await Settings.set(key, arrContent);
+
 		await new Promise((r) => setTimeout(r, 500)); //Wait to give user-feedback.
 		btnSave.disabled = false;
 	});
@@ -1347,18 +1392,27 @@ function manageSelectBox(key) {
 }
 
 function manageCheckboxSetting(key, def = null) {
-	const val = def === null ? Settings.get(key) : def;
-	if (val === null) {
-		console.log("Setting " + key + " does not exist");
+	let val = Settings.get(key);
+
+	// If the setting doesn't exist and we have a default, use it and save it
+	if (val === undefined && def !== null) {
+		val = def;
+		Settings.set(key, val); // Save the default value
+	}
+
+	if (val === undefined || val === null) {
+		console.log("Setting " + key + " does not exist and no default provided");
 		return;
 	}
+
 	const keyE = CSS.escape(key);
 	const checkObj = document.querySelector(`input[name='${keyE}']`);
 	if (checkObj == null) {
 		console.log("Checkbox input name='" + key + "' does not exist");
 		return;
 	}
-	checkObj.checked = val;
+
+	checkObj.checked = val === true;
 
 	//Trigger the change event so the fieldset will update accordingly.
 	const event = new Event("change");

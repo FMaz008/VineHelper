@@ -1,25 +1,34 @@
-import { Logger } from "./Logger.js";
+/*global chrome*/
+
+import { Logger } from "/scripts/core/utils/Logger.js";
 var logger = new Logger();
 
 logger.add("BOOT: Bootloader starting.");
 
-import { SettingsMgr } from "./SettingsMgr.js";
+// TODO: This bootloader needs refactoring to use dependency injection
+// Currently using compatibility layer for SettingsMgr as first step
+// Future work:
+// - Create a DI container instance at the top
+// - Register all services in the container
+// - Use container.resolve() instead of direct instantiation
+// See scripts/infrastructure/DIContainer.js for the DI implementation
+import { SettingsMgr } from "/scripts/core/services/SettingsMgrCompat.js";
 var Settings = new SettingsMgr();
 
-import { Internationalization } from "./Internationalization.js";
+import { Internationalization } from "/scripts/core/services/Internationalization.js";
 var i13n = new Internationalization();
 
-import { Environment } from "./Environment.js";
+import { Environment } from "/scripts/core/services/Environment.js";
 var env = new Environment();
 
-import { Template } from "./Template.js";
+import { Template } from "/scripts/core/utils/Template.js";
 var Tpl = new Template();
 
-import { YMDHiStoISODate } from "./DateHelper.js";
+import { YMDHiStoISODate } from "/scripts/core/utils/DateHelper.js";
 
-import { openDynamicModal } from "./DynamicModalHelper.js";
+import { openDynamicModal } from "/scripts/core/utils/DynamicModalHelper.js";
 
-import { CryptoKeys } from "./CryptoKeys.js";
+import { CryptoKeys } from "/scripts/core/utils/CryptoKeys.js";
 var cryptoKeys = new CryptoKeys();
 
 //Grid
@@ -32,40 +41,41 @@ import {
 	showAllItems,
 	updateTileCounts,
 	getTileByAsin,
-} from "./Grid.js";
+} from "/scripts/ui/components/Grid.js";
 
-import { isPageLogin, isPageCaptcha, isPageDog } from "./DOMHelper.js";
+import { isPageLogin, isPageCaptcha, isPageDog } from "/scripts/core/utils/DOMHelper.js";
 
-import { HiddenListMgr } from "./HiddenListMgr.js";
+import { HiddenListMgr } from "/scripts/core/services/HiddenListMgr.js";
 var HiddenList = new HiddenListMgr();
 
-import { HookMgr } from "./HookMgr.js";
+import { HookMgr } from "/scripts/core/utils/HookMgr.js";
 var hookMgr = new HookMgr();
 
-import { ModalMgr } from "./ModalMgr.js";
+import { Item } from "/scripts/core/models/Item.js";
+import { ModalMgr } from "/scripts/ui/controllers/ModalMgr.js";
 var DialogMgr = new ModalMgr();
 
-import { News } from "./News.js";
+import { News } from "/scripts/ui/controllers/News.js";
 
-import { NotificationMonitorV3 } from "./notification_monitor/NotificationMonitorV3.js";
+import { NotificationMonitorV3 } from "/scripts/notifications-monitor/core/NotificationMonitorV3.js";
 
-import { Pagination } from "./Pagination.js";
+import { Pagination } from "/scripts/ui/controllers/Pagination.js";
 var pagination = new Pagination();
-import { PinnedListMgr } from "./PinnedListMgr.js";
+import { PinnedListMgr } from "/scripts/core/services/PinnedListMgr.js";
 var PinnedList = new PinnedListMgr();
 
-import { ScreenNotification, ScreenNotifier } from "./ScreenNotifier.js";
+import { ScreenNotification, ScreenNotifier } from "/scripts/ui/components/ScreenNotifier.js";
 var Notifications = new ScreenNotifier();
 
-import { Tile, getTileFromDom } from "./Tile.js";
+import { Tile, getTileFromDom } from "/scripts/ui/components/Tile.js";
 
-import { TileSizer } from "./TileSizer.js";
+import { TileSizer } from "/scripts/ui/controllers/TileSizer.js";
 var tileSizer = new TileSizer();
 
-import { Toolbar } from "./Toolbar.js";
+import { Toolbar } from "/scripts/ui/components/Toolbar.js";
 
-import { Tooltip } from "./Tooltip.js";
-import { unescapeHTML } from "./StringHelper.js";
+import { Tooltip } from "/scripts/ui/components/Tooltip.js";
+import { unescapeHTML } from "/scripts/core/utils/StringHelper.js";
 
 var tooltip = new Tooltip();
 
@@ -112,12 +122,54 @@ env.data.marketplaceId = null;
 env.data.customerId = null;
 
 var notificationMonitor = null;
+var channel = new BroadcastChannel("vinehelper-notification-monitor");
 var promotionId = null; //Amazon checkout process
 var checkoutAsin = null; //Amazon checkout process
 
 //Do not run the extension if ultraviner is running
 if (!ultraviner) {
 	init();
+}
+
+//#########################
+//### Helper functions
+
+// Helper function to show the grid and clean up BlindLoading
+function showGridContainer() {
+	const gridContainer = document.querySelector("#vvp-items-grid-container");
+	if (!gridContainer) return;
+
+	// Signal that VineHelper is ready to show content
+	window.vhReadyToShow = true;
+
+	// Add attribute to body to allow CSS to show the containers
+	document.body.setAttribute("data-vh-ready", "true");
+
+	// Clean up the MutationObserver if BlindLoading was enabled
+	if (window.vhBlindLoadingObserver) {
+		window.vhBlindLoadingObserver.disconnect();
+		window.vhBlindLoadingObserver = null;
+	}
+
+	// Show the grid (remove any inline styles that might have been set)
+	gridContainer.style.visibility = "";
+	gridContainer.style.opacity = "";
+	gridContainer.style.display = "";
+
+	// Also ensure the parent containers are visible
+	const itemsGrid = document.querySelector("#vvp-items-grid");
+	if (itemsGrid) {
+		itemsGrid.style.visibility = "";
+		itemsGrid.style.opacity = "";
+		itemsGrid.style.display = "";
+	}
+
+	const itemsContainer = document.querySelector(".vvp-items-container");
+	if (itemsContainer) {
+		itemsContainer.style.visibility = "";
+		itemsContainer.style.opacity = "";
+		itemsContainer.style.display = "";
+	}
 }
 
 //#########################
@@ -128,15 +180,16 @@ async function init() {
 	//if (window.location.href.endsWith("#AR")) {
 	//Check if page is dogpage
 	if (isPageDog(document)) {
-		chrome.runtime.sendMessage({ type: "dogpage" });
+		channel.postMessage({ type: "dogpage" });
 		return;
 	}
 	if (isPageCaptcha(document)) {
-		chrome.runtime.sendMessage({ type: "captchapage" });
+		channel.postMessage({ type: "captchapage" });
 		return;
 	}
 	if (isPageLogin(document)) {
-		chrome.runtime.sendMessage({ type: "loginpage" });
+		console.log("loginpage detected");
+		channel.postMessage({ type: "loginpage" });
 		return;
 	}
 	//}
@@ -191,7 +244,7 @@ async function init() {
 	await initFlushTplCache(); //And display the version changelog popup
 	initInjectScript();
 
-	//Check if we want to display the notification monitor
+	//Check if we want to display the notifications monitor
 	const currentUrl = window.location.href;
 	let regex = /^[^#]+#monitor.*$/;
 	let arrMatches = currentUrl.match(regex);
@@ -202,9 +255,28 @@ async function init() {
 			loadStyleSheet("resource/css/listView.css");
 		}
 
-		//Initate the notification monitor
+		//Initate the notifications monitor
+		// CRITICAL: Clean up any existing instance to prevent memory leaks
+		if (notificationMonitor) {
+			console.log("🧹 Cleaning up existing NotificationMonitor instance before creating new one");
+			try {
+				notificationMonitor.destroy();
+			} catch (error) {
+				console.error("Error destroying previous NotificationMonitor:", error);
+			}
+			notificationMonitor = null;
+
+			// Force garbage collection hint
+			if (window.gc) {
+				window.gc();
+			}
+		}
+
 		notificationMonitor = new NotificationMonitorV3();
 		await notificationMonitor.initialize();
+
+		// Show the grid for notification monitor
+		showGridContainer();
 
 		hookMgr.hookExecute("productsUpdated", null);
 		return; //Do not initialize the page as normal
@@ -232,9 +304,11 @@ async function init() {
 	}
 
 	if (Settings.get("general.blindLoading")) {
-		const gridContainer = document.querySelector("#vvp-items-grid-container");
+		// Hide the grid during initial processing to prevent flicker
+		// This prevents users from seeing tiles being rearranged, sorted, and filtered
 		if (gridContainer) {
 			gridContainer.style.display = "none";
+			logger.add("BOOT: Blind loading enabled - hiding grid during initial processing");
 		}
 	}
 
@@ -255,27 +329,11 @@ async function init() {
 	await initInsertBookmarkButton();
 	initFixPreviousButton();
 	initModalNagivation();
-	serviceWorkerPing();
 	updateTileCounts();
 
 	hookMgr.hookExecute("EndOfBootloader", null);
 
 	HiddenList.garbageCollection();
-}
-
-//Ping the service worker every minute to let him know
-//VH is being actively used. (not a keep alive system)
-function serviceWorkerPing() {
-	//Create a timer to ping the service worker every minute
-	setInterval(() => {
-		try {
-			chrome.runtime.sendMessage({
-				action: "ping",
-			});
-		} catch (error) {
-			//Extension context is invaliated, but do nothing.
-		}
-	}, 60 * 1000);
 }
 
 async function initTileSizeWidget() {
@@ -316,8 +374,19 @@ function displayAccountData() {
 	displayAccountHideOptOutButton();
 
 	//Add a container to the status table
-	document.getElementById("vvp-current-status-box").style.height = "auto";
-	let elem = document.getElementById("vvp-current-status-box").children[0];
+	const statusBox = document.getElementById("vvp-current-status-box");
+	if (!statusBox) {
+		console.warn("[VineHelper] vvp-current-status-box element not found on account page");
+		return;
+	}
+
+	statusBox.style.height = "auto";
+	if (!statusBox.children || statusBox.children.length === 0) {
+		console.warn("[VineHelper] vvp-current-status-box has no children");
+		return;
+	}
+
+	let elem = statusBox.children[0];
 	let parentContainer = document.createElement("div");
 	parentContainer.classList.add("a-row");
 	elem.append(parentContainer);
@@ -524,7 +593,7 @@ function displayAccountDataEvaluationMetrics() {
 
 async function showGDPRPopup() {
 	if (Settings.get("general.GDPRPopup", false) == true || Settings.get("general.GDPRPopup", false) == undefined) {
-		const prom = await Tpl.loadFile("view/popup_gdpr.html");
+		const prom = await Tpl.loadFile("scripts/ui/templates/popup_gdpr.html");
 		let content = Tpl.render(prom);
 
 		let m = DialogMgr.newModal("gdpr");
@@ -571,7 +640,7 @@ async function initFlushTplCache() {
 				return;
 			}
 			*/
-			const prom = await Tpl.loadFile("view/popup_changelog.html");
+			const prom = await Tpl.loadFile("scripts/ui/templates/popup_changelog.html");
 			Tpl.setVar("appVersion", env.data.appVersion);
 			let content = Tpl.render(prom);
 
@@ -634,11 +703,10 @@ function initAddNotificationMonitorLink() {
 		const a = document.createElement("a");
 		a.id = "vvp-mobile-header-link";
 		a.classList.add("a-link-normal");
-		if (Settings.get("notification.monitor.blockNonEssentialListeners")) {
-			a.href = "/vine/vine-items?queue=encore#monitor";
-		} else {
-			a.href = "/vine/vine-items?queue=encore#monitorLoadAllListeners";
-		}
+		a.style.display = "flex";
+		a.style.alignItems = "center";
+		a.style.gap = "0.25rem";
+		a.href = "/vine/vine-items?queue=encore#monitor";
 		a.target = "_blank";
 		a.innerHTML = `<div class="vh-icon-16 vh-icon-vh"></div> NM`;
 		header.appendChild(a);
@@ -651,18 +719,22 @@ function initAddNotificationMonitorLink() {
 
 			const a = document.createElement("a");
 			//a.href = chrome.runtime.getURL("page/notifications.html");
-			if (Settings.get("notification.monitor.blockNonEssentialListeners")) {
-				a.href = "/vine/vine-items?queue=encore#monitor";
-			} else {
-				a.href = "/vine/vine-items?queue=encore#monitorLoadAllListeners";
-			}
+			a.href = "/vine/vine-items?queue=encore#monitor";
 			a.target = "_blank";
+			a.style.display = "flex";
+			a.style.alignItems = "center";
+			a.style.gap = "0.25rem";
 			a.innerHTML = `<div class="vh-icon-16 vh-icon-vh"></div> Notifications Monitor`;
 			li.appendChild(a);
 		}
 	}
 }
 
+/**
+ * Load the pinned list from the local storage and add the tiles to the grid.
+ * If the pinned list is cloud stored, it will be loaded when the get_info API request comes back.
+ * @returns
+ */
 async function loadPinnedList() {
 	if (env.data.gridDOM.container == null) {
 		//There is no listing on this page
@@ -675,21 +747,23 @@ async function loadPinnedList() {
 		let mapPin = new Map();
 		mapPin = await PinnedList.getList();
 		//Sort the map by date_added descending
-		mapPin = new Map([...mapPin].sort((a, b) => a[1].date_added - b[1].date_added));
+		mapPin = new Map([...mapPin].sort((a, b) => b[1].date_added - a[1].date_added));
 		mapPin.forEach(async (value, key) => {
 			const tile = getTileByAsin(key);
 			if (tile) {
 				tile.setPinned(true);
 			}
-			addPinnedTile(
-				key,
-				value.queue,
-				value.title,
-				value.thumbnail,
-				value.is_parent_asin,
-				value.is_pre_release || value.is_pre_release == "true",
-				value.enrollment_guid
-			);
+			const item = new Item({
+				asin: key,
+				queue: value.queue,
+				title: value.title,
+				img_url: value.thumbnail,
+				is_parent_asin: value.is_parent_asin,
+				enrollment_guid: value.enrollment_guid,
+				unavailable: value.unavailable,
+				is_pre_release: value.is_pre_release ? true : false,
+			});
+			addPinnedTile(item);
 		});
 	}
 }
@@ -750,25 +824,25 @@ function initInsertTopPagination() {
 			currentPageDOM != undefined
 		) {
 			//Fetch total items from the page
-			const TOTAL_ITEMS = parseInt(
-				env.data.gridDOM.container.querySelector("p strong:last-child").innerText.replace(/,/g, "")
-			);
+			const totalItemsElement = env.data.gridDOM.container.querySelector("p strong:last-child");
+			if (!totalItemsElement) {
+				return;
+			}
+			const totalText = totalItemsElement.innerText || totalItemsElement.textContent;
+			const TOTAL_ITEMS = parseInt(totalText.replace(/,/g, ""));
 			const ITEM_PER_PAGE = 36;
-			const CURRENT_PAGE = parseInt(currentPageDOM.innerText.replace(/,/g, ""));
+			const currentPageText = currentPageDOM.innerText || currentPageDOM.textContent;
+			const CURRENT_PAGE = parseInt(currentPageText.replace(/,/g, ""));
 
 			const URL = window.location.pathname + window.location.search; //Sample URL to be modified
 			pagination.setStartPagePadding(parseInt(Settings.get("general.verbosePaginationStartPadding")));
 			let paginationObj = pagination.generatePagination(URL, TOTAL_ITEMS, ITEM_PER_PAGE, CURRENT_PAGE);
 
-			const desktopContainer = env.data.gridDOM.container.querySelector("p");
-			if (desktopContainer) {
-				desktopContainer.appendChild(paginationObj);
-			} else {
-				const p = document.createElement("p");
-				//Insert the p as the first element of env.data.gridDOM.container
-				env.data.gridDOM.container.insertBefore(p, env.data.gridDOM.container.firstChild);
-				p.appendChild(paginationObj);
-			}
+			// Always create a new p element at the top for verbose pagination
+			const p = document.createElement("p");
+			//Insert the p as the first element of env.data.gridDOM.container
+			env.data.gridDOM.container.insertBefore(p, env.data.gridDOM.container.firstChild);
+			p.appendChild(paginationObj);
 		} else {
 			// Clone the bottom pagination to the top of the listing
 			let paginationElement = document.querySelector(".a-pagination");
@@ -845,7 +919,7 @@ async function initInsertBookmarkButton() {
 	//Insert bookmark button
 	if (Settings.get("general.displayFirstSeen") && Settings.get("general.bookmark")) {
 		removeElements("button.bookmark");
-		const prom = await Tpl.loadFile("view/bookmark.html");
+		const prom = await Tpl.loadFile("scripts/ui/templates/bookmark.html");
 		Tpl.setVar("date", Settings.get("general.bookmarkDate"));
 		let bookmarkContent = Tpl.render(prom);
 		document
@@ -916,7 +990,14 @@ async function initTilesAndDrawToolbars() {
 	for (let i = 0; i < arrObj.length; i++) {
 		try {
 			tile = await generateTile(arrObj[i]);
+
+			// Always create toolbar, even for tiles without ASINs
+			// Some tiles may have ASINs in the DOM but fail extraction
 			let t = new Toolbar(tile);
+
+			if (!tile.getAsin()) {
+				logger.add("WARNING: Creating toolbar for tile without extracted ASIN");
+			}
 
 			//Add tool tip to the truncated item title link
 			if (Settings.get("general.displayFullTitleTooltip")) {
@@ -930,13 +1011,15 @@ async function initTilesAndDrawToolbars() {
 			//Wrap the See Details button in a span with the class vh-see-details-container
 			const seeDetails =
 				arrObj[i].querySelector(".vvp-details-btn") || arrObj[i].querySelector(".vvp-details-btn-mobile");
-			const span = document.createElement("span");
-			span.classList.add("vh-btn-container");
-			span.style.display = "flex";
-			seeDetails.insertAdjacentElement("beforebegin", span);
+			if (seeDetails) {
+				const span = document.createElement("span");
+				span.classList.add("vh-btn-container");
+				span.style.display = "flex";
+				seeDetails.insertAdjacentElement("beforebegin", span);
 
-			//Move the seeDetails button as a child span
-			span.appendChild(seeDetails);
+				//Move the seeDetails button as a child span
+				span.appendChild(seeDetails);
+			}
 
 			//Generate the toolbar
 			await t.createProductToolbar();
@@ -947,10 +1030,13 @@ async function initTilesAndDrawToolbars() {
 	}
 	logger.add("done creating toolbars.");
 
-	// Scoll to the RFY/AFA/AI header
+	// Scroll to the RFY/AFA/AI header
 	if (Settings.get("general.scrollToRFY")) {
 		var scrollTarget = document.getElementById("vvp-items-button-container");
-		scrollTarget.scrollIntoView({ behavior: "smooth" });
+		if (scrollTarget) {
+			// Use instant scroll instead of smooth to avoid visible scrolling
+			scrollTarget.scrollIntoView({ behavior: "instant", block: "start" });
+		}
 	}
 
 	toolbarsDrawn = true;
@@ -968,15 +1054,45 @@ async function getAllProductsData() {
 
 	for (let i = 0; i < arrObj.length; i++) {
 		let tile = getTileFromDom(arrObj[i]);
+		if (!tile) {
+			continue; // Skip tiles that couldn't be created
+		}
 		tile.initiateTile(); //Do not await this.
 
 		const asin = tile.getAsin();
+		if (!asin) {
+			continue; // Skip tiles without ASIN
+		}
 		const btn = arrObj[i].querySelector(`input[data-asin="${asin}"]`);
+		if (!btn) {
+			continue;
+		}
 		const isParent = btn.dataset.isParentAsin == "true";
 		const isPreRelease = btn.dataset.isPreRelease == "true";
 		const enrollmentGUID = btn.dataset.recommendationId.match(/#vine\.enrollment\.([a-f0-9-]+)/i)[1];
 		const title = tile.getTitle();
 		const thumbnail = tile.getThumbnail();
+
+		//Get the queue from the item's information
+		const recommendationId = btn.dataset.recommendationId;
+		const recommendationType = btn.dataset.recommendationType;
+		const queueNames = {
+			VINE_FOR_ALL: "encore",
+			VENDOR_VINE_FOR_ALL: "last_chance",
+			VENDOR_TARGETED: "potluck",
+		};
+		let queue = "encore"; //Default queue
+		if (recommendationType == "SEARCH") {
+			//Count the number of # in the recommendationId
+			const numHashes = (recommendationId.match(/#/g) || []).length;
+			if (numHashes == 2) {
+				queue = "encore"; //or last_chance
+			} else if (numHashes == 3) {
+				queue = "potluck";
+			}
+		} else if (queueNames[recommendationType]) {
+			queue = queueNames[recommendationType];
+		}
 
 		//Do not query product info for product without a title or a thumbnail.
 		if (title && thumbnail) {
@@ -987,6 +1103,7 @@ async function getAllProductsData() {
 				is_parent_asin: isParent,
 				is_pre_release: isPreRelease,
 				enrollment_guid: enrollmentGUID,
+				queue: queue,
 			});
 		}
 	}
@@ -998,8 +1115,17 @@ async function generateTile(obj) {
 	let tile;
 	tile = new Tile(obj, env.data.grid.gridRegular);
 
+	// Check if tile was created without ASIN
+	if (!tile.getAsin()) {
+		logger.add("WARNING: Tile created without ASIN, but continuing with DOM setup");
+	}
+
 	//Add a container for the image and place the image in it.
 	let img = obj.querySelector(".vvp-item-tile-content img"); // Get the img element
+	if (!img) {
+		logger.add("WARNING: No image found for tile");
+		return tile;
+	}
 	let imgContainer = document.createElement("div"); // Create a new div element
 	imgContainer.classList.add("vh-img-container"); // Add the 'vh-img-container' class to the div
 	img.parentNode.insertBefore(imgContainer, img); // Insert the imgContainer before the img element
@@ -1050,26 +1176,34 @@ async function generateTile(obj) {
 	if (Settings.isPremiumUser(2) && Settings.get("general.displayVariantIcon")) {
 		//Check if the item is a parent ASIN (as variants)
 		let buttonInput = obj.querySelector(".a-button-input");
-		let variant = buttonInput.getAttribute("data-is-parent-asin");
+		if (!buttonInput) {
+			logger.add("WARNING: No button input found for variant check");
+		} else {
+			let variant = buttonInput.getAttribute("data-is-parent-asin");
 
-		if (variant === "true") {
-			// Create the div element and add a class
-			let div = document.createElement("div");
-			div.classList.add("vh-variant-indicator-container");
-			imgContainer.appendChild(div);
+			if (variant === "true") {
+				// Find the image container in the DOM
+				let imgContainerDOM = obj.querySelector(".vh-img-container");
+				if (imgContainerDOM) {
+					// Create the div element and add a class
+					let div = document.createElement("div");
+					div.classList.add("vh-variant-indicator-container");
+					imgContainerDOM.appendChild(div);
 
-			// Create the <a> element with a link that does nothing
-			let alink = document.createElement("a");
-			alink.href = "#";
-			alink.setAttribute("onclick", "return false;");
-			alink.setAttribute("title", "The item has variant(s).");
-			alink.style.cursor = "default";
-			div.appendChild(alink);
+					// Create the <a> element with a link that does nothing
+					let alink = document.createElement("a");
+					alink.href = "#";
+					alink.setAttribute("onclick", "return false;");
+					alink.setAttribute("title", "The item has variant(s).");
+					alink.style.cursor = "default";
+					div.appendChild(alink);
 
-			// Create another div element for the icon and add classes
-			let iconDiv = document.createElement("div");
-			iconDiv.classList.add("vh-indicator-icon", "vh-icon-choice");
-			alink.appendChild(iconDiv);
+					// Create another div element for the icon and add classes
+					let iconDiv = document.createElement("div");
+					iconDiv.classList.add("vh-indicator-icon", "vh-icon-choice");
+					alink.appendChild(iconDiv);
+				}
+			}
 		}
 	}
 
@@ -1082,7 +1216,13 @@ async function fetchProductsDatav5() {
 	if (arrProductsData.length == 0) {
 		const gridContainer = document.querySelector("#vvp-items-grid-container");
 		if (gridContainer) {
-			gridContainer.style.display = "block";
+			if (!Settings.get("general.blindLoading")) {
+				// Only show immediately if blind loading is disabled
+				gridContainer.style.display = "block";
+			} else {
+				// Even with blind loading, we need to show the grid if there are no products
+				showGridContainer();
+			}
 		}
 		return false; //No product on this page
 	}
@@ -1127,14 +1267,15 @@ async function fetchProductsDatav5() {
 			} else {
 				logger.add("FETCH: Server request failed");
 			}
-			document.querySelector("#vvp-items-grid-container").style.display = "block";
+			// Show grid on error
+			showGridContainer();
 		})
 		.finally(() => {
 			clearTimeout(timeoutId);
 
 			//If the page URL ends with #AR, send a message to the service worker to close the page
 			if (window.location.href.endsWith("#AR")) {
-				chrome.runtime.sendMessage({ type: "closeARTab" });
+				channel.postMessage({ type: "closeARTab" });
 			}
 		});
 }
@@ -1145,7 +1286,8 @@ async function serverProductsResponse(data) {
 	logger.add("FETCH: Response received from VineHelper's server...");
 	if (data["invalid_uuid"] == true) {
 		console.error("Invalid UUID");
-		document.querySelector("#vvp-items-grid-container").style.display = "block";
+		// Show grid on error
+		showGridContainer();
 		Settings.set("general.uuid", null); //Cancel the UUID, so the next load can regenerate a new one.
 		//Do no complete this execution
 		return false;
@@ -1160,7 +1302,6 @@ async function serverProductsResponse(data) {
 	}
 
 	const timenow = data["current_time"];
-
 	//Display notification from the server
 	if (Array.isArray(data["notification"])) {
 		if (data["notification"].length > 0) {
@@ -1180,105 +1321,156 @@ async function serverProductsResponse(data) {
 		const newsHandler = new News(data["news"]);
 	}
 
+	// Move missingASINs declaration before any usage
+	let missingASINs = [];
+
 	logger.add("FETCH: Waiting toolbars to be drawn...");
 	while (toolbarsDrawn == false) {
 		await new Promise((r) => setTimeout(r, 10));
 	}
 	logger.add("FETCH: Interface loaded, processing fetch data...");
+	try {
+		// Get all ASINs from the page
+		const grid = env.data.grid.gridRegular;
+		if (grid) {
+			// Use pArrTile property instead of getTiles method
+			const allTiles = grid.pArrTile || [];
+			const allPageASINs = allTiles.map((t) => t.getAsin()).filter((a) => a);
+			const serverASINs = Object.keys(data["products"]);
+			missingASINs = allPageASINs.filter((asin) => !serverASINs.includes(asin));
+		}
+	} catch (error) {
+		logger.add("ERROR: Failed to get tiles from grid: " + error.message);
+	}
 
 	//For each product provided by the server, modify the local listings
+	let processedCount = 0;
 	for (const [key, values] of Object.entries(data["products"])) {
-		logger.add("DRAW: Processing ASIN #" + key);
-		let tile = getTileByAsin(key);
+		try {
+			processedCount++;
+			logger.add("DRAW: Processing ASIN #" + key);
+			let tile = getTileByAsin(key);
 
-		if (tile == null) {
-			logger.add("No tile matching " + key);
-			return; //Continue the loop with the next item
-		}
-
-		//Load the ETV value
-		if (values.etv_min != null) {
-			logger.add("DRAW: Setting ETV");
-			tile.getToolbar().setETV(values.etv_min, values.etv_max);
-		} else {
-			logger.add("DRAW: No ETV value found");
-			tile.getToolbar().unknownETV();
-		}
-
-		if (values.date_added != null) {
-			logger.add("DRAW: Setting Date");
-			tile.setDateAdded(timenow, values.date_added);
-		}
-
-		if (values.discovered) {
-			logger.add("DRAW: Marking as discovered");
-			tile.markAsDiscovered();
-		}
-
-		//If there is a remote value for the hidden item, ensure it is sync'ed up with the local list
-		if (Settings.isPremiumUser(1) && Settings.get("hiddenTab.remote") && values.hidden != null) {
-			if (values.hidden == true && !(await tile.isHidden())) {
-				logger.add("DRAW: Remote is ordering to hide item");
-				await tile.hideTile(false); //Will update the placement and list
-			} else if (values.hidden == false && (await tile.isHidden())) {
-				logger.add("DRAW: Remote is ordering to show item");
-				await tile.showTile(false); //Will update the placement and list
-			}
-		}
-
-		if (Settings.get("unavailableTab.active")) {
-			logger.add("DRAW: Setting orders");
-			tile.setOrders(values.order_success, values.order_failed);
-			tile.setUnavailable(values.order_unavailable);
-
-			//Assign the tiles to the proper grid
-			if (Settings.get("hiddenTab.active") && (await tile.isHidden())) {
-				//The hidden tiles were already moved, keep the there.
-			} else if (tile.getUnavailable()) {
-				logger.add("DRAW: moving the tile to Unavailable (failed order(s))");
-				await tile.moveToGrid(env.data.grid.gridUnavailable, false); //This is the main sort, do not animate it
+			if (tile == null) {
+				logger.add("No tile matching " + key);
+				continue; //Continue the loop with the next item - FIXED: was 'return'
 			}
 
-			logger.add("DRAW: Updating the toolbar");
-			tile.getToolbar().updateVisibilityIcon();
-			logger.add("DRAW: Done updating the toolbar");
-		}
-
-		//Process variants
-		if (Settings.isPremiumUser(2) && Settings.get("general.displayVariantButton")) {
-			if (values.variants && values.variants.length > 0) {
-				logger.add("DRAW: Processing variants");
-
-				//Add variants to the tile
-				for (const [k, val] of Object.entries(values.variants)) {
-					await tile.addVariant(val.asin, val.title, val.etv);
+			// Debug: Check tile state
+			//Load the ETV value
+			if (values.etv_min != null) {
+				logger.add("DRAW: Setting ETV");
+				const toolbar = tile.getToolbar();
+				if (toolbar) {
+					toolbar.setETV(values.etv_min, values.etv_max);
 				}
-				tile.updateVariantCount();
+			} else {
+				logger.add("DRAW: No ETV value found");
+				const toolbar = tile.getToolbar();
+				if (toolbar) {
+					toolbar.unknownETV();
+				}
+			}
+
+			if (values.date_added != null) {
+				logger.add("DRAW: Setting Date");
+				tile.setDateAdded(timenow, values.date_added);
+			}
+
+			if (values.discovered) {
+				logger.add("DRAW: Marking as discovered");
+				tile.markAsDiscovered();
+			}
+
+			//If there is a remote value for the hidden item, ensure it is sync'ed up with the local list
+			if (Settings.isPremiumUser(1) && Settings.get("hiddenTab.remote") && values.hidden != null) {
+				if (values.hidden == true && !(await tile.isHidden())) {
+					logger.add("DRAW: Remote is ordering to hide item");
+					await tile.hideTile(false); //Will update the placement and list
+				} else if (values.hidden == false && (await tile.isHidden())) {
+					logger.add("DRAW: Remote is ordering to show item");
+					await tile.showTile(false); //Will update the placement and list
+				}
+			}
+
+			if (Settings.get("unavailableTab.active")) {
+				logger.add("DRAW: Setting orders");
+				tile.setOrders(values.order_success, values.order_failed);
+				tile.setUnavailable(values.order_unavailable);
+
+				//Assign the tiles to the proper grid
+				if (Settings.get("hiddenTab.active") && (await tile.isHidden())) {
+					//The hidden tiles were already moved, keep the there.
+				} else if (tile.getUnavailable()) {
+					logger.add("DRAW: moving the tile to Unavailable (failed order(s))");
+					await tile.moveToGrid(env.data.grid.gridUnavailable, false); //This is the main sort, do not animate it
+				}
+
+				logger.add("DRAW: Updating the toolbar");
+				const toolbar = tile.getToolbar();
+				if (toolbar) {
+					try {
+						toolbar.updateVisibilityIcon();
+					} catch (visError) {
+						logger.add("WARN: Failed to update visibility icon: " + visError.message);
+					}
+				}
+				logger.add("DRAW: Done updating the toolbar");
+			}
+
+			//Process variants
+			if (Settings.isPremiumUser(2) && Settings.get("general.displayVariantButton")) {
+				if (values.variants && values.variants.length > 0) {
+					logger.add("DRAW: Processing variants");
+
+					//Add variants to the tile
+					for (const [k, val] of Object.entries(values.variants)) {
+						await tile.addVariant(val.asin, val.title, val.etv);
+					}
+					tile.updateVariantCount();
+				}
+			}
+		} catch (error) {
+			logger.add("ERROR: Failed to process tile data: " + error.message);
+		}
+	}
+	// Process tiles that the server didn't return data for as unknown ETV
+	try {
+		if (typeof missingASINs !== "undefined" && missingASINs.length > 0) {
+			for (const asin of missingASINs) {
+				const tile = getTileByAsin(asin);
+				if (tile && tile.getToolbar()) {
+					tile.getToolbar().unknownETV();
+					tile.colorizeHighlight();
+				}
 			}
 		}
+	} catch (error) {
+		logger.add("WARN: Failed to process missing ASINs: " + error.message);
 	}
 
 	//Loading remote stored pinned items
 	if (Settings.isPremiumUser(1) && Settings.get("pinnedTab.active") && Settings.get("pinnedTab.remote")) {
 		if (data["pinned_products"] != undefined) {
 			logger.add("DRAW: Loading remote pinned products");
-			for (let i = 0; i < data["pinned_products"].length; i++) {
+			for (let i = data["pinned_products"].length - 1; i >= 0; i--) {
 				//Get the tile
 				const tile = getTileByAsin(data["pinned_products"][i]["asin"]);
 				if (tile) {
 					tile.setPinned(true);
 				}
 
-				await addPinnedTile(
-					data["pinned_products"][i]["asin"],
-					data["pinned_products"][i]["queue"],
-					data["pinned_products"][i]["title"],
-					data["pinned_products"][i]["img_url"],
-					data["pinned_products"][i]["is_parent_asin"],
-					data["pinned_products"][i]["is_pre_release"],
-					data["pinned_products"][i]["enrollment_guid"],
-					data["pinned_products"][i]["unavailable"]
-				); //grid.js
+				const item = new Item({
+					asin: data["pinned_products"][i]["asin"],
+					queue: data["pinned_products"][i]["queue"],
+					title: data["pinned_products"][i]["title"],
+					img_url: data["pinned_products"][i]["img_url"],
+					is_parent_asin: data["pinned_products"][i]["is_parent_asin"],
+					is_pre_release: data["pinned_products"][i]["is_pre_release"] ? true : false,
+					enrollment_guid: data["pinned_products"][i]["enrollment_guid"],
+					unavailable: data["pinned_products"][i]["unavailable"],
+				});
+				await addPinnedTile(item); //grid.js
 			}
 		}
 	}
@@ -1293,7 +1485,8 @@ async function serverProductsResponse(data) {
 	productUpdated = true;
 	hookMgr.hookExecute("productsUpdated", null);
 
-	document.querySelector("#vvp-items-grid-container").style.display = "block";
+	// Show the grid after all processing is complete
+	showGridContainer();
 }
 
 //#########################
@@ -1303,6 +1496,8 @@ async function serverProductsResponse(data) {
 //Messages sent via window.postMessage({}, "*");
 //Most requests comes from the inj.js file, which is in a different scope/context.
 var arrVariations = null;
+var modalASIN = null;
+var modalParentASIN = null;
 window.addEventListener("message", async function (event) {
 	//Do not run the extension if ultraviner is running
 	if (ultraviner) {
@@ -1318,14 +1513,26 @@ window.addEventListener("message", async function (event) {
 	if (event.data.type == "promotionId") {
 		promotionId = event.data.promotionId;
 		checkoutAsin = event.data.asin;
-
+		modalASIN = event.data.asin;
+		modalParentASIN = event.data.parent_asin;
 		// Try to find and update the form for 3 seconds
 		let attempts = 0;
 		const maxAttempts = 60; // 3 seconds at 50ms intervals
 		const interval = setInterval(() => {
 			const checkoutBuyNowForm = document.querySelector("#vvp-checkout-buy-now");
-			if (checkoutBuyNowForm) {
+			const requestProductBtn = document.querySelector(
+				"#vvp-product-details-modal--request-btn input[type='submit']"
+			);
+			if (checkoutBuyNowForm && requestProductBtn) {
 				checkoutBuyNowForm.target = "_blank";
+
+				const requestProductBtnListener = async (e) => {
+					await Settings.set("checkout.currentASIN", modalASIN);
+					await Settings.set("checkout.currentParentASIN", modalParentASIN);
+					checkoutBuyNowForm.removeEventListener("click", requestProductBtnListener);
+				};
+				requestProductBtn.addEventListener("click", requestProductBtnListener);
+
 				clearInterval(interval);
 			} else if (++attempts >= maxAttempts) {
 				clearInterval(interval);
@@ -1334,18 +1541,17 @@ window.addEventListener("message", async function (event) {
 		}, 50);
 	}
 
-	/*
 	//Amazon checkout process (only use if the notification monitor is loaded)
 	//This is an alternate backup method to flagging the form as target=_blank
+	/*
 	if (
 		event.data.type == "offerListingId" &&
 		env.isAmazonCheckoutEnabled() &&
 		notificationMonitor !== null &&
 		!Settings.get("general.forceTango")
 	) {
-		const offerListingId = event.data.offerListingId;
-
 		//Open a new tab to the form generating url
+		const offerListingId = event.data.offerListingId;
 		const params = {
 			asin: checkoutAsin,
 			promotionId: promotionId,
@@ -1440,7 +1646,7 @@ window.addEventListener("message", async function (event) {
 			body: JSON.stringify(content),
 		});
 
-		//The notification monitor does not instanciate a grid as there is no tabs.
+		//The notifications monitors does not instanciate a grid as there is no tabs.
 		//But the ETV will be received from the server
 		if (!notificationMonitor) {
 			//Update the product tile ETV in the Toolbar
@@ -1468,9 +1674,16 @@ window.addEventListener("message", async function (event) {
 		}
 
 		if (Settings.get("general.displayModalETV")) {
-			document.getElementById("vvp-product-details-modal--tax-value").style.display = "block";
-			document.getElementById("vvp-product-details-modal--tax-spinner").style.display = "none";
-			document.getElementById("vvp-product-details-modal--tax-value-string").innerText = event.data.data.etv;
+			if (env.isMobileView()) {
+				document.getElementById("product-details-sheet-tax-value").classList.remove("aok-hidden");
+				document.getElementById("product-details-sheet-tax-value").style.display = "block";
+				document.getElementById("product-details-sheet-tax-spinner").style.display = "none";
+				document.getElementById("product-details-sheet-tax-value-string").innerText = event.data.data.etv;
+			} else {
+				document.getElementById("vvp-product-details-modal--tax-value").style.display = "block";
+				document.getElementById("vvp-product-details-modal--tax-spinner").style.display = "none";
+				document.getElementById("vvp-product-details-modal--tax-value-string").innerText = event.data.data.etv;
+			}
 		}
 	}
 
@@ -1513,7 +1726,7 @@ window.addEventListener("message", async function (event) {
 				body: JSON.stringify(content),
 			});
 
-			//The notification monitor does not implement the regularGrid
+			//The notifications monitors does not implement the regularGrid
 			if (!notificationMonitor) {
 				//Update the product tile ETV in the Toolbar
 				let tile = getTileByAsin(tileASIN);
@@ -1573,18 +1786,13 @@ window.addEventListener("message", async function (event) {
 		//Check the current URL for the following pattern:
 		///vine/vine-items#openModal;${asin};${is_parent_asin};${is_pre_release};${enrollment_guid}
 		const currentUrl = window.location.href;
-		let regex = /^[^#]+#openModal;(.+?);(.+?);(.+?);(.+?);(.+?)(?:;(.+))?$/;
+		let regex = /^[^#]+#openModal;(.+?)$/;
 		let arrMatches = currentUrl.match(regex);
 		if (arrMatches != null) {
 			logger.add("BOOT: Open modal URL detected.");
 			//We have an open modal URL
-			const asin = arrMatches[1];
-			const queue = arrMatches[2];
-			const isParentAsin = arrMatches[3] === "true";
-			const isPreRelease = arrMatches[4] === "true";
-			const enrollmentGUID = arrMatches[5];
-			const variantAsin = arrMatches[6];
-			openDynamicModal(asin, queue, isParentAsin, isPreRelease, enrollmentGUID, variantAsin);
+			const options = JSON.parse(decodeURIComponent(arrMatches[1]));
+			openDynamicModal(options);
 		}
 
 		//Why here? No reason, it's just near the other URL check.
@@ -1649,26 +1857,51 @@ async function generateCheckoutForm(asin, promotionId, offerListingId) {
 //#####################################################
 //Message from within the context of the extension
 //Messages sent via: chrome.tabs.sendMessage(tab.id, data);
-//In this case, all messages are coming from the service_worker file.
-chrome.runtime.onMessage.addListener(async function (message, sender, sendResponse) {
-	let data = message;
-	if (data.type == undefined) {
+//In this case, all messages are coming from the service_worker or notification-monitor files.
+channel.addEventListener("message", (event) => {
+	processMessage(event.data);
+});
+chrome.runtime.onMessage.addListener(async (data, sender, sendResponse) => {
+	processMessage(data, sender, sendResponse);
+});
+window.addEventListener("message", (event) => {
+	processMessage(event.data);
+});
+
+async function processMessage(data, sender = null, sendResponse = null) {
+	if (data.type == undefined && data.action == undefined) {
 		return false;
 	}
 
-	sendResponse({ success: true });
-
 	//If we received a request for a hook execution
 	if (data.type == "hookExecute") {
+		if (sendResponse) {
+			sendResponse({ success: true });
+		}
 		hookMgr.hookExecute(data.hookname, data);
 	}
 
+	// Handle memory debugging commands from settings page
+	if (data.type == "MEMORY_DEBUG_COMMAND") {
+		handleMemoryDebugCommand(data, sendResponse);
+		return true; // Keep message channel open for async response
+	}
+
+	// Handle TileCounter debugging commands from settings page
+	if (data.type == "TILECOUNTER_DEBUG_COMMAND") {
+		handleTileCounterDebugCommand(data, sendResponse);
+		return true; // Keep message channel open for async response
+	}
+
 	if (data.type == "newItem") {
+		if (sendResponse) {
+			sendResponse({ success: true });
+		}
 		if (
 			!notificationMonitor &&
 			data.index < 10 && //Limit the notification to the top 10 most recents
 			env.data.vineBrowsingListing && //Only show notification on listing pages
-			!env.data.monitorActive && //Do not display on screen notification in the notification monitor
+			!env.data.monitorActive && //Do not display on screen notification in the notifications monitor
 			Settings.get("notification.screen.active")
 		) {
 			let {
@@ -1683,10 +1916,10 @@ chrome.runtime.onMessage.addListener(async function (message, sender, sendRespon
 				is_parent_asin,
 				is_pre_release,
 				enrollment_guid,
-			} = data;
+			} = data.item.data;
 
 			//Generate the content to be displayed in the notification
-			const prom = await Tpl.loadFile("/view/notification_new_item.html");
+			const prom = await Tpl.loadFile("scripts/ui/templates/notification_new_item.html");
 
 			if (
 				Settings.isPremiumUser() &&
@@ -1694,9 +1927,11 @@ chrome.runtime.onMessage.addListener(async function (message, sender, sendRespon
 				is_parent_asin != null &&
 				enrollment_guid != null
 			) {
+				const item = new Item(data.item.data);
+				const options = item.getCoreInfo();
 				Tpl.setVar(
 					"url",
-					`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${is_parent_asin ? "true" : "false"};${is_pre_release ? "true" : "false"};${enrollment_guid}`
+					`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${encodeURIComponent(JSON.stringify(options))}`
 				);
 			} else {
 				Tpl.setVar("url", `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?search=${search}`);
@@ -1709,7 +1944,9 @@ chrome.runtime.onMessage.addListener(async function (message, sender, sendRespon
 			Tpl.setVar("img_url", img_url);
 			Tpl.setVar("queue", queue);
 			Tpl.setVar("is_parent_asin", is_parent_asin);
+			Tpl.setVar("is_pre_release", is_pre_release);
 			Tpl.setVar("enrollment_guid", enrollment_guid);
+			Tpl.setVar("domain", i13n.getDomainTLD());
 
 			//Generate the notification
 			let note2 = new ScreenNotification();
@@ -1728,7 +1965,27 @@ chrome.runtime.onMessage.addListener(async function (message, sender, sendRespon
 			Notifications.pushNotification(note2);
 		}
 	}
-});
+
+	if (data.action === "showPrompt" && data.word) {
+		showCustomPrompt(data.word, data.list).then((result) => {
+			// Send the word to the background script
+			chrome.runtime.sendMessage({ action: "addWord", word: result.word, list: data.list });
+		});
+		return true; // Keep the message channel open for the async response
+	}
+
+	if (data.action === "copyASIN") {
+		//if (sendResponse) {
+		//sendResponse({ success: true });
+		//}
+		if (selectedASIN) {
+			navigator.clipboard.writeText(selectedASIN);
+			alert("ASIN " + selectedASIN + " copied to clipboard");
+		} else {
+			alert("No ASIN detected. :(");
+		}
+	}
+}
 
 //Key bindings/keyboard shortcuts for navigation
 window.addEventListener("keyup", async function (e) {
@@ -1806,6 +2063,7 @@ window.addEventListener("keyup", async function (e) {
 		[Settings.get("keyBindings.AFAPage")]: () => (window.location.href = "/vine/vine-items?queue=last_chance"),
 		[Settings.get("keyBindings.ALLPage")]: () => (window.location.href = "/vine/vine-items?queue=all_items"),
 		[Settings.get("keyBindings.AIPage")]: () => (window.location.href = "/vine/vine-items?queue=encore"),
+		[Settings.get("keyBindings.ALLPage")]: () => (window.location.href = "/vine/vine-items?queue=all_items"),
 		[Settings.get("keyBindings.AIPage2")]: () =>
 			(window.location.href = "/vine/vine-items?queue=encore&pn=&cn=&page=2"),
 		[Settings.get("keyBindings.AIPage3")]: () =>
@@ -1927,6 +2185,116 @@ function removeElements(selector) {
 	elementsToRemove.forEach(function (element) {
 		element.remove();
 	});
+}
+
+// Memory debugging command handler
+async function handleMemoryDebugCommand(data, sendResponse) {
+	try {
+		// Check if memory debugger is available
+		const debuggerReady = await window.MEMORY_DEBUGGER_READY;
+		if (!debuggerReady) {
+			sendResponse({
+				success: false,
+				error: "Memory debugger not initialized. Please enable memory debugging and reload the page.",
+			});
+			return;
+		}
+
+		const { command, params } = data;
+		let result;
+
+		switch (command) {
+			case "takeSnapshot":
+				result = debuggerReady.takeSnapshot(params.name);
+				sendResponse({ success: true, data: result });
+				break;
+
+			case "generateReport":
+				result = debuggerReady.generateReport();
+				sendResponse({ success: true, data: result });
+				break;
+
+			case "detectLeaks":
+				result = debuggerReady.detectLeaks();
+				sendResponse({ success: true, data: result });
+				break;
+
+			case "checkDetachedNodes":
+				result = debuggerReady.checkDetachedNodes();
+				sendResponse({ success: true, data: result });
+				break;
+
+			case "cleanup":
+				result = debuggerReady.cleanup();
+				sendResponse({ success: true, data: result });
+				break;
+
+			default:
+				sendResponse({ success: false, error: `Unknown command: ${command}` });
+		}
+	} catch (error) {
+		console.error("Memory debug command error:", error);
+		sendResponse({ success: false, error: error.message });
+	}
+}
+
+// TileCounter debugging command handler
+async function handleTileCounterDebugCommand(data, sendResponse) {
+	try {
+		// Check if TileCounter debugger is available
+		if (!window.tileCounterDebugger) {
+			// Check if we're in notification monitor context
+			if (!window.location.href.includes("#monitor")) {
+				sendResponse({
+					success: false,
+					error: "TileCounter debugger is only available in the Notification Monitor. Please open the Notification Monitor tab and try again.",
+				});
+				return;
+			}
+
+			sendResponse({
+				success: false,
+				error: "TileCounter debugger not initialized. Please enable TileCounter debugging in settings and reload the page.",
+			});
+			return;
+		}
+
+		const { command, params } = data;
+		let result;
+
+		switch (command) {
+			case "startMonitoring":
+				result = window.tileCounterDebugger.startMonitoring();
+				sendResponse(result);
+				break;
+
+			case "stopMonitoring":
+				result = window.tileCounterDebugger.stopMonitoring();
+				sendResponse(result);
+				break;
+
+			case "getMetrics":
+				result = window.tileCounterDebugger.getMetrics();
+				sendResponse(result);
+				break;
+
+			case "generateReport":
+				result = window.tileCounterDebugger.generateReport();
+				sendResponse(result);
+				break;
+
+			case "clearData":
+				result = window.tileCounterDebugger.clearData();
+				sendResponse(result);
+				break;
+
+			default:
+				sendResponse({ success: false, error: `Unknown command: ${command}` });
+		}
+	} catch (error) {
+		console.error("TileCounter debug command error:", error);
+		sendResponse({ success: false, error: error.message });
+	}
 }
 
 function getRandomNumber(min, max) {
@@ -2064,6 +2432,10 @@ async function handleModalNavigation(event) {
 	logger.add("[DEBUG] Updated the current index to: " + modalNavigatorCurrentIndex);
 }
 
+//#####################################################
+//## STYLESHEETS
+//#####################################################
+
 async function loadStyleSheet(path, injected = true) {
 	if (injected) {
 		const prom = await Tpl.loadFile(path);
@@ -2081,6 +2453,11 @@ function loadStyleSheetContent(content, path = "injected") {
 		document.head.appendChild(style);
 	}
 }
+
+//#####################################################
+//## CONTEXT MENU
+//#####################################################
+
 let selectedASIN = null;
 document.addEventListener("contextmenu", async (event) => {
 	// Try to obtain the word that was right clicked on
@@ -2188,23 +2565,3 @@ function showCustomPrompt(word, list, callback) {
 		});
 	});
 }
-
-// Show a custom dialog when prompted by the background script
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-	if (message.action === "showPrompt" && message.word) {
-		showCustomPrompt(message.word, message.list).then((result) => {
-			// Send the word to the background script
-			chrome.runtime.sendMessage({ action: "addWord", word: result.word, list: message.list });
-		});
-		return true; // Keep the message channel open for the async response
-	}
-
-	if (message.action === "copyASIN") {
-		if (selectedASIN) {
-			navigator.clipboard.writeText(selectedASIN);
-			alert("ASIN " + selectedASIN + " copied to clipboard");
-		} else {
-			alert("No ASIN detected. :(");
-		}
-	}
-});

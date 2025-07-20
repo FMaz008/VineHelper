@@ -1,0 +1,49 @@
+<div id="vh-pin-{{$id}}" class="vvp-item-tile pinned vh-listview">
+	<div class="vh-img-container">
+		<img src="{{$img_url}}" />
+	</div>
+	<div class="vvp-item-tile-content vh-status compact">
+		<div class="vh-status-container" style="height: 20px">
+			<div class="vh-status-container2">
+				<a href="#" class="vh-floating-icon unpin-link" onclick="return false;">
+					<div class="vh-toolbar-icon vh-icon-unpin" data-asin="{{$asin}}"></div>
+				</a>
+				<a
+					href="/vine/vine-items?search={{$search_url_slug}}"
+					id="vh-search-link-{{$asin}}"
+					class="vh-floating-icon vh-search-link"
+					title="Search for this item"
+					target="_blank"
+				>
+					<div class="vh-toolbar-icon vh-icon-search"></div>
+				</a>
+				{{if PINNEDTAB_REMOTE}}
+				<a
+					href="#"
+					class="vh-floating-icon pinned-reload-link"
+					title="Refresh all items' info from the database"
+					onclick="return false;"
+				>
+					<div class="vh-toolbar-icon vh-icon-reload"></div>
+				</a>
+				{{endif}}
+			</div>
+		</div>
+		<a href="https://amazon.{{$domain}}/dp/{{$asin}}" class="a-link-normal" target="_blank">{{$description}}</a>
+		<span class="a-button a-button-primary vvp-details-btn" id="a-autoid-0">
+			<span class="a-button-inner">
+				<input
+					data-asin="{{$asin}}"
+					data-is-parent-asin="{{$is_parent_asin}}"
+					data-is-pre-release="{{$is_pre_release}}"
+					data-recommendation-id="{{$recommendationId}}"
+					data-recommendation-type="{{$recommendationType}}"
+					class="a-button-input"
+					type="submit"
+					aria-labelledby="a-autoid-0-announce"
+				/>
+				<span class="a-button-text" aria-hidden="true" id="a-autoid-0-announce">See details</span>
+			</span>
+		</span>
+	</div>
+</div>

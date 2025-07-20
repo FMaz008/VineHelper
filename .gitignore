@@ -8,6 +8,9 @@
 *.zip
 node_modules
 .DS_Store
+
+# Yarn Berry
+.yarn/
+.yarnrc.yml
 /.pnp.cjs
 /.pnp.loader.mjs
-/.yarn/install-state.gz

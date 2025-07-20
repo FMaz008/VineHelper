@@ -1,13 +1,15 @@
-import { Logger } from "./Logger.js";
+/*global chrome*/
+
+import { Logger } from "/scripts/core/utils/Logger.js";
 var logger = new Logger();
 
-import { SettingsMgr } from "./SettingsMgr.js";
+import { SettingsMgr } from "/scripts/core/services/SettingsMgrCompat.js";
 var Settings = new SettingsMgr();
 
-import { Internationalization } from "./Internationalization.js";
+import { Internationalization } from "/scripts/core/services/Internationalization.js";
 var i13n = new Internationalization();
 
-import { Template } from "./Template.js";
+import { Template } from "/scripts/core/utils/Template.js";
 const Tpl = new Template();
 
 //###############################################33
@@ -27,39 +29,79 @@ async function loadStyleSheets() {
 	await Settings.waitForLoad();
 	logger.add("PREBOOT: config loaded!");
 
+	// Apply blind loading CSS immediately to prevent flicker
+	if (Settings.get("general.blindLoading")) {
+		logger.add("PREBOOT: Applying blind loading CSS to hide grid early");
+		loadStyleSheetContent(
+			`
+			/* Hide the grid container immediately to prevent flicker during page loads and pagination */
+			/* Using visibility instead of display to avoid layout issues */
+			/* Using a specific attribute selector that we can remove later */
+			body:not([data-vh-ready]) #vvp-items-grid-container {
+				visibility: hidden !important;
+				opacity: 0 !important;
+			}
+			
+			/* Also hide the items grid itself as a fallback */
+			body:not([data-vh-ready]) #vvp-items-grid {
+				visibility: hidden !important;
+				opacity: 0 !important;
+			}
+			
+			/* Hide the entire items container to be extra sure */
+			body:not([data-vh-ready]) .vvp-items-container {
+				visibility: hidden !important;
+				opacity: 0 !important;
+			}
+			
+			/* Smooth transition when showing */
+			body[data-vh-ready] #vvp-items-grid-container,
+			body[data-vh-ready] #vvp-items-grid,
+			body[data-vh-ready] .vvp-items-container {
+				visibility: visible !important;
+				opacity: 1 !important;
+				transition: opacity 0.2s ease-in-out;
+			}
+		`,
+			"blind-loading-early"
+		);
+	}
+
 	//Load Thorvarium stylesheets
-	if (Settings.get("thorvarium.mobileios")) loadStyleSheet("node_modules/vine-styling/mobile/ios-with-bugfix.css");
+	if (Settings.get("thorvarium.mobileios")) loadStyleSheet("scripts/vendor/vine-styling/mobile/ios-with-bugfix.css");
 
-	if (Settings.get("thorvarium.mobileandroid")) loadStyleSheet("node_modules/vine-styling/mobile/mobile.css");
+	if (Settings.get("thorvarium.mobileandroid")) loadStyleSheet("scripts/vendor/vine-styling/mobile/mobile.css");
 
-	if (Settings.get("thorvarium.smallItems")) loadStyleSheet("node_modules/vine-styling/desktop/small-items.css");
+	if (Settings.get("thorvarium.smallItems")) loadStyleSheet("scripts/vendor/vine-styling/desktop/small-items.css");
 
-	if (Settings.get("thorvarium.removeHeader")) loadStyleSheet("node_modules/vine-styling/desktop/remove-header.css");
+	if (Settings.get("thorvarium.removeHeader"))
+		loadStyleSheet("scripts/vendor/vine-styling/desktop/remove-header.css");
 
-	if (Settings.get("thorvarium.removeFooter")) loadStyleSheet("node_modules/vine-styling/desktop/remove-footer.css");
+	if (Settings.get("thorvarium.removeFooter"))
+		loadStyleSheet("scripts/vendor/vine-styling/desktop/remove-footer.css");
 
 	if (Settings.get("thorvarium.removeAssociateHeader"))
-		loadStyleSheet("node_modules/vine-styling/desktop/remove-associate-header.css");
+		loadStyleSheet("scripts/vendor/vine-styling/desktop/remove-associate-header.css");
 
-	if (Settings.get("thorvarium.darktheme")) loadStyleSheet("node_modules/vine-styling/desktop/dark-theme.css");
+	if (Settings.get("thorvarium.darktheme")) loadStyleSheet("scripts/vendor/vine-styling/desktop/dark-theme.css");
 
 	if (Settings.get("thorvarium.ETVModalOnTop"))
-		loadStyleSheet("node_modules/vine-styling/desktop/etv-modal-on-top.css");
+		loadStyleSheet("scripts/vendor/vine-styling/desktop/etv-modal-on-top.css");
 
 	if (Settings.get("thorvarium.paginationOnTop"))
-		loadStyleSheet("node_modules/vine-styling/desktop/pagination-on-top.css");
+		loadStyleSheet("scripts/vendor/vine-styling/desktop/pagination-on-top.css");
 
 	if (Settings.get("thorvarium.collapsableCategories"))
-		loadStyleSheet("node_modules/vine-styling/desktop/collapsable-categories.css");
+		loadStyleSheet("scripts/vendor/vine-styling/desktop/collapsable-categories.css");
 
 	if (Settings.get("thorvarium.stripedCategories"))
-		loadStyleSheet("node_modules/vine-styling/desktop/striped-categories.css");
+		loadStyleSheet("scripts/vendor/vine-styling/desktop/striped-categories.css");
 
 	if (Settings.get("thorvarium.limitedQuantityIcon"))
-		loadStyleSheet("node_modules/vine-styling/desktop/limited-quantity-icon.css");
+		loadStyleSheet("scripts/vendor/vine-styling/desktop/limited-quantity-icon.css");
 
 	if (Settings.get("thorvarium.RFYAFAAITabs"))
-		loadStyleSheet("node_modules/vine-styling/desktop/rfy-afa-ai-tabs.css");
+		loadStyleSheet("scripts/vendor/vine-styling/desktop/rfy-afa-ai-tabs.css");
 
 	logger.add("PREBOOT: Thorvarium stylesheets injected");
 
@@ -74,27 +116,10 @@ async function loadStyleSheets() {
 		// For all other countries, append the country code to the stylesheet
 		if (i13n.getCountryCode() != "com") emojiList += "-" + i13n.getCountryCode().toUpperCase();
 
-		loadStyleSheet("node_modules/vine-styling/desktop/" + emojiList + ".css");
+		loadStyleSheet("scripts/vendor/vine-styling/desktop/" + emojiList + ".css");
 	}
 
 	logger.add("PREBOOT: Thorvarium country-specific stylesheets injected");
-}
-
-//Send the country code to the Service Worker
-if (Settings.get("general.country") != i13n.getCountryCode()) {
-	Settings.set("general.country", i13n.getCountryCode());
-
-	chrome.runtime.sendMessage(
-		{
-			type: "setCountryCode",
-			countryCode: i13n.getCountryCode(),
-		},
-		function (response) {
-			if (chrome.runtime.lastError) {
-				console.error("Error sending message:", chrome.runtime.lastError.message);
-			}
-		}
-	);
 }
 
 //#################################################3

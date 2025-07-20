@@ -1,0 +1,173 @@
+<div style="margin: 0px" id="vh-notifications-monitor-header">
+	<div class="vh-icon-48 vh-icon-vh-48" style="float: left; margin-right: 10px"></div>
+	<h2 style="padding-bottom: 0px">Notifications Monitor</h2>
+	<span style="display: flex; align-items: flex-end"> <span id="user-tier-info"></span>&nbsp; </span>
+	<div id="vh-notifications-monitor-header-ui" style="display: flex; gap: 10px; flex-wrap: wrap; clear: both">
+		<div style="flex-grow: 1">
+			<div style="display: flex; flex-wrap: wrap; gap: 10px; width: 100%; max-width: 600px">
+				<div
+					style="
+						flex: 1 1 200px;
+						max-width: 270px;
+						min-width: 120px;
+						margin-bottom: 5px;
+						align-content: center;
+					"
+				>
+					<div class="vh_flex_column" style="gap: 5px">
+						<div style="display: flex; flex-wrap: wrap; align-items: baseline">
+							<strong style="margin-right: 5px">Loaded on:</strong>
+							<span id="date_loaded"></span>
+						</div>
+						<div style="display: flex; flex-wrap: wrap; align-items: baseline">
+							<strong style="margin-right: 5px">Most recent item:</strong>
+							<span id="date_most_recent_item">(tba)</span>
+						</div>
+					</div>
+				</div>
+				<div style="flex: 1 1 300px; max-width: 300px; min-width: 180px">
+					<div class="notice" id="statusSW" style="display: flex; align-items: center">
+						<div class="vh-switch-32 vh-icon-switch-off" style="margin-right: 10px; flex-shrink: 0"></div>
+						<div>
+							Mode:
+							<span id="descriptionSW"></span>
+						</div>
+					</div>
+					<div class="notice" id="statusWS" style="display: flex; align-items: center; margin-top: 5px">
+						<div class="vh-switch-32 vh-icon-switch-off" style="margin-right: 10px; flex-shrink: 0"></div>
+						<div>
+							Websocket Server:
+							<span id="descriptionWS"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div style="display: flex; flex-wrap: wrap; gap: 5px; margin: 5px 0">
+				<div class="vh-notification-monitor-controls">
+					<div class="vh-control-group">
+						<div class="vh-control-header">Clear</div>
+						<div class="vh-control-buttons">
+							<label for="clear-monitor">
+								<input type="button" name="clear-monitor" id="clear-monitor" value="All" />
+							</label>
+							<label for="clear-unavailable">
+								<input type="button" name="clear-unavailable" id="clear-unavailable" value="Unavail." />
+							</label>
+						</div>
+					</div>
+
+					<div class="vh-control-group">
+						<div class="vh-control-header">Fetch</div>
+						<div class="vh-control-buttons">
+							<label for="fetch-last-100">
+								<input
+									type="button"
+									name="fetch-last-100"
+									id="fetch-last-100"
+									value="last {{$fetchLimit}}"
+								/>
+							</label>
+							{{if TIER3}}
+							<label for="fetch-last-12hrs">
+								<input type="button" name="fetch-last-12hrs" id="fetch-last-12hrs" value="last 12hrs" />
+							</label>
+							{{endif}}
+						</div>
+					</div>
+
+					<div class="vh-control-group">
+						<div class="vh-control-header">Feed control</div>
+						<div class="vh-control-buttons">
+							<label for="pauseFeed">
+								<input
+									type="button"
+									name="pauseFeed"
+									id="pauseFeed"
+									value="Pause & Buffer Feed"
+									style="width: 150px"
+								/>
+							</label>
+						</div>
+					</div>
+
+					<div class="vh-control-group">
+						<div class="vh-control-header">Auto truncate</div>
+						<div class="vh-control-buttons">
+							<div style="width: 160px">
+								<input type="checkbox" name="auto-truncate" id="auto-truncate" checked />
+								after
+								<select name="auto-truncate-limit" id="auto-truncate-limit">
+									<option value="100">100</option>
+									<option value="200">200</option>
+									<option value="500">500</option>
+									<option value="1000">1000</option>
+									<option value="2000">2000</option>
+									<option value="3000">3000</option>
+									<option value="4000">4000</option>
+									<option value="5000">5000</option>
+								</select>
+								items
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="vh-nm-filters" style="align-self: flex-start; margin-bottom: 3px">
+			<div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0 5px">
+				<label style="justify-self: end"> Search: </label>
+				<input
+					type="text"
+					id="search-input"
+					name="search-input"
+					placeholder="Search items..."
+					style="width: 150px; height: inherit; width: 100%"
+				/>
+
+				<label style="margin-top: 5px; justify-self: end">
+					<span>Filter by: </span>
+				</label>
+				<span>
+					<select name="filter-queue">
+						<option value="-1">Show all queues</option>
+						<option value="last_chance">AFA</option>
+						<option value="encore">AI</option>
+						<option value="all_items">ALL</option>
+					</select>
+					<select name="filter-type">
+						<option value="-1">Show all notifications</option>
+						<option value="0">Regular only</option>
+						<option value="1">Zero ETV only</option>
+						<option value="2">KW match only</option>
+						<option value="3">Unknown ETV only</option>
+						<option value="9">Zero ETV or KW match only</option>
+					</select>
+				</span>
+
+				<label style="margin-top: 5px; justify-self: end"> Sort by: </label>
+				<select name="sort-queue">
+					<option value="date_desc">Date (new-old)</option>
+					<option value="date_asc">Date (old-new)</option>
+					<option value="price_desc">ETV (high-low)</option>
+					<option value="price_asc">ETV (low-high)</option>
+				</select>
+			</div>
+			<div id="vh-nm-tile-size-container"></div>
+		</div>
+	</div>
+	<div style="clear: both"></div>
+
+	<div id="fixed-toolbar" style="position: fixed; top: 10px; right: 10px; display: none; z-index: 1000">
+		<div style="display: flex; gap: 5px">
+			<label for="pauseFeed-fixed">
+				<input type="button" name="pauseFeed-fixed" id="pauseFeed-fixed" value="Pause & Buffer Feed" />
+			</label>
+			<div>
+				<label for="scrollToTop-fixed">
+					<input type="button" name="scrollToTop-fixed" id="scrollToTop-fixed" value="Top" />
+				</label>
+			</div>
+		</div>
+	</div>
+</div>

@@ -27,6 +27,36 @@
 		<br /><strong id="usageTime"></strong>
 	</p>
 
+	{{if isSafari}}
+	<fieldset>
+		<legend>
+			<div class="vh-toolbar-icon vh-icon-premium" style="margin-left: 5px"></div>
+			Apple Subscription
+		</legend>
+		<p>
+			Supporting on Apple will unlock premium features within Vine Helper, depending on the tier you choose.
+			Premium features are indicated with the diamond icon.
+		</p>
+		<p>
+			<br /><strong>Step 1:</strong> Sign up for a subscription to the tier of your liking. <br /><a
+				href="https://apps.apple.com/search?term=vinehelper"
+				target="_blank"
+				>VineHelper's Apple Subscription</a
+			>
+			<br />
+			<br /><strong>Step 2:</strong> Link your Apple account to Vine Helper. <br />
+			<a href="https://appleid.apple.com/auth/authorize?client_id=com.FrancoisMazerolle.VineHelper&redirect_uri=http://api.vinehelper.ovh/apple-login&response_type=code&scope=name%20email&response_mode=form_post">Apple Sign In</a>
+        <br />
+			<br />
+			<br /><strong>Step 3:</strong> Refresh a Vine page with items on it. <br /><a
+				href=""
+				id="RefreshVinePage"
+				target="_blank"
+				>Load a Vine page</a
+			>
+		</p>
+	</fieldset>
+	{{else}}
 	<fieldset>
 		<legend>
 			<div class="vh-toolbar-icon vh-icon-premium" style="margin-left: 5px"></div>
@@ -52,13 +82,12 @@
 			<br />
 			<br /><strong>Step 3:</strong> Refresh a Vine page with items on it. <br /><a
 				href=""
-				id="PatreonLoadPage"
+				id="RefreshVinePage"
 				target="_blank"
 				>Load a Vine page</a
 			>
 		</p>
 	</fieldset>
-
 	<fieldset>
 		<legend>Other means of supporting</legend>
 
@@ -93,4 +122,5 @@
 		<button id="copyETH">Copy</button>
 		<br />0xF5b68799b43C358E0A54482f0D8445DFBEA9BDF1
 	</fieldset>
+	{{endif}}
 </fieldset>

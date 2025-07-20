@@ -1,13 +1,26 @@
-import { Environment } from "../scripts/Environment.js";
+import { Environment } from "/scripts/core/services/Environment.js";
 var env = new Environment();
 
-import { Internationalization } from "../scripts/Internationalization.js";
+import { Internationalization } from "/scripts/core/services/Internationalization.js";
 const i13n = new Internationalization();
 
-import { SettingsMgr } from "../scripts/SettingsMgr.js";
+import { SettingsMgr } from "/scripts/core/services/SettingsMgrCompat.js";
 const Settings = new SettingsMgr();
 
-import { Chart, registerables } from "../scripts/chart.js/dist/chart.js";
+import { Chart, registerables } from "/scripts/vendor/chart.js/dist/chart.js";
+
+//If browser is firefox, load icon_firefox.css
+if (navigator.userAgent.includes("Firefox")) {
+	document.head.innerHTML += `<link rel="stylesheet" type="text/css" href="../resource/css/icon_firefox.css" />`;
+}
+//If the browser is chrome, load icon_chrome.css
+if (navigator.userAgent.includes("Chrome") || navigator.userAgent.includes("Chromium")) {
+	document.head.innerHTML += `<link rel="stylesheet" type="text/css" href="../resource/css/icon_chrome.css" />`;
+}
+if (navigator.userAgent.includes("Safari")) {
+	document.head.innerHTML += `<link rel="stylesheet" type="text/css" href="../resource/css/icon_ios.css" />`;
+}
+
 // Register required components
 Chart.register(...registerables);
 
@@ -239,6 +252,13 @@ function generateStackedGraph(canvas, dataRFY, dataAFA, dataAI, dataALL) {
 					data: dataRFY.map((d) => d.item_count),
 					backgroundColor: "rgba(255, 99, 132, 0.8)",
 					borderColor: "rgb(255, 99, 132)",
+					borderWidth: 1,
+				},
+				{
+					label: "ALL Items",
+					data: dataALL.map((d) => d.item_count),
+					backgroundColor: "rgba(153, 102, 255, 0.8)",
+					borderColor: "rgb(153, 102, 255)",
 					borderWidth: 1,
 				},
 			],

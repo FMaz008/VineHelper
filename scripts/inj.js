@@ -10,9 +10,15 @@ const countryCode = scriptTag.getAttribute("data-country-code");
 window.fetch = async (...args) => {
 	let response = await origFetch(...args);
 	let lastParent = extHelper_LastParentVariant;
+	let lastParentAsin = null;
 	let regex = null;
 
 	const url = args[0] || "";
+
+	if (lastParent != null) {
+		regex = /^.+?#(.+?)#.+$/;
+		lastParentAsin = extHelper_LastParentVariant.recommendationId.match(regex)[1];
+	}
 
 	//Voice Orders API
 	if (url.startsWith("api/voiceOrders")) {
@@ -25,11 +31,6 @@ window.fetch = async (...args) => {
 			console.error(e);
 		}
 
-		if (lastParent != null) {
-			regex = /^.+?#(.+?)#.+$/;
-			lastParent = extHelper_LastParentVariant.recommendationId.match(regex)[1];
-		}
-
 		let data = {};
 		if (extHelper_responseData.error !== null) {
 			window.postMessage(
@@ -38,7 +39,7 @@ window.fetch = async (...args) => {
 					data: {
 						status: "failed",
 						error: extHelper_responseData.error, //CROSS_BORDER_SHIPMENT, SCHEDULED_DELIVERY_REQUIRED, ITEM_NOT_IN_ENROLLMENT, ITEM_ALREADY_ORDERED
-						parent_asin: lastParent,
+						parent_asin: lastParentAsin,
 						asin: asin,
 					},
 				},
@@ -63,14 +64,14 @@ window.fetch = async (...args) => {
 					status: "success",
 					error: null,
 					//orderId: extHelper_responseData.result.orderId,
-					parent_asin: lastParent,
+					parent_asin: lastParentAsin,
 					asin: asin,
 				};
 			} else {
 				data = {
 					status: "failed",
 					error: "No orderId received back",
-					parent_asin: lastParent,
+					parent_asin: lastParentAsin,
 					asin: asin,
 				};
 			}
@@ -151,15 +152,14 @@ window.fetch = async (...args) => {
 		} else if (result.taxValue !== undefined) {
 			// The item has an ETV value, let's find out if it's a child or a parent
 			const isChild = !!lastParent?.variations?.some((v) => v.asin == result.asin);
+
 			let data = {
 				parent_asin: null,
 				asin: result.asin,
 				etv: result.taxValue,
 			};
 			if (isChild) {
-				regex = /^.+?#(.+?)#.+$/;
-				let arrMatchesP = lastParent.recommendationId.match(regex);
-				data.parent_asin = arrMatchesP[1];
+				data.parent_asin = lastParentAsin;
 			} else {
 				extHelper_LastParentVariant = null;
 			}
@@ -184,6 +184,7 @@ window.fetch = async (...args) => {
 					type: "promotionId",
 					promotionId: result.promotionId,
 					asin: result.asin,
+					parent_asin: lastParent,
 				},
 				"/" //message should be sent to the same origin as the current document.
 			);

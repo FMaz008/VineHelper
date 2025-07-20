@@ -86,7 +86,7 @@
 			<label for="notification.screen.regular.volume" style="margin-left: 20px"
 				>Volume&nbsp;
 				<input type="range" name="notification.screen.regular.volume" min="0" max="1" step="0.05" />
-				<button id="playScreenNotification">&#9654;</button>
+				<button id="playScreenNotification" aria-label="Play notification sound">&#9654;</button>
 			</label>
 		</div>
 	</fieldset>
@@ -129,7 +129,7 @@
 			</label>
 			<div class="setting-summary">
 				<div class="vh-toolbar-icon vh-icon-question"></div>
-				Pause the notification monitor feed when the mouse is over the See Details button. Resume the feed when
+				Pause the notifications monitor feed when the mouse is over the See Details button. Resume the feed when
 				the mouse is no longer over the See Details button.
 			</div>
 		</div>
@@ -193,21 +193,7 @@
 							<div class="vh-toolbar-icon vh-icon-question"></div>
 							When an order is successful, Vine redirects the page. This option prevents the page from
 							being unloaded by showing a confirmation popup, which you can decline to stay on the
-							notification monitor's page.
-						</div>
-					</div>
-					<div class="setting-container">
-						<label for="notification.monitor.blockNonEssentialListeners">
-							<input type="checkbox" name="notification.monitor.blockNonEssentialListeners" value="1" />
-							Block non-essential event listeners
-						</label>
-						<div class="setting-summary">
-							<div class="vh-toolbar-icon vh-icon-question"></div>
-							Amazon generates a lot of event listeners. If you have memory usage issues, or tab crash
-							(going white) issues: you can try enabling this setting. Using this setting can, sometimes,
-							render the See Details button inactive. A page refresh usually solve the problem, but if you
-							are using this setting, take the habbit to test the See Details button upon loading the
-							notification monitor.
+							notifications monitor's page.
 						</div>
 					</div>
 				</div>
@@ -242,7 +228,7 @@
 				<label for="notification.monitor.highlight.volume"
 					>Volume:&nbsp;
 					<input type="range" name="notification.monitor.highlight.volume" min="0" max="1" step="0.05" />
-					<button id="playMonitorHighlightNotification">&#9654;</button>
+					<button id="playMonitorHighlightNotification" aria-label="Play highlight notification sound">&#9654;</button>
 				</label>
 			</div>
 			<div class="setting-container">
@@ -300,7 +286,7 @@
 				<label for="notification.monitor.zeroETV.volume"
 					>Volume:&nbsp;
 					<input type="range" name="notification.monitor.zeroETV.volume" min="0" max="1" step="0.05" />
-					<button id="playMonitorZeroETVNotification">&#9654;</button>
+					<button id="playMonitorZeroETVNotification" aria-label="Play zero ETV notification sound">&#9654;</button>
 				</label>
 			</div>
 			<div class="setting-container">
@@ -354,7 +340,7 @@
 				<label for="notification.monitor.regular.volume"
 					>Volume:&nbsp;
 					<input type="range" name="notification.monitor.regular.volume" min="0" max="1" step="0.05" />
-					<button id="playMonitorRegularNotification">&#9654;</button>
+					<button id="playMonitorRegularNotification" aria-label="Play regular notification sound">&#9654;</button>
 				</label>
 			</div>
 		</div>
@@ -362,40 +348,13 @@
 </fieldset>
 <fieldset>
 	<legend>Pages Auto-Load</legend>
-	<div class="setting-container">
-		<label for="notification.autoload.tab">
-			<table style="width: 200px">
-				<tr>
-					<th colspan="3">
-						Auto-Load behavior
-						<div class="vh-toolbar-icon" style="margin-left: 5px"></div>
-					</th>
-				</tr>
-				<tr>
-					<td style="width: 30px; padding-left: 10px; text-align: right">Silent</td>
-					<td style="width: 30px; text-align: center">
-						<input type="checkbox" role="switch" name="notification.autoload.tab" value="1" />
-					</td>
-					<td>Open tab</td>
-				</tr>
-			</table>
-		</label>
-		<div class="setting-summary">
-			<div class="vh-toolbar-icon vh-icon-question"></div>
-			The auto-load behavior can either load a page in a new tab, which will be closed promptly, or load the page
-			in silent mode, in the background, without opening a tab.
-			<br />
-			<ul>
-				<li>Open tab ensure the load is genuine and allow Amazon's telemetry to work properly.</li>
-				<li>Silent will simply get the data, but won't allow other scripts to load.</li>
-			</ul>
-		</div>
-	</div>
 	<br /><strong>Interval</strong><br />
 	<div class="setting-container">
 		<div class="range_container" style="clear: both">
 			<div class="sliders_control">
+				<label for="fromSlider" class="sr-only">Minimum interval slider</label>
 				<input id="fromSlider" class="dualslider" type="range" value="5" min="1" max="10" />
+				<label for="toSlider" class="sr-only">Maximum interval slider</label>
 				<input id="toSlider" class="dualslider" type="range" value="10" min="1" max="10" />
 			</div>
 			<div class="form_control">
@@ -434,7 +393,7 @@
 	</div>
 	<div class="setting-summary">
 		<div class="vh-toolbar-icon vh-icon-question"></div>
-		Automatically load pages when the notification monitor is active. This allow you to define the intervals between
+		Automatically load pages when the notifications monitor is active. This allow you to define the intervals between
 		page load. The interval will be picked at random between the selected range. When triggered, VH will open and
 		close a Vine page in a separate tab automatically.
 	</div>

@@ -1,23 +1,37 @@
-import { ISODatetoYMDHiS } from "../scripts/DateHelper.js";
+import { ISODatetoYMDHiS } from "/scripts/core/utils/DateHelper.js";
 
-import { Environment } from "../scripts/Environment.js";
+import { Environment } from "/scripts/core/services/Environment.js";
 var env = new Environment();
 
-import { Internationalization } from "../scripts/Internationalization.js";
+import { Internationalization } from "/scripts/core/services/Internationalization.js";
 const i13n = new Internationalization();
 
-import { Pagination } from "../scripts/Pagination.js";
+import { Pagination } from "/scripts/ui/controllers/Pagination.js";
 const pagination = new Pagination();
 
-import { PinnedListMgr } from "../scripts/PinnedListMgr.js";
+import { PinnedListMgr } from "/scripts/core/services/PinnedListMgr.js";
 var PinnedList = new PinnedListMgr();
 
-import { SettingsMgr } from "../scripts/SettingsMgr.js";
+import { SettingsMgr } from "/scripts/core/services/SettingsMgrCompat.js";
 const Settings = new SettingsMgr();
 
-import { unescapeHTML, removeSpecialHTML } from "../scripts/StringHelper.js";
+import { unescapeHTML, removeSpecialHTML } from "/scripts/core/utils/StringHelper.js";
+
+import { Item } from "/scripts/core/models/Item.js";
 
 let secondsLeft = 10;
+
+//If browser is firefox, load icon_firefox.css
+if (navigator.userAgent.includes("Firefox")) {
+	document.head.innerHTML += `<link rel="stylesheet" type="text/css" href="../resource/css/icon_firefox.css" />`;
+}
+//If the browser is chrome, load icon_chrome.css
+if (navigator.userAgent.includes("Chrome") || navigator.userAgent.includes("Chromium")) {
+	document.head.innerHTML += `<link rel="stylesheet" type="text/css" href="../resource/css/icon_chrome.css" />`;
+}
+if (navigator.userAgent.includes("Safari")) {
+	document.head.innerHTML += `<link rel="stylesheet" type="text/css" href="../resource/css/icon_ios.css" />`;
+}
 
 (async () => {
 	//If browser is firefox, load icon_firefox.css
@@ -209,18 +223,17 @@ function queryDB(page = 1) {
 			displayError("Error fetching data from server: " + error.message);
 		});
 }
-function openSeeDetails(asin, queue, isParentAsin, isPreRelease, enrollmentGuid, variantAsin = null) {
-	if (variantAsin !== null) {
-		window.open(
-			`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${isParentAsin};${isPreRelease};${enrollmentGuid};${variantAsin}`,
-			"_blank"
-		);
-	} else {
-		window.open(
-			`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${asin};${queue};${isParentAsin};${isPreRelease};${enrollmentGuid}`,
-			"_blank"
-		);
+function openSeeDetails(item) {
+	if (!(item instanceof Item)) {
+		throw new Error("item is not an instance of Item");
 	}
+
+	const options = item.getCoreInfoWithVariant();
+
+	window.open(
+		`https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${encodeURIComponent(JSON.stringify(options))}`,
+		"_blank"
+	);
 }
 function serverProductsResponse(data) {
 	if (data["invalid_uuid"] == true) {
@@ -281,7 +294,15 @@ function serverProductsResponse(data) {
 			values.enrollment_guid != null &&
 			values.queue != "potluck"
 		) {
-			searchUrl = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${values.asin};${values.queue};${values.is_parent_asin ? "true" : "false"};${values.is_pre_release ? "true" : "false"};${values.enrollment_guid}`;
+			const item = new Item({
+				asin: key,
+				queue: values.queue,
+				is_parent_asin: values.is_parent_asin,
+				is_pre_release: values.is_pre_release,
+				enrollment_guid: values.enrollment_guid,
+			});
+			const options = item.getCoreInfo();
+			searchUrl = `https://www.amazon.${i13n.getDomainTLD()}/vine/vine-items?queue=encore#openModal;${encodeURIComponent(JSON.stringify(options))}`;
 		} else {
 			if (values.queue == "potluck") {
 				searchStyle = "opacity: 0.4;";
@@ -307,6 +328,7 @@ function serverProductsResponse(data) {
 							data-asin='${values.asin}'
 							data-queue='${values.queue}'
 							data-is-parent-asin='${values.is_parent_asin}'
+							data-is-pre-release='${values.is_pre_release ? true : false}'
 							data-enrollment-guid='${values.enrollment_guid}'
 							data-title='${values.title}'
 							data-thumbnail='${values.img_url}' 
@@ -355,15 +377,18 @@ function serverProductsResponse(data) {
 		const pinnedItems = document.querySelectorAll(".vh-icon-pin");
 		pinnedItems.forEach((item) => {
 			item.addEventListener("click", () => {
-				const asin = item.getAttribute("data-asin");
-				const queue = item.getAttribute("data-queue");
-				const isParentAsin = item.getAttribute("data-is-parent-asin");
-				const isPreRelease = item.getAttribute("data-is-pre-release");
-				const enrollmentGuid = item.getAttribute("data-enrollment-guid");
-				const title = item.getAttribute("data-title");
-				const thumbnail = item.getAttribute("data-thumbnail");
+				const coreAttributes = {
+					asin: item.getAttribute("data-asin"),
+					queue: item.getAttribute("data-queue"),
+					is_parent_asin: item.getAttribute("data-is-parent-asin"),
+					is_pre_release: item.getAttribute("data-is-pre-release"),
+					enrollment_guid: item.getAttribute("data-enrollment-guid"),
+				};
+				const item = new Item(coreAttributes);
+				item.setTitle(item.getAttribute("data-title"));
+				item.setImgUrl(item.getAttribute("data-thumbnail"));
 
-				PinnedList.addItem(asin, queue, title, thumbnail, isParentAsin, isPreRelease, enrollmentGuid);
+				PinnedList.addItem(item);
 
 				item.style.opacity = "0.4";
 			});
@@ -372,29 +397,30 @@ function serverProductsResponse(data) {
 
 	//Add event listener to the see details link
 	const seeDetails = document.querySelectorAll(".open-see-details");
-	seeDetails.forEach((item) => {
-		item.addEventListener("click", (event) => {
+	seeDetails.forEach((itemDOM) => {
+		itemDOM.addEventListener("click", (event) => {
 			event.preventDefault();
-			openSeeDetails(
-				item.getAttribute("data-asin"),
-				item.getAttribute("data-queue"),
-				item.getAttribute("data-is-parent-asin"),
-				item.getAttribute("data-is-pre-release") ? true : false,
-				item.getAttribute("data-enrollment-guid")
-			);
+			const item = new Item({
+				asin: itemDOM.getAttribute("data-asin"),
+				queue: itemDOM.getAttribute("data-queue"),
+				is_parent_asin: itemDOM.getAttribute("data-is-parent-asin"),
+				is_pre_release: itemDOM.getAttribute("data-is-pre-release"),
+				enrollment_guid: itemDOM.getAttribute("data-enrollment-guid"),
+			});
+			openSeeDetails(item);
 		});
 	});
 
 	//Add event listener to the load variants link
 	const loadVariants = document.querySelectorAll(".load-variants");
-	loadVariants.forEach((item) => {
-		item.addEventListener("click", (event) => {
+	loadVariants.forEach((itemDOM) => {
+		itemDOM.addEventListener("click", (event) => {
 			event.preventDefault();
-			const tr = item.parentElement.parentElement.parentElement;
-			const asin = item.getAttribute("data-asin");
+			const tr = itemDOM.parentElement.parentElement.parentElement;
+			const asin = itemDOM.getAttribute("data-asin");
 
 			//Delete the link
-			item.parentElement.remove();
+			itemDOM.parentElement.remove();
 
 			//Query the API for the variants
 			const content = {
@@ -456,24 +482,25 @@ function serverProductsResponse(data) {
 
 						//Clear all existing event listeners
 						const seeDetailsVariants = document.querySelectorAll(".open-variant-see-details");
-						seeDetailsVariants.forEach((item) => {
-							item.removeEventListener("click", (event) => {
+						seeDetailsVariants.forEach((itemDOM) => {
+							itemDOM.removeEventListener("click", (event) => {
 								event.preventDefault();
 							});
 						});
 
 						//Add event listener to the see details link
-						seeDetailsVariants.forEach((item) => {
-							item.addEventListener("click", (event) => {
+						seeDetailsVariants.forEach((itemDOM) => {
+							itemDOM.addEventListener("click", (event) => {
 								event.preventDefault();
-								openSeeDetails(
-									item.getAttribute("data-asin"),
-									item.getAttribute("data-queue"),
-									item.getAttribute("data-is-parent-asin"),
-									item.getAttribute("data-is-pre-release") ? true : false,
-									item.getAttribute("data-enrollment-guid"),
-									item.getAttribute("data-variant-asin")
-								);
+								const item = new Item({
+									asin: itemDOM.getAttribute("data-asin"),
+									queue: itemDOM.getAttribute("data-queue"),
+									is_parent_asin: itemDOM.getAttribute("data-is-parent-asin"),
+									is_pre_release: itemDOM.getAttribute("data-is-pre-release"),
+									enrollment_guid: itemDOM.getAttribute("data-enrollment-guid"),
+									variant_asin: itemDOM.getAttribute("data-variant-asin"),
+								});
+								openSeeDetails(item);
 							});
 						});
 					}

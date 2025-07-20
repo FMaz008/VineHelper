@@ -10,18 +10,6 @@ const pkg = require("./package.json");
 	fs.cpSync("./resource/", "./dist/resource/", { recursive: true });
 	fs.cpSync("./scripts/", "./dist/scripts/", { recursive: true });
 	fs.cpSync("./view/", "./dist/view/", { recursive: true });
-	fs.mkdirSync("./dist/node_modules/socket.io/client-dist", { recursive: true });
-	fs.cpSync(
-		"./node_modules/socket.io/client-dist/socket.io.esm.min.js",
-		"./dist/node_modules/socket.io/client-dist/socket.io.esm.min.js"
-	);
-	fs.cpSync(
-		"./node_modules/socket.io/client-dist/socket.io.esm.min.js.map",
-		"./dist/node_modules/socket.io/client-dist/socket.io.esm.min.js.map"
-	);
-	fs.cpSync("./node_modules/vine-styling/", "./dist/node_modules/vine-styling/", { recursive: true });
-	fs.cpSync("./node_modules/@kurkle/color/", "./dist/node_modules/@kurkle\\color/", { recursive: true });
-	fs.cpSync("./node_modules/canvas-confetti/", "./dist/node_modules/canvas-confetti/", { recursive: true });
 	console.log("Removing .csj files...");
 	const deleteCsjFiles = (dir) => {
 		const files = fs.readdirSync(dir);
