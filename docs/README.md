@@ -1,95 +1,130 @@
 # VineHelper Documentation
 
-This directory contains architectural and technical documentation for the VineHelper project.
+This directory contains the core technical documentation for the VineHelper browser extension. The documentation has been consolidated into 5 comprehensive guides that cover all aspects of the project.
 
 ## Core Documentation
 
-### [ARCHITECTURE.md](./ARCHITECTURE.md)
+### 🏗️ [ARCHITECTURE.md](./ARCHITECTURE.md)
 
-Comprehensive overview of the VineHelper architecture, including:
+**System Architecture & Design**
 
-- Current architecture analysis
-- System boundaries and operational modes
-- Notification Monitor architecture details
-- Memory management best practices and fixed issues
-- Dependency injection migration status
-- Implementation guidelines and patterns
-- Technical debt priorities
-- Future improvements roadmap
+Comprehensive overview of VineHelper's architecture, including:
 
-### [CHANGES_AND_FIXES.md](./CHANGES_AND_FIXES.md)
+- Project structure and core components
+- Bootloader vs Notification Monitor systems
+- Event-driven architecture patterns
+- Multi-tab coordination (Master/Slave)
+- Visibility management systems
+- Memory management patterns
+- Implementation guidelines
+- Technical debt and future improvements
 
-Consolidated summary of all changes, fixes, and improvements:
+### 🔍 [KEYWORD_MATCHING.md](./KEYWORD_MATCHING.md)
 
-- Recent bug fixes and enhancements
-- Feature branch fixes (Fix #1-7)
-- Keyword system improvements
-- Memory management optimizations
-- Architecture improvements
-- Test coverage status
-- Performance metrics
+**Keyword System Documentation**
 
-### [MEMORY_MANAGEMENT.md](./MEMORY_MANAGEMENT.md)
+Complete guide to the keyword matching system:
 
-Comprehensive memory management documentation:
+- **Keywords are regex patterns by default** - no special syntax needed
+- Simplified architecture (2025) - local compilation only
+- Proper "but without" usage with pipe separation (`pattern1|pattern2|pattern3`)
+- Pattern examples: `wi[- ]?fi` matches "wifi", "wi-fi", "wi fi"
+- Matching priority: highlight > hide
+- Race condition fixes and proper evaluation order
+- Migration from complex caching to simple compilation
+- Debug features for keyword testing
 
-- Fixed memory issues and their solutions
-- Current best practices and patterns
-- Memory debugging tools and usage
-- Performance monitoring guidelines
-- Prevention strategies
+### 🚀 [PERFORMANCE_AND_MEMORY.md](./PERFORMANCE_AND_MEMORY.md)
 
-### [DEPENDENCY_INJECTION_MIGRATION.md](./DEPENDENCY_INJECTION_MIGRATION.md)
+**Performance Optimization & Memory Management**
 
-Step-by-step guide for migrating from singleton pattern to dependency injection:
+Comprehensive performance and memory documentation:
 
-- Migration strategies (quick, full, custom)
-- Code examples and patterns
-- Testing approaches
-- Troubleshooting guide
+- Fixed memory leaks and their solutions
+- Performance optimizations (15x keyword matching improvement)
+- Stream processing architecture (95% memory reduction)
+- Caching strategies and best practices
+- DOM optimization techniques
+- Memory debugging tools and monitoring
+- Intersection Observer implementation plans
+- Success metrics and benchmarks
 
-### [DEBUG_SETTINGS_USAGE.md](./DEBUG_SETTINGS_USAGE.md)
+### 🛠️ [DEVELOPMENT_GUIDE.md](./DEVELOPMENT_GUIDE.md)
 
-Comprehensive guide to all debug settings:
+**Development Practices & Debug Tools**
 
-- Complete list of debug settings and their purposes
-- Usage examples and code snippets
-- Settings configuration and initialization
-- Periodic count verification feature
+Developer guide covering:
 
-### [FUTURE_IMPROVEMENTS.md](./FUTURE_IMPROVEMENTS.md)
+- Debug settings and their usage
+- Dependency injection migration guide
+- Settings manager simplification
+- Development workflow and best practices
+- Testing strategies
+- Troubleshooting common issues
+- Project status and roadmap
+- Contributing guidelines
 
-Tracking of planned improvements and optimizations:
+### 📚 [ARCHITECTURE.md](./ARCHITECTURE.md)
 
-- Performance optimizations
-- Architectural improvements
-- Code quality improvements
-- Implementation priorities
+**Detailed Architecture Documentation**
+
+In-depth technical architecture:
+
+- Component responsibilities and boundaries
+- Event flow and processing pipelines
+- Performance considerations
+- Architectural patterns and decisions
+- System integration points
+- Future architectural improvements
+
+## Quick Reference
+
+### Current Implementation Status
+
+- ✅ Simplified keyword architecture (no central compilation)
+- ✅ Keywords are regex patterns by default
+- ✅ 15x performance improvement in keyword matching
+- ✅ 95% memory reduction in stream processing
+- ✅ Fixed critical memory leaks
+- ✅ Proper "but without" functionality with pipe separation
+
+### Key Concepts
+
+1. **Keywords are regex patterns** - treated as regex by default, no special syntax needed
+2. **Local compilation only** - each component compiles its own keywords
+3. **Matching priority** - highlight keywords take precedence over hide keywords
+4. **Performance first** - all optimizations focus on user experience
 
 ## Archived Documentation
 
-Older documentation files have been moved to the `archived/` directory. These contain historical context and detailed implementation notes that may be useful for reference but are not part of the active documentation set.
+Historical documentation has been moved to the `archived/` directory. These files contain implementation history and detailed investigations that may be useful for reference but are not part of the active documentation.
 
-## Related Documentation
+## Related Resources
 
-- **Infrastructure Components**: See [`../scripts/infrastructure/README.md`](../scripts/infrastructure/README.md) for DI container and storage adapters
+- **Infrastructure Components**: See [`../scripts/infrastructure/README.md`](../scripts/infrastructure/README.md)
 - **Project README**: See the root [`../README.md`](../README.md) for general project information
+- **Test Documentation**: See test files for usage examples and patterns
 
 ## Documentation Standards
 
-When adding new documentation:
+When updating documentation:
 
-1. Use clear, descriptive filenames
-2. Include a table of contents for longer documents
-3. Provide code examples where applicable
-4. Keep documentation up-to-date with implementation changes
-5. Cross-reference related documents
+1. Keep content concise and focused
+2. Use clear examples for complex concepts
+3. Maintain consistent formatting
+4. Update all affected documents when making changes
+5. Include practical examples and common use cases
 
 ## Contributing
 
-When making architectural changes or adding new patterns:
+When making changes:
 
-1. Update the relevant documentation
-2. Add examples to migration guides
-3. Update the implementation status in ARCHITECTURE.md
-4. Ensure all code examples are tested and working
+1. Update the relevant core documentation file
+2. Ensure examples reflect current implementation
+3. Test all code examples
+4. Update this README if adding new documentation
+5. Archive outdated documentation rather than deleting
+
+---
+
+_Last consolidated: January 2025 - Reduced from 23 files to 5 core documents_

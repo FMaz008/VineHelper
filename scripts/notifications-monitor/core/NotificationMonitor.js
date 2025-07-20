@@ -7,7 +7,8 @@
 import { Tile } from "/scripts/ui/components/Tile.js";
 
 import { YMDHiStoISODate } from "/scripts/core/utils/DateHelper.js";
-import { keywordMatch, hasAnyEtvConditions } from "/scripts/core/utils/KeywordMatch.js";
+import { compile as compileKeywords, compileKeywordObjects } from "/scripts/core/utils/KeywordCompiler.js";
+import { findMatch, hasEtvConditions } from "/scripts/core/utils/KeywordMatcher.js";
 import { ETV_REPOSITION_THRESHOLD } from "/scripts/core/utils/KeywordUtils.js";
 import { escapeHTML, unescapeHTML, removeSpecialHTML } from "/scripts/core/utils/StringHelper.js";
 import { MonitorCore } from "/scripts/notifications-monitor/core/MonitorCore.js";
@@ -103,6 +104,10 @@ class NotificationMonitor extends MonitorCore {
 		buttons: new Map(),
 	};
 
+	// Compiled keyword patterns
+	#compiledHighlightKeywords = null;
+	#compiledHideKeywords = null;
+
 	constructor(monitorV3 = false) {
 		super(monitorV3);
 
@@ -120,7 +125,10 @@ class NotificationMonitor extends MonitorCore {
 		// Register this instance for testing if the expose script is loaded
 		if (window.VineHelper && typeof window.VineHelper.registerMonitor === "function") {
 			window.VineHelper.registerMonitor(this);
-			console.log("[NotificationMonitor] Registered instance for testing at window.VineHelper.monitor");
+			// Only log if debugMemory or debugTileCounter is enabled
+			if (this._settings.get("general.debugMemory") || this._settings.get("general.debugTileCounter")) {
+				console.log("[NotificationMonitor] Registered instance for testing at window.VineHelper.monitor");
+			}
 		}
 	}
 
@@ -131,6 +139,9 @@ class NotificationMonitor extends MonitorCore {
 	async _initializeDebugMode() {
 		// Wait for settings to load
 		await this._settings.waitForLoad();
+
+		// Compile keywords on initialization
+		this._compileKeywords();
 
 		// Check for debug flags from settings
 		const debugTileCounter = this._settings.get("general.debugTileCounter");
@@ -146,6 +157,38 @@ class NotificationMonitor extends MonitorCore {
 			if (debugTileCounter) {
 				await this._initializeTileCounterDebugger();
 			}
+		}
+	}
+
+	/**
+	 * Compile keywords from settings
+	 * @private
+	 */
+	_compileKeywords() {
+		// Compile highlight keywords
+		const highlightKeywords = this._settings.get("general.highlightKeywords");
+		if (highlightKeywords && highlightKeywords.length > 0) {
+			this.#compiledHighlightKeywords = compileKeywordObjects(highlightKeywords);
+		} else {
+			this.#compiledHighlightKeywords = null;
+		}
+
+		// Compile hide keywords
+		const hideKeywords = this._settings.get("general.hideKeywords");
+		if (hideKeywords && hideKeywords.length > 0) {
+			this.#compiledHideKeywords = compileKeywordObjects(hideKeywords);
+		} else {
+			this.#compiledHideKeywords = null;
+		}
+
+		// Debug logging
+		if (this._settings.get("general.debugKeywords")) {
+			console.log("[NotificationMonitor] Keywords compiled:", {
+				highlightCount: highlightKeywords?.length || 0,
+				hideCount: hideKeywords?.length || 0,
+				hasCompiledHighlight: !!this.#compiledHighlightKeywords,
+				hasCompiledHide: !!this.#compiledHideKeywords,
+			});
 		}
 	}
 
@@ -375,6 +418,38 @@ class NotificationMonitor extends MonitorCore {
 		};
 
 		const shouldBeVisible = filterVisibility[this._filterType]?.() || false;
+
+		// Debug logging for keyword matching and filter visibility
+		if (this._settings.get("general.debugKeywords")) {
+			const asin = node.dataset.asin;
+			const typeHighlight = parseInt(node.dataset.typeHighlight) || 0;
+			const typeZeroETV = parseInt(node.dataset.typeZeroETV) || 0;
+
+			// Log filter check details
+			console.log("[NotificationMonitor] Filter check:", {
+				asin,
+				typeHighlight,
+				typeZeroETV,
+				currentFilter: this._filterType,
+				filterName: FILTER_NAMES[this._filterType] || "Unknown",
+				notificationTypeHighlight,
+				notificationTypeZeroETV,
+				willBeVisible: shouldBeVisible,
+				timestamp: new Date().toISOString(),
+			});
+
+			// Check for visibility mismatch - items with typeHighlight=1 should be visible when filter=2 (KW Match Only)
+			if (this._filterType === TYPE_HIGHLIGHT && typeHighlight === 1 && !shouldBeVisible) {
+				console.warn("[NotificationMonitor] Visibility mismatch detected:", {
+					asin,
+					issue: "Item has typeHighlight=1 but willBeVisible=false with KW Match Only filter",
+					typeHighlight,
+					notificationTypeHighlight,
+					filterType: this._filterType,
+					timestamp: new Date().toISOString(),
+				});
+			}
+		}
 
 		if (!unpausing) {
 			this.#setTileDisplay(node, shouldBeVisible ? this.#getTileDisplayStyle() : "none");
@@ -990,14 +1065,29 @@ class NotificationMonitor extends MonitorCore {
 
 					// DEBUG: Log duplicate detection
 					if (this._settings.get("general.debugDuplicates")) {
+						const existingItem = this._itemsMgr.items.get(asin);
 						console.log("[DEBUG-DUPLICATE] Item already exists", {
 							asin,
 							hasElement: !!element,
 							imgUrl: item.data.img_url,
-							existingImgUrl: this._itemsMgr.items.get(asin)?.data?.img_url,
+							existingImgUrl: existingItem?.data?.img_url,
+							new_enrollment_guid: item.data.enrollment_guid,
+							existing_enrollment_guid: existingItem?.data?.enrollment_guid,
+							enrollment_guid_changed: existingItem?.data?.enrollment_guid !== item.data.enrollment_guid,
+							reason: reason,
 							timestamp: new Date().toISOString(),
 							stack: new Error().stack.split("\n").slice(2, 5).join("\n"),
 						});
+
+						// Log enrollment_guid changes specifically
+						if (existingItem?.data?.enrollment_guid !== item.data.enrollment_guid) {
+							console.warn("[NotificationMonitor] ENROLLMENT_GUID UPDATE:", {
+								asin,
+								old_enrollment_guid: existingItem?.data?.enrollment_guid,
+								new_enrollment_guid: item.data.enrollment_guid,
+								reason: reason,
+							});
+						}
 					}
 					// Update the data
 					this._itemsMgr.addItemData(asin, item.data);
@@ -1095,6 +1185,12 @@ class NotificationMonitor extends MonitorCore {
 			this._tpl.setVar("queue", queue);
 			this._tpl.setVar("description", escapeHTML(title));
 			this._tpl.setVar("reason", reason);
+
+			// Debug logging for keyword setting
+			if (this._settings.get("general.debugKeywords")) {
+				console.log(`[NotificationMonitor] Setting highlightKW for ASIN ${asin}: "${KW}"`);
+			}
+
 			this._tpl.setVar("highlightKW", KW);
 			this._tpl.setVar("blurKW", BlurKW);
 			this._tpl.setVar("is_parent_asin", is_parent_asin); //"true" or "false"
@@ -1150,6 +1246,19 @@ class NotificationMonitor extends MonitorCore {
 			// Store a reference to the DOM element
 			const wasMarkedUnavailable = this._itemsMgr.storeItemDOMElement(asin, tileDOM); //Store the DOM element
 			const tile = this._itemsMgr.getItemTile(asin);
+
+			// Initialize the tile (handles blur keywords and other tile-specific setup)
+			if (tile) {
+				if (this._settings.get("general.debugKeywords")) {
+					console.log("[NotificationMonitor] Calling initiateTile for", asin);
+				}
+				tile.initiateTile();
+			} else {
+				console.warn("[NotificationMonitor] No tile object found for", asin);
+			}
+
+			// Apply highlight styling (including zero ETV) after tile is in DOM
+			this._processNotificationHighlight(tileDOM);
 
 			// Track tile creation for memory debugging
 			if (window.MEMORY_DEBUGGER) {
@@ -1255,6 +1364,19 @@ class NotificationMonitor extends MonitorCore {
 			// This must happen before processNotificationFiltering to ensure proper visibility calculation
 			if (KWsMatch) {
 				tileDOM.dataset.typeHighlight = 1;
+
+				// Debug logging for typeHighlight being set
+				if (this._settings.get("general.debugKeywords")) {
+					console.log("[NotificationMonitor] Setting typeHighlight=1 for keyword match:", {
+						asin,
+						title,
+						keyword: KW,
+						typeHighlight: 1,
+						currentFilter: this._filterType,
+						filterName: FILTER_NAMES[this._filterType] || "Unknown",
+						timestamp: new Date().toISOString(),
+					});
+				}
 			}
 
 			// Check ETV status independently of keyword matching
@@ -1291,6 +1413,23 @@ class NotificationMonitor extends MonitorCore {
 			// First apply filtering to determine visibility
 			const isVisible = this.#processNotificationFiltering(tileDOM);
 			this.#setTileDisplay(tileDOM, isVisible ? this.#getTileDisplayStyle() : "none");
+
+			// Debug logging for the complete flow sequence
+			if (this._settings.get("general.debugKeywords") && KWsMatch) {
+				console.log("[NotificationMonitor] Complete keyword match flow:", {
+					step: "Final visibility decision",
+					asin,
+					title,
+					keyword: KW,
+					typeHighlight: tileDOM.dataset.typeHighlight,
+					currentFilter: this._filterType,
+					filterName: FILTER_NAMES[this._filterType] || "Unknown",
+					isVisible,
+					displayStyle: isVisible ? this.#getTileDisplayStyle() : "none",
+					note: "This item matched a keyword and its visibility has been determined",
+					timestamp: new Date().toISOString(),
+				});
+			}
 
 			// BUG FIX 1: During bulk fetch, only play sounds for items that will be visible
 			// This prevents sounds from playing for items that are filtered out
@@ -1484,18 +1623,61 @@ class NotificationMonitor extends MonitorCore {
 			}
 		}
 
-		// Re-evaluate keywords if any have ETV conditions
-		const highlightKeywords = this._settings.get("general.highlightKeywords");
-		if (highlightKeywords && hasAnyEtvConditions(highlightKeywords)) {
+		// Re-evaluate keywords ONLY if:
+		// 1. Keywords have ETV conditions AND
+		// 2. The item hasn't already been matched to a keyword without ETV conditions
+		const hasEtvConds = this.#compiledHighlightKeywords && hasEtvConditions(this.#compiledHighlightKeywords);
+		const currentlyHighlighted = notif.dataset.typeHighlight == 1;
+
+		// Debug: Log why re-evaluation might be triggered
+		if (hasEtvConds && currentlyHighlighted && this._settings.get("general.debugKeywords")) {
+			console.log(`[KEYWORD-DEBUG] Re-evaluation conditions met:`, {
+				asin,
+				hasEtvConds,
+				currentlyHighlighted,
+				hasTitle: !!data.title,
+				willTriggerReEvaluation: hasEtvConds && currentlyHighlighted && data.title,
+				timestamp: new Date().toISOString(),
+			});
+		}
+
+		// Debug logging to understand duplicate processing
+		if (this._settings.get("general.debugKeywords")) {
+			console.log("[NotificationMonitor] #setETV keyword re-evaluation check:", {
+				asin,
+				hasCompiledHighlightKeywords: !!this.#compiledHighlightKeywords,
+				hasEtvConditions: hasEtvConds,
+				currentlyHighlighted,
+				willReEvaluate: hasEtvConds && data.title && !currentlyHighlighted,
+				etvMin: etvObj.dataset.etvMin,
+				etvMax: etvObj.dataset.etvMax,
+				timestamp: Date.now(),
+			});
+		}
+
+		// Skip re-evaluation if item is already highlighted (matched in stream processing)
+		// and continue re-evaluation only for items that might match ETV conditions
+		if (hasEtvConds && !currentlyHighlighted) {
 			if (data.title) {
 				// Check keyword match with new ETV values
-				const matchedKeyword = await keywordMatch(
-					highlightKeywords,
+				const matchResult = findMatch(
 					data.title,
-					etvObj.dataset.etvMin,
-					etvObj.dataset.etvMax,
-					this._settings
+					this.#compiledHighlightKeywords,
+					parseFloat(etvObj.dataset.etvMin) || null,
+					parseFloat(etvObj.dataset.etvMax) || null
 				);
+
+				// Extract keyword string from match result
+				let matchedKeyword = false;
+				if (matchResult) {
+					if (typeof matchResult.contains === "string") {
+						matchedKeyword = matchResult.contains;
+					} else if (Array.isArray(matchResult.contains) && matchResult.contains.length > 0) {
+						matchedKeyword = matchResult.contains[0];
+					} else if (matchResult.keyword) {
+						matchedKeyword = matchResult.keyword;
+					}
+				}
 
 				const wasHighlighted = notif.dataset.typeHighlight == 1;
 				const technicalBtn = this._gridContainer.querySelector("#vh-reason-link-" + asin + ">div");
@@ -1503,76 +1685,152 @@ class NotificationMonitor extends MonitorCore {
 				if (matchedKeyword !== false) {
 					// Item matches a keyword
 					if (technicalBtn) {
+						// Debug logging for updating dataset
+						if (this._settings.get("general.debugKeywords")) {
+							console.log(
+								`[NotificationMonitor] Updating technicalBtn.dataset.highlightkw for ASIN ${asin}: "${matchedKeyword}"`
+							);
+						}
 						technicalBtn.dataset.highlightkw = matchedKeyword;
 					}
 
 					// Set the highlight flag
 					notif.dataset.typeHighlight = 1;
 
-					if (!wasHighlighted) {
-						// New highlight - play sound and move to top
-						const tileVisible = this.#processNotificationFiltering(notif);
+					// Since we're in the !currentlyHighlighted block, this is always a new highlight
+					// Play sound and move to top
+					const tileVisible = this.#processNotificationFiltering(notif);
 
-						// Play sound if visible or fetching
-						if (
-							(tileVisible || this._fetchingRecentItems) &&
-							this._settings.get("notification.monitor.highlight.sound") != "0"
-						) {
-							this._soundPlayerMgr.play(TYPE_HIGHLIGHT);
-						}
-
-						// Move to top if not fetching and sort allows it
-						if (!this._fetchingRecentItems && this._sortType !== TYPE_DATE_ASC) {
-							this._moveNotifToTop(notif);
-						}
-
-						// Don't handle visibility change here - it will be handled by the caller
-						// This prevents double counting when an item is both highlighted and zero ETV
-					} else {
-						// Already highlighted - just re-apply filtering
-						this.#processNotificationFiltering(notif);
+					// Play sound if visible or fetching
+					if (
+						(tileVisible || this._fetchingRecentItems) &&
+						this._settings.get("notification.monitor.highlight.sound") != "0"
+					) {
+						this._soundPlayerMgr.play(TYPE_HIGHLIGHT);
 					}
-				} else if (wasHighlighted) {
-					// Was highlighted but no longer matches - clear highlight
+
+					// Move to top if not fetching and sort allows it
+					if (!this._fetchingRecentItems && this._sortType !== TYPE_DATE_ASC) {
+						this._moveNotifToTop(notif);
+					}
+
+					// Don't handle visibility change here - it will be handled by the caller
+					// This prevents double counting when an item is both highlighted and zero ETV
+				}
+				// Note: No else block needed here because if we're in !currentlyHighlighted
+				// and the item doesn't match keywords, it wasn't highlighted before and still isn't
+			}
+		} else if (hasEtvConds && currentlyHighlighted && data.title) {
+			// Item is already highlighted, but we should check if the matched keyword has ETV conditions
+			// that might invalidate the match now that we have actual ETV values
+			const technicalBtn = this._gridContainer.querySelector("#vh-reason-link-" + asin + ">div");
+			const currentKeyword = technicalBtn?.dataset.highlightkw;
+
+			if (currentKeyword && this.#compiledHighlightKeywords) {
+				// Debug: Log re-evaluation details
+				const etvMin = parseFloat(etvObj.dataset.etvMin) || null;
+				const etvMax = parseFloat(etvObj.dataset.etvMax) || null;
+				if (this._settings.get("general.debugKeywords")) {
+					console.log(`[KEYWORD-DEBUG] Re-evaluating highlighted item:`, {
+						asin,
+						currentKeyword,
+						title: data.title,
+						etvMin,
+						etvMax,
+						etvObjDataset: { ...etvObj.dataset },
+						timestamp: new Date().toISOString(),
+					});
+				}
+
+				// Check if the current keyword still matches with actual ETV values
+				const matchResult = findMatch(data.title, this.#compiledHighlightKeywords, etvMin, etvMax);
+
+				// Extract keyword string from match result
+				let matchedKeywordString = null;
+				if (matchResult) {
+					if (typeof matchResult.contains === "string") {
+						matchedKeywordString = matchResult.contains;
+					} else if (Array.isArray(matchResult.contains) && matchResult.contains.length > 0) {
+						matchedKeywordString = matchResult.contains[0];
+					} else if (matchResult.keyword) {
+						matchedKeywordString = matchResult.keyword;
+					}
+				}
+
+				if (this._settings.get("general.debugKeywords")) {
+					console.log(`[KEYWORD-DEBUG] Re-evaluation result:`, {
+						asin,
+						matchFound: !!matchResult,
+						matchedKeyword: matchedKeywordString,
+						currentKeyword,
+						keywordsMatch: matchedKeywordString === currentKeyword,
+						timestamp: new Date().toISOString(),
+					});
+				}
+
+				// If no match or matched a different keyword, update accordingly
+				if (!matchResult || matchedKeywordString !== currentKeyword) {
+					if (this._settings.get("general.debugKeywords")) {
+						console.log(`[KEYWORD-DEBUG] Removing highlight:`, {
+							asin,
+							reason: !matchResult ? "no match found" : "different keyword matched",
+							previousKeyword: currentKeyword,
+							newKeyword: matchedKeywordString,
+							timestamp: new Date().toISOString(),
+						});
+					}
+					// No longer matches with actual ETV values
 					notif.dataset.typeHighlight = 0;
-					if (technicalBtn) {
-						delete technicalBtn.dataset.highlightkw;
-					}
-
-					// Re-apply filtering but don't handle visibility change here
-					// The caller will handle it to prevent double counting
+					delete technicalBtn.dataset.highlightkw;
 					this.#processNotificationFiltering(notif);
 				}
 			}
 		}
 
-		// Check hide keywords separately (not dependent on highlight keywords)
-		if (this._settings.get("notification.hideList")) {
-			const hideKeywords = this._settings.get("general.hideKeywords");
-			if (hideKeywords) {
-				if (data.title) {
-					const matchedHideKeyword = await keywordMatch(
-						hideKeywords,
-						data.title,
-						etvObj.dataset.etvMin,
-						etvObj.dataset.etvMax,
-						this._settings
-					);
-					if (matchedHideKeyword !== false) {
-						// Remove (permanently "hide") the tile
-						this._log.add(`NOTIF: Item ${asin} matched hide keyword ${matchedHideKeyword}. Hiding it.`);
+		// KEYWORD PRIORITY LOGIC:
+		// Hide keywords should ONLY be checked if the item does NOT match a highlight keyword.
+		// This ensures highlighted items are never hidden, maintaining the intended priority:
+		// 1. Highlight keywords take precedence
+		// 2. Hide keywords only apply to non-highlighted items
+		const isHighlighted = notif.dataset.typeHighlight == 1;
 
-						// Check if the tile is fully registered before attempting removal
-						const element = this._itemsMgr.getItemDOMElement(asin);
-						if (element) {
-							// Tile is fully registered, safe to remove
-							this.#removeTile(asin);
-						} else {
-							// Tile not fully registered yet (probably called during addTileInGrid)
-							console.warn(`Hide keyword matched for ${asin} but tile not fully registered. Skipping.`);
-						}
-						return true; // Exit early since item is processed
+		if (!isHighlighted && this._settings.get("notification.hideList") && this.#compiledHideKeywords) {
+			if (data.title) {
+				const hideMatchResult = findMatch(
+					data.title,
+					this.#compiledHideKeywords,
+					parseFloat(etvObj.dataset.etvMin) || null,
+					parseFloat(etvObj.dataset.etvMax) || null
+				);
+
+				if (hideMatchResult) {
+					// Extract keyword string from match result
+					// Priority: contains string > first contains array item > keyword property
+					let hideKeywordString = "";
+					if (typeof hideMatchResult.contains === "string") {
+						hideKeywordString = hideMatchResult.contains;
+					} else if (Array.isArray(hideMatchResult.contains) && hideMatchResult.contains.length > 0) {
+						hideKeywordString = hideMatchResult.contains[0];
+					} else if (hideMatchResult.keyword) {
+						hideKeywordString = hideMatchResult.keyword;
 					}
+
+					if (this._settings.get("general.debugKeywords")) {
+						console.log("[setETV] Hide keyword matched for", data, hideKeywordString);
+					}
+					// Remove (permanently "hide") the tile
+					this._log.add(`NOTIF: Item ${asin} matched hide keyword ${hideKeywordString}. Hiding it.`);
+
+					// Check if the tile is fully registered before attempting removal
+					const element = this._itemsMgr.getItemDOMElement(asin);
+					if (element) {
+						// Tile is fully registered, safe to remove
+						this.#removeTile(asin);
+					} else {
+						// Tile not fully registered yet (probably called during addTileInGrid)
+						console.warn(`Hide keyword matched for ${asin} but tile not fully registered. Skipping.`);
+					}
+					return true; // Exit early since item is processed
 				}
 			}
 		}
@@ -1612,8 +1870,11 @@ class NotificationMonitor extends MonitorCore {
 			});
 		}
 
-		// Clear unknown ETV flag since we now have an ETV value
-		if (notif.dataset.typeUnknownETV == 1) {
+		// Track if we need to update styling
+		let needsStylingUpdate = false;
+
+		// Clear unknown ETV flag if we now have ETV values
+		if (notif.dataset.typeUnknownETV == 1 && etvObj.dataset.etvMin !== "" && etvObj.dataset.etvMax !== "") {
 			// Debug logging for unknown ETV flag clearing
 			if (this._settings.get("general.debugItemProcessing")) {
 				const asin = notif.id?.replace("vh-notification-", "") || "unknown";
@@ -1632,6 +1893,7 @@ class NotificationMonitor extends MonitorCore {
 			}
 
 			notif.dataset.typeUnknownETV = 0;
+			needsStylingUpdate = true;
 
 			// Re-apply filter since the item no longer matches unknown ETV criteria
 			if (this._filterType === TYPE_UNKNOWN_ETV) {
@@ -1655,12 +1917,6 @@ class NotificationMonitor extends MonitorCore {
 						timestamp: new Date().toISOString(),
 					});
 				}
-
-				// IMPORTANT: Return early to prevent further processing that might re-show the item
-				// The item should remain hidden on the Unknown ETV filter since it now has ETV data
-				return;
-			} else {
-				// For other filters, just check if visibility changed
 			}
 		}
 
@@ -1682,6 +1938,7 @@ class NotificationMonitor extends MonitorCore {
 				try {
 					// Set the flag before calling the handler
 					notif.dataset.typeZeroETV = 1;
+					needsStylingUpdate = true;
 
 					// Process filtering to update visibility based on the new flag
 					this.#processNotificationFiltering(notif);
@@ -1705,6 +1962,11 @@ class NotificationMonitor extends MonitorCore {
 				// Re-apply filtering to update visibility
 				this.#processNotificationFiltering(notif);
 			}
+		}
+
+		// Apply styling update once after all flag changes
+		if (needsStylingUpdate) {
+			this._processNotificationHighlight(notif);
 		}
 	}
 
@@ -2878,7 +3140,10 @@ class NotificationMonitor extends MonitorCore {
 	 * to prevent memory leaks
 	 */
 	destroy() {
-		console.log("🧹 Destroying NotificationMonitor and cleaning up event listeners..."); // eslint-disable-line no-console
+		// Only log cleanup messages if debugMemory is enabled
+		if (this._settings.get("general.debugMemory")) {
+			console.log("🧹 Destroying NotificationMonitor and cleaning up event listeners..."); // eslint-disable-line no-console
+		}
 
 		// Remove grid container listener
 		if (this.#eventHandlers.grid && this._gridContainer) {
@@ -2979,7 +3244,9 @@ class NotificationMonitor extends MonitorCore {
 		// Clear references
 		this._gridContainer = null;
 
-		console.log("✅ NotificationMonitor cleanup complete"); // eslint-disable-line no-console
+		if (this._settings.get("general.debugMemory")) {
+			console.log("✅ NotificationMonitor cleanup complete"); // eslint-disable-line no-console
+		}
 	}
 }
 

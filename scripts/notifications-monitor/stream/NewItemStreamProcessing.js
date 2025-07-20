@@ -1,13 +1,22 @@
 /*global chrome*/
 
 import { Streamy } from "../../core/utils/Streamy.js";
-import { keywordMatch } from "../../core/utils/KeywordMatch.js";
+import { compile as compileKeywords, compileKeywordObjects } from "../../core/utils/KeywordCompiler.js";
+import { findMatch, getMatchedKeyword } from "../../core/utils/KeywordMatcher.js";
 import { SettingsMgr } from "../../core/services/SettingsMgrCompat.js";
 import { Item } from "../../core/models/Item.js";
 import { YMDHiStoISODate, DateToUnixTimeStamp } from "../../core/utils/DateHelper.js";
 
 const SEARCH_PHRASE_REGEX = /^([a-zA-Z0-9\s'".,]{0,40})[\s]+.*$/;
 
+/**
+ * NewItemStreamProcessing handles real-time item processing with keyword matching.
+ *
+ * This class uses the simplified KeywordCompiler/KeywordMatcher pattern where:
+ * - Keywords are compiled once on initialization
+ * - Keywords are recompiled when settings change
+ * - No complex caching logic is needed
+ */
 class NewItemStreamProcessing {
 	constructor(settingsManager = null, enableChromeListener = true) {
 		this.settingsManager = settingsManager || new SettingsMgr();
@@ -19,61 +28,71 @@ class NewItemStreamProcessing {
 			push: () => {},
 		};
 
-		this.cachedSettings = {
-			hideKeywords: null,
-			highlightKeywords: null,
-			blurKeywords: null,
-			hideListEnabled: false,
-			pushNotifications: false,
-			pushNotificationsAFA: false,
-		};
+		// Compiled keywords - compiled once and reused
+		this.compiledHideKeywords = null;
+		this.compiledHighlightKeywords = null;
+		this.compiledBlurKeywords = null;
+
+		// Settings that affect behavior
+		this.hideListEnabled = false;
+		this.pushNotifications = false;
+		this.pushNotificationsAFA = false;
+
+		// Diagnostic: Track processing counts per ASIN
+		this.processingCounts = new Map();
 
 		this.setupPipeline();
 		this.initialize();
 	}
 
 	async initialize() {
-		await this.updateCachedSettings();
-
-		if (this.enableChromeListener) {
-			this.addSettingsListener();
-		}
+		await this.compileKeywords();
 	}
 
-	async updateCachedSettings() {
+	async compileKeywords() {
 		await this.settingsManager.waitForLoad();
 
-		this.cachedSettings.hideKeywords = this.settingsManager.get("general.hideKeywords");
-		this.cachedSettings.highlightKeywords = this.settingsManager.get("general.highlightKeywords");
-		this.cachedSettings.blurKeywords = this.settingsManager.get("general.blurKeywords");
-		this.cachedSettings.hideListEnabled = this.settingsManager.get("notification.hideList");
-		this.cachedSettings.pushNotifications = this.settingsManager.get("notification.pushNotifications");
-		this.cachedSettings.pushNotificationsAFA = this.settingsManager.get("notification.pushNotificationsAFA");
-	}
+		// Get keywords from settings - all should be arrays
+		const hideKeywords = this.settingsManager.get("general.hideKeywords") || [];
+		const highlightKeywords = this.settingsManager.get("general.highlightKeywords") || [];
+		const blurKeywordsRaw = this.settingsManager.get("general.blurKeywords") || [];
 
-	addSettingsListener() {
-		// Listen for settings changes to update handler
-		if (typeof chrome === "undefined" || !chrome.storage) {
-			throw new Error("chrome.storage is not defined");
+		// Convert blur keywords array to keyword objects
+		const blurKeywords = Array.isArray(blurKeywordsRaw)
+			? blurKeywordsRaw.filter((kw) => kw && kw.length > 0).map((kw) => ({ contains: kw }))
+			: [];
+
+		// Debug logging for keyword loading
+		if (this.settingsManager.get("general.debugKeywords")) {
+			console.log("[NewItemStreamProcessing] Loading keywords from settings:", {
+				highlightKeywordsRaw: highlightKeywords,
+				blurKeywordsRaw: blurKeywordsRaw,
+				blurKeywordsParsed: blurKeywords,
+				highlightCount: highlightKeywords.length,
+				blurCount: blurKeywords.length,
+				timestamp: Date.now(),
+			});
 		}
-		chrome.storage.onChanged.addListener((changes, namespace) => {
-			if (namespace === "local") {
-				// Check if any relevant settings changed
-				const relevantKeys = [
-					"general.hideKeywords",
-					"general.highlightKeywords",
-					"general.blurKeywords",
-					"notification.hideList",
-					"notification.pushNotifications",
-					"notification.pushNotificationsAFA",
-				];
 
-				if (relevantKeys.some((key) => changes[key])) {
-					// Update the handler's cached settings
-					this.updateCachedSettings();
-				}
-			}
-		});
+		// Compile keywords into arrays of compiled keyword objects
+		this.compiledHideKeywords = hideKeywords.length > 0 ? compileKeywordObjects(hideKeywords) : null;
+		this.compiledHighlightKeywords = highlightKeywords.length > 0 ? compileKeywordObjects(highlightKeywords) : null;
+		this.compiledBlurKeywords = blurKeywords.length > 0 ? compileKeywordObjects(blurKeywords) : null;
+
+		// Update behavior settings
+		this.hideListEnabled = this.settingsManager.get("notification.hideList");
+		this.pushNotifications = this.settingsManager.get("notification.pushNotifications");
+		this.pushNotificationsAFA = this.settingsManager.get("notification.pushNotificationsAFA");
+
+		// Debug logging
+		if (this.settingsManager.get("general.debugKeywords")) {
+			console.log("[NewItemStreamProcessing] Keywords compiled:", {
+				hideKeywordsCount: hideKeywords.length,
+				highlightKeywordsCount: highlightKeywords.length,
+				blurKeywordsCount: blurKeywords.length,
+				timestamp: Date.now(),
+			});
+		}
 	}
 
 	//#####################################################
@@ -88,11 +107,20 @@ class NewItemStreamProcessing {
 		if (data.title === undefined) {
 			return true; //Skip this filter
 		}
-		//Only hide the keyword if the item is not a highlight match.
-		if (this.cachedSettings.hideListEnabled && !data.KWsMatch) {
-			// Check hide keywords with available ETV data (null/undefined values are handled by keywordMatch)
-			const hideKWMatch = keywordMatch(this.cachedSettings.hideKeywords, data.title, data.etv_min, data.etv_max);
-			if (hideKWMatch !== false) {
+
+		// KEYWORD PRIORITY: Only check hide keywords if the item is NOT highlighted
+		// This ensures highlight keywords take precedence over hide keywords
+		if (this.hideListEnabled && !data.KWsMatch && this.compiledHideKeywords) {
+			const hideKeyword = getMatchedKeyword(data.title, this.compiledHideKeywords, data.etv_min, data.etv_max);
+			if (hideKeyword !== false) {
+				if (this.settingsManager.get("general.debugKeywords")) {
+					console.log("[NewItemStreamProcessing] Item hidden by keyword:", {
+						asin: data.asin,
+						title: data.title,
+						keyword: hideKeyword,
+						timestamp: Date.now(),
+					});
+				}
 				return false; //Do not display the notification as it matches the hide list.
 			}
 		}
@@ -108,20 +136,83 @@ class NewItemStreamProcessing {
 		if (data.title === undefined) {
 			return rawData; //Skip this transformer if no title
 		}
-		// Check highlight keywords with available ETV data (null/undefined values are handled by keywordMatch)
-		const highlightKWMatch = keywordMatch(
-			this.cachedSettings.highlightKeywords,
-			data.title,
-			data.etv_min,
-			data.etv_max
-		);
-		rawData.item.data.KWsMatch = highlightKWMatch !== false;
-		rawData.item.data.KW = highlightKWMatch;
+
+		// Diagnostic logging for duplicate processing
+		if (this.settingsManager.get("general.debugDuplicates")) {
+			const timestamp = Date.now();
+			const asin = data.asin;
+
+			// Track processing count
+			const currentCount = this.processingCounts.get(asin) || 0;
+			this.processingCounts.set(asin, currentCount + 1);
+
+			if (this.settingsManager.get("general.debugKeywords")) {
+				console.log("[NewItemStreamProcessing] transformIsHighlight called:", {
+					asin: asin,
+					title: data.title?.substring(0, 50) + "...",
+					enrollment_guid: data.enrollment_guid,
+					processingCount: currentCount + 1,
+					isDuplicate: currentCount > 0,
+					timestamp,
+					timestampMs: timestamp,
+					reason: rawData.reason || "no reason",
+					callStack: new Error().stack.split("\n").slice(2, 5).join(" <- "),
+				});
+			}
+
+			// Warn if this is a duplicate processing
+			if (currentCount > 0) {
+				console.warn(
+					`[NewItemStreamProcessing] DUPLICATE PROCESSING DETECTED for ASIN ${asin} - processed ${currentCount + 1} times`,
+					{
+						enrollment_guid: data.enrollment_guid,
+						reason: rawData.reason,
+						timestamp: new Date().toISOString(),
+					}
+				);
+			}
+		}
+
+		// Check highlight keywords using the compiled keywords
+		if (this.compiledHighlightKeywords) {
+			const matchedKeyword = getMatchedKeyword(
+				data.title,
+				this.compiledHighlightKeywords,
+				data.etv_min,
+				data.etv_max
+			);
+			rawData.item.data.KWsMatch = matchedKeyword !== false;
+			rawData.item.data.KW = matchedKeyword;
+
+			if (matchedKeyword && this.settingsManager.get("general.debugKeywords")) {
+				console.log("[NewItemStreamProcessing] Item highlighted by keyword:", {
+					asin: data.asin,
+					title: data.title,
+					keyword: matchedKeyword,
+					timestamp: Date.now(),
+				});
+			}
+		} else {
+			rawData.item.data.KWsMatch = false;
+			rawData.item.data.KW = false;
+		}
 
 		return rawData;
 	}
 
 	transformIsBlur(rawData) {
+		// Always log entry to this transformer when debugging
+		if (this.settingsManager.get("general.debugKeywords")) {
+			console.log("[NewItemStreamProcessing] transformIsBlur called:", {
+				hasItem: !!rawData.item,
+				hasData: !!rawData.item?.data,
+				hasTitle: !!rawData.item?.data?.title,
+				asin: rawData.item?.data?.asin,
+				titlePreview: rawData.item?.data?.title?.substring(0, 50) + "...",
+				timestamp: Date.now(),
+			});
+		}
+
 		if (!rawData.item) {
 			return rawData; //Skip this transformer
 		}
@@ -129,9 +220,33 @@ class NewItemStreamProcessing {
 		if (data.title == undefined) {
 			return rawData; //Skip this transformer
 		}
-		const blurKWMatch = keywordMatch(this.cachedSettings.blurKeywords, data.title);
-		rawData.item.data.BlurKWsMatch = blurKWMatch !== false;
-		rawData.item.data.BlurKW = blurKWMatch;
+
+		// Check blur keywords using the compiled keywords
+		if (this.compiledBlurKeywords) {
+			const blurKeyword = getMatchedKeyword(data.title, this.compiledBlurKeywords);
+			rawData.item.data.BlurKWsMatch = blurKeyword !== false;
+			rawData.item.data.BlurKW = blurKeyword;
+
+			// Debug logging for blur keyword matching
+			if (this.settingsManager.get("general.debugKeywords")) {
+				console.log("[NewItemStreamProcessing] Blur keyword check:", {
+					asin: data.asin,
+					title: data.title,
+					compiledBlurKeywords: this.compiledBlurKeywords,
+					blurKeywordFound: blurKeyword,
+					BlurKWsMatch: rawData.item.data.BlurKWsMatch,
+					BlurKW: rawData.item.data.BlurKW,
+					timestamp: Date.now(),
+				});
+			}
+		} else {
+			rawData.item.data.BlurKWsMatch = false;
+			rawData.item.data.BlurKW = false;
+
+			if (this.settingsManager.get("general.debugKeywords")) {
+				console.log("[NewItemStreamProcessing] No blur keywords configured");
+			}
+		}
 
 		return rawData;
 	}
@@ -170,8 +285,8 @@ class NewItemStreamProcessing {
 		}
 
 		//If the new item match a highlight keyword, push a real notification.
-		const KWNotification = this.cachedSettings.pushNotifications && data.KWsMatch;
-		const AFANotification = this.cachedSettings.pushNotificationsAFA && data.queue == "last_chance";
+		const KWNotification = this.pushNotifications && data.KWsMatch;
+		const AFANotification = this.pushNotificationsAFA && data.queue == "last_chance";
 
 		if (KWNotification || AFANotification) {
 			//Create a new clean item with just the info needed to display the notification
@@ -187,6 +302,16 @@ class NewItemStreamProcessing {
 			item.setSearch(data.search);
 
 			if (KWNotification) {
+				// Debug logging for OS notification triggered by keyword match
+				if (this.settingsManager.get("general.debugKeywords")) {
+					console.log("[NewItemStreamProcessing] OS notification triggered for keyword match:", {
+						asin: data.asin,
+						title: data.title,
+						keyword: data.KW,
+						KWsMatch: data.KWsMatch,
+						timestamp: new Date().toISOString(),
+					});
+				}
 				this.outputFunctions.push("Vine Helper - New item match KW!", item);
 			} else if (AFANotification) {
 				this.outputFunctions.push("Vine Helper - New AFA item", item);
@@ -233,17 +358,28 @@ class NewItemStreamProcessing {
 	}
 
 	input(data) {
+		// Diagnostic logging for stream input
+		if (this.settingsManager.get("general.debugKeywords") && data.item) {
+			const timestamp = Date.now();
+			console.log("[NewItemStreamProcessing] Stream input received:", {
+				asin: data.item.data?.asin,
+				title: data.item.data?.title?.substring(0, 50) + "...",
+				type: data.type,
+				reason: data.reason,
+				timestamp,
+				timestampMs: timestamp,
+			});
+		}
 		this.dataStream.input(data);
 	}
 
-	// Expose settings for testing
-	getCachedSettings() {
-		return this.cachedSettings;
-	}
-
-	// Allow manual settings update for testing
-	setCachedSettings(settings) {
-		Object.assign(this.cachedSettings, settings);
+	// Expose compiled keywords for testing
+	getCompiledKeywords() {
+		return {
+			hideKeywords: this.compiledHideKeywords,
+			highlightKeywords: this.compiledHighlightKeywords,
+			blurKeywords: this.compiledBlurKeywords,
+		};
 	}
 }
 

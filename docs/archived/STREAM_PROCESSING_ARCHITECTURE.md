@@ -28,7 +28,6 @@ The new implementation uses:
 The architecture was heavily influenced by Chrome extension limitations that made traditional optimization approaches ineffective:
 
 1. **No Shared Memory Between Contexts**:
-
     - Content scripts run in isolated worlds
     - Cannot share object references between tabs
     - Each context must maintain its own state
@@ -44,7 +43,6 @@ The architecture was heavily influenced by Chrome extension limitations that mad
     This breaks traditional caching strategies that rely on reference equality.
 
 3. **Memory Pressure on Browser**:
-
     - Extensions share the browser's memory budget
     - Poor performance affects the entire browsing experience
     - Users immediately notice when extensions slow down their browser
@@ -522,19 +520,16 @@ class KeywordMatcher {
 ### What We Gained
 
 1. **Performance**
-
     - 15x faster keyword matching (15ms → 1ms per item)
     - 90% faster overall processing (19.4s → <2s for 300 items)
     - 99%+ cache hit rate for compiled regex patterns
 
 2. **Memory Efficiency**
-
     - 95% reduction in stream processing memory (9.4 MB → 300 KB)
     - Single keyword matcher instance vs multiple copies
     - Efficient caching with WeakMap + counter approach
 
 3. **Code Simplicity**
-
     - Single point of transformation logic
     - Easier to maintain and debug
     - Reduced code duplication
@@ -547,13 +542,11 @@ class KeywordMatcher {
 ### What We Lost
 
 1. **Separation of Concerns**
-
     - Previously: Each handler had a single responsibility
     - Currently: All transformations in one handler
     - Mitigation: Well-structured methods within the unified handler
 
 2. **Code Clarity**
-
     - Previously: Clear separation between filter/highlight/blur
     - Currently: All logic in one file
     - Mitigation: Clear method names and documentation
@@ -566,19 +559,16 @@ class KeywordMatcher {
 ### Additional Downsides and Warnings
 
 1. **All-or-Nothing Updates**
-
     - **Risk**: If the unified handler breaks, ALL transformations fail
     - **Impact**: Can't update just highlight logic without risking filter/blur
     - **Mitigation**: Comprehensive test suite, careful code reviews
 
 2. **Harder to Debug Individual Transformations**
-
     - **Risk**: Stack traces show unified handler for all issues
     - **Impact**: Takes longer to isolate which transformation failed
     - **Mitigation**: Detailed logging with transformation type labels
 
 3. **Less Modular for Future Extensions**
-
     - **Risk**: Adding new transformation types requires modifying core handler
     - **Impact**: Violates open/closed principle
     - **Mitigation**: Well-defined extension points within unified handler
@@ -622,12 +612,10 @@ class KeywordMatcher {
 **Yes, partially:**
 
 1. **Shared Cache Alone**: Would achieve ~80% of the performance benefit
-
     - Pros: Maintains separation of concerns
     - Cons: Still have handler overhead, more complex coordination
 
 2. **Lazy Compilation**: Compile regex on first use, then cache
-
     - Pros: Simpler implementation
     - Cons: First-time performance hit, cache invalidation complexity
 
@@ -661,19 +649,16 @@ The measurements were taken under controlled conditions with Chrome DevTools. Re
 ### Why the Trade-off Was Worth It
 
 1. **User Impact**
-
     - **100% of users benefit** from 15x performance improvement
     - Prevents browser freezes with large item counts
     - Reduces memory pressure on user devices
 
 2. **Critical Bug Fixes**
-
     - Eliminated 353,000 regex recompilations
     - Fixed memory leaks causing 86,400 executions/day
     - Resolved duplicate instance creation
 
 3. **Maintainability**
-
     - Single file to update for all transformations
     - Consistent handling across all operations
     - Easier to track data flow
@@ -688,13 +673,11 @@ The measurements were taken under controlled conditions with Chrome DevTools. Re
 ### Key Components
 
 1. **UnifiedTransformHandler** (`scripts/notifications-monitor/stream/UnifiedTransformHandler.js`)
-
     - Consolidates filter, highlight, blur, and notification logic
     - Caches settings to avoid repeated lookups
     - Uses single pipeline for all transformations
 
 2. **SharedKeywordMatcher** (`scripts/core/utils/SharedKeywordMatcher.js`)
-
     - Singleton wrapper around KeywordMatch
     - Provides backward compatibility
     - Delegates to optimized KeywordMatcher
@@ -707,12 +690,10 @@ The measurements were taken under controlled conditions with Chrome DevTools. Re
 ### Caching Strategy Evolution
 
 1. **Failed Approach**: WeakMap with Settings.get() arrays
-
     - Problem: Settings.get() returns new array references
     - Result: 0% cache hit rate
 
 2. **Failed Approach**: JSON.stringify for cache keys
-
     - Problem: 1055x slower than current solution
     - Result: Worse performance than no caching
 
@@ -723,17 +704,14 @@ The measurements were taken under controlled conditions with Chrome DevTools. Re
 ## Lessons Learned
 
 1. **Measure Before Optimizing**
-
     - Memory profiling revealed unexpected hotspots
     - Keyword matching was 50% of heap usage
 
 2. **Consolidation Can Improve Performance**
-
     - Fewer objects = less memory overhead
     - Shared resources = better cache utilization
 
 3. **Cache Design Matters**
-
     - Wrong caching strategy can make things worse
     - Understanding reference equality is crucial
 
@@ -744,12 +722,10 @@ The measurements were taken under controlled conditions with Chrome DevTools. Re
 ## Future Improvements
 
 1. **Further Consolidation**
-
     - Merge notification logic into transform pipeline
     - Optimize string operations with interning
 
 2. **Enhanced Caching**
-
     - Implement LRU eviction for very large keyword sets
     - Add cache warming on startup
 

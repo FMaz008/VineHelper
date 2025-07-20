@@ -56,6 +56,13 @@ class PinnedListMgr {
 						is_pre_release: ev.data.is_pre_release,
 					});
 					this.addItem(item, false, false);
+
+					// Notify observers about the broadcast event
+					this.broadcastObservers.forEach((observer) => {
+						if (observer.onPinnedBroadcast) {
+							observer.onPinnedBroadcast(item);
+						}
+					});
 				} catch (error) {
 					logger.add("PINNEDMGR: Failed to create Item from broadcast - " + error.message);
 					console.error("[PinnedListMgr] Cannot create item from broadcast -", error.message, {
@@ -63,12 +70,6 @@ class PinnedListMgr {
 						broadcast_data: ev.data,
 					});
 				}
-				// Notify observers about the broadcast event
-				this.broadcastObservers.forEach((observer) => {
-					if (observer.onPinnedBroadcast) {
-						observer.onPinnedBroadcast(item);
-					}
-				});
 			}
 			if (ev.data.type == "unpinnedItem") {
 				logger.add("Broadcast received: unpinned item " + ev.data.asin);

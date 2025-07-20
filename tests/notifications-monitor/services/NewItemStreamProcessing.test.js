@@ -206,12 +206,33 @@ describe("NewItemStreamProcessing", () => {
 		);
 	});
 
-	test("should allow manual settings override for testing", () => {
+	test("should allow manual settings override for testing", async () => {
+		// Define default settings
+		const defaultSettings = {
+			"general.highlightKeywords": [
+				{ contains: "poe", etv_min: null, etv_max: null },
+				{ contains: "ethernet", etv_min: null, etv_max: null },
+			],
+			"general.hideKeywords": [{ contains: "spam", etv_min: null, etv_max: null }],
+			"general.blurKeywords": [{ contains: "sex", etv_min: null, etv_max: null }],
+			"general.debugKeywords": false,
+			"general.version": "3.6.0",
+			"notification.hideList": true,
+			"notification.pushNotifications": false,
+			"notification.pushNotificationsAFA": false,
+		};
+
 		// Override settings to enable push notifications
-		processor.setCachedSettings({
-			pushNotifications: true,
-			highlightKeywords: [{ contains: "notification" }],
+		mockSettingsMgr.get.mockImplementation((key) => {
+			const overrides = {
+				"notification.pushNotifications": true,
+				"general.highlightKeywords": [{ contains: "notification" }],
+			};
+			return overrides[key] !== undefined ? overrides[key] : defaultSettings[key];
 		});
+
+		// Recompile keywords with new settings
+		await processor.compileKeywords();
 
 		const notificationItem = new Item({
 			asin: "B101",

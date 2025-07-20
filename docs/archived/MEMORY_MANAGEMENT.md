@@ -238,13 +238,11 @@ class SocketManager {
 **Important Lessons Learned**:
 
 1. **WeakMap Failure (Initial Attempt)**:
-
     - WeakMap was used for caching compiled regex patterns
     - Failed because Settings.get() returns new array references each time
     - Result: 0% cache hit rate, patterns compiled on every match
 
 2. **JSON.stringify Approach (Too Slow)**:
-
     - Used JSON.stringify(keywords) as cache key
     - Performance: 1055x slower than current solution
     - Abandoned due to performance impact
@@ -267,7 +265,6 @@ class SocketManager {
     ```
 
 4. **Array Reference Stability**:
-
     - SettingsMgrDI implements array caching to maintain stable references
     - Components within a tab share the same array references
     - Enables effective WeakMap caching
@@ -326,7 +323,6 @@ function countVisibleItemsBatched(container) {
 ### High Priority 🔧
 
 1. **ServerCom WebSocket Cleanup**
-
     - Problem: ServerCom instances growing 3x over time
     - Required: Implement proper cleanup in destroy method
 
@@ -421,7 +417,6 @@ function countVisibleItemsBatched(container) {
 ### Enabling Memory Debugging
 
 1. **Via Settings (Recommended)**:
-
     - Go to Settings > General > Debugging > Memory Analysis
     - Enable "Enable Memory Debugging"
     - Optionally enable "Auto Heap Snapshots" for automatic tracking
@@ -483,7 +478,6 @@ The MemoryDebugger automatically:
     ```
 
 2. **Monitor cache effectiveness**:
-
     - Look for "Cache hit" vs "Cache miss" messages
     - Check cache key consistency
 
