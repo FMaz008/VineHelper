@@ -28,12 +28,14 @@ var HiddenList = new HiddenListMgr();
 import { Item } from "/scripts/core/models/Item.js";
 
 import { ModalMgr } from "/scripts/ui/controllers/ModalMgr.js";
+import { StyleUtils } from "/scripts/ui/utils/StyleUtils.js";
 var modalMgr = new ModalMgr();
 
 import { Template } from "/scripts/core/utils/Template.js";
 var Tpl = new Template();
 
-import { keywordMatch } from "../../core/utils/KeywordMatch.js";
+import { compile as compileKeywords, compileKeywordObjects } from "../../core/utils/KeywordCompiler.js";
+import { findMatch, getMatchedKeyword } from "../../core/utils/KeywordMatcher.js";
 import { YMDHiStoISODate } from "/scripts/core/utils/DateHelper.js";
 import { getTileByAsin, updateTileCounts } from "/scripts/ui/components/Grid.js";
 import { unescapeHTML, escapeHTML } from "/scripts/core/utils/StringHelper.js";
@@ -553,26 +555,38 @@ class Tile {
 	}
 
 	async initiateTile() {
-		//Match with blur keywords.
-		this.#tileDOM.dataset.blurredKeyword = "";
-		const blurKeywords = Settings.get("general.blurKeywords");
-		if (Settings.isPremiumUser() && blurKeywords?.length > 0) {
-			// SharedKeywordMatcher handles compilation internally
-			let match = keywordMatch(blurKeywords, this.getTitle());
-			if (match) {
-				logger.add("TILE: The item match the keyword '" + match + "', blur it");
-				const img = this.#tileDOM.querySelector("img");
-				if (img) {
-					if (Settings.get("general.unblurImageOnHover")) {
-						img.classList.add("dynamic-blur");
-					} else {
-						img.classList.add("blur");
-					}
+		// Check if blur should be applied based on pre-computed blur keyword match
+		// The blur keyword matching is done in NewItemStreamProcessing.js
+		// dataset.blurkw contains the actual blur keyword if matched, or empty/undefined if not
+		const shouldBlur = this.#tileDOM.dataset.blurkw && this.#tileDOM.dataset.blurkw !== "false";
+
+		// Debug logging for blur keyword application
+		if (Settings.get("general.debugKeywords")) {
+			console.log("[Tile.initiateTile] Applying blur based on pre-computed match", {
+				asin: this.getAsin(),
+				title: this.getTitle(),
+				shouldBlur: shouldBlur,
+				dataBlurKw: this.#tileDOM.dataset.blurkw,
+			});
+		}
+
+		if (Settings.isPremiumUser() && shouldBlur) {
+			// Get the blur keyword from the DOM data (set during stream processing)
+			const blurKeyword = this.#tileDOM.dataset.blurkw || "blur keyword";
+
+			logger.add("TILE: The item matches blur keyword, applying blur");
+			const img = this.#tileDOM.querySelector("img");
+			if (img) {
+				if (Settings.get("general.unblurImageOnHover")) {
+					img.classList.add("dynamic-blur");
+				} else {
+					img.classList.add("blur");
 				}
-				this.#tileDOM.querySelector(".vvp-item-product-title-container")?.classList.add("dynamic-blur");
-				const blurMatchString = typeof match === "object" ? match.contains || match.word || "" : match;
-				this.#tileDOM.dataset.blurredKeyword = escapeHTML(blurMatchString);
 			}
+			this.#tileDOM.querySelector(".vvp-item-product-title-container")?.classList.add("dynamic-blur");
+			this.#tileDOM.dataset.blurredKeyword = escapeHTML(blurKeyword);
+		} else {
+			this.#tileDOM.dataset.blurredKeyword = "";
 		}
 
 		//Unescape titles and ensure they remain visible
@@ -736,23 +750,26 @@ class Tile {
 			});
 		}
 
-		this.#tileDOM.style.backgroundColor = "unset";
-		this.#tileDOM.style.background = "unset";
-
+		// Use StyleUtils to handle background styling
 		if (zeroETV && highlight && !Settings.get("general.highlightColor.ignore0ETVhighlight")) {
 			const color1 = Settings.get("general.zeroETVHighlight.color");
 			const color2 = Settings.get("general.highlightColor.color");
-			this.#tileDOM.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;
+			const gradient = StyleUtils.createStripedGradient(color1, color2);
+			StyleUtils.applyBackground(this.#tileDOM, gradient, true);
 		} else if (unknownETV && highlight && !Settings.get("general.highlightColor.ignoreUnknownETVhighlight")) {
 			const color1 = Settings.get("general.unknownETVHighlight.color");
 			const color2 = Settings.get("general.highlightColor.color");
-			this.#tileDOM.style.background = `repeating-linear-gradient(-45deg, ${color1} 0px, ${color1} 20px, ${color2} 20px, ${color2} 40px)`;
+			const gradient = StyleUtils.createStripedGradient(color1, color2);
+			StyleUtils.applyBackground(this.#tileDOM, gradient, true);
 		} else if (highlight) {
-			this.#tileDOM.style.backgroundColor = Settings.get("general.highlightColor.color");
+			StyleUtils.applyBackground(this.#tileDOM, Settings.get("general.highlightColor.color"), false);
 		} else if (zeroETV) {
-			this.#tileDOM.style.backgroundColor = Settings.get("general.zeroETVHighlight.color");
+			StyleUtils.applyBackground(this.#tileDOM, Settings.get("general.zeroETVHighlight.color"), false);
 		} else if (unknownETV) {
-			this.#tileDOM.style.backgroundColor = Settings.get("general.unknownETVHighlight.color");
+			StyleUtils.applyBackground(this.#tileDOM, Settings.get("general.unknownETVHighlight.color"), false);
+		} else {
+			// Clear any existing styling
+			StyleUtils.clearBackgrounds(this.#tileDOM);
 		}
 	}
 

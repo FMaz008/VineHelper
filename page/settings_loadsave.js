@@ -19,7 +19,7 @@ var deviceMgr = new DeviceMgr(Settings);
 import { CryptoKeys } from "/scripts/core/utils/CryptoKeys.js";
 var cryptoKeys = new CryptoKeys();
 
-import { precompileKeywords, compileKeyword } from "/scripts/core/utils/KeywordMatch.js";
+import { compile as compileKeywords, compileKeywordObjects } from "/scripts/core/utils/KeywordCompiler.js";
 
 async function drawDiscord() {
 	//Show or hide the discord options
@@ -844,7 +844,7 @@ function initiateTestKeywords() {
 	});
 }
 
-import { keywordMatch } from "../scripts/core/utils/KeywordMatch.js";
+import { findMatch } from "../scripts/core/utils/KeywordMatcher.js";
 function testKeyword(key, title) {
 	const keyE = CSS.escape(key);
 
@@ -853,12 +853,9 @@ function testKeyword(key, title) {
 		const containsObj = lines[i].querySelector(`td input[name="contains"]`);
 		const contains = containsObj.value.trim();
 
-		// For testing, we pass a simple array without __keywordType
-		// The last parameter 'true' enables test mode to suppress warnings
-		if (
-			keywordMatch([{ contains: contains, without: "", etv_min: "", etv_max: "" }], title, null, null, true) !=
-			false
-		) {
+		// Compile and test the keyword
+		const compiledKeywords = compileKeywordObjects([{ contains: contains, without: "", etv_min: "", etv_max: "" }]);
+		if (findMatch(title, compiledKeywords, null, null)) {
 			containsObj.style.background = "lightgreen";
 		} else {
 			containsObj.style.background = "white";
@@ -868,10 +865,8 @@ function testKeyword(key, title) {
 		const without = withoutObj.value.trim();
 
 		// Test the 'without' field as if it were a 'contains' field
-		if (
-			keywordMatch([{ contains: without, without: "", etv_min: "", etv_max: "" }], title, null, null, true) !=
-			false
-		) {
+		const compiledWithout = compileKeywordObjects([{ contains: without, without: "", etv_min: "", etv_max: "" }]);
+		if (findMatch(title, compiledWithout, null, null)) {
 			withoutObj.style.background = "lightgreen";
 		} else {
 			withoutObj.style.background = "white";
@@ -1093,48 +1088,6 @@ function manageKeywords(key) {
 		btnSave.disabled = true;
 		const arrContent = keywordsToJSON(key);
 		await Settings.set(key, arrContent);
-
-		// NEW: Compile and store patterns
-		try {
-			// Compile keywords to get the compiled regex patterns
-			const compilationResult = precompileKeywords(arrContent);
-
-			// Extract the compiled patterns from the cache
-			const patterns = [];
-			arrContent.forEach((keyword, index) => {
-				const compiled = compileKeyword(keyword);
-				if (compiled) {
-					const pattern = {
-						pattern: compiled.regex.source,
-						flags: compiled.regex.flags,
-						hasEtvCondition: compiled.hasEtvCondition || false,
-					};
-
-					if (compiled.withoutRegex) {
-						pattern.withoutPattern = compiled.withoutRegex.source;
-						pattern.withoutFlags = compiled.withoutRegex.flags;
-					}
-
-					patterns.push(pattern);
-				} else {
-					// Store null for failed compilations
-					patterns.push(null);
-				}
-			});
-
-			// Store the compiled patterns
-			await Settings.set(key + "_compiled", patterns);
-			console.log(
-				`[Settings] Compiled and stored ${patterns.filter((p) => p !== null).length} patterns for ${key}`
-			);
-
-			// Notify service worker to clear caches
-			if (chrome.runtime && chrome.runtime.sendMessage) {
-				chrome.runtime.sendMessage({ action: "keywordsUpdated", keyType: key });
-			}
-		} catch (error) {
-			console.error(`[Settings] Failed to compile keywords for ${key}:`, error);
-		}
 
 		await new Promise((r) => setTimeout(r, 500)); //Wait to give user-feedback.
 		btnSave.disabled = false;
