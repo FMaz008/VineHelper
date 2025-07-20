@@ -246,9 +246,15 @@ class Tile {
 				m.close();
 
 				const variantAsin = link.dataset.asin;
+				const queueNames = {
+					VINE_FOR_ALL: "encore",
+					VENDOR_VINE_FOR_ALL: "last_chance",
+					VENDOR_TARGETED: "potluck",
+				};
 
 				//Find the main See Details button
 				const seeDetails = this.#tileDOM.querySelector(".vvp-details-btn input");
+				const queue = queueNames[seeDetails.dataset.recommendationType];
 
 				//Generate a See Details button
 				//Extract enrollment guid from recommendationId
@@ -257,7 +263,7 @@ class Tile {
 
 				const item = new Item({
 					asin: seeDetails.dataset.asin,
-					queue: seeDetails.dataset.queue,
+					queue: queue,
 					is_parent_asin: false,
 					enrollment_guid: enrollmentGuid,
 					is_pre_release: seeDetails.dataset.isPreRelease,
