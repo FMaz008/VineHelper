@@ -292,11 +292,6 @@ class MonitorCore {
 			return false;
 		}
 
-		const etvObj = notif.querySelector("div.etv");
-		if (!etvObj) {
-			return false;
-		}
-
 		const isHighlighted =
 			notif.dataset.typeHighlight == 1 && this._settings.get("notification.monitor.highlight.colorActive");
 		const isZeroETV =

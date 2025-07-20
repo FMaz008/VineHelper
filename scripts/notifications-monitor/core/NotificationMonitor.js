@@ -1559,7 +1559,6 @@ class NotificationMonitor extends MonitorCore {
 						this._settings
 					);
 					if (matchedHideKeyword !== false) {
-						console.log("[setETV] Hide keyword matched for", data, matchedHideKeyword);
 						// Remove (permanently "hide") the tile
 						this._log.add(`NOTIF: Item ${asin} matched hide keyword ${matchedHideKeyword}. Hiding it.`);
 
