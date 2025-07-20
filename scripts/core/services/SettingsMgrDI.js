@@ -18,9 +18,6 @@ export class SettingsMgrDI {
 	#settings;
 	#isLoaded = false;
 	#loadPromise;
-	#debugKeywords = false;
-	#debugSettings = false;
-	#debugStorage = false;
 
 	constructor(storageAdapter, logger = new Logger()) {
 		this.#storageAdapter = storageAdapter;
@@ -36,20 +33,12 @@ export class SettingsMgrDI {
 		try {
 			await this.#loadSettingsFromStorage();
 			this.#isLoaded = true;
-			this.#updateDebugFlags();
 			this.#logger.add("SettingsMgr: Settings loaded.");
 			return true;
 		} catch (error) {
 			this.#logger.add(`SettingsMgr: Failed to load settings: ${error.message}`);
 			throw error;
 		}
-	}
-
-	#updateDebugFlags() {
-		// Update debug flags from settings
-		this.#debugKeywords = this.get("general.debugKeywords") || false;
-		this.#debugSettings = this.get("general.debugSettings") || false;
-		this.#debugStorage = this.get("general.debugStorage") || false;
 	}
 
 	// Return true if the user has a valid premium membership on Patreon
@@ -107,11 +96,6 @@ export class SettingsMgrDI {
 		current[lastKey] = value;
 
 		await this.#save();
-
-		// Update debug flags if any debug setting changed
-		if (settingPath.startsWith("general.debug")) {
-			this.#updateDebugFlags();
-		}
 
 		// Reload settings if requested (but after saving!)
 		if (reloadSettings) {
