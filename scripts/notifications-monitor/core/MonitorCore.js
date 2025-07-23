@@ -366,8 +366,14 @@ class MonitorCore {
 					asin: notif.id?.replace("vh-notification-", ""),
 				});
 			}
-		} else if (debugItemProcessing) {
-			console.log("[DEBUG-ETV-STYLING] No styling applied", { asin: notif.id?.replace("vh-notification-", "") });
+		} else {
+			// Clear any existing background when no styling should be applied
+			StyleUtils.clearBackgrounds(notif);
+			if (debugItemProcessing) {
+				console.log("[DEBUG-ETV-STYLING] No styling applied - cleared backgrounds", {
+					asin: notif.id?.replace("vh-notification-", ""),
+				});
+			}
 		}
 	}
 
