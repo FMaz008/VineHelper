@@ -152,8 +152,8 @@ class TileCounter {
 		//Will update the tab title, no need for any options.
 		this.#hookMgr.hookExecute("nm-update-tab-title");
 
-		// Update placeholders
-		if (this.#monitor._noShiftGrid) {
+		// Update placeholders, but skip during bulk operations to prevent rapid update warnings
+		if (this.#monitor._noShiftGrid && !options.isBulkOperation) {
 			this.#monitor._noShiftGrid.insertPlaceholderTiles();
 		}
 

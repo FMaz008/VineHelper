@@ -20,6 +20,9 @@ export class StyleUtils {
 		if (!element || !element.style) return;
 		element.style.background = "";
 		element.style.backgroundColor = "";
+
+		// Force style recalculation to ensure changes take effect
+		void element.offsetHeight;
 	}
 
 	/**
