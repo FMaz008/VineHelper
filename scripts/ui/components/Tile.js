@@ -253,7 +253,7 @@ class Tile {
 				};
 
 				//Find the main See Details button
-				const seeDetails = this.#tileDOM.querySelector(".vvp-details-btn input");
+				const seeDetails = this.#tileDOM.querySelector(".vvp-details-btn input, .vvp-details-btn-mobile input");
 				const queue = queueNames[seeDetails.dataset.recommendationType];
 
 				//Generate a See Details button
