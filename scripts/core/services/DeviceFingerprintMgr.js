@@ -106,6 +106,8 @@ class DeviceFingerprintMgr {
 		};
 		let response = await fetch(this._env.getAPIUrl(), options);
 		if (!response.ok) {
+			//It's likely that the crypto keys are invalid, delete them so they can be regenerated on the next load.
+			await this._cryptoKeys.deleteKeys();
 			throw new Error("Network response was not ok ENV:uploadFingerprint");
 		}
 

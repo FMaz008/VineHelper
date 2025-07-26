@@ -149,6 +149,11 @@ class CryptoKeys {
 		}
 		return btoa(binary);
 	}
+
+	async deleteKeys() {
+		await Settings.set("crypto.publicKey", null);
+		await Settings.set("crypto.privateKey", null);
+	}
 }
 
 export { CryptoKeys };
