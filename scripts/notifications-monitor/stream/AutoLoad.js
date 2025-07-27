@@ -8,7 +8,6 @@ class AutoLoad {
 	_monitor = null;
 	#ws = null;
 
-	#displayTimer = null;
 	#reloadTimer = null;
 	#channelMessageHandler = null;
 
@@ -25,6 +24,12 @@ class AutoLoad {
 	}
 
 	resetReloadTimer(interval) {
+		// Clear any existing timer first
+		if (this.#reloadTimer) {
+			clearTimeout(this.#reloadTimer);
+			this.#reloadTimer = null;
+		}
+
 		this.#reloadTimer = setTimeout(
 			() => {
 				clearTimeout(this.#reloadTimer);
@@ -61,10 +66,6 @@ class AutoLoad {
 
 	async #setReloadTimer() {
 		// Clear any existing timers first
-		if (this.#displayTimer) {
-			clearTimeout(this.#displayTimer);
-			this.#displayTimer = null;
-		}
 		if (this.#reloadTimer) {
 			clearTimeout(this.#reloadTimer);
 			this.#reloadTimer = null;
@@ -102,14 +103,6 @@ class AutoLoad {
 		}
 		//const timer = 30 * 1000; //30 seconds
 		const timer = Math.floor(Math.random() * (max * 60 * 1000 - min * 60 * 1000 + 1) + min * 60 * 1000); //In milliseconds
-
-		this.#displayTimer = setTimeout(() => {
-			const timerInMinutes = Math.floor(timer / 60 / 1000);
-			const secondsLeft = Math.floor((timer - timerInMinutes * 60 * 1000) / 1000);
-			//console.log(
-			//	`${new Date().toLocaleString()} - Setting reload timer to ${timerInMinutes} minutes and ${secondsLeft} seconds`
-			//);
-		}, 500);
 
 		this.#reloadTimer = setTimeout(async () => {
 			this.#setReloadTimer(); //Create a new timer
@@ -282,11 +275,7 @@ class AutoLoad {
 	 * Clean up resources to prevent memory leaks
 	 */
 	destroy() {
-		// Clear timers
-		if (this.#displayTimer) {
-			clearTimeout(this.#displayTimer);
-			this.#displayTimer = null;
-		}
+		// Clear timer
 
 		if (this.#reloadTimer) {
 			clearTimeout(this.#reloadTimer);
