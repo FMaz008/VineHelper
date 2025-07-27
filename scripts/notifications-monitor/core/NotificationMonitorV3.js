@@ -11,7 +11,7 @@ class NotificationMonitorV3 extends NotificationMonitor {
 
 		// Existing services still use direct instantiation (for now)
 		this._tileSizer = new TileSizer("notification.monitor.tileSize");
-		this._tierMgr = new TierMgr(this._env);
+		this._tierMgr = new TierMgr(this._env, this._settings);
 	}
 
 	async initialize() {

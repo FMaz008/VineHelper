@@ -296,6 +296,7 @@ async function initiateSettings() {
 	manageCheckboxSetting("general.debugVisibility", false);
 	manageCheckboxSetting("general.debugItemProcessing", false);
 	manageCheckboxSetting("general.debugTileCounter", false);
+	manageCheckboxSetting("general.debugOverrideTierToGold", false);
 
 	//##TAB - NOTIFICATIONS
 
