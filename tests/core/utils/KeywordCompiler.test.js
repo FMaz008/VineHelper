@@ -58,8 +58,8 @@ describe("KeywordCompiler", () => {
 
 	describe("createKeywordPattern", () => {
 		it("should create word boundary patterns for ASCII keywords", () => {
-			expect(createKeywordPattern("test")).toBe("\\btest\\b");
-			expect(createKeywordPattern("hello world")).toBe("\\bhello world\\b");
+			expect(createKeywordPattern("test")).toBe("\\b(test)\\b");
+			expect(createKeywordPattern("hello world")).toBe("\\b(hello world)\\b");
 		});
 
 		it("should create lookaround patterns for non-ASCII keywords", () => {
@@ -69,14 +69,14 @@ describe("KeywordCompiler", () => {
 
 		it("should NOT escape special characters by default (treatAsRegex=true)", () => {
 			// Default behavior: keywords are treated as regex patterns
-			expect(createKeywordPattern("test.")).toBe("\\btest.\\b");
-			expect(createKeywordPattern("$100")).toBe("\\b$100\\b");
+			expect(createKeywordPattern("test.")).toBe("\\b(test.)\\b");
+			expect(createKeywordPattern("$100")).toBe("\\b($100)\\b");
 		});
 
 		it("should escape special characters when treatAsRegex=false", () => {
 			// When explicitly set to false, special characters are escaped
-			expect(createKeywordPattern("test.", false)).toBe("\\btest\\.\\b");
-			expect(createKeywordPattern("$100", false)).toBe("\\b\\$100\\b");
+			expect(createKeywordPattern("test.", false)).toBe("\\b(test\\.)\\b");
+			expect(createKeywordPattern("$100", false)).toBe("\\b(\\$100)\\b");
 		});
 	});
 
@@ -84,7 +84,7 @@ describe("KeywordCompiler", () => {
 		it("should compile valid keywords into RegExp objects", () => {
 			const regex = compileKeyword("test");
 			expect(regex).toBeInstanceOf(RegExp);
-			expect(regex.source).toBe("\\btest\\b");
+			expect(regex.source).toBe("\\b(test)\\b");
 			expect(regex.flags).toBe("giu");
 		});
 
@@ -122,7 +122,7 @@ describe("KeywordCompiler", () => {
 				keyword: "test",
 				pattern: expect.any(RegExp),
 			});
-			expect(results[0].pattern.source).toBe("\\btest\\b");
+			expect(results[0].pattern.source).toBe("\\b(test)\\b");
 		});
 
 		it("should filter out invalid keywords", () => {
@@ -146,7 +146,7 @@ describe("KeywordCompiler", () => {
 
 			expect(results).toHaveLength(1);
 			expect(results[0].containsPattern).toBeInstanceOf(RegExp);
-			expect(results[0].containsPattern.source).toBe("\\btest\\b");
+			expect(results[0].containsPattern.source).toBe("\\b(test)\\b");
 		});
 
 		it("should compile array contains patterns", () => {
@@ -166,7 +166,7 @@ describe("KeywordCompiler", () => {
 			expect(results).toHaveLength(1);
 			expect(results[0].containsPattern).toBeInstanceOf(RegExp);
 			expect(results[0].withoutPattern).toBeInstanceOf(RegExp);
-			expect(results[0].withoutPattern.source).toBe("\\bexclude\\b");
+			expect(results[0].withoutPattern.source).toBe("\\b(exclude)\\b");
 		});
 
 		it("should compile array without patterns", () => {
@@ -245,8 +245,8 @@ describe("KeywordCompiler", () => {
 		it("should compile array of strings", () => {
 			const results = compile(["test", "hello"]);
 			expect(results).toHaveLength(2);
-			expect(results[0].containsPattern.source).toBe("\\btest\\b");
-			expect(results[1].containsPattern.source).toBe("\\bhello\\b");
+			expect(results[0].containsPattern.source).toBe("\\b(test)\\b");
+			expect(results[1].containsPattern.source).toBe("\\b(hello)\\b");
 		});
 
 		it("should compile complex keyword objects", () => {

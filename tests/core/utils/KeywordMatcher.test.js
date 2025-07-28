@@ -46,6 +46,15 @@ describe("KeywordMatcher", () => {
 			expect(matchesPattern("test", null)).toBe(false);
 			expect(matchesPattern("test", "not a regex")).toBe(false);
 		});
+		it("should match malformed patterns", () => {
+			const pattern = createPattern("\\bSAE\\b|\\bAnderson\\b|battery", "i");
+			expect(
+				matchesPattern(
+					"Nivithi 520Pcs Set Screw Assortment Kit,SAE & Metric Allen Socket Set Screws,(M3-M8) Screw Assortment,Durable 304 Stainless Steel,Grub Screws Hex Head Socket Set for Fixtures,GS2",
+					pattern
+				)
+			).toBe(true);
+		});
 	});
 
 	describe("matchesAnyPattern", () => {
@@ -196,6 +205,16 @@ describe("KeywordMatcher", () => {
 			expect(matchKeywordObject(null, keyword)).toBe(false);
 			expect(matchKeywordObject("test", null)).toBe(false);
 			expect(matchKeywordObject("test", {})).toBe(false); // No patterns
+		});
+
+		it("should match malformed patterns", () => {
+			const keyword = { containsPattern: createPattern("\\bSAE\\b|\\bAnderson\\b|battery", "i") };
+			expect(
+				matchKeywordObject(
+					"Nivithi 520Pcs Set Screw Assortment Kit,SAE & Metric Allen Socket Set Screws,(M3-M8) Screw Assortment,Durable 304 Stainless Steel,Grub Screws Hex Head Socket Set for Fixtures,GS2",
+					keyword
+				)
+			).toBe(true);
 		});
 	});
 
