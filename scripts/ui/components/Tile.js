@@ -34,8 +34,6 @@ var modalMgr = new ModalMgr();
 import { Template } from "/scripts/core/utils/Template.js";
 var Tpl = new Template();
 
-import { compile as compileKeywords, compileKeywordObjects } from "../../core/utils/KeywordCompiler.js";
-import { findMatch, getMatchedKeyword } from "../../core/utils/KeywordMatcher.js";
 import { YMDHiStoISODate } from "/scripts/core/utils/DateHelper.js";
 import { getTileByAsin, updateTileCounts } from "/scripts/ui/components/Grid.js";
 import { unescapeHTML, escapeHTML } from "/scripts/core/utils/StringHelper.js";
