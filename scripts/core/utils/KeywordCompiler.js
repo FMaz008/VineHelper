@@ -40,23 +40,9 @@ function createKeywordPattern(keyword, treatAsRegex = true) {
 	// Original behavior: keywords ARE regex patterns, no escaping by default
 	const processedKeyword = treatAsRegex ? keyword : escapeRegex(keyword);
 
-	// Check if this is a pipe-separated pattern (regex alternation)
-	if (treatAsRegex && processedKeyword.includes("|")) {
-		// Split by pipe and add word boundaries to each alternative
-		const alternatives = processedKeyword.split("|").map((alt) => {
-			const trimmed = alt.trim();
-			if (isAsciiOnly(trimmed)) {
-				return `\\b${trimmed}\\b`;
-			} else {
-				return `(?<![\\w\\p{L}])${trimmed}(?![\\w\\p{L}])`;
-			}
-		});
-		return alternatives.join("|");
-	}
-
 	if (isAsciiOnly(keyword)) {
 		// For ASCII keywords, use word boundaries
-		return `\\b${processedKeyword}\\b`;
+		return `\\b(${processedKeyword})\\b`;
 	} else {
 		// For non-ASCII keywords (e.g., Japanese), use lookahead/lookbehind
 		// to ensure we're not matching within a larger word
