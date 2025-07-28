@@ -509,6 +509,7 @@ class NotificationMonitor extends MonitorCore {
 	 * @param {object} notif - The DOM element of the tile
 	 * @param {boolean} updateTier - If true, update the tier of the item
 	 */
+	// eslint-disable-next-line no-unused-private-class-members
 	#disableGoldItemsForSilverUsers(notif, updateTier = false) {
 		if (!notif || this._monitorV2) {
 			return;
@@ -1187,8 +1188,9 @@ class NotificationMonitor extends MonitorCore {
 			this._tpl.setVar("reason", reason);
 
 			// Debug logging for keyword setting
-			if (this._settings.get("general.debugKeywords")) {
+			if (this._settings.get("general.debugKeywords") || KW === undefined) {
 				console.log(`[NotificationMonitor] Setting highlightKW for ASIN ${asin}: "${KW}"`);
+				console.trace();
 			}
 
 			this._tpl.setVar("highlightKW", KW);
@@ -1473,7 +1475,7 @@ class NotificationMonitor extends MonitorCore {
 			}
 
 			//Check gold tier status for this item
-			this.#disableGoldItemsForSilverUsers(tileDOM);
+			//this.#disableGoldItemsForSilverUsers(tileDOM);
 
 			if (this._mostRecentItemDate == null || date > this._mostRecentItemDate) {
 				if (this._mostRecentItemDateDOM) {
@@ -1838,7 +1840,7 @@ class NotificationMonitor extends MonitorCore {
 		//Set the highlight color as needed
 		this._processNotificationHighlight(notif);
 
-		this.#disableGoldItemsForSilverUsers(notif);
+		//this.#disableGoldItemsForSilverUsers(notif);
 
 		return true;
 	}
