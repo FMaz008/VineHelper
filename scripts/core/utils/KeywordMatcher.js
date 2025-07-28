@@ -64,21 +64,28 @@ function matchesAllPatterns(text, patterns) {
  * @returns {boolean} True if ETV conditions are satisfied or not specified
  */
 function satisfiesEtvConditions(keywordObj, itemEtvMin, itemEtvMax) {
+	// Helper function to check if a value is effectively empty/unset
+	const isEffectivelyEmpty = (value) => {
+		return value === undefined || value === null || value === "";
+	};
+
 	// If no ETV conditions specified, always match
-	if (!keywordObj.etv_min && !keywordObj.etv_max) {
+	if (isEffectivelyEmpty(keywordObj.etv_min) && isEffectivelyEmpty(keywordObj.etv_max)) {
 		return true;
 	}
 
 	// Check minimum ETV condition
-	if (keywordObj.etv_min !== undefined && keywordObj.etv_min !== null) {
-		if (itemEtvMax === null || itemEtvMax === undefined || itemEtvMax < keywordObj.etv_min) {
+	if (!isEffectivelyEmpty(keywordObj.etv_min)) {
+		const minValue = Number(keywordObj.etv_min);
+		if (itemEtvMax === null || itemEtvMax === undefined || itemEtvMax === "" || itemEtvMax < minValue) {
 			return false;
 		}
 	}
 
 	// Check maximum ETV condition
-	if (keywordObj.etv_max !== undefined && keywordObj.etv_max !== null) {
-		if (itemEtvMin === null || itemEtvMin === undefined || itemEtvMin > keywordObj.etv_max) {
+	if (!isEffectivelyEmpty(keywordObj.etv_max)) {
+		const maxValue = Number(keywordObj.etv_max);
+		if (itemEtvMin === null || itemEtvMin === undefined || itemEtvMin === "" || itemEtvMin > maxValue) {
 			return false;
 		}
 	}
@@ -125,18 +132,6 @@ function matchKeywordObject(text, compiledKeyword, itemEtvMin = null, itemEtvMax
 	}
 
 	// Check 'without' conditions (exclusions)
-	if (compiledKeyword.withoutPattern) {
-		if (matchesPattern(text, compiledKeyword.withoutPattern)) {
-			return false;
-		}
-	}
-
-	if (compiledKeyword.withoutPatterns) {
-		// For array of without patterns, fail if ANY pattern matches
-		if (matchesAnyPattern(text, compiledKeyword.withoutPatterns)) {
-			return false;
-		}
-	}
 	if (compiledKeyword.withoutPattern) {
 		if (matchesPattern(text, compiledKeyword.withoutPattern)) {
 			return false;
