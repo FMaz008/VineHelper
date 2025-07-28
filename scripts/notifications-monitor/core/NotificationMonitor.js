@@ -1189,6 +1189,22 @@ class NotificationMonitor extends MonitorCore {
 			// Debug logging for keyword setting
 			if (this._settings.get("general.debugKeywords")) {
 				console.log(`[NotificationMonitor] Setting highlightKW for ASIN ${asin}: "${KW}"`);
+			} else if (KWsMatch === true && KW === undefined) {
+				// ERROR logging for KW anomaly
+				console.error("[NotificationMonitor] ERROR: KWsMatch is true but KW is undefined!", {
+					asin,
+					title: title?.substring(0, 50) + "...",
+					KW,
+					KWType: typeof KW,
+					KWsMatch,
+					hasKWProperty: "KW" in item.data,
+					itemDataKW: item.data.KW,
+					destructuredKW: KW,
+					areEqual: item.data.KW === KW,
+					allItemDataKeys: Object.keys(item.data),
+					timestamp: new Date().toISOString(),
+				});
+				console.trace("[NotificationMonitor] Stack trace for KW undefined");
 			}
 
 			this._tpl.setVar("highlightKW", KW);
@@ -1726,6 +1742,23 @@ class NotificationMonitor extends MonitorCore {
 			const technicalBtn = this._gridContainer.querySelector("#vh-reason-link-" + asin + ">div");
 			const currentKeyword = technicalBtn?.dataset.highlightkw;
 
+			// ERROR logging for undefined keyword in UI
+			if (currentKeyword === "undefined" && notif.dataset.typeHighlight === "1") {
+				console.error(
+					"[NotificationMonitor] ERROR: Keyword shows as 'undefined' in UI but item is highlighted!",
+					{
+						asin,
+						currentKeyword,
+						typeHighlight: notif.dataset.typeHighlight,
+						technicalBtnDataset: technicalBtn ? { ...technicalBtn.dataset } : null,
+						itemDataKW: data.KW,
+						itemDataKWsMatch: data.KWsMatch,
+						timestamp: new Date().toISOString(),
+					}
+				);
+				console.trace("[NotificationMonitor] Stack trace for undefined keyword in UI");
+			}
+
 			if (currentKeyword && this.#compiledHighlightKeywords) {
 				// Debug: Log re-evaluation details
 				const etvMin = parseFloat(etvObj.dataset.etvMin) || null;
@@ -1828,7 +1861,9 @@ class NotificationMonitor extends MonitorCore {
 						this.#removeTile(asin);
 					} else {
 						// Tile not fully registered yet (probably called during addTileInGrid)
-						console.warn(`Hide keyword matched for ${asin} but tile not fully registered. Skipping.`);
+						if (this._settings.get("general.debugKeywords")) {
+							console.warn(`Hide keyword matched for ${asin} but tile not fully registered. Skipping.`);
+						}
 					}
 					return true; // Exit early since item is processed
 				}
@@ -3232,13 +3267,6 @@ class NotificationMonitor extends MonitorCore {
 		if (this._ws && typeof this._ws.destroyInstance === "function") {
 			this._ws.destroyInstance();
 			this._ws = null;
-		}
-
-		// Clear count verification interval
-		if (this._countVerificationInterval) {
-			clearInterval(this._countVerificationInterval);
-			this._countVerificationInterval = null;
-			console.log("🧹 Cleared count verification interval"); // eslint-disable-line no-console
 		}
 
 		// Clear references

@@ -197,6 +197,22 @@ class NewItemStreamProcessing {
 			rawData.item.data.KW = false;
 		}
 
+		// ERROR logging for KW anomaly
+		if (rawData.item.data.KWsMatch === true && rawData.item.data.KW === undefined) {
+			console.error("[NewItemStreamProcessing] ERROR: KWsMatch is true but KW is undefined!", {
+				asin: data.asin,
+				title: data.title?.substring(0, 50) + "...",
+				KW: rawData.item.data.KW,
+				KWsMatch: rawData.item.data.KWsMatch,
+				KWType: typeof rawData.item.data.KW,
+				hasKWProperty: "KW" in rawData.item.data,
+				compiledHighlightKeywords: !!this.compiledHighlightKeywords,
+				keywordCount: this.compiledHighlightKeywords?.length || 0,
+				timestamp: new Date().toISOString(),
+			});
+			console.trace("[NewItemStreamProcessing] Stack trace for KW undefined");
+		}
+
 		return rawData;
 	}
 

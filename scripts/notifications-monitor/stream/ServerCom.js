@@ -174,6 +174,31 @@ class ServerCom {
 			if (this._monitor._settings.get("general.debugServercom")) {
 				console.log("[ServerCom] newItem", data);
 			}
+
+			// ERROR logging for KW anomaly after broadcast
+			const kwsMatch = data.item?.data?.KWsMatch || data.item?.KWsMatch;
+			const kw = data.item?.data?.KW !== undefined ? data.item?.data?.KW : data.item?.KW;
+
+			if (kwsMatch === true && kw === undefined) {
+				console.error("[ServerCom] ERROR: KW is undefined but KWsMatch is true - After broadcast receive", {
+					asin: data.item?.data?.asin || data.item?.asin,
+					title: (data.item?.data?.title || data.item?.title || "").substring(0, 50) + "...",
+					itemIsInstance: data.item instanceof Item,
+					dataStructure: {
+						hasItem: !!data.item,
+						hasItemData: !!data.item?.data,
+						KWFromItem: data.item?.KW,
+						KWFromItemData: data.item?.data?.KW,
+						KWsMatchFromItem: data.item?.KWsMatch,
+						KWsMatchFromItemData: data.item?.data?.KWsMatch,
+					},
+					itemKeys: Object.keys(data.item || {}),
+					itemDataKeys: Object.keys(data.item?.data || {}),
+					timestamp: new Date().toISOString(),
+				});
+				console.trace("[ServerCom] Stack trace for KW undefined after broadcast");
+			}
+
 			//The broadcastChannel will pass the item as an object, not an instance of Item.
 			if (!(data.item instanceof Item)) {
 				data.item = this.#createValidatedItem(
@@ -181,6 +206,21 @@ class ServerCom {
 					`newItem from BroadcastChannel (reason: ${data.reason || "unknown"})`
 				);
 				if (!data.item) return;
+
+				// ERROR logging after item recreation
+				if (data.item.data?.KWsMatch === true && data.item.data?.KW === undefined) {
+					console.error("[ServerCom] ERROR: KW is undefined but KWsMatch is true - After item recreation", {
+						asin: data.item.data?.asin,
+						title: data.item.data?.title?.substring(0, 50) + "...",
+						KW: data.item.data?.KW,
+						KWsMatch: data.item.data?.KWsMatch,
+						hasKWProperty: "KW" in data.item.data,
+						allDataKeys: Object.keys(data.item.data),
+						originalItemKeys: Object.keys(data.item || {}),
+						timestamp: new Date().toISOString(),
+					});
+					console.trace("[ServerCom] Stack trace for KW undefined after item recreation");
+				}
 			}
 			await this._monitor.addTileInGrid(data.item, data.reason);
 		}
@@ -301,6 +341,21 @@ class ServerCom {
 
 	#dataBuffering(data) {
 		if (!this.fetch100) {
+			// ERROR logging for KW anomaly detection
+			if (data.type === "newItem" && data.item?.data?.KWsMatch === true && data.item?.data?.KW === undefined) {
+				console.error("[ServerCom] ERROR: KW is undefined but KWsMatch is true - Before broadcast", {
+					asin: data.item.data?.asin,
+					title: data.item.data?.title?.substring(0, 50) + "...",
+					KW: data.item.data?.KW,
+					KWsMatch: data.item.data?.KWsMatch,
+					hasKWProperty: "KW" in (data.item.data || {}),
+					KWType: typeof data.item.data?.KW,
+					itemDataKeys: Object.keys(data.item.data || {}),
+					timestamp: new Date().toISOString(),
+				});
+				console.trace("[ServerCom] Stack trace for KW undefined before broadcast");
+			}
+
 			this._monitor._channel.postMessage(data);
 			this.processBroadcastMessage(data);
 			return;
