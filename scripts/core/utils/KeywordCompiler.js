@@ -31,6 +31,37 @@ function escapeRegex(str) {
 }
 
 /**
+ * Detects if a pattern is a complex regex that shouldn't be modified
+ * @param {string} pattern - The pattern to check
+ * @returns {boolean} True if the pattern is complex and should be preserved
+ */
+function isComplexRegexPattern(pattern) {
+	// Check for regex constructs that indicate a complex pattern
+	const complexPatternIndicators = [
+		/\([^)]*\|[^)]*\)/, // Groups with alternation like (a|b)
+		/\(\?[=!:i<]/, // Lookaheads (?=, (?!, non-capturing groups (?:, inline flags (?i, etc.
+		/\\\w\*/, // Word character class with quantifier like \w*
+		/\\\S\*/, // Non-whitespace with quantifier like \S*
+		/\[[^\]]+\]/, // Character classes like [a-z]
+		/\{[\d,]+\}/, // Specific quantifiers like {2,4}
+		/\.\*/, // Dot with quantifier
+		/\\\d/, // Digit character class
+		/\\\W/, // Non-word character class
+		/\\\D/, // Non-digit character class
+		/\$$/, // End anchor at end of pattern
+		/^\^/, // Start anchor at beginning of pattern
+	];
+
+	// Check if pattern already has word boundaries at start/end
+	const hasExistingBoundaries = /^\\b.*\\b$/.test(pattern);
+
+	// Check if pattern contains any complex regex indicators
+	const hasComplexConstructs = complexPatternIndicators.some((indicator) => indicator.test(pattern));
+
+	return hasExistingBoundaries || hasComplexConstructs;
+}
+
+/**
  * Creates a regex pattern for a single keyword
  * @param {string} keyword - The keyword to create a pattern for
  * @param {boolean} treatAsRegex - Whether to treat the keyword as a regex pattern (default: true)
@@ -40,8 +71,14 @@ function createKeywordPattern(keyword, treatAsRegex = true) {
 	// Original behavior: keywords ARE regex patterns, no escaping by default
 	const processedKeyword = treatAsRegex ? keyword : escapeRegex(keyword);
 
+	// If treating as regex and it's a complex pattern, return as-is
+	if (treatAsRegex && isComplexRegexPattern(processedKeyword)) {
+		return processedKeyword;
+	}
+
 	// Check if this is a pipe-separated pattern (regex alternation)
-	if (treatAsRegex && processedKeyword.includes("|")) {
+	// Only process simple alternations, not complex ones with groups
+	if (treatAsRegex && processedKeyword.includes("|") && !processedKeyword.includes("(")) {
 		// Split by pipe and add word boundaries to each alternative
 		const alternatives = processedKeyword.split("|").map((alt) => {
 			const trimmed = alt.trim();
@@ -199,6 +236,7 @@ function compile(keywordData, flags = "giu") {
 export {
 	isAsciiOnly,
 	escapeRegex,
+	isComplexRegexPattern,
 	createKeywordPattern,
 	compileKeyword,
 	compileKeywords,

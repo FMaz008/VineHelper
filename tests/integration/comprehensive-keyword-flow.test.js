@@ -18,38 +18,38 @@ describe("Comprehensive Keyword Flow Tests", () => {
 	describe("Blur Keywords", () => {
 		test("Should match blur keywords correctly", () => {
 			const blurKeywords = [
-				{ contains: "dildo", without: null },
-				{ contains: "penis", without: null },
-				{ contains: "vagina", without: null },
-				{ contains: "sex[- ]?toy", without: null },
-				{ contains: "\\banal\\b", without: null },
-				{ contains: "vaginal", without: null },
-				{ contains: "cock", without: null },
-				{ contains: "pussy", without: null },
-				{ contains: "masturbate", without: null },
-				{ contains: "masturbator", without: null },
+				{ contains: "spam", without: null },
+				{ contains: "junk", without: null },
+				{ contains: "fake", without: null },
+				{ contains: "knock[- ]?off", without: null },
+				{ contains: "\\bscam\\b", without: null },
+				{ contains: "phishing", without: null },
+				{ contains: "virus", without: null },
+				{ contains: "malware", without: null },
+				{ contains: "counterfeit", without: null },
+				{ contains: "bootleg", without: null },
 			];
 
 			const compiled = compileKeywordObjects(blurKeywords);
 
-			// Test case from user feedback - should match "anal"
+			// Test case with multiple potential matches
 			const title =
-				"DIFFLUE 4PCS Silicone Anal Butt Plug Set, Beginner to Advanced, Trainer Kit with Flared Base for Women, Men Comfortable Long-Term Wear, Premium Training Sets, Sex Toys for Couples";
+				"WARNING: Fake Designer Handbag Knock-off, Counterfeit Luxury Scam Product - Do Not Buy This Bootleg Item";
 
 			const match = findMatch(title, compiled);
 
-			// Should match on "Anal" (word boundary match)
+			// Should match on either "fake" or "knock-off"
 			expect(match).toBeTruthy();
-			expect(match.contains).toBe("\\banal\\b");
+			expect(["fake", "knock[- ]?off"]).toContain(match.contains);
 
 			// Additional test cases
 			const testCases = [
-				{ title: "Some product with dildo in name", expected: "dildo" },
-				{ title: "Sex toy for adults", expected: "sex[- ]?toy" },
-				{ title: "Anal beads product", expected: "\\banal\\b" },
-				{ title: "Analysis tool", expected: null }, // Should NOT match (no word boundary)
-				{ title: "Vaginal health product", expected: "vaginal" },
-				{ title: "Masturbator device", expected: "masturbator" },
+				{ title: "Some product with spam in name", expected: "spam" },
+				{ title: "Knock off designer watch", expected: "knock[- ]?off" },
+				{ title: "Scam alert product", expected: "\\bscam\\b" },
+				{ title: "Scampi pasta dish", expected: null }, // Should NOT match (no word boundary)
+				{ title: "Phishing protection software", expected: "phishing" },
+				{ title: "Bootleg recording device", expected: "bootleg" },
 			];
 
 			testCases.forEach(({ title, expected }) => {
@@ -64,18 +64,18 @@ describe("Comprehensive Keyword Flow Tests", () => {
 		});
 
 		test("Blur keyword with word boundaries", () => {
-			const keywords = [{ contains: "\\banal\\b", without: null }];
+			const keywords = [{ contains: "\\bscam\\b", without: null }];
 			const compiled = compileKeywordObjects(keywords);
 
 			// Should match
-			expect(findMatch("Anal product", compiled)).toBeTruthy();
-			expect(findMatch("anal beads", compiled)).toBeTruthy();
-			expect(findMatch("ANAL TOYS", compiled)).toBeTruthy();
+			expect(findMatch("Scam product", compiled)).toBeTruthy();
+			expect(findMatch("scam alert", compiled)).toBeTruthy();
+			expect(findMatch("SCAM WARNING", compiled)).toBeTruthy();
 
 			// Should NOT match
-			expect(findMatch("Analysis report", compiled)).toBeFalsy();
-			expect(findMatch("Analog device", compiled)).toBeFalsy();
-			expect(findMatch("Canal boat", compiled)).toBeFalsy();
+			expect(findMatch("Scampi shrimp", compiled)).toBeFalsy();
+			expect(findMatch("Scrambled eggs", compiled)).toBeFalsy();
+			expect(findMatch("Scammer", compiled)).toBeFalsy();
 		});
 
 		describe("Blur Keyword Stream Processing", () => {
@@ -99,16 +99,16 @@ describe("Comprehensive Keyword Flow Tests", () => {
 						"general.highlightKeywords": [],
 						// CRITICAL: Blur keywords coming as ARRAY, not string!
 						"general.blurKeywords": [
-							"dildo",
-							"penis",
-							"vagina",
-							"sex[- ]?toy",
-							"\\banal\\b",
-							"vaginal",
-							"cock",
-							"pussy",
-							"masturbate",
-							"masturbator",
+							"spam",
+							"junk",
+							"fake",
+							"knock[- ]?off",
+							"\\bscam\\b",
+							"phishing",
+							"virus",
+							"malware",
+							"counterfeit",
+							"bootleg",
 						],
 					};
 					return settings[key];
@@ -121,12 +121,12 @@ describe("Comprehensive Keyword Flow Tests", () => {
 				expect(streamProcessor.compiledBlurKeywords).toBeTruthy();
 				expect(streamProcessor.compiledBlurKeywords.length).toBe(10);
 
-				// Test with the exact item from user's log that was failing
+				// Test with an item that should match multiple keywords
 				const rawData = {
 					item: {
 						data: {
 							asin: "B0F8BLDPXP",
-							title: '8 Inch Soft Silicone Realistic Anal Dildo with Big Balls, 7" Realistic Small Thick Penis Dildo with Suction Cup for G-Spot Stimulation, Lifelike Shower Prostate Dildos Sex Toy for Men Women Gay',
+							title: "Fake Designer Handbag - Counterfeit Luxury Knock-off Scam Product with Bootleg Materials and Spam Marketing",
 						},
 					},
 				};
@@ -136,7 +136,9 @@ describe("Comprehensive Keyword Flow Tests", () => {
 				// This MUST match!
 				expect(result.item.data.BlurKWsMatch).toBe(true);
 				expect(result.item.data.BlurKW).toBeTruthy();
-				expect(["dildo", "penis", "\\banal\\b", "sex[- ]?toy"]).toContain(result.item.data.BlurKW);
+				expect(["spam", "fake", "counterfeit", "knock[- ]?off", "\\bscam\\b", "bootleg"]).toContain(
+					result.item.data.BlurKW
+				);
 			});
 
 			test("Should handle empty blur keywords", async () => {
@@ -159,7 +161,7 @@ describe("Comprehensive Keyword Flow Tests", () => {
 					item: {
 						data: {
 							asin: "TEST123",
-							title: "Dildo Product",
+							title: "Spam Product",
 						},
 					},
 				};
@@ -175,7 +177,7 @@ describe("Comprehensive Keyword Flow Tests", () => {
 				mockSettings.get.mockImplementation((key) => {
 					const settings = {
 						"general.debugKeywords": true,
-						"general.blurKeywords": ["dildo", "penis", "\\banal\\b"],
+						"general.blurKeywords": ["spam", "junk", "\\bscam\\b"],
 						"general.hideKeywords": [],
 						"general.highlightKeywords": [],
 					};
@@ -190,7 +192,7 @@ describe("Comprehensive Keyword Flow Tests", () => {
 					item: {
 						data: {
 							asin: "B0F8BLDPXP",
-							title: "8 Inch Soft Silicone Realistic Anal Dildo",
+							title: "Fake Designer Handbag Scam Alert Spam",
 						},
 					},
 				};
@@ -199,7 +201,7 @@ describe("Comprehensive Keyword Flow Tests", () => {
 
 				expect(result.item.data.BlurKWsMatch).toBe(true);
 				expect(result.item.data.BlurKW).toBeTruthy();
-				expect(["dildo", "penis", "\\banal\\b"]).toContain(result.item.data.BlurKW);
+				expect(["spam", "junk", "\\bscam\\b"]).toContain(result.item.data.BlurKW);
 			});
 		});
 
