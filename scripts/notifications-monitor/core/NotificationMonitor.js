@@ -7,7 +7,7 @@
 import { Tile } from "/scripts/ui/components/Tile.js";
 
 import { YMDHiStoISODate } from "/scripts/core/utils/DateHelper.js";
-import { compile as compileKeywords, compileKeywordObjects } from "/scripts/core/utils/KeywordCompiler.js";
+import { compileKeywordObjects } from "/scripts/core/utils/KeywordCompiler.js";
 import { findMatch, hasEtvConditions } from "/scripts/core/utils/KeywordMatcher.js";
 import { ETV_REPOSITION_THRESHOLD } from "/scripts/core/utils/KeywordUtils.js";
 import { escapeHTML, unescapeHTML, removeSpecialHTML } from "/scripts/core/utils/StringHelper.js";
@@ -1753,9 +1753,8 @@ class NotificationMonitor extends MonitorCore {
 					if (typeof matchResult.contains === "string") {
 						matchedKeywordString = matchResult.contains;
 					} else if (Array.isArray(matchResult.contains) && matchResult.contains.length > 0) {
+						console.log("Is this code ever happening?");
 						matchedKeywordString = matchResult.contains[0];
-					} else if (matchResult.keyword) {
-						matchedKeywordString = matchResult.keyword;
 					}
 				}
 

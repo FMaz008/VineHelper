@@ -43,20 +43,6 @@ function matchesAnyPattern(text, patterns) {
 }
 
 /**
- * Tests if a text matches all patterns in an array
- * @param {string} text - The text to test
- * @param {Array<{keyword: string, pattern: RegExp}>} patterns - Array of compiled patterns
- * @returns {boolean} True if the text matches all patterns
- */
-function matchesAllPatterns(text, patterns) {
-	if (!text || !Array.isArray(patterns) || patterns.length === 0) {
-		return false;
-	}
-
-	return patterns.every(({ pattern }) => matchesPattern(text, pattern));
-}
-
-/**
  * Checks if ETV conditions are satisfied
  * @param {Object} keywordObj - The keyword object with etv_min/etv_max
  * @param {number|null} itemEtvMin - The item's minimum ETV
@@ -165,66 +151,6 @@ function findMatch(text, compiledKeywords, itemEtvMin = null, itemEtvMax = null)
 }
 
 /**
- * Finds all matching keywords from an array of compiled keywords
- * @param {string} text - The text to match against
- * @param {Array<Object>} compiledKeywords - Array of compiled keyword objects
- * @param {number|null} [itemEtvMin=null] - Item's minimum ETV
- * @param {number|null} [itemEtvMax=null] - Item's maximum ETV
- * @returns {Array<Object>} Array of all matching keyword objects
- */
-function findAllMatches(text, compiledKeywords, itemEtvMin = null, itemEtvMax = null) {
-	if (!text || !Array.isArray(compiledKeywords)) {
-		return [];
-	}
-
-	return compiledKeywords.filter((keyword) => matchKeywordObject(text, keyword, itemEtvMin, itemEtvMax));
-}
-
-/**
- * Checks if text matches any keyword in the array
- * @param {string} text - The text to match against
- * @param {Array<Object>} compiledKeywords - Array of compiled keyword objects
- * @param {number|null} [itemEtvMin=null] - Item's minimum ETV
- * @param {number|null} [itemEtvMax=null] - Item's maximum ETV
- * @returns {boolean} True if any keyword matches
- */
-function hasMatch(text, compiledKeywords, itemEtvMin = null, itemEtvMax = null) {
-	return findMatch(text, compiledKeywords, itemEtvMin, itemEtvMax) !== null;
-}
-
-/**
- * Legacy compatibility function that returns just the keyword string
- * @param {string} text - The text to match against
- * @param {Array<Object>} compiledKeywords - Array of compiled keyword objects
- * @param {number|null} [itemEtvMin=null] - Item's minimum ETV
- * @param {number|null} [itemEtvMax=null] - Item's maximum ETV
- * @returns {string|false} The matched keyword string or false
- */
-function getMatchedKeyword(text, compiledKeywords, itemEtvMin = null, itemEtvMax = null) {
-	const match = findMatch(text, compiledKeywords, itemEtvMin, itemEtvMax);
-
-	if (!match) {
-		return false;
-	}
-
-	// Return the original keyword string for legacy compatibility
-	// Priority: contains string > first contains array item > keyword property
-	if (typeof match.contains === "string") {
-		return match.contains;
-	}
-
-	if (Array.isArray(match.contains) && match.contains.length > 0) {
-		return match.contains[0];
-	}
-
-	if (match.keyword) {
-		return match.keyword;
-	}
-
-	return false;
-}
-
-/**
  * Checks if any keyword in the array has ETV conditions
  * @param {Array<Object>} compiledKeywords - Array of compiled keyword objects
  * @returns {boolean} True if any keyword has ETV conditions
@@ -243,18 +169,7 @@ function hasEtvConditions(compiledKeywords) {
 }
 
 // Export all functions for maximum flexibility
-export {
-	matchesPattern,
-	matchesAnyPattern,
-	matchesAllPatterns,
-	satisfiesEtvConditions,
-	matchKeywordObject,
-	findMatch,
-	findAllMatches,
-	hasMatch,
-	getMatchedKeyword,
-	hasEtvConditions,
-};
+export { findMatch, hasEtvConditions };
 
 // Default export is the main matching function
 export default findMatch;

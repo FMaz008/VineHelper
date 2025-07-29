@@ -19,7 +19,7 @@ var deviceMgr = new DeviceMgr(Settings);
 import { CryptoKeys } from "/scripts/core/utils/CryptoKeys.js";
 var cryptoKeys = new CryptoKeys();
 
-import { compile as compileKeywords, compileKeywordObjects } from "/scripts/core/utils/KeywordCompiler.js";
+import { compileKeywordObjects } from "/scripts/core/utils/KeywordCompiler.js";
 
 async function drawDiscord() {
 	//Show or hide the discord options

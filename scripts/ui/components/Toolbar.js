@@ -23,7 +23,7 @@ import { getTileByAsin, addPinnedTile, removePinnedTile, updateTileCounts } from
 import { Template } from "/scripts/core/utils/Template.js";
 var Tpl = new Template();
 
-import { compile as compileKeywords, compileKeywordObjects } from "/scripts/core/utils/KeywordCompiler.js";
+import { compileKeywordObjects } from "/scripts/core/utils/KeywordCompiler.js";
 import { findMatch } from "/scripts/core/utils/KeywordMatcher.js";
 import { escapeHTML } from "/scripts/core/utils/StringHelper.js";
 import { BrendaAnnounceQueue } from "/scripts/core/services/BrendaAnnounce.js";

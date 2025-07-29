@@ -1,8 +1,8 @@
 /*global chrome*/
 
 import { Streamy } from "../../core/utils/Streamy.js";
-import { compile as compileKeywords, compileKeywordObjects } from "../../core/utils/KeywordCompiler.js";
-import { findMatch, getMatchedKeyword } from "../../core/utils/KeywordMatcher.js";
+import { compileKeywordObjects } from "../../core/utils/KeywordCompiler.js";
+import { findMatch } from "../../core/utils/KeywordMatcher.js";
 import { SettingsMgr } from "../../core/services/SettingsMgrCompat.js";
 import { Item } from "../../core/models/Item.js";
 import { YMDHiStoISODate, DateToUnixTimeStamp } from "../../core/utils/DateHelper.js";
@@ -111,13 +111,13 @@ class NewItemStreamProcessing {
 		// KEYWORD PRIORITY: Only check hide keywords if the item is NOT highlighted
 		// This ensures highlight keywords take precedence over hide keywords
 		if (this.hideListEnabled && !data.KWsMatch && this.compiledHideKeywords) {
-			const hideKeyword = getMatchedKeyword(data.title, this.compiledHideKeywords, data.etv_min, data.etv_max);
-			if (hideKeyword !== false) {
+			const hideKeyword = findMatch(data.title, this.compiledHideKeywords, data.etv_min, data.etv_max);
+			if (hideKeyword !== null) {
 				if (this.settingsManager.get("general.debugKeywords")) {
 					console.log("[NewItemStreamProcessing] Item hidden by keyword:", {
 						asin: data.asin,
 						title: data.title,
-						keyword: hideKeyword,
+						keyword: hideKeyword?.contains ?? "",
 						timestamp: Date.now(),
 					});
 				}
@@ -175,14 +175,9 @@ class NewItemStreamProcessing {
 
 		// Check highlight keywords using the compiled keywords
 		if (this.compiledHighlightKeywords) {
-			const matchedKeyword = getMatchedKeyword(
-				data.title,
-				this.compiledHighlightKeywords,
-				data.etv_min,
-				data.etv_max
-			);
-			rawData.item.data.KWsMatch = matchedKeyword !== false;
-			rawData.item.data.KW = matchedKeyword;
+			const matchedKeyword = findMatch(data.title, this.compiledHighlightKeywords, data.etv_min, data.etv_max);
+			rawData.item.data.KWsMatch = matchedKeyword !== null;
+			rawData.item.data.KW = matchedKeyword?.contains ?? "";
 
 			if (matchedKeyword && this.settingsManager.get("general.debugKeywords")) {
 				console.log("[NewItemStreamProcessing] Item highlighted by keyword:", {
@@ -223,9 +218,9 @@ class NewItemStreamProcessing {
 
 		// Check blur keywords using the compiled keywords
 		if (this.compiledBlurKeywords) {
-			const blurKeyword = getMatchedKeyword(data.title, this.compiledBlurKeywords);
-			rawData.item.data.BlurKWsMatch = blurKeyword !== false;
-			rawData.item.data.BlurKW = blurKeyword;
+			const blurKeyword = findMatch(data.title, this.compiledBlurKeywords);
+			rawData.item.data.BlurKWsMatch = blurKeyword !== null;
+			rawData.item.data.BlurKW = blurKeyword?.contains ?? "";
 
 			// Debug logging for blur keyword matching
 			if (this.settingsManager.get("general.debugKeywords")) {

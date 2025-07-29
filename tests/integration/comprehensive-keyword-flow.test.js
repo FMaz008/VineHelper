@@ -4,8 +4,8 @@
  */
 
 import { jest } from "@jest/globals";
-import { compile as compileKeywords, compileKeywordObjects } from "../../scripts/core/utils/KeywordCompiler.js";
-import { findMatch, getMatchedKeyword } from "../../scripts/core/utils/KeywordMatcher.js";
+import { compileKeywordObjects } from "../../scripts/core/utils/KeywordCompiler.js";
+import { findMatch } from "../../scripts/core/utils/KeywordMatcher.js";
 import { NewItemStreamProcessing } from "../../scripts/notifications-monitor/stream/NewItemStreamProcessing.js";
 import { SettingsMgr } from "../../scripts/core/services/SettingsMgrDI.js";
 
@@ -18,38 +18,38 @@ describe("Comprehensive Keyword Flow Tests", () => {
 	describe("Blur Keywords", () => {
 		test("Should match blur keywords correctly", () => {
 			const blurKeywords = [
-				{ contains: "dildo", without: null },
-				{ contains: "penis", without: null },
-				{ contains: "vagina", without: null },
-				{ contains: "sex[- ]?toy", without: null },
-				{ contains: "\\banal\\b", without: null },
-				{ contains: "vaginal", without: null },
-				{ contains: "cock", without: null },
-				{ contains: "pussy", without: null },
-				{ contains: "masturbate", without: null },
-				{ contains: "masturbator", without: null },
+				{ contains: "inappropriate_item1", without: null },
+				{ contains: "inappropriate_item2", without: null },
+				{ contains: "inappropriate_item3", without: null },
+				{ contains: "inappropriate_item4", without: null },
+				{ contains: "\\binappropriate_item5\\b", without: null },
+				{ contains: "inappropriate_item6", without: null },
+				{ contains: "inappropriate_item7", without: null },
+				{ contains: "inappropriate_item8", without: null },
+				{ contains: "inappropriate_item9", without: null },
+				{ contains: "inappropriate_item10", without: null },
 			];
 
 			const compiled = compileKeywordObjects(blurKeywords);
 
-			// Test case from user feedback - should match "anal"
+			// Test case from user feedback - should match "inappropriate_item5"
 			const title =
-				"DIFFLUE 4PCS Silicone Anal Butt Plug Set, Beginner to Advanced, Trainer Kit with Flared Base for Women, Men Comfortable Long-Term Wear, Premium Training Sets, Sex Toys for Couples";
+				"DIFFLUE 4PCS Silicone inappropriate_item5 Product Set, Beginner to Advanced, Trainer Kit with Base for Adults, Comfortable Long-Term Wear, Premium Training Sets, Adult Items for Couples";
 
 			const match = findMatch(title, compiled);
 
-			// Should match on "Anal" (word boundary match)
+			// Should match on "inappropriate_item5" (word boundary match)
 			expect(match).toBeTruthy();
-			expect(match.contains).toBe("\\banal\\b");
+			expect(match.contains).toBe("\\binappropriate_item5\\b");
 
 			// Additional test cases
 			const testCases = [
-				{ title: "Some product with dildo in name", expected: "dildo" },
-				{ title: "Sex toy for adults", expected: "sex[- ]?toy" },
-				{ title: "Anal beads product", expected: "\\banal\\b" },
+				{ title: "Some product with inappropriate_item1 in name", expected: "inappropriate_item1" },
+				{ title: "inappropriate_item4 for adults", expected: "inappropriate_item4" },
+				{ title: "inappropriate_item5 product", expected: "\\binappropriate_item5\\b" },
 				{ title: "Analysis tool", expected: null }, // Should NOT match (no word boundary)
-				{ title: "Vaginal health product", expected: "vaginal" },
-				{ title: "Masturbator device", expected: "masturbator" },
+				{ title: "inappropriate_item6 health product", expected: "inappropriate_item6" },
+				{ title: "inappropriate_item10 device", expected: "inappropriate_item10" },
 			];
 
 			testCases.forEach(({ title, expected }) => {
@@ -64,13 +64,13 @@ describe("Comprehensive Keyword Flow Tests", () => {
 		});
 
 		test("Blur keyword with word boundaries", () => {
-			const keywords = [{ contains: "\\banal\\b", without: null }];
+			const keywords = [{ contains: "\\binappropriate_item5\\b", without: null }];
 			const compiled = compileKeywordObjects(keywords);
 
 			// Should match
-			expect(findMatch("Anal product", compiled)).toBeTruthy();
-			expect(findMatch("anal beads", compiled)).toBeTruthy();
-			expect(findMatch("ANAL TOYS", compiled)).toBeTruthy();
+			expect(findMatch("inappropriate_item5 product", compiled)).toBeTruthy();
+			expect(findMatch("inappropriate_item5 items", compiled)).toBeTruthy();
+			expect(findMatch("INAPPROPRIATE_ITEM5 ITEMS", compiled)).toBeTruthy();
 
 			// Should NOT match
 			expect(findMatch("Analysis report", compiled)).toBeFalsy();
@@ -99,16 +99,16 @@ describe("Comprehensive Keyword Flow Tests", () => {
 						"general.highlightKeywords": [],
 						// CRITICAL: Blur keywords coming as ARRAY, not string!
 						"general.blurKeywords": [
-							"dildo",
-							"penis",
-							"vagina",
-							"sex[- ]?toy",
-							"\\banal\\b",
-							"vaginal",
-							"cock",
-							"pussy",
-							"masturbate",
-							"masturbator",
+							"inappropriate_item1",
+							"inappropriate_item2",
+							"inappropriate_item3",
+							"inappropriate_item4",
+							"\\binappropriate_item5\\b",
+							"inappropriate_item6",
+							"inappropriate_item7",
+							"inappropriate_item8",
+							"inappropriate_item9",
+							"inappropriate_item10",
 						],
 					};
 					return settings[key];
@@ -126,7 +126,7 @@ describe("Comprehensive Keyword Flow Tests", () => {
 					item: {
 						data: {
 							asin: "B0F8BLDPXP",
-							title: '8 Inch Soft Silicone Realistic Anal Dildo with Big Balls, 7" Realistic Small Thick Penis Dildo with Suction Cup for G-Spot Stimulation, Lifelike Shower Prostate Dildos Sex Toy for Men Women Gay',
+							title: '8 Inch Soft Silicone Realistic inappropriate_item5 inappropriate_item1, 7" Realistic Small inappropriate_item2 inappropriate_item1 with Suction Cup for Stimulation, Lifelike Shower Items for Adults',
 						},
 					},
 				};
@@ -135,8 +135,7 @@ describe("Comprehensive Keyword Flow Tests", () => {
 
 				// This MUST match!
 				expect(result.item.data.BlurKWsMatch).toBe(true);
-				expect(result.item.data.BlurKW).toBeTruthy();
-				expect(["dildo", "penis", "\\banal\\b", "sex[- ]?toy"]).toContain(result.item.data.BlurKW);
+				expect(result.item.data.BlurKW).toBe("inappropriate_item1");
 			});
 
 			test("Should handle empty blur keywords", async () => {
@@ -159,7 +158,7 @@ describe("Comprehensive Keyword Flow Tests", () => {
 					item: {
 						data: {
 							asin: "TEST123",
-							title: "Dildo Product",
+							title: "inappropriate_item1 Product",
 						},
 					},
 				};
@@ -175,7 +174,11 @@ describe("Comprehensive Keyword Flow Tests", () => {
 				mockSettings.get.mockImplementation((key) => {
 					const settings = {
 						"general.debugKeywords": true,
-						"general.blurKeywords": ["dildo", "penis", "\\banal\\b"],
+						"general.blurKeywords": [
+							"inappropriate_item1",
+							"inappropriate_item2",
+							"\\binappropriate_item5\\b",
+						],
 						"general.hideKeywords": [],
 						"general.highlightKeywords": [],
 					};
@@ -190,7 +193,7 @@ describe("Comprehensive Keyword Flow Tests", () => {
 					item: {
 						data: {
 							asin: "B0F8BLDPXP",
-							title: "8 Inch Soft Silicone Realistic Anal Dildo",
+							title: "8 Inch Soft Silicone Realistic inappropriate_item5 inappropriate_item1",
 						},
 					},
 				};
@@ -199,7 +202,9 @@ describe("Comprehensive Keyword Flow Tests", () => {
 
 				expect(result.item.data.BlurKWsMatch).toBe(true);
 				expect(result.item.data.BlurKW).toBeTruthy();
-				expect(["dildo", "penis", "\\banal\\b"]).toContain(result.item.data.BlurKW);
+				expect(["inappropriate_item1", "inappropriate_item2", "\\binappropriate_item5\\b"]).toContain(
+					result.item.data.BlurKW
+				);
 			});
 		});
 
@@ -515,14 +520,14 @@ describe("Comprehensive Keyword Flow Tests", () => {
 		});
 
 		test("Bug 3: Blur keywords not matching", () => {
-			const blurKeywords = [{ contains: "\\banal\\b", without: null }];
+			const blurKeywords = [{ contains: "\\binappropriate_item5\\b", without: null }];
 
 			const compiled = compileKeywordObjects(blurKeywords);
-			const title = "DIFFLUE 4PCS Silicone Anal Butt Plug Set";
+			const title = "DIFFLUE 4PCS Silicone inappropriate_item5 Product Set";
 
 			const match = findMatch(title, compiled);
 			expect(match).toBeTruthy();
-			expect(match.contains).toBe("\\banal\\b");
+			expect(match.contains).toBe("\\binappropriate_item5\\b");
 		});
 
 		test("Bug 4: Zero ETV highlighting after unknown ETV clears", () => {

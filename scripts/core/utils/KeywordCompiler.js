@@ -135,63 +135,8 @@ function compileKeywordObjects(keywordObjects, flags = "giu") {
 		});
 }
 
-/**
- * Validates and normalizes keyword data into a consistent format
- * @param {*} keywordData - Raw keyword data (can be string, array, or mixed)
- * @returns {Array<Object>} Normalized array of keyword objects
- */
-function normalizeKeywordData(keywordData) {
-	if (!keywordData) {
-		return [];
-	}
-
-	// Handle single string
-	if (typeof keywordData === "string") {
-		return [{ contains: keywordData }];
-	}
-
-	// Handle array
-	if (Array.isArray(keywordData)) {
-		return keywordData
-			.map((item) => {
-				if (typeof item === "string") {
-					return { contains: item };
-				}
-				return item;
-			})
-			.filter((item) => item && typeof item === "object");
-	}
-
-	// Handle single object
-	if (typeof keywordData === "object") {
-		return [keywordData];
-	}
-
-	return [];
-}
-
-/**
- * Main entry point for compiling keyword data
- * @param {*} keywordData - Raw keyword data in any supported format
- * @param {string} [flags='giu'] - Regex flags for all patterns
- * @returns {Array<Object>} Array of compiled keyword objects ready for matching
- */
-function compile(keywordData, flags = "giu") {
-	const normalized = normalizeKeywordData(keywordData);
-	return compileKeywordObjects(normalized, flags);
-}
-
 // Export all functions for maximum flexibility
-export {
-	isAsciiOnly,
-	escapeRegex,
-	createKeywordPattern,
-	compileKeyword,
-	compileKeywords,
-	compileKeywordObjects,
-	normalizeKeywordData,
-	compile,
-};
+export { compileKeywordObjects };
 
 // Default export is the main compile function
-export default compile;
+export default compileKeywordObjects;
