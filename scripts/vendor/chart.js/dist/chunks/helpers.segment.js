@@ -4,7 +4,7 @@
  * (c) 2024 Chart.js Contributors
  * Released under the MIT License
  */
-import { Color } from "../../../../../node_modules/@kurkle/color/dist/color.esm.js";
+import { Color } from "../../../@kurkle/color/dist/color.esm.js";
 
 /**
  * @namespace Chart.helpers
