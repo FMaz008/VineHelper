@@ -171,7 +171,13 @@ class Template {
 	}
 
 	async flushLocalStorage() {
+		//Send instructions to the service worker to save the list to local storage
+		chrome.runtime.sendMessage({ type: "saveToLocalStorage", key: "arrTemplate", value: [] });
+
+		//Save the list to local storage
+		/*
 		await chrome.storage.local.set({ arrTemplate: [] });
+		*/
 		this.#tplMgr.arrTemplate = [];
 		this.clearVariables(); // Clear variables when flushing storage
 		logger.add("TEMPLATE: Flushed template cache.");
@@ -224,7 +230,10 @@ class TemplateMgr {
 		this.arrTemplate.push({ url, prom });
 
 		//Save new file to local storage
+		chrome.runtime.sendMessage({ type: "saveToLocalStorage", key: "arrTemplate", value: this.arrTemplate });
+		/*
 		await chrome.storage.local.set({ arrTemplate: this.arrTemplate });
+		*/
 
 		return prom;
 	}

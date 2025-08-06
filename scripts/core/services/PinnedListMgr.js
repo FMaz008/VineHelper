@@ -195,6 +195,11 @@ class PinnedListMgr {
 
 	async saveList(remoteSave = true) {
 		let storableVal = Object.fromEntries(this.mapPin);
+		//Send instructions to the service worker to save the list to local storage
+		chrome.runtime.sendMessage({ type: "saveToLocalStorage", key: "pinnedItems", value: storableVal });
+
+		//Save the list to local storage
+		/*
 		await chrome.storage.local.set({ pinnedItems: storableVal }, () => {
 			if (chrome.runtime.lastError) {
 				const error = chrome.runtime.lastError;
@@ -209,7 +214,7 @@ class PinnedListMgr {
 				}
 			}
 		});
-
+		*/
 		if (remoteSave && Settings.isPremiumUser(1) && Settings.get("pinnedTab.remote")) {
 			await this.notifyServerOfChangedItem();
 			this.arrChanges = [];

@@ -152,6 +152,13 @@ chrome.permissions.contains({ permissions: ["contextMenus"] }, (result) => {
 //#####################################################
 
 function processBroadcastMessage(data) {
+	if (data.type == "saveToLocalStorage") {
+		chrome.storage.local.set({
+			[data.key]: data.value,
+		});
+		return;
+	}
+
 	if (data.type == "pushNotification") {
 		try {
 			// ServerCom sends { type: "pushNotification", item: {...}, title: ... }

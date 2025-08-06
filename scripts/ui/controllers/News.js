@@ -132,7 +132,13 @@ export class News {
 		//Check if the news is already in the local news data
 		if (!this.#localNewsData.includes(newsId)) {
 			this.#localNewsData.push(newsId);
+			//Send instructions to the service worker to save the list to local storage
+			chrome.runtime.sendMessage({ type: "saveToLocalStorage", key: "readnews", value: this.#localNewsData });
+
+			//Save the list to local storage
+			/*
 			await chrome.storage.local.set({ readnews: this.#localNewsData });
+			*/
 		}
 	}
 
