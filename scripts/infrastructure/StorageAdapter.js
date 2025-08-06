@@ -105,6 +105,9 @@ export class ChromeStorageAdapter extends StorageAdapter {
 
 	async set(key, value) {
 		return new Promise((resolve, reject) => {
+			chrome.runtime.sendMessage({ type: "saveToLocalStorage", key, value });
+			resolve();
+			/*
 			this.#storage.set({ [key]: value }, () => {
 				if (chrome.runtime.lastError) {
 					const error = chrome.runtime.lastError;
@@ -124,6 +127,7 @@ export class ChromeStorageAdapter extends StorageAdapter {
 					resolve();
 				}
 			});
+            */
 		});
 	}
 
