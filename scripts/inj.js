@@ -70,7 +70,7 @@ window.fetch = async (...args) => {
 			} else {
 				data = {
 					status: "failed",
-					error: "No orderId received back",
+					error: "No orderId received back. Refreshing the notifications monitor may help.",
 					parent_asin: lastParentAsin,
 					asin: asin,
 				};
