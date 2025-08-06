@@ -136,7 +136,7 @@ function compileKeywordObjects(keywordObjects, flags = "giu") {
 }
 
 // Export all functions for maximum flexibility
-export { compileKeywordObjects };
+export { compileKeyword, compileKeywordObjects }; //compileKeyword is for unit test only.
 
 // Default export is the main compile function
 export default compileKeywordObjects;

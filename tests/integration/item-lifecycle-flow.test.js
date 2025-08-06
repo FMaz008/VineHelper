@@ -4,7 +4,7 @@
  */
 
 import { jest } from "@jest/globals";
-import { compile as compileKeywords } from "../../scripts/core/utils/KeywordCompiler.js";
+import { compileKeywordObjects } from "../../scripts/core/utils/KeywordCompiler.js";
 import { findMatch } from "../../scripts/core/utils/KeywordMatcher.js";
 
 describe("Item Lifecycle Flow Integration", () => {
@@ -24,10 +24,10 @@ describe("Item Lifecycle Flow Integration", () => {
 		};
 
 		// Compile keywords
-		compiledHighlightKeywords = compileKeywords(mockSettings["general.highlightKeywords"]);
+		compiledHighlightKeywords = compileKeywordObjects(mockSettings["general.highlightKeywords"]);
 		compiledHideKeywords =
 			mockSettings["general.hideKeywords"].length > 0
-				? compileKeywords(mockSettings["general.hideKeywords"])
+				? compileKeywordObjects(mockSettings["general.hideKeywords"])
 				: null;
 	});
 
@@ -108,7 +108,7 @@ describe("Item Lifecycle Flow Integration", () => {
 			},
 		];
 
-		const compiledEtvKeywords = compileKeywords(keywordsWithEtv);
+		const compiledEtvKeywords = compileKeywordObjects(keywordsWithEtv);
 
 		const item = {
 			title: "Expensive Electronic Device",
@@ -135,8 +135,8 @@ describe("Item Lifecycle Flow Integration", () => {
 		const highlightKeywords = [{ contains: "special", without: null }];
 		const hideKeywords = [{ contains: "widget", without: null }];
 
-		const compiledHighlight = compileKeywords(highlightKeywords);
-		const compiledHide = compileKeywords(hideKeywords);
+		const compiledHighlight = compileKeywordObjects(highlightKeywords);
+		const compiledHide = compileKeywordObjects(hideKeywords);
 
 		const item = {
 			title: "Special Widget Device", // Matches both "special" (highlight) and "widget" (hide)
@@ -201,7 +201,7 @@ describe("Item Lifecycle Flow Integration", () => {
 			{ contains: "gaming", without: "refurbished", etv_min: 50 },
 		];
 
-		const compiled = compileKeywords(keywords);
+		const compiled = compileKeywordObjects(keywords);
 		const item = {
 			title: "Gaming Laptop High Performance",
 			initialMatch: null,
@@ -277,7 +277,7 @@ describe("Real-world Scenario Tests", () => {
 	test("Actual log sequence from bug report", () => {
 		// This test recreates the exact sequence from the user's logs
 		const keyword = "soldering|\\bsolder\\b|\\bflux\\b";
-		const compiled = compileKeywords([{ contains: keyword, without: null }]);
+		const compiled = compileKeywordObjects([{ contains: keyword, without: null }]);
 
 		// Timeline of events
 		const events = [];
