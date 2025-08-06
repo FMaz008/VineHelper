@@ -76,7 +76,10 @@ async function getCurrentCheckout(currentASIN) {
  */
 async function getCurrentInfo() {
 	const arrCurrentCheckouts = await Settings.get("checkout.arrCurrentCheckouts");
-	return arrCurrentCheckouts.find((checkout) => getProductId() === checkout.productId);
+	if (arrCurrentCheckouts.length > 0) {
+		return arrCurrentCheckouts.find((checkout) => getProductId() === checkout.productId);
+	}
+	return null;
 }
 
 function getProductId() {
