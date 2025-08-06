@@ -233,7 +233,7 @@ async function init() {
 		const notification = new ScreenNotification();
 		notification.title = "UUID request failed";
 		notification.content =
-			"Vine Helper failed to create an account for this device. Please ensure you are not using a VPN or proxy. If the issue persist, please contact the developer.";
+			"Vine Helper failed to create an account for this device. Please ensure you are not using a VPN or proxy (including iCloud Private Relay). If the issue persist, please contact the developer.";
 		Notifications.pushNotification(notification);
 	}
 
