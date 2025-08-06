@@ -38,6 +38,14 @@ if (navigator.userAgent.includes("Safari")) {
 	document.head.innerHTML += `<link rel="stylesheet" type="text/css" href="../resource/css/icon_ios.css" />`;
 }
 
+function loadStyleSheetContent(content, path = "injected") {
+	if (content != "") {
+		const style = document.createElement("style");
+		style.innerHTML = "/*" + path + "*/\n" + content;
+		document.head.appendChild(style);
+	}
+}
+
 //Init the AppleAuth
 function initAppleAuth(event) {
 	event.preventDefault();
@@ -119,6 +127,13 @@ async function validateReceipt() {
 	Tpl.setVar("TAB8", Tpl.render(promTab8));
 	Tpl.setVar("TAB9", Tpl.render(promTab9));
 	Tpl.setVar("TAB10", Tpl.render(promTab10));
+
+	await Settings.waitForLoad();
+
+	//Load the custom CSS if the user is a premium user
+	if (Settings.isPremiumUser(2) && Settings.get("general.customCSS")) {
+		loadStyleSheetContent(Settings.get("general.customCSS"));
+	}
 
 	let domainTLD = "";
 	const countryCode = Settings.get("general.country");

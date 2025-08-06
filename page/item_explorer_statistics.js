@@ -20,6 +20,13 @@ if (navigator.userAgent.includes("Chrome") || navigator.userAgent.includes("Chro
 if (navigator.userAgent.includes("Safari")) {
 	document.head.innerHTML += `<link rel="stylesheet" type="text/css" href="../resource/css/icon_ios.css" />`;
 }
+function loadStyleSheetContent(content, path = "injected") {
+	if (content != "") {
+		const style = document.createElement("style");
+		style.innerHTML = "/*" + path + "*/\n" + content;
+		document.head.appendChild(style);
+	}
+}
 
 // Register required components
 Chart.register(...registerables);
@@ -78,6 +85,10 @@ Chart.register({
 	if (Settings.isPremiumUser(3) == false) {
 		displayError("You need to be a tier 3 Patreon subscriber to use this feature.");
 		return;
+	}
+
+	if (Settings.isPremiumUser(2) && Settings.get("general.customCSS")) {
+		loadStyleSheetContent(Settings.get("general.customCSS"));
 	}
 
 	const countryCode = Settings.get("general.country");

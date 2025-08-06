@@ -105,7 +105,7 @@ async function loadStyleSheets() {
 
 	logger.add("PREBOOT: Thorvarium stylesheets injected");
 
-	if (Settings.isPremiumUser() && Settings.get("general.customCSS")) {
+	if (Settings.isPremiumUser(2) && Settings.get("general.customCSS")) {
 		loadStyleSheetContent(Settings.get("general.customCSS"));
 	}
 
