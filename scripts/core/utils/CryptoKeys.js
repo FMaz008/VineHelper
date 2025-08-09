@@ -11,6 +11,7 @@ class CryptoKeysError extends Error {
 
 class CryptoKeys {
 	static #instance = null;
+	#keysReady = null; // Promise that resolves when keys are ready
 
 	constructor() {
 		if (CryptoKeys.#instance) {
@@ -19,6 +20,63 @@ class CryptoKeys {
 		}
 		// Initialize the instance if it doesn't exist
 		CryptoKeys.#instance = this;
+
+		// Initialize keys in constructor to avoid race conditions
+		this.#keysReady = this.#initializeKeys();
+	}
+
+	async #initializeKeys() {
+		try {
+			const storedPrivateKey = Settings.get("crypto.privateKey", false);
+			const storedPublicKey = Settings.get("crypto.publicKey", false);
+
+			// If either key is missing, regenerate both to ensure they're a matching pair
+			if (!storedPrivateKey || !storedPublicKey) {
+				await this.#generateKeypair();
+			} else {
+				// Validate that stored keys can be imported successfully
+				try {
+					const privateKey = await crypto.subtle.importKey(
+						"jwk",
+						storedPrivateKey,
+						{ name: "ECDSA", namedCurve: "P-256" },
+						true,
+						["sign"]
+					);
+					const publicKey = await crypto.subtle.importKey(
+						"jwk",
+						storedPublicKey,
+						{ name: "ECDSA", namedCurve: "P-256" },
+						true,
+						["verify"]
+					);
+
+					// Test if the keys are actually a matching pair
+					const testData = new TextEncoder().encode("key_pair_test");
+					const testSignature = await crypto.subtle.sign(
+						{ name: "ECDSA", hash: { name: "SHA-256" } },
+						privateKey,
+						testData
+					);
+					const testVerification = await crypto.subtle.verify(
+						{ name: "ECDSA", hash: { name: "SHA-256" } },
+						publicKey,
+						testSignature,
+						testData
+					);
+
+					if (!testVerification) {
+						await this.#generateKeypair();
+					}
+				} catch (error) {
+					console.warn("Stored keys are corrupted, regenerating:", error);
+					await this.#generateKeypair();
+				}
+			}
+		} catch (error) {
+			console.error("Failed to initialize keys:", error);
+			throw new CryptoKeysError("Failed to initialize keys", error);
+		}
 	}
 
 	async #generateKeypair() {
@@ -28,25 +86,28 @@ class CryptoKeys {
 				"verify",
 			]);
 
-			// Export the keys and store them
+			// Export the keys and store them atomically
 			const publicKey = await crypto.subtle.exportKey("jwk", keyPair.publicKey);
 			const privateKey = await crypto.subtle.exportKey("jwk", keyPair.privateKey);
 
-			await Settings.set("crypto.publicKey", publicKey);
 			await Settings.set("crypto.privateKey", privateKey);
+			await Settings.set("crypto.publicKey", publicKey);
 
 			return keyPair;
 		} catch (error) {
+			console.error("Failed to generate key pair:", error);
 			throw new CryptoKeysError("Failed to generate key pair", error);
 		}
 	}
 
 	async getPrivateKey() {
 		try {
+			// Wait for keys to be ready
+			await this.#keysReady;
+
 			const storedPrivateKey = Settings.get("crypto.privateKey", false);
 			if (!storedPrivateKey) {
-				await this.#generateKeypair();
-				return this.getPrivateKey();
+				throw new CryptoKeysError("Private key not available after initialization");
 			}
 
 			const cryptoKey = await crypto.subtle.importKey(
@@ -67,10 +128,12 @@ class CryptoKeys {
 
 	async getPublicKey() {
 		try {
+			// Wait for keys to be ready
+			await this.#keysReady;
+
 			const storedPublicKey = Settings.get("crypto.publicKey", false);
 			if (!storedPublicKey) {
-				await this.#generateKeypair();
-				return this.getPublicKey();
+				throw new CryptoKeysError("Public key not available after initialization");
 			}
 
 			// Import the key first
@@ -106,6 +169,42 @@ class CryptoKeys {
 			]);
 		} catch (error) {
 			throw new CryptoKeysError("Failed to import public key from JWK", error);
+		}
+	}
+
+	/**
+	 * Verifies data signature using a public key JWK
+	 * @param {object} publicKeyJWK - Public key in JWK format (from getExportedPublicKey)
+	 * @param {string|object} data - The data that was signed
+	 * @param {string} signatureBase64 - The signature in base64 format
+	 * @returns {boolean} True if signature is valid, false otherwise
+	 */
+	async verifyData(publicKeyJWK, data, signatureBase64) {
+		try {
+			// Convert the JWK to a CryptoKey
+			const publicKey = await this.importPublicKeyFromJWK(publicKeyJWK);
+
+			// Convert data to the same format as signing
+			const dataString = typeof data === "string" ? data : JSON.stringify(data);
+
+			const encoder = new TextEncoder();
+			const dataBuffer = encoder.encode(dataString);
+
+			// Convert signature from base64 to ArrayBuffer
+			const signatureBuffer = this.base64ToBuffer(signatureBase64);
+
+			// Verify the signature
+			const isValid = await crypto.subtle.verify(
+				{ name: "ECDSA", hash: { name: "SHA-256" } },
+				publicKey,
+				signatureBuffer,
+				dataBuffer
+			);
+
+			return isValid;
+		} catch (error) {
+			console.error("verifyData error:", error);
+			throw new CryptoKeysError("Failed to verify data signature", error);
 		}
 	}
 
@@ -153,9 +252,26 @@ class CryptoKeys {
 		return btoa(binary);
 	}
 
+	/**
+	 * Converts a base64 string back to an ArrayBuffer
+	 * @param {string} base64 - The base64 string to convert
+	 * @returns {ArrayBuffer} The decoded buffer
+	 */
+	base64ToBuffer(base64) {
+		const binary = atob(base64);
+		const bytes = new Uint8Array(binary.length);
+		for (let i = 0; i < binary.length; i++) {
+			bytes[i] = binary.charCodeAt(i);
+		}
+		return bytes.buffer;
+	}
+
 	async deleteKeys() {
 		await Settings.set("crypto.publicKey", null);
 		await Settings.set("crypto.privateKey", null);
+		// Re-initialize keys after deletion
+		this.#keysReady = this.#initializeKeys();
+		await this.#keysReady;
 	}
 }
 
