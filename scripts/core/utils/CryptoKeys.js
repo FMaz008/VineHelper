@@ -111,14 +111,17 @@ class CryptoKeys {
 
 	/**
 	 * Signs the data using the private key
-	 * @param {string} data - The data to sign
+	 * @param {string|object} data - The data to sign (will be JSON stringified if object)
 	 * @returns {string} The signed data in base64 format
 	 */
 	async signData(data) {
 		try {
+			// Convert object to JSON string if necessary
+			const dataString = typeof data === "string" ? data : JSON.stringify(data);
+
 			// Convert string to ArrayBuffer
 			const encoder = new TextEncoder();
-			const dataBuffer = encoder.encode(data);
+			const dataBuffer = encoder.encode(dataString);
 
 			const privateKey = await this.getPrivateKey();
 			const signature = await crypto.subtle.sign(
