@@ -1107,7 +1107,7 @@ async function getAllProductsData() {
 			});
 		}
 	}
-	return { arr: arrUrl, s: await cryptoKeys.signData(arrUrl) };
+	return arrUrl;
 }
 
 //Convert the regular tile to the Vine Helper version.
@@ -1212,7 +1212,7 @@ async function generateTile(obj) {
 
 //Get data from the server about the products listed on this page
 async function fetchProductsDatav5() {
-	const { arr: arrProductsData, s } = await getAllProductsData();
+	const arrProductsData = await getAllProductsData();
 	if (arrProductsData.length == 0) {
 		const gridContainer = document.querySelector("#vvp-items-grid-container");
 		if (gridContainer) {
@@ -1244,7 +1244,6 @@ async function fetchProductsDatav5() {
 		queue: env.data.vineQueue,
 		items: arrProductsData,
 		request_variants: requestVariants,
-		s2: s,
 		p: env.data.vinePageNumber,
 	};
 	content.s = await cryptoKeys.signData(content);
