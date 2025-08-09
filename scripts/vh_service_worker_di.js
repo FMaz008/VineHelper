@@ -53,8 +53,8 @@ let selectedWord = ""; // For context menu functionality
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 	// Handle broadcast messages (including pushNotification)
 	if (message.type !== undefined) {
-		processBroadcastMessage(message);
-		return;
+		processBroadcastMessage(message, sender, sendResponse);
+		return true; // Indicate that sendResponse will be called asynchronously
 	}
 
 	// Handle context menu word selection
@@ -151,12 +151,29 @@ chrome.permissions.contains({ permissions: ["contextMenus"] }, (result) => {
 //## BROADCAST MESSAGE PROCESSING
 //#####################################################
 
-function processBroadcastMessage(data) {
+function processBroadcastMessage(data, sender, sendResponse) {
 	if (data.type == "saveToLocalStorage") {
-		chrome.storage.local.set({
-			[data.key]: data.value,
-		});
-		return;
+		chrome.storage.local.set(
+			{
+				[data.key]: data.value,
+			},
+			() => {
+				if (chrome.runtime.lastError) {
+					// Send error response
+					const error = chrome.runtime.lastError.message;
+					const errorName = error.includes("quota") ? "QuotaExceededError" : "StorageError";
+					sendResponse({
+						success: false,
+						error: error,
+						errorName: errorName,
+					});
+				} else {
+					// Send success response
+					sendResponse({ success: true });
+				}
+			}
+		);
+		return true; // Indicate that sendResponse will be called asynchronously
 	}
 
 	if (data.type == "pushNotification") {

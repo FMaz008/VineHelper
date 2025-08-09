@@ -128,8 +128,9 @@ export class SettingsMgrDI {
 					return false;
 				}
 			} else {
-				// Some other error occurred
-				alert("Error:", e.name, e.message);
+				// Some other error occurred - log it instead of showing alert
+				this.#logger.add(`SettingsMgr: Storage error: ${e.name} - ${e.message}`);
+				console.error("SettingsMgr storage error:", e);
 				return false;
 			}
 		}

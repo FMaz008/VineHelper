@@ -105,32 +105,48 @@ export class ChromeStorageAdapter extends StorageAdapter {
 
 	async set(key, value) {
 		return new Promise((resolve, reject) => {
-			chrome.runtime.sendMessage({ type: "saveToLocalStorage", key, value });
-			resolve();
-			/*
-			this.#storage.set({ [key]: value }, () => {
-				if (chrome.runtime.lastError) {
-					const error = chrome.runtime.lastError;
-					// Safari-specific quota error handling
-					if (error.message && error.message.includes("Exceeded storage quota")) {
-						const quotaError = new Error(error.message);
-						quotaError.name = "QuotaExceededError";
-						reject(quotaError);
-					} else if (error.message && error.message.includes("QUOTA_BYTES quota exceeded")) {
-						const quotaError = new Error(error.message);
-						quotaError.name = "QuotaExceededError";
-						reject(quotaError);
+			// Try service worker messaging first, fall back to direct storage if it fails
+			chrome.runtime.sendMessage(
+				{
+					type: "saveToLocalStorage",
+					key,
+					value,
+				},
+				(response) => {
+					if (chrome.runtime.lastError) {
+						// If service worker messaging fails (e.g., "message port closed"),
+						// fall back to direct storage
+						if (chrome.runtime.lastError.message.includes("message port closed")) {
+							this.#storage.set({ [key]: value }, () => {
+								if (chrome.runtime.lastError) {
+									const error = chrome.runtime.lastError;
+									if (error.message && error.message.includes("quota")) {
+										const quotaError = new Error(error.message);
+										quotaError.name = "QuotaExceededError";
+										reject(quotaError);
+									} else {
+										reject(new Error(error.message));
+									}
+								} else {
+									resolve();
+								}
+							});
+						} else {
+							reject(new Error(chrome.runtime.lastError.message));
+						}
+					} else if (response && response.success) {
+						resolve();
 					} else {
-						reject(new Error(error.message));
+						const error = new Error(response?.error || "Storage operation failed");
+						if (response?.errorName) {
+							error.name = response.errorName;
+						}
+						reject(error);
 					}
-				} else {
-					resolve();
 				}
-			});
-            */
+			);
 		});
 	}
-
 	async setMultiple(items) {
 		return new Promise((resolve, reject) => {
 			this.#storage.set(items, () => {
