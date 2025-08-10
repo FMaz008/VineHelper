@@ -1049,7 +1049,7 @@ async function getAllProductsData() {
 	const arrObj = document.querySelectorAll(".vvp-item-tile:not(.pinned)");
 
 	if (arrObj.length == 0) {
-		return { arr: [], s: await cryptoKeys.signData([]) };
+		return [];
 	}
 
 	for (let i = 0; i < arrObj.length; i++) {
