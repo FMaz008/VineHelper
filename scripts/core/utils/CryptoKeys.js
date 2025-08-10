@@ -27,6 +27,8 @@ class CryptoKeys {
 
 	async #initializeKeys() {
 		try {
+			await Settings.waitForLoad(); // Ensure settings are loaded before accessing them
+
 			const storedPrivateKey = Settings.get("crypto.privateKey", false);
 			const storedPublicKey = Settings.get("crypto.publicKey", false);
 
