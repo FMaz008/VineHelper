@@ -132,7 +132,7 @@ export class ChromeStorageAdapter extends StorageAdapter {
 								}
 							});
 						} else {
-							reject(new Error(chrome.runtime.lastError.message));
+							reject(new Error(chrome.runtime.lastError.message + ": " + key));
 						}
 					} else if (response && response.success) {
 						resolve();

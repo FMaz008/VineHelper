@@ -156,120 +156,24 @@ export class SettingsMgrDI {
 	}
 
 	async #migrate() {
-		// V2.2.0: Move the keybinding settings
-		if (this.#settings.general.keyBindings !== undefined) {
-			this.#settings.keyBindings = {};
-			this.#settings.keyBindings.active = this.#settings.general.keyBindings;
-			this.#settings.keyBindings.nextPage = "n";
-			this.#settings.keyBindings.previousPage = "p";
-			this.#settings.keyBindings.RFYPage = "r";
-			this.#settings.keyBindings.AFAPage = "a";
-			this.#settings.keyBindings.ALLPage = "l";
-			this.#settings.keyBindings.AIPage = "i";
-			this.#settings.keyBindings.hideAll = "h";
-			this.#settings.keyBindings.showAll = "s";
-			this.#settings.keyBindings.debug = "d";
-			this.#settings.general.keyBindings = undefined;
-			await this.#save();
-		}
-
-		// V2.2.3: Configure garbage collector for hidden items
-		if (this.#settings.general.hiddenItemsCacheSize == undefined) {
-			this.#settings.general.hiddenItemsCacheSize = 9;
-			await this.#save();
-		}
-		if (this.#settings.general.newItemNotificationImage == undefined) {
-			this.#settings.general.newItemNotificationImage = true;
-			await this.#save();
-		}
-
-		// v2.2.7
-		if (this.#settings.general.displayNewItemNotifications == undefined) {
-			this.#settings.general.displayNewItemNotifications = this.#settings.general.newItemNotification;
-			await this.#save();
-		}
-
-		// v2.3.3
-		if (this.#settings.general.hideKeywords == undefined) {
-			this.#settings.general.hideKeywords = [];
-			await this.#save();
-		}
-		if (this.#settings.general.highlightKeywords == undefined) {
-			this.#settings.general.highlightKeywords = [];
-			await this.#save();
-		}
-
-		// v2.7.6
-		if (this.#settings.notification == undefined) {
-			this.#logger.add("SettingsMgr: Updating settings to v2.7.6 format...");
-			// Convert the old settings to the new format
-			this.#settings.notification = {
-				active: this.#settings.general.newItemNotification,
-				reduce: this.#settings.general.reduceNotifications,
-				screen: {
-					active: this.#settings.general.displayNewItemNotifications,
-					thumbnail: this.#settings.general.newItemNotificationImage,
-					regular: {
-						sound: "0",
-						volume: 0,
-					},
-				},
-				monitor: {
-					hideList: this.#settings.general.newItemMonitorNotificationHiding,
-					hideDuplicateThumbnail: this.#settings.general.newItemMonitorDuplicateImageHiding,
-					regular: {
-						sound: "notification",
-						volume: this.#settings.general.newItemMonitorNotificationSound == 2 ? 0 : 1,
-					},
-					highlight: {
-						sound: "notification",
-						volume: 1,
-						color: "#FFE815",
-					},
-					zeroETV: {
-						sound: "0",
-						volume: 1,
-						color: "#64af4b",
-					},
-				},
-			};
-			this.#settings.customCSS = "";
-			delete this.#settings.general.newItemNotification;
-			delete this.#settings.general.displayNewItemNotifications;
-			delete this.#settings.general.newItemNotificationImage;
-			delete this.#settings.general.newItemMonitorNotificationHiding;
-			delete this.#settings.general.newItemMonitorDuplicateImageHiding;
-			delete this.#settings.general.newItemMonitorNotificationSound;
-			delete this.#settings.general.reduceNotifications;
-			delete this.#settings.general.newItemNotificationVolume;
-			delete this.#settings.general.newItemNotificationSound;
-			delete this.#settings.general.newItemMonitorNotificationVolume;
-			delete this.#settings.general.newItemMonitorNotificationSoundCondition;
-
-			delete this.#settings.general.firstVotePopup;
-			delete this.#settings.unavailableTab.consensusDiscard;
-			delete this.#settings.unavailableTab.selfDiscard;
-			delete this.#settings.unavailableTab.unavailableOpacity;
-			delete this.#settings.unavailableTab.votingToolbar;
-			delete this.#settings.unavailableTab.consensusThreshold;
-
-			await this.#save();
-		}
-
 		// V3.1.0
 		if (this.#settings.notification.monitor.tileSize == undefined) {
 			this.#settings.notification.monitor.tileSize = this.#settings.tileSize;
+			console.log("SettingsMgr: Migrated tileSize to notification.monitor.tileSize");
 			await this.#save();
 		}
 
 		// V3.4.0
 		if (this.get("general.deviceName", false) == undefined) {
+			console.log("SettingsMgr: Migrated deviceName to general.deviceName");
 			await this.set("general.blindLoading", false);
 		}
 		if (this.get("pinnedTab.remote", false) == undefined) {
+			console.log("SettingsMgr: Migrated pinnedTab.remote to pinnedTab.remote");
 			await this.set("pinnedTab.remote", this.get("hiddenTab.remote", false));
 		}
 		if (this.get("notification.monitor.sortType", false) == "date") {
+			console.log("SettingsMgr: Migrated notification.monitor.sortType from 'date' to 'date_desc'");
 			await this.set("notification.monitor.sortType", "date_desc");
 		}
 
@@ -288,6 +192,7 @@ export class SettingsMgrDI {
 
 		if (hasCompiledKeywords) {
 			this.#logger.add("SettingsMgr: Removed legacy compiled keywords from storage");
+			console.log("SettingsMgr: Removed legacy compiled keywords from storage");
 			await this.#save();
 		}
 	}
