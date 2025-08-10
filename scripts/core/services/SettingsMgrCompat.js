@@ -40,7 +40,7 @@ class SettingsMgr {
 	}
 
 	async refresh() {
-		return this.#diInstance.refresh();
+		return await this.#diInstance.refresh();
 	}
 
 	get(settingPath, undefinedReturnDefault = true) {

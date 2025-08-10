@@ -32,6 +32,7 @@ class Websocket {
 		try {
 			await this._monitor._settings.refresh();
 		} catch (e) {
+			//Will catch an error from ChromeStorageAdapter.get() if the storage is not accessible
 			this.#relayMessage({ type: "outOfContext" });
 		}
 

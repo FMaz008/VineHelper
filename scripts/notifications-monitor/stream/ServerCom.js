@@ -14,6 +14,7 @@ class ServerCom {
 	#channelMessageHandler = null;
 	fetch100 = false;
 	#dataBuffer = [];
+	#outOfContext = false; // Flag to indicate if the monitor is out of context, require a page refresh to reset.
 
 	constructor(monitor) {
 		this._monitor = monitor;
@@ -123,7 +124,9 @@ class ServerCom {
 		}
 
 		if (data.type == "outOfContext") {
+			this.#outOfContext = true;
 			this.#setMasterMonitorStatus(false, "Monitor out of context, reload the page.");
+			this.#setWebSocketStatus(false, "Monitor out of context, reload the page.");
 		}
 
 		// Process the item as received from the websocket
@@ -284,7 +287,7 @@ class ServerCom {
 		const icon = document.querySelector("#statusSW div.vh-switch-32");
 		const description = document.querySelector("#descriptionSW");
 
-		if (status) {
+		if (status && !this.#outOfContext) {
 			icon.classList.remove("vh-icon-switch-off");
 			icon.classList.add("vh-icon-switch-on");
 		} else {
@@ -292,7 +295,11 @@ class ServerCom {
 			icon.classList.add("vh-icon-switch-off");
 		}
 
-		description.textContent = desc;
+		if (this.#outOfContext) {
+			description.textContent = "Monitor out of context, reload the page.";
+		} else {
+			description.textContent = desc;
+		}
 	}
 
 	//#####################################################
