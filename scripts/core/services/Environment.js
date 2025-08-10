@@ -56,7 +56,7 @@ class Environment {
 		logger.add("ENV: Settings loaded.");
 
 		this.#loadDiscordActive();
-		this.#loadCountryCode();
+		await this.#loadCountryCode();
 		this.#loadUUID();
 
 		this.data.loadContextCompleted = true;
@@ -72,11 +72,11 @@ class Environment {
 		this.data.appVersion = manifest.version;
 	}
 
-	#loadCountryCode() {
+	async #loadCountryCode() {
 		if (Settings.get("general.country", false) === null) {
 			const code = i13n.getCountryCode();
 			if (code) {
-				Settings.set("general.country", code);
+				await Settings.set("general.country", code);
 			}
 		}
 	}

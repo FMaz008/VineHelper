@@ -48,7 +48,7 @@ class SettingsMgr {
 	}
 
 	async set(settingPath, value, reloadSettings = true) {
-		return this.#diInstance.set(settingPath, value, reloadSettings);
+		return await this.#diInstance.set(settingPath, value, reloadSettings);
 	}
 
 	getCompiledKeywords(key) {
