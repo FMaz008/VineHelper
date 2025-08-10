@@ -7,11 +7,11 @@
  */
 
 import { SettingsMgrDI } from "../core/services/SettingsMgrDI.js";
-import { ChromeStorageAdapter } from "./StorageAdapter.js";
+import { ServiceWorkerStorageAdapter } from "./StorageAdapter.js";
 import { container } from "./DIContainer.js";
 
 // Register the storage adapter in the DI container
-container.register("storageAdapter", () => new ChromeStorageAdapter("local"), {
+container.register("storageAdapter", () => new ServiceWorkerStorageAdapter(), {
 	singleton: true,
 });
 

@@ -1,12 +1,12 @@
 /*global chrome*/
 
-import { Internationalization } from "/scripts/core/services/Internationalization.js";
+import { ChromeStorageAdapter } from "/scripts/infrastructure/StorageAdapter.js";
 import { Item } from "/scripts/core/models/Item.js";
 import { initializeServices, getSettingsManager } from "/scripts/infrastructure/SettingsFactoryEnhanced.js";
 
 // Initialize services
+let storage = new ChromeStorageAdapter("local");
 let Settings = null;
-let i13n = new Internationalization();
 let notificationsData = {};
 let masterCheckInterval = 0.2; //Firefox shutdown the background script after 30seconds.
 let selectedWord = ""; // For context menu functionality
@@ -153,26 +153,14 @@ chrome.permissions.contains({ permissions: ["contextMenus"] }, (result) => {
 
 function processBroadcastMessage(data, sender, sendResponse) {
 	if (data.type == "saveToLocalStorage") {
-		chrome.storage.local.set(
-			{
-				[data.key]: data.value,
-			},
-			() => {
-				if (chrome.runtime.lastError) {
-					// Send error response
-					const error = chrome.runtime.lastError.message;
-					const errorName = error.includes("quota") ? "QuotaExceededError" : "StorageError";
-					sendResponse({
-						success: false,
-						error: error,
-						errorName: errorName,
-					});
-				} else {
-					// Send success response
-					sendResponse({ success: true });
-				}
-			}
-		);
+		storage
+			.set(data.key, data.value)
+			.then(() => {
+				sendResponse({ success: true });
+			})
+			.catch((error) => {
+				sendResponse({ success: false, error: error.message });
+			});
 		return true; // Indicate that sendResponse will be called asynchronously
 	}
 

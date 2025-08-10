@@ -72,16 +72,16 @@ export class StorageAdapter {
  * Chrome storage adapter for production use
  */
 export class ChromeStorageAdapter extends StorageAdapter {
-	#storage;
+	_storage;
 
 	constructor(storageArea = "local") {
 		super();
-		this.#storage = chrome.storage[storageArea];
+		this._storage = chrome.storage[storageArea];
 	}
 
 	async get(key) {
 		return new Promise((resolve, reject) => {
-			this.#storage.get(key, (result) => {
+			this._storage.get(key, (result) => {
 				if (chrome.runtime.lastError) {
 					reject(new Error(chrome.runtime.lastError.message));
 				} else {
@@ -93,7 +93,7 @@ export class ChromeStorageAdapter extends StorageAdapter {
 
 	async getMultiple(keys) {
 		return new Promise((resolve, reject) => {
-			this.#storage.get(keys, (result) => {
+			this._storage.get(keys, (result) => {
 				if (chrome.runtime.lastError) {
 					reject(new Error(chrome.runtime.lastError.message));
 				} else {
@@ -105,51 +105,26 @@ export class ChromeStorageAdapter extends StorageAdapter {
 
 	async set(key, value) {
 		return new Promise((resolve, reject) => {
-			// Try service worker messaging first, fall back to direct storage if it fails
-			chrome.runtime.sendMessage(
-				{
-					type: "saveToLocalStorage",
-					key,
-					value,
-				},
-				(response) => {
-					if (chrome.runtime.lastError) {
-						// If service worker messaging fails (e.g., "message port closed"),
-						// fall back to direct storage
-						if (chrome.runtime.lastError.message.includes("message port closed")) {
-							this.#storage.set({ [key]: value }, () => {
-								if (chrome.runtime.lastError) {
-									const error = chrome.runtime.lastError;
-									if (error.message && error.message.includes("quota")) {
-										const quotaError = new Error(error.message);
-										quotaError.name = "QuotaExceededError";
-										reject(quotaError);
-									} else {
-										reject(new Error(error.message));
-									}
-								} else {
-									resolve();
-								}
-							});
-						} else {
-							reject(new Error(chrome.runtime.lastError.message + ": " + key));
-						}
-					} else if (response && response.success) {
-						resolve();
+			this._storage.set({ [key]: value }, () => {
+				if (chrome.runtime.lastError) {
+					const error = chrome.runtime.lastError;
+					// Handle quota errors specifically
+					if (error.message && error.message.includes("quota")) {
+						const quotaError = new Error(error.message);
+						quotaError.name = "QuotaExceededError";
+						reject(quotaError);
 					} else {
-						const error = new Error(response?.error || "Storage operation failed");
-						if (response?.errorName) {
-							error.name = response.errorName;
-						}
-						reject(error);
+						reject(new Error(error.message));
 					}
+				} else {
+					resolve();
 				}
-			);
+			});
 		});
 	}
 	async setMultiple(items) {
 		return new Promise((resolve, reject) => {
-			this.#storage.set(items, () => {
+			this._storage.set(items, () => {
 				if (chrome.runtime.lastError) {
 					const error = chrome.runtime.lastError;
 					// Safari-specific quota error handling
@@ -173,7 +148,7 @@ export class ChromeStorageAdapter extends StorageAdapter {
 
 	async remove(key) {
 		return new Promise((resolve, reject) => {
-			this.#storage.remove(key, () => {
+			this._storage.remove(key, () => {
 				if (chrome.runtime.lastError) {
 					reject(new Error(chrome.runtime.lastError.message));
 				} else {
@@ -185,13 +160,52 @@ export class ChromeStorageAdapter extends StorageAdapter {
 
 	async clear() {
 		return new Promise((resolve, reject) => {
-			this.#storage.clear(() => {
+			this._storage.clear(() => {
 				if (chrome.runtime.lastError) {
 					reject(new Error(chrome.runtime.lastError.message));
 				} else {
 					resolve();
 				}
 			});
+		});
+	}
+}
+
+/** Service Worker adapter for production use */
+export class ServiceWorkerStorageAdapter extends ChromeStorageAdapter {
+	constructor() {
+		super();
+	}
+
+	async set(key, value) {
+		return new Promise((resolve, reject) => {
+			// Try service worker messaging first, fall back to direct storage if it fails
+			chrome.runtime.sendMessage(
+				{
+					type: "saveToLocalStorage",
+					key,
+					value,
+				},
+				(response) => {
+					if (chrome.runtime.lastError) {
+						// If service worker messaging fails (e.g., "message port closed"),
+						// fall back to direct storage
+						if (chrome.runtime.lastError.message.includes("message port closed")) {
+							super.set(key, value).then(resolve).catch(reject);
+						} else {
+							reject(new Error(chrome.runtime.lastError.message + ": " + key));
+						}
+					} else if (response && response.success) {
+						resolve();
+					} else {
+						const error = new Error(response?.error || "Storage operation failed");
+						if (response?.errorName) {
+							error.name = response.errorName;
+						}
+						reject(error);
+					}
+				}
+			);
 		});
 	}
 }

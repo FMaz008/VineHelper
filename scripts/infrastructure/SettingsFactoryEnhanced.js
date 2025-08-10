@@ -1,5 +1,6 @@
 /**
  * Enhanced Settings Factory with Keyword Compilation Service
+ * This class is used exclusively by the service worker.
  *
  * This factory extends the basic SettingsFactory to include the
  * KeywordCompilationService and other services needed for the DI migration.
