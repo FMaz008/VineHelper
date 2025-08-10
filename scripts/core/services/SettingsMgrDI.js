@@ -337,6 +337,7 @@ export class SettingsMgrDI {
 				highlightKWFirst: true,
 				listView: false,
 				modalNavigation: false,
+				searchOpenModal: false,
 				patreon: {
 					tier: 0,
 				},
