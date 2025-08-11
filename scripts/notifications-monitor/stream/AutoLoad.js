@@ -105,7 +105,7 @@ class AutoLoad {
 		const timer = Math.floor(Math.random() * (max * 60 * 1000 - min * 60 * 1000 + 1) + min * 60 * 1000); //In milliseconds
 		const executeTime = new Date(Date.now() + timer);
 		/*
-        console.log(
+		console.log(
 			`${new Date().toLocaleString()} - Auto-load timer will execute at ${executeTime.toLocaleString()} (in ${Math.round(timer / 1000 / 60, 1)} minutes)`
 		);
         */
@@ -246,33 +246,31 @@ class AutoLoad {
 		}
 
 		//Forward the items to the server
-		if (items.length > 0) {
-			const arrQueue = { AI: "encore", RFY: "potluck", AFA: "last_chance", ALL: "all_items" };
+		const arrQueue = { AI: "encore", RFY: "potluck", AFA: "last_chance", ALL: "all_items" };
 
-			const content = {
-				api_version: 5,
-				app_version: this._monitor._env.data.appVersion,
-				country: this._monitor._i13nMgr.getCountryCode(),
-				uuid: await this._monitor._settings.get("general.uuid", false),
-				fid: await this._monitor._settings.get("general.fingerprint.id", false),
-				action: "get_info",
-				tier: this._monitor._tierMgr.getTier(),
-				queue: arrQueue[queue],
-				items: items,
-				request_variants: false,
-			};
-			content.s = await this._monitor._cryptoKeys.signData(content);
-			content.pk = await this._monitor._cryptoKeys.getExportedPublicKey();
-			fetch(this._monitor._env.getAPIUrl(), {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(content),
-			}).finally(() => {
-				/*console.log(
+		const content = {
+			api_version: 5,
+			app_version: this._monitor._env.data.appVersion,
+			country: this._monitor._i13nMgr.getCountryCode(),
+			uuid: await this._monitor._settings.get("general.uuid", false),
+			fid: await this._monitor._settings.get("general.fingerprint.id", false),
+			action: "get_info",
+			tier: this._monitor._tierMgr.getTier(),
+			queue: arrQueue[queue],
+			items: items,
+			request_variants: false,
+		};
+		content.s = await this._monitor._cryptoKeys.signData(content);
+		content.pk = await this._monitor._cryptoKeys.getExportedPublicKey();
+		fetch(this._monitor._env.getAPIUrl(), {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(content),
+		}).finally(() => {
+			/*console.log(
 					`${new Date().toLocaleString()} - ${items.length} items from ${queue}:${page} sent to the server.`
 				);*/
-			});
-		}
+		});
 	}
 
 	/**
