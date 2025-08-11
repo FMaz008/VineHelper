@@ -601,7 +601,7 @@ async function showGDPRPopup() {
 		m.content = content;
 		m.show();
 
-		Settings.set("general.GDPRPopup", false);
+		await Settings.set("general.GDPRPopup", false);
 	}
 }
 async function initFlushTplCache() {

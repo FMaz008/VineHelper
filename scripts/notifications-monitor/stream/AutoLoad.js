@@ -103,7 +103,12 @@ class AutoLoad {
 		}
 		//const timer = 30 * 1000; //30 seconds
 		const timer = Math.floor(Math.random() * (max * 60 * 1000 - min * 60 * 1000 + 1) + min * 60 * 1000); //In milliseconds
-
+		const executeTime = new Date(Date.now() + timer);
+		/*
+        console.log(
+			`${new Date().toLocaleString()} - Auto-load timer will execute at ${executeTime.toLocaleString()} (in ${Math.round(timer / 1000 / 60, 1)} minutes)`
+		);
+        */
 		this.#reloadTimer = setTimeout(async () => {
 			this.#setReloadTimer(); //Create a new timer
 		}, timer);
@@ -255,7 +260,6 @@ class AutoLoad {
 				queue: arrQueue[queue],
 				items: items,
 				request_variants: false,
-				s2: await this._monitor._cryptoKeys.signData(items),
 			};
 			content.s = await this._monitor._cryptoKeys.signData(content);
 			content.pk = await this._monitor._cryptoKeys.getExportedPublicKey();
