@@ -300,8 +300,8 @@ export class SettingsMgrDI {
 				active: false,
 				hideList: true,
 				autoload: {
-					min: 5,
-					max: 10,
+					min: 2,
+					max: 5,
 					hourStart: "03:00",
 					hourEnd: "17:00",
 				},
