@@ -9,7 +9,7 @@ const pkg = require("./package.json");
 	fs.cpSync("./popup/", "./dist/popup/", { recursive: true });
 	fs.cpSync("./resource/", "./dist/resource/", { recursive: true });
 	fs.cpSync("./scripts/", "./dist/scripts/", { recursive: true });
-	fs.cpSync("./view/", "./dist/view/", { recursive: true });
+	//fs.cpSync("./view/", "./dist/view/", { recursive: true });
 	console.log("Removing .csj files...");
 	const deleteCsjFiles = (dir) => {
 		const files = fs.readdirSync(dir);
