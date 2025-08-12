@@ -2,7 +2,7 @@
 	"manifest_version": 3,
 	"name": "Vine Helper",
 	"description": "Improve the Amazon Vine experience.",
-	"version": "3.6.0",
+	"version": "3.6.1",
 	"permissions": [
 		"alarms",
 		"contextMenus",
@@ -89,7 +89,9 @@
 				"resource/css/toolbar.css",
 				"resource/css/vinehelper.css"
 			],
-			"js": ["scripts/bootloaderLoader.js"],
+			"js": [
+				"scripts/bootloaderLoader.js"
+			],
 			"matches": [
 				"*://*.amazon.ca/vine/*",
 				"*://*.amazon.it/vine/*",
@@ -110,7 +112,10 @@
 			"run_at": "document_end"
 		},
 		{
-			"js": ["scripts/preboot_inj.js", "scripts/prebootLoader.js"],
+			"js": [
+				"scripts/preboot_inj.js",
+				"scripts/prebootLoader.js"
+			],
 			"matches": [
 				"*://*.amazon.ca/vine/*",
 				"*://*.amazon.it/vine/*",
@@ -131,8 +136,13 @@
 			"run_at": "document_start"
 		},
 		{
-			"css": ["resource/css/vinehelper.css", "resource/css/main.css"],
-			"js": ["scripts/review.js"],
+			"css": [
+				"resource/css/vinehelper.css",
+				"resource/css/main.css"
+			],
+			"js": [
+				"scripts/review.js"
+			],
 			"matches": [
 				"*://*.amazon.ca/review/*",
 				"*://*.amazon.it/review/*",
@@ -168,7 +178,9 @@
 			"run_at": "document_end"
 		},
 		{
-			"js": ["scripts/checkoutMonitoringLoader.js"],
+			"js": [
+				"scripts/checkoutMonitoringLoader.js"
+			],
 			"matches": [
 				"*://*.amazon.ca/checkout/p/*",
 				"*://*.amazon.com/checkout/p/*",
