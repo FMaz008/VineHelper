@@ -259,6 +259,7 @@ class AutoLoad {
 			queue: arrQueue[queue],
 			items: items,
 			request_variants: false,
+			p: page,
 		};
 		content.s = await this._monitor._cryptoKeys.signData(content);
 		content.pk = await this._monitor._cryptoKeys.getExportedPublicKey();
