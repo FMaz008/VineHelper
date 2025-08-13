@@ -141,7 +141,7 @@ export class SettingsMgrDI {
 		const settings = await this.#storageAdapter.get("settings");
 
 		// If no settings exist already, create the default ones
-		if (!settings || Object.keys(settings).length === 0) {
+		if (!settings?.general || Object.keys(settings).length === 0) {
 			// Will generate default settings
 			await this.#storageAdapter.clear();
 			this.#settings = { ...this.#defaultSettings };
