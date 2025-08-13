@@ -195,10 +195,40 @@ export class ServiceWorkerStorageAdapter extends ChromeStorageAdapter {
 						} else {
 							reject(new Error(chrome.runtime.lastError.message + ": " + key));
 						}
-					} else if (response && response.success) {
+					} else if (response) {
 						resolve();
 					} else {
 						const error = new Error(response?.error || "Storage operation failed");
+						if (response?.errorName) {
+							error.name = response.errorName;
+						}
+						reject(error);
+					}
+				}
+			);
+		});
+	}
+
+	async clear() {
+		return new Promise((resolve, reject) => {
+			// Try service worker messaging first, fall back to direct storage if it fails
+			chrome.runtime.sendMessage(
+				{
+					type: "clearLocalStorage",
+				},
+				(response) => {
+					if (chrome.runtime.lastError) {
+						// If service worker messaging fails (e.g., "message port closed"),
+						// fall back to direct storage
+						if (chrome.runtime.lastError.message.includes("message port closed")) {
+							super.clear().then(resolve).catch(reject);
+						} else {
+							reject(new Error(chrome.runtime.lastError.message));
+						}
+					} else if (response) {
+						resolve();
+					} else {
+						const error = new Error(response?.error || "Storage clear operation failed");
 						if (response?.errorName) {
 							error.name = response.errorName;
 						}

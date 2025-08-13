@@ -63,38 +63,7 @@ function initAppleAuth(event) {
 			AppleID.auth.signIn();
 		} catch (error) {
 			console.error("Apple Sign-In error:", error);
-			showAppleAuthFallback();
 		}
-	} else {
-		showAppleAuthFallback();
-	}
-}
-
-function showAppleAuthFallback() {
-	// More user-friendly message for non-Safari browsers
-	const isSafari = navigator.userAgent.includes("Safari") && !navigator.userAgent.includes("Chrome");
-	const message = isSafari
-		? "Apple Sign-In is temporarily unavailable. Please use the receipt validation method below."
-		: "Apple Sign-In is only available in Safari. Please use the receipt validation method below.";
-
-	alert(message);
-	// Focus on the receipt textarea
-	document.getElementById("receiptData")?.focus();
-}
-
-async function validateReceipt() {
-	const receiptData = document.getElementById("receiptData").value;
-	const uuid = await Settings.get("general.uuid", false);
-
-	const response = await fetch("/api/apple/validate-receipt", {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ uuid, receiptData }),
-	});
-
-	const result = await response.json();
-	if (result.success) {
-		alert(`✅ Subscription linked: ${result.subscription.tier_name}`);
 	}
 }
 
@@ -155,13 +124,6 @@ async function validateReceipt() {
 		initiateSettings(); //page/settings_loadsave.js, initialize the loading and saving code for the page
 		initMemoryDebugging(); // Initialize memory debugging controls
 		initTileCounterDebugging(); // Initialize TileCounter debugging controls
-	}
-
-	if (env.isSafari()) {
-		//Bind the initAppleAuth function to the AppleLogin button
-		document.getElementById("AppleLogin").addEventListener("click", initAppleAuth);
-		//Bind the validateReceipt function to the validateReceipt button
-		document.getElementById("validateReceipt").addEventListener("click", validateReceipt);
 	}
 })();
 

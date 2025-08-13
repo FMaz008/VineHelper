@@ -163,6 +163,17 @@ function processBroadcastMessage(data, sender, sendResponse) {
 			});
 		return true; // Indicate that sendResponse will be called asynchronously
 	}
+	if (data.type == "clearLocalStorage") {
+		storage
+			.clear()
+			.then(() => {
+				sendResponse({ success: true });
+			})
+			.catch((error) => {
+				sendResponse({ success: false, error: error.message });
+			});
+		return true; // Indicate that sendResponse will be called asynchronously
+	}
 
 	if (data.type == "pushNotification") {
 		try {
