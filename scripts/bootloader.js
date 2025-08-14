@@ -1212,6 +1212,15 @@ async function generateTile(obj) {
 
 //Get data from the server about the products listed on this page
 async function fetchProductsDatav5() {
+	//Check if the page is loaded from cache
+	if (!env.isSafari()) {
+		const nav = performance.getEntriesByType("navigation")[0];
+		if (nav && nav.type === "navigate" && nav.transferSize === 0) {
+			logger.add("FETCH: Page loaded from cache");
+			return false;
+		}
+	}
+
 	const arrProductsData = await getAllProductsData();
 	if (arrProductsData.length == 0) {
 		const gridContainer = document.querySelector("#vvp-items-grid-container");
