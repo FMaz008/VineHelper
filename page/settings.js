@@ -1,14 +1,3 @@
-// Load Apple SDK for Safari (moved from inline script to avoid CSP issues)
-if (navigator.userAgent.includes("Safari") && !navigator.userAgent.includes("Chrome")) {
-	const script = document.createElement("script");
-	script.type = "text/javascript";
-	script.src = "https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js";
-	script.onerror = function () {
-		console.warn("Apple Sign-In SDK failed to load. Receipt validation is still available.");
-	};
-	document.head.appendChild(script);
-}
-
 import { SettingsMgr } from "/scripts/core/services/SettingsMgrCompat.js";
 const Settings = new SettingsMgr();
 
@@ -43,27 +32,6 @@ function loadStyleSheetContent(content, path = "injected") {
 		const style = document.createElement("style");
 		style.innerHTML = "/*" + path + "*/\n" + content;
 		document.head.appendChild(style);
-	}
-}
-
-//Init the AppleAuth
-function initAppleAuth(event) {
-	event.preventDefault();
-
-	// Check if AppleID is available (only in Safari with proper CSP)
-	if (typeof AppleID !== "undefined" && AppleID.auth) {
-		try {
-			AppleID.auth.init({
-				clientId: "com.FrancoisMazerolle.VineHelper",
-				scope: "email name",
-				redirectURI: "https://api.vinehelper.ovh/apple-login",
-				state: `origin:web,uuid:${Settings.get("general.uuid", false)}`,
-			});
-
-			AppleID.auth.signIn();
-		} catch (error) {
-			console.error("Apple Sign-In error:", error);
-		}
 	}
 }
 
