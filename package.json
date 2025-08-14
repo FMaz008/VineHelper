@@ -1,6 +1,6 @@
 {
 	"name": "vinehelper",
-	"version": "3.6.2",
+	"version": "3.6.3",
 	"description": "Improve the Amazon Vine experience.",
 	"workspaces": [
 		"/*"
