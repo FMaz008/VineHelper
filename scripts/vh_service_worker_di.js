@@ -264,63 +264,67 @@ function sendMessageToTab(tabId, data) {
 //## PUSH NOTIFICATIONS
 //#####################################################
 
-chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
-	chrome.notifications.onClicked.addListener((notificationId) => {
-		if (Settings.get("general.debugServiceWorker")) {
-			console.log("[ServiceWorker] Notification clicked", {
-				notificationId,
-				data: notificationsData[notificationId],
-			});
-		}
-
-		const { asin, queue, is_parent_asin, enrollment_guid, search, is_pre_release } =
-			notificationsData[notificationId] || {};
-
-		let url;
-		const domain = Settings.get("general.country") || "com";
-
-		// Check if we should open modal (requires all necessary data)
-		if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
-			try {
-				// Create the openModal URL like the old code did
-				const item = new Item({
-					asin: asin,
-					queue: queue,
-					is_parent_asin: is_parent_asin,
-					is_pre_release: is_pre_release,
-					enrollment_guid: enrollment_guid,
+try {
+	chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
+		chrome.notifications.onClicked.addListener((notificationId) => {
+			if (Settings.get("general.debugServiceWorker")) {
+				console.log("[ServiceWorker] Notification clicked", {
+					notificationId,
+					data: notificationsData[notificationId],
 				});
-				const options = item.getCoreInfoWithVariant();
-				url = `https://www.amazon.${domain}/vine/vine-items?queue=encore#openModal;${encodeURIComponent(JSON.stringify(options))}`;
-				if (Settings.get("general.debugServiceWorker")) {
-					console.log("[ServiceWorker] Opening modal URL:", url);
-				}
-			} catch (error) {
-				console.error("[ServiceWorker] Cannot create modal URL, falling back to search", error);
-				// Fall back to search URL
-				if (search) {
-					url = `https://www.amazon.${domain}/vine/vine-items?search=${encodeURIComponent(search)}`;
-				}
 			}
-		} else if (search) {
-			// Use search string (item title) not ASIN
-			url = `https://www.amazon.${domain}/vine/vine-items?search=${encodeURIComponent(search)}`;
-		} else {
-			// Last resort: just open vine items page
-			url = `https://www.amazon.${domain}/vine/vine-items`;
-			console.warn("[ServiceWorker] No search string available for notification", {
-				notificationData: notificationsData[notificationId],
-			});
-		}
 
-		if (Settings.get("general.debugServiceWorker")) {
-			console.log("[ServiceWorker] Opening URL from notification click:", url);
-		}
-		chrome.tabs.create({ url: url });
-		chrome.notifications.clear(notificationId);
-		delete notificationsData[notificationId];
+			const { asin, queue, is_parent_asin, enrollment_guid, search, is_pre_release } =
+				notificationsData[notificationId] || {};
+
+			let url;
+			const domain = Settings.get("general.country") || "com";
+
+			// Check if we should open modal (requires all necessary data)
+			if (Settings.get("general.searchOpenModal") && is_parent_asin != null && enrollment_guid != null) {
+				try {
+					// Create the openModal URL like the old code did
+					const item = new Item({
+						asin: asin,
+						queue: queue,
+						is_parent_asin: is_parent_asin,
+						is_pre_release: is_pre_release,
+						enrollment_guid: enrollment_guid,
+					});
+					const options = item.getCoreInfoWithVariant();
+					url = `https://www.amazon.${domain}/vine/vine-items?queue=encore#openModal;${encodeURIComponent(JSON.stringify(options))}`;
+					if (Settings.get("general.debugServiceWorker")) {
+						console.log("[ServiceWorker] Opening modal URL:", url);
+					}
+				} catch (error) {
+					console.error("[ServiceWorker] Cannot create modal URL, falling back to search", error);
+					// Fall back to search URL
+					if (search) {
+						url = `https://www.amazon.${domain}/vine/vine-items?search=${encodeURIComponent(search)}`;
+					}
+				}
+			} else if (search) {
+				// Use search string (item title) not ASIN
+				url = `https://www.amazon.${domain}/vine/vine-items?search=${encodeURIComponent(search)}`;
+			} else {
+				// Last resort: just open vine items page
+				url = `https://www.amazon.${domain}/vine/vine-items`;
+				console.warn("[ServiceWorker] No search string available for notification", {
+					notificationData: notificationsData[notificationId],
+				});
+			}
+
+			if (Settings.get("general.debugServiceWorker")) {
+				console.log("[ServiceWorker] Opening URL from notification click:", url);
+			}
+			chrome.tabs.create({ url: url });
+			chrome.notifications.clear(notificationId);
+			delete notificationsData[notificationId];
+		});
 	});
-});
+} catch (err) {
+	//Not supported, probably safari.
+}
 
 async function pushNotification(title, item) {
 	// Handle both object with methods and plain object formats

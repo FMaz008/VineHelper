@@ -121,12 +121,18 @@ async function initiateSettings() {
 	}
 
 	//Handle removing push notifications for safari
-	chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
-		if (!result) {
-			document.querySelector("#notification.pushNotifications").disabled = true;
-			document.querySelector("#notification.pushNotificationsAFA").disabled = true;
+	try {
+		if (!env.isSafari()) {
+			chrome.permissions.contains({ permissions: ["notifications"] }, (result) => {
+				if (!result) {
+					document.querySelector("#notification.pushNotifications").disabled = true;
+					document.querySelector("#notification.pushNotificationsAFA").disabled = true;
+				}
+			});
 		}
-	});
+	} catch (err) {
+		//Do nothing.
+	}
 
 	//Show the usage time in days and hours
 	const minutesUsed = Settings.get("metrics.minutesUsed");
